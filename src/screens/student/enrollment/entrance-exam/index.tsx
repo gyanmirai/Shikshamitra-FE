@@ -70,28 +70,31 @@ import { SlotsForm } from '../setting/entrance-exam-slots';
  * Main component for managing entrance exam screens and functionalities
  */
 const EntranceExamScreen = () => {
-  // const [view, setView] = React.useState('calender');
-  // State for managing search parameters (currently unused)
+  // Search params hook for view state management
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
-  // State for storing the data of the entrance exam being edited
+
+  // State for managing edit data and move operations
   const [editData, setEditData] = useState(null);
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
-  // State indicating whether there are unsaved changes in the form
+
+  // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // useDispatch hook for dispatching Redux actions
   const dispatch = useDispatch();
-  // State for controlling the visibility of the result dialog
+
+  // Dialog control hooks
   const resultDialog = useBoolean();
   // State for controlling the visibility of the move confirmation popup
   const confirmMovePopup = useBoolean();
 
-  // Query for fetching entrance exam data
+  // Query hook for fetching entrance exam data
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
   });
-  // Mutation for moving a student to admission
+
+  // Mutation hook for moving students to admission
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
@@ -100,10 +103,13 @@ const EntranceExamScreen = () => {
       success: true,
     },
   });
-  // MUI theme object
+
+  // Material-UI theme hook
   const theme = useTheme();
 
-  // Computed table data derived from entranceExamData
+  /**
+   * Memoized table data transformation
+   */
   const tableData = useMemo(
     () =>
       entranceExamData?.items?.map((item: any) => ({
@@ -130,7 +136,9 @@ const EntranceExamScreen = () => {
     [entranceExamData]
   );
 
-  // Computed calendar data derived from entranceExamData
+  /**
+   * Memoized calendar data transformation
+   */
   const calendarData = useMemo(
     () =>
       entranceExamData?.items.map((i: any) => {
@@ -174,7 +182,9 @@ const EntranceExamScreen = () => {
     [entranceExamData?.items, theme.palette]
   );
 
-  // Callback function for rendering actions in each row of the table
+  /**
+   * Callback for handling row actions
+   */
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -204,7 +214,9 @@ const EntranceExamScreen = () => {
     [confirmMovePopup, resultDialog]
   );
 
-  // Handler function for closing the result dialog
+  /**
+   * Handler for dialog close events
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       console.log('Are u sure to leave this page ');
@@ -217,12 +229,15 @@ const EntranceExamScreen = () => {
     }
   };
 
-  // State for storing selected students
+  // State for managing selected students
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
-  // State for controlling the send instant notification dialog
+
+  // Dialog control for instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
 
-  // Handler function for opening the send instant notification dialog
+  /**
+   * Handler for sending notifications
+   */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -443,20 +458,22 @@ export const ExamForm = ({
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
-  // Query hook to fetch exam slots
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
   // State for controlling the visibility of the add exam type dialog (currently unused)
   const addExamTypeDialog = useBoolean();
 
   // Fetch entrance exam slots using a custom hook
+  // Query hook to fetch exam slots
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  // Fetch entrance exam slots using a custom hook
+  // Query hook to fetch exam slots
   const { data: slots } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
   });
 
-  // Mutation hook for scheduling an exam
+  // Mutation hook for scheduling exams
   const [scheduleExam, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEntranceExamMutation,
