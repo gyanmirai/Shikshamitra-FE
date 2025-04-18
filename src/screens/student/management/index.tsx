@@ -58,7 +58,16 @@ const TABS = [
       division: string;
     }) => <ChangeDivisionScreen {...props} />,
   },
-  { value: 'changeClass', label: 'Change Class', component: () => <ChangeClassScreen /> },
+  {
+    value: 'changeClass',
+    label: 'Change Class',
+    component: (props: {
+      isLoading: boolean;
+      tableData: IInquiryData[];
+      allClass: Standards[];
+      classes: string;
+    }) => <ChangeClassScreen {...props} />,
+  },
   { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
   { value: 'groupManageMent', label: 'House Management', component: () => <GroupManagement /> },
@@ -181,7 +190,7 @@ const StudentManagementScreen = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.({ tableData, isLoading, allDivision, division })}
+        {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
       </Box>
     </Box>
   );
