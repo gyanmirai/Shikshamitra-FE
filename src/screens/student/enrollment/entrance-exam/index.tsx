@@ -458,6 +458,13 @@ export const ExamForm = ({
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  // State for controlling the visibility of the add exam type dialog (currently unused)
+  const addExamTypeDialog = useBoolean();
+
+  // Fetch entrance exam slots using a custom hook
   // Query hook to fetch exam slots
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
