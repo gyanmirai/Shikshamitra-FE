@@ -249,6 +249,7 @@ const HrEventsAndHolidaysScreen = () => {
               id: 'actions',
               label: 'Actions',
               isFilter: false,
+              minWidth: 60,
               sticky: true,
               isSort: false,
               render(value, row) {

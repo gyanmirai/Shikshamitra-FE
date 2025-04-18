@@ -122,7 +122,7 @@ const HrSetting = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
-            minWidth: '140px',
+            minWidth: 50,
             render: (value, data) => (
               <ThreeDotsActions
                 showEditIcon
