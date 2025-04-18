@@ -18,6 +18,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 }) => (
   <CustomizableTable
     tableId="schedule-exam-table"
+    searchFieldProps={{
+      placeholder: 'Search by Class, Subject Name, Exam Type...',
+      label: 'Search by Class, Subject Name, Exam Type...',
+    }}
     noDataText={
       <>
         No Exam Data Found{' '}

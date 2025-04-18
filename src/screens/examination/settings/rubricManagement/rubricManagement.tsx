@@ -32,6 +32,10 @@ const RubricManagement = () => {
       </Box>
       <CustomizableTable
         tableId="rubricTable"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Subject Name, Point Scale...',
+          label: 'Search by Class, Subject Name, Point Scale...',
+        }}
         noDataText={
           <>
             No Rubric Data Found{' '}

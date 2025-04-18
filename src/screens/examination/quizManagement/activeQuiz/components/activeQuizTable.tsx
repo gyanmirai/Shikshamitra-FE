@@ -21,6 +21,10 @@ const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick }: any
   return (
     <CustomizableTable
       tableId="quiz-table"
+      searchFieldProps={{
+        placeholder: 'Search by Class, Division, Subject...',
+        label: 'Search by Class, Division, Subject...',
+      }}
       noDataText={
         <>
           No Quiz Data Found{' '}

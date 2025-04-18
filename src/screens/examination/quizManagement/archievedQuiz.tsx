@@ -93,6 +93,10 @@ const ArchievedQuiz = () => {
     <Box>
       <CustomizableTable
         tableId="archivedQuiz"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Division, Subject, Assigned Teacher...',
+          label: 'Search by Class, Division, Subject, Assigned Teacher...',
+        }}
         noDataText={<>No Archieved Quiz Data Found </>}
         columns={[
           { id: 'class', label: 'Class' },
