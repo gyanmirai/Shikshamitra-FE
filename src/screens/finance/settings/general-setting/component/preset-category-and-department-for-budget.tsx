@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -17,7 +18,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const PresetCategoryAndDepartmentForBudget = () => {
   // State for managing edit mode
@@ -237,23 +238,43 @@ const PresetCategoryAndDepartmentForBudget = () => {
           />
         </Grid>
         {dialogForDeleteConfirmation.value && (
-          <DeleteConfirmationDialog
+          <ConfirmDialog
             open={dialogForDeleteConfirmation.value}
             onClose={() => {
               dialogForDeleteConfirmation.onFalse();
               setSelectedbudgetCategory(null);
             }}
-            onConfirm={handleDeleteBudgetCategory}
             title="Delete Item"
-            description={
-              <>
-                Are you sure you want to delete{' '}
-                <strong>{`${selectedbudgetCategory.budgetCategoryName} Budget Category`}</strong> ?
-                This action cannot be undone.
-              </>
+            content="Are you sure want to delete?"
+            action={
+              <LoadingButton
+                variant="contained"
+                loading={isdeleteBudgetCategory}
+                color="error"
+                onClick={handleDeleteBudgetCategory}
+              >
+                Delete
+              </LoadingButton>
             }
-            isDeleteLoading={isdeleteBudgetCategory}
           />
+
+          // <DeleteConfirmationDialog
+          //   open={dialogForDeleteConfirmation.value}
+          //   onClose={() => {
+          //     dialogForDeleteConfirmation.onFalse();
+          //     setSelectedbudgetCategory(null);
+          //   }}
+          //   onConfirm={handleDeleteBudgetCategory}
+          //   title="Delete Item"
+          //   description={
+          //     <>
+          //       Are you sure you want to delete{' '}
+          //       <strong>{`${selectedbudgetCategory.budgetCategoryName} Budget Category`}</strong> ?
+          //       This action cannot be undone.
+          //     </>
+          //   }
+          //   isDeleteLoading={isdeleteBudgetCategory}
+          // />
         )}
       </Grid>
     </Box>
