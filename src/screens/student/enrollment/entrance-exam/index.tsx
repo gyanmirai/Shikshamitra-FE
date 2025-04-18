@@ -49,6 +49,7 @@ import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
   useUpdateEntranceExamMutation,
+  useLazyGetStudentForSlotByDateQuery,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
 
 import { Label } from 'src/components/label';
@@ -64,19 +65,32 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 import { SlotsForm } from '../setting/entrance-exam-slots';
 
+/**
+ * Main component for managing entrance exam screens and functionalities
+ */
 const EntranceExamScreen = () => {
-  // const [view, setView] = React.useState('calender');
+  // Search params hook for view state management
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
+
+  // State for managing edit data and move operations
   const [editData, setEditData] = useState(null);
   const [moveId, setMoveId] = useState<string | null>(null);
+
+  // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // Dialog control hooks
   const resultDialog = useBoolean();
   const confirmMovePopup = useBoolean();
+
+  // Query hook for fetching entrance exam data
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
   });
+
+  // Mutation hook for moving students to admission
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
@@ -85,8 +99,13 @@ const EntranceExamScreen = () => {
       success: true,
     },
   });
+
+  // Material-UI theme hook
   const theme = useTheme();
 
+  /**
+   * Memoized table data transformation
+   */
   const tableData = useMemo(
     () =>
       entranceExamData?.items?.map((item: any) => ({
@@ -113,6 +132,9 @@ const EntranceExamScreen = () => {
     [entranceExamData]
   );
 
+  /**
+   * Memoized calendar data transformation
+   */
   const calendarData = useMemo(
     () =>
       entranceExamData?.items.map((i: any) => {
@@ -156,6 +178,9 @@ const EntranceExamScreen = () => {
     [entranceExamData?.items, theme.palette]
   );
 
+  /**
+   * Callback for handling row actions
+   */
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -172,7 +197,6 @@ const EntranceExamScreen = () => {
 
         <MenuItem
           onClick={async () => {
-            // dialog.onTrue()
             confirmMovePopup.onTrue();
             setMoveId(row.id);
             popover.onClose();
@@ -186,6 +210,9 @@ const EntranceExamScreen = () => {
     [confirmMovePopup, resultDialog]
   );
 
+  /**
+   * Handler for dialog close events
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       console.log('Are u sure to leave this page ');
@@ -198,9 +225,15 @@ const EntranceExamScreen = () => {
     }
   };
 
+  // State for managing selected students
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
+
+  // Dialog control for instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
 
+  /**
+   * Handler for sending notifications
+   */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
@@ -220,45 +253,7 @@ const EntranceExamScreen = () => {
           </Button>
         }
       />
-      {/* <EntranceExamDashboard /> */}
-      {/* <Card> */}
-      {/* <CommonCalender data={[]} /> */}
-      {/* </Card> */}
-
-      {/* <ButtonGroup>
-        <Button
-          variant={searchParams.view === 'calender' ? 'contained' : 'outlined'}
-          color="inherit"
-          onClick={() => setSearchParam({ view: 'calender' })}
-        >
-          <Iconify icon="uis:calender" />
-        </Button>
-        <Button
-          color="inherit"
-          variant={searchParams.view === 'table' ? 'contained' : 'outlined'}
-          onClick={() => setSearchParam({ view: 'table' })}
-        >
-          <Iconify icon="lucide:layout-list" />
-        </Button>
-      </ButtonGroup> */}
       <Box mt={2}>
-        {/* {searchParams.view === 'calender' && (
-          <Box display="flex" height="700px">
-            <CommonCalender
-              data={calendarData}
-              eventTimeFormat={{
-                hour: 'numeric',
-                minute: '2-digit',
-                meridiem: 'short', // Use 'short' for AM/PM or 'false' for 24-hour format
-              }}
-              // showCalendarToolbar={false}
-              // onDateClick={(e) => {
-              //   console.log(e);
-              //   setCurrentDateClick(e);
-              // }}
-            />
-          </Box>
-        )} */}
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
@@ -425,6 +420,7 @@ const EntranceExamScreen = () => {
 
 export default EntranceExamScreen;
 
+// Component for handling exam form functionality including scheduling exams and managing slots
 export const ExamForm = ({
   studentName,
   standardName,
@@ -436,10 +432,15 @@ export const ExamForm = ({
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
+  // State to store all available exam slots
+  const [allSlots, setAllSlots] = useState<any[]>([]);
+
+  // Dialog state for slot management
   const dialog = useBoolean();
+
+  // Validation schema for exam form fields
   const validationSchema = Yup.object({
     examDate: Yup.date().required('Exam date is required'),
-    // selectedStudents: Yup.string().required('Students are required'),
     passingMarks: Yup.number()
       .nullable()
       .test(
@@ -453,28 +454,41 @@ export const ExamForm = ({
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
+  // Query hook to fetch exam slots
   const { data: slots } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
   });
 
+  // Mutation hook for scheduling exams
   const [scheduleExam, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEntranceExamMutation,
   });
 
-  const allSlots = useMemo(
-    () =>
-      slots?.items?.map((slot: any) => ({
-        ...slot,
-        label: `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`,
-        value: slot.id,
-      })),
-    [slots]
+  // Query hook to get student count for slots
+  const [getStudentCountByDate] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useLazyGetStudentForSlotByDateQuery,
+  });
+
+  // Callback function to fetch student count for a specific slot and date
+  const getStudentCount = useCallback(
+    async (slotId: string, date: string) => {
+      try {
+        const res = await getStudentCountByDate({ slotId, examDate: date }).unwrap();
+        return res.studentCount;
+      } catch (e) {
+        console.log(e);
+        return 0;
+      }
+    },
+    [getStudentCountByDate]
   );
 
+  // Formik instance for form handling
   const formik = useFormik({
-    // enableReinitialize: true,
+    enableReinitialize: true,
     initialValues: {
       examDate: null,
       examType: '',
@@ -505,6 +519,27 @@ export const ExamForm = ({
     },
   });
 
+  // Effect to update slots when exam date changes
+  useEffect(() => {
+    if (slots?.items?.length && formik.values.examDate) {
+      (async () => {
+        const getAllSlot = await Promise.all(
+          slots?.items?.map(async (slot: any) => ({
+            ...slot,
+            label: `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`,
+            value: slot.id,
+            studentCount: await getStudentCount(
+              slot.id,
+              dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true)
+            ),
+          }))
+        );
+        setAllSlots(getAllSlot);
+      })();
+    }
+  }, [formik.values.examDate, getStudentCount, slots?.items]);
+
+  // Effect to update form slots when allSlots changes
   useEffect(() => {
     formik.setFieldValue('slots', allSlots || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -526,7 +561,6 @@ export const ExamForm = ({
         sx={{
           p: 3,
           bgcolor: 'background.neutral',
-          //   height: 'calc(100vh - 150px)',
         }}
       >
         <Grid container spacing={2}>
@@ -611,17 +645,6 @@ export const ExamForm = ({
                       formik.setFieldValue('examType', value?.id);
                     }}
                   />
-                  {/* <CustomSelect
-                    options={scheduleTypeOptions}
-                    label="Schedule Type"
-                    labelKey="name"
-                    valueKey="id"
-                    value={formik.values.scheduleType}
-                    onChange={(val) => formik.setFieldValue('scheduleType', val)}
-                    formControlProps={{
-                      fullWidth: true,
-                    }}
-                  /> */}
                 </Grid>
                 <Grid xs={4}>
                   <TextField
@@ -674,7 +697,7 @@ export const ExamForm = ({
                             label={slot.label}
                           />
                           <Label variant="soft" color="success">
-                            5 / {slot.studentLimit}
+                            {slot.studentCount} / {slot.studentLimit}
                           </Label>
                         </Grid>
                       ))}
@@ -709,6 +732,11 @@ export const ExamForm = ({
   );
 };
 
+/**
+ * Form component for handling entrance exam results
+ * @param {Object} editData - Data of the exam result to be edited
+ * @param {Function} handleClose - Callback function to handle form closure
+ */
 const ResultForm = ({
   editData,
   handleClose,
@@ -716,6 +744,9 @@ const ResultForm = ({
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  /**
+   * Formik instance for form handling with validation and submission logic
+   */
   const formik = useFormik({
     initialValues: {
       obtainedMarks: editData?.marksObtained ?? null,
@@ -754,6 +785,10 @@ const ResultForm = ({
     },
   });
 
+  /**
+   * Custom hook for handling API mutation to update exam marks
+   * Returns update function and loading state
+   */
   const [updateMarks, { isLoading }] = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useUpdateEntranceExamMutation,

@@ -46,6 +46,13 @@ export const EntranceExamApi = createApi({
       }),
       providesTags: ['Entrance-Exam'],
     }),
+    getStudentForSlotByDate: builder.query({
+      query: ({ slotId, examDate }) => ({
+        url: `/app/entrance-exam/student-count-for-slot-by-date/${slotId}?examDate=${examDate}`,
+        method: 'GET',
+      }),
+      providesTags: ['Entrance-Exam'],
+    }),
   }),
 });
 
@@ -55,4 +62,6 @@ export const {
   useDeleteEntranceExamMutation,
   useGetEntranceExamQuery,
   useGetEntranceExamByStudentIdQuery,
+  useGetStudentForSlotByDateQuery,
+  useLazyGetStudentForSlotByDateQuery,
 } = EntranceExamApi;
