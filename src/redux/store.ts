@@ -43,6 +43,7 @@ import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-t
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
+import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
 
 const persistConfig = {
@@ -94,6 +95,7 @@ const reducers = combineReducers({
   [shiftManagementApi.reducerPath]: shiftManagementApi.reducer,
   [StudentApi.reducerPath]: StudentApi.reducer,
   [studentGroupApi.reducerPath]: studentGroupApi.reducer,
+  [studentChangeClassApi.reducerPath]: studentChangeClassApi.reducer,
 });
 
 const store = configureStore({
@@ -139,7 +141,8 @@ const store = configureStore({
       .concat(StudentTakeAttendanceApi.middleware)
       .concat(shiftManagementApi.middleware)
       .concat(StudentApi.middleware)
-      .concat(studentGroupApi.middleware),
+      .concat(studentGroupApi.middleware)
+      .concat(studentChangeClassApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

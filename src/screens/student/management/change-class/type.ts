@@ -1,6 +1,6 @@
 import type { Standards } from 'src/types/school';
 
-export interface TableClassDropDownProps {
+export interface ITableClassDropDownProps {
   allClass: Standards[];
   classes: string;
 
