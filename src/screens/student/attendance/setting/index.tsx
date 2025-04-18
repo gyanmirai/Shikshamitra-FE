@@ -37,8 +37,8 @@ const TABS = [
   },
 
   {
-    value: 'attendanceType',
-    label: 'Attendance Type',
+    value: 'leaveType',
+    label: 'Leave Type',
     icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
     component: () => <AttendanceType />,
   },

@@ -162,7 +162,7 @@ const AttendanceType = () => {
 
 export default AttendanceType;
 
-const AttendanceTypeForm = ({
+export const AttendanceTypeForm = ({
   handleClose,
   editData,
 }: {

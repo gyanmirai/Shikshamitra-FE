@@ -1,10 +1,12 @@
 import type { Board } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 import type { SxProps, GridProps } from '@mui/material';
 
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { capitalize } from 'lodash';
 import { useMemo, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -12,7 +14,9 @@ import {
   Grid,
   Stack,
   Select,
+  Button,
   Divider,
+  Tooltip,
   Checkbox,
   MenuItem,
   Collapse,
@@ -28,6 +32,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import calculateAge from 'src/utils/calculate-age';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
@@ -39,6 +44,7 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Category, CategoryArray } from 'src/enums/studnet-category';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
@@ -63,6 +69,8 @@ import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
+import { DocumentForm } from '../setting/document-type';
+
 import type { IInquiryData } from '../Inquiry';
 
 export interface FieldsType {
@@ -83,6 +91,8 @@ export const RenderDocuments = (props: any) => {
   // State to store the selected document ID
   const [docId, setDocId] = useState<null | string>(null);
 
+  // Dialog state for adding documents
+  const addDocumentDialog = useBoolean();
   // Mutation hook for uploading new documents
   const [uploadDocument] = useQueryAndMutation({
     type: 'mutation',
@@ -128,8 +138,35 @@ export const RenderDocuments = (props: any) => {
       })) || [],
     [documents?.items, employeeDocuments]
   );
+
+  // Get the isChanges state from the Redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get the dispatch function from the Redux store
+  const dispatch = useDispatch();
+
+  // Reset form and close dialog
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addDocumentDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addDocumentDialog.onFalse();
+    }
+  };
   return (
     <>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+          onClick={() => {
+            addDocumentDialog.onTrue();
+          }}
+        >
+          Add Document
+        </Button>
+      </Box>
       <CustomizableTable
         isLoading={isLoading || isEmployeeDocLoading}
         tableId="documents"
@@ -214,6 +251,25 @@ export const RenderDocuments = (props: any) => {
         <Box p={2}>
           <ViewDocuments id={id} docId={docId} />
         </Box>
+      </CustomDialog>
+
+      <CustomDialog
+        open={addDocumentDialog.value}
+        handleClose={addDocumentDialog.onFalse}
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Document</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+      >
+        <DocumentForm handleClose={handleClose} editData={null} />
       </CustomDialog>
     </>
   );
