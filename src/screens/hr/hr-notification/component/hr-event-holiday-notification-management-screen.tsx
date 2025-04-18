@@ -210,7 +210,7 @@ const HrEventHolidayNotificationManagementScreen = () => {
               isFilter: false,
               isSort: false,
               sticky: true,
-
+              minWidth: 50,
               render(value, row) {
                 return (
                   <ThreeDotsActions

@@ -61,7 +61,7 @@ const EventsAndHolidaysRequest = () => (
           label: 'Actions',
           isSort: false,
           isFilter: false,
-
+          minWidth: 50,
           sticky: true,
           render(value, row) {
             return (

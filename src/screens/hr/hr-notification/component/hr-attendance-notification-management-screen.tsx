@@ -241,7 +241,6 @@ const HrAttendanceNotificationManagementScreen = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
@@ -266,7 +265,7 @@ const HrAttendanceNotificationManagementScreen = () => {
               isFilter: false,
               isSort: false,
               sticky: true,
-
+              minWidth: 50,
               render(value, row) {
                 return (
                   <ThreeDotsActions
