@@ -140,7 +140,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                   {
                     id: 'chargesPerDay',
                     label: 'ChargesPerDay',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value, row) {
                       if (row.chargesPerDay !== null) {
                         return (
@@ -158,7 +158,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                   {
                     id: 'totalCharges',
                     label: 'Total Charges',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value, row) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },

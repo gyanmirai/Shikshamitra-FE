@@ -50,9 +50,11 @@ import {
 } from '@mui/material';
 
 import debounce from 'src/utils/debounce';
+import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import { parseFormattedNumber } from './utlis';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
 
@@ -270,6 +272,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           ? Number(filter.value)
           : filter.value;
         const isDateType = filter.valueType === 'date';
+        const isFormattedNumber = filter.valueType === 'formattedNumber';
 
         if (isDateType) {
           switch (filter.type) {
@@ -280,6 +283,21 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(dayjs(filter.value, 'DD-MM-YYYY'));
             case 'before':
               return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
+            default:
+              return false;
+          }
+        }
+        if (isFormattedNumber) {
+          const parsedValue = parseFormattedNumber(value);
+          const parsedFilterValue = parseFormattedNumber(filter.value);
+
+          switch (filter.type) {
+            case 'equals':
+              return parsedValue === parsedFilterValue;
+            case 'greaterThan':
+              return parsedValue > parsedFilterValue;
+            case 'lessThan':
+              return parsedValue < parsedFilterValue;
             default:
               return false;
           }
@@ -433,6 +451,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     valueType: string
   ) => {
     const newFilter = { column: columnId, type: filterTypes, value, valueType };
+
     handelChangeParams({
       filters: [...filters, newFilter],
       page: 0,
@@ -918,7 +937,7 @@ const FilterChips = ({
           key={index}
           size="small"
           variant="soft"
-          label={`${findColumn?.label} : ${filterValue}`}
+          label={`${findColumn?.label} :   ${findColumn?.filterType === 'formattedNumber' ? formatNumber(filterValue, 'INR') : filterValue}`}
           onDelete={() => removeFilter(index)}
         />
       );
@@ -946,7 +965,7 @@ const ColumnFilterMenu: React.FC<{
   const [filterType, setFilterType] = useState('');
 
   // Stores the filter value entered by the user (can be string, date, or null)
-  const [filterValue, setFilterValue] = useState<null | string | Dayjs>(null);
+  const [filterValue, setFilterValue] = useState<null | string | Dayjs | number>(null);
 
   // Stores the date range for date filters (currently unused)
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
@@ -955,6 +974,13 @@ const ColumnFilterMenu: React.FC<{
     if (!anchorEl) return [];
 
     switch (anchorEl.column.filterType) {
+      case 'formattedNumber':
+        return [
+          { value: 'equals', label: 'Equals' },
+          { value: 'greaterThan', label: 'Greater Than' },
+          { value: 'lessThan', label: 'Less Than' },
+        ];
+
       case 'string':
         return [
           { value: 'contains', label: 'Contains' },
@@ -998,6 +1024,9 @@ const ColumnFilterMenu: React.FC<{
     }
     if (anchorEl.column.filterType === 'enum') {
       filterTypeValue = 'equals';
+    }
+    if (anchorEl.column.filterType === 'formattedNumber') {
+      value = parseFormattedNumber(value);
     }
 
     onApplyFilter(anchorEl.column.id, filterTypeValue, value, anchorEl.column.filterType as string);

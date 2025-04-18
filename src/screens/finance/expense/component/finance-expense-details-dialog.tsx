@@ -29,7 +29,7 @@ const FinanceExpenseDetailsDialog: React.FC<IFinanceExpenseDetailsDialogProps> =
           {
             id: 'amount',
             label: 'Amount',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
             },

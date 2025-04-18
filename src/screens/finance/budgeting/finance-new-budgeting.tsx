@@ -208,7 +208,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'totalAmountExpected',
                     label: 'Total Expected ',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -216,7 +216,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'collectedAmount',
                     label: 'Collected',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -224,7 +224,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'outstandingAmount',
                     label: 'Outstanding',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -298,7 +298,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'allocatedAmount',
                     label: 'Allocated Amount',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -306,7 +306,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'spentAmount',
                     label: 'Spent Amount',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -314,7 +314,7 @@ const FinanceNewBudgetingScreen = () => {
                   {
                     id: 'remainingAmount',
                     label: 'Remaining Amount',
-                    filterType: 'number',
+                    filterType: 'formattedNumber',
                     render(value) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },

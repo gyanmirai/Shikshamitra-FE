@@ -56,7 +56,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           {
             id: 'amountPaid',
             label: 'Amount',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row: any) {
               return <Typography fontSize="12px">{formatNumber(row.amountPaid, 'INR')}</Typography>;
             },
@@ -64,7 +64,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           {
             id: 'amountPending',
             label: 'Amount Pending',
-            filterType: 'number',
+            filterType: 'formattedNumber',
             render(value, row: any) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.amountPending, 'INR')}</Typography>

@@ -125,7 +125,7 @@ const FinanceIncomeTrackingScreen = () => {
               {
                 id: 'incomeAmount',
                 label: 'Income Amount',
-                filterType: 'number',
+                filterType: 'formattedNumber',
                 render(value, row) {
                   return (
                     <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
