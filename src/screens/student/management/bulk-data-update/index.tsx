@@ -151,6 +151,7 @@ const BulkDataUpdateScreen = () => {
                 isSort: false,
                 minWidth: '200px',
                 align: 'left',
+                isFilter: false,
                 // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
                 // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
                 render: (value, row: any) => (

@@ -4,6 +4,11 @@ import React, { useState } from 'react';
 
 import { Box, Switch } from '@mui/material';
 
+import {
+  NotificationStatusType,
+  NotificationStatusOptions,
+} from 'src/enums/notification-status-type';
+
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -212,16 +217,17 @@ const notificationsData = [
 ];
 
 const NewStudentNotificationForInquiry = () => {
+  // State variables to manage the dialog and selected notification data
   const [open, setOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
+  // Handler function to close the dialog and reset selected data and view state
   const closeHandler = () => {
     setOpen(false);
     setSelectedData(null);
     setView(false);
   };
-
   return (
     <>
       {open ? (
@@ -250,15 +256,17 @@ const NewStudentNotificationForInquiry = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
+              filterType: 'enum',
+              isSort: false,
+              enumOptions: NotificationStatusOptions,
               render(value, row) {
                 return (
                   <Box>
                     <Switch
-                      checked={row.isActive}
+                      checked={NotificationStatusType.Active === row.isActive}
                       onChange={(event) => {
                         console.log(event.target.checked);
                       }}
@@ -270,6 +278,10 @@ const NewStudentNotificationForInquiry = () => {
             {
               id: 'action',
               label: 'Action',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              minWidth: 60,
               render(value, row) {
                 return (
                   <ThreeDotsActions
