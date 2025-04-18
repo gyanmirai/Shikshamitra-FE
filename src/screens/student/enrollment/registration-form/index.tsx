@@ -88,17 +88,17 @@ const RegistrationFormScreen = () => {
           },
         }}
         columns={[
-          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
             label: 'Inquiry Number',
-
+            align: 'left',
             minWidth: '162px',
             isFilter: true,
             filterType: 'string',
           },
-          { id: 'standard.name', label: 'Class' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
           {
             id: 'dobValue',
             label: 'DOB',
@@ -107,7 +107,7 @@ const RegistrationFormScreen = () => {
             isFilter: true,
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age' },
+          { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
             label: 'DOI',
@@ -115,15 +115,21 @@ const RegistrationFormScreen = () => {
             align: 'left',
             isDateRangeFilter: true,
           },
-          { id: 'genderValue', label: 'Gender' },
-          { id: 'address', label: 'Address', minWidth: '120px' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
-          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          { id: 'genderValue', label: 'Gender', align: 'left' },
+          { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px', align: 'left' },
+          {
+            id: 'alternativeContactNumber',
+            label: 'Alternate Contact Details',
+            minWidth: '232px',
+            align: 'left',
+          },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
             label: 'Inquiry Preferences',
             minWidth: '200px',
+            align: 'left',
           },
           {
             id: 'actions',
@@ -131,6 +137,7 @@ const RegistrationFormScreen = () => {
             isFilter: false,
             isSort: false,
             sticky: true,
+            minWidth: 40,
             render(value, row) {
               return (
                 <ThreeDotsActions

@@ -135,6 +135,8 @@ const EntranceExamSlots = () => {
             label: 'Action',
             id: 'action',
             isSort: false,
+            minWidth: 50,
+            sticky: true,
             isFilter: false,
             render(value, row) {
               return (

@@ -127,6 +127,8 @@ const ExamType = () => {
             id: 'action',
             label: 'Action',
             isSort: false,
+            minWidth: 40,
+            sticky: true,
             isFilter: false,
             render(value, row) {
               return (
