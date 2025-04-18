@@ -31,6 +31,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -40,6 +43,8 @@ import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+
+import { AttendanceTypeForm } from '../setting/attendance-type';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
@@ -313,6 +318,7 @@ const LeaveRequestForm = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
   const [organization, setOrganization] = useState<string>('');
+  const dialog = useBoolean();
   // State to store all available classes
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store the selected class
@@ -346,6 +352,34 @@ const LeaveRequestForm = () => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
+
+  // Query hook for fetching filtered student data
+  // Returns getStudents function, StudentsData response and loading state
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  // Effect to fetch students when division, class and organization are selected
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
+
+  // Transform students data to include full name
+  const studentOptions = useMemo(
+    () =>
+      StudentsData?.items?.map((item: any) => ({
+        id: item.id,
+        name: `${item.firstName} ${item.lastName}`,
+      })) || [],
+    [StudentsData?.items]
+  );
 
   // Memoized validation schema for the form
   const validationSchema = useMemo(
@@ -399,12 +433,12 @@ const LeaveRequestForm = () => {
           loading={false}
           noOptionsText="No Student Found"
           sx={{ maxWidth: '250px', width: '100%' }}
-          // value={props.formik.values.sponsorStudent}
-          // onChange={(e, value: any) => {
-          //   props.formik.setFieldValue('sponsorStudent', value);
-          // }}
-          options={[]}
-          getOptionLabel={(option: any) => option?.firstName || ''}
+          value={studentOptions.find((s: Record<string, string>) => s.id === student) || null}
+          onChange={(e, value: any) => {
+            setStudent(value?.id);
+          }}
+          options={studentOptions || []}
+          getOptionLabel={(option: any) => option?.name || ''}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -416,7 +450,7 @@ const LeaveRequestForm = () => {
           )}
           renderOption={(prop: any, option: any) => (
             <li {...prop} key={option.id}>
-              {option.firstName}
+              {option.name}
             </li>
           )}
         />
@@ -437,7 +471,7 @@ const LeaveRequestForm = () => {
           onSubmit={(values, { setSubmitting }) => {}}
         >
           {({ errors, touched, setFieldValue, values, submitForm }) => (
-            <Form style={{ padding: '0 8px' }}>
+            <Form>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Field
@@ -456,6 +490,22 @@ const LeaveRequestForm = () => {
                       </MenuItem>
                     ))}
                   </Field>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    textAlign="right"
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      dialog.onTrue();
+                    }}
+                  >
+                    Add Leave Type ?
+                  </Typography>
+                  <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
+                    <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
+                  </CustomDialog>
                 </Grid>
                 <Grid item xs={4}>
                   <FormControlLabel
