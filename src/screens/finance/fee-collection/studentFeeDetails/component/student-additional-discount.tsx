@@ -140,7 +140,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'paidAmount',
               label: 'Gross Fee',
-              filterType: 'number',
+              isFilter: false,
               isSort: false,
               render(value, row) {
                 if (row.paidAmount === 'Total') {
@@ -158,7 +158,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'generalDiscount',
               label: 'General Discount',
-              filterType: 'number',
+              isFilter: false,
               isSort: false,
               render(value, row) {
                 return (
@@ -171,7 +171,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'payableFee',
               label: 'Payable Fee',
-              filterType: 'number',
+              isFilter: false,
               isSort: false,
               render(value, row) {
                 return (
@@ -182,7 +182,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             {
               id: 'refundAmount',
               label: 'Discount Amount',
-              filterType: 'number',
+
               isSort: false,
               isFilter: false,
               render: (value: any, row: any) =>

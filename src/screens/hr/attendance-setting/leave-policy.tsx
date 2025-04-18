@@ -271,7 +271,7 @@ const LeavePolicy = () => {
 };
 export default LeavePolicy;
 
-const LeavePolicyForm = ({
+export const LeavePolicyForm = ({
   handleClose,
   editData,
 }: {
