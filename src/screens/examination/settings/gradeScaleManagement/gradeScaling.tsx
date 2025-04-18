@@ -73,6 +73,10 @@ const GradingScale = () => {
       </Box>
       <CustomizableTable
         tableId="gradesTable"
+        searchFieldProps={{
+          placeholder: 'Search by Total Marks...',
+          label: 'Search by Total Marks...',
+        }}
         noDataText={
           <>
             No Grade Scaling Data Found{' '}

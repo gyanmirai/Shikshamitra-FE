@@ -20,9 +20,13 @@ const AssessmentManagementTable = ({
 }: IAssessmentManagementTableProps) => (
   <CustomizableTable
     tableId="assessment-management-table"
+    searchFieldProps={{
+      placeholder: 'Search by Class, Division, Subject...',
+      label: 'Search by Class, Division, Subject...',
+    }}
     noDataText={
       <>
-        No Lecture Slots Found{' '}
+        No Assessment Data Found{' '}
         <Box
           onClick={() => {
             setOpenDialog(true);
@@ -37,7 +41,7 @@ const AssessmentManagementTable = ({
             },
           }}
         >
-          Create Slots
+          Create Assessment
         </Box>
       </>
     }

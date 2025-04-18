@@ -106,6 +106,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
+        searchFieldProps={{
+          placeholder: 'Search by Student Name, Assignments, Subject, Submission Date...',
+          label: 'Search by Student Name, Assignments, Subject, Submission Date...',
+        }}
+        noDataText="No Submission Data Found Select Above Dropdown Data"
         columns={[
           {
             id: 'checkBox',

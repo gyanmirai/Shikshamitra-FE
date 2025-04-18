@@ -127,6 +127,10 @@ const AssignTeacher = () => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Division, Assigned Teacher...',
+          label: 'Search by Class, Division, Assigned Teacher...',
+        }}
         noDataText={<>No Division Data Found Search By Organization and Class</>}
         columns={[
           {

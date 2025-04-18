@@ -128,6 +128,10 @@ const AssessmentTypeSettings = () => {
         </Button>
       </Box>
       <CustomizableTable
+        searchFieldProps={{
+          placeholder: 'Search by Assessment Type, Description, Status...',
+          label: 'Search by Assessment Type, Description, Status...',
+        }}
         tableId="assessment-type"
         noDataText={
           <>
