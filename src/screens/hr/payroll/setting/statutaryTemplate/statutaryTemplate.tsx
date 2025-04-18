@@ -26,9 +26,11 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const StatutoryTemplate = () => {
   const dialog = useBoolean();
+  const deleteConfirmationDialog = useBoolean();
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -102,7 +104,9 @@ const StatutoryTemplate = () => {
                   actions={(prop) => actions({ ...prop, row })}
                   showEditIcon
                   showDeleteIcon
-                  handleDeleteClick={() => {}}
+                  handleDeleteClick={() => {
+                    deleteConfirmationDialog.onTrue();
+                  }}
                   handleEditClick={() => {}}
                   placement="right-top"
                 />
@@ -162,6 +166,20 @@ const StatutoryTemplate = () => {
           editData={[]}
         />
       </CustomDialog>
+
+      {deleteConfirmationDialog.value && (
+        <ConfirmDialog
+          open={deleteConfirmationDialog.value}
+          onClose={deleteConfirmationDialog.onFalse}
+          title="Delete Item"
+          content=" Are you sure you want to delete?"
+          action={
+            <Button variant="contained" color="error" onClick={() => {}}>
+              Delete
+            </Button>
+          }
+        />
+      )}
     </Box>
   );
 };
