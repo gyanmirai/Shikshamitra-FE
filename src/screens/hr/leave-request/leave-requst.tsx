@@ -10,7 +10,16 @@ import { Form, Field, Formik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Tooltip,
+  Checkbox,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -28,11 +37,15 @@ import {
 
 import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import { LeavePolicyForm } from '../attendance-setting/leave-policy';
 
 import type { TabComponentType } from '.';
 
@@ -136,6 +149,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     },
     []
   );
+
+  const addLeaveTypeDialog = useBoolean();
+
+  const handleCloseLeavePolicy = (_e: any, isSubmit?: boolean) => {
+    addLeaveTypeDialog.onFalse();
+  };
   return (
     <Formik
       enableReinitialize
@@ -248,8 +267,39 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       onChange={(value) => {
                         setFieldValue('leaveType', value);
                       }}
+                      addOtherItemText="Add Leave Type"
+                      addOtherItemOnClick={() => {
+                        addLeaveTypeDialog.onTrue();
+                      }}
                     />
                   </ShakingTextField>
+                  {addLeaveTypeDialog.value && (
+                    <CustomDialog
+                      maxWidth="md"
+                      title={
+                        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+                          <Typography variant="h5">Leave Policy</Typography>
+                          <Tooltip
+                            arrow
+                            placement="right"
+                            title="In this dialog, you can create a leave policy by setting rules for different leave types (e.g., sick, casual), leave entitlements, and approval workflows."
+                          >
+                            <Iconify
+                              icon="lucide:info"
+                              sx={{ cursor: 'pointer' }}
+                              color="info.main"
+                            />
+                          </Tooltip>
+                        </Box>
+                      }
+                      open={addLeaveTypeDialog.value}
+                      handleClose={() => {
+                        addLeaveTypeDialog.onFalse();
+                      }}
+                    >
+                      <LeavePolicyForm handleClose={handleCloseLeavePolicy} editData={[]} />
+                    </CustomDialog>
+                  )}
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
