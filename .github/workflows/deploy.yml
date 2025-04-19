@@ -1,35 +1,39 @@
-name: Deploy Next.js to Azure App Service
+name: Build and deploy Next.js app to Azure Web App
 
 on:
   push:
     branches:
-      - main # or your deployment branch
+      - main
+  workflow_dispatch:
+
+env:
+  APPLICATION_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+  WEBAPP_NAME: 'dev-gyanmirai-fe'
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Node.js version
+        uses: actions/setup-node@v4
         with:
-          node-version: '22' # Or your project's Node.js version
+          node-version: '20.x'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Next.js app
+      - name: npm install, build, and test
         run: |
+          npm install
           npm run build
           mv ./build/static ./build/standalone/build
           mv ./public ./build/standalone
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: dev-gyanmirai-fe
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-name: ${{ env.WEBAPP_NAME }}
+          slot-name: 'Production'
+          publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
           package: ./build/standalone
