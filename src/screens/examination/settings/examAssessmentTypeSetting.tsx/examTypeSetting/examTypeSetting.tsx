@@ -144,6 +144,10 @@ const ExamTypeSettings = () => {
       </Box>
       <CustomizableTable
         tableId="examTypeTable"
+        searchFieldProps={{
+          placeholder: 'Search by Exam Type, Description, Status...',
+          label: 'Search by Exam Type, Description, Status...',
+        }}
         noDataText={
           <>
             No Exam Type Data Found{' '}

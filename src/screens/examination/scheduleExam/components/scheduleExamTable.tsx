@@ -18,6 +18,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 }) => (
   <CustomizableTable
     tableId="schedule-exam-table"
+    searchFieldProps={{
+      placeholder: 'Search by Class, Subject Name...',
+      label: 'Search by Class, Subject Name...',
+    }}
     noDataText={
       <>
         No Exam Data Found{' '}
@@ -76,7 +80,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               handleDeleteClick={() => {
                 onDelete(row as IScheduledExam);
               }}
-              handleEditClick={() => {}}
+              handleEditClick={() => {
+                setOpenDialog(true);
+              }}
               handleViewClick={() => {}}
             />
           );

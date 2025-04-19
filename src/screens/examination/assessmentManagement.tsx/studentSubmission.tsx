@@ -89,6 +89,11 @@ const StudentSubmissions = () => {
       <Scrollbar sx={{ p: 2, height: '500px' }}>
         <CustomizableTable
           tableId="student-submissions"
+          searchFieldProps={{
+            placeholder: 'Search by Student Name, Assignments, Subject...',
+            label: 'Search by Student Name, Assignments, Subject...',
+          }}
+          noDataText="No student submissions found"
           columns={[
             {
               id: 'select',
@@ -154,6 +159,8 @@ const StudentSubmissions = () => {
             {
               id: 'action',
               label: 'Action',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return (
                   <ThreeDotsActions

@@ -6,7 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick }: any) => {
+const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick, handleDelete }: any) => {
   const actions = ({ row, popover }: any) => (
     <Box>
       <MenuList>
@@ -21,6 +21,10 @@ const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick }: any
   return (
     <CustomizableTable
       tableId="quiz-table"
+      searchFieldProps={{
+        placeholder: 'Search by Class, Division, Subject...',
+        label: 'Search by Class, Division, Subject...',
+      }}
       noDataText={
         <>
           No Quiz Data Found{' '}
@@ -95,8 +99,12 @@ const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick }: any
                 placement="right-top"
                 showEditIcon
                 showDeleteIcon
-                handleEditClick={() => {}}
-                handleDeleteClick={() => {}}
+                handleEditClick={() => {
+                  addQuizDialog.onTrue();
+                }}
+                handleDeleteClick={() => {
+                  handleDelete(row.id);
+                }}
               />
             );
           },
