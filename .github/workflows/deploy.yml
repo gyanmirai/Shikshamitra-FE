@@ -26,6 +26,7 @@ jobs:
         run: |
           npm install
           npm run build
+          mkdir -p ./build/standalone/build
           mv ./build/static ./build/standalone/build
           mv ./public ./build/standalone
 
