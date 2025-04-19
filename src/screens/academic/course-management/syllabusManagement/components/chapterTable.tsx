@@ -17,9 +17,13 @@ const ChapterTable = ({
 }: IChapterTableProps) => (
   <CustomizableTable
     tableId="chapterTable"
+    searchFieldProps={{
+      placeholder: 'Search by Chapter No, Chapter Name, Secondary Teacher',
+      label: 'Search by Chapter No, Chapter Name, Secondary Teacher',
+    }}
     noDataText={
       <>
-        No Inquiry Found{' '}
+        No Chapters Found{' '}
         <Box
           onClick={() => {
             addChapterDialog.onTrue();

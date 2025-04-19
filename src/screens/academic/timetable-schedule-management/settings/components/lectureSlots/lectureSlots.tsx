@@ -69,6 +69,10 @@ const LectureSlots = () => {
       </Box>
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Period Slots, Break Slots',
+          label: 'Search by Class, Period Slots, Break Slots',
+        }}
         noDataText={
           <>
             No Lecture Slots Found{' '}
@@ -107,7 +111,9 @@ const LectureSlots = () => {
                   showEditIcon
                   showViewIcon
                   handleViewClick={() => {}}
-                  handleEditClick={() => {}}
+                  handleEditClick={() => {
+                    createSlotsDialog.onTrue();
+                  }}
                   placement="right-top"
                 />
               );
@@ -135,9 +141,8 @@ const LectureSlots = () => {
           },
         ]}
       />
-
       <CustomDialog
-        title="Create Slots"
+        title="Lecture Slots"
         open={createSlotsDialog.value}
         handleClose={createSlotsDialog.onFalse}
         maxWidth="md"

@@ -185,6 +185,10 @@ const CourseProgress = (props: TabComponentType) => {
           </Typography>
           {/* Table showing chapter-wise progress details */}
           <CustomizableTable
+            searchFieldProps={{
+              placeholder: 'Search by Chapter Name, Teacher Name, Progress...',
+              label: 'Search by Chapter Name, Teacher Name, Progress...',
+            }}
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
@@ -255,7 +259,7 @@ const CourseProgress = (props: TabComponentType) => {
               },
             ]}
             data={selectedCourse.details}
-          />
+          />{' '}
         </Box>
       )}
       {/* Dialog for updating progress */}

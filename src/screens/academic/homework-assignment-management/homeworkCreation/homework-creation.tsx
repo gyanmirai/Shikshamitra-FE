@@ -410,7 +410,9 @@ const HomeworkCreation = (props: TabComponentType) => {
           showViewIcon
           showEditIcon
           showThreeDots={false}
-          handleEditClick={() => {}}
+          handleEditClick={() => {
+            setOpen(true);
+          }}
           handleViewClick={() => {
             submissionDialog.onTrue();
           }}
@@ -515,7 +517,9 @@ const HomeworkCreation = (props: TabComponentType) => {
           placement="right-top"
           showViewIcon
           showEditIcon
-          handleEditClick={() => {}}
+          handleEditClick={() => {
+            setOpen(true);
+          }}
           handleViewClick={() => {
             submissionDialog.onTrue();
           }}
@@ -694,6 +698,10 @@ const HomeworkCreation = (props: TabComponentType) => {
           </Box>
           <CustomizableTable
             tableId="homework-assignment-management"
+            searchFieldProps={{
+              placeholder: 'Search by Title, Type , Creation Date...',
+              label: 'Search by Title, Type, Creation Date...',
+            }}
             noDataText={
               <>
                 {view === 'homework' ? 'No Homework Created' : 'No Assignment Created'}
@@ -851,6 +859,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
+        searchFieldProps={{
+          placeholder: 'Search by Student Name, Assignments, Subject, Submission Date...',
+          label: 'Search by Student Name, Assignments, Subject, Submission Date...',
+        }}
         noDataText={<>No Submission Data Found Select Above Dropdown Data </>}
         columns={[
           {
@@ -891,16 +903,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               );
             },
           },
-          // {
-          //   id: 'select',
-          //   label: 'Select',
-          //   render: (value, row: any) => (
-          //     <Checkbox
-          //       checked={selectedStudents.includes(row.id)}
-          //       onChange={() => handleSelectStudent(row.id)}
-          //     />
-          //   ),
-          // },
           { id: 'studentName', label: 'Student Name', minWidth: '180px', align: 'left' },
           { id: 'assignments', label: 'Assignments' },
           { id: 'subject', label: 'Subject' },

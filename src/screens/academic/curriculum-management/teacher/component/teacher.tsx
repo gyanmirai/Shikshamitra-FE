@@ -122,7 +122,6 @@ const Teacher = ({
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <CustomSelect
           label="Class"
@@ -157,6 +156,10 @@ const Teacher = ({
         // showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
         noDataText={<>No Teachers Data Found Select Class and Division</>}
+        searchFieldProps={{
+          placeholder: 'Search by Subject, Assigned Teacher',
+          label: 'Search by Subject, Assigned Teacher',
+        }}
         columns={[
           {
             id: 'subject',
@@ -203,7 +206,7 @@ const Teacher = ({
           },
         ]}
         data={filteredData}
-      />
+      />{' '}
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}
