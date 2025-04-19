@@ -30,6 +30,31 @@ const FirstTrialCertificate = () => {
       </Box>
       <CustomizableTable
         tableId="first-trial-certificate"
+        noDataText={
+          <>
+            No First Trial Certificate Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create First Trial
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Medium, Organization, Class...',
+          label: 'Search by Medium, Organization, Class...',
+        }}
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },
@@ -38,7 +63,13 @@ const FirstTrialCertificate = () => {
           { id: 'grNo', label: 'GR.No.', align: 'left', minWidth: '180px' },
           { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
 
-          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
+          {
+            id: 'creationDate',
+            label: 'Creation Date',
+            align: 'left',
+            minWidth: '180px',
+            filterType: 'date',
+          },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}

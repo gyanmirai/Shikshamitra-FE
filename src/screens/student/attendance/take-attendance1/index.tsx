@@ -459,6 +459,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent.length !== 0}
         tableId="student-attendance-list"
+        noDataText="No Students Found"
         isSearch={false}
         isLoading={isLoading}
         rowProps={(tableData: any) => ({
@@ -473,6 +474,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           {
             id: 'checkBox',
             label: ' ',
+            minWidth: '60px',
+            sticky: true,
             isSort: false,
             isFilter: false,
             renderColumn: (value) => (
@@ -549,11 +552,12 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'percentage',
             label: 'Attendance Percentage',
             align: 'left',
-            minWidth: '230px',
+            minWidth: '210px',
           },
           {
             id: 'isPresent',
             label: 'Attendance',
+            minWidth: '130px',
             isSort: false,
             render(value, row) {
               return isSaved.value ? (

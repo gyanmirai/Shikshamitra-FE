@@ -149,6 +149,7 @@ const LeaveHistory = (props: TabComponentType) => {
             id: 'checkBox',
             align: 'left',
             minWidth: '60px',
+            sticky: true,
             isSort: false,
             isFilter: false,
             label: '',
@@ -192,7 +193,7 @@ const LeaveHistory = (props: TabComponentType) => {
             label: 'Start Date',
             id: 'start',
             filterType: 'date',
-            minWidth: '100px',
+            minWidth: '120px',
           },
           {
             label: 'End Date',
@@ -203,6 +204,7 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Half Day',
             id: 'isHalfDay',
+            minWidth: '100px',
             render(value, row) {
               return value ? 'Yes' : 'No';
             },
@@ -214,6 +216,7 @@ const LeaveHistory = (props: TabComponentType) => {
           {
             label: 'Rejection Reason',
             id: 'rejectionReason',
+            minWidth: '200px',
             render(value, row) {
               return value || '-';
             },

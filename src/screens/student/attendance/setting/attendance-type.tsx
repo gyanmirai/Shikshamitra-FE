@@ -56,11 +56,32 @@ const AttendanceType = () => {
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
         <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained" size="small">
-          Attendance Type
+          Leave Type
         </Button>
       </Box>
       <CustomizableTable
         tableId="attendance-type"
+        noDataText={
+          <>
+            No Leave Type Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Leave Type
+            </Box>
+          </>
+        }
         searchFieldProps={{
           placeholder: 'Search by Type, Color...',
           label: 'Search by Type, Color...',

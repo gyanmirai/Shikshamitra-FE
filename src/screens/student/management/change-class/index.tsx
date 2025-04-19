@@ -108,6 +108,7 @@ const ChangeClassScreen = ({
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudent.length !== 0}
           tableId="change-class-table"
+          noDataText="No Student data available"
           isLoading={isLoading}
           searchFieldProps={{
             placeholder: 'Search by Sr. No., GR No...',
@@ -121,7 +122,10 @@ const ChangeClassScreen = ({
             {
               id: 'checkBox',
               label: ' ',
+              minWidth: '60px',
+              sticky: true,
               isSort: false,
+              isFilter: false,
               renderColumn: (value) => (
                 <Checkbox
                   checked={tableData.length === selectedStudent.length}
@@ -152,8 +156,8 @@ const ChangeClassScreen = ({
               },
             },
             // { id: 'srNo', label: 'Sr. No.' },
-            { id: 'grNoRecord', label: 'GR No.' },
-            { id: 'name', label: 'Name' },
+            { id: 'grNoRecord', label: 'GR No.', align: 'left' },
+            { id: 'name', label: 'Name', align: 'left' },
             // { id: 'division', label: 'Division' },
             // {
             //   id: 'feeStatus',
@@ -172,6 +176,9 @@ const ChangeClassScreen = ({
             {
               id: 'standardId',
               label: '',
+              align: 'right',
+              isFilter: false,
+              isSort: false,
               renderColumn(value) {
                 return (
                   <TableClassDropDown
@@ -237,7 +244,7 @@ const TableClassDropDown = ({ allClass, classes, onChange }: ITableClassDropDown
     onChange={onChange}
     labelKey="name"
     valueKey="id"
-    formControlProps={{ sx: { width: '150px', textAlign: 'left' } }}
+    formControlProps={{ sx: { width: '100%', minWidth: '220px', textAlign: 'left' } }}
     onClick={(e) => e.stopPropagation()}
   />
 );
