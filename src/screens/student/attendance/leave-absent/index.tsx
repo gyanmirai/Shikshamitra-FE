@@ -3,10 +3,11 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
 import { Form, Field, Formik, useFormik } from 'formik';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
@@ -30,12 +31,17 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+import { useAddStudentLeaveMutation } from 'src/redux/student/student-leave/student-leave-api';
+import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -45,6 +51,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
+
+import type { IFormValues, ILeaveAbsent } from './type';
+import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
@@ -284,7 +293,7 @@ const LeaveAndAbsentScreen = () => {
           </Box>
         }
       >
-        <LeaveRequestForm />
+        <LeaveRequestForm handleClose={dialog.onFalse} />
       </CustomDialog>
       <CustomDialog
         title="Remarks"
@@ -307,13 +316,12 @@ const LeaveAndAbsentScreen = () => {
 
 export default LeaveAndAbsentScreen;
 
-const leaveTypes = [
-  { value: 'vacation', label: 'Vacation' },
-  { value: 'sick', label: 'Sick Leave' },
-  { value: 'personal', label: 'Personal Leave' },
-];
-
-const LeaveRequestForm = () => {
+// Configuration for file upload component
+const uploadProps = {
+  multiple: true,
+  accept: { 'image/*': [] },
+};
+const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -328,7 +336,7 @@ const LeaveRequestForm = () => {
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
   // State to store the selected student
-  const [student, setStudent] = useState('');
+  const [student, setStudent] = useState<IInquiryData | null>(null);
   // Selector to get the current board from Redux store
   const {
     currentBoard,
@@ -396,6 +404,34 @@ const LeaveRequestForm = () => {
     []
   );
 
+  const [addLeaveRequest] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddStudentLeaveMutation,
+  });
+  // Fetch all attendance types
+  const { data: attendanceTypes, isLoading: isAttandanceTypeLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
+  });
+  // Handler to remove a single file attachment
+  const handleRemoveFile = useCallback(
+    (
+      inputFile: File | string,
+      values: IFormValues,
+      setFieldValue: (field: string, value: any) => void
+    ) => {
+      setFieldValue('docs', '');
+    },
+    []
+  );
+
+  // Handler to remove all file attachments
+  const handleRemoveAllFiles = useCallback(
+    (values: IFormValues, setFieldValue: (field: string, value: any) => void) => {
+      setFieldValue('docs', '');
+    },
+    []
+  );
   return (
     <Box p={2}>
       <Box display="flex" my={2} gap={2} flexWrap="wrap">
@@ -433,12 +469,12 @@ const LeaveRequestForm = () => {
           loading={false}
           noOptionsText="No Student Found"
           sx={{ maxWidth: '250px', width: '100%' }}
-          value={studentOptions.find((s: Record<string, string>) => s.id === student) || null}
+          value={student}
           onChange={(e, value: any) => {
-            setStudent(value?.id);
+            setStudent(value);
           }}
-          options={studentOptions || []}
-          getOptionLabel={(option: any) => option?.name || ''}
+          options={StudentsData?.items || []}
+          getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -450,14 +486,14 @@ const LeaveRequestForm = () => {
           )}
           renderOption={(prop: any, option: any) => (
             <li {...prop} key={option.id}>
-              {option.name}
+              {option.firstName || ''} {option.lastName || ''}
             </li>
           )}
         />
       </Box>
 
-      {student && (
-        <Formik
+      {student?.id && (
+        <Formik<IFormValues>
           initialValues={{
             leaveType: '',
             description: '',
@@ -466,9 +502,70 @@ const LeaveRequestForm = () => {
             isHalfDay: false,
             rejectionReason: '',
             status: null,
+            docs: '',
           }}
-          validationSchema={validationSchema}
-          onSubmit={(values, { setSubmitting }) => {}}
+          validationSchema={Yup.object().shape({
+            leaveType: Yup.string().required('Leave type is required'),
+            isHalfDay: Yup.boolean(),
+            startDate: Yup.date().required('Start date is required'),
+            endDate: Yup.string()
+              .nullable()
+              .test('endDate', '', (value, context) => {
+                const { isHalfDay } = context.parent;
+                const { startDate } = context.parent;
+                if (isHalfDay) return true;
+                if (startDate && value) {
+                  const fullStartDate = dayjs(startDate);
+                  const endDate = dayjs(value);
+
+                  const isAfter = endDate.isAfter(fullStartDate);
+
+                  return (
+                    isAfter || context.createError({ message: 'End date must be after start date' })
+                  );
+                }
+                if (!value && !isHalfDay) {
+                  return context.createError({ message: 'End date is required' });
+                }
+                return true;
+              }),
+            description: Yup.string().required('Description is required'),
+            status: Yup.string().nullable(),
+            rejectionReason: Yup.string().test(
+              'rejectionReason',
+              'Rejection reason is required',
+              (value, context) => {
+                const { status } = context.parent;
+                if (status === EmployeeLeaveStatusType.Rejected) {
+                  return (
+                    !!value || context.createError({ message: 'Rejection reason is required' })
+                  );
+                }
+                return true;
+              }
+            ),
+            // color: Yup.string().required('Color is required'),
+          })}
+          onSubmit={async (values, { setSubmitting }) => {
+            try {
+              const res = await addLeaveRequest({
+                studentId: student?.id,
+                leaveTypeId: values.leaveType,
+                halfDay: values.isHalfDay,
+                startDate: dateConvertor(values?.startDate?.format(dateFormat) || ''),
+                ...(!values.isHalfDay
+                  ? {
+                      endDate: dateConvertor(values?.endDate?.format(dateFormat) || ''),
+                    }
+                  : {}),
+                description: values.description,
+                attachment: values.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+              }).unwrap();
+              handleClose();
+            } catch (err) {
+              console.log(err);
+            }
+          }}
         >
           {({ errors, touched, setFieldValue, values, submitForm }) => (
             <Form>
@@ -484,9 +581,13 @@ const LeaveRequestForm = () => {
                     error={touched.leaveType && errors.leaveType}
                     helperText={touched.leaveType && errors.leaveType}
                   >
-                    {leaveTypes.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                    {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
+                      <MenuItem
+                        key={option.type}
+                        value={option.id}
+                        sx={{ bgcolor: `${option.color}20` }}
+                      >
+                        {option.type}
                       </MenuItem>
                     ))}
                   </Field>
@@ -552,7 +653,26 @@ const LeaveRequestForm = () => {
                     />
                   </Grid>
                 )}
-                <Grid item xs={12}>
+                <Grid item xs={6}>
+                  <Upload
+                    {...uploadProps}
+                    thumbnail
+                    value={values.docs}
+                    onDrop={(acceptedFiles) => {
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => {
+                        const base64String = reader.result;
+                        setFieldValue('docs', base64String);
+                      };
+                    }}
+                    multiple={false}
+                    onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
+                    onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                  />
+                </Grid>
+                <Grid item xs={6}>
                   <Editor
                     onChange={(value) => {
                       setFieldValue('description', value);
