@@ -130,7 +130,7 @@ const RegistrationTable = ({
         tableId="student-registration-table"
         noDataText={
           <>
-            No Rubric Data Found{' '}
+            No Registration Data Found{' '}
             <Box
               onClick={() => {
                 formDialog.onTrue();
@@ -152,8 +152,8 @@ const RegistrationTable = ({
         }
         isLoading={isLoading}
         searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry number, Student name, Class..',
-          label: 'Search by  Form No, Inquiry number, Student name, Class..',
+          placeholder: 'Search by Form No, Inquiry number, Student name..',
+          label: 'Search by  Form No, Inquiry number, Student name..',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -163,8 +163,9 @@ const RegistrationTable = ({
           {
             id: 'checkBox',
             align: 'left',
-            minWidth: '60px',
+            minWidth: '30px',
             isSort: false,
+            sticky: true,
             isFilter: false,
             label: '',
             renderColumn() {
@@ -196,16 +197,17 @@ const RegistrationTable = ({
               );
             },
           },
-          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
             label: 'Inquiry Number',
             minWidth: '162px',
             isFilter: true,
             filterType: 'string',
+            align: 'left',
           },
-          { id: 'standard.name', label: 'Class' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
           {
             id: 'dobValue',
             label: 'DOB',
@@ -214,7 +216,7 @@ const RegistrationTable = ({
             isFilter: true,
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age' },
+          { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
             label: 'DOI',
@@ -223,23 +225,28 @@ const RegistrationTable = ({
             filterType: 'date',
             isDateRangeFilter: true,
           },
-          { id: 'genderValue', label: 'Gender' },
-          { id: 'address', label: 'Address', minWidth: '120px' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
-          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          { id: 'genderValue', label: 'Gender', align: 'left' },
+          { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px', align: 'left' },
+          {
+            id: 'alternativeContactNumber',
+            label: 'Alternate Contact Details',
+            minWidth: '232px',
+            align: 'left',
+          },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
             label: 'Inquiry Preferences',
             minWidth: '200px',
+            align: 'left',
           },
 
-          { id: 'educationMedium.name', label: 'Organization' },
-
-          // { id: 'EmployeeDesignation', label: 'Role' },
+          { id: 'educationMedium.name', label: 'Organization', align: 'left' },
           {
             id: 'percentage',
             label: 'Progress',
+            align: 'left',
             filterType: 'number',
             render(value, row) {
               return (
@@ -265,22 +272,12 @@ const RegistrationTable = ({
               );
             },
           },
-          // {
-          //   id: 'StatusName',
-          //   label: 'Status',
-          //   render(value, row) {
-          //     return (
-          //       <Label variant="soft" color={value === 'Active' ? 'success' : 'error'}>
-          //         {value}
-          //       </Label>
-          //     );
-          //   },
-          // },
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            minWidth: 40,
             sticky: true,
             render(value, row) {
               return (

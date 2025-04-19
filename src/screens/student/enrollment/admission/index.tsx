@@ -622,8 +622,8 @@ const AdmissionScreen = () => {
         tableId="student-enrollment-admission-table"
         noDataText={<>No Admission Data Found</>}
         searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry number, Student name, Class..',
-          label: 'Search by  Form No, Inquiry number, Student name, Class..',
+          placeholder: 'Search by Form No, Inquiry number, Student names..',
+          label: 'Search by  Form No, Inquiry number, Student name..',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -636,6 +636,7 @@ const AdmissionScreen = () => {
             align: 'left',
             minWidth: '60px',
             isSort: false,
+            sticky: true,
             isFilter: false,
             label: '',
             renderColumn() {
@@ -667,7 +668,7 @@ const AdmissionScreen = () => {
               );
             },
           },
-          { id: 'formNumber', label: 'Form No', minWidth: '110px' },
+          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
             label: 'Inquiry Number',
@@ -675,55 +676,76 @@ const AdmissionScreen = () => {
             minWidth: '162px',
             isFilter: true,
             filterType: 'string',
+            align: 'left',
           },
-          { id: 'standard.name', label: 'Class' },
-          { id: 'division.name', label: 'Division' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px' },
+          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'division.name', label: 'Division', align: 'left' },
+          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
           {
             id: 'dobValue',
             label: 'DOB',
-            minWidth: '120px',
+            minWidth: '80px',
             align: 'left',
             isFilter: true,
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age' },
+          { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
             label: 'DOI',
-            minWidth: '120px',
+            minWidth: '100px',
             align: 'left',
             isDateRangeFilter: true,
             filterType: 'date',
           },
-          { id: 'genderValue', label: 'Gender' },
-          { id: 'address', label: 'Address', minWidth: '120px' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px' },
-          { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '232px' },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px' },
+          { id: 'genderValue', label: 'Gender', align: 'left' },
+          { id: 'address', label: 'Address', minWidth: '100px', align: 'left' },
+          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '150px', align: 'left' },
+          {
+            id: 'alternativeContactNumber',
+            label: 'Alternate Contact Details',
+            minWidth: '220px',
+            align: 'left',
+          },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
             label: 'Inquiry Preferences',
             minWidth: '200px',
+            align: 'left',
           },
 
-          { id: 'educationMedium.name', label: 'Medium' },
+          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
 
           { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
           // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
-          { id: 'Name', label: 'Name' },
-          { id: 'Code', label: 'Code' },
-          { id: 'class', label: 'Class' },
+          { id: 'Name', label: 'Name', align: 'left' },
+          { id: 'Code', label: 'Code', align: 'left' },
+          { id: 'class', label: 'Class', align: 'left' },
           // { id: 'Organization', label: 'Organization' },
-          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px' },
-          { id: 'totalAmount', label: 'Total Amount', minWidth: '135px', filterType: 'number' },
-          { id: 'paidAmount', label: 'Paid Amount', minWidth: '125px', filterType: 'number' },
+          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px', align: 'left' },
+          {
+            id: 'totalAmount',
+            label: 'Total Amount',
+            minWidth: '135px',
+            filterType: 'number',
+            align: 'left',
+          },
+          {
+            id: 'paidAmount',
+            label: 'Paid Amount',
+            minWidth: '125px',
+            filterType: 'number',
+            align: 'left',
+          },
           {
             id: 'feeStatusType',
             label: 'Payment Status',
+            minWidth: '150px',
             filterType: 'enum',
             enumOptions: AdmissionPaymentStatusOptions,
+            align: 'left',
             render(value, row) {
               const color = AdmissionPaymentStatusTypeColors[
                 value as Partial<AdmissionPaymentStatusType>
@@ -742,6 +764,7 @@ const AdmissionScreen = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            minWidth: 70,
             render(value, row) {
               return (
                 <ThreeDotsActions

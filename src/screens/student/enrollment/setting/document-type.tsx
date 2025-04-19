@@ -156,6 +156,8 @@ const StudentDocumentType = () => {
             label: 'Action',
             isSort: false,
             isFilter: false,
+            minWidth: 50,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions

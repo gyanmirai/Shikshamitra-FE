@@ -118,6 +118,8 @@ const InquiryPreference = () => {
             label: 'Action',
             isFilter: false,
             isSort: false,
+            sticky: true,
+            minWidth: 40,
             render(value, row) {
               return (
                 <ThreeDotsActions
