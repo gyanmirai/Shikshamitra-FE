@@ -48,6 +48,10 @@ const WeeklyLectures = () => {
       </Box>
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Total Lectures',
+          label: 'Search by Class, Total Lectures',
+        }}
         noDataText={
           <>
             No Create Number Of Lectures Found{' '}

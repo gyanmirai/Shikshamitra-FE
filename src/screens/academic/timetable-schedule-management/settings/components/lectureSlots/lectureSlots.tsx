@@ -69,6 +69,10 @@ const LectureSlots = () => {
       </Box>
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Period Slots, Break Slots',
+          label: 'Search by Class, Period Slots, Break Slots',
+        }}
         noDataText={
           <>
             No Lecture Slots Found{' '}
@@ -135,7 +139,6 @@ const LectureSlots = () => {
           },
         ]}
       />
-
       <CustomDialog
         title="Create Slots"
         open={createSlotsDialog.value}

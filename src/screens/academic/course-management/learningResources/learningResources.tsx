@@ -287,6 +287,10 @@ const LearningResources = (props: TabComponentType) => {
             (view === 'list' ? (
               <CustomizableTable
                 tableId="learning-resources"
+                searchFieldProps={{
+                  placeholder: 'Search by Resource Title, Type, Class, Subject',
+                  label: 'Search by Resource Title, Type, Class, Subject',
+                }}
                 noDataText={
                   <>
                     No Learning Resource Found{' '}

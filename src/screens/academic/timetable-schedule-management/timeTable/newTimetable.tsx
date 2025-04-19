@@ -465,7 +465,11 @@ const TimeTableGrid = (props: TabComponentType) => {
           />
           <CustomizableTable
             tableId="timetable-table"
-            noDataText={<>No Time Table Data Found</>}
+            searchFieldProps={{
+              placeholder: 'Search by Division, Status',
+              label: 'Search by Division, Status',
+            }}
+            noDataText="No Time Table Data Found"
             columns={[
               { id: 'division', label: 'Division' },
               {
@@ -540,7 +544,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                 status: 'Publish',
               },
             ]}
-          />
+          />{' '}
         </>
       )}
       {open && (
