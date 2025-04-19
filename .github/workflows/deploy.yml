@@ -22,7 +22,9 @@ jobs:
         run: npm install
 
       - name: Build Next.js app
-        run: npm run build:linux
+        run: |
+          chmod +x ./build-and-copy.sh
+          npm run build:linux
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
