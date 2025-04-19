@@ -13,6 +13,7 @@ import activeQuizTableData from 'src/json/academic/examination/activeQuizTableDa
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import QuizPortal from '../quizPortal';
 import QuizTable from './components/activeQuizTable';
@@ -23,6 +24,8 @@ const ActiveQuiz = () => {
   const [tableData, setTableData] = useState(activeQuizTableData);
   // Dialog state for adding new quiz
   const addQuizDialog = useBoolean();
+  const deleteQuizDialog = useBoolean();
+  const [selectedQuizData, setSelectedQuizData] = useState('');
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Dialog state for attempting quiz
@@ -80,6 +83,10 @@ const ActiveQuiz = () => {
       ) : (
         <QuizTable
           addQuizDialog={addQuizDialog}
+          handleDelete={(id: string) => {
+            deleteQuizDialog.onTrue();
+            setSelectedQuizData(id);
+          }}
           data={tableData}
           onTogglePublish={handleTogglePublish}
           onAttemptClick={handleAttemptClick}
@@ -94,6 +101,20 @@ const ActiveQuiz = () => {
       >
         <AddNewQuiz onClose={handleClose} />
       </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteQuizDialog.value}
+        onClose={() => {
+          deleteQuizDialog.onFalse();
+        }}
+        title="Delete"
+        content="Are you sure want to Delete?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

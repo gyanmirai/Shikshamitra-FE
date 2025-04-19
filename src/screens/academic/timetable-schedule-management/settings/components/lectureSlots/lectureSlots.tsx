@@ -107,7 +107,9 @@ const LectureSlots = () => {
                   showEditIcon
                   showViewIcon
                   handleViewClick={() => {}}
-                  handleEditClick={() => {}}
+                  handleEditClick={() => {
+                    createSlotsDialog.onTrue();
+                  }}
                   placement="right-top"
                 />
               );
@@ -137,7 +139,7 @@ const LectureSlots = () => {
       />
 
       <CustomDialog
-        title="Create Slots"
+        title="Lecture Slots"
         open={createSlotsDialog.value}
         handleClose={createSlotsDialog.onFalse}
         maxWidth="md"

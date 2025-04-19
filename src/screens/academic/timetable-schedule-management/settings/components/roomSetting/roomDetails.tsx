@@ -106,10 +106,13 @@ const RoomDetails = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       dialog.onFalse();
-
+      setIsEdit(false);
+      setSelectedEntry(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       dialog.onFalse();
+      setIsEdit(false);
+      setSelectedEntry(null);
     }
   };
 

@@ -8,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import rubricTableData from 'src/json/academic/examination/rubricTableData.json';
 
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -15,6 +16,7 @@ import RubricCreationForm from './rubricCreationForm';
 
 const RubricManagement = () => {
   const dialog = useBoolean();
+  const deleteDialog = useBoolean();
   const [rubricData, setRubricData] = useState(rubricTableData);
   return (
     <Box>
@@ -103,8 +105,12 @@ const RubricManagement = () => {
                   showViewIcon
                   showEditIcon
                   showDeleteIcon
-                  handleDeleteClick={() => {}}
-                  handleEditClick={() => {}}
+                  handleDeleteClick={() => {
+                    deleteDialog.onTrue();
+                  }}
+                  handleEditClick={() => {
+                    dialog.onTrue();
+                  }}
                   handleViewClick={() => {}}
                 />
               );
@@ -122,6 +128,20 @@ const RubricManagement = () => {
       >
         <RubricCreationForm />
       </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          deleteDialog.onFalse();
+        }}
+        title="Delete"
+        content="Are you sure want to Delete?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

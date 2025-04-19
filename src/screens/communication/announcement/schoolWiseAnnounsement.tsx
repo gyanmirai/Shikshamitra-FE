@@ -19,7 +19,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { Label } from 'src/components/label';
 import SchoolWiseAnnouncementInitialData from 'src/json/communication/announcement/SchoolWiseAnnouncementInitialData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -223,7 +222,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         onClose={() => {
           handleCloseDialog();
         }}
-        title="Delete"
+        title="Publish"
         content="Are you sure want to Publish?"
         action={
           <Button

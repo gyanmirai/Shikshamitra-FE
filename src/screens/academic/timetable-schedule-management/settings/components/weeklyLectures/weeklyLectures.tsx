@@ -87,7 +87,9 @@ const WeeklyLectures = () => {
                   handleViewClick={() => {}}
                   showEditIcon
                   showThreeDots={false}
-                  handleEditClick={() => {}}
+                  handleEditClick={() => {
+                    createLectureNumberDialog.onTrue();
+                  }}
                   placement="right-top"
                 />
               );
@@ -119,7 +121,7 @@ const WeeklyLectures = () => {
       />
 
       <CustomDialog
-        title="Create Number of Lectures"
+        title="Number of Lectures"
         open={createLectureNumberDialog.value}
         handleClose={createLectureNumberDialog.onFalse}
         maxWidth="md"

@@ -410,7 +410,9 @@ const HomeworkCreation = (props: TabComponentType) => {
           showViewIcon
           showEditIcon
           showThreeDots={false}
-          handleEditClick={() => {}}
+          handleEditClick={() => {
+            setOpen(true);
+          }}
           handleViewClick={() => {
             submissionDialog.onTrue();
           }}
@@ -515,7 +517,9 @@ const HomeworkCreation = (props: TabComponentType) => {
           placement="right-top"
           showViewIcon
           showEditIcon
-          handleEditClick={() => {}}
+          handleEditClick={() => {
+            setOpen(true);
+          }}
           handleViewClick={() => {
             submissionDialog.onTrue();
           }}
