@@ -224,6 +224,7 @@ const RollNoGenerationScreen = ({
                 isSort: false,
                 isFilter: false,
                 label: '',
+                sticky: true,
                 renderColumn() {
                   return (
                     <Checkbox
@@ -260,7 +261,10 @@ const RollNoGenerationScreen = ({
               {
                 id: 'rollNo',
                 label: 'Roll No.',
+                isFilter: false,
+                isSort: false,
                 minWidth: 250,
+                align: 'left',
                 render(value, row) {
                   return (
                     <TextField

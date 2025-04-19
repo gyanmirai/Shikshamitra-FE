@@ -160,7 +160,7 @@ const AttendanceRule = () => {
           {
             label: 'Half Day Threshold Unit',
             id: 'halfDayThresholdUnitValue',
-            minWidth: '200px',
+            minWidth: '230px',
           },
           {
             label: 'Enable Notification',
@@ -173,7 +173,7 @@ const AttendanceRule = () => {
             id: 'action',
             isFilter: false,
             isSort: false,
-            minWidth: 130,
+            minWidth: 90,
             sticky: true,
             render(value, row) {
               return (

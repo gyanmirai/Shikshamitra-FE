@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
@@ -33,6 +34,11 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
@@ -161,6 +167,8 @@ const LeaveAndAbsentScreen = () => {
             label: ' ',
             isSort: false,
             isFilter: false,
+            minWidth: '60px',
+            sticky: true,
             renderColumn: (value) => (
               <Checkbox
                 checked={tableData.length === selectedStudent.length}
@@ -226,23 +234,21 @@ const LeaveAndAbsentScreen = () => {
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: EmployeeLeaveStatusOptions,
             render(value, row) {
-              return (
-                <Label
-                  color={
-                    value === 'Approved' ? 'success' : value === 'Pending' ? 'warning' : 'error'
-                  }
-                >
-                  {value}
-                </Label>
-              );
+              const color = EmployeeLeaveStatusTypeColor[
+                value as EmployeeLeaveStatusType
+              ] as LabelColor;
+
+              return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
           {
             id: 'actions',
             label: 'Actions',
             sticky: true,
-            minWidth: 130,
+            minWidth: 80,
             isSort: false,
             isFilter: false,
             render(value, row) {
