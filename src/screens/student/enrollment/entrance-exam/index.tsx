@@ -278,6 +278,7 @@ const EntranceExamScreen = () => {
               align: 'left',
               minWidth: '60px',
               isSort: false,
+              sticky: true,
               isFilter: false,
               label: '',
               renderColumn() {
@@ -310,38 +311,48 @@ const EntranceExamScreen = () => {
               },
             },
             { id: 'date', label: 'Date', filterType: 'date' },
-            { id: 'examTime', label: 'Exam Time' },
+            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
             {
               id: 'name',
               label: 'Student',
+              align: 'left',
             },
             {
               id: 'medium',
               label: 'Medium',
+              align: 'left',
             },
             {
               id: 'class',
               label: 'Class',
+              align: 'left',
             },
             {
               id: 'passingMark',
               label: 'Passing Marks',
               filterType: 'number',
+              align: 'left',
+              minWidth: 140,
             },
             {
               id: 'totalMarks',
               label: 'Total Marks',
               filterType: 'number',
+              align: 'left',
+              minWidth: 140,
             },
             {
               id: 'obtainMarks',
               label: 'Obtained Marks',
               filterType: 'number',
+              align: 'left',
+              minWidth: 150,
             },
             {
               id: 'percentage',
               label: 'Percentage',
               filterType: 'number',
+              align: 'left',
               render(value, row) {
                 return `${value}%`;
               },
@@ -351,6 +362,7 @@ const EntranceExamScreen = () => {
               label: 'Status',
               filterType: 'enum',
               enumOptions: EntranceExamStatusOptions,
+              align: 'left',
               render(value, row) {
                 const color = EntranceExamStatusTypeColors[
                   value as EntranceExamStatusType
