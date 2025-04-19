@@ -23,8 +23,9 @@ jobs:
 
       - name: Build Next.js app
         run: |
-          chmod +x ./build-and-copy.sh
-          npm run build:linux
+          npm run build
+          mv ./build/static ./build/standalone/build
+          mv ./public ./build/standalone
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
