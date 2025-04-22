@@ -53,6 +53,7 @@ const HostelConfiguration = () => {
         { name: 'Hostel Configuration', href: '' },
       ];
 
+  // Handler function for closing the hostel form, optionally handling form submission and changes.
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setOpen(false);
