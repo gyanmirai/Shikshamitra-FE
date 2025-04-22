@@ -14,6 +14,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelForm from './components/hostelForm';
@@ -22,13 +23,21 @@ import HostelTable from './components/hostelTable';
 import type { IHostelData } from './components/type';
 
 const HostelConfiguration = () => {
+  // State for managing the visibility of the add new hostel dialog.
   const addNewHostelDialog = useBoolean();
+  // State for storing the selected hostel data for editing or deleting.
   const [selectedHostel, setSelectedHostel] = useState<IHostelData | null>(null);
+  // State for managing the visibility of the hostel form.
   const [open, setOpen] = useState(false);
+  // Selector for retrieving the 'isChanges' state from the Redux store.
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // State for managing the visibility of the delete confirmation dialog.
   const deleteDialog = useBoolean();
+  // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
+  // State for storing the hostel data.
   const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
+  // Dynamically generated links for the breadcrumbs based on the 'open' state.
   const links = open
     ? [
         { name: 'Hostel Management', href: '/hostel/dashboard' },
@@ -41,6 +50,7 @@ const HostelConfiguration = () => {
         { name: 'Hostel Configuration', href: '' },
       ];
 
+  // Handler function for closing the hostel form, optionally handling form submission and changes.
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setOpen(false);
@@ -85,7 +95,7 @@ const HostelConfiguration = () => {
           <HostelForm
             open={addNewHostelDialog}
             onClose={() => {
-              setOpen(false);
+              handleClose(null, false);
             }}
             editData={selectedHostel}
           />
@@ -107,6 +117,21 @@ const HostelConfiguration = () => {
           data={hostelData}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          setSelectedHostel(null);
+          deleteDialog.onFalse();
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };
