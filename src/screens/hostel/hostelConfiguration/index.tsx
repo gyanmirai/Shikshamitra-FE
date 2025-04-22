@@ -11,6 +11,7 @@ import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import hostelRoomData from 'src/json/hostel/hostelConfiguration/hostelRoomData.json';
 import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -21,6 +22,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import HostelForm from './components/hostelForm';
 import HostelTable from './components/hostelTable';
 import AddRoomForm from './components/addRoomForm';
+import HostelRoomTable from './components/roomDetailsTable';
 
 import type { IHostelData } from './components/type';
 
@@ -36,6 +38,7 @@ const HostelConfiguration = () => {
   // State for managing the visibility of the delete confirmation dialog.
   const deleteDialog = useBoolean();
   const addRoomDialog = useBoolean();
+  const roomDetailsDialog = useBoolean();
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.
@@ -125,6 +128,10 @@ const HostelConfiguration = () => {
             addRoomDialog.onTrue();
             setSelectedHostel(data);
           }}
+          onRoomDetails={(data) => {
+            setSelectedHostel(data);
+            roomDetailsDialog.onTrue();
+          }}
         />
       )}
 
@@ -144,7 +151,7 @@ const HostelConfiguration = () => {
       />
 
       <CustomDialog
-        title="Room Configuration"
+        title="Add Room Configuration"
         open={addRoomDialog.value}
         handleClose={() => {
           addRoomDialog.onFalse();
@@ -156,6 +163,23 @@ const HostelConfiguration = () => {
           onClose={() => {
             handleClose(null, false);
           }}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        title={`${selectedHostel?.hostelName}'s Room Details`}
+        open={roomDetailsDialog.value}
+        handleClose={() => {
+          roomDetailsDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <HostelRoomTable
+          open={roomDetailsDialog}
+          onClose={() => {
+            handleClose(null, false);
+          }}
+          roomData={hostelRoomData}
         />
       </CustomDialog>
     </Box>
