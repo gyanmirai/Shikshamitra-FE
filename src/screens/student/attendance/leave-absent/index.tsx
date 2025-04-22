@@ -36,8 +36,11 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useAddStudentLeaveMutation } from 'src/redux/student/student-leave/student-leave-api';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
+import {
+  useGetStudentLeaveQuery,
+  useAddStudentLeaveMutation,
+} from 'src/redux/student/student-leave/student-leave-api';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -67,49 +70,6 @@ const LeaveAndAbsentScreen = () => {
   // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
 
-  // Mock data for leave requests table
-  const [tableData, setTableData] = useState([
-    {
-      medium: 'English',
-      organization: 'Primary',
-      class: '10th',
-      division: 'A',
-      student: 'John Doe',
-      leaveType: 'Sick Leave',
-      id: '1',
-      startDate: '01-05-2023',
-      endDate: '03-05-2023',
-      description: 'Fever and cold',
-      status: 'Approved',
-    },
-    {
-      medium: 'Spanish',
-      organization: 'Secondary',
-      class: '9th',
-      division: 'B',
-      student: 'Jane Smith',
-      leaveType: 'Personal Leave',
-      id: '2',
-      startDate: '10-05-2023',
-      endDate: '12-05-2023',
-      description: 'Family event',
-      status: 'Pending',
-    },
-    {
-      medium: 'French',
-      organization: 'Primary',
-      class: '11th',
-      division: 'C',
-      student: 'Alice Johnson',
-      leaveType: 'Vacation',
-      id: '3',
-      startDate: '01-06-2023',
-      endDate: '07-06-2023',
-      description: 'Summer vacation',
-      status: 'Approved',
-    },
-  ]);
-
   // State to store selected students for notifications
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
 
@@ -122,6 +82,24 @@ const LeaveAndAbsentScreen = () => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const { leaveData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentLeaveQuery,
+  });
+
+  const tableData = useMemo(
+    () =>
+      leaveData?.items?.map((item: any) => ({
+        ...item,
+        startDate: dayjs(item.startDate).format('DD/MM/YYYY'),
+        endDate: dayjs(item.endDate).format('DD/MM/YYYY'),
+        name: `${item.student?.lastName} ${item.student?.firstName} ${
+          item.student?.middleName ? item.student?.middleName : ''
+        }`,
+      })),
+    [leaveData]
+  );
 
   return (
     <Box>
@@ -138,7 +116,7 @@ const LeaveAndAbsentScreen = () => {
       />
       <CustomizableTable
         onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudent.length !== 0}
+        showCheckbox={selectedStudent?.length !== 0}
         tableId="leave-absent-table"
         noDataText={
           <>
@@ -179,7 +157,7 @@ const LeaveAndAbsentScreen = () => {
             sticky: true,
             renderColumn: (value) => (
               <Checkbox
-                checked={tableData.length === selectedStudent.length}
+                checked={tableData?.length === selectedStudent?.length}
                 onChange={(e) => {
                   if (e.target.checked) {
                     setSelectedStudent(tableData);
@@ -207,7 +185,7 @@ const LeaveAndAbsentScreen = () => {
             },
           },
           {
-            id: 'student',
+            id: 'name',
             label: 'Student',
             render(value, row) {
               return (
@@ -218,11 +196,11 @@ const LeaveAndAbsentScreen = () => {
               );
             },
           },
-          { id: 'medium', label: 'Medium' },
-          { id: 'organization', label: 'Organization' },
-          { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'leaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
+          { id: 'student.educationMedium.name', label: 'Medium' },
+          { id: 'student.educationMediumStage.name', label: 'Organization' },
+          { id: 'student.standard.name', label: 'Class' },
+          { id: 'student.division.name', label: 'Division' },
+          { id: 'leavePolicy.cleaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
           {
             id: 'startDate',
             label: 'Start Date',
@@ -238,7 +216,7 @@ const LeaveAndAbsentScreen = () => {
             align: 'left',
           },
           { id: 'description', label: 'Description' },
-          { id: 'remarks', label: 'Remarks' },
+          { id: 'rejectionReason', label: 'Remarks' },
           {
             id: 'status',
             label: 'Status',
@@ -279,7 +257,8 @@ const LeaveAndAbsentScreen = () => {
             },
           },
         ]}
-        data={tableData}
+        data={tableData || []}
+        isLoading={isLoading}
       />{' '}
       <CustomDialog
         maxWidth="md"
