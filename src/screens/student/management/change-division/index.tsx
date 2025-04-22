@@ -84,7 +84,7 @@ const ChangeDivisionScreen = ({
   };
   return (
     <Box>
-      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
           <LoadingButton
             loading={isChangeDivisionLoading}
@@ -113,6 +113,7 @@ const ChangeDivisionScreen = ({
               id: 'checkBox',
               align: 'left',
               minWidth: '60px',
+              sticky: true,
               isSort: false,
               isFilter: false,
               label: '',
@@ -150,6 +151,7 @@ const ChangeDivisionScreen = ({
             {
               id: 'divisionId',
               label: 'Division',
+              isFilter: false,
               isSort: false,
               render(value, row) {
                 return (

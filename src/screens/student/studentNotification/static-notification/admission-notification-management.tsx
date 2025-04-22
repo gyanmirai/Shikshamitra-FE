@@ -4,6 +4,11 @@ import React, { useState } from 'react';
 
 import { Box, Card, Switch } from '@mui/material';
 
+import {
+  NotificationStatusType,
+  NotificationStatusOptions,
+} from 'src/enums/notification-status-type';
+
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -95,10 +100,14 @@ const notificationsData = [
 ];
 
 const AdmissionNotificationManagement = () => {
+  // State variable to control the visibility of the dialog.
   const [open, setOpen] = useState(false);
+  // State variable to store the selected notification data.
   const [selectedData, setSelectedData] = useState<any>(null);
+  // State variable to determine whether the dialog is in view mode.
   const [view, setView] = useState(false);
 
+  // Handler function to close the dialog and reset related states.
   const closeHandler = () => {
     setOpen(false);
     setSelectedData(null);
@@ -139,11 +148,14 @@ const AdmissionNotificationManagement = () => {
             {
               id: 'isActive',
               label: 'Active',
+              filterType: 'enum',
+              isSort: false,
+              enumOptions: NotificationStatusOptions,
               render(value, row) {
                 return (
                   <Box>
                     <Switch
-                      checked={row.isActive}
+                      checked={NotificationStatusType.Active === row.isActive}
                       onChange={(event) => {
                         console.log(event.target.checked);
                       }}
@@ -155,6 +167,10 @@ const AdmissionNotificationManagement = () => {
             {
               id: 'action',
               label: 'Action',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              minWidth: 60,
               render(value, row) {
                 return (
                   <ThreeDotsActions

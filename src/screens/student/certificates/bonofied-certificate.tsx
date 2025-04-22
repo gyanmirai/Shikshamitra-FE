@@ -41,6 +41,31 @@ const BonofiedCertificate = () => {
       </Box>
       <CustomizableTable
         tableId="bonofied-certificate"
+        noDataText={
+          <>
+            No Bonofied Certificate Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Bonafide
+            </Box>
+          </>
+        }
+        searchFieldProps={{
+          placeholder: 'Search by Medium, Organization, Class...',
+          label: 'Search by Medium, Organization, Class...',
+        }}
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },
@@ -48,7 +73,13 @@ const BonofiedCertificate = () => {
           { id: 'division', label: 'Division' },
           { id: 'grNo', label: 'GR.No.' },
           { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
-          { id: 'creationDate', label: 'Creation Date', align: 'left', minWidth: '180px' },
+          {
+            id: 'creationDate',
+            label: 'Creation Date',
+            align: 'left',
+            minWidth: '180px',
+            filterType: 'date',
+          },
           { id: 'reason', label: 'Reason' },
         ]}
         data={[]}

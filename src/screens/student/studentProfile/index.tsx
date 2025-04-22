@@ -301,6 +301,7 @@ export function StudentProfile() {
                 id: 'checkBox',
                 align: 'left',
                 minWidth: '60px',
+                sticky: true,
                 isSort: false,
                 isFilter: false,
                 label: '',
@@ -360,6 +361,8 @@ export function StudentProfile() {
                 label: 'Action',
                 isSort: false,
                 isFilter: false,
+                sticky: true,
+                minWidth: 80,
                 render: (value, row) => (
                   <Button
                     onClick={() => {

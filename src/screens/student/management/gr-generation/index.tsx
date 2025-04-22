@@ -167,6 +167,7 @@ const GrNoGenerationScreen = ({
             {
               id: 'checkBox',
               align: 'left',
+              sticky: true,
               minWidth: '60px',
               isSort: false,
               isFilter: false,
@@ -200,12 +201,14 @@ const GrNoGenerationScreen = ({
                 );
               },
             },
-            { id: 'tempGrNo', label: 'Current GR No.' },
-            { id: 'name', label: 'Name' },
+            { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
+            { id: 'name', label: 'Name', align: 'left' },
             {
               id: 'grNoRecord',
               label: 'New GR No.',
-
+              align: 'left',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return isManual ? (
                   <TextField
