@@ -1,0 +1,42 @@
+[
+  {
+    "roomName": "A101",
+    "roomType": "Single",
+    "floorNumber": 1,
+    "roomCapacity": 1,
+    "roomStatus": "Available",
+    "beds": ["Bed A"]
+  },
+  {
+    "roomName": "B201",
+    "roomType": "Double",
+    "floorNumber": 2,
+    "roomCapacity": 2,
+    "roomStatus": "Occupied",
+    "beds": ["Bed A", "Bed B"]
+  },
+  {
+    "roomName": "C301",
+    "roomType": "Triple",
+    "floorNumber": 3,
+    "roomCapacity": 3,
+    "roomStatus": "Maintenance",
+    "beds": ["Bed A", "Bed B", "Bed C"]
+  },
+  {
+    "roomName": "D102",
+    "roomType": "Single",
+    "floorNumber": 1,
+    "roomCapacity": 1,
+    "roomStatus": "Occupied",
+    "beds": ["Bed A"]
+  },
+  {
+    "roomName": "E202",
+    "roomType": "Double",
+    "floorNumber": 2,
+    "roomCapacity": 2,
+    "roomStatus": "Available",
+    "beds": ["Bed A", "Bed B"]
+  }
+]

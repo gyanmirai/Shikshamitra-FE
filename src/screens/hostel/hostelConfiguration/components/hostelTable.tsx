@@ -22,6 +22,7 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
   onEdit,
   onAddRoomDialog,
   onAddRoom,
+  onRoomDetails,
 }) => {
   const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
 
@@ -34,16 +35,26 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
           <MenuItem
             onClick={() => {
               onAddRoom(row as IHostelData);
+              pop.onClose();
             }}
           >
             <Iconify icon="mdi:plus" sx={{ mr: 1 }} />
             Room Configuration
           </MenuItem>
+          <MenuItem
+            onClick={() => {
+              onRoomDetails(row as IHostelData);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
+            Room Details
+          </MenuItem>
           {/* )} */}
         </MenuList>
       </>
     ),
-    [onAddRoom]
+    [onAddRoom, onRoomDetails]
   );
 
   return (
