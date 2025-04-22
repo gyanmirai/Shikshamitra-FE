@@ -35,4 +35,5 @@ export const StudentLeaveApi = createApi({
   }),
 });
 
-export const { useGetStudentLeaveQuery, useAddStudentLeaveMutation } = StudentLeaveApi;
+export const { useGetStudentLeaveQuery, useAddStudentLeaveMutation, useChangeLeaveStatusMutation } =
+  StudentLeaveApi;
