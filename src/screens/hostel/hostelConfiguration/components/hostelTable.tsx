@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 
 import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -19,8 +20,31 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
   onDelete,
   data,
   onEdit,
+  onAddRoomDialog,
+  onAddRoom,
 }) => {
   const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {/* {(row.status === 'Cancelled' || row.status === 'Scheduled') && ( */}
+          <MenuItem
+            onClick={() => {
+              onAddRoom(row as IHostelData);
+            }}
+          >
+            <Iconify icon="mdi:plus" sx={{ mr: 1 }} />
+            Room Configuration
+          </MenuItem>
+          {/* )} */}
+        </MenuList>
+      </>
+    ),
+    [onAddRoom]
+  );
 
   return (
     <CustomizableTable
@@ -52,30 +76,29 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
         </>
       }
       columns={[
-        { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 130 },
+        { id: 'hostelName', label: 'Hostel Name', align: 'left' },
         {
           id: 'totalRoomCapacity',
           label: 'Total Room Capacity',
           align: 'left',
-          minWidth: 180,
           filterType: 'number',
         },
-        { id: 'wardenDetails', label: 'Warden Details', align: 'left', minWidth: 150 },
-        { id: 'currentOccupation', label: 'Current Occupation', align: 'left', minWidth: 180 },
-        { id: 'hostelType', label: 'Hostel Type', align: 'left', minWidth: 130 },
-        { id: 'location', label: 'Location', align: 'left', minWidth: 100 },
+        { id: 'wardenDetails', label: 'Warden Details', align: 'left' },
+        { id: 'currentOccupation', label: 'Current Occupation', align: 'left' },
+        { id: 'hostelType', label: 'Hostel Type', align: 'left' },
+        { id: 'location', label: 'Location', align: 'left' },
         {
           id: 'action',
           label: 'Actions',
-          minWidth: 80,
+          minWidth: 130,
           isSort: false,
           sticky: true,
           isFilter: false,
           render(value, row) {
             return (
               <ThreeDotsActions
+                actions={(prop) => actions({ ...prop, row })}
                 placement="right-top"
-                showThreeDots={false}
                 showViewIcon
                 showDeleteIcon
                 showEditIcon
