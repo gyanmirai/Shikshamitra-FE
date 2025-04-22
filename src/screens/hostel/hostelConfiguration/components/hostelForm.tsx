@@ -11,7 +11,7 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { validationSchema } from './validationSchema';
+import { hostelValidationSchema } from './validationSchema';
 import { getHostelInitialValues } from './getInitialValues';
 
 import type { IHostelFormProps } from './type';
@@ -19,7 +19,7 @@ import type { IHostelFormProps } from './type';
 const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => {
   const formik = useFormik({
     initialValues: getHostelInitialValues(editData),
-    validationSchema,
+    validationSchema: hostelValidationSchema,
     onSubmit: (values, formikHelpers) => {
       console.log(values);
     },
