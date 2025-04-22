@@ -1,0 +1,53 @@
+[
+    {
+      "roomName": "A101",
+      "roomType": "Single",
+      "floorNumber": 1,
+      "roomCapacity": 1,
+      "roomStatus": "Available",
+      "status": "Clean",
+      "bed": "Bed A",
+      "currentOccupation": 0
+    },
+    {
+      "roomName": "B201",
+      "roomType": "Double",
+      "floorNumber": 2,
+      "roomCapacity": 2,
+      "roomStatus": "Occupied",
+      "status": "Needs Cleaning",
+      "bed": "Bed B",
+      "currentOccupation": 2
+    },
+    {
+      "roomName": "C301",
+      "roomType": "Triple",
+      "floorNumber": 3,
+      "roomCapacity": 3,
+      "roomStatus": "Maintenance",
+      "status": "Under Repair",
+      "bed": "Bed C",
+      "currentOccupation": 1
+    },
+    {
+      "roomName": "D102",
+      "roomType": "Single",
+      "floorNumber": 1,
+      "roomCapacity": 1,
+      "roomStatus": "Occupied",
+      "status": "Clean",
+      "bed": "Bed A",
+      "currentOccupation": 1
+    },
+    {
+      "roomName": "E202",
+      "roomType": "Double",
+      "floorNumber": 2,
+      "roomCapacity": 2,
+      "roomStatus": "Available",
+      "status": "Clean",
+      "bed": "Bed B",
+      "currentOccupation": 0
+    }
+  ]
+  
