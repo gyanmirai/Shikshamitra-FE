@@ -16,6 +16,7 @@ import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import HostelForm from './components/hostelForm';
 import HostelTable from './components/hostelTable';
 
 import type { IHostelData } from './components/type';
@@ -81,12 +82,13 @@ const HostelConfiguration = () => {
       />
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          {/* <HostelForm
+          <HostelForm
             open={addNewHostelDialog}
             onClose={() => {
               setOpen(false);
             }}
-          /> */}
+            editData={selectedHostel}
+          />
         </Card>
       ) : (
         <HostelTable
