@@ -15,3 +15,4 @@ export const getRoomInitialValues = (editData?: IHostelRoom | null) => ({
   beds: editData?.beds || null, // Ensure beds is initialized as an array
   roomStatus: editData?.roomStatus || '',
 });
+

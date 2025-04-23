@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
 export const hostelValidationSchema = Yup.object({
+
   hostelName: Yup.string().required('Hostel name is required'),
   totalRoomCapacity: Yup.number()
     .typeError('Must be a number')
@@ -37,3 +38,4 @@ export const hostelRoomValidationSchema = Yup.object().shape({
     .oneOf(['Available', 'Occupied', 'Maintenance'], 'Invalid room status')
     .required('Room status is required'),
 });
+
