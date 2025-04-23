@@ -1377,6 +1377,19 @@ const hostelModule = {
           _action: 'hostel-settings',
           shortcutKey: 'Alt+H+7',
           shortcutKeyName: 'Alt+H+7',
+        },
+      ],
+    },
+  ],
+};
+
+const resourceManagement = {
+  [resourceManagementPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
           path: '/resourceManagement/dashboard',
           _action: 'dashboard',
         },
