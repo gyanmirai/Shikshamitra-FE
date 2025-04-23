@@ -1,0 +1,35 @@
+[
+    {
+      "hostelName": "Hostel 1",
+      "totalRoomCapacity": 500,
+      "wardenDetails": "John Doe",
+      "currentOccupation": "250/500",
+      "hostelType": "Boys",
+      "location": "Building 1"
+    },
+    {
+      "hostelName": "Hostel 2",
+      "totalRoomCapacity": 500,
+      "wardenDetails": "John Doe",
+      "currentOccupation": "250/500",
+      "hostelType": "Girls",
+      "location": "Building 2"
+    },
+    {
+      "hostelName": "Hostel 3",
+      "totalRoomCapacity": 500,
+      "wardenDetails": "John Doe",
+      "currentOccupation": "250/500",
+      "hostelType": "Boys",
+      "location": "Building 3"
+    },
+    {
+      "hostelName": "Hostel 4",
+      "totalRoomCapacity": 500,
+      "wardenDetails": "John Doe",
+      "currentOccupation": "250/500",
+      "hostelType": "Girls",
+      "location": "Building 4"
+    }
+  ]
+  
