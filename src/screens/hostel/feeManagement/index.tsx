@@ -4,13 +4,18 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 
-import { Box, TextField, Autocomplete } from '@mui/material';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import CollectFeesForm from './components/feeCollectForm';
 import StudentProfile from '../studentAllocation/compoenents/studentProfile';
 import HostelStudentDetailedFeeComponent from './components/feeManagementTabs';
 
@@ -24,6 +29,7 @@ const HostelfeeManagement = () => {
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   // State to control visibility of student list
   const [showStudents, setShowStudents] = useState(false);
+  const collectFeeDialog = useBoolean();
   // Query to fetch class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -39,6 +45,19 @@ const HostelfeeManagement = () => {
           { name: 'Fee Management', href: '' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            onClick={() => {
+              collectFeeDialog.onTrue();
+            }}
+            disabled={!student}
+            startIcon={<Iconify icon="game-icons:receive-money" />}
+            variant="outlined"
+            size="small"
+          >
+            Collect Fees
+          </Button>
+        }
       />
       <Box display="flex" alignItems="center" mb={2} gap={1}>
         <Autocomplete
@@ -107,6 +126,20 @@ const HostelfeeManagement = () => {
       </Box>
       <StudentProfile studentId="1" />
       <HostelStudentDetailedFeeComponent studentId="1" />
+      <CustomDialog
+        open={collectFeeDialog.value}
+        handleClose={collectFeeDialog.onFalse}
+        title="Collect Fee Of John"
+        maxWidth="md"
+      >
+        <CollectFeesForm
+          open={collectFeeDialog.value}
+          onClose={() => {
+            collectFeeDialog.onFalse();
+          }}
+          student={student}
+        />
+      </CustomDialog>
     </Box>
   );
 };
