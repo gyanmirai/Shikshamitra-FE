@@ -50,3 +50,9 @@ export interface IHostelRoomTableProps {
   onClose: () => void;
   roomData: IHostelRoom[];
 }
+
+export interface IHostelFormProps {
+  open: UseBooleanReturn;
+  onClose: () => void;
+  editData?: IHostelData | null;
+}

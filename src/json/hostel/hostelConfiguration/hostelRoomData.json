@@ -7,6 +7,7 @@
     "roomStatus": "Available",
     "status": "Clean",
     "currentOccupation": 0
+    "beds": ["Bed A"]
   },
   {
     "roomName": "B201",
@@ -16,6 +17,7 @@
     "roomStatus": "Occupied",
     "status": "Needs Cleaning",
     "currentOccupation": 2
+    "beds": ["Bed A", "Bed B"]
   },
   {
     "roomName": "C301",
@@ -25,6 +27,7 @@
     "roomStatus": "Maintenance",
     "status": "Under Repair",
     "currentOccupation": 0
+    "beds": ["Bed A", "Bed B", "Bed C"]
   },
   {
     "roomName": "D102",
@@ -34,6 +37,7 @@
     "roomStatus": "Occupied",
     "status": "Clean",
     "currentOccupation": 1
+    "beds": ["Bed A"]
   },
   {
     "roomName": "E202",
@@ -43,5 +47,6 @@
     "roomStatus": "Available",
     "status": "Clean",
     "currentOccupation": 0
+    "beds": ["Bed A", "Bed B"]
   }
 ]
