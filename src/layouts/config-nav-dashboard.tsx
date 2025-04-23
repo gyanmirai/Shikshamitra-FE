@@ -1,5 +1,6 @@
 import {
   hrPath,
+  hostelPath,
   financePath,
   studentPath,
   settingPath,
@@ -1323,13 +1324,59 @@ const transportModule = {
   ],
 };
 
-const resourceManagement = {
-  [resourceManagementPath]: [
+const hostelModule = {
+  [hostelPath]: [
     {
       subheader: '',
       items: [
         {
           title: 'Dashboard',
+          path: '/hostel/dashboard',
+          _action: 'hostel-dashboard',
+          shortcutKey: 'Alt+H+1',
+          shortcutKeyName: 'Alt+H+1',
+        },
+        {
+          title: 'Hostel Configuration',
+          path: '/hostel/configuration',
+          _action: 'hostel-configuration',
+          shortcutKey: 'Alt+H+2',
+          shortcutKeyName: 'Alt+H+2',
+        },
+        {
+          title: 'Student Allocation',
+          path: '/hostel/student-allocation',
+          _action: 'hostel-student-allocation',
+          shortcutKey: 'Alt+H+3',
+          shortcutKeyName: 'Alt+H+3',
+        },
+        {
+          title: 'Fee Management',
+          path: '/hostel/fee-management',
+          _action: 'hostel-fee-management',
+          shortcutKey: 'Alt+H+4',
+          shortcutKeyName: 'Alt+H+4',
+        },
+        {
+          title: 'Maintenance',
+          path: '/hostel/maintenance',
+          _action: 'hostel-maintenance',
+          shortcutKey: 'Alt+H+5',
+          shortcutKeyName: 'Alt+H+5',
+        },
+        {
+          title: 'Reporting & Analytics',
+          path: '/hostel/reporting-analytics',
+          _action: 'hostel-reporting-analytics',
+          shortcutKey: 'Alt+H+6',
+          shortcutKeyName: 'Alt+H+6',
+        },
+        {
+          title: 'Settings',
+          path: '/hostel/settings',
+          _action: 'hostel-settings',
+          shortcutKey: 'Alt+H+7',
+          shortcutKeyName: 'Alt+H+7',
           path: '/resourceManagement/dashboard',
           _action: 'dashboard',
         },
@@ -1472,7 +1519,7 @@ export const navData = (isDdvs: boolean) => [
         _action: 'hostel',
         shortcutKey: 'Alt+O',
         shortcutKeyName: 'Alt+O',
-        submodule: [],
+        submodule: hostelModule[hostelPath].flatMap((list) => list.items),
         disabled: !isDdvs,
       },
       {
@@ -1493,7 +1540,7 @@ export const navSubData = (isDdvs: boolean) => ({
   ...settingModule,
   ...hrModule,
   ...academicModule,
-
+  ...hostelModule,
   ...financeModule,
   ...transportModule,
   ...communicationModule,
