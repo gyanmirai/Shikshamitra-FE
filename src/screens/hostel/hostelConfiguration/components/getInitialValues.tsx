@@ -1,3 +1,4 @@
+
 import type { IHostelData, IHostelRoom } from './type';
 
 export const getHostelInitialValues = (editData?: IHostelData | null) => ({
