@@ -14,11 +14,14 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelForm from './components/hostelForm';
 import HostelTable from './components/hostelTable';
+import AddRoomForm from './components/addRoomForm';
 
 import type { IHostelData } from './components/type';
 
@@ -33,6 +36,8 @@ const HostelConfiguration = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State for managing the visibility of the delete confirmation dialog.
   const deleteDialog = useBoolean();
+  const addRoomDialog = useBoolean();
+
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.
@@ -54,10 +59,12 @@ const HostelConfiguration = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setOpen(false);
+      addRoomDialog.onFalse();
       dispatch(setIsChanges(false));
       setSelectedHostel(null);
     } else if (!isChanges) {
       setOpen(false);
+      addRoomDialog.onFalse();
       setSelectedHostel(null);
     }
   };
@@ -115,6 +122,11 @@ const HostelConfiguration = () => {
           editData={selectedHostel}
           setEditData={setSelectedHostel}
           data={hostelData}
+          onAddRoomDialog={addRoomDialog}
+          onAddRoom={(data) => {
+            addRoomDialog.onTrue();
+            setSelectedHostel(data);
+          }}
         />
       )}
 
@@ -132,6 +144,23 @@ const HostelConfiguration = () => {
           </Button>
         }
       />
+
+      <CustomDialog
+        title="Room Configuration"
+        open={addRoomDialog.value}
+        handleClose={() => {
+          addRoomDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <AddRoomForm
+          open={addRoomDialog}
+          onClose={() => {
+            handleClose(null, false);
+          }}
+        />
+      </CustomDialog>
+
     </Box>
   );
 };
