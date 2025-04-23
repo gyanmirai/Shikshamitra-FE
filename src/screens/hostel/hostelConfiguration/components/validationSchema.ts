@@ -37,4 +37,3 @@ export const hostelRoomValidationSchema = Yup.object().shape({
     .oneOf(['Available', 'Occupied', 'Maintenance'], 'Invalid room status')
     .required('Room status is required'),
 });
-

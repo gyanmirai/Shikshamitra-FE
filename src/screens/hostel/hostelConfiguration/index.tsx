@@ -16,7 +16,6 @@ import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -40,8 +39,6 @@ const HostelConfiguration = () => {
   const deleteDialog = useBoolean();
   const addRoomDialog = useBoolean();
   const roomDetailsDialog = useBoolean();
-
-
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.
@@ -185,7 +182,6 @@ const HostelConfiguration = () => {
           roomData={hostelRoomData}
         />
       </CustomDialog>
-
     </Box>
   );
 };

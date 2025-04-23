@@ -8,7 +8,6 @@ export const getHostelInitialValues = (editData?: IHostelData | null) => ({
   hostelType: editData?.hostelType || '',
   location: editData?.location || '',
 });
-
 export const getRoomInitialValues = (editData?: IHostelRoom | null) => ({
   roomName: editData?.roomName || '',
   roomType: editData?.roomType || '',
@@ -17,4 +16,3 @@ export const getRoomInitialValues = (editData?: IHostelRoom | null) => ({
   beds: editData?.beds || null, // Ensure beds is initialized as an array
   roomStatus: editData?.roomStatus || '',
 });
-
