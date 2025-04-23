@@ -19,6 +19,7 @@ export interface IHostelDataTableProps {
   onEdit: (data: IHostelData) => void;
   onAddRoom: (data: IHostelData) => void;
   onAddRoomDialog: UseBooleanReturn;
+  onRoomDetails: (data: IHostelData) => void;
 }
 
 export interface IHostelFormProps {
@@ -40,6 +41,12 @@ export interface IRoomFormProps {
   open: UseBooleanReturn;
   onClose: () => void;
   editData?: IHostelRoom | null;
+}
+
+export interface IHostelRoomTableProps {
+  open: UseBooleanReturn;
+  onClose: () => void;
+  roomData: IHostelRoom[];
 }
 
 export interface IHostelFormProps {
