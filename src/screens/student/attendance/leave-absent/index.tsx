@@ -36,13 +36,17 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useAddStudentLeaveMutation } from 'src/redux/student/student-leave/student-leave-api';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  useGetStudentLeaveQuery,
+  useAddStudentLeaveMutation,
+  useChangeLeaveStatusMutation,
+} from 'src/redux/student/student-leave/student-leave-api';
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
@@ -51,6 +55,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -67,48 +72,9 @@ const LeaveAndAbsentScreen = () => {
   // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
 
-  // Mock data for leave requests table
-  const [tableData, setTableData] = useState([
-    {
-      medium: 'English',
-      organization: 'Primary',
-      class: '10th',
-      division: 'A',
-      student: 'John Doe',
-      leaveType: 'Sick Leave',
-      id: '1',
-      startDate: '01-05-2023',
-      endDate: '03-05-2023',
-      description: 'Fever and cold',
-      status: 'Approved',
-    },
-    {
-      medium: 'Spanish',
-      organization: 'Secondary',
-      class: '9th',
-      division: 'B',
-      student: 'Jane Smith',
-      leaveType: 'Personal Leave',
-      id: '2',
-      startDate: '10-05-2023',
-      endDate: '12-05-2023',
-      description: 'Family event',
-      status: 'Pending',
-    },
-    {
-      medium: 'French',
-      organization: 'Primary',
-      class: '11th',
-      division: 'C',
-      student: 'Alice Johnson',
-      leaveType: 'Vacation',
-      id: '3',
-      startDate: '01-06-2023',
-      endDate: '07-06-2023',
-      description: 'Summer vacation',
-      status: 'Approved',
-    },
-  ]);
+  const [whichStatus, setWhichStatus] = useState<EmployeeLeaveStatusType | null>(null);
+
+  const [leaveId, setLeaveId] = useState<string>('');
 
   // State to store selected students for notifications
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
@@ -122,6 +88,24 @@ const LeaveAndAbsentScreen = () => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const { leaveData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentLeaveQuery,
+  });
+
+  const tableData = useMemo(
+    () =>
+      leaveData?.items?.map((item: any) => ({
+        ...item,
+        startDate: dayjs(item.startDate).format('DD/MM/YYYY'),
+        endDate: dayjs(item.endDate).format('DD/MM/YYYY'),
+        name: `${item.student?.lastName} ${item.student?.firstName} ${
+          item.student?.middleName ? item.student?.middleName : ''
+        }`,
+      })),
+    [leaveData]
+  );
 
   return (
     <Box>
@@ -138,7 +122,7 @@ const LeaveAndAbsentScreen = () => {
       />
       <CustomizableTable
         onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudent.length !== 0}
+        showCheckbox={selectedStudent?.length !== 0}
         tableId="leave-absent-table"
         noDataText={
           <>
@@ -179,7 +163,7 @@ const LeaveAndAbsentScreen = () => {
             sticky: true,
             renderColumn: (value) => (
               <Checkbox
-                checked={tableData.length === selectedStudent.length}
+                checked={tableData?.length === selectedStudent?.length}
                 onChange={(e) => {
                   if (e.target.checked) {
                     setSelectedStudent(tableData);
@@ -207,7 +191,7 @@ const LeaveAndAbsentScreen = () => {
             },
           },
           {
-            id: 'student',
+            id: 'name',
             label: 'Student',
             render(value, row) {
               return (
@@ -218,11 +202,11 @@ const LeaveAndAbsentScreen = () => {
               );
             },
           },
-          { id: 'medium', label: 'Medium' },
-          { id: 'organization', label: 'Organization' },
-          { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'leaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
+          { id: 'student.educationMedium.name', label: 'Medium' },
+          { id: 'student.educationMediumStage.name', label: 'Organization' },
+          { id: 'student.standard.name', label: 'Class' },
+          { id: 'student.division.name', label: 'Division' },
+          { id: 'leavePolicy.cleaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
           {
             id: 'startDate',
             label: 'Start Date',
@@ -238,7 +222,7 @@ const LeaveAndAbsentScreen = () => {
             align: 'left',
           },
           { id: 'description', label: 'Description' },
-          { id: 'remarks', label: 'Remarks' },
+          { id: 'rejectionReason', label: 'Remarks' },
           {
             id: 'status',
             label: 'Status',
@@ -264,10 +248,26 @@ const LeaveAndAbsentScreen = () => {
                 <Box display="flex" gap={1}>
                   {row.status === 'Pending' ? (
                     <>
-                      <IconButton size="small" color="success" onClick={confirmRejectDialog.onTrue}>
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={() => {
+                          setWhichStatus(EmployeeLeaveStatusType.Approved);
+                          setLeaveId(row.id);
+                          confirmRejectDialog.onTrue();
+                        }}
+                      >
                         <CheckCircleOutline />
                       </IconButton>
-                      <IconButton size="small" color="error" onClick={confirmRejectDialog.onTrue}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          setWhichStatus(EmployeeLeaveStatusType.Rejected);
+                          setLeaveId(row.id);
+                          confirmRejectDialog.onTrue();
+                        }}
+                      >
                         <Cancel />
                       </IconButton>
                     </>
@@ -279,7 +279,8 @@ const LeaveAndAbsentScreen = () => {
             },
           },
         ]}
-        data={tableData}
+        data={tableData || []}
+        isLoading={isLoading}
       />{' '}
       <CustomDialog
         maxWidth="md"
@@ -303,9 +304,21 @@ const LeaveAndAbsentScreen = () => {
       <CustomDialog
         title="Remarks"
         open={confirmRejectDialog.value}
-        handleClose={confirmRejectDialog.onFalse}
+        handleClose={() => {
+          setWhichStatus(null);
+          confirmRejectDialog.onFalse();
+          setLeaveId('');
+        }}
       >
-        <LeaveAbsent handleClose={confirmRejectDialog.onFalse} />
+        <LeaveAbsent
+          handleClose={() => {
+            setWhichStatus(null);
+            confirmRejectDialog.onFalse();
+            setLeaveId('');
+          }}
+          leaveId={leaveId}
+          status={whichStatus}
+        />
       </CustomDialog>
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -349,11 +362,13 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
+  // Effect to update all organizations and set default organization when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
+  // Effect to update all classes and set default class when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
     setClass(
@@ -361,12 +376,12 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
     );
   }, [organization, allOrganization]);
 
+  // Effect to update all divisions and set default division when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  // Query hook for fetching filtered student data
   // Returns getStudents function, StudentsData response and loading state
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -383,31 +398,6 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
       });
     }
   }, [division, classes, organization, getStudents]);
-
-  // Transform students data to include full name
-  const studentOptions = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        id: item.id,
-        name: `${item.firstName} ${item.lastName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
-
-  // Memoized validation schema for the form
-  const validationSchema = useMemo(
-    () =>
-      Yup.object().shape({
-        leaveType: Yup.string().required('Leave type is required'),
-        isHalfDay: Yup.boolean(),
-        startDate: Yup.date().required('Start date is required'),
-        endDate: Yup.date().when('isHalfDay', (isHalfDay, schema) =>
-          isHalfDay ? schema : schema.required('End date is required')
-        ),
-        description: Yup.string().required('Description is required'),
-      }),
-    []
-  );
 
   const [addLeaveRequest] = useQueryAndMutation({
     type: 'mutation',
@@ -707,8 +697,24 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   );
 };
 
-const LeaveAbsent = ({ handleClose }: any) => {
-  // Initialize form state and handlers using Formik
+const LeaveAbsent = ({
+  handleClose,
+  status,
+  leaveId,
+}: {
+  handleClose: () => void;
+  status: EmployeeLeaveStatusType | null;
+  leaveId: string;
+}) => {
+  /**
+   * Custom hook for managing leave status changes
+   * Uses mutation to update leave request status in the backend
+   * @returns {Array} - Array containing the mutation function
+   */
+  const [changeStatus] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeLeaveStatusMutation,
+  }); // Initialize form state and handlers using Formik
   // values: contains form field values
   // handleChange: handles input field changes
   // handleSubmit: handles form submission
@@ -718,7 +724,23 @@ const LeaveAbsent = ({ handleClose }: any) => {
       remarks: '',
     },
     // Empty submit handler - to be implemented
-    onSubmit() {},
+    async onSubmit() {
+      try {
+        await changeStatus({
+          id: leaveId,
+          body: {
+            status,
+            rejectionReason: values.remarks,
+          },
+        }).unwrap();
+        handleClose();
+        shikshaMitraToast.success({
+          message: `Leave Request ${EmployeeLeaveStatusType[status as EmployeeLeaveStatusType]}  successfully`,
+        });
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      }
+    },
   });
 
   return (

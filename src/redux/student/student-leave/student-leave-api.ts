@@ -24,7 +24,16 @@ export const StudentLeaveApi = createApi({
       }),
       invalidatesTags: ['Student-Leave'],
     }),
+    changeLeaveStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/app/student-leave/${id}/leave-request-status`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Student-Leave'],
+    }),
   }),
 });
 
-export const { useGetStudentLeaveQuery, useAddStudentLeaveMutation } = StudentLeaveApi;
+export const { useGetStudentLeaveQuery, useAddStudentLeaveMutation, useChangeLeaveStatusMutation } =
+  StudentLeaveApi;

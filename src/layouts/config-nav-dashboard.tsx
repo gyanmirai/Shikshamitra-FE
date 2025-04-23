@@ -9,6 +9,7 @@ import {
   academicPath,
   transportPath,
   communicationPath,
+  resourceManagementPath,
 } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
@@ -59,6 +60,7 @@ export const ICONS = {
   academic: icon('ic-academic'),
   examination: icon('ic-examination'),
   school: icon('ic-school'),
+  resource: icon('ic-hostel'),
 };
 
 // ----------------------------------------------------------------------
@@ -1375,6 +1377,48 @@ const hostelModule = {
           _action: 'hostel-settings',
           shortcutKey: 'Alt+H+7',
           shortcutKeyName: 'Alt+H+7',
+          path: '/resourceManagement/dashboard',
+          _action: 'dashboard',
+        },
+        {
+          title: 'Inventory Management',
+          path: '/resourceManagement/inventory-management',
+          _action: 'inventory-management',
+        },
+        {
+          title: 'Classroom & Facilities',
+          path: '/resourceManagement/classroom-facilities',
+          _action: 'classroom-facilities',
+        },
+        {
+          title: 'Procurement & Vendors',
+          path: '/resourceManagement/procurement-vendors',
+          _action: 'procurement-vendors',
+        },
+        {
+          title: 'Request & Approval',
+          path: '/resourceManagement/request-approval',
+          _action: 'request-approval',
+        },
+        {
+          title: 'Usage & Maintenance',
+          path: '/resourceManagement/usage-maintenance',
+          _action: 'usage-maintenance',
+        },
+        {
+          title: 'Reports & Analytics',
+          path: '/resourceManagement/reports-analytics',
+          _action: 'reports-analytics',
+        },
+        {
+          title: 'Documentation',
+          path: '/resourceManagement/documentation',
+          _action: 'documentation',
+        },
+        {
+          title: 'Settings',
+          path: '/resourceManagement/settings',
+          _action: 'settings',
         },
       ],
     },
@@ -1460,6 +1504,15 @@ export const navData = (isDdvs: boolean) => [
         disabled: !isDdvs,
       },
       {
+        title: 'Resource Management',
+        path: '/resourceManagement/dashboard',
+        icon: ICONS.resource,
+        _action: 'resource',
+
+        submodule: resourceManagement[resourceManagementPath].flatMap((list) => list.items),
+        disabled: !isDdvs,
+      },
+      {
         title: 'Hostel',
         path: '/hostel/dashboard',
         icon: ICONS.hostel,
@@ -1492,4 +1545,5 @@ export const navSubData = (isDdvs: boolean) => ({
   ...transportModule,
   ...communicationModule,
   ...libraryModule,
+  ...resourceManagement,
 });
