@@ -21,4 +21,10 @@ export const GlobalIcons = {
   skipIcon: 'ix:skip',
   rubricFile: 'material-symbols-light:rubric-rounded',
   assignedRoute: 'lineicons:route-1',
+  bookIcon: 'emojione:books',
+  stationaryIcon: 'clarity:ruler-pencil-line',
+  itEquipmentIcon: 'mingcute:laptop-line',
+  sportsIcon: 'ic:outline-sports-handball',
+  pendingIcon: 'mdi:account-pending-outline',
+  laboratories: 'medical-icon:i-laboratory',
 };
