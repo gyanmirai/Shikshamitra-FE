@@ -41,6 +41,7 @@ const HostelConfiguration = () => {
   const addRoomDialog = useBoolean();
   const roomDetailsDialog = useBoolean();
 
+
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.

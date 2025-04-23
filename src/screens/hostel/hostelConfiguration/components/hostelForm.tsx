@@ -21,7 +21,6 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
   const formik = useFormik({
     initialValues: getHostelInitialValues(editData),
     validationSchema: hostelValidationSchema,
-
     onSubmit: (values, formikHelpers) => {
       console.log(values);
     },
