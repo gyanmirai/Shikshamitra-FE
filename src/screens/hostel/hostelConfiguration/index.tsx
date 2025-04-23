@@ -15,6 +15,7 @@ import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -36,6 +37,7 @@ const HostelConfiguration = () => {
   // State for managing the visibility of the delete confirmation dialog.
   const deleteDialog = useBoolean();
   const addRoomDialog = useBoolean();
+
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.
@@ -158,6 +160,7 @@ const HostelConfiguration = () => {
           }}
         />
       </CustomDialog>
+
     </Box>
   );
 };

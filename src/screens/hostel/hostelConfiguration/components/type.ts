@@ -41,3 +41,9 @@ export interface IRoomFormProps {
   onClose: () => void;
   editData?: IHostelRoom | null;
 }
+
+export interface IHostelFormProps {
+  open: UseBooleanReturn;
+  onClose: () => void;
+  editData?: IHostelData | null;
+}
