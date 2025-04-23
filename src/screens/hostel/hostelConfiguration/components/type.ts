@@ -34,7 +34,9 @@ export interface IHostelRoom {
   floorNumber: number;
   roomCapacity: number;
   roomStatus: string;
-  beds: string[];
+  status?: string;
+  currentOccupation?: number;
+  beds?: string[];
 }
 
 export interface IRoomFormProps {

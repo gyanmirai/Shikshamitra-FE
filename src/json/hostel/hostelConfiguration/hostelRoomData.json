@@ -5,6 +5,8 @@
     "floorNumber": 1,
     "roomCapacity": 1,
     "roomStatus": "Available",
+    "status": "Clean",
+    "currentOccupation": 0
     "beds": ["Bed A"]
   },
   {
@@ -13,6 +15,8 @@
     "floorNumber": 2,
     "roomCapacity": 2,
     "roomStatus": "Occupied",
+    "status": "Needs Cleaning",
+    "currentOccupation": 2
     "beds": ["Bed A", "Bed B"]
   },
   {
@@ -21,6 +25,8 @@
     "floorNumber": 3,
     "roomCapacity": 3,
     "roomStatus": "Maintenance",
+    "status": "Under Repair",
+    "currentOccupation": 0
     "beds": ["Bed A", "Bed B", "Bed C"]
   },
   {
@@ -29,6 +35,8 @@
     "floorNumber": 1,
     "roomCapacity": 1,
     "roomStatus": "Occupied",
+    "status": "Clean",
+    "currentOccupation": 1
     "beds": ["Bed A"]
   },
   {
@@ -37,6 +45,8 @@
     "floorNumber": 2,
     "roomCapacity": 2,
     "roomStatus": "Available",
+    "status": "Clean",
+    "currentOccupation": 0
     "beds": ["Bed A", "Bed B"]
   }
 ]
