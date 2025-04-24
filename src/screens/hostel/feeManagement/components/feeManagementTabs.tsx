@@ -3,7 +3,6 @@
 import React from 'react';
 
 import { Box, Tab, Card, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';

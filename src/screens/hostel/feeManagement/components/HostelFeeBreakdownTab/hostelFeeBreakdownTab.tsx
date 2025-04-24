@@ -41,6 +41,11 @@ const HostelFeeBreakdownTab = () => {
     <>
       <CustomizableTable
         tableId="hostel-fee-breakdown"
+        noDataText="Hostel Fee Data Not Found"
+        searchFieldProps={{
+          placeholder: 'Search Date, Fee Type...',
+          label: 'Search Date, Fee Type...',
+        }}
         isFilter={false}
         isPagination={false}
         isSearch={false}

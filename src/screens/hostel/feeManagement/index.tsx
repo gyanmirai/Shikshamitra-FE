@@ -30,7 +30,7 @@ const HostelfeeManagement = () => {
     currentQueryAndMutation: useGetClassQuery,
   });
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Hostel Management"
         description="Student Allocation For Hostel "
