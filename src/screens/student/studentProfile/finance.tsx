@@ -192,7 +192,6 @@ const Finance = (props: StudentTabsComponentType) => {
       </Stack>
       <Box sx={{ height: 'calc(100vh - 400px)' }}>
         <Box sx={{ my: 2 }} />
-
         <AppAreaInstalled
           title="Fee Insights"
           selectSeries="2024"
