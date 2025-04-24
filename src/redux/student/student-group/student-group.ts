@@ -9,17 +9,13 @@ export const studentGroupApi = createApi({
   }),
   tagTypes: ['studentGroup'],
   endpoints: (builder) => ({
-    getStudentGroup: builder.query({
-      query: ({ SkipCount, MaxResultCount }) => {
-        let query = '';
-        query += `?SkipCount=${SkipCount || 0}`;
-        if (+MaxResultCount > 0) query += `${query ? '&' : '?'}MaxResultCount=${MaxResultCount}`;
-
-        return {
-          url: `/app/student-group${query}`,
+    getAllGroup: builder.query({
+      query: (params) =>
+        // const { page, limit, ...rest } = params;
+        ({
+          url: `/app/student-group`,
           method: 'GET',
-        };
-      },
+        }),
       providesTags: ['studentGroup'],
     }),
     addStudentGroup: builder.mutation({
@@ -61,14 +57,47 @@ export const studentGroupApi = createApi({
       }),
       invalidatesTags: ['studentGroup'],
     }),
+    setGroupLeaderAsDivision: builder.mutation({
+      query: (body) => ({
+        url: `/app/student-group-member/set-division-leader`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
+    removeDivisionLeader: builder.mutation({
+      query: (groupId) => ({
+        url: `/app/student-group-member/division-leader/${groupId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
+    removeGroupLeader: builder.mutation({
+      query: (groupId) => ({
+        url: `/app/student-group-member/group-leader/${groupId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
+    removeStudentFromGroup: builder.mutation({
+      query: ({ studentId, groupId }) => ({
+        url: `/app/student-group-member/student-from-group?studentId=${studentId}&groupId=${groupId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
   }),
 });
 
 export const {
   useAddStudentGroupMutation,
   useDeleteStudentGroupMutation,
-  useGetStudentGroupQuery,
+  useGetAllGroupQuery,
   useUpdateStudentGroupMutation,
   useAssignStudentGroupMutation,
   useSetGroupLeaderMutation,
+  useSetGroupLeaderAsDivisionMutation,
+  useRemoveDivisionLeaderMutation,
+  useRemoveGroupLeaderMutation,
+  useRemoveStudentFromGroupMutation,
 } = studentGroupApi;
