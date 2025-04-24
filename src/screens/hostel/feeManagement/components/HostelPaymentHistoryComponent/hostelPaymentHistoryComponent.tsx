@@ -147,5 +147,4 @@ const HostelPaymentHistoryComponent = () => {
     </Box>
   );
 };
-
 export default HostelPaymentHistoryComponent;
