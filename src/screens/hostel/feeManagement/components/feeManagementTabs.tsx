@@ -46,6 +46,7 @@ const HostelStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeCompo
 
   return (
     <Box pt="15px">
+
       <Typography variant="h6" sx={{ mb: '15px', ml: '3px' }}>
         Detailed Fee View
       </Typography>
