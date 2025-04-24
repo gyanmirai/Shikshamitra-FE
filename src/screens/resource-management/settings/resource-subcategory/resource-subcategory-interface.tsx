@@ -1,6 +1,6 @@
 export interface IResourceSubCategoryFormValues {
   categoryName: string;
-  subCategoryName: string;
+  subcategoryName: string;
 }
 
 export interface IAddResourceSubCategoryDialogProps {
