@@ -16,4 +16,5 @@ export const examinationPath = '/examination';
 export const settingPath = '/setting';
 export const transportPath = '/transport';
 export const communicationPath = '/communication';
+export const hostelPath = '/hostel';
 export const resourceManagementPath = '/resourceManagement';

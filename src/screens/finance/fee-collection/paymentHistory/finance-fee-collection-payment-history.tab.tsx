@@ -342,43 +342,6 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
           {
             id: 'feeHead',
             label: 'Fee Head',
-            // children(row) {
-            //   return (
-            //     <CustomizableTable
-            //     isFilter={false}
-            //     isScrollbar={false}
-            //     isSearch={false}
-            //     isPagination={false}
-            //     columns={[
-            //       {id:"paymentId", label:"Payment Id / Cheque No"},
-            //       {id:"amount", label:"Amount"},
-            //       {id:"paymentMode", label:"PaymentMode"},
-            //       {id:"paymentStatus", label:"Status"},
-            //       {id:"action", label:"Action", render(value,) {
-            //         return (
-            //           <ThreeDotsActions
-            //           actions={(popover) => (
-            //             <MenuList>
-            //               <MenuItem
-            //                 onClick={() => {
-            //                   // popover.onClose();
-            //                 }}
-            //               >
-            //                 <Iconify icon="lets-icons:refund-back-light" />
-            //                 Refund
-            //               </MenuItem>
-
-            //             </MenuList>
-            //           )}
-            //         />
-            //         );
-            //       },},
-            //     ]} data={
-            //       row.paymentHistory
-            //     }/>
-
-            //   );
-            // },
           },
           {
             id: 'amountPaid',
@@ -396,8 +359,6 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
               );
             },
           },
-          // { id: 'dueDate', label: 'Due Date' },
-
           {
             id: 'status',
             label: 'Status',

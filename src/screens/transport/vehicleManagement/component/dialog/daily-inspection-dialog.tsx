@@ -1,5 +1,5 @@
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 
 import {
   Box,
@@ -153,10 +153,6 @@ const TransportDailyVehicleDialog: React.FC<TransportDailyVehicleDialogProps> = 
   isEdit,
   allData,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-  console.log('data', allData);
-  console.log('seldata', data);
-
   const formik = useFormik<FormikValue>({
     initialValues: {
       division: isEdit ? (data.division ?? '') : '',
