@@ -1,11 +1,9 @@
 import React from 'react';
 
 import { Box, Grid, Button, Divider, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
-
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -122,11 +120,19 @@ const PaymentReceipt = () => (
         </Box>
       </Box>
     </Grid>
-    <DialogActions sx={{ flexShrink: 0, p: 2, alignItems: 'flex-end' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        p: 2,
+        width: '100%',
+      }}
+    >
       <Button startIcon={<Iconify icon={GlobalIcons.download} />} variant="contained">
         Download
       </Button>
-    </DialogActions>
+    </Box>
   </Grid>
 );
 

@@ -12,6 +12,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentProfile from './compoenents/studentProfile';
+import HostelRoomTableComponent from './compoenents/hostelRoomTable';
 
 const HostelStudentAllocation = () => {
   // State for selected class
@@ -29,7 +30,7 @@ const HostelStudentAllocation = () => {
     currentQueryAndMutation: useGetClassQuery,
   });
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Hostel Management"
         description="Student Allocation For Hostel "
@@ -80,6 +81,7 @@ const HostelStudentAllocation = () => {
           )}
           sx={{ maxWidth: '200px', width: '100%' }}
         />
+        ``
         <Autocomplete
           disabled={!division}
           options={[
@@ -105,6 +107,7 @@ const HostelStudentAllocation = () => {
         />
       </Box>
       <StudentProfile studentId="1" />
+      <HostelRoomTableComponent />
     </Box>
   );
 };

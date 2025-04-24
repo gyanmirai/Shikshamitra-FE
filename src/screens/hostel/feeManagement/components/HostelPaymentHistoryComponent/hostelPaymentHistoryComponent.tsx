@@ -8,13 +8,6 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { formatNumber } from 'src/utils/formate_number';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import PaymentReceipt from './paymentReceipt';
 const HostelPaymentHistoryComponent = () => {
   // State for managing the receipt dialog visibility
