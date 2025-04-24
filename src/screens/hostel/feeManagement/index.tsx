@@ -1,13 +1,9 @@
 'use client';
 
 import type { Division, Standards } from 'src/types/school';
-
 import React, { useState } from 'react';
-
 import { Box, Button, TextField, Autocomplete } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -30,6 +26,7 @@ const HostelfeeManagement = () => {
   // State to control visibility of student list
   const [showStudents, setShowStudents] = useState(false);
   const collectFeeDialog = useBoolean();
+
   // Query to fetch class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -37,6 +34,7 @@ const HostelfeeManagement = () => {
   });
   return (
     <Box display="flex" flexDirection="column">
+
       <CustomBreadcrumbs
         heading="Hostel Management"
         description="Student Allocation For Hostel "

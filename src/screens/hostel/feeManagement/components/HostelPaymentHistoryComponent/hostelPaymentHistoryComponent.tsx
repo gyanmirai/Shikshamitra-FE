@@ -1,11 +1,8 @@
 import React from 'react';
 
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { formatNumber } from 'src/utils/formate_number';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -147,5 +144,5 @@ const HostelPaymentHistoryComponent = () => {
     </Box>
   );
 };
-
+const HostelPaymentHistoryComponent = () => <div>HostelPaymentHistoryComponent</div>;
 export default HostelPaymentHistoryComponent;
