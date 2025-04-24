@@ -34,7 +34,6 @@ const HostelfeeManagement = () => {
   });
   return (
     <Box display="flex" flexDirection="column">
-
       <CustomBreadcrumbs
         heading="Hostel Management"
         description="Student Allocation For Hostel "
