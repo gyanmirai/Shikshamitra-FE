@@ -17,9 +17,6 @@ import AddResourceCategoryDialog from './resource-category/component/add-resourc
 import AddSubCategoryDialog from './resource-subcategory/component/add-resource-subcategory-dialog';
 import ResourceSubCategoryConfiguration from './resource-subcategory/resource-subcategory-configuration';
 
-import type { IResourceCategoryFormValues } from './resource-category/resource-category-interface';
-import type { IResourceSubCategoryFormValues } from './resource-subcategory/resource-subcategory-interface';
-
 const TABS = [
   {
     value: 'resourceCategoryConfiguration',
@@ -121,10 +118,7 @@ const ResourceSetting = () => {
           open={addResourceCategoryDialog.value}
           handleClose={addResourceCategoryDialog.onFalse}
         >
-          <AddResourceCategoryDialog
-            isEdit={false}
-            data={{ categoryName: '' } as IResourceCategoryFormValues}
-          />
+          <AddResourceCategoryDialog isEdit={false} data={{ categoryName: '' }} />
         </CustomDialog>
       )}
 
@@ -135,10 +129,7 @@ const ResourceSetting = () => {
           open={addResourceSubCategoryDialog.value}
           handleClose={addResourceSubCategoryDialog.onFalse}
         >
-          <AddSubCategoryDialog
-            isEdit={false}
-            data={{ categoryName: '', subcategoryName: '' } as IResourceSubCategoryFormValues}
-          />
+          <AddSubCategoryDialog isEdit={false} data={{ categoryName: '', subcategoryName: '' }} />
         </CustomDialog>
       )}
     </Box>

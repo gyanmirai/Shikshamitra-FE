@@ -8,8 +8,8 @@ import data from 'src/json/ResourceManagement/resourceSettings/resourceCategoryD
 
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import AddResourceCategoryDialog from './component/add-resource-category-dialog';
 
@@ -102,10 +102,7 @@ const ResourceCategoryConfiguration = () => {
           open={addResourceCategoryDialog.value}
           handleClose={addResourceCategoryDialog.onFalse}
         >
-          <AddResourceCategoryDialog
-            isEdit={false}
-            data={{ categoryName: '' } as IResourceCategoryFormValues}
-          />
+          <AddResourceCategoryDialog isEdit={false} data={{ categoryName: '' }} />
         </CustomDialog>
       )}
     </Box>

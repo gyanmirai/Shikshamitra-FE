@@ -8,8 +8,8 @@ import data from 'src/json/ResourceManagement/resourceSettings/resourceSubcatego
 
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import AddSubCategoryDialog from './component/add-resource-subcategory-dialog';
 
@@ -102,10 +102,7 @@ const ResourceSubCategoryConfiguration = () => {
           open={addResourceSubCategoryDialog.value}
           handleClose={addResourceSubCategoryDialog.onFalse}
         >
-          <AddSubCategoryDialog
-            isEdit={false}
-            data={{ categoryName: '', subcategoryName: '' } as IResourceSubCategoryFormValues}
-          />
+          <AddSubCategoryDialog isEdit={false} data={{ categoryName: '', subcategoryName: '' }} />
         </CustomDialog>
       )}
     </Box>
