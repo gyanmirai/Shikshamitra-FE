@@ -1,0 +1,51 @@
+[
+    {
+      "id": "F001",
+      "name": "Room A101",
+      "type": "Classroom",
+      "capacity": 40,
+      "location": "Block A - First Floor",
+      "status": 0
+    },
+    {
+      "id": "F002",
+      "name": "Physics Lab",
+      "type": "Laboratory",
+      "capacity": 25,
+      "location": "Block B - Ground Floor",
+      "status": 1
+    },
+    {
+      "id": "F003",
+      "name": "Auditorium 1",
+      "type": "Auditorium",
+      "capacity": 200,
+      "location": "Main Building",
+      "status": 0
+    },
+    {
+      "id": "F004",
+      "name": "Room B202",
+      "type": "Classroom",
+      "capacity": 35,
+      "location": "Block B - Second Floor",
+      "status": 2
+    },
+    {
+      "id": "F005",
+      "name": "Chemistry Lab",
+      "type": "Laboratory",
+      "capacity": 20,
+      "location": "Block C - First Floor",
+      "status": 0
+    },
+    {
+      "id": "F006",
+      "name": "Auditorium 2",
+      "type": "Auditorium",
+      "capacity": 150,
+      "location": "Cultural Block",
+      "status": 1
+    }
+  ]
+  

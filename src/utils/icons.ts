@@ -27,4 +27,5 @@ export const GlobalIcons = {
   sportsIcon: 'ic:outline-sports-handball',
   pendingIcon: 'mdi:account-pending-outline',
   laboratories: 'medical-icon:i-laboratory',
+  calenderIcon: 'uit:calender',
 };

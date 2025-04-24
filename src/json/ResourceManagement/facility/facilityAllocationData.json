@@ -1,0 +1,33 @@
+[
+    {
+      "facility": "Room A101",
+      "status": 0,
+      "utilization": 75,
+      "timing": "10:00 AM - 5:00 PM"
+    },
+    {
+      "facility": "Physics Lab 1",
+      "status": 1,
+      "utilization": 90,
+      "timing": "9:00 AM - 6:00 PM"
+    },
+    {
+      "facility": "Main Auditorium",
+      "status": 2,
+      "utilization": 0,
+      "timing": "10:00 AM - 5:00 PM"
+    },
+    {
+      "facility": "Computer Lab 2",
+      "status": 0,
+      "utilization": 60,
+      "timing": "8:00 AM - 4:00 PM"
+    },
+    {
+      "facility": "Chemistry Lab",
+      "status": 1,
+      "utilization": 85,
+      "timing": "9:00 AM - 5:30 PM"
+    }
+  ]
+  
