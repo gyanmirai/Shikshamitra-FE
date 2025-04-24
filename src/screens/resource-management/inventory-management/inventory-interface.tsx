@@ -47,3 +47,18 @@ export interface IProcurementResourceDialogProps {
   data: IProcurementFormValues;
   isEdit?: boolean;
 }
+
+export interface IInventoryItem {
+  itemCode: string;
+  name: string;
+  category: string;
+  quantity: number;
+  available: number;
+  location: string;
+  status: number;
+  lastUpdatedDate: Dayjs;
+}
+
+export interface IInventoryManagementDetailsViewpProps {
+  data: IInventoryItem;
+}

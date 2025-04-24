@@ -11,12 +11,12 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   subtitleText,
   subtitleIcon,
   labelData = [],
-  titleColor = 'black',
-  mainTextColor = 'black',
-  subtitleTextColor = 'black',
-  mainIconColor = 'black',
-  subtitleIconColor = 'black',
-  backgroundColor = 'white',
+  titleColor = 'primary.common.black',
+  mainTextColor = 'primary.common.black',
+  subtitleTextColor = 'primary.common.black',
+  mainIconColor = 'primary.common.black',
+  subtitleIconColor = 'primary.common.black',
+  backgroundColor = 'primary.common.white',
 }) => (
   <Card
     sx={{
