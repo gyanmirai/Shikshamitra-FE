@@ -1,7 +1,7 @@
 import React from 'react';
 
-import HostelAttendance from 'src/screens/hostel/attendanceManagement/hostelAttendance';
+import ManualHostelAttendance from 'src/screens/hostel/attendanceManagement/hostelAttendance/manualAttendance';
 
-const page = () => <HostelAttendance />;
+const page = () => <ManualHostelAttendance />;
 
 export default page;

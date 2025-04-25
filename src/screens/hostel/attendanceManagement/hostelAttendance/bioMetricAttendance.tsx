@@ -10,7 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Box, MenuItem, MenuList, TextField, Autocomplete } from '@mui/material';
 
 import {
-  BiometricHostelAttendance,
+  BiometricHostelAttendanceType,
   BiometricHostelAttendanceColor,
   BiometricHostelAttendanceOptions,
 } from 'src/enums/biometric-hostel-attendance';
@@ -21,7 +21,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-const HostelAttendance = () => {
+const BiometricHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
@@ -166,10 +166,10 @@ const HostelAttendance = () => {
             enumOptions: BiometricHostelAttendanceOptions,
             render(value, row) {
               const color = BiometricHostelAttendanceColor[
-                value as BiometricHostelAttendance
+                value as BiometricHostelAttendanceType
               ] as LabelColor;
 
-              return <Label color={color}>{BiometricHostelAttendance[value]}</Label>;
+              return <Label color={color}>{BiometricHostelAttendanceType[value]}</Label>;
             },
           },
           {
@@ -196,7 +196,7 @@ const HostelAttendance = () => {
             hostelName: 'Hostel A',
             floor: 1,
             timeStamp: '2025-04-25T07:30:00Z',
-            status: BiometricHostelAttendance.Present,
+            status: BiometricHostelAttendanceType.Present,
           },
           {
             id: '2',
@@ -205,7 +205,7 @@ const HostelAttendance = () => {
             hostelName: 'Hostel B',
             floor: 2,
             timeStamp: '2025-04-25T07:45:00Z',
-            status: BiometricHostelAttendance.Absent,
+            status: BiometricHostelAttendanceType.Absent,
           },
           {
             id: '3',
@@ -214,7 +214,7 @@ const HostelAttendance = () => {
             hostelName: 'Hostel A',
             floor: 1,
             timeStamp: '2025-04-25T08:00:00Z',
-            status: BiometricHostelAttendance.Missing,
+            status: BiometricHostelAttendanceType.Missing,
           },
           {
             id: '4',
@@ -223,7 +223,7 @@ const HostelAttendance = () => {
             hostelName: 'Hostel C',
             floor: 3,
             timeStamp: '2025-04-25T07:15:00Z',
-            status: BiometricHostelAttendance.Present,
+            status: BiometricHostelAttendanceType.Present,
           },
         ]}
       />
@@ -231,4 +231,4 @@ const HostelAttendance = () => {
   );
 };
 
-export default HostelAttendance;
+export default BiometricHostelAttendance;
