@@ -48,7 +48,7 @@ const GateApproval = () => {
               }}
             >
               <Iconify icon="mdi:arrow-right-bold" sx={{ mr: 1 }} />
-              Mark Outbound
+              Marked Out
             </MenuItem>
           )}
           {row.status === 1 && (
@@ -59,7 +59,7 @@ const GateApproval = () => {
               }}
             >
               <Iconify icon="mdi:arrow-left-bold" sx={{ mr: 1 }} />
-              Mark Return
+              Marked In
             </MenuItem>
           )}
           {/* )} */}
@@ -131,11 +131,11 @@ const GateApproval = () => {
         onClose={() => {
           markOutboundDialog.onFalse();
         }}
-        title="Mark Down"
-        content="Are you sure want to Markdown?"
+        title="Marked Out"
+        content="Are you sure want to Marked Out?"
         action={
           <Button variant="contained" onClick={() => {}}>
-            Mark Down
+            Marked Out
           </Button>
         }
       />
@@ -145,11 +145,11 @@ const GateApproval = () => {
         onClose={() => {
           markReturnDialog.onFalse();
         }}
-        title="Mark Return"
-        content="Are you sure want to Mark Return?"
+        title="Marked In"
+        content="Are you sure want to Marked In?"
         action={
           <Button variant="contained" onClick={() => {}}>
-            Mark Return
+            Marked In
           </Button>
         }
       />
