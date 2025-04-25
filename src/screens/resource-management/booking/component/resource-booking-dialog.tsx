@@ -49,7 +49,6 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
             >
               <CustomSelect
                 label="Select Category"
-                autofocus
                 options={[]}
                 value={formik.values.resourceCategory}
                 onChange={(value) => formik.setFieldValue('resourceCategory', value)}
