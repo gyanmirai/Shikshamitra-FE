@@ -1399,6 +1399,18 @@ const resourceManagement = {
           _action: 'inventory-management',
         },
         {
+          title: 'Resource Allocation',
+          path: '/resourceManagement/resource-allocation',
+          _action: 'resource-allocation',
+          children: [
+            {
+              title: 'Allocation Of Resources',
+              path: '/resourceManagement/resource-allocation/allocation-of-resources',
+              _action: 'allocation-of-resources',
+            },
+          ],
+        },
+        {
           title: 'Classroom & Facilities',
           path: '/resourceManagement/classroom-facilities',
           _action: 'classroom-facilities',

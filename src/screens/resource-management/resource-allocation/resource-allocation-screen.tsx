@@ -1,0 +1,60 @@
+'use client';
+
+import React from 'react';
+
+import { Add } from '@mui/icons-material';
+import { Box, Button } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import CustomDialog from 'src/components/customDialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import ResourceItemTable from './component/resource-item-table';
+import ResourceAllocateDialog from './component/resource-allocation-dialog';
+
+import type { IResourceAllocateFormValues } from './resource-allocation-interface';
+
+const ResourceAllocationScreen = () => {
+  const allocationResourceDialog = useBoolean();
+  return (
+    <>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <Box>
+          <CustomBreadcrumbs
+            heading="Resource Allocation"
+            links={[{ name: 'Resource Management' }, { name: 'Resource Allocation' }]}
+            sx={{ px: 1, mb: 2 }}
+          />
+        </Box>
+
+        <Box display="flex" flexDirection="row" gap={2} alignItems="center" pb="15px">
+          <Button
+            onClick={() => {
+              allocationResourceDialog.onTrue();
+            }}
+            variant="contained"
+            startIcon={<Add />}
+          >
+            Allocate Resource{' '}
+          </Button>
+        </Box>
+      </Box>
+      <ResourceItemTable />
+      {allocationResourceDialog.value && (
+        <CustomDialog
+          maxWidth="md"
+          title="Allocate Resource"
+          handleClose={() => {
+            allocationResourceDialog.onFalse();
+          }}
+          open={allocationResourceDialog.value}
+        >
+          <ResourceAllocateDialog isEdit={false} data={{} as IResourceAllocateFormValues} />
+        </CustomDialog>
+      )}
+    </>
+  );
+};
+
+export default ResourceAllocationScreen;
