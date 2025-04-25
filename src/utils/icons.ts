@@ -30,4 +30,5 @@ export const GlobalIcons = {
   calenderIcon: 'uit:calender',
   delocate: 'mage:refresh-reverse',
   transfer: 'bx:transfer',
+  maintenanceIcon: 'pajamas:issue-type-maintenance',
 };

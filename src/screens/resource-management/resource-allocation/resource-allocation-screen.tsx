@@ -3,11 +3,12 @@
 import React from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Box, Grid, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ResourceItemTable from './component/resource-item-table';
@@ -40,6 +41,26 @@ const ResourceAllocationScreen = () => {
           </Button>
         </Box>
       </Box>
+      <Grid container spacing={2} mb={5} mt={1}>
+        <Grid item lg={3}>
+          <CustomSelect
+            autoFocus
+            label="Select Resource"
+            options={[]}
+            value=""
+            onChange={() => {}}
+          />
+        </Grid>
+        <Grid item lg={3}>
+          <CustomSelect
+            autoFocus
+            label="Select Allocation Target"
+            options={[]}
+            value=""
+            onChange={() => {}}
+          />
+        </Grid>
+      </Grid>
       <ResourceItemTable />
       {allocationResourceDialog.value && (
         <CustomDialog

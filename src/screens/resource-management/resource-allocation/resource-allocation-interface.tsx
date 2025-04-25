@@ -17,6 +17,7 @@ export interface IResourceAllocateFormValues {
 
   reasonOfTransfer: string;
 }
+
 export interface IResourceAllocateDialogProps {
   data: IResourceAllocateFormValues;
   isEdit: boolean;
@@ -25,4 +26,8 @@ export interface IResourceAllocateDialogProps {
 export interface IResourceTransferDialogProps {
   data: IResourceAllocateFormValues;
   isEdit: boolean;
+}
+
+export interface IResourceViewDialogTeacherProps {
+  data: IResourceAllocateFormValues;
 }

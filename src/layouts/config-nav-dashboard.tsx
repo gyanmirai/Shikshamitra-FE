@@ -1408,6 +1408,11 @@ const resourceManagement = {
               path: '/resourceManagement/resource-allocation/allocation-of-resources',
               _action: 'allocation-of-resources',
             },
+            {
+              title: 'Assigned Resource',
+              path: '/resourceManagement/resource-allocation/assigned-resource',
+              _action: 'assigned-resource',
+            },
           ],
         },
         {
