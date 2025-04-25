@@ -7,6 +7,7 @@ export interface IResourceBookingFormValues {
   status: string;
   purpose?: string;
   requestedBy?: string;
+  resourceCategory: string;
 }
 
 export interface IResourceBookingDialogProps {

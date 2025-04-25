@@ -48,7 +48,7 @@ const InventoryManagement = () => {
           >
             Add Resources{' '}
           </Button>
-          <Button
+          {/* <Button
             onClick={() => {
               dialogIssueResource.onTrue();
             }}
@@ -65,7 +65,7 @@ const InventoryManagement = () => {
             startIcon={<Add />}
           >
             Procurement Request{' '}
-          </Button>
+          </Button> */}
         </Box>
 
         {dialogAddResource.value && (

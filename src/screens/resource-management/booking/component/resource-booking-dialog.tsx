@@ -45,10 +45,30 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
         <Grid container spacing={2}>
           <Grid item xs={12} pb="10px">
             <ShakingTextField
-              error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
+              error={formik.touched.resourceCategory && Boolean(formik.errors.resourceCategory)}
             >
               <CustomSelect
                 label="Select Category"
+                autofocus
+                options={[]}
+                value={formik.values.resourceCategory}
+                onChange={(value) => formik.setFieldValue('resourceCategory', value)}
+                disabled={isEdit}
+                error={formik.touched.resourceCategory && Boolean(formik.errors.resourceCategory)}
+                helperText={
+                  formik.touched.resourceCategory && formik.errors.resourceCategory
+                    ? String(formik.errors.resourceCategory)
+                    : ''
+                }
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField
+              error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
+            >
+              <CustomSelect
+                label="Select Item"
                 options={[]}
                 value={formik.values.resourceName}
                 onChange={(value) => formik.setFieldValue('resourceName', value)}
@@ -86,9 +106,11 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
             />
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid item xs={12} pb="10px">
             <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
               <TextField
+                multiline
+                rows={4}
                 name="purpose"
                 label="Purpose"
                 value=""

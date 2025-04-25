@@ -1,7 +1,7 @@
 import React from 'react';
 
-import AdminBookingScreen from 'src/screens/resource-management/booking/admin-booking-screen';
+import TeacherBookingScreen from 'src/screens/resource-management/booking/teacher-booking-screen';
 
-const BookingPage = () => <AdminBookingScreen />;
+const BookingPage = () => <TeacherBookingScreen />;
 
 export default BookingPage;
