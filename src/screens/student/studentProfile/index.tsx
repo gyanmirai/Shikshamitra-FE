@@ -52,6 +52,7 @@ import StudentIDCard from './student-id-card';
 import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
+import HostelRoomMate from './hostel/hostelRoomMate';
 
 import type { IInquiryData } from '../enrollment/Inquiry';
 
@@ -128,6 +129,14 @@ const TABS = [
     label: 'Library',
     icon: <Iconify icon="mdi:library" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Library {...props} />,
+  },
+  {
+    value: 'hostel',
+    label: 'Hostel',
+    icon: <Iconify icon="mdi:home-city-outline" width={20} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+      <HostelRoomMate {...props} />
+    ),
   },
 ];
 
