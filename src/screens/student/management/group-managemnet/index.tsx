@@ -2,6 +2,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
@@ -9,36 +10,47 @@ import {
   Box,
   Stack,
   Button,
-  MenuList,
-  MenuItem,
+  Tooltip,
   TextField,
+  IconButton,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { useGetAllStudentsQuery } from 'src/redux/student';
+import { StudentApi } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  useGetStudentGroupQuery,
+  useGetAllGroupQuery,
   useSetGroupLeaderMutation,
   useAddStudentGroupMutation,
+  useRemoveGroupLeaderMutation,
   useDeleteStudentGroupMutation,
   useUpdateStudentGroupMutation,
   useAssignStudentGroupMutation,
+  useRemoveDivisionLeaderMutation,
+  useRemoveStudentFromGroupMutation,
+  useSetGroupLeaderAsDivisionMutation,
 } from 'src/redux/student/student-group/student-group';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IGroup } from './type';
+import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const GroupManagement = () => {
+const GroupManagement = ({
+  tableData,
+  isLoading,
+}: {
+  tableData: IInquiryData[];
+  isLoading: boolean;
+}) => {
   // State to store query parameters
   const [queryParams, setQueryParams] = useState({
     SkipCount: 0,
@@ -46,21 +58,29 @@ const GroupManagement = () => {
     Sorting: 'name ASC',
   });
   // State to manage dialog for assigning group leaders
-  const assignLeaderDialog = useBoolean();
+  const assignLeaderAsDivisionDialog = useBoolean();
   // State to manage dialog for assigning students
   const assignStudentDialog = useBoolean();
   // Dialog state for add/edit form
   const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
+  // State to manage group data
+  const dispatch = useDispatch();
+  // State to manage group data
+  const isConfirmForDivisionLeader = useBoolean();
+  // State to manage group data
+  const isConfirmForMainLeader = useBoolean();
+  // State to manage group data
+  const isRemoveFromDivisionLeader = useBoolean();
+  // State to manage group data
+  const isRemoveLeader = useBoolean();
+  // State to manage group data
+  const isRemovestudetToHouse = useBoolean();
+
   // State to store group data being edited
-  const [editData, setEditData] = useState<null | IGroup>(null);
-  // Fetch all student groups
-  const { data: groupData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentGroupQuery,
-    params: queryParams,
-  });
+  const [editData, setEditData] = useState<null | IInquiryData>(null);
+
   // Close dialog and reset edit data
   const handleClose = () => {
     setEditData(null);
@@ -72,6 +92,32 @@ const GroupManagement = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteStudentGroupMutation,
   });
+  // set division leader  group mutation hook
+  const [assignDivisionLeader, { isLoading: isAssignDivisionLeaderLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSetGroupLeaderAsDivisionMutation,
+  });
+  // set division leader  group mutation hook
+  const [assignMainLeader, { isLoading: isAssignMainLeaderLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSetGroupLeaderMutation,
+  });
+  // set division leader  group mutation hook
+  const [removeDivisionLeader, { isLoading: isRemoveDivisionLeaderLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRemoveDivisionLeaderMutation,
+  });
+  // remove  leader  group mutation hook
+  const [removeLeader, { isLoading: isRemoveLeaderLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRemoveGroupLeaderMutation,
+  });
+  // remove  leader  group mutation hook
+  const [removeStudentFromHouse, { isLoading: isRemoveStudentFromHouse }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRemoveStudentFromGroupMutation,
+  });
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
@@ -113,7 +159,352 @@ const GroupManagement = () => {
           </LoadingButton>
         }
       />
+      <ConfirmDialog
+        open={isRemoveFromDivisionLeader.value}
+        onClose={() => {
+          isRemoveFromDivisionLeader.onFalse();
+          setEditData(null);
+        }}
+        title="Remove Division Leader"
+        content={
+          <>
+            Are you sure want to Remove Student <b>{`${editData?.name}`}</b> from Division Leader ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isRemoveDivisionLeaderLoading}
+            color="error"
+            onClick={async () => {
+              try {
+                await removeDivisionLeader(editData?.groupMembership?.groupId).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'Removed Division Leader Successfully',
+                });
+                isRemoveFromDivisionLeader.onFalse();
+              } catch (error) {
+                console.log(error);
+              }
+              setEditData(null);
+            }}
+          >
+            Remove
+          </LoadingButton>
+        }
+      />
+      <ConfirmDialog
+        open={isRemoveLeader.value}
+        onClose={() => {
+          isRemoveLeader.onFalse();
+          setEditData(null);
+        }}
+        title="Remove Division Leader"
+        content={
+          <>
+            Are you sure want to Remove Student <b>{`${editData?.name}`}</b> from House Leader ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isRemoveLeaderLoading}
+            color="error"
+            onClick={async () => {
+              try {
+                await removeLeader(editData?.groupMembership?.groupId).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'Removed House Leader Successfully',
+                });
+                isRemoveLeader.onFalse();
+              } catch (error) {
+                console.log(error);
+              }
+              setEditData(null);
+            }}
+          >
+            Remove
+          </LoadingButton>
+        }
+      />
+      <ConfirmDialog
+        open={isRemovestudetToHouse.value}
+        onClose={() => {
+          isRemovestudetToHouse.onFalse();
+          setEditData(null);
+        }}
+        title="Remove Student from house"
+        content={
+          <>
+            Are you sure want to Remove Student <b>{`${editData?.name}`}</b> from House ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isRemoveStudentFromHouse}
+            color="error"
+            onClick={async () => {
+              try {
+                await removeStudentFromHouse({
+                  groupId: editData?.groupMembership?.groupId,
+                  studentId: editData?.id,
+                }).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'Removed Student From House Successfully',
+                });
+                isRemovestudetToHouse.onFalse();
+              } catch (error) {
+                console.log(error);
+              }
+              setEditData(null);
+            }}
+          >
+            Remove
+          </LoadingButton>
+        }
+      />
+      <ConfirmDialog
+        open={isConfirmForDivisionLeader.value}
+        onClose={() => {
+          isConfirmForDivisionLeader.onFalse();
+          setEditData(null);
+        }}
+        title="Assign Division Leader"
+        content={
+          <>
+            Are you sure want to Assign Division Leader to <b>{`${editData?.name}`}</b> ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isAssignDivisionLeaderLoading}
+            onClick={async () => {
+              try {
+                await assignDivisionLeader({
+                  studentId: editData?.id,
+                  studentGroupId: editData?.groupMembership?.groupId,
+                }).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
+                isConfirmForDivisionLeader.onFalse();
+
+                shikshaMitraToast.success({
+                  message: 'Assigned Division Leader Successfully',
+                });
+              } catch (error) {
+                console.log(error);
+              }
+              setEditData(null);
+            }}
+          >
+            Assign
+          </LoadingButton>
+        }
+      />
+      <ConfirmDialog
+        open={isConfirmForMainLeader.value}
+        onClose={() => {
+          isConfirmForMainLeader.onFalse();
+          setEditData(null);
+        }}
+        title="Assign Leader"
+        content={
+          <>
+            Are you sure want to Assign Leader to <b>{`${editData?.name}`}</b> ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isAssignMainLeaderLoading}
+            onClick={async () => {
+              try {
+                await assignMainLeader({
+                  studentId: editData?.id,
+                  studentGroupId: editData?.groupMembership?.groupId,
+                }).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
+                isConfirmForMainLeader.onFalse();
+                shikshaMitraToast.success({
+                  message: 'Assigned House Leader Successfully',
+                });
+              } catch (error) {
+                console.log(error);
+              }
+              setEditData(null);
+            }}
+          >
+            Assign
+          </LoadingButton>
+        }
+      />
       <CustomizableTable
+        // onSendNotification={handlerSendNotification}
+        // showCheckbox={selectedStudent.length !== 0}
+        tableId="group-management-table"
+        noDataText="No Student data available"
+        isLoading={isLoading}
+        columns={[
+          // { id: 'srNo', label: 'Sr. No.' },
+          { id: 'grNoRecord', label: 'GR No.', align: 'left', minWidth: '110px' },
+          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '120px' },
+          { id: 'name', label: 'Name', align: 'left', minWidth: '160px' },
+          {
+            id: 'groupMembership.groupName',
+            label: 'House Name',
+            minWidth: '160px',
+            render(value, row) {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  {value ? <Label color="info">{value} House</Label> : <Box />}
+                  <Box>
+                    <Tooltip title="Change House">
+                      <IconButton
+                        sx={{ color: 'info.main' }}
+                        onClick={() => {
+                          setEditData(row as IInquiryData);
+                          assignStudentDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="mage:exchange-a" />
+                      </IconButton>
+                    </Tooltip>
+                    {value && (
+                      <Tooltip
+                        title="Remove from House"
+                        onClick={() => {
+                          setEditData(row as IInquiryData);
+                          isRemovestudetToHouse.onTrue();
+                        }}
+                      >
+                        <IconButton sx={{ color: 'error.main' }}>
+                          <Iconify icon="jam:user-remove" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </Box>
+              );
+            },
+          },
+          {
+            id: 'groupMembership.isDivisionLeader',
+            label: 'Division Leader',
+            minWidth: '160px',
+            render(value, row) {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  <Box>
+                    {!value ? (
+                      <Tooltip title="Assign Division Leader">
+                        <IconButton
+                          sx={{ color: 'info.main' }}
+                          onClick={() => {
+                            if (!row.groupMembership) {
+                              shikshaMitraToast.error({ message: 'Please assign house first' });
+                              return;
+                            }
+                            setEditData(row as IInquiryData);
+                            isConfirmForDivisionLeader.onTrue();
+                          }}
+                        >
+                          <Iconify icon="fluent-mdl2:party-leader" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Remove from Division Leader">
+                        <IconButton
+                          sx={{ color: 'error.main' }}
+                          onClick={() => {
+                            setEditData(row as IInquiryData);
+                            isRemoveFromDivisionLeader.onTrue();
+                          }}
+                        >
+                          <Iconify icon="material-symbols:group-remove-outline" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </Box>
+              );
+            },
+          },
+          {
+            id: 'groupMembership.isLeader',
+            label: 'House Leader',
+            minWidth: '160px',
+            render(value, row) {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  <Box>
+                    {!value ? (
+                      <Tooltip title=" Assign House Leader">
+                        <IconButton
+                          sx={{ color: 'info.main' }}
+                          onClick={() => {
+                            if (!row.groupMembership) {
+                              shikshaMitraToast.error({ message: 'Please assign house first' });
+                              return;
+                            }
+                            setEditData(row as IInquiryData);
+                            isConfirmForMainLeader.onTrue();
+                          }}
+                        >
+                          <Iconify icon="fluent-mdl2:party-leader" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Remove from  Leader">
+                        <IconButton
+                          sx={{ color: 'error.main' }}
+                          onClick={() => {
+                            setEditData(row as IInquiryData);
+                            isRemoveLeader.onTrue();
+                          }}
+                        >
+                          <Iconify icon="material-symbols:group-remove-outline" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </Box>
+              );
+            },
+          },
+        ]}
+        data={tableData || []}
+      />{' '}
+      {/* <CustomizableTable
         tableId="group-management-table"
         noDataText={
           <>
@@ -207,7 +598,7 @@ const GroupManagement = () => {
           },
         ]}
         data={groupData?.items || []}
-      />{' '}
+      />{' '} */}
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
@@ -221,7 +612,7 @@ const GroupManagement = () => {
           assignStudentDialog.onFalse();
           setEditData(null);
         }}
-        title="Assign Students"
+        title="Assign House"
       >
         <AssignStudentForm
           editData={editData}
@@ -231,22 +622,22 @@ const GroupManagement = () => {
           }}
         />
       </CustomDialog>
-      <CustomDialog
-        open={assignLeaderDialog.value}
+      {/* <CustomDialog
+        open={assignLeaderAsDivisionDialog.value}
         handleClose={() => {
-          assignLeaderDialog.onFalse();
+          assignLeaderAsDivisionDialog.onFalse();
           setEditData(null);
         }}
         title="Assign Students"
       >
-        <AssignLeaderForm
+        <AssignStudentForm
           editData={editData}
           handleClose={() => {
-            assignLeaderDialog.onFalse();
+            assignLeaderAsDivisionDialog.onFalse();
             setEditData(null);
           }}
         />
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };
@@ -335,51 +726,69 @@ const GroupManagementForm = ({
   );
 };
 
-// Component for assigning students to groups
+/**
+ * Component for assigning a leader to a group
+ * @param {Object} props - Component props
+ * @param {Function} props.handleClose - Function to handle dialog close
+ * @param {Object|null} props.editData - Group data being edited
+ */
 const AssignStudentForm = ({
   handleClose,
   editData,
 }: {
   handleClose: () => void;
-  editData: IGroup | null;
+  editData: IInquiryData | null;
 }) => {
-  // Hook for assigning students to groups mutation
+  /**
+   * Custom hook for assigning students as group leaders
+   * Returns mutation function and loading state
+   */
   const [assignStudent, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAssignStudentGroupMutation,
   });
 
-  // Hook for fetching all students data
-  const { data: studentData, isLoading: isStudentLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAllStudentsQuery,
-  });
+  // Fetch all student groups
+  // const { data: groupData, isLoading: isGetHouseLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetStudentGroupQuery,
+  // });
 
-  // Formik instance for form handling
+  const { data: groupData, isLoading: isGetGroupLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllGroupQuery,
+  });
+  console.log('🚀 ~ groupData:', groupData);
+
+  /**
+   * Formik instance for handling form state and validation
+   * Manages student selection and form submission
+   */
   const formik = useFormik<{
-    student: {
-      id: string;
-      firstName: string;
-      lastName: string;
-    };
+    house: { name: string; id: string };
   }>({
     // Initial form values
     initialValues: {
-      student: { id: '', firstName: '', lastName: '' },
+      house: { name: '', id: '' },
     },
     // Validation schema for form fields
     validationSchema: Yup.object({
-      student: Yup.object({
-        id: Yup.string().required('Student is required'),
+      house: Yup.object({
+        id: Yup.string().required('please select a house'),
       }),
     }),
-    // Form submission handler
+    /**
+     * Handles form submission
+     * Assigns selected student as group leader
+     * @param {Object} values - Form values
+     */
     onSubmit: async (values) => {
       try {
         await assignStudent({
-          studentId: values.student.id,
-          studentGroupId: editData?.id || '',
+          studentId: editData?.id,
+          studentGroupId: values.house.id,
           isLeader: false,
+          isDivisionLeader: false,
         }).unwrap();
         shikshaMitraToast.success({ message: `Student Assigned Successfully` });
         handleClose();
@@ -393,139 +802,27 @@ const AssignStudentForm = ({
     <Box component="form" onSubmit={formik.handleSubmit} p={2}>
       <Stack spacing={2}>
         <Autocomplete
-          noOptionsText="No Student Found"
+          noOptionsText="No House Found"
           fullWidth
-          value={formik.values.student}
-          onChange={(_, val) => formik.setFieldValue('student', val)}
+          loading={isGetGroupLoading}
+          value={formik.values.house}
+          onChange={(_, val) => formik.setFieldValue('house', val)}
           renderOption={(props, option: any) => (
             <li {...props} key={option.id}>
-              {`${option?.firstName || ''} ${option?.lastName || ''}`}
+              {option?.name}
             </li>
           )}
-          options={studentData?.items || []}
-          getOptionLabel={(option: any) => `${option?.firstName} ${option?.lastName}`}
+          options={groupData?.items || []}
+          getOptionLabel={(option: any) => `${option?.name}`}
           renderInput={(params) => (
             <TextField
               {...params}
               fullWidth
               size="small"
-              label="Search Student"
-              placeholder="Search Student"
-              error={formik.touched.student && Boolean(formik.errors.student?.id)}
-              helperText={formik.touched.student && formik.errors.student?.id}
-            />
-          )}
-        />
-      </Stack>
-      <DialogActions sx={{ px: 0, pb: 0 }}>
-        <Button size="small" variant="outlined" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton size="small" type="submit" variant="contained" loading={isLoading}>
-          Assign
-        </LoadingButton>
-      </DialogActions>
-    </Box>
-  );
-};
-
-/**
- * Component for assigning a leader to a group
- * @param {Object} props - Component props
- * @param {Function} props.handleClose - Function to handle dialog close
- * @param {Object|null} props.editData - Group data being edited
- */
-const AssignLeaderForm = ({
-  handleClose,
-  editData,
-}: {
-  handleClose: () => void;
-  editData: IGroup | null;
-}) => {
-  /**
-   * Custom hook for assigning students as group leaders
-   * Returns mutation function and loading state
-   */
-  const [assignLeader, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useSetGroupLeaderMutation,
-  });
-
-  /**
-   * Custom hook for fetching all students data
-   * Returns students data and loading state
-   */
-  const { data: studentData, isLoading: isStudentLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAllStudentsQuery,
-  });
-
-  /**
-   * Formik instance for handling form state and validation
-   * Manages student selection and form submission
-   */
-  const formik = useFormik<{
-    student: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      groupId: string;
-    };
-  }>({
-    // Initial form values
-    initialValues: {
-      student: { id: '', firstName: '', lastName: '', groupId: '' },
-    },
-    // Validation schema for form fields
-    validationSchema: Yup.object({
-      student: Yup.object({
-        id: Yup.string().required('Student is required'),
-      }),
-    }),
-    /**
-     * Handles form submission
-     * Assigns selected student as group leader
-     * @param {Object} values - Form values
-     */
-    onSubmit: async (values) => {
-      try {
-        await assignLeader({
-          studentId: values.student.id,
-          studentGroupId: editData?.id,
-        }).unwrap();
-        shikshaMitraToast.success({ message: `leader Assigned Successfully` });
-        handleClose();
-      } catch (error) {
-        console.log(error);
-      }
-    },
-  });
-
-  return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <Stack spacing={2}>
-        <Autocomplete
-          noOptionsText="No Student Found"
-          fullWidth
-          loading={isStudentLoading}
-          value={formik.values.student}
-          onChange={(_, val) => formik.setFieldValue('student', val)}
-          renderOption={(props, option: any) => (
-            <li {...props} key={option.id}>
-              {`${option?.firstName || ''} ${option?.lastName || ''}`}
-            </li>
-          )}
-          options={studentData?.items || []}
-          getOptionLabel={(option: any) => `${option?.firstName} ${option?.lastName}`}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              fullWidth
-              size="small"
-              label="Search Student"
-              placeholder="Search Student"
-              error={formik.touched.student && Boolean(formik.errors.student?.id)}
-              helperText={formik.touched.student && formik.errors.student?.id}
+              label="Search House"
+              placeholder="Search House"
+              error={formik.touched.house && Boolean(formik.errors.house?.id)}
+              helperText={formik.touched.house && formik.errors.house?.id}
             />
           )}
         />

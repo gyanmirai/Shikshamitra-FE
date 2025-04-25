@@ -70,7 +70,13 @@ const TABS = [
   },
   { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
-  { value: 'groupManageMent', label: 'House Management', component: () => <GroupManagement /> },
+  {
+    value: 'groupManageMent',
+    label: 'House Management',
+    component: (props: { tableData: IInquiryData[]; isLoading: boolean }) => (
+      <GroupManagement {...props} />
+    ),
+  },
 ];
 
 const StudentManagementScreen = () => {

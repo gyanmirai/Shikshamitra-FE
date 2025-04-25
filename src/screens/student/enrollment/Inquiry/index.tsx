@@ -93,6 +93,7 @@ export interface IInquiryData {
   apparId: string;
   remarks: string;
   onboardingProgressState: number;
+  groupMembership: IGroupMembership;
 }
 
 export interface ParentBankDetails {
@@ -129,6 +130,13 @@ export interface InquiryPreference {
   lastModificationTime: string;
   lastModifierId: string;
   preferenceName: string;
+}
+
+export interface IGroupMembership {
+  groupId: string;
+  groupName: string;
+  isDivisionLeader: boolean;
+  isLeader: boolean;
 }
 
 export interface StudentBasicDetails {
