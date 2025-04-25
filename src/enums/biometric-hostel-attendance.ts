@@ -1,4 +1,4 @@
-export enum BiometricHostelAttendance {
+export enum BiometricHostelAttendanceType {
   Missing,
   Present,
   Absent,
@@ -7,20 +7,20 @@ export enum BiometricHostelAttendance {
 export const BiometricHostelAttendanceOptions = [
   {
     label: 'Missing',
-    value: BiometricHostelAttendance.Missing,
+    value: BiometricHostelAttendanceType.Missing,
   },
   {
     label: 'Present',
-    value: BiometricHostelAttendance.Present,
+    value: BiometricHostelAttendanceType.Present,
   },
   {
     label: 'Absent',
-    value: BiometricHostelAttendance.Absent,
+    value: BiometricHostelAttendanceType.Absent,
   },
 ];
 
 export const BiometricHostelAttendanceColor = {
-  [BiometricHostelAttendance.Missing]: 'warning',
-  [BiometricHostelAttendance.Present]: 'success',
-  [BiometricHostelAttendance.Absent]: 'error',
+  [BiometricHostelAttendanceType.Missing]: 'warning',
+  [BiometricHostelAttendanceType.Present]: 'success',
+  [BiometricHostelAttendanceType.Absent]: 'error',
 };
