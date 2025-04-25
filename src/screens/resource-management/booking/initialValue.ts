@@ -11,5 +11,6 @@ export function getInitialBookingValues(
     status: isEdit ? (data.status ?? '') : '',
     purpose: isEdit ? (data.purpose ?? '') : '',
     requestedBy: isEdit ? (data.requestedBy ?? '') : '',
+    resourceCategory: isEdit ? (data.resourceCategory ?? '') : '',
   };
 }
