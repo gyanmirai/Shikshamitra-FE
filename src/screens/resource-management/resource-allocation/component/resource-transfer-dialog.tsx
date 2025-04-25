@@ -13,7 +13,7 @@ import { getInitialResourceTransferValues } from '../initialValue';
 import { resourceTransferValidationSchema } from '../validationSchema';
 
 import type {
-  IResourceTransferFormValues,
+  IResourceAllocateFormValues,
   IResourceTransferDialogProps,
 } from '../resource-allocation-interface';
 
@@ -21,13 +21,13 @@ const ResourceTransferDialog: React.FC<IResourceTransferDialogProps> = ({ data, 
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
   console.log('data', data);
-  const initialValues = useMemo<IResourceTransferFormValues>(
+  const initialValues = useMemo<IResourceAllocateFormValues>(
     () => getInitialResourceTransferValues(data, isEdit),
     [data, isEdit]
   );
 
   // Initialize Formik for managing form state, validation, and submission
-  const formik = useFormik<IResourceTransferFormValues>({
+  const formik = useFormik<IResourceAllocateFormValues>({
     // Set initial form field values
     initialValues,
 
