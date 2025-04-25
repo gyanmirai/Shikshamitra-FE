@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
+
 import { Box, Tab, Card, Typography } from '@mui/material';
+
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -46,7 +48,6 @@ const HostelStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeCompo
 
   return (
     <Box pt="15px">
-
       <Typography variant="h6" sx={{ mb: '15px', ml: '3px' }}>
         Detailed Fee View
       </Typography>

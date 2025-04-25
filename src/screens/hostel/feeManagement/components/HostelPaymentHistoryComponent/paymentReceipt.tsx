@@ -1,9 +1,11 @@
 import React from 'react';
 
-import { Box, Grid, Button, Divider, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Divider, Typography } from '@mui/material';
+
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
+
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
