@@ -1,7 +1,4 @@
-import type {
-  IResourceAllocateFormValues,
-  IResourceTransferFormValues,
-} from './resource-allocation-interface';
+import type { IResourceAllocateFormValues } from './resource-allocation-interface';
 
 export function getInitialResourceAllocateValues(
   data: Partial<IResourceAllocateFormValues> = {},
@@ -15,17 +12,8 @@ export function getInitialResourceAllocateValues(
     allocationDate: isEdit ? (data.allocationDate ?? null) : null,
     expectedReturnDate: isEdit ? (data.expectedReturnDate ?? null) : null,
     purposeOfAllocation: isEdit ? (data.purposeOfAllocation ?? '') : '',
-  };
-}
-
-export function getInitialResourceTransferValues(
-  data: Partial<IResourceTransferFormValues> = {},
-  isEdit = false
-): IResourceTransferFormValues {
-  return {
     currentLocation: isEdit ? (data.currentLocation ?? '') : '',
-    allocationTarget: isEdit ? (data.allocationTarget ?? '') : '',
-    assignedTo: isEdit ? (data.assignedTo ?? '') : '',
+
     transferDate: isEdit ? (data.transferDate ?? null) : null,
     reasonOfTransfer: isEdit ? (data.reasonOfTransfer ?? '') : '',
   };

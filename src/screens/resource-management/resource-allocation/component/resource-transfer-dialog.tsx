@@ -9,7 +9,7 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { getInitialResourceTransferValues } from '../initialValue';
+import { getInitialResourceAllocateValues } from '../initialValue';
 import { resourceTransferValidationSchema } from '../validationSchema';
 
 import type {
@@ -22,7 +22,7 @@ const ResourceTransferDialog: React.FC<IResourceTransferDialogProps> = ({ data, 
   // This uses a utility function for reusability across the app.
   console.log('data', data);
   const initialValues = useMemo<IResourceAllocateFormValues>(
-    () => getInitialResourceTransferValues(data, isEdit),
+    () => getInitialResourceAllocateValues(data, isEdit),
     [data, isEdit]
   );
 
