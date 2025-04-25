@@ -1358,6 +1358,36 @@ const hostelModule = {
           shortcutKeyName: 'Alt+H+4',
         },
         {
+          title: 'Attendance And Leave Management',
+          path: '',
+          _action: 'hostel-attendance-leave-management',
+          shortcutKey: 'Alt+H+4',
+          shortcutKeyName: 'Alt+H+4',
+          children: [
+            {
+              title: 'Attendance',
+              path: '/hostel/attendance',
+              _action: 'hostel-attendance',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Leave And Approve',
+              path: '/hostel/leave-approve',
+              _action: 'hostel-leave-approve',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+            {
+              title: 'Gate Verification',
+              path: '/hostel/gate-verification',
+              _action: 'hostel-gate-verification',
+              shortcutKey: 'Alt+A+C+3',
+              shortcutKeyName: 'Alt+A+C+3',
+            },
+          ],
+        },
+        {
           title: 'Maintenance',
           path: '/hostel/maintenance',
           _action: 'hostel-maintenance',
