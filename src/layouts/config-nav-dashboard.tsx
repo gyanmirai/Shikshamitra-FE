@@ -1421,6 +1421,23 @@ const resourceManagement = {
           _action: 'classroom-facilities',
         },
         {
+          title: 'Booking Management',
+          path: '/resourceManagement/booking-management',
+          _action: 'classroom-facilities',
+          children: [
+            {
+              title: 'Book Resource',
+              path: '/resourceManagement/booking-management/booking',
+              _action: 'booking',
+            },
+            {
+              title: 'Manage Booking',
+              path: '/resourceManagement/booking-management/manage-request',
+              _action: 'manage-request',
+            },
+          ],
+        },
+        {
           title: 'Procurement & Vendors',
           path: '/resourceManagement/procurement-vendors',
           _action: 'procurement-vendors',

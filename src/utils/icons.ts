@@ -31,4 +31,5 @@ export const GlobalIcons = {
   delocate: 'mage:refresh-reverse',
   transfer: 'bx:transfer',
   maintenanceIcon: 'pajamas:issue-type-maintenance',
+  approvedIcon: 'hugeicons:tick-01',
 };
