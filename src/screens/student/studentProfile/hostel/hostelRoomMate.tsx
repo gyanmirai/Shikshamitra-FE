@@ -1,16 +1,28 @@
 import React from 'react';
 
-import { Box, Avatar, Typography } from '@mui/material';
+import { Box, Stack, Avatar, Typography } from '@mui/material';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import HostelRoomDetailCard from './components/hostelRoomDetailCard';
+
 import type { StudentTabsComponentType } from '..';
 
 const HostelRoomMate = (props: StudentTabsComponentType) => (
   <Box>
-    <Typography variant="h6">Room Mates Info</Typography>
+    <Stack direction="row" spacing={2} alignItems="center">
+      <HostelRoomDetailCard label="Block" value="A" color="success" />
+      <HostelRoomDetailCard label="Floor" value="4" color="success" />
+      <HostelRoomDetailCard label="Room Number" value="102" color="warning" />
+      <HostelRoomDetailCard label="Room Type" value="AC" color="error" />
+      <HostelRoomDetailCard label="Bed Number" value="4" color="error" />
+      <HostelRoomDetailCard label="Bed Type" value="Single" color="error" />
+    </Stack>
+    <Typography variant="h6" mt={2}>
+      Room Mates Info
+    </Typography>
     <CustomizableTable
       tableId="student-list"
       isShowedDense={false}
