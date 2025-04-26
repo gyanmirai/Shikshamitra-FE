@@ -48,7 +48,6 @@ const HostelConfiguration = () => {
     ? [
         { name: 'Hostel Management', href: '/hostel/dashboard' },
         { name: 'Hostel Configuration', href: '' },
-        { name: 'Add Hostel' },
         { name: 'Hostel Form' },
       ]
     : [
@@ -73,7 +72,7 @@ const HostelConfiguration = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Hostel Management"
+        heading="Hostel Configuration"
         description={
           open
             ? 'Create or update hostel details, including hostel name, contact information, and address. Manage hostel configurations and make adjustments as needed.'
