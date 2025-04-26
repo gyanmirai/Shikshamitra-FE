@@ -152,39 +152,7 @@ const ManualHostelAttendance = () => {
           sx={{ maxWidth: '200px', width: '100%' }}
         />
       </Box>
-      {/* <Box
-        sx={{
-          display: 'flex',
-          gap: 1,
-          flexWrap: 'wrap',
-          border: (theme) => `1px dashed gray`,
-          p: 1,
-          borderRadius: 1,
-          my: 1,
-        }}
-      >
-        <Typography variant="body1" fontWeight={500} color="error">
-          Total Absent : <b>{absentStudents.length}</b>
-        </Typography>
-        {absentStudents.map((item: any) => (
-          <Chip
-            size="small"
-            label={`${item.name}`}
-            color="error"
-            icon={
-              <CancelOutlined
-                onClick={() => {
-                  setStudentsData((studentDetails: any) =>
-                    studentDetails.map((student: any) =>
-                      item.id === student.id ? { ...item, isPresent: false } : item
-                    )
-                  );
-                }}
-              />
-            }
-          />
-        ))}
-      </Box> */}
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
