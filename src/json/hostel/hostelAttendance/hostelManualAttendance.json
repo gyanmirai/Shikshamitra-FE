@@ -1,0 +1,43 @@
+[
+    {
+      "id": "1",
+      "roomNo": "101",
+      "studentName": "Amit Sharma",
+      "hostelName": "Block A",
+      "isPresent": true,
+      "remarks": ""
+    },
+    {
+      "id": "2",
+      "roomNo": "102",
+      "studentName": "Neha Patel",
+      "hostelName": "Block A",
+      "isPresent": false,
+      "remarks": "Sick leave"
+    },
+    {
+      "id": "3",
+      "roomNo": "103",
+      "studentName": "Raj Mehta",
+      "hostelName": "Block B",
+      "isPresent": true,
+      "remarks": ""
+    },
+    {
+      "id": "4",
+      "roomNo": "104",
+      "studentName": "Priya Desai",
+      "hostelName": "Block B",
+      "isPresent": false,
+      "remarks": "Out of station"
+    },
+    {
+      "id": "5",
+      "roomNo": "105",
+      "studentName": "Kunal Singh",
+      "hostelName": "Block C",
+      "isPresent": true,
+      "remarks": ""
+    }
+  ]
+  

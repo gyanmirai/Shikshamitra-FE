@@ -1,0 +1,51 @@
+[
+    {
+      "studentName": "Aarav Shah",
+      "roomNo": "A101",
+      "hostelName": "Sunrise Hostel",
+      "leaveType": "Medical",
+      "startDate": "2025-04-20",
+      "endDate": "2025-04-22",
+      "isHalfDay": false,
+      "description": "Flu symptoms and fever.",
+      "rejectionReason": "",
+      "statusValue": "Approved"
+    },
+    {
+      "studentName": "Kiara Mehta",
+      "roomNo": "B202",
+      "hostelName": "River View Hostel",
+      "leaveType": "Personal",
+      "startDate": "2025-04-23",
+      "endDate": "2025-04-24",
+      "isHalfDay": true,
+      "description": "Family function.",
+      "rejectionReason": "",
+      "statusValue": "Pending"
+    },
+    {
+      "studentName": "Rohan Patel",
+      "roomNo": "C303",
+      "hostelName": "Sunrise Hostel",
+      "leaveType": "Emergency",
+      "startDate": "2025-04-19",
+      "endDate": "2025-04-20",
+      "isHalfDay": false,
+      "description": "Travel due to urgent personal matter.",
+      "rejectionReason": "Insufficient documentation.",
+      "statusValue": "Rejected"
+    },
+    {
+      "studentName": "Sneha Desai",
+      "roomNo": "D404",
+      "hostelName": "Mountain View Hostel",
+      "leaveType": "Medical",
+      "startDate": "2025-04-21",
+      "endDate": "2025-04-23",
+      "isHalfDay": false,
+      "description": "Doctor consultation and rest.",
+      "rejectionReason": "",
+      "statusValue": "Cancelled"
+    }
+  ]
+  

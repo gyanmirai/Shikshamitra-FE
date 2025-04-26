@@ -1,0 +1,57 @@
+[
+    {
+      "id": 1,
+      "roomNumber": 101,
+      "studentName": "Amit Sharma",
+      "hostelName": "Block A",
+      "outTime": "2025-04-25T08:30:00",
+      "returnETA": "2025-04-25T18:00:00",
+      "status": 1
+    },
+    {
+      "id": 2,
+      "roomNumber": 102,
+      "studentName": "Neha Patel",
+      "hostelName": "Block A",
+      "outTime": "2025-04-25T09:00:00",
+      "returnETA": "2025-04-25T20:00:00",
+      "status": 0
+    },
+    {
+      "id": 3,
+      "roomNumber": 103,
+      "studentName": "Raj Malra",
+      "hostelName": "Block B",
+      "outTime": "2025-04-25T07:45:00",
+      "returnETA": "2025-04-25T17:00:00",
+      "status": 2
+    },
+    {
+      "id": 4,
+      "roomNumber": 104,
+      "studentName": "Priya Desai",
+      "hostelName": "Block B",
+      "outTime": "2025-04-25T08:15:00",
+      "returnETA": "2025-04-25T17:30:00",
+      "status": 1
+    },
+    {
+      "id": 5,
+      "roomNumber": 105,
+      "studentName": "Kunal Singh",
+      "hostelName": "Block C",
+      "outTime": "2025-04-25T06:30:00",
+      "returnETA": "2025-04-25T16:00:00",
+      "status": 2
+    },
+    {
+      "id": 6,
+      "roomNumber": 106,
+      "studentName": "Sneha Rao",
+      "hostelName": "Block C",
+      "outTime": "2025-04-25T08:00:00",
+      "returnETA": "2025-04-25T19:30:00",
+      "status": 0
+    }
+  ]
+  
