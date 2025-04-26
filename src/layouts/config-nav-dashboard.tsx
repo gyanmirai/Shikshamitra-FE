@@ -1345,10 +1345,26 @@ const hostelModule = {
         },
         {
           title: 'Student Allocation',
-          path: '/hostel/student-allocation',
+          path: '',
           _action: 'hostel-student-allocation',
           shortcutKey: 'Alt+H+3',
           shortcutKeyName: 'Alt+H+3',
+          children: [
+            {
+              title: 'Assign Students',
+              path: '/hostel/assign-students',
+              _action: 'hostel-assign-students',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Allocated Rooms',
+              path: '/hostel/allocated-students',
+              _action: 'hostel-allocated-students',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+          ],
         },
         {
           title: 'Fee Management',

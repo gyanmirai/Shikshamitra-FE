@@ -1,0 +1,73 @@
+[
+    {
+      "id": "1",
+      "studentName": "Aarav Patel",
+      "class": "10",
+      "division": "A",
+      "bedNumber": "B1"
+    },
+    {
+      "id": "2",
+      "studentName": "Siya Sharma",
+      "class": "9",
+      "division": "B",
+      "bedNumber": "B2"
+    },
+    {
+      "id": "3",
+      "studentName": "Vihaan Mehta",
+      "class": "11",
+      "division": "A",
+      "bedNumber": "A1"
+    },
+    {
+      "id": "4",
+      "studentName": "Anaya Joshi",
+      "class": "12",
+      "division": "C",
+      "bedNumber": "C1"
+    },
+    {
+      "id": "5",
+      "studentName": "Ishaan Desai",
+      "class": "8",
+      "division": "B",
+      "bedNumber": "B3"
+    },
+    {
+      "id": "6",
+      "studentName": "Mira Shah",
+      "class": "10",
+      "division": "C",
+      "bedNumber": "C2"
+    },
+    {
+      "id": "7",
+      "studentName": "Krish Iyer",
+      "class": "9",
+      "division": "A",
+      "bedNumber": "A2"
+    },
+    {
+      "id": "8",
+      "studentName": "Anvi Kapoor",
+      "class": "11",
+      "division": "B",
+      "bedNumber": "B4"
+    },
+    {
+      "id": "9",
+      "studentName": "Devansh Nair",
+      "class": "12",
+      "division": "A",
+      "bedNumber": "A3"
+    },
+    {
+      "id": "10",
+      "studentName": "Riya Menon",
+      "class": "8",
+      "division": "C",
+      "bedNumber": "C3"
+    }
+  ]
+  
