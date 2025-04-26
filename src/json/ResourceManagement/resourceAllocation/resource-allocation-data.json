@@ -1,0 +1,47 @@
+[
+  {
+    "resourceName": "Math Book",
+    "quantity": 20,
+    "allocationTarget": "Department",
+    "assignedTo": "Mr. Sharma",
+    "allocationDate": "2025-04-25T00:00:00.000Z",
+    "expectedReturnDate": "2025-05-10T00:00:00.000Z",
+    "purposeOfAllocation": "Math Class"
+  },
+  {
+    "resourceName": "Science Kit",
+    "quantity": 5,
+    "allocationTarget": "Room",
+    "assignedTo": "Ms. Rina Das",
+    "allocationDate": "2025-04-20T00:00:00.000Z",
+    "purposeOfAllocation": "Math Class",
+    "expectedReturnDate": "2025-05-05T00:00:00.000Z"
+  },
+  {
+    "resourceName": "Projector",
+    "quantity": 2,
+    "allocationTarget": "Teacher",
+    "assignedTo": "Mr. Rahul Verma",
+    "allocationDate": "2025-04-22T00:00:00.000Z",
+    "purposeOfAllocation": "Math Class",
+    "expectedReturnDate": "2025-04-26T00:00:00.000Z"
+  },
+  {
+    "resourceName": "Laptops",
+    "quantity": 10,
+    "allocationTarget": "Room",
+    "assignedTo": "Ms. Anjali Mehta",
+    "allocationDate": "2025-04-18T00:00:00.000Z",
+    "purposeOfAllocation": "Math Class",
+    "expectedReturnDate": "2025-04-28T00:00:00.000Z"
+  },
+  {
+    "resourceName": "Sports Equipment",
+    "quantity": 15,
+    "allocationTarget": "Department",
+    "assignedTo": "Mr. Vinod Kumar",
+    "allocationDate": "2025-04-24T00:00:00.000Z",
+    "purposeOfAllocation": "Math Class",
+    "expectedReturnDate": "2025-04-30T00:00:00.000Z"
+  }
+]

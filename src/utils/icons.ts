@@ -28,4 +28,7 @@ export const GlobalIcons = {
   pendingIcon: 'mdi:account-pending-outline',
   laboratories: 'medical-icon:i-laboratory',
   calenderIcon: 'uit:calender',
+  delocate: 'mage:refresh-reverse',
+  transfer: 'bx:transfer',
+  maintenanceIcon: 'pajamas:issue-type-maintenance',
 };
