@@ -11,7 +11,10 @@ export interface IAddResourceFormValues {
   itemName: string;
   categoryName: string;
   quantity: string | number;
-  storageLocation: string;
+  campusName: string;
+  buildingName: string;
+  roomNumber: string;
+  floorNumber: string;
   id: number;
 }
 
