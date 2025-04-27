@@ -1,14 +1,16 @@
 [
     {
       "resourceName": "Conference Room A",
+      "resourceCategory":"Room",
       "date": "2025-04-27T00:00:00.000Z",
       "quantity": 100,
       "status": 1,
-      "purpose": "Monthly strategy meeting",
+      "purpose": "Monthly strategy meeting",   
       "requestedBy": "Ms. Kavita Rao"
     },
     {
       "resourceName": "Projector XZ500",
+      "resourceCategory":"Equipment",
       "date": "2025-04-28T00:00:00.000Z",
       "quantity": 100,
       "status": 0,
@@ -17,6 +19,7 @@
     },
     {
       "resourceName": "Lab 1",
+      "resourceCategory":"Lab",
       "date": "2025-04-30T00:00:00.000Z",
       "quantity": 100,
       "status": 2,

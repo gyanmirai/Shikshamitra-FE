@@ -1477,6 +1477,11 @@ const resourceManagement = {
               path: '/resourceManagement/procurement-vendors/manage-request',
               _action: 'allocation-of-resources',
             },
+            {
+              title: 'Procurement Request',
+              path: '/resourceManagement/procurement-vendors/procurement-request',
+              _action: 'allocation-of-resources',
+            },
           ],
         },
         {
