@@ -1,0 +1,27 @@
+[
+    {
+      "resourceName": "Conference Room A",
+      "date": "2025-04-27T00:00:00.000Z",
+      "quantity": 100,
+      "status": 1,
+      "purpose": "Monthly strategy meeting",
+      "requestedBy": "Ms. Kavita Rao"
+    },
+    {
+      "resourceName": "Projector XZ500",
+      "date": "2025-04-28T00:00:00.000Z",
+      "quantity": 100,
+      "status": 0,
+      "purpose": "Seminar on AI Trends",
+      "requestedBy": "Mr. Anuj Singh"
+    },
+    {
+      "resourceName": "Lab 1",
+      "date": "2025-04-30T00:00:00.000Z",
+      "quantity": 100,
+      "status": 2,
+      "purpose": "Physics practicals",
+      "requestedBy": "Dr. Seema Joshi"
+    }
+  ]
+  
