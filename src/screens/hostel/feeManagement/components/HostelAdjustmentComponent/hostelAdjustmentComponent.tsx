@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +12,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  HostelPaymentStatusType,
+  HostelPaymentStatusOptions,
+  HostelPaymentStatusTypeColor,
+} from 'src/enums/hostel-payment-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -20,10 +26,13 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import AdjustmentForm from './components/adjustmentForm';
+import PaymentReceipt from '../HostelPaymentHistoryComponent/paymentReceipt';
 
 import type { IHostelFeeAdjustment } from './type';
 
 const HostelAdjustmentComponent = () => {
+  // State for managing the receipt dialog visibility
+  const receiptDialog = useBoolean();
   // state for adjustment dialog
   const adjustmentDialog = useBoolean();
   // state for delete adjustment dialog
@@ -53,11 +62,15 @@ const HostelAdjustmentComponent = () => {
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'flex-end',
-          p: 2,
           width: '100%',
         }}
       >
-        <Button startIcon={<Add />} variant="contained" onClick={adjustmentDialog.onTrue}>
+        <Button
+          startIcon={<Add />}
+          variant="contained"
+          onClick={adjustmentDialog.onTrue}
+          size="small"
+        >
           Adjustment
         </Button>
       </Box>
@@ -108,23 +121,15 @@ const HostelAdjustmentComponent = () => {
           {
             id: 'status',
             label: 'Status',
+            filterType: 'enum',
+            enumOptions: HostelPaymentStatusOptions,
+
             render(value, row) {
-              return (
-                <Label
-                  variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
-                >
-                  {value}
-                </Label>
-              );
+              const color = HostelPaymentStatusTypeColor[
+                value as HostelPaymentStatusType
+              ] as LabelColor;
+
+              return <Label color={color}>{HostelPaymentStatusType[value]}</Label>;
             },
           },
           {
@@ -136,6 +141,7 @@ const HostelAdjustmentComponent = () => {
             sticky: true,
             render: (value, row) => (
               <ThreeDotsActions
+                placement="right-top"
                 showEditIcon
                 handleEditClick={() => {
                   adjustmentDialog.onTrue();
@@ -148,10 +154,21 @@ const HostelAdjustmentComponent = () => {
                 }}
                 actions={() => (
                   <MenuList>
-                    <MenuItem onClick={() => {}}>
-                      <Iconify icon="tabler:receipt" />
-                      Pay Now
-                    </MenuItem>
+                    {row.status === 'Paid' ? (
+                      <MenuItem onClick={() => {}}>
+                        <Iconify icon="tabler:receipt" />
+                        Pay Now
+                      </MenuItem>
+                    ) : (
+                      <MenuItem
+                        onClick={() => {
+                          receiptDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="tabler:receipt" />
+                        View Receipt
+                      </MenuItem>
+                    )}
                   </MenuList>
                 )}
               />
@@ -226,6 +243,15 @@ const HostelAdjustmentComponent = () => {
           </Button>
         }
       />
+      <CustomDialog
+        open={receiptDialog.value}
+        title=""
+        handleClose={receiptDialog.onFalse}
+        maxWidth="md"
+        fullWidth
+      >
+        <PaymentReceipt />
+      </CustomDialog>
     </Box>
   );
 };
