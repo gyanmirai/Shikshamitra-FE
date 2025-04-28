@@ -56,7 +56,7 @@ const ManualHostelAttendance = () => {
   );
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Attendance"
         description="Manual attendance for all students"
@@ -267,6 +267,7 @@ const ManualHostelAttendance = () => {
             label: 'Attendance',
             align: 'center',
             isSort: false,
+            isFilter: false,
             render(value, row) {
               return (
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
