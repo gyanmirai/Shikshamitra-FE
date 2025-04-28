@@ -1,0 +1,20 @@
+'use client';
+
+import React from 'react';
+
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+
+import AdminResourceTable from './component/admin-resource-table';
+
+const AdminBookingScreen = () => (
+  <>
+    <CustomBreadcrumbs
+      heading="Boooking Approval"
+      links={[{ name: 'Resource Management' }, { name: 'Boooking Approval' }]}
+      sx={{ px: 1, mb: 2 }}
+    />
+    <AdminResourceTable />
+  </>
+);
+
+export default AdminBookingScreen;
