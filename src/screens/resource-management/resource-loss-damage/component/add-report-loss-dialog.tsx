@@ -10,6 +10,7 @@ import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialResourceIncidentValues } from '../initialValue';
@@ -20,7 +21,7 @@ import type {
   IResourceIncidentFormValues,
 } from '../resource-loss-damage-interface';
 
-const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data }) => {
+const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data, onClose }) => {
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
   const initialValues = useMemo<IResourceIncidentFormValues>(
@@ -50,7 +51,7 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
               error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
             >
               <CustomSelect
-                label="Select Category"
+                label="Select Category *"
                 options={[]}
                 value={formik.values.resourceName}
                 onChange={(value) => formik.setFieldValue('resourceName', value)}
@@ -69,7 +70,7 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
               error={formik.touched.typeOfIncident && Boolean(formik.errors.typeOfIncident)}
             >
               <CustomSelect
-                label="Select Item"
+                label="Select Item *"
                 options={[]}
                 value={formik.values.typeOfIncident}
                 onChange={(value) => formik.setFieldValue('typeOfIncident', value)}
@@ -89,9 +90,21 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
               error={formik.touched.dateOfIncident && Boolean(formik.errors.dateOfIncident)}
             >
               <DatePicker
-                label="Select Date"
+                label="Select Date *"
                 format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                value={formik.values.dateOfIncident}
+                onChange={(value) => formik.setFieldValue('dateOfIncident', value)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: formik.touched.dateOfIncident && Boolean(formik.errors.dateOfIncident),
+                    helperText:
+                      formik.touched.dateOfIncident && formik.errors.dateOfIncident
+                        ? String(formik.errors.dateOfIncident)
+                        : '',
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
@@ -107,7 +120,7 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
                   formik.setFieldValue('description', value);
                 }}
                 value={formik.values.incidentDescription}
-                placeholder="incidentDescription"
+                placeholder="Incident Description (*)"
                 error={
                   formik.touched.incidentDescription && Boolean(formik.errors.incidentDescription)
                 }
@@ -151,6 +164,11 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
         </Grid>
       </Scrollbar>
       <DialogActions>
+        <CancelButton
+          onClick={() => {
+            onClose();
+          }}
+        />
         <SubmitButton onClick={() => {}} />
       </DialogActions>
     </form>

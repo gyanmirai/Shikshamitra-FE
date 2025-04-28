@@ -11,8 +11,8 @@ import data from 'src/json/ResourceManagement/resourceAllocation/resource-alloca
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import ResourceTransferDialog from './resource-transfer-dialog';
 import ResourceAllocateDialog from './resource-allocation-dialog';
@@ -136,6 +136,9 @@ const ResourceItemTable = () => {
           <ResourceAllocateDialog
             isEdit={false}
             data={selectedItem as IResourceAllocateFormValues}
+            handleClose={() => {
+              allocationResourceDialog.onFalse();
+            }}
           />
         </CustomDialog>
       )}
@@ -152,6 +155,9 @@ const ResourceItemTable = () => {
           <ResourceTransferDialog
             isEdit={false}
             data={selectedItem as IResourceAllocateFormValues}
+            handleClose={() => {
+              resourceTransferDialog.onFalse();
+            }}
           />
         </CustomDialog>
       )}

@@ -70,6 +70,7 @@ const InventoryManagement = () => {
 
         {dialogAddResource.value && (
           <AddResourceDialog
+            maxWidth="md"
             isEdit={false}
             data={{} as IAddResourceFormValues}
             handleClose={() => {

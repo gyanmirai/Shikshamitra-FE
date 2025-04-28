@@ -21,11 +21,13 @@ export interface IResourceAllocateFormValues {
 export interface IResourceAllocateDialogProps {
   data: IResourceAllocateFormValues;
   isEdit: boolean;
+  handleClose: () => void;
 }
 
 export interface IResourceTransferDialogProps {
   data: IResourceAllocateFormValues;
   isEdit: boolean;
+  handleClose: () => void;
 }
 
 export interface IResourceViewDialogTeacherProps {

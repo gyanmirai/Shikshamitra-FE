@@ -1461,11 +1461,11 @@ const resourceManagement = {
             },
           ],
         },
-        {
-          title: 'Classroom & Facilities',
-          path: '/resourceManagement/classroom-facilities',
-          _action: 'classroom-facilities',
-        },
+        // {
+        //   title: 'Classroom & Facilities',
+        //   path: '/resourceManagement/classroom-facilities',
+        //   _action: 'classroom-facilities',
+        // },
         {
           title: 'Booking Management',
           path: '/resourceManagement/booking-management',
@@ -1505,10 +1505,11 @@ const resourceManagement = {
           path: '/resourceManagement/report-loss-damage',
           _action: 'report-loss-damage',
         },
+
         {
-          title: 'Request & Approval',
-          path: '/resourceManagement/request-approval',
-          _action: 'request-approval',
+          title: 'Incident Report',
+          path: '/resourceManagement/incident-report',
+          _action: 'incident-report',
         },
         {
           title: 'Usage & Maintenance',

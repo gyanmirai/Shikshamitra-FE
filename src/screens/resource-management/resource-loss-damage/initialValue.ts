@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 import type { IResourceIncidentFormValues } from './resource-loss-damage-interface';
 
 export function getInitialResourceIncidentValues(
@@ -7,7 +9,7 @@ export function getInitialResourceIncidentValues(
   return {
     resourceName: data.resourceName || '',
     typeOfIncident: data.typeOfIncident || '',
-    dateOfIncident: data.dateOfIncident ? new Date(data.dateOfIncident) : null,
+    dateOfIncident: data.dateOfIncident ? dayjs(data.dateOfIncident) : null,
     incidentDescription: data.incidentDescription || '',
   };
 }

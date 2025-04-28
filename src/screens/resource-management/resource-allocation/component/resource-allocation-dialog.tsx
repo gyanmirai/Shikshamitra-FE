@@ -7,6 +7,7 @@ import { Grid, TextField, DialogActions } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialResourceAllocateValues } from '../initialValue';
@@ -17,7 +18,11 @@ import type {
   IResourceAllocateDialogProps,
 } from '../resource-allocation-interface';
 
-const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, isEdit }) => {
+const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
+  data,
+  isEdit,
+  handleClose,
+}) => {
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
   console.log('data', data);
@@ -50,7 +55,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
             >
               <CustomSelect
                 autoFocus
-                label="Select Resource"
+                label="Select Resource *"
                 options={[]}
                 value={formik.values.resourceName}
                 onChange={(value) => formik.setFieldValue('resourceName', value)}
@@ -69,7 +74,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
             <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
               <TextField
                 name="quantity"
-                label="Quantity"
+                label="Quantity *"
                 value=""
                 onChange={() => {}}
                 size="small"
@@ -85,7 +90,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
               error={formik.touched.allocationTarget && Boolean(formik.errors.allocationTarget)}
             >
               <CustomSelect
-                label="Select Allocation Target"
+                label="Select Allocation Target *"
                 options={[]}
                 value={formik.values.allocationTarget}
                 onChange={(value) => formik.setFieldValue('allocationTarget', value)}
@@ -104,7 +109,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
               error={formik.touched.assignedTo && Boolean(formik.errors.assignedTo)}
             >
               <CustomSelect
-                label="Select Assigned To"
+                label="Select Assigned To *"
                 options={[]}
                 value={formik.values.assignedTo}
                 onChange={(value) => formik.setFieldValue('assignedTo', value)}
@@ -120,28 +125,49 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
           </Grid>
 
           <Grid item xs={6}>
-            <ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.allocationDate && Boolean(formik.errors.allocationDate)}
+            >
               <DatePicker
                 format="DD-MM-YYYY"
-                label="Allocation Date"
+                label="Allocation Date *"
                 value={formik.values.allocationDate}
                 onChange={(value) => {
                   formik.setFieldValue('allocationDate', value);
                 }}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: formik.touched.allocationDate && Boolean(formik.errors.allocationDate),
+                    helperText: formik.touched.allocationDate && formik.errors.allocationDate,
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
           <Grid item xs={6}>
-            <ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.expectedReturnDate && Boolean(formik.errors.expectedReturnDate)}
+            >
               <DatePicker
                 format="DD-MM-YYYY"
-                label="Expected Return Date"
+                label="Expected Return Date *"
                 value={formik.values.expectedReturnDate}
                 onChange={(value) => {
                   formik.setFieldValue('expectedReturnDate', value);
                 }}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error:
+                      formik.touched.expectedReturnDate &&
+                      Boolean(formik.errors.expectedReturnDate),
+                    helperText:
+                      formik.touched.expectedReturnDate && formik.errors.expectedReturnDate,
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
@@ -171,6 +197,11 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({ data, 
         </Grid>
       </Scrollbar>
       <DialogActions>
+        <CancelButton
+          onClick={() => {
+            handleClose();
+          }}
+        />
         <SubmitButton onClick={() => {}} />
       </DialogActions>
     </form>

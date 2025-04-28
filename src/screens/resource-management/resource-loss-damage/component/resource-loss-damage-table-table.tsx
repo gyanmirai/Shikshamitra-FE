@@ -68,7 +68,13 @@ const ResourceLossDamageTableTeacher = () => {
           open={addResourceLossDamagedDialog.value}
           handleClose={addResourceLossDamagedDialog.onFalse}
         >
-          <AddReportLossDialog data={{} as IResourceIncidentFormValues} isEdit={false} />
+          <AddReportLossDialog
+            onClose={() => {
+              addResourceLossDamagedDialog.onFalse();
+            }}
+            data={{} as IResourceIncidentFormValues}
+            isEdit={false}
+          />
         </CustomDialog>
       )}
     </>

@@ -71,7 +71,13 @@ const ResourceAllocationScreen = () => {
           }}
           open={allocationResourceDialog.value}
         >
-          <ResourceAllocateDialog isEdit={false} data={{} as IResourceAllocateFormValues} />
+          <ResourceAllocateDialog
+            handleClose={() => {
+              allocationResourceDialog.onFalse();
+            }}
+            isEdit={false}
+            data={{} as IResourceAllocateFormValues}
+          />
         </CustomDialog>
       )}
     </>

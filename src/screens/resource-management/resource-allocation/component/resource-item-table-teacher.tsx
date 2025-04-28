@@ -159,6 +159,9 @@ const ResourceItemTableTeacher = () => {
           <ResourceTransferDialog
             isEdit={false}
             data={selectedItem as IResourceAllocateFormValues}
+            handleClose={() => {
+              resourceTransferDialog.onFalse();
+            }}
           />
         </CustomDialog>
       )}

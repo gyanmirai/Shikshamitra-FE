@@ -16,12 +16,8 @@ import type { IInventoryManagementDetailsViewpProps } from '../inventory-interfa
 // Reusable component for rendering label sections
 const InfoSection = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Box display="flex" flexDirection="column">
-    <Typography sx={{ fontWeight: 400 }} variant="h6">
-      {label}
-    </Typography>
-    <Typography sx={{ fontWeight: 600 }} variant="h6">
-      {value}
-    </Typography>
+    <Typography sx={{ fontWeight: 400, fontSize: '14px' }}>{label}</Typography>
+    <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>{value}</Typography>
   </Box>
 );
 
