@@ -14,10 +14,13 @@ export function getInitialResourceValues(
     itemName: isEdit ? (data.itemName ?? '') : '',
     categoryName: isEdit ? (data.categoryName ?? '') : '',
     quantity: isEdit ? (data.quantity ?? '') : '',
-    storageLocation: isEdit ? (data.storageLocation ?? '') : '',
     id: isEdit
       ? (data.id ?? Math.floor(Math.random() * 1000000000))
       : Math.floor(Math.random() * 1000000000),
+    campusName: isEdit ? (data.campusName ?? '') : '',
+    buildingName: isEdit ? (data.buildingName ?? '') : '',
+    roomNumber: isEdit ? (data.roomNumber ?? '') : '',
+    floorNumber: isEdit ? (data.floorNumber ?? '') : '',
   };
 }
 
