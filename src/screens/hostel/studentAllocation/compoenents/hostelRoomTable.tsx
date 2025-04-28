@@ -130,7 +130,7 @@ const HostelRoomTableComponent = () => {
             minWidth: 150,
             filterType: 'number',
             render(value, row) {
-              return <>{row.currentOccupation / row.roomCapacity}</>;
+              return <>{`${row.currentOccupation}/${row.roomCapacity}`}</>;
             },
           },
           {
