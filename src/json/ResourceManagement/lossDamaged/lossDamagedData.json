@@ -1,0 +1,13 @@
+[
+    {
+      "resourceName": "Laptop",
+      "typeOfIncident": "Lost",
+      "dateOfIncident": "2025-04-27T10:30:00+05:30"
+    },
+    {
+      "resourceName": "Mobile Phone",
+      "typeOfIncident": "Damaged",
+      "dateOfIncident": "2025-04-25T15:45:00+05:30"
+    }
+  ]
+  

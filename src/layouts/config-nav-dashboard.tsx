@@ -1501,6 +1501,11 @@ const resourceManagement = {
           ],
         },
         {
+          title: 'Report Loss / Damage ',
+          path: '/resourceManagement/report-loss-damage',
+          _action: 'report-loss-damage',
+        },
+        {
           title: 'Request & Approval',
           path: '/resourceManagement/request-approval',
           _action: 'request-approval',
