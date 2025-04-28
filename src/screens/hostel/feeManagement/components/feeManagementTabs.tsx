@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { Box, Tab, Card, Typography } from '@mui/material';
+import { Box, Tab, Card } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -43,14 +43,13 @@ interface FinanceStudentDetailedFeeComponentProps {
 const HostelStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComponentProps> = ({
   studentId,
 }) => {
+  // Initialize tabs with default value 'fee-breakdown' using custom hook
   const tabs = useTabs('fee-breakdown');
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
+  // Find and store the current component to render based on selected tab value
+  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
     <Box pt="15px">
-      <Typography variant="h6" sx={{ mb: '15px', ml: '3px' }}>
-        Detailed Fee View
-      </Typography>
       <Card>
         <CustomTabs value={tabs.value} onChange={tabs.onChange} variant="fullWidth">
           {TABS.map((tab) => (

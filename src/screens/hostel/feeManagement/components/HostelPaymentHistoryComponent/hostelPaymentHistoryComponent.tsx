@@ -52,15 +52,7 @@ const HostelPaymentHistoryComponent = () => {
               return (
                 <Label
                   variant="soft"
-                  color={
-                    value === 'Overdue'
-                      ? 'error'
-                      : value === 'Unpaid'
-                        ? 'warning'
-                        : value === 'Paid'
-                          ? 'success'
-                          : 'default'
-                  }
+                  color={value === 'Failed' ? 'error' : value === 'Success' ? 'success' : 'default'}
                 >
                   {value}
                 </Label>
@@ -76,11 +68,13 @@ const HostelPaymentHistoryComponent = () => {
             sticky: true,
             render: (value, row) => (
               <ThreeDotsActions
-                actions={() => (
+                placement="right-top"
+                actions={({ popover }) => (
                   <MenuList>
                     <MenuItem
                       onClick={() => {
                         receiptDialog.onTrue();
+                        popover.onClose();
                       }}
                     >
                       <Iconify icon="tabler:receipt" />
@@ -99,7 +93,7 @@ const HostelPaymentHistoryComponent = () => {
             feeType: 'Hostel Fee - April',
             amountPaid: 5000,
             paymentMode: 'UPI',
-            status: 'Paid',
+            status: 'Failed',
           },
           {
             id: 2,
@@ -107,7 +101,7 @@ const HostelPaymentHistoryComponent = () => {
             feeType: 'Hostel Fee - March',
             amountPaid: 5000,
             paymentMode: 'Cash',
-            status: 'Paid',
+            status: 'Success',
           },
           {
             id: 3,
@@ -115,7 +109,7 @@ const HostelPaymentHistoryComponent = () => {
             feeType: 'Hostel Fee - February',
             amountPaid: 0,
             paymentMode: '—',
-            status: 'Unpaid',
+            status: 'Failed',
           },
           {
             id: 4,
@@ -123,7 +117,7 @@ const HostelPaymentHistoryComponent = () => {
             feeType: 'Hostel Fee - January',
             amountPaid: 5000,
             paymentMode: 'Bank Transfer',
-            status: 'Paid',
+            status: 'Failed',
           },
           {
             id: 5,
@@ -131,7 +125,7 @@ const HostelPaymentHistoryComponent = () => {
             feeType: 'Hostel Fee - December',
             amountPaid: 0,
             paymentMode: '—',
-            status: 'Overdue',
+            status: 'Failed',
           },
         ]}
       />
