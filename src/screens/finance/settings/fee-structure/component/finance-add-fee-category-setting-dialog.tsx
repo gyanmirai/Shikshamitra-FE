@@ -19,7 +19,6 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { feeStructurevalidationSchema } from '../validationSchema';
@@ -160,15 +159,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
     <>
       <form onSubmit={formik.handleSubmit}>
         <Box display="flex" justifyContent="space-between">
-          <CustomBreadcrumbs
-            heading="Fee Structure"
-            links={[
-              { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Settings' },
-              { name: 'Fee Structure' },
-            ]}
-            description="This is the Fee Structure section, where you can create fee structures as needed."
-          />
           <Box display="flex" gap={2}>
             <Button
               startIcon={<Iconify icon="bx:arrow-back" />}
