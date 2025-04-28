@@ -30,7 +30,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Box flex={8} display="flex" flexDirection="row" gap={2} py="12px">
               <Typography>
                 <strong>Name:</strong> Vishal RameshBhai Patel
@@ -60,7 +60,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Select Term"
+                    label="Select Term *"
                     name="selectedTerms"
                     variant="outlined"
                     fullWidth
@@ -88,7 +88,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                 error={!!(formik.touched.dueAmount && formik.errors.dueAmount) || false}
               >
                 <NumericFormatCustom
-                  label="Due Amount"
+                  label="Due Amount *"
                   value={formik.values.dueAmount}
                   onChange={(e) => {
                     formik.setFieldValue('dueAmount', e.target.value);
@@ -109,7 +109,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                 error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount) || false}
               >
                 <NumericFormatCustom
-                  label="Received Amount"
+                  label="Received Amount *"
                   value={formik.values.receivedAmount}
                   onChange={(e) => {
                     formik.setFieldValue('receivedAmount', e.target.value);
@@ -140,7 +140,7 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Payment Mode"
+                      label="Payment Mode *"
                       error={formik.touched.paymentMode && Boolean(formik.errors.paymentMode)}
                       helperText={
                         Array.isArray(formik.errors.paymentMode)
