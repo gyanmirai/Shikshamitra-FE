@@ -1,4 +1,4 @@
-import type { VisitorStatusType } from 'src/enums/visitor-status-type';
+import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import dayjs from 'dayjs';
@@ -6,7 +6,11 @@ import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 
 import visitorLogData from 'src/json/hostel/visitorManagement/pre-registerData.json';
-import { VisitorStatusColors, VisitorStatusOptions } from 'src/enums/visitor-status-type';
+import {
+  PreRegisterStatusType,
+  PreRegisterStatusColors,
+  PreRegisterStatusOptions,
+} from 'src/enums/pre-register-statusType';
 
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -69,16 +73,14 @@ const PreRegisterTable: React.FC<IPreRegisterTableProps> = ({ onClick }) => (
           id: 'status',
           label: 'Status',
           filterType: 'enum',
-          enumOptions: VisitorStatusOptions,
+          enumOptions: PreRegisterStatusOptions,
           minWidth: '130px',
           align: 'left',
           render(value, row) {
-            const color =
-              VisitorStatusColors[
-                VisitorStatusOptions.find((opt) => opt.label === value)?.value as VisitorStatusType
-              ] ?? 'warning';
+            const color = PreRegisterStatusColors[value as PreRegisterStatusType] as LabelColor;
 
-            return <Label color={color}>{value}</Label>;
+            const val = PreRegisterStatusType[value];
+            return <Label color={color}>{val}</Label>;
           },
         },
         {

@@ -1,0 +1,55 @@
+[
+  {
+    "id": "1",
+    "visitorName": "Rajesh Kumar",
+    "idProof": "Aadhar Card",
+    "proofNumber": "123456789012",
+    "contactNo": "9876543210",
+    "visitingWhome": "Rajesh Kumar's Student", 
+    "entryTime": "2025-04-27T10:30:00+05:30", 
+    "exitTime": "2025-04-27T11:15:00+05:30",   
+    "reasonForVisit": "Meeting regarding admission",
+    "visitingType":"Pre-Registered",
+    "status": 0
+  },
+  {
+    "id": "2",
+    "visitorName": "Pooja Sharma",
+    "idProof": "Driving License",
+    "proofNumber": "234567890123",
+    "contactNo": "9123456780",
+    "visitingWhome": "Pooja Sharma's Student",  
+    "entryTime": "2025-04-27T09:45:00+05:30",
+    "exitTime": "2025-04-27T10:20:00+05:30",
+    "reasonForVisit": "Fee inquiry",
+    "visitingType":"Pre-Registered",
+    "status": 0
+  },
+  {
+    "id": "3",
+    "visitorName": "Amit Patel",
+    "idProof": "PAN Card",
+    "proofNumber": "345678901234",
+    "contactNo": "9988776655",
+    "visitingWhome": "Amit Patel's Student",  
+    "entryTime": "2025-04-27T14:00:00+05:30",
+    "exitTime": "2025-04-27T14:45:00+05:30",
+    "reasonForVisit": "Meeting with student",
+    "visitingType":"Pre-Registered",
+    "status": 1
+  },
+  {
+    "id": "4",
+    "visitorName": "Sneha Verma",
+    "idProof": "Voter ID",
+    "proofNumber": "456789012345",
+    "contactNo": "9876512345",
+    "visitingWhome": "Sneha Verma's Student",  
+    "entryTime": "2025-04-27T11:30:00+05:30",
+    "exitTime": "2025-04-27T12:00:00+05:30",
+    "reasonForVisit": "Library membership",
+    "visitingType":"Pre-Registered",
+    "status": 0
+  }
+ 
+]
