@@ -7,6 +7,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialResourceValues } from './initialValue';
@@ -42,24 +43,24 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
   });
 
   return (
-    <CustomDialog title="Add New Resource" open={open} handleClose={handleClose}>
+    <CustomDialog maxWidth="md" title="Add New Resource" open={open} handleClose={handleClose}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
             <Grid item xs={12} pb="10px">
               <ShakingTextField
-                error={formik.touched.roomNumber && Boolean(formik.errors.roomNumber)}
+                error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
               >
                 <CustomSelect
-                  label="Select Category"
+                  label="Select Category *"
                   options={[]}
-                  value={formik.values.roomNumber}
-                  onChange={(value) => formik.setFieldValue('roomNumber', value)}
+                  value={formik.values.categoryName}
+                  onChange={(value) => formik.setFieldValue('categoryName', value)}
                   disabled={isEdit}
-                  error={formik.touched.roomNumber && Boolean(formik.errors.roomNumber)}
+                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
                   helperText={
-                    formik.touched.roomNumber && formik.errors.roomNumber
-                      ? String(formik.errors.roomNumber)
+                    formik.touched.categoryName && formik.errors.categoryName
+                      ? String(formik.errors.categoryName)
                       : ''
                   }
                 />
@@ -70,7 +71,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               <ShakingTextField error={formik.touched.itemName && Boolean(formik.errors.itemName)}>
                 <TextField
                   name="itemName"
-                  label="Item Name"
+                  label="Item Name *"
                   value=""
                   onChange={() => {}}
                   size="small"
@@ -87,7 +88,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   name="quantity"
-                  label="Quantity"
+                  label="Quantity *"
                   value=""
                   onChange={() => {}}
                   size="small"
@@ -102,7 +103,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 error={formik.touched.campusName && Boolean(formik.errors.campusName)}
               >
                 <CustomSelect
-                  label="Select Campus"
+                  label="Select Campus *"
                   options={[]}
                   value={formik.values.campusName}
                   onChange={(value) => formik.setFieldValue('campusName', value)}
@@ -122,7 +123,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 error={formik.touched.buildingName && Boolean(formik.errors.buildingName)}
               >
                 <CustomSelect
-                  label="Select Building"
+                  label="Select Building *"
                   options={[]}
                   value={formik.values.buildingName}
                   onChange={(value) => formik.setFieldValue('buildingName', value)}
@@ -142,7 +143,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 error={formik.touched.floorNumber && Boolean(formik.errors.floorNumber)}
               >
                 <CustomSelect
-                  label="Floor Number"
+                  label="Floor Number *"
                   options={[]}
                   value={formik.values.floorNumber}
                   onChange={(value) => formik.setFieldValue('floorNumber', value)}
@@ -161,7 +162,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 error={formik.touched.roomNumber && Boolean(formik.errors.roomNumber)}
               >
                 <CustomSelect
-                  label="Room Number"
+                  label="Room Number *"
                   options={[]}
                   value={formik.values.roomNumber}
                   onChange={(value) => formik.setFieldValue('roomNumber', value)}
@@ -195,6 +196,11 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
+          <CancelButton
+            onClick={() => {
+              handleClose();
+            }}
+          />
           <SubmitButton onClick={() => {}} />
         </DialogActions>
       </form>

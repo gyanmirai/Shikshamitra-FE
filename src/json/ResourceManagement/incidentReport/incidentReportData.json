@@ -1,0 +1,29 @@
+[
+    {
+      "incidentName": "Lab Equipment",
+      "resourceName": "Emergency",
+      "status":1,
+      "reportedBy": "John Doe",
+      "reportedDate": "2025-04-27T10:30:00Z",
+      "reporterRole": "Lab Assistant",
+      "reporterdepartment": "Science",
+      "incidentDescription": "Microscope lens cracked during experiment.",
+      "incidentType": "Damaged",
+      "actionTaken": "Replacement requested",
+      "adminNotes": "Priority replacement approved."
+    },
+    {
+      "incidentName": "Maths Book",
+      "resourceName": "Regular",
+      "status": 0,
+      "reportedBy": "Jane Smith",
+      "reportedDate": "2025-04-26T09:00:00Z",
+      "reporterRole": "Teacher",
+      "reporterdepartment": "Mathematics",
+      "incidentDescription": "Textbook missing after class.",
+      "incidentType": "Lost",
+      "actionTaken": "New book issued",
+      "adminNotes": "Handled swiftly."
+    }
+  ]
+  
