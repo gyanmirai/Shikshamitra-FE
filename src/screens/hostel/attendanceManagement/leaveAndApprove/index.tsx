@@ -1,13 +1,16 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Card, Button, IconButton } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
+import { Box, Card, Button, TextField, IconButton, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -31,11 +34,22 @@ import HostelLeaveAbsent from './components/leaveAbsent';
 import type { IStudentAttendanceLeave } from './type';
 
 const LeaveAndApprove = () => {
+  // State to store the starting date of the leave request, initialized with current date
+  const [fromDate, setFromDate] = useState<Dayjs | null>(dayjs());
+  // State to store the ending date of the leave request, initialized with current date
+  const [toDate, setToDate] = useState<Dayjs | null>(dayjs()); // State for storing the selected hostel
+  const [hostel, setHostel] = useState<string>('');
+  // Dialog state for confirming rejection of leave requests
   const confirmRejectDialog = useBoolean();
+
+  // State to manage the table data containing student attendance and leave information
   const [hostelTableData, setHostelTableData] =
     useState<IStudentAttendanceLeave[]>(hostelLeaveData);
-  const [selectedData, setSelectedData] = useState<IStudentAttendanceLeave | null>(null);
+
+  // Dialog state for managing leave request form visibility
   const leaveRequestDialog = useBoolean();
+  // State for division options based on selected class
+  const [student, setStudent] = useState<string>('');
   // State for managing the visibility of the hostel form.
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
@@ -104,135 +118,212 @@ const LeaveAndApprove = () => {
           />
         </Card>
       ) : (
-        <CustomizableTable
-          tableId="student-attendance-list"
-          noDataText="No Students Found"
-          searchFieldProps={{
-            placeholder: 'Search Room No, Student Name...',
-            label: 'Search Room No, Student Name...',
-          }}
-          isSearch={false}
-          columns={[
-            {
-              id: 'studentName',
-              label: 'Student Name',
-              align: 'left',
-              minWidth: 150,
-            },
-            {
-              id: 'roomNo',
-              label: 'Room No',
-              align: 'left',
-              minWidth: '100px',
-            },
-            {
-              id: 'hostelName',
-              label: 'Hostel Name',
-              align: 'left',
-              minWidth: 150,
-            },
-            {
-              id: 'leaveType',
-              label: 'Leave Type',
-              align: 'left',
-              minWidth: 120,
-            },
-            {
-              id: 'startDate',
-              label: 'Start Date',
-              align: 'left',
-              minWidth: 120,
+        <>
+          <Box display="flex" gap={2}>
+            <Autocomplete
+              options={[
+                { id: 'H1', name: 'Hostel A' },
+                { id: 'H2', name: 'Hostel B' },
+                { id: 'H3', name: 'Hostel C' },
+              ]}
+              getOptionLabel={(option) => option.name || ''}
+              onChange={(_, value) => {
+                setHostel(value?.id || '');
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Hostel"
+                  name="hostel"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                />
+              )}
+              sx={{ maxWidth: '200px', width: '100%' }}
+            />
+            <DatePicker
+              label="From Date"
+              format="DD/MM/YYYY"
+              value={fromDate}
+              onChange={(date) => {
+                setFromDate(date);
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                },
+              }}
+              sx={{ maxWidth: '200px', width: '100%' }}
+            />
+            <DatePicker
+              label="To Date"
+              format="DD/MM/YYYY"
+              value={toDate}
+              onChange={(date) => {
+                setToDate(date);
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                },
+              }}
+              sx={{ maxWidth: '200px', width: '100%' }}
+            />{' '}
+            <Autocomplete
+              options={[
+                { id: '1', name: 'Student 1' },
+                { id: '2', name: 'Student 2' },
+                { id: '3', name: 'Student 3' },
+              ]}
+              getOptionLabel={(option) => option.name || ''}
+              onChange={(_, value) => {
+                setStudent(value?.id || '');
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Student"
+                  name="student"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                />
+              )}
+              sx={{ maxWidth: '200px', width: '100%' }}
+            />
+          </Box>
+          <CustomizableTable
+            tableId="student-attendance-list"
+            noDataText="No Students Found"
+            searchFieldProps={{
+              placeholder: 'Search Room No, Student Name...',
+              label: 'Search Room No, Student Name...',
+            }}
+            isSearch={false}
+            columns={[
+              {
+                id: 'studentName',
+                label: 'Student Name',
+                align: 'left',
+                minWidth: 150,
+              },
+              {
+                id: 'roomNo',
+                label: 'Room No',
+                align: 'left',
+                minWidth: '100px',
+              },
+              {
+                id: 'hostelName',
+                label: 'Hostel Name',
+                align: 'left',
+                minWidth: 150,
+              },
+              {
+                id: 'leaveType',
+                label: 'Leave Type',
+                align: 'left',
+                minWidth: 120,
+              },
+              {
+                id: 'startDate',
+                label: 'Start Date',
+                align: 'left',
+                minWidth: 120,
 
-              filterType: 'date',
-            },
-            {
-              id: 'endDate',
-              label: 'End Date',
-              align: 'left',
-              minWidth: 120,
+                filterType: 'date',
+              },
+              {
+                id: 'endDate',
+                label: 'End Date',
+                align: 'left',
+                minWidth: 120,
+                filterType: 'date',
+              },
+              {
+                label: 'Half Day',
+                id: 'isHalfDay',
+                minWidth: '100px',
+                render(value, row) {
+                  return value ? 'Yes' : 'No';
+                },
+              },
+              {
+                label: 'Description',
+                id: 'description',
+                align: 'left',
+              },
+              {
+                label: 'Rejection Reason',
+                id: 'rejectionReason',
+                align: 'left',
+                minWidth: '200px',
+                render(value, row) {
+                  return value || '-';
+                },
+              },
+              {
+                label: 'Status',
+                id: 'statusValue',
+                filterType: 'enum',
+                enumOptions: EmployeeLeaveStatusOptions,
+                render(value, row) {
+                  const color = EmployeeLeaveStatusTypeColor[
+                    value as EmployeeLeaveStatusType
+                  ] as LabelColor;
 
-              filterType: 'date',
-            },
-            {
-              label: 'Half Day',
-              id: 'isHalfDay',
-              minWidth: '100px',
-              render(value, row) {
-                return value ? 'Yes' : 'No';
+                  return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
+                },
               },
-            },
-            {
-              label: 'Description',
-              id: 'description',
-              align: 'left',
-            },
-            {
-              label: 'Rejection Reason',
-              id: 'rejectionReason',
-              align: 'left',
-              minWidth: '200px',
-              render(value, row) {
-                return value || '-';
+              {
+                id: 'actions',
+                label: 'Actions',
+                sticky: true,
+                minWidth: 80,
+                isSort: false,
+                isFilter: false,
+                render(value, row) {
+                  return (
+                    <Box display="flex" gap={1}>
+                      {row.statusValue === 'Pending' ? (
+                        <>
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => {
+                              // setWhichStatus(EmployeeLeaveStatusType.Approved);
+                              // setLeaveId(row.id);
+                              confirmRejectDialog.onTrue();
+                            }}
+                          >
+                            <CheckCircleOutline />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              // setWhichStatus(EmployeeLeaveStatusType.Rejected);
+                              // setLeaveId(row.id);
+                              confirmRejectDialog.onTrue();
+                            }}
+                          >
+                            <Cancel />
+                          </IconButton>
+                        </>
+                      ) : (
+                        '-'
+                      )}
+                    </Box>
+                  );
+                },
               },
-            },
-            {
-              label: 'Status',
-              id: 'statusValue',
-              filterType: 'enum',
-              enumOptions: EmployeeLeaveStatusOptions,
-              render(value, row) {
-                const color = EmployeeLeaveStatusTypeColor[
-                  value as EmployeeLeaveStatusType
-                ] as LabelColor;
-
-                return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
-              },
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              sticky: true,
-              minWidth: 80,
-              isSort: false,
-              isFilter: false,
-              render(value, row) {
-                return (
-                  <Box display="flex" gap={1}>
-                    {row.statusValue === 'Pending' ? (
-                      <>
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => {
-                            // setWhichStatus(EmployeeLeaveStatusType.Approved);
-                            // setLeaveId(row.id);
-                            confirmRejectDialog.onTrue();
-                          }}
-                        >
-                          <CheckCircleOutline />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => {
-                            // setWhichStatus(EmployeeLeaveStatusType.Rejected);
-                            // setLeaveId(row.id);
-                            confirmRejectDialog.onTrue();
-                          }}
-                        >
-                          <Cancel />
-                        </IconButton>
-                      </>
-                    ) : (
-                      '-'
-                    )}
-                  </Box>
-                );
-              },
-            },
-          ]}
-          data={hostelTableData}
-        />
+            ]}
+            data={hostelTableData}
+          />
+        </>
       )}
 
       <CustomDialog
