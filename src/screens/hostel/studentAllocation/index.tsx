@@ -82,7 +82,6 @@ const HostelStudentAllocation = () => {
           )}
           sx={{ maxWidth: '200px', width: '100%' }}
         />
-        ``
         <Autocomplete
           disabled={!division}
           options={[

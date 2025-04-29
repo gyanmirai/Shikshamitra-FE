@@ -9,6 +9,7 @@ import { Iconify } from 'src/components/iconify';
 const { assetURL } = CONFIG.site;
 
 const StudentProfile = ({ studentId }: { studentId: string }) => {
+  // Get the MUI theme object for styling
   const theme = useTheme();
 
   return (
@@ -20,7 +21,7 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
           width: '100%',
           padding: { xs: 2, sm: 2.5, md: 3 },
           background: theme.palette.background.default,
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.12)',
+          boxShadow: 'none',
           borderRadius: 3,
           overflow: 'hidden',
           mt: 2,
@@ -101,53 +102,25 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
                 sx={{
                   textAlign: 'center',
                   p: { xs: 1, sm: 1.5 },
-                  borderRadius: 2,
-                  transition: 'all 0.2s',
+                  maxWidth: '150px',
+                  width: '100%',
                 }}
               >
-                <Typography
-                  variant="body2"
+                <Iconify
+                  width={26}
+                  height={26}
+                  icon={item.icon}
                   sx={{
-                    mb: 0.5,
-                    color: theme.palette.text.secondary,
-                    fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' },
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
+                    color: 'primary.main',
                   }}
-                >
+                />
+                <Typography variant="subtitle2" color="text.secondary">
                   {item.label}
                 </Typography>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{
-                    fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
-                    fontWeight: 600,
-                    color: 'text.primary',
-                  }}
-                >
-                  <Iconify
-                    icon={item.icon}
-                    sx={{
-                      width: { xs: 24, sm: 28, md: 32 },
-                      height: { xs: 24, sm: 28, md: 32 },
-                      mr: 0.75,
-                      color: 'primary.main',
-                    }}
-                  />
-                  <Typography
-                    noWrap
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
-                    }}
-                  >
-                    {item.value}
-                  </Typography>
-                </Box>
+
+                <Typography noWrap variant="h6">
+                  {item.value}
+                </Typography>
               </Box>
             ))}
           </Box>
