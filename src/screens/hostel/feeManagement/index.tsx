@@ -39,11 +39,12 @@ const HostelfeeManagement = () => {
   return (
     <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Fee Management"
+        heading="Fee Collection"
         description="Student Fee Management For Hostel "
         links={[
           { name: 'Hostel Management', href: '/hostel/dashboard' },
           { name: 'Fee Management', href: '' },
+          { name: 'Fee Collection', href: '' },
         ]}
         sx={{ px: 1, mb: 2 }}
         action={

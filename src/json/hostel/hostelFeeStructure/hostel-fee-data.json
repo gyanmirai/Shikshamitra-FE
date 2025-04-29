@@ -1,0 +1,48 @@
+{
+    "initialData": [
+      {
+        "id": 1,
+        "totalAmount": "75000",
+        "totaldiscountAmount": 2000,
+        "grossFee": 77000,
+        "applicableGrade": "2",
+        "bookRecipt": "CBSE",
+        "paymentDueDate": "20-12-2024",
+        "feeSubCategoryList": [
+          {
+            "id": 1,
+            "name": "Tuition Fee",
+            "amount": "50000",
+            "isCounted": true,
+            "value": "tuitionFee",
+            "paymentMethod": ["cash", "online"],
+            "discountAmount": 4000,
+            "discountCategory": "Summer Campaign"
+          },
+          {
+            "id": 2,
+            "name": "Sports Fee",
+            "amount": "15000",
+            "isCounted": false,
+            "value": "sportsFee",
+            "paymentMethod": ["cash", "online"],
+            "discountAmount": 0,
+            "discountCategory": "-"
+          },
+          {
+            "id": 3,
+            "name": "Transport Fee",
+            "amount": "10000",
+            "isCounted": true,
+            "value": "transportFee",
+            "paymentMethod": ["cash", "online"],
+            "discountAmount": 0,
+            "discountCategory": "-"
+          }
+        ],
+        "statusToggle": true,
+        "action": "View"
+      }
+    ]
+  }
+  

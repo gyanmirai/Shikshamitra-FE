@@ -1368,10 +1368,26 @@ const hostelModule = {
         },
         {
           title: 'Fee Management',
-          path: '/hostel/fee-management',
+          path: '',
           _action: 'hostel-fee-management',
           shortcutKey: 'Alt+H+4',
           shortcutKeyName: 'Alt+H+4',
+          children: [
+            {
+              title: 'Fee Collection',
+              path: '/hostel/fee-management',
+              _action: 'hostel-fee-collection',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Fee Setting',
+              path: '/hostel/fee-setting',
+              _action: 'hostel-fee-setting',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+          ],
         },
         {
           title: 'Attendance And Leave Management',
