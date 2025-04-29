@@ -1450,6 +1450,29 @@ const hostelModule = {
           ],
         },
         {
+          title: 'Disciplinary Actions Tracking & Management',
+          path: '',
+          _action: 'hostel-disciplinary-actions',
+          shortcutKey: 'Alt+H+4',
+          shortcutKeyName: 'Alt+H+4',
+          children: [
+            {
+              title: 'Log Disciplinary Incident',
+              path: '/hostel/log-disciplinary-incident',
+              _action: 'hostel-log-disciplinary-incident',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Archieved Incident',
+              path: '/hostel/archived-incident',
+              _action: 'hostel-archived-incident',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+          ],
+        },
+        {
           title: 'Maintenance',
           path: '/hostel/maintenance',
           _action: 'hostel-maintenance',
