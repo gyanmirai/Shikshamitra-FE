@@ -10,6 +10,7 @@ export interface IHostelIncident {
   description: string;
   incidentType: string;
   documents?: File | null;
+  status?: number;
 }
 
 export interface IHostelIncidentFormProps {
@@ -27,4 +28,11 @@ export interface IHostelIncidentTableProps {
   setEditData: (value: IHostelIncident | null) => void;
   onDelete: (data: IHostelIncident) => void;
   onEdit: (data: IHostelIncident) => void;
+  onView: (data: IHostelIncident) => void;
+}
+
+export interface ITakeActionFormProps {
+  open: UseBooleanReturn;
+  onClose: () => void;
+  editData?: IHostelIncident | null;
 }

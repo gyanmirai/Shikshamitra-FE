@@ -30,8 +30,8 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { getIncidentInitialValues } from './initialValues';
 import { incidentValidationSchema } from './validationSchema';
+import { getTakeActionInitialValues } from './takeActionInitialValues';
 
 import type { IHostelIncidentFormProps } from '../type';
 
@@ -39,7 +39,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
-    initialValues: getIncidentInitialValues(editData),
+    initialValues: getTakeActionInitialValues(editData),
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: incidentValidationSchema,
     // Handle form submission
@@ -60,7 +60,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 >
                   <CustomSelect
                     size="small"
-                    label="Hostel Name"
+                    label="Hostel Name *"
                     name="hostelName"
                     fullWidth
                     value={formik.values.hostelName}
@@ -82,7 +82,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 <ShakingTextField error={!!(formik.touched.floor && formik.errors.floor) || false}>
                   <CustomSelect
                     size="small"
-                    label="Floor"
+                    label="Floor *"
                     name="floor"
                     fullWidth
                     value={formik.values.floor}
@@ -142,7 +142,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Select Students"
+                          label="Select Students *"
                           placeholder="Select students"
                           size="small"
                         />
@@ -160,7 +160,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                   error={!!(formik.touched.incidentDate && formik.errors.incidentDate) || false}
                 >
                   <DatePicker
-                    label="Incident Date"
+                    label="Incident Date *"
                     format="DD/MM/YYYY"
                     value={formik.values.incidentDate}
                     onChange={(val) => formik.setFieldValue('incidentDate', val)}
@@ -184,7 +184,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                   error={!!(formik.touched.incidentTime && formik.errors.incidentTime) || false}
                 >
                   <TimePicker
-                    label="Incident Time"
+                    label="Incident Time *"
                     format="HH:mm"
                     value={formik.values.incidentTime}
                     onChange={(val) => formik.setFieldValue('incidentTime', val)}
@@ -209,7 +209,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 >
                   <CustomSelect
                     size="small"
-                    label="Incident Type"
+                    label="Incident Type *"
                     name="incidentType"
                     fullWidth
                     value={formik.values.incidentType}
@@ -237,7 +237,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                       // setQuestion(value);
                       formik.setFieldValue('description', value);
                     }}
-                    placeholder="Incident Description"
+                    placeholder="Incident Description *"
                     error={formik.touched.description && Boolean(formik.errors.description)}
                     helperText={
                       formik.touched.description && formik.errors.description

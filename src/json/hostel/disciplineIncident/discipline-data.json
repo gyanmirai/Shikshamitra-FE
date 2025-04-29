@@ -7,7 +7,8 @@
       "incidentTime": "2024-12-15T10:00",
       "description": "Students were found causing disturbance during study hours.",
       "incidentType": "Disturbance",
-      "documents": null
+      "documents": null,
+      "status" : 0
     },
     {
       "hostelName": "Moonlight Hostel",
@@ -17,7 +18,8 @@
       "incidentTime": "2024-12-15T10:00",
       "description": "Student was caught violating curfew rules.",
       "incidentType": "Curfew Violation",
-      "documents": null
+      "documents": null,
+      "status" : 1
     }
   ]
   
