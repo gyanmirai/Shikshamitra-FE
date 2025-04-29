@@ -1420,6 +1420,36 @@ const hostelModule = {
           ],
         },
         {
+          title: 'Visitor Entry Management',
+          path: '',
+          _action: 'hostel-visitor-entry-management',
+          shortcutKey: 'Alt+H+4',
+          shortcutKeyName: 'Alt+H+4',
+          children: [
+            {
+              title: 'Log Visitor',
+              path: '/hostel/log-visitor',
+              _action: 'hostel-log-visitor',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Pre Register Visitor',
+              path: '/hostel/pre-register-visitor',
+              _action: 'hostel-pre-register-visitor',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+            {
+              title: 'Visitor Log',
+              path: '/hostel/visitor-log',
+              _action: 'hostel-visitor-log',
+              shortcutKey: 'Alt+A+C+3',
+              shortcutKeyName: 'Alt+A+C+3',
+            },
+          ],
+        },
+        {
           title: 'Maintenance',
           path: '/hostel/maintenance',
           _action: 'hostel-maintenance',
