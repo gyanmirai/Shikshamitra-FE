@@ -1489,6 +1489,28 @@ const hostelModule = {
           ],
         },
         {
+          title: 'Catering Management',
+          path: '',
+          _action: 'catering-management',
+          children: [
+            {
+              title: 'Weekly Menu Planning',
+              path: '/hostel/catering-management/weekly-menu-planning',
+              _action: 'weekly-menu-planning',
+            },
+            {
+              title: 'Feedback Analytics',
+              path: '/hostel/catering-management/feedback-analytics',
+              _action: 'feedback-analytics',
+            },
+            {
+              title: 'Settings',
+              path: '/hostel/catering-management/settings',
+              _action: 'settings',
+            },
+          ],
+        },
+        {
           title: 'Reporting & Analytics',
           path: '/hostel/reporting-analytics',
           _action: 'hostel-reporting-analytics',
