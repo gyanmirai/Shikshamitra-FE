@@ -14,9 +14,12 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import disciplineData from 'src/json/hostel/disciplineIncident/discipline-data.json';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import IncidentForm from './components/incidentForm';
+import TakeActionForm from './components/takeActionForm';
 import HostelIncidentTable from './components/incidentTable';
 
 import type { IHostelIncident } from './type';
@@ -24,6 +27,7 @@ import type { IHostelIncident } from './type';
 const LogDisciplinaryManagement = () => {
   // Dialog state for adding disciplinary incidents
   const addIncidentDialog = useBoolean();
+  const viewIncidentDialog = useBoolean();
 
   // Selected incident for editing/viewing
   const [selectedIncident, setSelectedIncident] = useState<IHostelIncident | null>(null);
@@ -70,10 +74,12 @@ const LogDisciplinaryManagement = () => {
       dispatch(setIsChanges(false));
       setSelectedIncident(null);
       addIncidentDialog.onFalse();
+      viewIncidentDialog.onFalse();
     } else if (!isChanges) {
       setOpen(false);
       setSelectedIncident(null);
       addIncidentDialog.onFalse();
+      viewIncidentDialog.onFalse();
     }
   };
   return (
@@ -125,6 +131,10 @@ const LogDisciplinaryManagement = () => {
             setSelectedIncident(data);
             setOpen(true);
           }}
+          onView={(data) => {
+            setSelectedIncident(data);
+            viewIncidentDialog.onTrue();
+          }}
           open={open}
           onAddIncident={addIncidentDialog}
           setOpenDialog={setOpen}
@@ -133,6 +143,38 @@ const LogDisciplinaryManagement = () => {
           data={incidentData}
         />
       )}
+      <CustomDialog
+        open={viewIncidentDialog.value}
+        handleClose={() => {
+          viewIncidentDialog.onFalse();
+          setSelectedIncident(null);
+        }}
+        title="Take Action"
+        maxWidth="md"
+      >
+        <TakeActionForm
+          open={viewIncidentDialog}
+          onClose={() => {
+            handleClose(null, false);
+          }}
+          editData={selectedIncident}
+        />
+      </CustomDialog>
+      <ConfirmDialog
+        open={deleteIncidentDialog.value}
+        onClose={() => {
+          setSelectedIncident(null);
+          deleteIncidentDialog.onFalse();
+        }}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Delete
+          </Button>
+        }
+      />
+
     </Box>
   );
 };
