@@ -48,7 +48,7 @@ const GateApproval = () => {
               }}
             >
               <Iconify icon="mdi:arrow-right-bold" sx={{ mr: 1 }} />
-              Marked Out
+              Exit Confirm
             </MenuItem>
           )}
           {row.status === 1 && (
@@ -59,7 +59,7 @@ const GateApproval = () => {
               }}
             >
               <Iconify icon="mdi:arrow-left-bold" sx={{ mr: 1 }} />
-              Marked In
+              Return
             </MenuItem>
           )}
           {/* )} */}
@@ -89,11 +89,23 @@ const GateApproval = () => {
         }}
         noDataText="Attendance Data Not Found"
         columns={[
-          { id: 'roomNumber', label: 'Room Number', filterType: 'number' },
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'hostelName', label: 'Hostel Name' },
-          { id: 'outTime', label: 'Out Time', filterType: 'date' },
-          { id: 'returnETA', label: 'Return ETA', filterType: 'date' },
+          {
+            id: 'roomNumber',
+            label: 'Room Number',
+            filterType: 'number',
+            align: 'left',
+            minWidth: 150,
+          },
+          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: 150 },
+          { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 150 },
+          { id: 'outTime', label: 'Out Time', filterType: 'date', align: 'left', minWidth: 150 },
+          {
+            id: 'returnETA',
+            label: 'Return Time',
+            filterType: 'date',
+            align: 'left',
+            minWidth: 150,
+          },
           {
             id: 'status',
             label: 'Status',
@@ -131,11 +143,11 @@ const GateApproval = () => {
         onClose={() => {
           markOutboundDialog.onFalse();
         }}
-        title="Marked Out"
-        content="Are you sure want to Marked Out?"
+        title="Exit Confirmation"
+        content="Are you sure want to Confirm Exit ?"
         action={
           <Button variant="contained" onClick={() => {}}>
-            Marked Out
+            Confirm
           </Button>
         }
       />
@@ -145,11 +157,11 @@ const GateApproval = () => {
         onClose={() => {
           markReturnDialog.onFalse();
         }}
-        title="Marked In"
-        content="Are you sure want to Marked In?"
+        title="Return Confirmation"
+        content="Are you sure want to Returned ?"
         action={
           <Button variant="contained" onClick={() => {}}>
-            Marked In
+            Confirm
           </Button>
         }
       />
