@@ -1,7 +1,7 @@
 import React from 'react';
 
-import Settings from 'src/screens/academic/curriculum-management/settings';
+import CurriculumSetting from 'src/screens/academic/curriculum-management/setting/curriculumSetting';
 
-const SettingScreen = () => <Settings />;
+const SettingScreen = () => <CurriculumSetting />;
 
 export default SettingScreen;
