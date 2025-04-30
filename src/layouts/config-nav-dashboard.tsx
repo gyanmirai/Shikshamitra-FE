@@ -1474,10 +1474,19 @@ const hostelModule = {
         },
         {
           title: 'Maintenance',
-          path: '/hostel/maintenance',
+          path: '',
           _action: 'hostel-maintenance',
           shortcutKey: 'Alt+H+5',
           shortcutKeyName: 'Alt+H+5',
+          children: [
+            {
+              title: 'Safety Management',
+              path: '/hostel/maintenance/saftey-management',
+              _action: 'saftey-management',
+              shortcutKey: 'Alt+A+C+3',
+              shortcutKeyName: 'Alt+A+C+3',
+            },
+          ],
         },
         {
           title: 'Reporting & Analytics',
