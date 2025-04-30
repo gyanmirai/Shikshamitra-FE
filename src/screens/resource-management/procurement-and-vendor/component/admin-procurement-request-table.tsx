@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label/types';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { MenuItem, MenuList } from '@mui/material';
+import { Button, MenuItem, MenuList } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,6 +19,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -28,10 +29,18 @@ import AddProcurementRequestDialog from './add-procurement-request-dialog';
 import type { IProcurementAndVendorFromValues } from '../procurement-and-vendor-interface';
 
 const AdminProcurementRequestTable = () => {
-  const [selectedRow, setSelectedRow] = useState<IProcurementAndVendorFromValues>();
+  // State to store the selected procurement request row data
+  const [selectedRow, setSelectedRow] = useState<IProcurementAndVendorFromValues | null>(null);
+  // State to track if the procurement request is in edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // Boolean state to control the visibility of view procurement request dialog
   const viewProcurementRequest = useBoolean();
+  // Boolean state to control the visibility of assign to purchase dialog
   const assignedToPurchase = useBoolean();
+  // Boolean state to control the visibility of approve dialog
+  const approveDialog = useBoolean();
+  // Boolean state to control the visibility of reject dialog
+  const rejectDialog = useBoolean();
   return (
     <>
       <CustomizableTable
@@ -46,21 +55,18 @@ const AdminProcurementRequestTable = () => {
         noDataText="No Booking Request Found"
         tableId="admin-resource-table"
         columns={[
-          { id: 'resourceName', label: 'Resource Name', minWidth: 100 },
-          { id: 'quantity', label: 'Quantity', minWidth: 100, filterType: 'number' },
-          { id: 'requestedBy', label: 'Requested By', minWidth: 100 },
+          { id: 'resourceName', label: 'Resource Name' },
+          { id: 'quantity', label: 'Quantity', filterType: 'number' },
+          { id: 'requestedBy', label: 'Requested By' },
           {
             id: 'date',
             label: 'Date',
-            minWidth: 80,
             filterType: 'date',
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
           },
-
           {
             label: 'Status',
             id: 'status',
-            minWidth: '100px',
             filterType: 'enum',
             enumOptions: ResourceBookingStatusTypeOptions,
             render(value, row) {
@@ -71,12 +77,11 @@ const AdminProcurementRequestTable = () => {
               return <Label color={color}>{ResourceBookingStatusType[value]}</Label>;
             },
           },
-
           {
             id: 'action',
             label: 'Actions',
             align: 'left',
-            minWidth: 100,
+            minWidth: 70,
             sticky: true,
             isFilter: false,
             isSort: false,
@@ -88,16 +93,27 @@ const AdminProcurementRequestTable = () => {
                   showThreeDots
                   handleViewClick={() => {
                     setSelectedRow(row as IProcurementAndVendorFromValues);
-
                     viewProcurementRequest.onTrue();
                   }}
-                  actions={() => (
+                  actions={({ popover }) => (
                     <MenuList>
-                      <MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          approveDialog.onTrue();
+                          popover.onClose();
+                          setSelectedRow(row as IProcurementAndVendorFromValues);
+                        }}
+                      >
                         <Iconify icon={GlobalIcons.approvedIcon} />
-                        Approved
+                        Approve
                       </MenuItem>
-                      <MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          rejectDialog.onTrue();
+                          popover.onClose();
+                          setSelectedRow(row as IProcurementAndVendorFromValues);
+                        }}
+                      >
                         <Iconify icon={GlobalIcons.cancel} />
                         Reject
                       </MenuItem>
@@ -128,6 +144,36 @@ const AdminProcurementRequestTable = () => {
           />
         </CustomDialog>
       )}
+
+      <ConfirmDialog
+        open={approveDialog.value}
+        onClose={() => {
+          setSelectedRow(null);
+          approveDialog.onFalse();
+        }}
+        title="Approve"
+        content="Are you sure want to Approve this Resource ?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Confirm
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={rejectDialog.value}
+        onClose={() => {
+          setSelectedRow(null);
+          rejectDialog.onFalse();
+        }}
+        title="Approve"
+        content="Are you sure want to Reject this Resource ?"
+        action={
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Confirm
+          </Button>
+        }
+      />
 
       {assignedToPurchase.value && (
         <CustomDialog
