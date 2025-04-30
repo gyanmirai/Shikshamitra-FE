@@ -28,6 +28,7 @@ const LogDisciplinaryManagement = () => {
   // Dialog state for adding disciplinary incidents
   const addIncidentDialog = useBoolean();
   const viewIncidentDialog = useBoolean();
+
   // Selected incident for editing/viewing
   const [selectedIncident, setSelectedIncident] = useState<IHostelIncident | null>(null);
 
@@ -173,6 +174,7 @@ const LogDisciplinaryManagement = () => {
           </Button>
         }
       />
+
     </Box>
   );
 };

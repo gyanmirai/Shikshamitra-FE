@@ -29,9 +29,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-
+import { getIncidentInitialValues } from './initialValues';
 import { incidentValidationSchema } from './validationSchema';
-import { getTakeActionInitialValues } from './takeActionInitialValues';
 
 import type { IHostelIncidentFormProps } from '../type';
 
@@ -39,7 +38,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
-    initialValues: getTakeActionInitialValues(editData),
+    initialValues: getIncidentInitialValues(editData),
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: incidentValidationSchema,
     // Handle form submission
