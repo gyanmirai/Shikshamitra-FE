@@ -12,7 +12,7 @@ export const getFeedbackAnalyticsInitialValues = (
   howMuchOkay: data?.howMuchOkay || 0,
   howMuchBad: data?.howMuchBad || 0,
   howMuchSuperb: data?.howMuchSuperb || 0,
-  howMuchExcellent: data?.howMuchExcellent || 0,
+  howMuchAmezing: data?.howMuchAmezing || 0,
   howMuchVeryBad: data?.howMuchVeryBad || 0,
   howMuchlovedIt: data?.howMuchlovedIt || 0,
   reviewBy: data?.reviewBy || [],
