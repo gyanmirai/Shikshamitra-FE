@@ -8,7 +8,7 @@
       "visitTime": "2025-04-27T11:30:00+05:30",
       "visitDate": "2025-04-27T12:00:00+05:30", 
       "reasonForVisit": "Meet my child",
-      "status": "Exited",
+      "status": 1,
       "relationship": "Father"
     },
     {
@@ -20,7 +20,7 @@
       "visitTime": "2025-04-27T16:10:00+05:30",
       "visitDate": "2025-04-27T17:00:00+05:30",
       "reasonForVisit": "Reason",
-      "status": "InHostel",
+      "status": 0,
       "relationship": "Father"
     }
   ]

@@ -6,7 +6,7 @@ export enum VisitorStatusType {
 
 export const VisitorStatusOptions = [
   {
-    label: 'In Hostel',
+    label: 'InHostel',
     value: VisitorStatusType.InHostel,
   },
   {
@@ -20,7 +20,7 @@ export const VisitorStatusOptions = [
 ];
 
 export const VisitorStatusColors: Record<VisitorStatusType, 'success' | 'error' | 'warning'> = {
-  [VisitorStatusType.InHostel]: 'success',
-  [VisitorStatusType.Exited]: 'error',
+  [VisitorStatusType.InHostel]: 'error',
+  [VisitorStatusType.Exited]: 'success',
   [VisitorStatusType.Overstayed]: 'warning',
 };
