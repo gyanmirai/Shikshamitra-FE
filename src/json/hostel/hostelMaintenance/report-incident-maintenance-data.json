@@ -1,0 +1,24 @@
+[
+    {
+      "incidentTitle": "Fire Alarm Triggered",
+      "incidentType": "Fire",
+      "incidentDate": "2025-04-27T00:00:00+05:30",
+      "incidentTime": "2025-04-27T14:30:00+05:30",
+      "incidentUrgency": "High",
+      "incidentDescription": "Fire alarm was triggered due to smoke in chemistry lab.",
+      "incidentReportedBy": "Ravi Sharma",
+      "status": 0
+    },
+    {
+      "incidentTitle": "Water Leakage",
+      "incidentType": "Infrastructure",
+      "incidentDate": "2025-04-26T00:00:00+05:30",
+      "incidentTime": "2025-04-26T10:00:00+05:30",
+      "incidentUrgency": "Medium",
+      "incidentDescription": "Water leakage observed in boys' hostel bathroom.",
+      "incidentReportedBy": "Anjali Mehra",
+      "status": 2
+    }
+  
+  ]
+  
