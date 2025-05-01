@@ -1567,13 +1567,13 @@ const resourceManagement = {
           _action: 'procurement-vendors',
           children: [
             {
-              title: 'Request Review & Approval',
-              path: '/resourceManagement/procurement-vendors/manage-request',
+              title: 'Procurement Request',
+              path: '/resourceManagement/procurement-vendors/procurement-request',
               _action: 'allocation-of-resources',
             },
             {
-              title: 'Procurement Request',
-              path: '/resourceManagement/procurement-vendors/procurement-request',
+              title: 'Request Review & Approval',
+              path: '/resourceManagement/procurement-vendors/manage-request',
               _action: 'allocation-of-resources',
             },
           ],

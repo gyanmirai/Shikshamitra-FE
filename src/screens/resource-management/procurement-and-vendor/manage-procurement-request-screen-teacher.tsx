@@ -22,7 +22,11 @@ const ManageProcurementRequestScreenTeacher = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <CustomBreadcrumbs
           heading="Procurement Request"
-          links={[{ name: 'Resource Management' }, { name: 'Procurement Request' }]}
+          links={[
+            { name: 'Resource Management', href: '/resourceManagement/dashboard' },
+            { name: 'Procurement & Vendors' },
+            { name: 'Procurement Request' },
+          ]}
           sx={{ px: 1, mb: 2 }}
         />
         <Button
