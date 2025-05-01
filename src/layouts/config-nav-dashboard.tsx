@@ -306,6 +306,11 @@ const securityModule = {
             },
           ],
         },
+        {
+          title: 'Gate Pass System',
+          path: '/security/gate-pass-system',
+          _action: 'gate-pass-system',
+        },
       ],
     },
   ],
