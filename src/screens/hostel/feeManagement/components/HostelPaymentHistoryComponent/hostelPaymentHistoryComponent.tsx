@@ -80,6 +80,10 @@ const HostelPaymentHistoryComponent = () => {
                       <Iconify icon="tabler:receipt" />
                       View Receipt
                     </MenuItem>
+                    <MenuItem onClick={() => {}}>
+                      <Iconify icon="tabler:receipt" />
+                      Send Reminder
+                    </MenuItem>
                   </MenuList>
                 )}
               />
