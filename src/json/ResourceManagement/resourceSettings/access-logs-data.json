@@ -1,0 +1,38 @@
+[
+    {
+      "name": "Ravi Sharma",
+      "role": "Visitor",
+      "gate": "Gate 1",
+      "timestamp": "2025-05-01T09:15:30",
+      "direction": 0
+    },
+    {
+      "name": "Anjali Mehta",
+      "role": "Resident",
+      "gate": "Gate 2",
+      "timestamp": "2025-05-01T10:45:12",
+      "direction": 1
+    },
+    {
+      "name": "Suresh Kumar",
+      "role": "Delivery",
+      "gate": "Gate 3",
+      "timestamp": "2025-05-01T11:05:00",
+      "direction": 0
+    },
+    {
+      "name": "Priya Verma",
+      "role": "Staff",
+      "gate": "Gate 1",
+      "timestamp": "2025-05-01T12:22:47",
+      "direction": 0
+    },
+    {
+      "name": "Amit Jain",
+      "role": "Visitor",
+      "gate": "Gate 2",
+      "timestamp": "2025-05-01T13:10:03",
+      "direction": 1
+    }
+  ]
+  

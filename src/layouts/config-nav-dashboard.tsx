@@ -311,6 +311,11 @@ const securityModule = {
           path: '/security/gate-pass-system',
           _action: 'gate-pass-system',
         },
+        {
+          title: 'Access Logs Management',
+          path: '/security/access-logs-management',
+          _action: 'access-logs-management',
+        },
       ],
     },
   ],
