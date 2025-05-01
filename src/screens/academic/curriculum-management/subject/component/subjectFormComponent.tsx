@@ -1,11 +1,9 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
 
-import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   List,
@@ -48,22 +46,22 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
   // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
   const addSubjectDialog = useBoolean();
-
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getSubjectInitialValues(data),
     validationSchema,
-    // Handle form submission with updated status based on draft mode
+    validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: (values) => {
       onSubmit({
         ...values,
         id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
         documents,
       });
       onClose(null, true);
     },
   });
+  console.log('formik initial values----', formik.errors);
 
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -86,13 +84,30 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
   const handleRemoveDocument = (docId: string) => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
   };
+
+  // Add this function to your component
+  const handlePublish = async () => {
+    // Update the status
+    await formik.setFieldValue('status', 'Publish', false);
+
+    // Mark the primary teacher field as touched to show validation errors
+    await formik.setFieldTouched('primaryTeacher', true, false);
+
+    // Now validate just the primary teacher field with the updated status
+    await formik.validateField('primaryTeacher');
+
+    // Check if the field is valid
+    if (!formik.errors.primaryTeacher) {
+      formik.handleSubmit();
+    }
+  };
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
@@ -113,7 +128,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.subjectCode && formik.errors.subjectCode) || false}
                 >
@@ -130,21 +145,23 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
                 >
-                  <TextField
-                    fullWidth
+                  <CustomSelect
+                    options={[{ value: 'Math', label: 'Math' }]}
                     label="Subject Name"
-                    name="subjectName"
-                    size="small"
-                    disabled={isPublished}
+                    isLoading={isLoading}
                     value={formik.values.subjectName}
-                    onChange={formik.handleChange}
+                    onChange={(val) => {
+                      formik.setFieldValue('subjectName', val);
+                    }}
+                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
-                    helperText={formik.touched.subjectName && formik.errors.subjectName}
-                  />
+                    helperText={(formik.touched.subjectName && formik.errors.subjectName) || ''}
+                    disabled={isPublished}
+                  />{' '}
                 </ShakingTextField>
                 <Typography
                   variant="body2"
@@ -157,12 +174,12 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                     addSubjectDialog.onTrue();
                   }}
                 >
-                  Add Subject
+                  Add Subject ?
                 </Typography>
                 <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
-                  title="Inquiry Preference"
+                  title="Add Subject"
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}
@@ -172,6 +189,35 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                     editData={null}
                   />{' '}
                 </CustomDialog>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
+                >
+                  <MuiColorInput
+                    placeholder="Subject Color"
+                    size="small"
+                    format="hex"
+                    value={formik.values.subjectColor}
+                    onChange={(e) => {
+                      formik.setFieldValue('subjectColor', e);
+                    }}
+                    disabled={!formik.values.subjectName}
+                    sx={{
+                      minWidth: 180,
+                      width: '100%',
+                      '& .MuiInputBase-root': {
+                        fontSize: '0.875rem',
+                      },
+                      '& .MuiInputBase-input::placeholder': {
+                        fontSize: '0.875rem',
+                      },
+                    }}
+                    error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
+                    helperText={formik.touched.subjectColor && formik.errors.subjectColor}
+                  />
+                </ShakingTextField>
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -232,59 +278,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false}
-                >
-                  <DateTimePicker
-                    label="Schedule Date"
-                    value={formik.values.scheduleDate ? dayjs(formik.values.scheduleDate) : null}
-                    onChange={(value) => {
-                      formik.setFieldValue('scheduleDate', value);
-                    }}
-                    disabled={isPublished}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
-                        helperText:
-                          formik.touched.scheduleDate && formik.errors.scheduleDate
-                            ? formik.errors.scheduleDate
-                            : '',
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
-                >
-                  <MuiColorInput
-                    placeholder="Subject Color"
-                    size="small"
-                    format="hex"
-                    value={formik.values.subjectColor}
-                    onChange={(e) => {
-                      formik.setFieldValue('subjectColor', e);
-                    }}
-                    disabled={isPublished}
-                    sx={{
-                      minWidth: 180,
-                      width: '100%',
-                      '& .MuiInputBase-root': {
-                        fontSize: '0.875rem',
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        fontSize: '0.875rem',
-                      },
-                    }}
-                    error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
-                    helperText={formik.touched.subjectColor && formik.errors.subjectColor}
-                  />
-                </ShakingTextField>
-              </Grid>
+
               <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.learningGoal && formik.errors.learningGoal) || false}
@@ -410,7 +404,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   variant="outlined"
                   startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                   onClick={() => {
-                    setIsDraft(true);
+                    formik.setFieldValue('status', 'UnPublish');
                     formik.handleSubmit();
                   }}
                 >
@@ -420,10 +414,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   startIcon={<Iconify icon={GlobalIcons.publish} />}
                   type="submit"
                   variant="contained"
-                  onClick={() => {
-                    setIsDraft(false);
-                    formik.handleSubmit();
-                  }}
+                  onClick={handlePublish}
                 >
                   Publish
                 </Button>

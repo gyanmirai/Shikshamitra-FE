@@ -1,11 +1,9 @@
-import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface ISubject {
   id: number;
   subjectName: string;
   subjectCode: string;
-  scheduleDate: Dayjs | string | null;
   className: string;
   primaryTeacher: string;
   secondaryTeacher: string[] | null;
@@ -20,7 +18,6 @@ export interface ISubject {
 export interface ISubjectFormValues {
   subjectCode: string;
   subjectName: string;
-  scheduleDate: Dayjs | string | null;
   className: string;
   primaryTeacher: string;
   secondaryTeacher: string[];

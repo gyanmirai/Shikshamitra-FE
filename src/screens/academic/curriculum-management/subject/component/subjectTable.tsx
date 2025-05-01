@@ -1,7 +1,5 @@
 // SubjectTable.tsx
 
-import dayjs from 'dayjs';
-
 import { Box, Switch, Typography } from '@mui/material';
 
 import {
@@ -90,19 +88,6 @@ const SubjectTable = ({
               </Typography>
             ))}
           </Box>
-        ),
-      },
-      {
-        id: 'scheduleDate',
-        label: 'Schedule Date',
-        minWidth: '180px',
-        align: 'left',
-        filterType: 'date',
-        isDateRangeFilter: true,
-        render: (value) => (
-          <Typography fontSize="12px" gutterBottom>
-            {dayjs(value).format('DD MMM YYYY')}
-          </Typography>
         ),
       },
       { id: 'prerequisites', label: 'Prerequisites', minWidth: '200px', align: 'left' },
