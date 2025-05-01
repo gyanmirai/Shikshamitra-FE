@@ -78,8 +78,8 @@ const AddProcurementRequestDialog: React.FC<IAddProcurementRequestDialogProps> =
               <TextField
                 name="resourceName"
                 label="Resource Name"
-                value=""
-                onChange={() => {}}
+                value={formik.values.resourceName}
+                onChange={formik.handleChange}
                 size="small"
                 fullWidth
                 error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
@@ -92,8 +92,9 @@ const AddProcurementRequestDialog: React.FC<IAddProcurementRequestDialogProps> =
               <TextField
                 name="quantity"
                 label="Quantity"
-                value=""
-                onChange={() => {}}
+                value={formik.values.quantity}
+                type="number"
+                onChange={formik.handleChange}
                 size="small"
                 fullWidth
                 error={formik.touched.quantity && Boolean(formik.errors.quantity)}
@@ -175,7 +176,11 @@ const AddProcurementRequestDialog: React.FC<IAddProcurementRequestDialogProps> =
             >
               Reject
             </Button>
-            <Button startIcon={<Iconify icon={GlobalIcons.approvedIcon} />} variant="contained">
+            <Button
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.approvedIcon} />}
+              variant="contained"
+            >
               Approved
             </Button>
           </Box>

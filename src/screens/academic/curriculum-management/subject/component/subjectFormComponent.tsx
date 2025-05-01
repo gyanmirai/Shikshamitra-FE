@@ -19,6 +19,8 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -27,12 +29,14 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from './validationSchema';
 import { getSubjectInitialValues } from './initialValues';
+import SettingSubjectForm from '../../setting/subjectCreation/subjectForm';
 
 import type { IDocument, ISubjectFormProps, ISubjectFormValues } from './type';
 
@@ -43,6 +47,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
   const [documents, setDocuments] = useState<IDocument[]>(data?.documents || []);
   // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
+  const addSubjectDialog = useBoolean();
 
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
@@ -141,6 +146,32 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                     helperText={formik.touched.subjectName && formik.errors.subjectName}
                   />
                 </ShakingTextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    addSubjectDialog.onTrue();
+                  }}
+                >
+                  Add Subject
+                </Typography>
+                <CustomDialog
+                  open={addSubjectDialog.value}
+                  handleClose={addSubjectDialog.onFalse}
+                  title="Inquiry Preference"
+                >
+                  <SettingSubjectForm
+                    open={addSubjectDialog}
+                    onClose={() => {
+                      addSubjectDialog.onFalse();
+                    }}
+                    editData={null}
+                  />{' '}
+                </CustomDialog>
               </Grid>
 
               <Grid item xs={12} md={6}>
