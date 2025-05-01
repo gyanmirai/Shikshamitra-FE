@@ -1,0 +1,21 @@
+[
+    {
+      "personName": "Ravi Kumar",
+      "time": "2025-04-29T16:30:00+05:30",
+      "reason": "Urgent medical checkup",
+      "emergencyFlag": 0
+    },
+    {
+      "personName": "Anjali Mehta",
+      "time": "2025-04-29T10:15:00+05:30",
+      "reason": "Family emergency",
+      "emergencyFlag": 1
+    },
+    {
+      "personName": "Suraj Singh",
+      "time": "2025-04-29T08:45:00+05:30",
+      "reason": "Immediate travel",
+      "emergencyFlag": 0
+    }
+  ]
+  
