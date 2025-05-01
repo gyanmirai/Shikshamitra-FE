@@ -1,0 +1,58 @@
+[
+    {
+      "mealType": "Breakfast",
+      "mealDay": "Monday",
+      "mealDescription": "Idli, Sambar, Coconut Chutney",
+      "mealImage": "breakfast-monday.jpg"
+    },
+    {
+      "mealType": "Lunch",
+      "mealDay": "Monday",
+      "mealDescription": "Rice, Rajma, Cabbage Fry, Curd",
+      "mealImage": "lunch-monday.jpg"
+    },
+    {
+      "mealType": "Dinner",
+      "mealDay": "Monday",
+      "mealDescription": "Roti, Aloo Matar, Salad",
+      "mealImage": "dinner-monday.jpg"
+    },
+    {
+      "mealType": "Breakfast",
+      "mealDay": "Tuesday",
+      "mealDescription": "Poha, Boiled Egg, Banana",
+      "mealImage": "breakfast-tuesday.jpg"
+    },
+    {
+      "mealType": "Lunch",
+      "mealDay": "Tuesday",
+      "mealDescription": "Chapati, Mixed Veg Curry, Rice, Dal",
+      "mealImage": "lunch-tuesday.jpg"
+    },
+    {
+      "mealType": "Dinner",
+      "mealDay": "Tuesday",
+      "mealDescription": "Jeera Rice, Dal Tadka, Papad",
+      "mealImage": "dinner-tuesday.jpg"
+    },
+    {
+      "mealType": "Breakfast",
+      "mealDay": "Wednesday",
+      "mealDescription": "Upma, Chutney, Tea",
+      "mealImage": "breakfast-wednesday.jpg"
+    },
+    {
+      "mealType": "Lunch",
+      "mealDay": "Wednesday",
+      "mealDescription": "Paratha, Chole, Rice, Salad",
+      "mealImage": "lunch-wednesday.jpg"
+    },
+    {
+      "mealType": "Dinner",
+      "mealDay": "Wednesday",
+      "mealDescription": "Pulao, Raita, Fryums",
+      "mealImage": "dinner-wednesday.jpg"
+    }
+  ]
+  
+  

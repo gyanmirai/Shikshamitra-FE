@@ -1,0 +1,19 @@
+[
+    {
+      "mealSlotsName": "Lunch",
+      "description": "Breakfast"
+    },
+    {
+      "mealSlotsName": "Lunch",
+      "description": "Lunch"
+    },
+    {
+      "mealSlotsName": "Snacks",
+      "description": "Snacks"
+    },
+    {
+      "mealSlotsName": "Dinner",
+      "description": "Dinner"
+    }
+  ]
+  
