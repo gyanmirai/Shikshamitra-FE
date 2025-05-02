@@ -54,6 +54,10 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                         label="Student Name"
                         placeholder="Student Name"
                         fullWidth
+                        error={formik.touched.studentName && Boolean(formik.errors.studentName)}
+                        helperText={
+                          (formik.touched.studentName && formik.errors.studentName) || undefined
+                        }
                       />
                     )}
                     renderOption={(prop: any, option: any) => (
@@ -62,7 +66,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                       </li>
                     )}
                   />
-                </ShakingTextField>
+                </ShakingTextField>{' '}
               </Grid>
 
               <Grid item xs={12} md={6}>

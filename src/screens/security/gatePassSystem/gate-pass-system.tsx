@@ -138,7 +138,7 @@ const GatePassSystemScreen = () => {
             setSelectedVisitor(null);
             deleteDialog.onFalse();
           }}
-          title="Delete Visitor"
+          title="Delete"
           content="Are you sure you want to delete this entry?"
           action={
             <Button variant="contained" color="error" onClick={() => {}}>

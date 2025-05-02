@@ -321,6 +321,11 @@ const securityModule = {
           path: '/security/create-gate-pass',
           _action: 'create-gate-pass',
         },
+        {
+          title: 'Gate Pass',
+          path: '/security/gate-pass',
+          _action: 'gate-pass',
+        },
       ],
     },
   ],
