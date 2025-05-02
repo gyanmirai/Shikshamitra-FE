@@ -1,5 +1,7 @@
 import React from 'react';
 
-const page = () => <div>page</div>;
+import ArchievedIncidents from 'src/screens/hostel/disciplineManagement/archivedIncident';
+
+const page = () => <ArchievedIncidents />;
 
 export default page;

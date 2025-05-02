@@ -1,0 +1,25 @@
+[
+    {
+      "hostelName": "Sunrise Hostel",
+      "floor": "first",
+      "students": ["S12345", "S67890"],
+      "incidentDate": "2025-04-29",
+      "incidentTime": "2024-12-15T10:00",
+      "description": "Students were found causing disturbance during study hours.",
+      "incidentType": "Disturbance",
+      "documents": null,
+      "status" : 0
+    },
+    {
+      "hostelName": "Moonlight Hostel",
+      "floor": "second",
+      "students": ["S54321"],
+      "incidentDate": "2025-04-28",
+      "incidentTime": "2024-12-15T10:00",
+      "description": "Student was caught violating curfew rules.",
+      "incidentType": "Curfew Violation",
+      "documents": null,
+      "status" : 0
+    }
+  ]
+  
