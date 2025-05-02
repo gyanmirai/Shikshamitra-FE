@@ -21,7 +21,7 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
           width: '100%',
           padding: { xs: 2, sm: 2.5, md: 3 },
           background: theme.palette.background.default,
-          boxShadow: 'none',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           borderRadius: 3,
           overflow: 'hidden',
           mt: 2,

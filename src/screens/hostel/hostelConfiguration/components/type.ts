@@ -33,8 +33,8 @@ export interface IHostelRoom {
   roomType: string;
   floorNumber: number;
   roomCapacity: number;
-  roomStatus: string;
-  status?: string;
+  roomStatus: string | number;
+  status?: string | number;
   currentOccupation?: number;
   beds?: string[];
 }

@@ -37,7 +37,7 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 >
                   <TextField
                     size="small"
-                    label="Hostel Name"
+                    label="Hostel Name *"
                     name="hostelName"
                     fullWidth
                     value={formik.values.hostelName}
@@ -53,7 +53,7 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                   error={!!(formik.touched.hostelType && formik.errors.hostelType) || false}
                 >
                   <CustomSelect
-                    label="Hostel Type"
+                    label="Hostel Type *"
                     options={[
                       { value: 'Boys', label: 'Boys' },
                       { value: 'Girls', label: 'Girls' },
@@ -79,7 +79,7 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 >
                   <TextField
                     size="small"
-                    label="Total Room Capacity"
+                    label="Total Room Capacity *"
                     name="totalRoomCapacity"
                     type="number"
                     fullWidth
@@ -99,7 +99,7 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 >
                   <TextField
                     size="small"
-                    label="Location"
+                    label="Location *"
                     name="location"
                     fullWidth
                     value={formik.values.location}
@@ -115,7 +115,7 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                   error={!!(formik.touched.wardenDetails && formik.errors.wardenDetails) || false}
                 >
                   <TextField
-                    label="Warden Details"
+                    label="Warden Details *"
                     name="wardenDetails"
                     fullWidth
                     rows={4}

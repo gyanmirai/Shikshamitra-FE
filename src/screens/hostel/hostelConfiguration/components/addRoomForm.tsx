@@ -36,7 +36,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 >
                   <TextField
                     size="small"
-                    label="Room Name"
+                    label="Room Name *"
                     name="roomName"
                     fullWidth
                     value={formik.values.roomName}
@@ -52,7 +52,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                   error={!!(formik.touched.roomType && formik.errors.roomType) || false}
                 >
                   <CustomSelect
-                    label="Room Type"
+                    label="Room Type *"
                     options={[
                       { value: 'Single', label: 'Single' },
                       { value: 'Double', label: 'Double' },
@@ -73,7 +73,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 >
                   <TextField
                     size="small"
-                    label="Floor Number"
+                    label="Floor Number *"
                     name="floorNumber"
                     type="number"
                     fullWidth
@@ -91,7 +91,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 >
                   <TextField
                     size="small"
-                    label="Room Capacity"
+                    label="Room Capacity *"
                     name="roomCapacity"
                     type="number"
                     fullWidth
@@ -106,7 +106,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.beds && formik.errors.beds) || false}>
                   <CustomSelect
-                    label="Select Bed"
+                    label="Select Bed *"
                     options={[
                       { value: 'Single', label: 'Single' },
                       { value: 'Double', label: 'Double' },
@@ -139,7 +139,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                   error={!!(formik.touched.roomStatus && formik.errors.roomStatus) || false}
                 >
                   <CustomSelect
-                    label="Room Status"
+                    label="Room Status *"
                     options={[
                       { value: 'Available', label: 'Available' },
                       { value: 'Occupied', label: 'Occupied' },
@@ -155,7 +155,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                   />
                 </ShakingTextField>
               </Grid>
-            </Grid>
+            </Grid>{' '}
           </Scrollbar>
 
           <DialogActions>

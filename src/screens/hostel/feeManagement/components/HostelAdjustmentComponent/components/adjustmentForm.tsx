@@ -39,7 +39,7 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onClose, editData }) =
                 <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                   <TextField
                     size="small"
-                    label="Amount"
+                    label="Amount*"
                     name="amount"
                     type="number"
                     fullWidth
@@ -54,7 +54,7 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onClose, editData }) =
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
                   <CustomSelect
-                    label="Type"
+                    label="Type*"
                     options={[
                       { value: 'Fine', label: 'Fine' },
                       { value: 'Discount', label: 'Discount' },
@@ -73,7 +73,7 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onClose, editData }) =
                 <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
                   <TextField
                     size="small"
-                    label="Reason"
+                    label="Reason*"
                     name="reason"
                     fullWidth
                     multiline
@@ -85,7 +85,7 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onClose, editData }) =
                   />
                 </ShakingTextField>
               </Grid>
-            </Grid>
+            </Grid>{' '}
           </Scrollbar>
 
           <DialogActions>

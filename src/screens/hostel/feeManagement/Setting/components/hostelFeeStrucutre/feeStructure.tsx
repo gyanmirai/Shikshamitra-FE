@@ -198,25 +198,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
     dialog.onFalse();
   };
 
-  // Handle switch state changes
-  const handleSwitchChange = (rowId: number, index: number) => {
-    const updatedSwitchState = { ...switchStates };
-    updatedSwitchState[rowId][index] = !updatedSwitchState[rowId][index];
-    setSwitchStates(updatedSwitchState);
-  };
-
-  // Close dialog and reset edit mode
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
-
-  // Handle deletion of fee structure
-  const handleDelete = (rowData: any) => {
-    const updatedData = tableData.filter((val) => val.id !== rowData.id);
-    setTableData(updatedData);
-  };
-
   const [open, setOpen] = useState(false);
 
   // Handler for closing the dialog

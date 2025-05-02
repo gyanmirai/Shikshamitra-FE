@@ -41,7 +41,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 >
                   <TextField
                     size="small"
-                    label="Visitor Name"
+                    label="Visitor Name *"
                     name="visitorName"
                     fullWidth
                     value={formik.values.visitorName}
@@ -57,7 +57,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                   error={!!(formik.touched.idProof && formik.errors.idProof) || false}
                 >
                   <CustomSelect
-                    label="ID Proof"
+                    label="ID Proof *"
                     options={[
                       { value: 'Aadhar Card', label: 'Aadhar Card' },
                       { value: 'PAN Card', label: 'PAN Card' },
@@ -81,7 +81,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 >
                   <TextField
                     size="small"
-                    label="Aadhar Number"
+                    label="Aadhar Number *"
                     name="aadharNumber"
                     fullWidth
                     value={formik.values.aadharNumber}
@@ -98,7 +98,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 >
                   <TextField
                     size="small"
-                    label="Contact Number"
+                    label="Contact Number *"
                     name="contactNo"
                     fullWidth
                     value={formik.values.contactNo}
@@ -124,7 +124,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Visiting Whom"
+                        label="Visiting Whom *"
                         name="visingWhome"
                         fullWidth
                         error={formik.touched.visingWhome && Boolean(formik.errors.visingWhome)}
@@ -137,7 +137,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
 
               <Grid item xs={12} md={6}>
                 <TimePicker
-                  label="Entry Time"
+                  label="Entry Time *"
                   format="HH:mm"
                   value={formik.values.entryTime}
                   onChange={(val) => {
@@ -159,7 +159,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
 
               <Grid item xs={12} md={6}>
                 <TimePicker
-                  label="Exit Time"
+                  label="Exit Time *"
                   format="HH:mm"
                   value={formik.values.exitTime}
                   onChange={(val) => {
@@ -188,7 +188,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                     onChange={(value) => {
                       formik.setFieldValue('reasonForVisit', value);
                     }}
-                    placeholder="Question"
+                    placeholder="Question *"
                     sx={{ width: '100%', marginTop: '10px' }}
                     error={formik.touched.reasonForVisit && Boolean(formik.errors.reasonForVisit)}
                     helperText={formik.touched.reasonForVisit && formik.errors.reasonForVisit}
