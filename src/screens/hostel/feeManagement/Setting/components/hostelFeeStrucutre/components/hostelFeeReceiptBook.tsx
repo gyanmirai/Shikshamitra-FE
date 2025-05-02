@@ -52,7 +52,7 @@ const HostelFeeReceiptBook: React.FC<IHostelFeeReceiptBookProps> = ({
                 fullWidth
                 autoFocus
                 name="receiptBookName"
-                label="Receipt Book Name"
+                label="Receipt Book Name *"
                 value={formik.values.receiptBookName}
                 onChange={(e) =>
                   formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
@@ -72,7 +72,7 @@ const HostelFeeReceiptBook: React.FC<IHostelFeeReceiptBookProps> = ({
                 size="small"
                 fullWidth
                 name="receiptBookCode"
-                label="Receipt Book Code"
+                label="Receipt Book Code *"
                 value={formik.values.receiptBookCode}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -81,7 +81,7 @@ const HostelFeeReceiptBook: React.FC<IHostelFeeReceiptBookProps> = ({
               />
             </ShakingTextField>
           </Grid>
-        </Grid>
+        </Grid>{' '}
       </Box>
 
       <Box display="flex" justifyContent="flex-end" gap={2} p={2}>

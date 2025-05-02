@@ -32,12 +32,12 @@ const HostelStudentAllocation = () => {
   return (
     <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Assign Allocation"
+        heading="Assign Students"
         description="Student Allocation For Hostel"
         links={[
           { name: 'Hostel Management', href: '/hostel/dashboard' },
           { name: 'Student Allocation', href: '' },
-          { name: 'Assign Allocation', href: '' },
+          { name: 'Assign Students', href: '' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

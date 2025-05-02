@@ -24,6 +24,8 @@ import type { IVisitorData } from './type';
 
 const LogVisitor = () => {
   const addVisitorDialog = useBoolean();
+  const markInDialog = useBoolean();
+  const markOutDialog = useBoolean();
   const [selectedVisitor, setSelectedVisitor] = useState<IVisitorData | null>(null);
   const [open, setOpen] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -114,13 +116,14 @@ const LogVisitor = () => {
           data={visitorData}
           onMarkOut={(data) => {
             setSelectedVisitor(data);
+            markOutDialog.onTrue();
           }}
           onMarkIn={(data) => {
             setSelectedVisitor(data);
+            markInDialog.onTrue();
           }}
         />
       )}
-
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
@@ -135,6 +138,34 @@ const LogVisitor = () => {
           </Button>
         }
       />
+      <ConfirmDialog
+        open={markInDialog.value}
+        onClose={() => {
+          setSelectedVisitor(null);
+          markInDialog.onFalse();
+        }}
+        title="Mark In"
+        content="Are you sure you want to mark this visitor as checked in?"
+        action={
+          <Button variant="contained" onClick={() => {}}>
+            Mark In
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={markOutDialog.value}
+        onClose={() => {
+          setSelectedVisitor(null);
+          markOutDialog.onFalse();
+        }}
+        title="Mark Out"
+        content="Are you sure you want to mark this visitor as checked out?"
+        action={
+          <Button variant="contained" onClick={() => {}}>
+            Mark Out
+          </Button>
+        }
+      />{' '}
     </Box>
   );
 };

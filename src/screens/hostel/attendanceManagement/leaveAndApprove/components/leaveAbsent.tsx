@@ -60,6 +60,7 @@ const HostelLeaveAbsent = ({
         <Button
           type="submit"
           variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={() => {
             // handleClose(null, false);
           }}

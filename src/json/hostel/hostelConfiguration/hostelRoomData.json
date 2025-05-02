@@ -4,7 +4,7 @@
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "roomStatus": "Available",
+    "roomStatus": 0,
     "status": "Clean",
     "currentOccupation": 0,
     "beds": ["Bed A"]
@@ -14,7 +14,7 @@
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "roomStatus": "Occupied",
+    "roomStatus": 1,
     "status": "Needs Cleaning",
     "currentOccupation": 2,
     "beds": ["Bed A", "Bed B"]
@@ -24,7 +24,7 @@
     "roomType": "Triple",
     "floorNumber": 3,
     "roomCapacity": 3,
-    "roomStatus": "Maintenance",
+    "roomStatus": 2,
     "status": "Under Repair",
     "currentOccupation": 0,
     "beds": ["Bed A", "Bed B", "Bed C"]
@@ -34,7 +34,7 @@
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "roomStatus": "Occupied",
+    "roomStatus": 1,
     "status": "Clean",
     "currentOccupation": 1,
     "beds": ["Bed A"]
@@ -44,7 +44,7 @@
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "roomStatus": "Available",
+    "roomStatus": 0,
     "status": "Clean",
     "currentOccupation": 0,
     "beds": ["Bed A", "Bed B"]

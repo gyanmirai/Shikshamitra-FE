@@ -45,7 +45,7 @@ const AddMealSlotsDialog: React.FC<IAddMealSlotsDialogProps> = ({ data, isEdit, 
               >
                 <TextField
                   name="mealSlotsName"
-                  label="Name"
+                  label="Name *"
                   value={formik.values.mealSlotsName}
                   placeholder="Enter Meal Slot Name"
                   autoFocus
@@ -68,7 +68,7 @@ const AddMealSlotsDialog: React.FC<IAddMealSlotsDialogProps> = ({ data, isEdit, 
                   rows={4}
                   disabled={isDisable}
                   name="description"
-                  label="Description"
+                  label="Description *"
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   size="small"

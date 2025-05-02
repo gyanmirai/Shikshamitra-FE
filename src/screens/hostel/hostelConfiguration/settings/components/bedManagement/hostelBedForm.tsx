@@ -43,7 +43,7 @@ const AddBedNumberForm: React.FC<IBedNumberFormProps> = ({ dialog, onClose, edit
                 <ShakingTextField error={!!(formik.touched.bedNumber && formik.errors.bedNumber)}>
                   <TextField
                     size="small"
-                    label="Bed Number"
+                    label="Bed Number *"
                     name="bedNumber"
                     fullWidth
                     value={formik.values.bedNumber}
@@ -59,7 +59,7 @@ const AddBedNumberForm: React.FC<IBedNumberFormProps> = ({ dialog, onClose, edit
                   <CustomSelect
                     options={[]}
                     size="small"
-                    label="Hostel Name"
+                    label="Hostel Name *"
                     name="hostelName"
                     fullWidth
                     value={formik.values.hostelName}

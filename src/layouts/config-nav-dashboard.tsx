@@ -1392,14 +1392,14 @@ const hostelModule = {
           shortcutKeyName: 'Alt+H+1',
         },
         {
-          title: 'Hostel Configuration',
+          title: 'Hostel Management',
           path: '',
           _action: 'hostel-configuration',
           shortcutKey: 'Alt+H+2',
           shortcutKeyName: 'Alt+H+2',
           children: [
             {
-              title: 'Hostel Management',
+              title: 'Hostel Configuration',
               path: '/hostel/hostel-management',
               _action: 'hostel-management',
               shortcutKey: 'Alt+A+C+1',
@@ -1488,6 +1488,13 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
             },
+            {
+              title: 'Setting',
+              path: '/hostel/attendanceSetting',
+              _action: 'hostel-setting',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
           ],
         },
         {
@@ -1538,6 +1545,13 @@ const hostelModule = {
               title: 'Archieved Incident',
               path: '/hostel/archived-incident',
               _action: 'hostel-archived-incident',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+            {
+              title: 'Setting',
+              path: '/hostel/disciplineSetting',
+              _action: 'hostel-discipline-setting',
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
             },
@@ -1681,6 +1695,11 @@ const resourceManagement = {
           title: 'Incident Report',
           path: '/resourceManagement/incident-report',
           _action: 'incident-report',
+        },
+        {
+          title: 'Audit & Verification',
+          path: '/resourceManagement/audit-verification',
+          _action: 'audit-verification',
         },
         {
           title: 'Usage & Maintenance',

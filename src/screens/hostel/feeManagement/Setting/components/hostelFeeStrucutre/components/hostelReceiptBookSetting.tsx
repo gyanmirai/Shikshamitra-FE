@@ -52,41 +52,20 @@ const HostelReceiptBookSetting = (props: TabComponentType) => {
 
   return (
     <>
-      {open ? (
-        <CustomDialog
-          open={dialog.value}
-          handleClose={() => {
-            closeHandler();
+      <Box gap={3} display="flex" justifyContent="flex-end" alignContent="flex-end" ml="auto">
+        <Button
+          startIcon={<Iconify icon="ic:outline-plus" />}
+          onClick={() => {
+            setIsEdit(false);
+            dialog.onTrue();
+            setOpen(true);
           }}
-          title={isEdit ? 'Edit Receipt Book' : 'Add Receipt Book'}
+          variant="contained"
+          size="small"
         >
-          <HostelFeeReceiptBook
-            onSave={() => {}}
-            // dialogValue={dialog.value}
-            onClose={closeHandler}
-            data={selectedEntry}
-            isEdit={isEdit}
-            allData={tableData}
-          />
-        </CustomDialog>
-      ) : (
-        <Box display="flex" flexDirection="row">
-          <Box gap={3} display="flex" justifyContent="flex-end" alignContent="flex-end" ml="auto">
-            <Button
-              startIcon={<Iconify icon="ic:outline-plus" />}
-              onClick={() => {
-                setIsEdit(false);
-                dialog.onTrue();
-                setOpen(true);
-              }}
-              variant="contained"
-              size="small"
-            >
-              New Receipt Book
-            </Button>
-          </Box>
-        </Box>
-      )}
+          New Receipt Book
+        </Button>
+      </Box>
 
       <CustomizableTable
         noDataText={
@@ -148,7 +127,7 @@ const HostelReceiptBookSetting = (props: TabComponentType) => {
                 showEditIcon
                 handleEditClick={() => {
                   setIsEdit(true);
-
+                  dialog.onTrue();
                   setSelectedEntry(row);
                   setOpen(true);
                 }}
@@ -174,6 +153,23 @@ const HostelReceiptBookSetting = (props: TabComponentType) => {
           }
         />
       )}
+
+      <CustomDialog
+        open={dialog.value}
+        handleClose={() => {
+          closeHandler();
+        }}
+        title={isEdit ? 'Edit Receipt Book' : 'Add Receipt Book'}
+      >
+        <HostelFeeReceiptBook
+          onSave={() => {}}
+          // dialogValue={dialog.value}
+          onClose={closeHandler}
+          data={selectedEntry}
+          isEdit={isEdit}
+          allData={tableData}
+        />
+      </CustomDialog>
 
       <Box pb="20px" />
     </>

@@ -40,7 +40,7 @@ const AddHostelTypeForm: React.FC<IHostelTypeFormProps> = ({ dialog, onClose, ed
                 >
                   <TextField
                     size="small"
-                    label="Hostel Type Name"
+                    label="Hostel Type Name *"
                     name="hostelTypeName"
                     fullWidth
                     value={formik.values.hostelTypeName}
@@ -57,7 +57,7 @@ const AddHostelTypeForm: React.FC<IHostelTypeFormProps> = ({ dialog, onClose, ed
                 >
                   <TextField
                     size="small"
-                    label="Description"
+                    label="Description *"
                     name="description"
                     fullWidth
                     multiline
