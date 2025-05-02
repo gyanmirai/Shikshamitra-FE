@@ -1648,6 +1648,11 @@ const resourceManagement = {
           _action: 'incident-report',
         },
         {
+          title: 'Audit & Verification',
+          path: '/resourceManagement/audit-verification',
+          _action: 'audit-verification',
+        },
+        {
           title: 'Usage & Maintenance',
           path: '/resourceManagement/usage-maintenance',
           _action: 'usage-maintenance',
