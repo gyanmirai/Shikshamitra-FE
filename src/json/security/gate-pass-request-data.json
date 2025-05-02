@@ -1,0 +1,19 @@
+[
+    {
+      "studentName": "Rahul Sharma",
+      "studentId": "STU12345",
+      "reason": "Medical Appointment",
+      "validFrom": "2025-05-01T10:00:00",
+      "validTo": "2025-05-01T16:00:00",
+      "status": 1
+    },
+    {
+      "studentName": "Ananya Verma",
+      "studentId": "STU67890",
+      "reason": "Family Function",
+      "validFrom": "2025-05-03T09:00:00",
+      "validTo": "2025-05-04T18:00:00",
+      "status": 0
+    }
+  ]
+  
