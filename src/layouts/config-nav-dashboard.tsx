@@ -1357,14 +1357,14 @@ const hostelModule = {
           shortcutKeyName: 'Alt+H+1',
         },
         {
-          title: 'Hostel Configuration',
+          title: 'Hostel Management',
           path: '',
           _action: 'hostel-configuration',
           shortcutKey: 'Alt+H+2',
           shortcutKeyName: 'Alt+H+2',
           children: [
             {
-              title: 'Hostel Management',
+              title: 'Hostel Configuration',
               path: '/hostel/hostel-management',
               _action: 'hostel-management',
               shortcutKey: 'Alt+A+C+1',

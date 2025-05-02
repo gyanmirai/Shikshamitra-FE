@@ -10,6 +10,7 @@ import FeedbackAnalyticsTable from './component/feedback-analytics-table';
 
 const FeedbackAnalyticsScreen = () => {
   const links = [
+    { name: 'Hostel Management', href: '/hostel/dashboard' },
     { name: 'Catering Management', href: '' },
     { name: 'Feedback Analytics', href: '' },
   ];

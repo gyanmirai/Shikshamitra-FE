@@ -13,7 +13,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import BedManagement from './components/bedManagement/bedManagement';
 import HostelTypeSetting from './components/hostelTypeDefinition/hostelTypeDefinition';
-import RoomCategoryManagement from './components/roomCategoryManagement/roomCategoryManagement';
+import RoomCategorySetting from './components/roomCategoryManagement/roomCategoryManagement';
 
 const TABS = [
   {
@@ -24,7 +24,7 @@ const TABS = [
   {
     value: 'roomCategoryManagement',
     label: 'Room Category Management',
-    component: (props: TabComponentType) => <RoomCategoryManagement {...props} />,
+    component: (props: TabComponentType) => <RoomCategorySetting {...props} />,
   },
   {
     value: 'bedManagement',
@@ -32,7 +32,7 @@ const TABS = [
     component: (props: TabComponentType) => <BedManagement {...props} />,
   },
 ];
-const HostelConfigurationSetting = () => {
+const HostelConfigurationSetting: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'hostelTypeDefinition' });
 
   const currentActiveComponent = useMemo(
@@ -46,7 +46,6 @@ const HostelConfigurationSetting = () => {
         description="Hostel Configuration Setting"
         links={[
           { name: 'Hostel Management', href: '/hostel/dashboard' },
-          { name: 'Fee Management', href: '' },
           { name: 'Setting', href: '' },
           { name: currentActiveComponent?.label, href: '' },
         ]}

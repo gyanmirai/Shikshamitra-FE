@@ -56,6 +56,12 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
                         variant="outlined"
                         fullWidth
                         size="small"
+                        error={!!(formik.touched.roomType && formik.errors.roomType) || false}
+                        helperText={
+                          formik.touched.roomType && formik.errors.roomType
+                            ? formik.errors.roomType
+                            : ''
+                        }
                       />
                     )}
                     sx={{ maxWidth: '200px', width: '100%' }}
@@ -87,6 +93,12 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
                         variant="outlined"
                         fullWidth
                         size="small"
+                        error={!!(formik.touched.roomName && formik.errors.roomName) || false}
+                        helperText={
+                          formik.touched.roomName && formik.errors.roomName
+                            ? formik.errors.roomName
+                            : ''
+                        }
                       />
                     )}
                     sx={{ maxWidth: '200px', width: '100%' }}
@@ -117,6 +129,12 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
                         variant="outlined"
                         fullWidth
                         size="small"
+                        error={!!(formik.touched.bedNumber && formik.errors.bedNumber) || false}
+                        helperText={
+                          formik.touched.bedNumber && formik.errors.bedNumber
+                            ? formik.errors.bedNumber
+                            : ''
+                        }
                       />
                     )}
                     sx={{ maxWidth: '200px', width: '100%' }}

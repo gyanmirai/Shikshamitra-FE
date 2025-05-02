@@ -8,6 +8,7 @@ import WeeklyPlanningForCatering from './component/weekly-planning-for-catering'
 
 const WeeklyMenuPlannerScreen = () => {
   const links = [
+    { name: 'Hostel Management', href: '/hostel/dashboard' },
     { name: 'Catering Management', href: '' },
     { name: 'Weekly Menu Planner', href: '' },
   ];

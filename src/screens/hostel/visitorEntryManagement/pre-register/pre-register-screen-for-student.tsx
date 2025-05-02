@@ -33,13 +33,13 @@ const PreRegisterScreenForStudent = () => {
     ? [
         { name: 'Hostel Management', href: '/hostel/dashboard' },
         { name: 'Visitor Management', href: '/visitor/dashboard' },
-        { name: 'Pre Visitor', href: '' },
+        { name: 'Pre Register Visitor', href: '' },
         { name: 'Visitor Form' },
       ]
     : [
         { name: 'Hostel Management', href: '/hostel/dashboard' },
         { name: 'Visitor Management', href: '/visitor/dashboard' },
-        { name: 'Pre Visitor', href: '' },
+        { name: 'Pre Register Visitor', href: '' },
       ];
 
   // Handles logic for each table action: edit, delete, view, or new entry
@@ -91,7 +91,7 @@ const PreRegisterScreenForStudent = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Pre-register Visitor"
+        heading="Pre Register Visitor"
         description={
           open
             ? 'Pre-register a visitor by entering their details, such as name, contact information, visit date, and purpose. Save pre-registrations to streamline check-in on arrival.'
