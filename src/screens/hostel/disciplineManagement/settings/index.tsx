@@ -11,7 +11,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import TagsManagement from './tagsManagement';
+import TagSetting from './tagsManagement';
 import DisciplineActionSetting from './disciplinaryAction';
 
 const TABS = [
@@ -23,7 +23,7 @@ const TABS = [
   {
     value: 'tagsManagement',
     label: 'Tags Management',
-    component: (props: TabComponentType) => <TagsManagement {...props} />,
+    component: (props: TabComponentType) => <TagSetting {...props} />,
   },
 ];
 const HostelDisciplineSetting: React.FC = () => {
@@ -40,6 +40,7 @@ const HostelDisciplineSetting: React.FC = () => {
         description="Hostel Configuration Setting"
         links={[
           { name: 'Hostel Management', href: '/hostel/dashboard' },
+          { name: 'Disciplinary Actions Tracking & Management', href: '' },
           { name: 'Setting', href: '' },
           { name: currentActiveComponent?.label, href: '' },
         ]}
