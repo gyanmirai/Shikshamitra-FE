@@ -103,7 +103,7 @@ const GatePassRequestTable: React.FC<IGatePassRequestTableProps> = ({ onClick })
           render(value, row) {
             return (
               <ThreeDotsActions
-                showThreeDots
+                showThreeDots={false}
                 placement="right-top"
                 showDeleteIcon
                 showEditIcon
