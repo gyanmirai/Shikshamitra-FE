@@ -316,6 +316,11 @@ const securityModule = {
           path: '/security/access-logs-management',
           _action: 'access-logs-management',
         },
+        {
+          title: 'Create Gate Pass',
+          path: '/security/create-gate-pass',
+          _action: 'create-gate-pass',
+        },
       ],
     },
   ],
