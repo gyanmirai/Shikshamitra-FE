@@ -1353,10 +1353,26 @@ const hostelModule = {
         },
         {
           title: 'Hostel Configuration',
-          path: '/hostel/configuration',
+          path: '',
           _action: 'hostel-configuration',
           shortcutKey: 'Alt+H+2',
           shortcutKeyName: 'Alt+H+2',
+          children: [
+            {
+              title: 'Hostel Management',
+              path: '/hostel/hostel-management',
+              _action: 'hostel-management',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
+              title: 'Setting',
+              path: '/hostel/setting',
+              _action: 'hostel-setting',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
+          ],
         },
         {
           title: 'Student Allocation',
