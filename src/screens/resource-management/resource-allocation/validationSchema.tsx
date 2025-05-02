@@ -21,6 +21,8 @@ export const resourceAllocateValidationSchema = Yup.object().shape({
     .nullable()
     .min(Yup.ref('allocationDate'), 'Return date must be after allocation date')
     .required('Expected return date is required'),
+
+  purposeOfAllocation: Yup.string().required('Purpose of allocation is required'),
 });
 
 export const resourceTransferValidationSchema = Yup.object().shape({
