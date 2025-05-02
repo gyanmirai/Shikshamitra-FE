@@ -50,7 +50,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
               error={formik.touched.wardenName && Boolean(formik.errors.wardenName)}
             >
               <CustomSelect
-                label="Select Warden"
+                label="Select Warden *"
                 options={[]}
                 value={formik.values.wardenName}
                 onChange={(value) => formik.setFieldValue('wardenName', value)}
@@ -70,7 +70,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
               error={formik.touched.assignedDeadline && Boolean(formik.errors.assignedDeadline)}
             >
               <DatePicker
-                label="Assigned Deadline"
+                label="Assigned Deadline *"
                 format="DD-MM-YYYY"
                 value={formik.values.assignedDeadline}
                 onChange={(value) => formik.setFieldValue('assignedDeadline', value)}
@@ -94,7 +94,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
               error={formik.touched.updateStatus && Boolean(formik.errors.updateStatus)}
             >
               <CustomSelect
-                label="Update Status"
+                label="Update Status *"
                 options={[]}
                 value={formik.values.updateStatus}
                 onChange={(value) => formik.setFieldValue('updateStatus', value)}
@@ -115,7 +115,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
                 multiline
                 rows={4}
                 name="notes"
-                label="Notes"
+                label="Notes *"
                 value=""
                 onChange={() => {}}
                 size="small"

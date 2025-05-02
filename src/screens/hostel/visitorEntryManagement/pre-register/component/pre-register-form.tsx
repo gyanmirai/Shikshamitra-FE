@@ -186,16 +186,18 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 <ShakingTextField
                   error={!!(formik.touched.reasonForVisit && formik.errors.reasonForVisit) || false}
                 >
-                  <Editor
-                    value={formik.values.reasonForVisit}
-                    onChange={(value) => {
-                      formik.setFieldValue('reasonForVisit', value);
-                    }}
-                    placeholder="Reason for Visit *"
-                    sx={{ width: '100%', marginTop: '10px' }}
-                    error={formik.touched.reasonForVisit && Boolean(formik.errors.reasonForVisit)}
-                    helperText={formik.touched.reasonForVisit && formik.errors.reasonForVisit}
-                  />
+                  <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                    <Editor
+                      value={formik.values.reasonForVisit}
+                      onChange={(value) => {
+                        formik.setFieldValue('reasonForVisit', value);
+                      }}
+                      placeholder="Reason for Visit *"
+                      sx={{ width: '100%', marginTop: '10px' }}
+                      error={formik.touched.reasonForVisit && Boolean(formik.errors.reasonForVisit)}
+                      helperText={formik.touched.reasonForVisit && formik.errors.reasonForVisit}
+                    />
+                  </div>
                 </ShakingTextField>
               </Grid>
             </Grid>

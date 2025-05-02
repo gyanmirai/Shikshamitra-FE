@@ -10,9 +10,9 @@ import VisitorLogtable from './component/visitor-log-table';
 
 const VisitorLogsScreen = () => {
   const links = [
-    { name: 'Hostel Management', href: '/hostel/dashboard' },
-    { name: 'Visitor Management', href: '/visitor/dashboard' },
-    { name: 'Pre Visitor', href: '' },
+    { name: 'Hostel Management', href: '' },
+    { name: 'Visitor Management', href: '' },
+    { name: 'Visitor Logs', href: '' },
   ];
   return (
     <Box>
