@@ -1513,6 +1513,13 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
             },
+            {
+              title: 'Setting',
+              path: '/hostel/disciplineSetting',
+              _action: 'hostel-discipline-setting',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
           ],
         },
         {
