@@ -1,7 +1,7 @@
 import React from 'react';
 
-import WeeklyPlanningForCatering from 'src/screens/hostel/cateringManagement/weeklyPlanner/component/weekly-planning-for-catering';
+import FeedbackAnalyticsScreen from 'src/screens/hostel/cateringManagement/feedback-analytics/feedback-analytics-screen';
 
-const page = () => <WeeklyPlanningForCatering />;
+const page = () => <FeedbackAnalyticsScreen />;
 
 export default page;

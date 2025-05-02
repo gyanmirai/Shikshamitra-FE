@@ -1,0 +1,50 @@
+[
+    {
+      "mealName": "Chole Bhature",
+      "mealDay": "Monday",
+      "mealType": "Lunch",
+      "mealDescription": "Spicy chickpeas with fluffy fried bread.",
+      "overallMealRating": "Bad",
+      "overallComplaintStatus": 0,
+      "howMuchOkay": 3,
+      "howMuchBad": 1,
+      "howMuchSuperb": 6,
+      "howMuchAmezing": 4,
+      "howMuchVeryBad": 0,
+      "howMuchlovedIt": 5,
+      "reviewBy": [
+        {
+          "name": "Aman Verma",
+          "status": 1,
+          "message": "Loved the taste"
+        },
+        {
+          "name": "Priya Singh",
+          "status": 0,
+          "message": "Could be spicier"
+        }
+      ]
+    },
+    {
+      "mealName": "Idli Sambhar",
+      "mealDay": "Wednesday",
+      "mealType": "Breakfast",
+      "mealDescription": "Soft idlis served with sambhar and chutney.",
+      "overallMealRating": "Good",
+      "overallComplaintStatus": 1,
+      "howMuchOkay": 2,
+      "howMuchBad": 0,
+      "howMuchSuperb": 5,
+      "howMuchAmezing": 8,
+      "howMuchVeryBad": 0,
+      "howMuchlovedIt": 10,
+      "reviewBy": [
+        {
+          "name": "Neha Agarwal",
+          "status": 1,
+          "message": "Perfectly cooked"
+        }
+      ]
+    }
+  ]
+  

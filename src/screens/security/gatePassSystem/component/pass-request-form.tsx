@@ -66,7 +66,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                       </li>
                     )}
                   />
-                </ShakingTextField>{' '}
+                </ShakingTextField>
               </Grid>
 
               <Grid item xs={12} md={6}>
