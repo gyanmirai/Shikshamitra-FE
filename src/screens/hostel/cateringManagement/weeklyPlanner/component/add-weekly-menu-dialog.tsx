@@ -99,7 +99,7 @@ const AddWeeklyMenuDialog: React.FC<IAddWeeklyMenuDialogProps> = ({ data, isEdit
                     onChange={(value) => {
                       formik.setFieldValue('mealDescription', value);
                     }}
-                    placeholder="Question"
+                    placeholder="Description *"
                     sx={{ width: '100%', marginTop: '10px' }}
                     error={formik.touched.mealDescription && Boolean(formik.errors.mealDescription)}
                     helperText={formik.touched.mealDescription && formik.errors.mealDescription}

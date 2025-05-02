@@ -1536,6 +1536,13 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
             },
+            {
+              title: 'Setting',
+              path: '/hostel/maintenance/setting',
+              _action: 'hostel-setting',
+              shortcutKey: 'Alt+A+C+2',
+              shortcutKeyName: 'Alt+A+C+2',
+            },
           ],
         },
         {
