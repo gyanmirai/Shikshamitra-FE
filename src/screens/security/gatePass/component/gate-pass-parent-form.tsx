@@ -45,8 +45,9 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                   error={!!(formik.touched.childName && formik.errors.childName) || false}
                 >
                   <Autocomplete
+                    disabled={isDisabled}
                     loading={false}
-                    noOptionsText="No Person Found"
+                    noOptionsText="No Child Found"
                     fullWidth
                     options={[]}
                     getOptionLabel={(option: any) => option?.firstName || ''}
@@ -54,8 +55,8 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                       <TextField
                         {...params}
                         size="small"
-                        label="Student Name"
-                        placeholder="Student Name"
+                        label="Child Name *"
+                        placeholder="Child Name"
                         fullWidth
                         error={formik.touched.childName && Boolean(formik.errors.childName)}
                         helperText={
@@ -128,16 +129,20 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                     !!(formik.touched.reasonForPickup && formik.errors.reasonForPickup) || false
                   }
                 >
-                  <Editor
-                    value={formik.values.reasonForPickup}
-                    onChange={(value) => {
-                      formik.setFieldValue('reasonForPickup', value);
-                    }}
-                    placeholder="Reason for Pickup *"
-                    sx={{ width: '100%', marginTop: '10px' }}
-                    error={formik.touched.reasonForPickup && Boolean(formik.errors.reasonForPickup)}
-                    helperText={formik.touched.reasonForPickup && formik.errors.reasonForPickup}
-                  />
+                  <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                    <Editor
+                      value={formik.values.reasonForPickup}
+                      onChange={(value) => {
+                        formik.setFieldValue('reasonForPickup', value);
+                      }}
+                      placeholder="Reason for Pickup *"
+                      sx={{ width: '100%', marginTop: '10px' }}
+                      error={
+                        formik.touched.reasonForPickup && Boolean(formik.errors.reasonForPickup)
+                      }
+                      helperText={formik.touched.reasonForPickup && formik.errors.reasonForPickup}
+                    />
+                  </div>
                 </ShakingTextField>
               </Grid>
             </Grid>

@@ -46,6 +46,7 @@ const CreateGatePassRequestForm: React.FC<ICreateEmergencyGatePassFormProps> = (
                   error={!!(formik.touched.personName && formik.errors.personName) || false}
                 >
                   <Autocomplete
+                    disabled={isDisabled}
                     loading={false}
                     noOptionsText="No Person Found"
                     fullWidth
@@ -55,7 +56,7 @@ const CreateGatePassRequestForm: React.FC<ICreateEmergencyGatePassFormProps> = (
                       <TextField
                         {...params}
                         size="small"
-                        label="Person Name"
+                        label="Person Name *"
                         placeholder="Person Name"
                         fullWidth
                         error={formik.touched.personName && Boolean(formik.errors.personName)}
@@ -121,16 +122,18 @@ const CreateGatePassRequestForm: React.FC<ICreateEmergencyGatePassFormProps> = (
                 <ShakingTextField
                   error={!!(formik.touched.reason && formik.errors.reason) || false}
                 >
-                  <Editor
-                    value={formik.values.reason}
-                    onChange={(value) => {
-                      formik.setFieldValue('reason', value);
-                    }}
-                    placeholder="Reason *"
-                    sx={{ width: '100%', marginTop: '10px' }}
-                    error={formik.touched.reason && Boolean(formik.errors.reason)}
-                    helperText={formik.touched.reason && formik.errors.reason}
-                  />
+                  <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                    <Editor
+                      value={formik.values.reason}
+                      onChange={(value) => {
+                        formik.setFieldValue('reason', value);
+                      }}
+                      placeholder="Descriptive Reason *"
+                      sx={{ width: '100%', marginTop: '10px' }}
+                      error={formik.touched.reason && Boolean(formik.errors.reason)}
+                      helperText={formik.touched.reason && formik.errors.reason}
+                    />
+                  </div>
                 </ShakingTextField>
               </Grid>
             </Grid>

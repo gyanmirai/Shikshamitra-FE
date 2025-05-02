@@ -326,6 +326,28 @@ const securityModule = {
           path: '/security/gate-pass',
           _action: 'gate-pass',
         },
+        {
+          title: 'Alert',
+          path: '',
+          _action: 'alert',
+          children: [
+            {
+              title: 'Live Security Alert',
+              path: '/security/alert/live-security-alert',
+              _action: 'live-security-alerts',
+            },
+            {
+              title: 'Alert Dashboard',
+              path: '/security/alert/alert-dashboard',
+              _action: 'alert-dashboard',
+            },
+            {
+              title: 'Alert Report',
+              path: '/security/alert/alert-report',
+              _action: 'alert-report',
+            },
+          ],
+        },
       ],
     },
   ],
