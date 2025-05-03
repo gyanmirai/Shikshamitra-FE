@@ -1,0 +1,38 @@
+[
+    {
+      "studentName": "Alice Johnson",
+      "time": "2025-05-01T09:15:00.000Z",
+      "aknowledgementBy": "Security Officer A",
+      "resolvedBy": "Admin B",
+      "status": 0
+    },
+    {
+      "studentName": "Brian Smith",
+      "time": "2025-05-01T10:45:00.000Z",
+      "aknowledgementBy": "Security Officer B",
+      "resolvedBy": null,
+      "status": 1
+    },
+    {
+      "studentName": "Charlie Kim",
+      "time": "2025-05-01T12:30:00.000Z",
+      "aknowledgementBy": null,
+      "resolvedBy": null,
+      "status": 2
+    },
+    {
+      "studentName": "Diana Patel",
+      "time": "2025-05-02T08:00:00.000Z",
+      "aknowledgementBy": "Security Officer C",
+      "resolvedBy": "Admin C",
+      "status": 0
+    },
+    {
+      "studentName": "Ethan Zhao",
+      "time": "2025-05-02T11:20:00.000Z",
+      "aknowledgementBy": null,
+      "resolvedBy": null,
+      "status": 2
+    }
+  ]
+  

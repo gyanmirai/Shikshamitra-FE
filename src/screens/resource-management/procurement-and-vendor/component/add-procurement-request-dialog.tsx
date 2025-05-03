@@ -112,11 +112,20 @@ const AddProcurementRequestDialog: React.FC<IAddProcurementRequestDialogProps> =
               <DatePicker
                 label="Expected Delivery Date"
                 format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error:
+                      formik.touched.expectedDeliveryDate &&
+                      Boolean(formik.errors.expectedDeliveryDate),
+                    helperText:
+                      formik.touched.expectedDeliveryDate && formik.errors.expectedDeliveryDate,
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
-
           <Grid item xs={12} pb="10px">
             <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
               <Editor

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import LiveSecurityAlertsScreen from 'src/screens/security/alerts/live-security-alerts/live-security-alerts-screen';
+import AlertReportsScreen from 'src/screens/security/alerts/alert-report/alert-reports-screen';
 
-const Page = () => <LiveSecurityAlertsScreen />;
+const Page = () => <AlertReportsScreen />;
 
 export default Page;
