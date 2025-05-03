@@ -1,0 +1,43 @@
+[
+    {
+      "studentName": "Alice Johnson",
+      "time": "2025-05-01T09:15:00.000Z",
+      "acknowledgBy": "Officer A",
+      "resolved": "Yes",
+      "status": "Resolved",
+      "slaMet": 0
+    },
+    {
+      "studentName": "Brian Smith",
+      "time": "2025-05-01T10:30:00.000Z",
+      "acknowledgBy": "Officer B",
+      "resolved": "No",
+      "status": "Pending",
+      "slaMet": 1
+    },
+    {
+      "studentName": "Charlie Kim",
+      "time": "2025-05-01T12:00:00.000Z",
+      "acknowledgBy": "Officer C",
+      "resolved": "No",
+      "status": "Escalated",
+      "slaMet": 1
+    },
+    {
+      "studentName": "Diana Patel",
+      "time": "2025-05-02T08:45:00.000Z",
+      "acknowledgBy": "Officer D",
+      "resolved": "Yes",
+      "status": "Resolved",
+      "slaMet":0
+    },
+    {
+      "studentName": "Ethan Zhao",
+      "time": "2025-05-02T11:15:00.000Z",
+      "acknowledgBy": "Officer E",
+      "resolved": "No",
+      "status": "Pending",
+      "slaMet": 0
+    }
+  ]
+  

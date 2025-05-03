@@ -1,7 +1,7 @@
 import React from 'react';
 
-import CreateGatePassScreen from 'src/screens/security/createGatePass/create-gate-pass-screen';
+import AlertDashboardScreen from 'src/screens/security/alerts/alert-dashboard/alert-dashboard-screen';
 
-const Page = () => <CreateGatePassScreen />;
+const Page = () => <AlertDashboardScreen />;
 
 export default Page;

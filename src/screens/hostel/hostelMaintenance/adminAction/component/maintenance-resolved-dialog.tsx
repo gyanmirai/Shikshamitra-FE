@@ -50,7 +50,7 @@ const MaintenceIncidentResolvedDialog: React.FC<IMaintenceIncidentResolvedDialog
                 multiline
                 rows={4}
                 name="notes"
-                label="Notes"
+                label="Notes *"
                 value=""
                 onChange={() => {}}
                 size="small"

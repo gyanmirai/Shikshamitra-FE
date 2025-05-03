@@ -77,11 +77,11 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                   error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                 >
                   <CustomSelect
+                    disabled={isDisabled}
                     label="Incident Type *"
                     options={[]}
                     value={formik.values.incidentType}
                     onChange={(value) => formik.setFieldValue('incidentType', value)}
-                    disabled={isEdit}
                     error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                     helperText={
                       formik.touched.incidentType && formik.errors.incidentType
@@ -165,48 +165,52 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                     false
                   }
                 >
-                  <Editor
-                    value={formik.values.incidentDescription}
-                    onChange={(value) => {
-                      formik.setFieldValue('incidentDescription', value);
-                    }}
-                    placeholder="Description Of the Incident *"
-                    sx={{ width: '100%', marginTop: '10px' }}
-                    error={
-                      formik.touched.incidentDescription &&
-                      Boolean(formik.errors.incidentDescription)
-                    }
-                    helperText={
-                      formik.touched.incidentDescription && formik.errors.incidentDescription
-                    }
-                  />
+                  <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                    <Editor
+                      value={formik.values.incidentDescription}
+                      onChange={(value) => {
+                        formik.setFieldValue('incidentDescription', value);
+                      }}
+                      placeholder="Description Of the Incident *"
+                      sx={{ width: '100%', marginTop: '10px' }}
+                      error={
+                        formik.touched.incidentDescription &&
+                        Boolean(formik.errors.incidentDescription)
+                      }
+                      helperText={
+                        formik.touched.incidentDescription && formik.errors.incidentDescription
+                      }
+                    />
+                  </div>
                 </ShakingTextField>
               </Grid>
 
               <Grid item xs={12} pb="20px">
-                <UploadBox
-                  onDrop={() => {}}
-                  placeholder={
-                    <Box
-                      sx={{
-                        gap: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.disabled',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Upload file</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    py: 2.5,
-                    width: 'auto',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
-                />
+                <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                  <UploadBox
+                    onDrop={() => {}}
+                    placeholder={
+                      <Box
+                        sx={{
+                          gap: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'text.disabled',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        <Iconify icon="eva:cloud-upload-fill" width={40} />
+                        <Typography variant="body2">Upload file</Typography>
+                      </Box>
+                    }
+                    sx={{
+                      py: 2.5,
+                      width: 'auto',
+                      height: 'auto',
+                      borderRadius: 1.5,
+                    }}
+                  />
+                </div>
               </Grid>
             </Grid>
             <Grid item xs={12}>
@@ -233,11 +237,13 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                         value="identified"
                         control={<Radio />}
                         label="Report with Identity"
+                        disabled={isDisabled}
                       />
                       <FormControlLabel
                         value="anonymous"
                         control={<Radio />}
                         label="Report Anonymously"
+                        disabled={isDisabled}
                       />
                     </RadioGroup>
                     {formik.touched.incidentReportedBy && formik.errors.incidentReportedBy && (
