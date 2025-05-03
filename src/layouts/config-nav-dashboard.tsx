@@ -307,24 +307,54 @@ const securityModule = {
           ],
         },
         {
-          title: 'Gate Pass System',
-          path: '/security/gate-pass-system',
-          _action: 'gate-pass-system',
+          title: 'Gate Pass Management',
+          path: '',
+          _action: 'gate-pass-management',
+          children: [
+            {
+              title: 'Gate Pass System',
+              path: '/security/gate-pass-management/gate-pass-system',
+              _action: 'gate-pass-system',
+            },
+            {
+              title: 'Access Logs Management',
+              path: '/security/gate-pass-management/access-logs-management',
+              _action: 'access-logs-management',
+            },
+            {
+              title: 'Create Gate Pass',
+              path: '/security/gate-pass-management/create-gate-pass',
+              _action: 'create-gate-pass',
+            },
+            {
+              title: 'Early Gate Pass Request',
+              path: '/security/gate-pass-management/gate-pass',
+              _action: 'gate-pass',
+            },
+          ],
         },
+
         {
-          title: 'Access Logs Management',
-          path: '/security/access-logs-management',
-          _action: 'access-logs-management',
-        },
-        {
-          title: 'Create Gate Pass',
-          path: '/security/create-gate-pass',
-          _action: 'create-gate-pass',
-        },
-        {
-          title: 'Gate Pass',
-          path: '/security/gate-pass',
-          _action: 'gate-pass',
+          title: 'Alert',
+          path: '',
+          _action: 'alert',
+          children: [
+            {
+              title: 'Live Security Alert',
+              path: '/security/alert/live-security-alert',
+              _action: 'live-security-alerts',
+            },
+            {
+              title: 'Alert Dashboard',
+              path: '/security/alert/alert-dashboard',
+              _action: 'alert-dashboard',
+            },
+            {
+              title: 'Alert Report',
+              path: '/security/alert/alert-report',
+              _action: 'alert-report',
+            },
+          ],
         },
       ],
     },

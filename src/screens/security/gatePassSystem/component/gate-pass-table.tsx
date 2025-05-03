@@ -55,11 +55,11 @@ const GatePassRequestTable: React.FC<IGatePassRequestTableProps> = ({ onClick })
           label: 'Student Name',
           align: 'left',
         },
-        {
-          id: 'studentId',
-          label: 'Student ID',
-          align: 'left',
-        },
+        // {
+        //   id: 'studentId',
+        //   label: 'Student ID',
+        //   align: 'left',
+        // },
         {
           id: 'reason',
           label: 'Reason',

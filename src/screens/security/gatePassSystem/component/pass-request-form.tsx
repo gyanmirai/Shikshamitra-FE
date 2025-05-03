@@ -42,8 +42,9 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                   error={!!(formik.touched.studentName && formik.errors.studentName) || false}
                 >
                   <Autocomplete
+                    disabled={isDisabled}
                     loading={false}
-                    noOptionsText="No Employee Found"
+                    noOptionsText="No Student Found"
                     fullWidth
                     options={[]}
                     getOptionLabel={(option: any) => option?.firstName || ''}
@@ -51,7 +52,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                       <TextField
                         {...params}
                         size="small"
-                        label="Student Name"
+                        label="Student Name *"
                         placeholder="Student Name"
                         fullWidth
                         error={formik.touched.studentName && Boolean(formik.errors.studentName)}
@@ -143,21 +144,23 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                     false
                   }
                 >
-                  <Editor
-                    value={formik.values.specailInstructions}
-                    onChange={(value) => {
-                      formik.setFieldValue('Special Instructions', value);
-                    }}
-                    placeholder="Reason for Visit *"
-                    sx={{ width: '100%', marginTop: '10px' }}
-                    error={
-                      formik.touched.specailInstructions &&
-                      Boolean(formik.errors.specailInstructions)
-                    }
-                    helperText={
-                      formik.touched.specailInstructions && formik.errors.specailInstructions
-                    }
-                  />
+                  <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
+                    <Editor
+                      value={formik.values.specailInstructions}
+                      onChange={(value) => {
+                        formik.setFieldValue('specialInstructions', value);
+                      }}
+                      placeholder="Reason for Visit *"
+                      sx={{ width: '100%', marginTop: '10px' }}
+                      error={
+                        formik.touched.specailInstructions &&
+                        Boolean(formik.errors.specailInstructions)
+                      }
+                      helperText={
+                        formik.touched.specailInstructions && formik.errors.specailInstructions
+                      }
+                    />
+                  </div>
                 </ShakingTextField>
               </Grid>
             </Grid>

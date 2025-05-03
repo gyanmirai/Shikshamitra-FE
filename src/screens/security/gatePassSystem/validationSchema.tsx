@@ -7,5 +7,5 @@ export const gatePassValidationSchema = Yup.object().shape({
   validFrom: Yup.date().required('Valid From date is required'),
   validTo: Yup.date().required('Valid To date is required'),
   status: Yup.string().optional(),
-  specailInstructions: Yup.string().optional(),
+  specailInstructions: Yup.string().required('Descriptive Reason  is required'),
 });

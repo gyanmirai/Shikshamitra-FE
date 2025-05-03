@@ -1,0 +1,24 @@
+[
+   
+    {
+      "studentName": "Bob Lee",
+      "location": "Cafeteria",
+      "time": "2025-05-02T09:00:00Z"
+    },
+    {
+      "studentName": "Catherine Park",
+      "location": "Main Entrance",
+      "time": "2025-05-02T09:45:00Z"
+    },
+    {
+      "studentName": "David Kim",
+      "location": "Library",
+     "time": "2025-05-02T08:15:00Z"
+    },
+    {
+      "studentName": "Esha Patel",
+      "location": "Playground",
+      "time": "2025-05-02T10:30:00Z"
+    }
+  ]
+  

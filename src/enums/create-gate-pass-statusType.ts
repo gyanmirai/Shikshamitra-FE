@@ -9,7 +9,7 @@ export const CreateGatePassRequestStatusOptions = [
     value: CreateGatePassStatusType.Yes,
   },
   {
-    label: 'Appproved',
+    label: 'No',
     value: CreateGatePassStatusType.No,
   },
 ];
