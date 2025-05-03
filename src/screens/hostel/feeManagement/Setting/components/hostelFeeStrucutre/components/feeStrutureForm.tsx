@@ -454,7 +454,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
             Cancel
           </Button>
           <Button
-            startIcon={<Iconify icon="material-symbols-light:save" />}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
             variant="contained"
             size="small"
             onClick={handleSubmit}

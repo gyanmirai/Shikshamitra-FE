@@ -1,10 +1,12 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, TextField } from '@mui/material';
+import { Box, Grid, Button, TextField } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
 import capitalizeWords from 'src/utils/capitalizeText';
 
+import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
@@ -77,6 +79,13 @@ const HostelReceiptBookDialogForDropdown = () => {
       </Box>
 
       <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {}}
+          variant="outlined"
+        >
+          Cancel
+        </Button>
         <SubmitButton type="submit" />
       </Box>
     </form>
