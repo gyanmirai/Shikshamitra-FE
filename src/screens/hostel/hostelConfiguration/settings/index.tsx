@@ -11,6 +11,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import FacilitySetting from './components/facility';
 import BedManagement from './components/bedManagement/bedManagement';
 import HostelTypeSetting from './components/hostelTypeDefinition/hostelTypeDefinition';
 import RoomCategorySetting from './components/roomCategoryManagement/roomCategoryManagement';
@@ -20,6 +21,11 @@ const TABS = [
     value: 'hostelTypeDefinition',
     label: 'Hostel Type Definition',
     component: (props: TabComponentType) => <HostelTypeSetting {...props} />,
+  },
+  {
+    value: 'facility',
+    label: 'Facility',
+    component: (props: TabComponentType) => <FacilitySetting {...props} />,
   },
   {
     value: 'roomCategoryManagement',
