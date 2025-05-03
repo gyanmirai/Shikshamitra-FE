@@ -7,11 +7,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import data from 'src/json/ResourceManagement/lossDamaged/lossDamagedData.json';
 
-import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-
-import AddReportLossDialog from './add-report-loss-dialog';
 
 import type {
   IReportLossTableProps,
@@ -99,7 +96,7 @@ const ResourceLossDamageTableTeacher: React.FC<IReportLossTableProps> = ({ onCli
         ]}
         data={data}
       />
-      {addResourceLossDamagedDialog.value && (
+      {/* {addResourceLossDamagedDialog.value && (
         <CustomDialog
           maxWidth="md"
           title="Add Report Loss/Damage"
@@ -114,7 +111,7 @@ const ResourceLossDamageTableTeacher: React.FC<IReportLossTableProps> = ({ onCli
             isEdit={false}
           />
         </CustomDialog>
-      )}
+      )} */}
     </>
   );
 };
