@@ -48,7 +48,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
               error={formik.touched.resourceCategory && Boolean(formik.errors.resourceCategory)}
             >
               <CustomSelect
-                label="Select Category"
+                label="Select Category *"
                 options={[]}
                 value={formik.values.resourceCategory}
                 onChange={(value) => formik.setFieldValue('resourceCategory', value)}
@@ -67,7 +67,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
               error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
             >
               <CustomSelect
-                label="Select Item"
+                label="Select Item *"
                 options={[]}
                 value={formik.values.resourceName}
                 onChange={(value) => formik.setFieldValue('resourceName', value)}
@@ -85,16 +85,23 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
           <Grid item xs={6} pb="10px">
             <ShakingTextField error={formik.touched.date && Boolean(formik.errors.date)}>
               <DatePicker
-                label="Select Date"
+                label="Select Date *"
                 format="DD-MM-YYYY"
-                slotProps={{ textField: { size: 'small' } }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    error: formik.touched.date && Boolean(formik.errors.date),
+                    helperText:
+                      formik.touched.date && formik.errors.date ? String(formik.errors.date) : '',
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
 
           <Grid item xs={6}>
             <TimePicker
-              label="Select Time"
+              label="Select Time *"
               value={formik.values.time}
               viewRenderers={{
                 hours: renderTimeViewClock,
@@ -102,8 +109,16 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
                 seconds: renderTimeViewClock,
               }}
               onChange={(newTime) => formik.setFieldValue('time', newTime)}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: formik.touched.time && Boolean(formik.errors.time),
+                  helperText:
+                    formik.touched.time && formik.errors.time ? String(formik.errors.time) : '',
+                },
+              }}
+            />{' '}
           </Grid>
           <Grid item xs={12} pb="10px">
             <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
@@ -111,7 +126,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
                 multiline
                 rows={4}
                 name="purpose"
-                label="Purpose"
+                label="Purpose *"
                 value=""
                 onChange={() => {}}
                 size="small"

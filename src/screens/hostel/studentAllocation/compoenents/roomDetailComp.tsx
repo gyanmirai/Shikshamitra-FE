@@ -186,7 +186,11 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
             >
               Cancel
             </Button>
-            <Button type="submit" variant="contained">
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
               Confirm Allocate
             </Button>
           </DialogActions>

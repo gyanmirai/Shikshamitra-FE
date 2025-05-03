@@ -57,7 +57,7 @@ const AddWeeklyMenuDialog: React.FC<IAddWeeklyMenuDialogProps> = ({ data, isEdit
                   error={!!(formik.touched.mealType && formik.errors.mealType) || false}
                 >
                   <CustomSelect
-                    label="Meal Type"
+                    label="Meal Type *"
                     options={mealTypes}
                     value={formik.values.mealType}
                     onChange={(val) => {
@@ -75,7 +75,7 @@ const AddWeeklyMenuDialog: React.FC<IAddWeeklyMenuDialogProps> = ({ data, isEdit
                   error={!!(formik.touched.mealDay && formik.errors.mealDay) || false}
                 >
                   <CustomSelect
-                    label="Select Day"
+                    label="Select Day *"
                     options={days}
                     value={formik.values.mealDay}
                     onChange={(val) => {
@@ -99,7 +99,7 @@ const AddWeeklyMenuDialog: React.FC<IAddWeeklyMenuDialogProps> = ({ data, isEdit
                     onChange={(value) => {
                       formik.setFieldValue('mealDescription', value);
                     }}
-                    placeholder="Question"
+                    placeholder="Description *"
                     sx={{ width: '100%', marginTop: '10px' }}
                     error={formik.touched.mealDescription && Boolean(formik.errors.mealDescription)}
                     helperText={formik.touched.mealDescription && formik.errors.mealDescription}

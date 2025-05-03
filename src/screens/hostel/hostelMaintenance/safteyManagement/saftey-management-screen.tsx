@@ -31,13 +31,13 @@ const SafteyManagemtScreen = () => {
 
   const links = open
     ? [
-        { name: 'Hostel', href: '/hostel/dashboard' },
+        { name: 'Hostel Management', href: '/hostel/dashboard' },
         { name: 'Maintenance', href: '' },
         { name: 'Safety/Discipline Management', href: '' },
         { name: 'Report Form' },
       ]
     : [
-        { name: 'Hostel', href: '/hostel/dashboard' },
+        { name: 'Hostel Management', href: '/hostel/dashboard' },
         { name: 'Maintenance', href: '' },
         { name: 'Safety/Discipline Management', href: '' },
       ];
@@ -89,7 +89,7 @@ const SafteyManagemtScreen = () => {
   };
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Safety/Discipline Management"
         description={

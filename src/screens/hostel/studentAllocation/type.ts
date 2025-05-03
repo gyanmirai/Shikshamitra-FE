@@ -5,7 +5,7 @@ export interface IHostelAllocationRoom {
   roomType: string;
   floorNumber: number;
   roomCapacity: number;
-  roomStatus: string;
+  roomStatus: string | number;
   status: string;
   bed: string;
   currentOccupation: number;

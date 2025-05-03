@@ -182,7 +182,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
                 multiline
                 rows={4}
                 name="purposeOfAllocation"
-                label="Notes / purpose of allocation"
+                label="Notes / purpose of allocation *"
                 value=""
                 onChange={() => {}}
                 size="small"

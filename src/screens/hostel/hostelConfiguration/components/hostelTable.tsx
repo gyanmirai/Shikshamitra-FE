@@ -87,16 +87,17 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
         </>
       }
       columns={[
-        { id: 'hostelName', label: 'Hostel Name', align: 'left' },
+        { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 130 },
         {
           id: 'totalRoomCapacity',
           label: 'Total Room Capacity',
           align: 'left',
           filterType: 'number',
+          minWidth: 180,
         },
-        { id: 'wardenDetails', label: 'Warden Details', align: 'left' },
-        { id: 'currentOccupation', label: 'Current Occupation', align: 'left' },
-        { id: 'hostelType', label: 'Hostel Type', align: 'left' },
+        { id: 'wardenDetails', label: 'Warden Details', align: 'left', minWidth: 150 },
+        { id: 'currentOccupation', label: 'Current Occupation', align: 'left', minWidth: 180 },
+        { id: 'hostelType', label: 'Hostel Type', align: 'left', minWidth: 130 },
         { id: 'location', label: 'Location', align: 'left' },
         {
           id: 'action',
@@ -110,7 +111,6 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
               <ThreeDotsActions
                 actions={(prop) => actions({ ...prop, row })}
                 placement="right-top"
-                showViewIcon
                 showDeleteIcon
                 showEditIcon
                 handleDeleteClick={() => {
@@ -119,7 +119,6 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
                 handleEditClick={() => {
                   onEdit(row as IHostelData);
                 }}
-                handleViewClick={() => {}}
               />
             );
           },

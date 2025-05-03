@@ -161,35 +161,32 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
     <Box p={2}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ height: '450px' }}>
-          <Box display="flex" justifyContent="space-between">
-            <Box display="flex" gap={2}>
-              <Button
-                startIcon={<Iconify icon="si:add-duotone" />}
-                type="submit"
-                variant="contained"
-                size="small"
-              >
-                Add
-              </Button>
-              <Button
-                startIcon={<Iconify icon="si:add-duotone" />}
-                variant="contained"
-                size="small"
-                onClick={handleClear}
-                disabled={feeHeadListForFeeStructure.length === 0}
-              >
-                Add For Other Class
-              </Button>
-            </Box>
+          <Box display="flex" justifyContent="flex-end" gap={1}>
+            <Button
+              startIcon={<Iconify icon="si:add-duotone" />}
+              type="submit"
+              variant="contained"
+              size="small"
+            >
+              Add
+            </Button>
+            <Button
+              startIcon={<Iconify icon="si:add-duotone" />}
+              variant="contained"
+              size="small"
+              onClick={handleClear}
+              disabled={feeHeadListForFeeStructure.length === 0}
+            >
+              Add For Other Class
+            </Button>
           </Box>
-
           <Grid container spacing={3} py="30px">
             <Grid item xs={12} md={6}>
               <ShakingTextField
                 error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
               >
                 <CustomSelect
-                  label="Receipt Book"
+                  label="Receipt Book *"
                   options={[
                     { value: 'cbse', label: 'CBSE' },
                     { value: 'gseb', label: 'GSEB' },
@@ -219,7 +216,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
               >
                 <CustomSelect
-                  label="Applicable Class"
+                  label="Applicable Class *"
                   options={[
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },
@@ -240,7 +237,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 error={formik.touched.hostelFeeHead && Boolean(formik.errors.hostelFeeHead)}
               >
                 <CustomSelect
-                  label="Fee Type"
+                  label="Fee Type *"
                   options={[
                     { value: 'tuitionFee', label: 'Tuition Fee' },
                     { value: 'sportsFee', label: 'Sports Fee' },
@@ -274,7 +271,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 <NumericFormatCustom
                   size="small"
                   fullWidth
-                  label="Gross Fee"
+                  label="Gross Fee *"
                   name="grossFee"
                   value={formik.values.grossFee}
                   onChange={(e) => {
@@ -303,7 +300,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 <NumericFormatCustom
                   size="small"
                   fullWidth
-                  label="Discount Amount"
+                  label="Discount Amount *"
                   name="discountAmount"
                   value={formik.values.discountAmount}
                   onChange={(e) => {
@@ -328,7 +325,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 <TextField
                   size="small"
                   fullWidth
-                  label="Discount Remark"
+                  label="Discount Remark *"
                   name="discountRemark"
                   value={formik.values.discountRemark}
                   onChange={(e) => {
@@ -343,7 +340,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
               <TextField
                 size="small"
                 fullWidth
-                label="Payable Fee"
+                label="Payable Fee *"
                 name="payableFee"
                 value={formik.values.payableFee}
                 disabled
@@ -357,7 +354,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
               >
                 <CustomSelect
                   multiple
-                  label="Payment Method"
+                  label="Payment Method *"
                   options={[
                     { value: 'cash', label: 'Cash' },
                     { value: 'check', label: 'Check' },
@@ -387,7 +384,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 }
               >
                 <CustomSelect
-                  label="Late Fee Charges Type"
+                  label="Late Fee Charges Type *"
                   options={[
                     { value: 'perDay', label: 'Per Day' },
 
@@ -416,7 +413,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   <NumericFormatCustom
                     size="small"
                     fullWidth
-                    label="Late Fee Charges Amount"
+                    label="Late Fee Charges Amount *"
                     name="lateFeeChargesAmount"
                     value={formik.values.lateFeeChargesAmount}
                     onChange={formik.handleChange}
@@ -433,13 +430,13 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
             )}
             <Grid item xs={12} md={6}>
               <DatePicker
-                label="Fees Due Date"
+                label="Fees Due Date *"
                 value={formik.values.paymentDueDate}
                 onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
             </Grid>
-          </Grid>
+          </Grid>{' '}
           {/* We can create multiple fee heads for a single fee structure. Previous entries are listed below in a table, similar to a to-do list, for easy tracking and management. */}
           <HostelFeeHeadForFeeStructure
             onDelete={handleDelete}
@@ -457,7 +454,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
             Cancel
           </Button>
           <Button
-            startIcon={<Iconify icon="material-symbols-light:save" />}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
             variant="contained"
             size="small"
             onClick={handleSubmit}

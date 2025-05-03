@@ -117,10 +117,10 @@ const AddReportLossDialog: React.FC<IAddReportLossDialogProps> = ({ isEdit, data
             >
               <Editor
                 onChange={(value) => {
-                  formik.setFieldValue('description', value);
+                  formik.setFieldValue('incidentDescription', value);
                 }}
                 value={formik.values.incidentDescription}
-                placeholder="Incident Description (*)"
+                placeholder="Incident Description *"
                 error={
                   formik.touched.incidentDescription && Boolean(formik.errors.incidentDescription)
                 }

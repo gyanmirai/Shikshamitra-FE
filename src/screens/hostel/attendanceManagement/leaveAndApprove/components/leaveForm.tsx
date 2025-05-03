@@ -87,7 +87,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                   <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                     <CustomSelect
                       options={[]}
-                      label="Leave Type"
+                      label="Leave Type *"
                       value={values.leaveType}
                       name="leaveType"
                       valueKey="id"
@@ -127,7 +127,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                 <Grid item xs={values.isHalfDay ? 12 : 6}>
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
-                      label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                      label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
                       onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
                       value={values.startDate}
@@ -147,7 +147,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                   <Grid item xs={6}>
                     <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                       <DateTimePicker
-                        label="End Date and Time"
+                        label="End Date and Time *"
                         onChange={(value) => setFieldValue('endDate', value)}
                         value={values.endDate}
                         format="DD-MM-YYYY HH:mm:ss"
@@ -193,7 +193,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                         setFieldValue('description', value);
                       }}
                       value={values.description}
-                      placeholder="Leave description"
+                      placeholder="Leave description *"
                       error={touched.description && Boolean(errors.description)}
                       helperText={touched.description && errors.description}
                       editable={!editData}
@@ -242,7 +242,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                       rows={4}
                       variant="outlined"
                       value={values.rejectionReason}
-                      label="Rejection Reason"
+                      label="Rejection Reason *"
                       onChange={(e) => setFieldValue('rejectionReason', e.target.value)}
                       error={touched.rejectionReason && Boolean(errors.rejectionReason)}
                       helperText={touched.rejectionReason && errors.rejectionReason}
