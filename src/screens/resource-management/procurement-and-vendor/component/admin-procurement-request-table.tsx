@@ -52,7 +52,7 @@ const AdminProcurementRequestTable = () => {
             width: '100%',
           },
         }}
-        noDataText="No Booking Request Found"
+        noDataText="No Procurement Request Found"
         tableId="admin-resource-table"
         columns={[
           { id: 'resourceName', label: 'Resource Name' },

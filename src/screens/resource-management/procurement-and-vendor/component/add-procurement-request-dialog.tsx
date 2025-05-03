@@ -30,8 +30,8 @@ const AddProcurementRequestDialog: React.FC<IAddProcurementRequestDialogProps> =
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
   const initialValues = useMemo<IProcurementAndVendorFromValues>(
-    () => getInitialProcurementAndVendorValues(data, isEdit),
-    [data, isEdit]
+    () => getInitialProcurementAndVendorValues(data),
+    [data]
   );
 
   // Initialize Formik for managing form state, validation, and submission

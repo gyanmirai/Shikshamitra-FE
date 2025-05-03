@@ -23,6 +23,10 @@ const LiveSecurityAlertTable = () => {
         searchFieldProps={{
           placeholder: 'Search by  Name, location...',
           label: 'Search by  Name, location...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
         }}
         tableId="access-logs-management-table"
         noDataText="No Alerts Found"

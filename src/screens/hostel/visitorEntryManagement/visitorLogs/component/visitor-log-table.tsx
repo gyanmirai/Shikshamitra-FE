@@ -17,6 +17,10 @@ const VisitorLogtable = () => (
     searchFieldProps={{
       placeholder: 'Search by Visitor Name...',
       label: 'Search by Visitor Name...',
+      sx: {
+        maxWidth: '400px',
+        width: '100%',
+      },
     }}
     noDataText="No visitor log data available."
     columns={[

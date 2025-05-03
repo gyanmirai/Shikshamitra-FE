@@ -31,6 +31,10 @@ const FeedbackAnalyticsTable = () => {
         searchFieldProps={{
           placeholder: 'Search by Meal Name, Rating...',
           label: 'Search by Meal Name, Rating...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
         }}
         noDataText="No Feedback Found"
         tableId="feedback-analytics-table"

@@ -12,3 +12,13 @@ export interface IAddReportLossDialogProps {
   data: IResourceIncidentFormValues;
   onClose: () => void;
 }
+
+export interface IReportLossTableProps {
+  onClick: (data: IResourceIncidentFormValues, eventName: string) => void;
+}
+
+export interface IAddReportLossFormProps {
+  isEdit: boolean;
+  data: IResourceIncidentFormValues | null;
+  onClose: () => void;
+}

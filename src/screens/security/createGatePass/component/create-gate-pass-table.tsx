@@ -28,6 +28,10 @@ const CreateGatePassTable: React.FC<ICreateEmergencyGatePassTableProps> = ({ onC
       searchFieldProps={{
         placeholder: 'Search by Person Name...',
         label: 'Search by Person Name...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       noDataText={
         <>

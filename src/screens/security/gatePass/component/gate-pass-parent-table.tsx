@@ -28,6 +28,10 @@ const EarlyGatePassRequestTable: React.FC<IGetEarlyPassRequestTableProps> = ({ o
       searchFieldProps={{
         placeholder: 'Search by Student Name...',
         label: 'Search by Student Name...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       noDataText={
         <>
