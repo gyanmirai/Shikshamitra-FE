@@ -1616,6 +1616,13 @@ const hostelModule = {
           shortcutKey: 'Alt+H+7',
           shortcutKeyName: 'Alt+H+7',
         },
+        {
+          title: 'Notification',
+          path: '/hostel/hostel-notification',
+          _action: 'notification',
+          shortcutKey: 'Alt+S+N',
+          shortcutKeyName: 'Alt+S+N',
+        },
       ],
     },
   ],
