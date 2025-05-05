@@ -21,3 +21,14 @@ export interface IAssignedToPurchase {
   priority: string;
   description: string;
 }
+
+export interface IProcurementTeacherTableProps {
+  onClick: (data: IProcurementAndVendorFromValues, eventName: string) => void;
+}
+
+export interface IAddProcurementRequestFormProps {
+  isEdit: boolean;
+  data: IProcurementAndVendorFromValues | null;
+  onClose: () => void;
+  fromTeacher?: boolean;
+}

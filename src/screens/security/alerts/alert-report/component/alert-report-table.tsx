@@ -94,6 +94,10 @@ const AlertReportTable = () => (
       searchFieldProps={{
         placeholder: 'Search by  Name, status...',
         label: 'Search by  Name, status...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       tableId="access-logs-management-table"
       noDataText="No Alerts Found"

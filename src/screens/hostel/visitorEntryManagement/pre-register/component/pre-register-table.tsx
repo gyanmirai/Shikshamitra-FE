@@ -25,6 +25,10 @@ const PreRegisterTable: React.FC<IPreRegisterTableProps> = ({ onClick }) => (
       searchFieldProps={{
         placeholder: 'Search by Visitor Name...',
         label: 'Search by Visitor Name...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       noDataText={
         <>

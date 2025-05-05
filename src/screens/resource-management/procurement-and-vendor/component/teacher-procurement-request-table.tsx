@@ -19,9 +19,12 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import AddProcurementRequestDialog from './add-procurement-request-dialog';
 
-import type { IProcurementAndVendorFromValues } from '../procurement-and-vendor-interface';
+import type {
+  IProcurementTeacherTableProps,
+  IProcurementAndVendorFromValues,
+} from '../procurement-and-vendor-interface';
 
-const TeacherProcurementRequestTable = () => {
+const TeacherProcurementRequestTable: React.FC<IProcurementTeacherTableProps> = ({ onClick }) => {
   const viewProcurementRequest = useBoolean();
 
   const [selectedRow, setSelectedRow] = useState<IProcurementAndVendorFromValues>();
@@ -37,25 +40,25 @@ const TeacherProcurementRequestTable = () => {
             width: '100%',
           },
         }}
-        noDataText="No Booking Request Found"
+        noDataText="No Procurement Request Found"
         tableId="admin-resource-table"
         columns={[
-          { id: 'resourceName', label: 'Resource Name', minWidth: 100 },
+          { id: 'resourceName', label: 'Resource Name' },
 
-          { id: 'resourceCategory', label: 'Resource Category', minWidth: 100 },
-          { id: 'quantity', label: 'Quantity', minWidth: 100, filterType: 'number' },
+          { id: 'resourceCategory', label: 'Resource Category' },
+          { id: 'quantity', label: 'Quantity', filterType: 'number' },
           {
             id: 'date',
             label: 'Expected Delivery Date',
-            minWidth: 80,
+
             filterType: 'date',
-            render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
+            render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : null),
           },
 
           {
             label: 'Status',
             id: 'status',
-            minWidth: '100px',
+            minWidth: 100,
             filterType: 'enum',
             enumOptions: ResourceBookingStatusTypeOptions,
             render(value, row) {
@@ -71,7 +74,7 @@ const TeacherProcurementRequestTable = () => {
             id: 'action',
             label: 'Actions',
             align: 'left',
-            minWidth: 100,
+            minWidth: 10,
             sticky: true,
             isFilter: false,
             isSort: false,
@@ -84,13 +87,13 @@ const TeacherProcurementRequestTable = () => {
                   showThreeDots={false}
                   handleViewClick={() => {
                     setSelectedRow(row as IProcurementAndVendorFromValues);
-                    viewProcurementRequest.onTrue();
-                    setIsEdit(false);
+                    onClick(row as IProcurementAndVendorFromValues, 'view');
+                    // viewProcurementRequest.onTrue();
                   }}
                   handleEditClick={() => {
                     setSelectedRow(row as IProcurementAndVendorFromValues);
-                    viewProcurementRequest.onTrue();
-                    setIsEdit(true);
+                    onClick(row as IProcurementAndVendorFromValues, 'edit');
+                    // viewProcurementRequest.onTrue();
                   }}
                 />
               );

@@ -38,6 +38,10 @@ const AccessLogsManagementSecurityTable = () => {
         searchFieldProps={{
           placeholder: 'Search by  Name, Role...',
           label: 'Search by  Name, Role...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
         }}
         tableId="access-logs-management-table"
         noDataText="No Access Logs Found"

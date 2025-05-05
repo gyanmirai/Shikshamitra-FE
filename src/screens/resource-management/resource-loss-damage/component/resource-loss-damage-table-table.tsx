@@ -1,5 +1,5 @@
-import React from 'react';
 import dayjs from 'dayjs';
+import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -7,15 +7,19 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import data from 'src/json/ResourceManagement/lossDamaged/lossDamagedData.json';
 
-import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import AddReportLossDialog from './add-report-loss-dialog';
+import type {
+  IReportLossTableProps,
+  IResourceIncidentFormValues,
+} from '../resource-loss-damage-interface';
 
-import type { IResourceIncidentFormValues } from '../resource-loss-damage-interface';
-
-const ResourceLossDamageTableTeacher = () => {
+const ResourceLossDamageTableTeacher: React.FC<IReportLossTableProps> = ({ onClick }) => {
   const addResourceLossDamagedDialog = useBoolean();
+
+  const [selectedRow, setSelectedRow] = useState<IResourceIncidentFormValues>();
+
   return (
     <>
       <CustomizableTable
@@ -32,7 +36,7 @@ const ResourceLossDamageTableTeacher = () => {
             No Resource Loss/Damage Reported{' '}
             <Box
               onClick={() => {
-                addResourceLossDamagedDialog.onTrue();
+                onClick({} as IResourceIncidentFormValues, 'new');
               }}
               color="primary.main"
               fontWeight={600}
@@ -58,10 +62,41 @@ const ResourceLossDamageTableTeacher = () => {
             filterType: 'date',
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
           },
+          {
+            id: 'action',
+            label: 'Actions',
+            align: 'left',
+            minWidth: 70,
+            sticky: true,
+            isFilter: false,
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  showEditIcon
+                  handleViewClick={() => {
+                    setSelectedRow(row as IResourceIncidentFormValues);
+                    onClick(row as IResourceIncidentFormValues, 'view');
+                  }}
+                  handleDeleteClick={() => {
+                    setSelectedRow(row as IResourceIncidentFormValues);
+                    onClick(row as IResourceIncidentFormValues, 'delete');
+                  }}
+                  handleEditClick={() => {
+                    setSelectedRow(row as IResourceIncidentFormValues);
+                    onClick(row as IResourceIncidentFormValues, 'edit');
+                  }}
+                />
+              );
+            },
+          },
         ]}
         data={data}
       />
-      {addResourceLossDamagedDialog.value && (
+      {/* {addResourceLossDamagedDialog.value && (
         <CustomDialog
           maxWidth="md"
           title="Add Report Loss/Damage"
@@ -76,7 +111,7 @@ const ResourceLossDamageTableTeacher = () => {
             isEdit={false}
           />
         </CustomDialog>
-      )}
+      )} */}
     </>
   );
 };

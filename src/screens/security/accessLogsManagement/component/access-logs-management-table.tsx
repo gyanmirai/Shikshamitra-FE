@@ -94,6 +94,10 @@ const AccessLogsManagementTable = () => (
       searchFieldProps={{
         placeholder: 'Search by Person Name, Role...',
         label: 'Search by Person Name, Role...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
       }}
       tableId="access-logs-management-table"
       noDataText="No Access Logs Data Found"
