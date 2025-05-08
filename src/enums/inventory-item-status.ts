@@ -1,26 +1,38 @@
 export enum InventoryItemStatusType {
-  'In Use',
-  Available,
-  'Partially Issued',
+  Good,
+  Damaged,
+  UnderMaintenance,
+  New,
+  Disposed,
 }
 
 export const InventoryItemStatusOptions = [
   {
-    label: 'Available',
-    value: InventoryItemStatusType.Available,
+    label: 'Good',
+    value: InventoryItemStatusType.Good,
   },
   {
-    label: 'In Use',
-    value: InventoryItemStatusType['In Use'],
+    label: 'Damaged',
+    value: InventoryItemStatusType.Damaged,
   },
   {
-    label: 'Partially Issued',
-    value: InventoryItemStatusType['Partially Issued'],
+    label: 'Under Maintenance',
+    value: InventoryItemStatusType.UnderMaintenance,
+  },
+  {
+    label: 'New',
+    value: InventoryItemStatusType.New,
+  },
+  {
+    label: 'Disposed',
+    value: InventoryItemStatusType.Disposed,
   },
 ];
 
 export const InventoryItemStatusTypeColor = {
-  [InventoryItemStatusType.Available]: 'success',
-  [InventoryItemStatusType['In Use']]: 'error',
-  [InventoryItemStatusType['Partially Issued']]: 'warning',
+  [InventoryItemStatusType.Good]: 'success',
+  [InventoryItemStatusType.Damaged]: 'error',
+  [InventoryItemStatusType.UnderMaintenance]: 'warning',
+  [InventoryItemStatusType.New]: 'info',
+  [InventoryItemStatusType.Disposed]: 'default',
 };

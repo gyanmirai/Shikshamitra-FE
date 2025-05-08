@@ -1,0 +1,25 @@
+[
+    {
+      "vendorName": "Rakesh Mehta",
+      "vendorContactNumber": "9876543210",
+      "vendorSecondaryContactNumber": "9123456780",
+      "vendorComponyName": "SecureTech Solutions",
+      "vendorComponyEmail": "support@securetech.com",
+      "vendorComponyCity": "Mumbai",
+      "vendorComponyCountry": "India",
+      "vendorComponyState": "Maharashtra",
+      "vendorComponyZipCode": "400001",
+      "vendorComponyAddress": "101, Fort Commercial Plaza, Mumbai",
+      "vendorGstNumber": "27ABCDE1234F1Z5",
+      "vendorPanNumber": "ABCDE1234F",
+      "vendorBankName": "HDFC Bank",
+      "vendorBankAccountNumber": "123456789012",
+      "vendorBankIfscCode": "HDFC0001234",
+      "vendorBankBranchName": "Fort Branch",
+      "vendorBankAccountType": "Current",
+      "vendorUpiId": "securetech@hdfcbank",
+      "vendorComponyDescription": "Vendor supplying biometric and security systems.",
+      "vendorTagForQuickSearch": "biometric security vendor"
+    }
+  ]
+  

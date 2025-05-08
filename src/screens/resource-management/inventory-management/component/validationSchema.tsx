@@ -3,18 +3,31 @@ import * as Yup from 'yup';
 
 export const addResourceValidationSchema = Yup.object().shape({
   itemName: Yup.string().required('Item name is required'),
+  category: Yup.string().required('Category is required'),
+  subCategory: Yup.string().required('Sub-category is required'),
+  resourceConditionStatus: Yup.string().required('Condition status is required'),
+  resourceMeasurementUnit: Yup.string().required('Measurement unit is required'),
 
-  categoryName: Yup.string().required('Category is required'),
-
-  quantity: Yup.string()
+  quantity: Yup.number()
+    .typeError('Quantity must be a valid number')
     .required('Quantity is required')
-    .transform((value) => value.replace(/[^0-9.]/g, '')) // keep numeric input only
-    .test('is-valid-quantity', 'Quantity must be a number greater than zero', (value) => {
-      const numericValue = Number(value);
-      return numericValue > 0;
-    }),
+    .moreThan(0, 'Quantity must be greater than zero'),
 
-  storageLocation: Yup.string().required('Storage location is required'),
+  campusName: Yup.string().required('Campus name is required'),
+  buildingName: Yup.string().required('Building name is required'),
+  roomNumber: Yup.string().required('Room number is required'),
+  floorNumber: Yup.string().required('Floor number is required'),
+
+  termAndCondition: Yup.string().required('Terms and conditions are required'),
+
+  warrantyExpiryDate: Yup.date().nullable().required('Warranty expiry date is required'),
+
+  resourceImage: Yup.string().required('Resource image is required'),
+  resourceBill: Yup.string().required('Resource bill is required'),
+
+  purchasedVendorName: Yup.string().required('Vendor name is required'),
+
+  resourcePurchaseDate: Yup.date().nullable().required('Purchase date is required'),
 });
 
 export const issueResourceValidationSchema = Yup.object().shape({

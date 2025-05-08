@@ -12,15 +12,24 @@ export function getInitialResourceValues(
 ): IAddResourceFormValues {
   return {
     itemName: isEdit ? (data.itemName ?? '') : '',
-    categoryName: isEdit ? (data.categoryName ?? '') : '',
+    category: isEdit ? (data.category ?? '') : '',
+    subCategory: isEdit ? (data.subCategory ?? '') : '',
+    resourceConditionStatus: isEdit ? (data.resourceConditionStatus ?? '') : '',
+    resourceMeasurementUnit: isEdit ? (data.resourceMeasurementUnit ?? '') : '',
     quantity: isEdit ? (data.quantity ?? '') : '',
-    id: isEdit
-      ? (data.id ?? Math.floor(Math.random() * 1000000000))
-      : Math.floor(Math.random() * 1000000000),
     campusName: isEdit ? (data.campusName ?? '') : '',
     buildingName: isEdit ? (data.buildingName ?? '') : '',
     roomNumber: isEdit ? (data.roomNumber ?? '') : '',
     floorNumber: isEdit ? (data.floorNumber ?? '') : '',
+    termAndCondition: isEdit ? (data.termAndCondition ?? '') : '',
+    warrantyExpiryDate: isEdit ? (data.warrantyExpiryDate ?? null) : null,
+    resourceImage: isEdit ? (data.resourceImage ?? '') : '',
+    resourceBill: isEdit ? (data.resourceBill ?? '') : '',
+    purchasedVendorName: isEdit ? (data.purchasedVendorName ?? '') : '',
+    resourcePurchaseDate: isEdit ? (data.resourcePurchaseDate ?? null) : null,
+    id: isEdit
+      ? (data.id ?? Math.floor(Math.random() * 1000000000))
+      : Math.floor(Math.random() * 1000000000),
   };
 }
 

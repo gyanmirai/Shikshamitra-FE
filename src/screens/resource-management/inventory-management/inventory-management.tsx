@@ -10,11 +10,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddResourceDialog from './component/add-resource-dialog';
-import InventoryPageGraph from './component/inventory-page-graph';
 import InventoryItemTable from './component/inventory-item-table';
 import IssueResourceDialog from './component/issue-resource-dialog';
 import ProcurementResourceDialog from './component/procurement-request-dialog';
-import InventoryDashboardCard from './component/inventory-management-page-card';
 
 import type {
   IAddResourceFormValues,
@@ -100,8 +98,8 @@ const InventoryManagement = () => {
         )}
       </Box>
       <Box display="flex" flexDirection="column" gap={3}>
-        <InventoryDashboardCard />
-        <InventoryPageGraph />
+        {/* <InventoryDashboardCard /> */}
+        {/* <InventoryPageGraph /> */}
         <InventoryItemTable />
         <Box />
       </Box>

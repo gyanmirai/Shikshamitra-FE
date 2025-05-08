@@ -1,27 +1,9 @@
 [
     {
-      "categoryName": "Books",
-      "subcategoryName": "Fiction"
-    },
-    {
-      "categoryName": "Books",
-      "subcategoryName": "Non-Fiction"
-    },
-    {
-      "categoryName": "Books",
-      "subcategoryName": "Textbooks"
-    },
-    {
-      "categoryName": "IT Equipment",
-      "subcategoryName": "Laptops"
-    },
-    {
-      "categoryName": "IT Equipment",
-      "subcategoryName": "Desktops"
-    },
-    {
-      "categoryName": "IT Equipment",
-      "subcategoryName": "Monitors"
+      "categoryName": "Furniture",
+      "subcategoryName": ["Table",  "White-Board"]
     }
+    
+    
   ]
   

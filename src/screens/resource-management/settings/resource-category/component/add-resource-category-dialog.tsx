@@ -19,8 +19,8 @@ const AddResourceCategoryDialog: React.FC<IAddResourceCategoryDialogProps> = ({ 
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
   const initialValues = useMemo<IResourceCategoryFormValues>(
-    () => getInitialResourceCategoryValues(data, isEdit),
-    [data, isEdit]
+    () => getInitialResourceCategoryValues(data),
+    [data]
   );
 
   // Initialize Formik for managing form state, validation, and submission
@@ -36,7 +36,7 @@ const AddResourceCategoryDialog: React.FC<IAddResourceCategoryDialogProps> = ({ 
       // Add logic here to handle form submission (e.g., API call or state update)
     },
   });
-
+  const isDisabled = !isEdit && data !== null;
   return (
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
@@ -47,9 +47,9 @@ const AddResourceCategoryDialog: React.FC<IAddResourceCategoryDialogProps> = ({ 
             >
               <TextField
                 name="categoryName"
-                label="Category Name"
-                value=""
-                onChange={() => {}}
+                label="Category Name *"
+                value={formik.values.categoryName}
+                onChange={formik.handleChange}
                 size="small"
                 fullWidth
                 autoFocus

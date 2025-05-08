@@ -8,13 +8,26 @@ export interface IAddResourceDialogProps {
 }
 
 export interface IAddResourceFormValues {
+  category: string;
+  subCategory: string;
   itemName: string;
-  categoryName: string;
+  resourceConditionStatus: string;
+  resourceMeasurementUnit: string;
+
   quantity: string | number;
   campusName: string;
   buildingName: string;
   roomNumber: string;
   floorNumber: string;
+  termAndCondition: string;
+  warrantyExpiryDate: Dayjs | null;
+  resourceImage: string;
+  purchasedVendorName: string;
+  resourceBill: string;
+  resourcePurchaseDate: Dayjs | null;
+  assignedTo?: string;
+  serialNumber?: string;
+
   id: number;
 }
 
@@ -53,15 +66,27 @@ export interface IProcurementResourceDialogProps {
 
 export interface IInventoryItem {
   itemCode: string;
-  name: string;
+  itemName: string;
   category: string;
+  subCategory: string;
+  resourceConditionStatus: string;
+  resourceMeasurementUnit: string;
   quantity: number;
   available: number;
+  campusName: string;
+  buildingName: string;
+  roomNumber: string;
+  floorNumber: string;
   location: string;
-  status: number;
+  termAndCondition: string;
+  warrantyExpiryDate: Dayjs | null;
+  resourceImage: string;
+  resourceBill: string;
+  purchasedVendorName: string;
+  resourcePurchaseDate: Dayjs | null;
   lastUpdatedDate: Dayjs;
+  status: number;
 }
-
 export interface IInventoryManagementDetailsViewpProps {
   data: IInventoryItem;
 }

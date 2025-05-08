@@ -2,19 +2,13 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo, useState } from 'react';
 
-import { Add } from '@mui/icons-material';
-import { Box, Tab, Tabs, Paper, Button, Drawer, Typography, drawerClasses } from '@mui/material';
+import { Box, Tab, Tabs, Paper, Button, Drawer, drawerClasses } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { paper, varAlpha } from 'src/theme/styles';
 import inventoryItem from 'src/json/ResourceManagement/InventoryManagement/inventory-data-for-all-categories.json';
-import {
-  InventoryItemStatusType,
-  InventoryItemStatusOptions,
-  InventoryItemStatusTypeColor,
-} from 'src/enums/inventory-item-status';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -44,24 +38,14 @@ const InventoryItemTable = () => {
       count: 0,
       color: 'warning',
     },
+
     {
-      label: 'Books',
-      value: 'books',
-      count: 0,
-      color: 'success',
-    },
-    {
-      label: 'IT',
+      label: 'Electronics',
       value: 'it',
       count: 0,
       color: 'error',
     },
-    {
-      label: 'Stationary',
-      value: 'stationary',
-      count: 0,
-      color: 'error',
-    },
+
     {
       label: 'Sports',
       value: 'sports',
@@ -80,18 +64,13 @@ const InventoryItemTable = () => {
       return inventoryItem;
     }
 
-    // If the "Books" tab is selected, filter items by the "Book" category
-    if (tabs.value === 'books') {
-      return inventoryItem.filter((item) => item.category.toLowerCase() === 'book');
-    }
-
     // Otherwise, filter items by the selected category (e.g., IT, Sports, Stationary)
     return inventoryItem.filter((item) => item.category.toLowerCase() === tabs.value);
   }, [tabs.value]); // Re-run this logic whenever the selected tab value changes
 
   return (
     <Box>
-      <Typography variant="h6">Inventory Items</Typography>
+      {/* <Typography variant="h6">Inventory Items</Typography> */}
       <Box display="flex" gap={1} alignItems="flex-start">
         <Tabs
           value={tabs.value}
@@ -123,9 +102,9 @@ const InventoryItemTable = () => {
           ))}
         </Tabs>
 
-        <Button variant="contained" size="small" startIcon={<Add />} onClick={() => {}}>
+        {/* <Button variant="contained" size="small" startIcon={<Add />} onClick={() => {}}>
           Add Resource
-        </Button>
+        </Button> */}
       </Box>
 
       <CustomizableTable
@@ -159,13 +138,8 @@ const InventoryItemTable = () => {
         }
         columns={[
           {
-            label: 'Item Code',
-            id: 'itemCode',
-            minWidth: '100px',
-          },
-          {
             label: 'Name',
-            id: 'name',
+            id: 'itemName',
             minWidth: '100px',
           },
           {
@@ -179,30 +153,11 @@ const InventoryItemTable = () => {
             minWidth: '100px',
             filterType: 'number',
           },
-          {
-            label: 'Available',
-            id: 'available',
-            minWidth: '100px',
-            filterType: 'number',
-          },
+
           {
             label: 'Location',
             id: 'location',
             minWidth: '100px',
-          },
-          {
-            label: 'Status',
-            id: 'status',
-            minWidth: '100px',
-            filterType: 'enum',
-            enumOptions: InventoryItemStatusOptions,
-            render(value, row) {
-              const color = InventoryItemStatusTypeColor[
-                value as InventoryItemStatusType
-              ] as LabelColor;
-
-              return <Label color={color}>{InventoryItemStatusType[value]}</Label>;
-            },
           },
 
           {

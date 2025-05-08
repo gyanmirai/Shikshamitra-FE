@@ -1637,6 +1637,16 @@ const resourceManagement = {
           _action: 'inventory-management',
         },
         {
+          title: 'My Resources',
+          path: '/resourceManagement/my-resources',
+          _action: 'my-resources',
+        },
+        {
+          title: 'My Resources Request',
+          path: '/resourceManagement/my-resources-request',
+          _action: 'my-resources-request',
+        },
+        {
           title: 'Resource Allocation',
           path: '/resourceManagement/resource-allocation',
           _action: 'resource-allocation',
@@ -1658,23 +1668,23 @@ const resourceManagement = {
         //   path: '/resourceManagement/classroom-facilities',
         //   _action: 'classroom-facilities',
         // },
-        {
-          title: 'Booking Management',
-          path: '/resourceManagement/booking-management',
-          _action: 'classroom-facilities',
-          children: [
-            {
-              title: 'Book Resource',
-              path: '/resourceManagement/booking-management/booking',
-              _action: 'booking',
-            },
-            {
-              title: 'Manage Booking',
-              path: '/resourceManagement/booking-management/manage-request',
-              _action: 'manage-request',
-            },
-          ],
-        },
+        // {
+        //   title: 'Booking Management',
+        //   path: '/resourceManagement/booking-management',
+        //   _action: 'classroom-facilities',
+        //   children: [
+        //     {
+        //       title: 'Book Resource',
+        //       path: '/resourceManagement/booking-management/booking',
+        //       _action: 'booking',
+        //     },
+        //     {
+        //       title: 'Manage Booking',
+        //       path: '/resourceManagement/booking-management/manage-request',
+        //       _action: 'manage-request',
+        //     },
+        //   ],
+        // },
         {
           title: 'Procurement & Vendors',
           path: '/resourceManagement/procurement-vendors',
@@ -1727,6 +1737,38 @@ const resourceManagement = {
           title: 'Settings',
           path: '/resourceManagement/settings',
           _action: 'settings',
+          children: [
+            {
+              title: 'Resource Category',
+              path: '/resourceManagement/settings/resource-category',
+              _action: 'resource-category',
+            },
+            {
+              title: 'Resource Sub Category',
+              path: '/resourceManagement/settings/resource-sub-category',
+              _action: 'resource-sub-category',
+            },
+            {
+              title: 'Vendor Configuration',
+              path: '/resourceManagement/settings/vendor-configuration',
+              _action: 'vendor-configuration',
+            },
+            {
+              title: 'Resource Condition Status',
+              path: '/resourceManagement/settings/resource-condition-status',
+              _action: 'resource-condition-status',
+            },
+            {
+              title: 'Resource Status',
+              path: '/resourceManagement/settings/resource-status',
+              _action: 'resource-status',
+            },
+            {
+              title: 'Measurement Unit',
+              path: '/resourceManagement/settings/measurement-unit',
+              _action: 'measurement-unit',
+            },
+          ],
         },
       ],
     },

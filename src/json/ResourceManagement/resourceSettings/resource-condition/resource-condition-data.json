@@ -1,0 +1,23 @@
+[
+    {
+      "resourceConditionStatusName": "New",
+      "resourceConditionStatusDescription": "Brand new condition with no signs of use."
+    },
+    {
+      "resourceConditionStatusName": "Good",
+      "resourceConditionStatusDescription": "Slightly used but in excellent working condition."
+    },
+    {
+      "resourceConditionStatusName": "Fair",
+      "resourceConditionStatusDescription": "Used regularly with some signs of wear."
+    },
+    {
+      "resourceConditionStatusName": "Needs Repair",
+      "resourceConditionStatusDescription": "Functionality issues; requires repair or attention."
+    },
+    {
+      "resourceConditionStatusName": "Damaged",
+      "resourceConditionStatusDescription": "Significantly damaged and not suitable for use."
+    }
+  ]
+  

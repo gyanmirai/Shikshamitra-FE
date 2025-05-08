@@ -1,10 +1,9 @@
 import type { IResourceCategoryFormValues } from './resource-category-interface';
 
 export function getInitialResourceCategoryValues(
-  data: Partial<IResourceCategoryFormValues> = {}, // Partial values
-  isEdit = false
+  data: Partial<IResourceCategoryFormValues> | null
 ): IResourceCategoryFormValues {
   return {
-    categoryName: isEdit ? (data.categoryName ?? '') : '',
+    categoryName: data?.categoryName ?? '',
   };
 }
