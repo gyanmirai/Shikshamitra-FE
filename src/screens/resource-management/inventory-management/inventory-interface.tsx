@@ -3,33 +3,32 @@ import type { Dayjs } from 'dayjs';
 export interface IAddResourceDialogProps {
   open: boolean;
   handleClose: () => void;
-  data: IAddResourceFormValues;
+  data: IInventoryItem;
   isEdit?: boolean;
 }
 
-export interface IAddResourceFormValues {
-  category: string;
-  subCategory: string;
-  itemName: string;
-  resourceConditionStatus: string;
-  resourceMeasurementUnit: string;
+// export interface IAddResourceFormValues {
+//   category: string;
+//   subCategory: string;
+//   itemName: string;
+//   resourceConditionStatus: string;
+//   resourceMeasurementUnit: string;
 
-  quantity: string | number;
-  campusName: string;
-  buildingName: string;
-  roomNumber: string;
-  floorNumber: string;
-  termAndCondition: string;
-  warrantyExpiryDate: Dayjs | null;
-  resourceImage: string;
-  purchasedVendorName: string;
-  resourceBill: string;
-  resourcePurchaseDate: Dayjs | null;
-  assignedTo?: string;
-  serialNumber?: string;
+//   quantity: string | number;
+//   campusName: string;
+//   buildingName: string;
+//   roomNumber: string;
+//   floorNumber: string;
+//   termAndCondition: string;
+//   warrantyExpiryDate: Dayjs | null;
+//   resourceImage: string;
+//   purchasedVendorName: string;
+//   resourceBill: string;
+//   resourcePurchaseDate: Dayjs | null;
+//   assignedTo?: string;
 
-  id: number;
-}
+//   id: number;
+// }
 
 export interface IIssueResourceFormValues {
   selectItem: string;
@@ -71,7 +70,7 @@ export interface IInventoryItem {
   subCategory: string;
   resourceConditionStatus: string;
   resourceMeasurementUnit: string;
-  quantity: number;
+  quantity: number | null;
   available: number;
   campusName: string;
   buildingName: string;
@@ -86,7 +85,13 @@ export interface IInventoryItem {
   resourcePurchaseDate: Dayjs | null;
   lastUpdatedDate: Dayjs;
   status: number;
+  assignedTo?: string;
+  id: number;
 }
 export interface IInventoryManagementDetailsViewpProps {
   data: IInventoryItem;
+}
+
+export interface IInventoryItemTableProps {
+  onClick: (data: IInventoryItem, eventName: string) => void;
 }

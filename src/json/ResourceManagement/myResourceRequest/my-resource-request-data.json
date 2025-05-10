@@ -1,0 +1,43 @@
+[
+    {
+      "id": 1,
+      "name": "Projector",
+      "category": "Electronics",
+      "subCategory": "Presentation Equipment",
+      "vendor": "AV Solutions Ltd.",
+      "condition": "",
+      "status": 1,
+      "quantity": 1,
+      "measurementUnit": "Pieces",
+      "description": "High-definition projector required for seminar hall.",
+      "image": "",
+      "assignedDate": null,
+      "priority": "High",
+      "issueDescription": "",
+      "issueSupportingDocument": "",
+      "requestStatusType": "New",
+      "reasonForNewResource": "Need for conducting academic seminars",
+      "requiredByDate": "2025-05-20"
+    },
+    {
+      "id": 2,
+      "name": "Laptop Battery",
+      "category": "IT",
+      "subCategory": "Accessories",
+      "vendor": "TechCorp",
+      "condition": "Used",
+      "status": 1,
+      "quantity": 1,
+      "measurementUnit": "Pieces",
+      "description": "Battery replacements for faculty laptops.",
+      "image": "/images/battery.png",
+      "assignedDate": "2025-05-05",
+      "priority": "Medium",
+      "issueDescription": "Battery not holding charge",
+      "issueSupportingDocument": "/docs/battery_issue.pdf",
+      "requestStatusType": "Maintenance",
+      "reasonForNewResource": "",
+      "requiredByDate": "2025-05-15"
+    }
+  ]
+  

@@ -1647,6 +1647,26 @@ const resourceManagement = {
           _action: 'my-resources-request',
         },
         {
+          title: 'Review Resource Request',
+          path: '/resourceManagement/review-resource-request',
+          _action: 'review-resource-request',
+        },
+        {
+          title: 'Order Request',
+          path: '/resourceManagement/order-management',
+          _action: 'order-management',
+        },
+        {
+          title: 'Maintenance Request',
+          path: '/resourceManagement/maintenance-request',
+          _action: 'maintenance-request',
+        },
+        {
+          title: 'Disposed Resource',
+          path: '/resourceManagement/disposed-resource',
+          _action: 'disposed-resource',
+        },
+        {
           title: 'Resource Allocation',
           path: '/resourceManagement/resource-allocation',
           _action: 'resource-allocation',

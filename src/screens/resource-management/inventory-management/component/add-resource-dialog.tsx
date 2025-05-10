@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 
@@ -13,10 +14,10 @@ import { Iconify } from 'src/components/iconify/iconify';
 import { UploadBox } from 'src/components/upload/upload-box';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { getInitialResourceValues } from './initialValue';
+import { getInitialInventoryItem } from './initialValue';
 import { addResourceValidationSchema } from './validationSchema';
 
-import type { IAddResourceFormValues, IAddResourceDialogProps } from '../inventory-interface';
+import type { IInventoryItem, IAddResourceDialogProps } from '../inventory-interface';
 
 const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
   open,
@@ -26,13 +27,13 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
 }) => {
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
-  const initialValues = useMemo<IAddResourceFormValues>(
-    () => getInitialResourceValues(data, isEdit),
+  const initialValues = useMemo<IInventoryItem>(
+    () => getInitialInventoryItem(data, isEdit),
     [data, isEdit]
   );
 
   // Initialize Formik for managing form state, validation, and submission
-  const formik = useFormik<IAddResourceFormValues>({
+  const formik = useFormik<IInventoryItem>({
     // Set initial form field values
     initialValues,
 
@@ -46,7 +47,12 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
   });
 
   return (
-    <CustomDialog maxWidth="md" title="Add New Resource" open={open} handleClose={handleClose}>
+    <CustomDialog
+      maxWidth="md"
+      title={`${isEdit ? 'Edit' : 'Add'}   New Resource`}
+      open={open}
+      handleClose={handleClose}
+    >
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
@@ -91,8 +97,8 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 <TextField
                   name="itemName"
                   label="Item Name *"
-                  value=""
-                  onChange={() => {}}
+                  value={formik.values.itemName}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   autoFocus
@@ -130,10 +136,11 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
             <Grid item xs={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
+                  disabled={isEdit}
                   name="quantity"
                   label="Quantity *"
-                  value=""
-                  onChange={() => {}}
+                  value={formik.values.quantity}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   error={formik.touched.quantity && Boolean(formik.errors.quantity)}
@@ -148,11 +155,11 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 }
               >
                 <CustomSelect
+                  disabled={isEdit}
                   label="Purchased Vendor Name *"
                   options={[]}
                   value={formik.values.purchasedVendorName}
                   onChange={(value) => formik.setFieldValue('purchasedVendorName', value)}
-                  disabled={isEdit}
                   error={
                     formik.touched.purchasedVendorName && Boolean(formik.errors.purchasedVendorName)
                   }
@@ -172,7 +179,12 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 }
               >
                 <DatePicker
-                  value={formik.values.resourcePurchaseDate}
+                  value={
+                    formik.values.resourcePurchaseDate
+                      ? dayjs(formik.values.resourcePurchaseDate)
+                      : null
+                  }
+                  disabled={isEdit}
                   onChange={(value) => formik.setFieldValue('resourcePurchaseDate', value)}
                   label="Resource Purchase Date"
                   format="DD-MM-YYYY"
@@ -197,7 +209,12 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 }
               >
                 <DatePicker
-                  value={formik.values.warrantyExpiryDate}
+                  value={
+                    formik.values.warrantyExpiryDate
+                      ? dayjs(formik.values.warrantyExpiryDate)
+                      : null
+                  }
+                  disabled={isEdit}
                   onChange={(value) => formik.setFieldValue('warrantyExpiryDate', value)}
                   label="Warranty Expiray Date"
                   format="DD-MM-YYYY"
@@ -303,8 +320,8 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                   rows={6}
                   name="termAndCondition"
                   label="Term And Condition *"
-                  value=""
-                  onChange={() => {}}
+                  value={formik.values.termAndCondition}
+                  onChange={formik.handleChange}
                   size="small"
                   fullWidth
                   error={formik.touched.termAndCondition && Boolean(formik.errors.termAndCondition)}

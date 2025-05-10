@@ -11,19 +11,22 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddResourceDialog from './component/add-resource-dialog';
 import InventoryItemTable from './component/inventory-item-table';
-import IssueResourceDialog from './component/issue-resource-dialog';
-import ProcurementResourceDialog from './component/procurement-request-dialog';
 
-import type {
-  IAddResourceFormValues,
-  IProcurementFormValues,
-  IIssueResourceFormValues,
-} from './inventory-interface';
+import type { IInventoryItem } from './inventory-interface';
 
 const InventoryManagement = () => {
-  const dialogIssueResource = useBoolean();
   const dialogAddResource = useBoolean();
-  const dialogProcurementResource = useBoolean();
+
+  const [selectedData, setSelectedData] = React.useState<IInventoryItem | null>(null);
+  const [isEdit, setIsEdit] = React.useState(false);
+
+  const handleClick = (data: IInventoryItem, eventName: string) => {
+    setSelectedData(data);
+    if (eventName === 'edit') {
+      setIsEdit(true);
+      dialogAddResource.onTrue();
+    }
+  };
 
   return (
     <>
@@ -39,6 +42,8 @@ const InventoryManagement = () => {
         <Box display="flex" flexDirection="row" gap={2} alignItems="center" pb="15px">
           <Button
             onClick={() => {
+              setSelectedData(null);
+              setIsEdit(false);
               dialogAddResource.onTrue();
             }}
             variant="contained"
@@ -68,15 +73,15 @@ const InventoryManagement = () => {
 
         {dialogAddResource.value && (
           <AddResourceDialog
-            isEdit={false}
-            data={{} as IAddResourceFormValues}
+            isEdit={isEdit}
+            data={selectedData as IInventoryItem}
             handleClose={() => {
               dialogAddResource.onFalse();
             }}
             open={dialogAddResource.value}
           />
         )}
-        {dialogIssueResource.value && (
+        {/* {dialogIssueResource.value && (
           <IssueResourceDialog
             isEdit={false}
             data={{} as IIssueResourceFormValues}
@@ -85,8 +90,8 @@ const InventoryManagement = () => {
             }}
             open={dialogIssueResource.value}
           />
-        )}
-        {dialogProcurementResource.value && (
+        )} */}
+        {/* {dialogProcurementResource.value && (
           <ProcurementResourceDialog
             isEdit={false}
             data={{} as IProcurementFormValues}
@@ -95,12 +100,12 @@ const InventoryManagement = () => {
             }}
             open={dialogProcurementResource.value}
           />
-        )}
+        )} */}
       </Box>
       <Box display="flex" flexDirection="column" gap={3}>
         {/* <InventoryDashboardCard /> */}
         {/* <InventoryPageGraph /> */}
-        <InventoryItemTable />
+        <InventoryItemTable onClick={handleClick} />
         <Box />
       </Box>
     </>

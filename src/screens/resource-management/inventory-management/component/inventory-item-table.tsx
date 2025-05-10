@@ -19,9 +19,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import InventoryManagementDetailsView from './inventory-management-details-view';
 
-import type { IInventoryItem } from '../inventory-interface';
+import type { IInventoryItem, IInventoryItemTableProps } from '../inventory-interface';
 
-const InventoryItemTable = () => {
+const InventoryItemTable: React.FC<IInventoryItemTableProps> = ({ onClick }) => {
   // State to store the selected inventory item
   const [selectedData, setSelectedData] = useState<IInventoryItem>();
 
@@ -140,24 +140,21 @@ const InventoryItemTable = () => {
           {
             label: 'Name',
             id: 'itemName',
-            minWidth: '100px',
           },
           {
             label: 'Category',
             id: 'category',
-            minWidth: '100px',
           },
-          {
-            label: 'Quantity',
-            id: 'quantity',
-            minWidth: '100px',
-            filterType: 'number',
-          },
+          // {
+          //   label: 'Quantity',
+          //   id: 'quantity',
+
+          //   filterType: 'number',
+          // },
 
           {
             label: 'Location',
-            id: 'location',
-            minWidth: '100px',
+            id: 'roomNumber',
           },
 
           {
@@ -172,6 +169,7 @@ const InventoryItemTable = () => {
               return (
                 <ThreeDotsActions
                   placement="right-top"
+                  showEditIcon
                   showViewIcon
                   showDeleteIcon
                   showThreeDots={false}
@@ -181,6 +179,11 @@ const InventoryItemTable = () => {
                   }}
                   handleDeleteClick={() => {
                     deleteItem.onTrue();
+                  }}
+                  handleEditClick={() => {
+                    setSelectedData(row as IInventoryItem);
+                    onClick(row as IInventoryItem, 'edit');
+                    // editItem.onTrue();
                   }}
                 />
               );
@@ -263,7 +266,3 @@ const InventoryItemTable = () => {
 };
 
 export default InventoryItemTable;
-
-function useBoolen() {
-  throw new Error('Function not implemented.');
-}

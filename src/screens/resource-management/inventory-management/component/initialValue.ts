@@ -1,34 +1,42 @@
+import type { Dayjs } from 'dayjs';
+
 import dayjs from 'dayjs';
 
 import type {
-  IAddResourceFormValues,
+  IInventoryItem,
   IProcurementFormValues,
   IIssueResourceFormValues,
 } from '../inventory-interface';
 
-export function getInitialResourceValues(
-  data: Partial<IAddResourceFormValues> = {},
+export function getInitialInventoryItem(
+  data: Partial<IInventoryItem> = {},
   isEdit = false
-): IAddResourceFormValues {
+): IInventoryItem {
   return {
-    itemName: isEdit ? (data.itemName ?? '') : '',
-    category: isEdit ? (data.category ?? '') : '',
-    subCategory: isEdit ? (data.subCategory ?? '') : '',
-    resourceConditionStatus: isEdit ? (data.resourceConditionStatus ?? '') : '',
-    resourceMeasurementUnit: isEdit ? (data.resourceMeasurementUnit ?? '') : '',
-    quantity: isEdit ? (data.quantity ?? '') : '',
-    campusName: isEdit ? (data.campusName ?? '') : '',
-    buildingName: isEdit ? (data.buildingName ?? '') : '',
-    roomNumber: isEdit ? (data.roomNumber ?? '') : '',
-    floorNumber: isEdit ? (data.floorNumber ?? '') : '',
-    termAndCondition: isEdit ? (data.termAndCondition ?? '') : '',
-    warrantyExpiryDate: isEdit ? (data.warrantyExpiryDate ?? null) : null,
-    resourceImage: isEdit ? (data.resourceImage ?? '') : '',
-    resourceBill: isEdit ? (data.resourceBill ?? '') : '',
-    purchasedVendorName: isEdit ? (data.purchasedVendorName ?? '') : '',
-    resourcePurchaseDate: isEdit ? (data.resourcePurchaseDate ?? null) : null,
+    itemCode: data?.itemCode ?? '',
+    itemName: data?.itemName ?? '',
+    category: data?.category ?? '',
+    subCategory: data?.subCategory ?? '',
+    resourceConditionStatus: data?.resourceConditionStatus ?? '',
+    resourceMeasurementUnit: data?.resourceMeasurementUnit ?? '',
+    quantity: data?.quantity ?? null,
+    available: data?.available ?? 0,
+    campusName: data?.campusName ?? '',
+    buildingName: data?.buildingName ?? '',
+    roomNumber: data?.roomNumber ?? '',
+    floorNumber: data?.floorNumber ?? '',
+    location: data?.location ?? '',
+    termAndCondition: data?.termAndCondition ?? '',
+    warrantyExpiryDate: data?.warrantyExpiryDate ?? null,
+    resourceImage: data?.resourceImage ?? '',
+    resourceBill: data?.resourceBill ?? '',
+    purchasedVendorName: data?.purchasedVendorName ?? '',
+    resourcePurchaseDate: data?.resourcePurchaseDate ?? null,
+    lastUpdatedDate: data?.lastUpdatedDate ?? (null as unknown as Dayjs),
+    status: data?.status ?? 0,
+    assignedTo: data?.assignedTo ?? '',
     id: isEdit
-      ? (data.id ?? Math.floor(Math.random() * 1000000000))
+      ? (data?.id ?? Math.floor(Math.random() * 1000000000))
       : Math.floor(Math.random() * 1000000000),
   };
 }
