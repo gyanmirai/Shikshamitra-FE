@@ -8,7 +8,7 @@ import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Stack,
+  Grid,
   Button,
   MenuItem,
   MenuList,
@@ -26,12 +26,15 @@ import {
 } from 'src/enums/audit-status-type';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Label, type LabelColor } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import ResourceVerifiedAllocateDialog from './component/aknowledge-dialog';
 
 /**
  * AuditVerificationScreen Component
@@ -43,6 +46,7 @@ const AuditVerificationScreen = () => {
    * Boolean state hook to control the visibility of the audit form dialog
    */
   const isOpenForm = useBoolean();
+  const isAuditVerifacationDialog = useBoolean();
 
   return (
     <Box>
@@ -115,7 +119,12 @@ const AuditVerificationScreen = () => {
                 }}
                 actions={({ popover }) => (
                   <MenuList>
-                    <MenuItem onClick={() => {}}>
+                    <MenuItem
+                      onClick={() => {
+                        isAuditVerifacationDialog.onTrue();
+                        popover.onClose();
+                      }}
+                    >
                       <Iconify icon="iconoir:verified-user" />
                       Mark as verified
                     </MenuItem>
@@ -124,14 +133,14 @@ const AuditVerificationScreen = () => {
                       <Iconify icon="carbon:reminder" />
                       Send Reminder
                     </MenuItem>
-                    <MenuItem onClick={() => {}}>
+                    {/* <MenuItem onClick={() => {}}>
                       <Iconify icon="material-symbols-light:order-approve-outline-sharp" />
-                      Approve Dispute
-                    </MenuItem>
-                    <MenuItem sx={{ color: 'error.main' }} onClick={() => {}}>
+                    
+                    </MenuItem> */}
+                    {/* <MenuItem sx={{ color: 'error.main' }} onClick={() => {}}>
                       <Iconify icon="line-md:file-document-cancel" />
                       Reject Dispute
-                    </MenuItem>
+                    </MenuItem> */}
                   </MenuList>
                 )}
               />
@@ -171,8 +180,26 @@ const AuditVerificationScreen = () => {
           },
         ]}
       />
-      <CustomDialog title="New Audit" open={isOpenForm.value} handleClose={isOpenForm.onFalse}>
+      <CustomDialog
+        maxWidth="md"
+        title="New Audit"
+        open={isOpenForm.value}
+        handleClose={isOpenForm.onFalse}
+      >
         <AuditForm handleClose={isOpenForm.onFalse} />
+      </CustomDialog>
+      <CustomDialog
+        maxWidth="md"
+        title="Audit Verified For HP Printer MX450"
+        open={isAuditVerifacationDialog.value}
+        handleClose={isAuditVerifacationDialog.onFalse}
+      >
+        <ResourceVerifiedAllocateDialog
+          onClose={() => {
+            isAuditVerifacationDialog.onFalse();
+          }}
+          data={{}}
+        />
       </CustomDialog>
     </Box>
   );
@@ -210,105 +237,111 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
   });
 
   return (
-    <Box
-      onSubmit={formik.handleSubmit}
-      component="form"
-      sx={{ p: 2, borderRadius: 1, boxShadow: 1 }}
-    >
-      <Stack spacing={3}>
-        <ShakingTextField error={!!formik.errors.assets && !!formik.touched.assets}>
-          <Autocomplete
-            multiple
-            size="small"
-            id="assets"
-            options={[
-              'HP Printer MX450',
-              'Office Chair Model A',
-              'Meeting Room Projector',
-              'Network Switch Cisco',
-            ]}
-            value={formik.values.assets}
-            onChange={(event, newValue) => {
-              formik.setFieldValue('assets', newValue);
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select Assets *"
-                placeholder="Search assets *"
-                error={!!formik.errors.assets && !!formik.touched.assets}
-                helperText={
-                  formik.touched.assets && formik.errors.assets ? formik.errors.assets : ''
-                }
+    <Box onSubmit={formik.handleSubmit} component="form">
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField error={!!formik.errors.assets && !!formik.touched.assets}>
+              <Autocomplete
+                multiple
+                size="small"
+                id="assets"
+                options={[
+                  'HP Printer MX450',
+                  'Office Chair Model A',
+                  'Meeting Room Projector',
+                  'Network Switch Cisco',
+                ]}
+                value={formik.values.assets}
+                onChange={(event, newValue) => {
+                  formik.setFieldValue('assets', newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Assets *"
+                    placeholder="Search assets *"
+                    error={!!formik.errors.assets && !!formik.touched.assets}
+                    helperText={
+                      formik.touched.assets && formik.errors.assets ? formik.errors.assets : ''
+                    }
+                  />
+                )}
               />
-            )}
-          />
-        </ShakingTextField>
-        <ShakingTextField error={!!formik.errors.assignStaffs && !!formik.touched.assignStaffs}>
-          <Autocomplete
-            multiple
-            size="small"
-            id="assignStaffs"
-            options={['Sarah Johnson', 'Mike Brown', 'Emily Davis', 'Tom Wilson']}
-            value={formik.values.assignStaffs}
-            onChange={(event, newValue) => {
-              formik.setFieldValue('assignStaffs', newValue);
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Assign Staff *"
-                placeholder="Search staff *"
-                error={!!formik.errors.assignStaffs && !!formik.touched.assignStaffs}
-                helperText={
-                  formik.touched.assignStaffs && formik.errors.assignStaffs
-                    ? formik.errors.assignStaffs
-                    : ''
-                }
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField error={!!formik.errors.assignStaffs && !!formik.touched.assignStaffs}>
+              <Autocomplete
+                multiple
+                size="small"
+                id="assignStaffs"
+                options={['Sarah Johnson', 'Mike Brown', 'Emily Davis', 'Tom Wilson']}
+                value={formik.values.assignStaffs}
+                onChange={(event, newValue) => {
+                  formik.setFieldValue('assignStaffs', newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Assign Staff *"
+                    placeholder="Search staff *"
+                    error={!!formik.errors.assignStaffs && !!formik.touched.assignStaffs}
+                    helperText={
+                      formik.touched.assignStaffs && formik.errors.assignStaffs
+                        ? formik.errors.assignStaffs
+                        : ''
+                    }
+                  />
+                )}
               />
-            )}
-          />
-        </ShakingTextField>
-        <ShakingTextField error={!!formik.errors.startDate && !!formik.touched.startDate}>
-          <DatePicker
-            label="Start Date*"
-            value={formik.values.startDate}
-            onChange={(newValue) => {
-              formik.setFieldValue('startDate', newValue);
-            }}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                error: !!formik.errors.startDate && !!formik.touched.startDate,
-                helperText:
-                  formik.touched.startDate && formik.errors.startDate
-                    ? formik.errors.startDate
-                    : '',
-              },
-            }}
-          />
-        </ShakingTextField>
-        <ShakingTextField error={!!formik.errors.dueDate && !!formik.touched.dueDate}>
-          <DatePicker
-            label="Due Date *"
-            value={formik.values.dueDate}
-            onChange={(newValue) => {
-              formik.setFieldValue('dueDate', newValue);
-            }}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                error: !!formik.errors.dueDate && !!formik.touched.dueDate,
-                helperText:
-                  formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
-              },
-            }}
-          />
-        </ShakingTextField>
-      </Stack>
-      <DialogActions sx={{ pt: 2, px: 0, pb: 0 }}>
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField error={!!formik.errors.startDate && !!formik.touched.startDate}>
+              <DatePicker
+                label="Start Date*"
+                value={formik.values.startDate}
+                onChange={(newValue) => {
+                  formik.setFieldValue('startDate', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!formik.errors.startDate && !!formik.touched.startDate,
+                    helperText:
+                      formik.touched.startDate && formik.errors.startDate
+                        ? formik.errors.startDate
+                        : '',
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField error={!!formik.errors.dueDate && !!formik.touched.dueDate}>
+              <DatePicker
+                label="Due Date *"
+                value={formik.values.dueDate}
+                onChange={(newValue) => {
+                  formik.setFieldValue('dueDate', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!formik.errors.dueDate && !!formik.touched.dueDate,
+                    helperText:
+                      formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </Scrollbar>
+      <DialogActions>
         <Button variant="outlined" onClick={handleClose} sx={{ mr: 1 }}>
           Cancel
         </Button>
