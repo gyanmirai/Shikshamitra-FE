@@ -1,5 +1,7 @@
 import React from 'react';
 
-const page = () => <div>room configuration</div>;
+import RoomConfiguration from 'src/screens/hostel/hostelConfiguration/roomConfiguration';
+
+const page = () => <RoomConfiguration />;
 
 export default page;

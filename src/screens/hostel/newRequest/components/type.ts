@@ -27,6 +27,7 @@ export interface IHostelRequestFormType {
   city?: string;
   village: string;
   pinCode: string;
+  status?: number;
 }
 
 export interface IHostelRequestTableProps {
@@ -37,4 +38,5 @@ export interface IHostelRequestTableProps {
   onDelete: (data: IHostelRequestFormType) => void;
   onEdit: (data: IHostelRequestFormType) => void;
   onRequestDetails: (data: IHostelRequestFormType) => void;
+  onAssignRoom: (data: IHostelRequestFormType) => void;
 }

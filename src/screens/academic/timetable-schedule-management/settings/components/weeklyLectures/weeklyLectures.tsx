@@ -24,6 +24,8 @@ const WeeklyLectures = () => {
   const dispatch = useDispatch();
 
   const createLectureNumberDialog = useBoolean();
+  const [disabled, setDisabled] = React.useState(false);
+  const viewWeeklyLecturesDialog = useBoolean();
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       createLectureNumberDialog.onFalse();
@@ -79,7 +81,7 @@ const WeeklyLectures = () => {
           {
             id: 'actions',
             label: 'Actions',
-            minWidth: 100,
+            minWidth: 70,
             sticky: true,
             isSort: false,
             isFilter: false,
@@ -88,7 +90,10 @@ const WeeklyLectures = () => {
                 <ThreeDotsActions
                   // actions={(prop) => actions({ ...prop, row })}
                   showViewIcon
-                  handleViewClick={() => {}}
+                  handleViewClick={() => {
+                    viewWeeklyLecturesDialog.onTrue();
+                    setDisabled(true);
+                  }}
                   showEditIcon
                   showThreeDots={false}
                   handleEditClick={() => {
@@ -137,6 +142,29 @@ const WeeklyLectures = () => {
         // data={selectedEntry}
         // isEdit={isEdit}
         // allData={roomData}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        title="View Number of Lectures"
+        open={viewWeeklyLecturesDialog.value}
+        handleClose={viewWeeklyLecturesDialog.onFalse}
+        maxWidth="md"
+      >
+        <CreateNoOfLecture
+          disabled={disabled}
+          // onSave={handleSave}
+          // dialogValue={dialog.value}
+          // onClose={closeDialog}
+          // data={selectedEntry}
+          // isEdit={isEdit}
+          // allData={roomData}
+          // onSave={handleSave}
+          // dialogValue={dialog.value}
+          // onClose={closeDialog}
+          // data={selectedEntry}
+          // isEdit={isEdit}
+          // allData={roomData}
         />
       </CustomDialog>
     </Box>

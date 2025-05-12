@@ -27,11 +27,11 @@ const ManualHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [block, setBlock] = useState<string>('');
+  const [rollCall, setRollCall] = useState<string>();
   // State for storing the selected hostel
   const [hostel, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [room, setRoom] = useState<string>('');
+  const [floor, setFloor] = useState<string>('');
   // Dialog state for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
   // State for storing the selected student data
@@ -81,28 +81,6 @@ const ManualHostelAttendance = () => {
             },
           }}
         />
-        <Autocomplete
-          options={[
-            { id: '1', name: 'Block 1' },
-            { id: '2', name: 'Block 2' },
-            { id: '3', name: 'Block 3' },
-          ]}
-          getOptionLabel={(option) => option.name || ''}
-          onChange={(_, value) => {
-            setBlock(value?.id || '');
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Block"
-              name="block"
-              variant="outlined"
-              fullWidth
-              size="small"
-            />
-          )}
-          sx={{ maxWidth: '200px', width: '100%' }}
-        />
 
         {/* Hostel Dropdown */}
         <Autocomplete
@@ -128,22 +106,44 @@ const ManualHostelAttendance = () => {
           sx={{ maxWidth: '200px', width: '100%' }}
         />
 
-        {/* Room Dropdown */}
         <Autocomplete
           options={[
-            { id: 'R101', name: 'Room 101' },
-            { id: 'R102', name: 'Room 102' },
-            { id: 'R103', name: 'Room 103' },
+            { id: '1', name: 'Block 1' },
+            { id: '2', name: 'Block 2' },
+            { id: '3', name: 'Block 3' },
           ]}
           getOptionLabel={(option) => option.name || ''}
           onChange={(_, value) => {
-            setRoom(value?.id || '');
+            setFloor(value?.id || '');
           }}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Room"
-              name="room"
+              label="Floor"
+              name="floor"
+              variant="outlined"
+              fullWidth
+              size="small"
+            />
+          )}
+          sx={{ maxWidth: '200px', width: '100%' }}
+        />
+
+        <Autocomplete
+          options={[
+            { id: '1', name: 'Block 1' },
+            { id: '2', name: 'Block 2' },
+            { id: '3', name: 'Block 3' },
+          ]}
+          getOptionLabel={(option) => option.name || ''}
+          onChange={(_, value) => {
+            setRollCall(value?.id || '');
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Roll Call"
+              name="rollCall"
               variant="outlined"
               fullWidth
               size="small"
@@ -273,6 +273,7 @@ const ManualHostelAttendance = () => {
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                   <Switch
                     size="small"
+                    disabled={row.onLeave}
                     inputProps={{ 'aria-label': 'controlled' }}
                     checked={value}
                     sx={{
@@ -329,7 +330,7 @@ const ManualHostelAttendance = () => {
                   }}
                   multiline
                   rows={2}
-                  sx={{ maxWidth: '200px', width: '100%' }}
+                  sx={{ maxWidth: '300px', width: '100%' }}
                 />
               );
             },

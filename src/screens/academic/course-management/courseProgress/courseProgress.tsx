@@ -145,7 +145,7 @@ const CourseProgress = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       {/* Class and Division selection filters */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
         <CustomSelect
           label="Class"
           name="class"
@@ -153,7 +153,7 @@ const CourseProgress = (props: TabComponentType) => {
           options={classData?.items || []}
           valueKey="id"
           labelKey="name"
-          formControlProps={{ sx: { width: '150px' } }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           value={searchParams?.classId || ''}
           onChange={(value) => {
             setClasses(value as string);
@@ -169,9 +169,7 @@ const CourseProgress = (props: TabComponentType) => {
           onChange={(val) => {
             setDivision(val as string);
           }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
       </Box>
       {/* Grid of course cards showing progress */}
@@ -192,13 +190,12 @@ const CourseProgress = (props: TabComponentType) => {
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
-              { id: 'chapterName', label: 'Chapter Name', minWidth: '200px', align: 'left' },
-              { id: 'teacherName', label: 'Teacher Name', minWidth: '200px', align: 'left' },
+              { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+              { id: 'teacherName', label: 'Teacher Name', align: 'left' },
               {
                 id: 'progress',
                 label: 'Progress',
                 align: 'center',
-                minWidth: '200px',
                 filterType: 'number',
                 render(value, row) {
                   return (
@@ -233,7 +230,6 @@ const CourseProgress = (props: TabComponentType) => {
                 id: 'timeLine',
                 label: 'Timeline',
                 align: 'left',
-                minWidth: '200px',
                 filterType: 'date',
                 render: (value, row) => (
                   <Typography fontSize="12px" gutterBottom>
@@ -244,7 +240,7 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'actions',
                 label: 'Actions',
-                minWidth: 100,
+                minWidth: 50,
                 align: 'left',
                 sticky: true,
                 isFilter: false,

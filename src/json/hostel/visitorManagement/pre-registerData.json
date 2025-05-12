@@ -1,27 +1,26 @@
 [
-    {
-      "id": "1",
-      "visitorName": "Sneha Verma",
-      "idProof": "Voter ID",
-      "proofNumber": "456789012345",
-      "contactNo": "9876512345",
-      "visitTime": "2025-04-27T11:30:00+05:30",
-      "visitDate": "2025-04-27T12:00:00+05:30", 
-      "reasonForVisit": "Meet my child",
-      "status": 1,
-      "relationship": "Father"
-    },
-    {
-      "id": "2",
-      "visitorName": "Sunil Mehta",
-      "idProof": "Passport",
-      "proofNumber": "567890123456",
-      "contactNo": "9765432109",
-      "visitTime": "2025-04-27T16:10:00+05:30",
-      "visitDate": "2025-04-27T17:00:00+05:30",
-      "reasonForVisit": "Reason",
-      "status": 0,
-      "relationship": "Father"
-    }
-  ]
-  
+  {
+    "id": "1",
+    "visitorName": "Sneha Verma",
+    "idProof": "Voter ID",
+    "proofNumber": "456789012345",
+    "contactNo": "9876512345",
+    "visitStartDateTime": "2025-04-27T11:30:00+05:30",
+    "visitEndDateTime": "2025-04-27T12:00:00+05:30",
+    "reasonForVisit": "Meet my child",
+    "status": "1",
+    "relationship": "Father"
+  },
+  {
+    "id": "2",
+    "visitorName": "Sunil Mehta",
+    "idProof": "Passport",
+    "proofNumber": "567890123456",
+    "contactNo": "9765432109",
+    "visitStartDateTime": "2025-04-27T16:10:00+05:30",
+    "visitEndDateTime": "2025-04-27T17:00:00+05:30",
+    "reasonForVisit": "Reason",
+    "status": "0",
+    "relationship": "Father"
+  }
+]

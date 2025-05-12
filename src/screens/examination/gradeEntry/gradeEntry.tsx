@@ -282,9 +282,7 @@ const GradeEntry = (props: TabComponentType) => {
             setDivisionOptions(selectedClass?.divisions || []);
           }}
           value={classes}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '180px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
           label="Division"
@@ -298,9 +296,7 @@ const GradeEntry = (props: TabComponentType) => {
             // formik.setFieldValue('division', selectedDivision?.name || '');
             setDivision(val as string);
           }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '180px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
           label="Subject"
@@ -314,9 +310,7 @@ const GradeEntry = (props: TabComponentType) => {
             setSubject(val as string);
           }}
           value={subject}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '180px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
           label="Exam Type"
@@ -330,9 +324,7 @@ const GradeEntry = (props: TabComponentType) => {
             setAssignmentType(val as string);
           }}
           value={assignmentType}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '180px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
           label="Exam Title"
@@ -350,9 +342,7 @@ const GradeEntry = (props: TabComponentType) => {
             setAssignmentTitle(val as string);
           }}
           value={assignmentTitle}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '180px' },
-          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
       </Box>
       <GradeEntryTable

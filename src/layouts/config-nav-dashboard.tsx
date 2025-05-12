@@ -1429,7 +1429,7 @@ const hostelModule = {
           ],
         },
         {
-          title: 'Student Allocation',
+          title: 'Room Allocation to Students',
           path: '/hostel/student-allocation',
           _action: 'hostel-student-allocation',
           shortcutKey: 'Alt+H+3',

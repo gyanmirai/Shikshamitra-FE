@@ -162,7 +162,7 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                 <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
-                  title="Inquiry Preference"
+                  title="Add Subject"
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}

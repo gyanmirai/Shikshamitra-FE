@@ -4,16 +4,15 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -58,54 +57,12 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
 
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.idProof && formik.errors.idProof) || false}
-                >
-                  <CustomSelect
-                    disabled={isDisabled}
-                    label="ID Proof *"
-                    options={[
-                      { value: 'Aadhar Card', label: 'Aadhar Card' },
-                      { value: 'PAN Card', label: 'PAN Card' },
-                      { value: 'Driving License', label: 'Driving License' },
-                      { value: 'Passport', label: 'Passport' },
-                    ]}
-                    value={formik.values.idProof}
-                    onChange={(val) => {
-                      formik.setFieldValue('idProof', val);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                    error={formik.touched.idProof && Boolean(formik.errors.idProof)}
-                    helperText={(formik.touched.idProof && formik.errors.idProof) || undefined}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.proofNumber && formik.errors.proofNumber) || false}
-                >
-                  <TextField
-                    disabled={isDisabled}
-                    size="small"
-                    label="Proof Number *"
-                    name="proofNumber"
-                    fullWidth
-                    value={formik.values.proofNumber}
-                    onChange={formik.handleChange}
-                    error={formik.touched.proofNumber && Boolean(formik.errors.proofNumber)}
-                    helperText={formik.touched.proofNumber && formik.errors.proofNumber}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
                   error={!!(formik.touched.contactNo && formik.errors.contactNo) || false}
                 >
                   <TextField
                     disabled={isDisabled}
                     size="small"
-                    label="Contact Numbe *"
+                    label="Contact Number *"
                     name="contactNo"
                     fullWidth
                     value={formik.values.contactNo}
@@ -116,7 +73,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={12}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.relationship && formik.errors.relationship) || false}
                 >
@@ -135,23 +92,28 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TimePicker
+                <DateTimePicker
                   disabled={isDisabled}
-                  label="Visit Time *"
-                  format="hh:mm A"
-                  value={formik.values.visitTime ? dayjs(formik.values.visitTime) : null}
+                  label="Select Start Date Time*"
+                  value={
+                    formik.values.visitStartDateTime
+                      ? dayjs(formik.values.visitStartDateTime)
+                      : null
+                  }
                   onChange={(val) => {
                     // val is a Dayjs object or null
-                    formik.setFieldValue('visitTime', val ? val.toISOString() : null);
+                    formik.setFieldValue('visitStartDateTime', val ? val.toISOString() : null);
                   }}
                   slotProps={{
                     textField: {
                       size: 'small',
                       fullWidth: true,
-                      error: formik.touched.visitTime && Boolean(formik.errors.visitTime),
+                      error:
+                        formik.touched.visitStartDateTime &&
+                        Boolean(formik.errors.visitStartDateTime),
                       helperText:
-                        formik.touched.visitTime && formik.errors.visitTime
-                          ? String(formik.errors.visitTime)
+                        formik.touched.visitStartDateTime && formik.errors.visitStartDateTime
+                          ? String(formik.errors.visitStartDateTime)
                           : undefined,
                     },
                   }}
@@ -159,23 +121,25 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <DatePicker
+                <DateTimePicker
                   disabled={isDisabled}
-                  label="Select Date *"
-                  format="DD-MM-YYYY"
-                  value={formik.values.visitDate ? dayjs(formik.values.visitDate) : null}
+                  label="Select End Date Time*"
+                  value={
+                    formik.values.visitEndDateTime ? dayjs(formik.values.visitEndDateTime) : null
+                  }
                   onChange={(value) => {
                     // value is a Dayjs object or null
-                    formik.setFieldValue('visitDate', value ? value.toISOString() : null);
+                    formik.setFieldValue('visitEndDateTime', value ? value.toISOString() : null);
                   }}
                   slotProps={{
                     textField: {
                       size: 'small',
                       fullWidth: true,
-                      error: formik.touched.visitDate && Boolean(formik.errors.visitDate),
+                      error:
+                        formik.touched.visitEndDateTime && Boolean(formik.errors.visitEndDateTime),
                       helperText:
-                        formik.touched.visitDate && formik.errors.visitDate
-                          ? String(formik.errors.visitDate)
+                        formik.touched.visitEndDateTime && formik.errors.visitEndDateTime
+                          ? String(formik.errors.visitEndDateTime)
                           : '',
                     },
                   }}
@@ -199,6 +163,32 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                     />
                   </div>
                 </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12}>
+                <UploadBox
+                  onDrop={() => {}}
+                  placeholder={
+                    <Box
+                      sx={{
+                        gap: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'text.disabled',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      <Iconify icon="eva:cloud-upload-fill" width={40} />
+                      <Typography variant="body2">Upload Id Proof</Typography>
+                    </Box>
+                  }
+                  sx={{
+                    py: 2.5,
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 1.5,
+                  }}
+                />
               </Grid>
             </Grid>
           </Scrollbar>

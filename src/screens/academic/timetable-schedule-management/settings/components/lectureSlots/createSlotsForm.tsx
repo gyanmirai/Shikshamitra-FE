@@ -27,7 +27,7 @@ import { validationSchema } from './validationSchema';
 
 import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
-const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => {
+const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disabled }) => {
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -55,7 +55,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
    * Initializes each slot with default values
    */
   const handleCreateSlots = () => {
-    const slotsCount = parseInt(totalSlots, 10);
+    const slotsCount = parseInt(formik.values.totalSlots, 10);
     if (slotsCount > 0) {
       const newSlots = Array(slotsCount)
         .fill(null)
@@ -63,7 +63,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
           id: index,
           startTime: null,
           endTime: null,
-          slotType: 'period', // default value
+          slotType: 'period',
         }));
       setTimeSlots(newSlots);
       setShowTable(true);
@@ -146,6 +146,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                         ? formik.errors.className
                         : undefined
                     }
+                    disabled={disabled}
                   />
                 </ShakingTextField>
               </Grid>
@@ -163,6 +164,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                     error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
                     helperText={formik.touched.schoolHours && formik.errors.schoolHours}
                     size="small"
+                    disabled={disabled}
                   />
                 </ShakingTextField>
               </Grid>
@@ -188,6 +190,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                         ? formik.errors.previousClassSlots
                         : undefined
                     }
+                    disabled={disabled}
                   />
                 </ShakingTextField>
               </Grid>
@@ -204,6 +207,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                     error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
                     helperText={formik.touched.totalSlots && formik.errors.totalSlots}
                     size="small"
+                    disabled={disabled}
                   />
                 </ShakingTextField>
               </Grid>
@@ -214,6 +218,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                   size="small"
                   variant="contained"
                   onClick={handleCreateSlots}
+                  disabled={disabled}
                 >
                   Create Slots
                 </Button>
@@ -245,6 +250,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                             }}
                             onChange={(newTime) => handleTimeChange(newTime, row.id, 'startTime')}
                             slotProps={{ textField: { size: 'small' } }}
+                            disabled={disabled}
                           />
                         );
                       },
@@ -263,6 +269,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                             }}
                             onChange={(newTime) => handleTimeChange(newTime, row.id, 'endTime')}
                             slotProps={{ textField: { size: 'small' } }}
+                            disabled={disabled}
                           />
                         );
                       },
@@ -282,6 +289,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                               value={value}
                               onChange={(val: any) => handleSlotTypeChange(val, row.id)}
                               formControlProps={{ sx: { minWidth: '150px' } }}
+                              disabled={disabled}
                             />
                             {value === 'break' && (
                               <CustomSelect
@@ -295,6 +303,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
                                 value={row.breakType || ''}
                                 onChange={(val: any) => handleBreakTypeChange(val, row.id)}
                                 formControlProps={{ sx: { minWidth: '150px' } }}
+                                disabled={disabled}
                               />
                             )}
                           </Box>
@@ -309,10 +318,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose }) => 
           </Scrollbar>
 
           <DialogActions>
-            <Button type="submit" startIcon={<Iconify icon={GlobalIcons.eye} />} variant="outlined">
+            <Button
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.eye} />}
+              variant="outlined"
+              disabled={disabled}
+            >
               Preview
             </Button>
-            <SubmitButton />
+            <SubmitButton disabled={disabled} />
           </DialogActions>
         </form>
       </Box>

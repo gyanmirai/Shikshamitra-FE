@@ -19,6 +19,9 @@ const GradeEntryTable = ({
       {
         id: 'select',
         label: 'Select',
+        minWidth: 60,
+        isFilter: false,
+        isSort: false,
         render: (value, row) => (
           <Checkbox
             checked={selectedStudents.includes(row.id)}
@@ -71,7 +74,9 @@ const GradeEntryTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 100,
+        minWidth: 50,
+        sticky: true,
+        isFilter: false,
         isSort: false,
         render(value, row) {
           return (

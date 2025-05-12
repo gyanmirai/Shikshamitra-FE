@@ -19,6 +19,7 @@ const HostelRequestTable: React.FC<IHostelRequestTableProps> = ({
   onDelete,
   onEdit,
   onRequestDetails,
+  onAssignRoom,
 }) => (
   <CustomizableTable
     tableId="hostel-request-table"

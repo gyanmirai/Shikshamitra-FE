@@ -1,7 +1,7 @@
 [
     {
       "hostelName": "Sunrise Hostel",
-      "floor": "first",
+      "emeregencyLevel" : "High",
       "students": ["S12345", "S67890"],
       "incidentDate": "2025-04-29",
       "incidentTime": "2024-12-15T10:00",
@@ -12,7 +12,7 @@
     },
     {
       "hostelName": "Moonlight Hostel",
-      "floor": "second",
+      "emeregencyLevel" : "High",
       "students": ["S54321"],
       "incidentDate": "2025-04-28",
       "incidentTime": "2024-12-15T10:00",

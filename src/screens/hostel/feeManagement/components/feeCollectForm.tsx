@@ -3,6 +3,7 @@ import { useFormik } from 'formik';
 
 import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -32,18 +33,15 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Box flex={8} display="flex" flexDirection="row" gap={2} py="12px">
-              <Typography>
-                <strong>Name:</strong> Vishal RameshBhai Patel
-              </Typography>
-              <Typography>
-                <strong>Standard:</strong> 10/B
-              </Typography>
-              <Typography>
-                <strong>Gr Number:</strong> 89866
-              </Typography>
-              <Typography>
-                <strong>Roll Number:</strong> 1
-              </Typography>
+              <Label color="primary" sx={{ fontSize: '12px' }}>
+                Name : ABC
+              </Label>
+              <Label color="info" sx={{ fontSize: '12px' }}>
+                Hostel : xyz
+              </Label>
+              <Label color="warning" sx={{ fontSize: '12px' }}>
+                Room : xyz
+              </Label>
             </Box>
           </Box>
           <Box flex={1}>

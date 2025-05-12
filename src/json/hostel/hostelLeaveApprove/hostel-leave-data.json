@@ -9,7 +9,7 @@
       "isHalfDay": false,
       "description": "Flu symptoms and fever.",
       "rejectionReason": "",
-      "statusValue": "Approved"
+      "statusValue": 1
     },
     {
       "studentName": "Kiara Mehta",
@@ -21,7 +21,7 @@
       "isHalfDay": true,
       "description": "Family function.",
       "rejectionReason": "",
-      "statusValue": "Pending"
+      "statusValue": 0
     },
     {
       "studentName": "Rohan Patel",
@@ -33,7 +33,7 @@
       "isHalfDay": false,
       "description": "Travel due to urgent personal matter.",
       "rejectionReason": "Insufficient documentation.",
-      "statusValue": "Rejected"
+      "statusValue": 2
     },
     {
       "studentName": "Sneha Desai",
@@ -45,7 +45,7 @@
       "isHalfDay": false,
       "description": "Doctor consultation and rest.",
       "rejectionReason": "",
-      "statusValue": "Cancelled"
+      "statusValue": 4
     }
   ]
   

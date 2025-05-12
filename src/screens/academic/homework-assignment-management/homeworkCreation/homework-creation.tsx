@@ -406,9 +406,11 @@ const HomeworkCreation = (props: TabComponentType) => {
       align: 'left',
       render: (value, row) => (
         <ThreeDotsActions
+          actions={(prop) => actions({ ...prop, row })}
           placement="right-top"
           showViewIcon
           showEditIcon
+          showDeleteIcon
           showThreeDots={false}
           handleEditClick={() => {
             setOpen(true);
@@ -517,6 +519,7 @@ const HomeworkCreation = (props: TabComponentType) => {
           placement="right-top"
           showViewIcon
           showEditIcon
+          showDeleteIcon
           handleEditClick={() => {
             setOpen(true);
           }}
@@ -620,7 +623,7 @@ const HomeworkCreation = (props: TabComponentType) => {
 
       {!open && (
         <>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2, mt: 2 }}>
             <CustomSelect
               label="Class"
               name="class"
@@ -628,7 +631,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               options={classData?.items || []}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { width: '150px' } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 const selectedClass: Standards = classData.items.find(
@@ -648,9 +651,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               onChange={(val) => {
                 setDivision(val as string);
               }}
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '150px' },
-              }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
               label="Subject"
@@ -660,9 +661,7 @@ const HomeworkCreation = (props: TabComponentType) => {
               onChange={(val) => {
                 setSubject(val as string);
               }}
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '150px' },
-              }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             {view === 'homework' ? (
               <DatePicker

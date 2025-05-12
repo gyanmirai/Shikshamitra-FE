@@ -34,7 +34,7 @@ const StudentHostelRequest = () => {
   // Dialog state for room details
   const requestDetailsDialog = useBoolean();
   const [disabled, setDisabled] = useState(false);
-
+  const assignRoom = useBoolean();
   // State to store selected request for edit/delete operations
   const [selectedRequest, setSelectedRequest] = useState<IHostelRequestFormType | null>(null);
   // State to control form visibility
@@ -134,6 +134,10 @@ const StudentHostelRequest = () => {
             requestDetailsDialog.onTrue();
             setDisabled(true);
           }}
+          onAssignRoom={(req) => {
+            setSelectedRequest(req);
+            assignRoom.onTrue();
+          }}
         />
       )}
       <ConfirmDialog
@@ -172,6 +176,18 @@ const StudentHostelRequest = () => {
             Close
           </Button>
         </DialogActions>
+      </CustomDialog>
+
+      <CustomDialog
+        title="Request Details"
+        open={assignRoom.value}
+        handleClose={() => {
+          setSelectedRequest(null);
+          requestDetailsDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <RequestDetails hostelRequest={selectedRequest} />
       </CustomDialog>
     </Box>
   );

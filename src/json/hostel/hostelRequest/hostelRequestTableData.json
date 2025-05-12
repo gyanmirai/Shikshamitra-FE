@@ -35,7 +35,8 @@
       },
       "city": "Mumbai",
       "village": "Borivali",
-      "pinCode": "400066"
+      "pinCode": "400066",
+      "status": 1
     },
     {
       "hostelName": "Sunrise Hostel",
@@ -74,7 +75,8 @@
       },
       "city": "Lucknow",
       "village": "Vikramshila",
-      "pinCode": "226002"
+      "pinCode": "226002",
+      "status": 0
     },
     {
       "hostelName": "Horizon Hostel",
@@ -113,7 +115,8 @@
       },
       "city": "Ahmedabad",
       "village": "Sardar Nagar",
-      "pinCode": "380001"
+      "pinCode": "380001",
+      "status": 0
     },
     {
       "hostelName": "Bluebell Hostel",
@@ -151,7 +154,8 @@
       },
       "city": "Chennai",
       "village": "Kotturpuram",
-      "pinCode": "600085"
+      "pinCode": "600085",
+      "status": 1
     },
     {
       "hostelName": "Evergreen Hostel",
@@ -189,7 +193,8 @@
       },
       "city": "Jaipur",
       "village": "Amer",
-      "pinCode": "302001"
+      "pinCode": "302001",
+      "status": 1
     }
   ]
   

@@ -87,7 +87,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
               <Grid item xs={6}>
                 <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                   <NumericFormatCustom
-                    label="Amount (₹) *"
+                    label="Monthly Amount (₹) *"
                     name="amount"
                     fullWidth
                     size="small"

@@ -5,6 +5,7 @@
       "studentName": "Amit Sharma",
       "hostelName": "Block A",
       "isPresent": true,
+      "onLeave": false,
       "remarks": ""
     },
     {
@@ -13,6 +14,7 @@
       "studentName": "Neha Patel",
       "hostelName": "Block A",
       "isPresent": false,
+      "onLeave": true,
       "remarks": "Sick leave"
     },
     {
@@ -21,6 +23,7 @@
       "studentName": "Raj Mehta",
       "hostelName": "Block B",
       "isPresent": true,
+      "onLeave": false,
       "remarks": ""
     },
     {
@@ -29,6 +32,7 @@
       "studentName": "Priya Desai",
       "hostelName": "Block B",
       "isPresent": false,
+      "onLeave": true,
       "remarks": "Out of station"
     },
     {
@@ -37,7 +41,7 @@
       "studentName": "Kunal Singh",
       "hostelName": "Block C",
       "isPresent": true,
+      "onLeave": false,
       "remarks": ""
     }
   ]
-  
