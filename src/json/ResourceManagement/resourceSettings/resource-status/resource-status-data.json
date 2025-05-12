@@ -1,0 +1,16 @@
+[
+    {
+      "resourceStatusName": "Available",
+      "resourceStatusDescription": "The resource is currently available for assignment or use."
+    },
+    {
+      "resourceStatusName": "In Use",
+      "resourceStatusDescription": "The resource is currently being used or assigned."
+    },
+    {
+      "resourceStatusName": "Under Maintenance",
+      "resourceStatusDescription": "The resource is temporarily unavailable due to maintenance work."
+    }
+   
+  ]
+  

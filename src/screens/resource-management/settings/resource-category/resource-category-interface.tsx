@@ -4,5 +4,5 @@ export interface IResourceCategoryFormValues {
 
 export interface IAddResourceCategoryDialogProps {
   isEdit: boolean;
-  data: IResourceCategoryFormValues;
+  data: IResourceCategoryFormValues | null;
 }

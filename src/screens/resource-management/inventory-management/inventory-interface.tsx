@@ -3,20 +3,32 @@ import type { Dayjs } from 'dayjs';
 export interface IAddResourceDialogProps {
   open: boolean;
   handleClose: () => void;
-  data: IAddResourceFormValues;
+  data: IInventoryItem;
   isEdit?: boolean;
 }
 
-export interface IAddResourceFormValues {
-  itemName: string;
-  categoryName: string;
-  quantity: string | number;
-  campusName: string;
-  buildingName: string;
-  roomNumber: string;
-  floorNumber: string;
-  id: number;
-}
+// export interface IAddResourceFormValues {
+//   category: string;
+//   subCategory: string;
+//   itemName: string;
+//   resourceConditionStatus: string;
+//   resourceMeasurementUnit: string;
+
+//   quantity: string | number;
+//   campusName: string;
+//   buildingName: string;
+//   roomNumber: string;
+//   floorNumber: string;
+//   termAndCondition: string;
+//   warrantyExpiryDate: Dayjs | null;
+//   resourceImage: string;
+//   purchasedVendorName: string;
+//   resourceBill: string;
+//   resourcePurchaseDate: Dayjs | null;
+//   assignedTo?: string;
+
+//   id: number;
+// }
 
 export interface IIssueResourceFormValues {
   selectItem: string;
@@ -53,15 +65,33 @@ export interface IProcurementResourceDialogProps {
 
 export interface IInventoryItem {
   itemCode: string;
-  name: string;
+  itemName: string;
   category: string;
-  quantity: number;
+  subCategory: string;
+  resourceConditionStatus: string;
+  resourceMeasurementUnit: string;
+  quantity: number | null;
   available: number;
+  campusName: string;
+  buildingName: string;
+  roomNumber: string;
+  floorNumber: string;
   location: string;
-  status: number;
+  termAndCondition: string;
+  warrantyExpiryDate: Dayjs | null;
+  resourceImage: string;
+  resourceBill: string;
+  purchasedVendorName: string;
+  resourcePurchaseDate: Dayjs | null;
   lastUpdatedDate: Dayjs;
+  status: number;
+  assignedTo?: string;
+  id: number;
 }
-
 export interface IInventoryManagementDetailsViewpProps {
   data: IInventoryItem;
+}
+
+export interface IInventoryItemTableProps {
+  onClick: (data: IInventoryItem, eventName: string) => void;
 }

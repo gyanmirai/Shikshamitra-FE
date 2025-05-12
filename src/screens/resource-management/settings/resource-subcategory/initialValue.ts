@@ -1,11 +1,10 @@
 import type { IResourceSubCategoryFormValues } from './resource-subcategory-interface';
 
 export function getInitialSubCategoryValues(
-  data: Partial<IResourceSubCategoryFormValues> = {},
-  isEdit = false
+  data: Partial<IResourceSubCategoryFormValues> | null = null
 ): IResourceSubCategoryFormValues {
   return {
-    categoryName: isEdit ? (data.categoryName ?? '') : '',
-    subcategoryName: isEdit ? (data.subcategoryName ?? '') : '',
+    categoryName: data?.categoryName ?? '',
+    subcategoryName: Array.isArray(data?.subcategoryName) ? data.subcategoryName : [''],
   };
 }

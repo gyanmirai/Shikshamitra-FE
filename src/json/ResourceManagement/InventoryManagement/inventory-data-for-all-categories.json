@@ -1,40 +1,50 @@
 [
+  {
+    "itemCode": "IT001",
+    "itemName": "Desktop Dell ",
+    "category": "IT",
+    "subCategory": "Desktop",
+    "resourceConditionStatus": "New",
+    "resourceMeasurementUnit": "Piece",
+    "quantity": 10,
+    
+    "campusName": "Main Campus",
+    "buildingName": "Tech Block",
+    "roomNumber": "101",
+    "floorNumber": "1",
+    "location": "Room 13",
+    "termAndCondition": "1-year onsite warranty by Dell.",
+    "warrantyExpiryDate": "2026-05-07",
+    "resourceImage": "-",
+    "resourceBill": "-",
+    "purchasedVendorName": "ABC Electronics",
+    "resourcePurchaseDate": "2025-05-01",
+    "status": 0,
+    "id": 1
+  },
+  {
+    "itemCode": "SP001",
+    "itemName": "Football",
+    "category": "Sports",
+    "subCategory": "Outdoor Equipment",
+    "resourceConditionStatus": "Good",
+    "resourceMeasurementUnit": "Piece",
+    "quantity": 20,
    
-    {
-      "itemCode": "IT001",
-      "name": "Laptop - Dell Inspiron",
-      "category": "IT",
-      "quantity": 10,
-      "available": 6,
-      "location": "IT Room 1",
-      "status": 0
-    },
-    {
-      "itemCode": "SP001",
-      "name": "Football",
-      "category": "Sports",
-      "quantity": 20,
-      "available": 15,
-      "location": "Sports Equipment Room",
-      "status": 1
-    },
-    {
-      "itemCode": "BK001",
-      "name": "Introduction to Algorithms",
-      "category": "Book",
-      "quantity": 5,
-      "available": 3,
-      "location": "Library Shelf A3",
-      "status": 2
-    },
-    {
-      "itemCode": "ST001",
-      "name": "A4 Notebooks",
-      "category": "Stationary",
-      "quantity": 100,
-      "available": 90,
-      "location": "Stationary Cupboard",
-      "status": 0
-    }
-  ]
+    "campusName": "North Campus",
+    "buildingName": "Sports Complex",
+    "roomNumber": "G1",
+    "floorNumber": "Ground",
+    "location": "Sports Equipment Room",
+    "termAndCondition": "Use only on turf. Inflate as per guidelines.",
+    "warrantyExpiryDate": "2026-08-01",
+    "resourceImage": "-",
+    "resourceBill": "-",
+    "purchasedVendorName": "Sportify Co.",
+    "resourcePurchaseDate": "2025-08-01",
+    "status": 1,
+    "id": 2
+  }
   
+
+]

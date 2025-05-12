@@ -1,9 +1,9 @@
 export interface IResourceSubCategoryFormValues {
   categoryName: string;
-  subcategoryName: string;
+  subcategoryName: string[];
 }
 
 export interface IAddResourceSubCategoryDialogProps {
   isEdit: boolean;
-  data: IResourceSubCategoryFormValues;
+  data: IResourceSubCategoryFormValues | null;
 }

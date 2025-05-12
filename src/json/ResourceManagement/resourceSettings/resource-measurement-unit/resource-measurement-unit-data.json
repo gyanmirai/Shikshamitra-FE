@@ -1,0 +1,20 @@
+[
+    {
+      "resourceMeasurementUnit": "Piece",
+      "resourceMeasurementUnitDescription": "Used for individual countable items"
+    },
+    {
+      "resourceMeasurementUnit": "Kilogram",
+      "resourceMeasurementUnitDescription": "Used to measure weight"
+    },
+    {
+      "resourceMeasurementUnit": "Liter",
+      "resourceMeasurementUnitDescription": "Used to measure volume"
+    },
+    {
+      "resourceMeasurementUnit": "Meter",
+      "resourceMeasurementUnitDescription": "Used to measure length"
+    }
+   
+  ]
+  

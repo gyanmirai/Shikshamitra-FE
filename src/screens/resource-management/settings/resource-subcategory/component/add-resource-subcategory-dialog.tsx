@@ -5,6 +5,7 @@ import { Grid, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
+import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialSubCategoryValues } from '../initialValue';
@@ -18,8 +19,8 @@ import type {
 const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ data, isEdit }) => {
   // Generate initial form values based on `isEdit` mode and incoming `data`
   const initialValues = useMemo<IResourceSubCategoryFormValues>(
-    () => getInitialSubCategoryValues(data, isEdit),
-    [data, isEdit]
+    () => getInitialSubCategoryValues(data),
+    [data]
   );
 
   // Initialize Formik for managing form state, validation, and submission
@@ -33,6 +34,8 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
     },
   });
 
+  const isDisabled = !isEdit && data !== null;
+
   return (
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
@@ -42,17 +45,19 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
             <ShakingTextField
               error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
             >
-              <TextField
-                name="categoryName"
-                label="Category Name"
-                value={formik.values.categoryName}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
+              <CustomSelect
                 autoFocus
+                label="Add Category *"
+                options={[]}
+                value={formik.values.categoryName}
+                onChange={(value) => formik.setFieldValue('categoryName', value)}
                 disabled={isEdit}
                 error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-                helperText={formik.touched.categoryName && formik.errors.categoryName}
+                helperText={
+                  formik.touched.categoryName && formik.errors.categoryName
+                    ? String(formik.errors.categoryName)
+                    : ''
+                }
               />
             </ShakingTextField>
           </Grid>
@@ -64,7 +69,7 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
             >
               <TextField
                 name="subcategoryName"
-                label="Subcategory Name"
+                label="Subcategory Name *"
                 value={formik.values.subcategoryName}
                 onChange={formik.handleChange}
                 size="small"

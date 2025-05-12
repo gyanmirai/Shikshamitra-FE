@@ -1,0 +1,60 @@
+[
+    {
+      "id": 1,
+      "name": "Smart Projector",
+      "category": "Electronics",
+      "subCategory": "Classroom Equipment",
+      "vendor": "AVTech Pvt Ltd",
+      "condition": "Good",
+      "status": "In Use",
+      "quantity": 1,
+      "measurementUnit": "Piece",
+      "description": "Projector for smart class teaching",
+      "image": "/images/projector.jpg",
+      "assignedDate": "2025-04-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Whiteboard Markers",
+      "category": "Stationery",
+      "subCategory": "Writing Tools",
+      "vendor": "Office Supplies Co.",
+      "condition": "New",
+      "status": "In Use",
+      "quantity": 12,
+      "measurementUnit": "Pieces",
+      "description": "Pack of 12 assorted whiteboard markers",
+      "image": "/images/markers.jpg",
+      "assignedDate": "2025-04-12T09:00:00Z"
+    },
+ 
+    {
+      "id": 4,
+      "name": "Laptop",
+      "category": "Electronics",
+      "subCategory": "Personal Use",
+      "vendor": "HP",
+      "condition": "Excellent",
+      "status": "In Use",
+      "quantity": 1,
+      "measurementUnit": "Piece",
+      "description": "Teacher's personal laptop assigned by school",
+      "image": "/images/laptop.jpg",
+      "assignedDate": "2025-04-01T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Tablet",
+      "category": "Electronics",
+      "subCategory": "Personal Use",
+      "vendor": "Samsung",
+      "condition": "New",
+      "status": "In Use",
+      "quantity": 1,
+      "measurementUnit": "Piece",
+      "description": "Tablet device for class attendance and lesson planning",
+      "image": "/images/tablet.jpg",
+      "assignedDate": "2025-04-15T11:15:00Z"
+    }
+  ]
+  
