@@ -33,18 +33,6 @@ const SubjectCreation = (props: TabComponentType) => {
   const [subjectData, setSubjectData] = useState<ISubject[]>(settingSubjectTableData);
   // Redux dispatch
   const dispatch = useDispatch();
-  const links = open
-    ? [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum', href: '/academic/curriculum-management' },
-        { name: 'Settings' },
-        { name: 'Subject Form' },
-      ]
-    : [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum', href: '/academic/curriculum-management' },
-        { name: 'Settings' },
-      ];
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {

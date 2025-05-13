@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "status": "Unpublish",
+    "className": "10th Grade",
+    "subjectName": "Science",
+    "subjectType": "elective",
+    "subjects": [
+      {
+        "id": 101,
+        "subjectName": "Physics",
+        "subjectCode": "PHY-10",
+        "primaryTeacher": "teacher_1",
+        "secondaryTeacher": ["teacher_2", "teacher_3"],
+        "documents": [
+          {
+            "id": "doc1",
+            "name": "Syllabus.pdf",
+            "url": "https://example.com/syllabus.pdf"
+          }
+        ],
+        "prerequisites": "Basic understanding of Mathematics",
+        "learningGoal": "Learn the fundamentals of Physics.",
+        "description": "This subject covers classical mechanics, thermodynamics, and electromagnetism.",
+        "isSubjectOpen": true
+      },
+      {
+        "id": 102,
+        "subjectName": "Chemistry",
+        "subjectCode": "CHEM-10",
+        "primaryTeacher": "teacher_4",
+        "secondaryTeacher": null,
+        "documents": [],
+        "prerequisites": "None",
+        "learningGoal": "Understand the basics of Chemistry.",
+        "description": "Introduction to chemical reactions, periodic table, and lab safety.",
+        "isSubjectOpen": false
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "status": "Unpublish",
+    "className": "10th Grade",
+    "subjectName": "Mathematics",
+    "subjectType": "core",
+    "subjects": [
+      {
+        "id": 201,
+        "subjectName": "Mathematics",
+        "subjectCode": "MATH-10",
+        "primaryTeacher": "teacher_5",
+        "secondaryTeacher": ["teacher_6"],
+        "documents": [
+          {
+            "id": "doc2",
+            "name": "Math_Syllabus.pdf",
+            "url": "https://example.com/math_syllabus.pdf"
+          }
+        ],
+        "prerequisites": "Basic Arithmetic",
+        "learningGoal": "Understand algebra, geometry, and basic trigonometry.",
+        "description": "This subject covers algebraic equations, geometry concepts, and introductory trigonometry.",
+        "isSubjectOpen": true
+      }
+    ]
+  }
+]

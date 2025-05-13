@@ -3,23 +3,22 @@
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button, DialogActions, DialogContent, DialogContentText } from '@mui/material';
+import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import subjectData from 'src/json/academic/curriculum/subjectTableData.json';
+import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -27,12 +26,13 @@ import SubjectTable from './component/subjectTable';
 import SubjectForm from './component/subjectFormComponent';
 import { ViewSubject } from './component/viewSubjectComponent';
 
-import type { ISubject } from './component/type';
+import type { ISubjectFormValues } from './component/type';
 
 const Subject = (props: TabComponentType) => {
   // State to manage subject table data and filtered data
-  const [subjectTableData, setSubjectTableData] = useState<ISubject[]>(subjectData);
-  const [filteredData, setFilteredData] = useState<ISubject[]>([]);
+  const [subjectTableData, setSubjectTableData] =
+    useState<ISubjectFormValues[]>(electiveSubjectData);
+  const [filteredData, setFilteredData] = useState<ISubjectFormValues[]>([]);
 
   // Query hook to fetch class data
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -42,15 +42,17 @@ const Subject = (props: TabComponentType) => {
 
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
-  // Dialog control states using boolean hooks
+  // Dialog control for delete confirmation
   const deleteConfirmDialog = useBoolean();
+  // Dialog control for publish/unpublish confirmation
   const confirmPublishDialog = useBoolean();
+  // Dialog control for viewing subject details
   const showSubjectDialog = useBoolean();
-  const addBulkDialog = useBoolean();
+  // State to store selected class value
   const [classes, setClasses] = useState('');
 
   // State for managing selected subject and edit mode
-  const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -60,48 +62,14 @@ const Subject = (props: TabComponentType) => {
     newValue: string;
   } | null>(null);
 
-  // Filter and update subject data based on selected class
-  useEffect(() => {
-    if (classData?.items?.length) {
-      // Set default class if none selected
-      if (!classes) {
-        const firstClass = classData.items[0];
-        setClasses(firstClass?.id);
-      }
-      // Find selected class and filter subjects
-      const selectedClass = classData.items.find((c: any) => c.id === classes);
-      if (selectedClass) {
-        const filtered = subjectTableData.filter((item) => item.className === selectedClass?.name);
-        setFilteredData(filtered);
-      }
-    }
-  }, [classData, subjectTableData, classes]);
-
   // Handle subject status toggle between Publish/Unpublish
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirmPublishDialog.onTrue();
   };
 
-  // Handle form submission for creating/updating subjects
-  const handleSubmit = (values: ISubject) => {
-    if (isEdit) {
-      // Update existing subject
-      setSubjectTableData(
-        subjectTableData.map((subject) => (subject.id === values.id ? values : subject))
-      );
-    } else {
-      // Add new subject
-      setSubjectTableData([...subjectTableData, values]);
-    }
-    addSubjectDialog.onFalse();
-    setIsEdit(false);
-    setSelectedSubject(null);
-    shikshaMitraToast.success({ message: 'Subject added successfully' });
-  };
-
   // Open dialog to view subject details
-  const handleViewSubject = (subject: ISubject) => {
+  const handleViewSubject = (subject: ISubjectFormValues) => {
     setSelectedSubject(subject);
     showSubjectDialog.onTrue();
   };
@@ -183,7 +151,7 @@ const Subject = (props: TabComponentType) => {
             variant="contained"
             onClick={
               addSubjectDialog.value
-                ? handleClose
+                ? () => handleClose(null, false)
                 : () => {
                     addSubjectDialog.onTrue();
                     setIsEdit(false);
@@ -200,12 +168,7 @@ const Subject = (props: TabComponentType) => {
         <>
           {/* Subject form card for creating/editing subjects */}
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <SubjectForm
-              onSubmit={handleSubmit}
-              onClose={handleClose}
-              data={selectedSubject}
-              isEdit={isEdit}
-            />{' '}
+            <SubjectForm onClose={handleClose} data={selectedSubject} isEdit={isEdit} />{' '}
           </Card>
         </>
       ) : (
@@ -225,26 +188,25 @@ const Subject = (props: TabComponentType) => {
             }}
           />
           {/* Subject table displayed when class is selected */}
-          {classes && (
-            <SubjectTable
-              addSubjectDialog={addSubjectDialog}
-              data={filteredData}
-              editData={selectedSubject}
-              setEditData={setSelectedSubject}
-              subjectTableData={subjectTableData}
-              onView={handleViewSubject}
-              onEdit={(row: ISubject) => {
-                setSelectedSubject(row);
-                setIsEdit(true);
-                addSubjectDialog.onTrue();
-              }}
-              onDelete={(row: ISubject) => {
-                setSelectedSubject(row);
-                deleteConfirmDialog.onTrue();
-              }}
-              onToggleStatus={handleStatusChange}
-            />
-          )}
+
+          <SubjectTable
+            addSubjectDialog={addSubjectDialog}
+            data={subjectTableData}
+            editData={selectedSubject}
+            setEditData={setSelectedSubject}
+            subjectTableData={subjectTableData}
+            onView={handleViewSubject}
+            onEdit={(row: ISubjectFormValues) => {
+              setSelectedSubject(row);
+              setIsEdit(true);
+              addSubjectDialog.onTrue();
+            }}
+            onDelete={(row: ISubjectFormValues) => {
+              setSelectedSubject(row);
+              deleteConfirmDialog.onTrue();
+            }}
+            onToggleStatus={handleStatusChange}
+          />
         </>
       )}
 
@@ -255,7 +217,7 @@ const Subject = (props: TabComponentType) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure want to Delete ?"
         action={
           <Button
             variant="contained"
@@ -270,27 +232,26 @@ const Subject = (props: TabComponentType) => {
       />
 
       {/* Publish confirmation dialog */}
-      <CustomDialog
-        title="Confirm Publication"
+      <ConfirmDialog
         open={confirmPublishDialog.value}
-        handleClose={confirmPublishDialog.onFalse}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>
-            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
-            this Subject?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} variant="contained" color="error">
-            Cancel
+        onClose={() => {
+          confirmPublishDialog.onFalse();
+          setSelectedSubject(null);
+        }}
+        title="Confirm Publication"
+        content="Are you sure want to Publish ?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              confirmStatusChange();
+            }}
+          >
+            Publish
           </Button>
-          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
-            Confirm
-          </Button>
-        </DialogActions>
-      </CustomDialog>
+        }
+      />
 
       {/* View subject details dialog */}
       <CustomDialog

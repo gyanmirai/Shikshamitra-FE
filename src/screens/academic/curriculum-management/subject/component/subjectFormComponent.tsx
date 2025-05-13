@@ -1,21 +1,16 @@
 'use client';
 
-import dayjs from 'dayjs';
-import { useState } from 'react';
 import { useFormik } from 'formik';
-import { MuiColorInput } from 'mui-color-input';
+import { useState, useEffect } from 'react';
 
-import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  List,
   Grid,
+  Chip,
   Button,
-  ListItem,
   TextField,
-  IconButton,
   Typography,
-  ListItemText,
+  Autocomplete,
   DialogActions,
 } from '@mui/material';
 
@@ -27,40 +22,92 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import SubjectCard from './subjectCardComponent';
 import { validationSchema } from './validationSchema';
 import { getSubjectInitialValues } from './initialValues';
 import SettingSubjectForm from '../../setting/subjectCreation/subjectForm';
 
-import type { IDocument, ISubjectFormProps, ISubjectFormValues } from './type';
+import type { ISubjectFormProps, ISubjectFormValues } from './type';
 
-const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => {
+// Enhanced subject options with core and elective groups
+const subjectOptions = [
+  // Core subjects
+  { label: 'Mathematics', value: 'Mathematics', type: 'core' },
+  { label: 'Physics', value: 'Physics', type: 'core' },
+  { label: 'Biology', value: 'Biology', type: 'core' },
+  // Elective subject groups
+  {
+    label: 'Science Electives',
+    value: 'Science Electives',
+    type: 'elective',
+    subjects: [
+      { name: 'Chemistry', code: 'CHEM101' },
+      { name: 'Earth Science', code: 'ESCI101' },
+      { name: 'Astronomy', code: 'ASTR101' },
+    ],
+  },
+  {
+    label: 'Language Electives',
+    value: 'Language Electives',
+    type: 'elective',
+    subjects: [
+      { name: 'French', code: 'FREN101' },
+      { name: 'Spanish', code: 'SPAN101' },
+      { name: 'German', code: 'GERM101' },
+    ],
+  },
+  {
+    label: 'Arts Electives',
+    value: 'Arts Electives',
+    type: 'elective',
+    subjects: [
+      { name: 'Music', code: 'MUS101' },
+      { name: 'Visual Arts', code: 'ARTS101' },
+      { name: 'Drama', code: 'DRAM101' },
+    ],
+  },
+];
+
+// Available teachers for selection
+const teacherOptions = [
+  { value: 'Jiya', label: 'Jiya' },
+  { value: 'Riya', label: 'Riya' },
+  { value: 'Priya', label: 'Priya' },
+];
+
+const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
   // State to track if the form is in draft mode - determined by edit status or existing data status
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
-  // State to manage uploaded documents with initial value from existing data or empty array
-  const [documents, setDocuments] = useState<IDocument[]>(data?.documents || []);
   // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
   const addSubjectDialog = useBoolean();
+
+  // State to track selected option for the autocomplete
+  const [selectedOption, setSelectedOption] = useState<any>(null);
+  // Flag to prevent infinite update loops
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getSubjectInitialValues(data),
     validationSchema,
-    // Handle form submission with updated status based on draft mode
+    // Handle form submission
     onSubmit: (values) => {
-      onSubmit({
+      // Prepare the complete submission data
+      const submitData = {
         ...values,
         id: data?.id || Date.now(),
         status: isDraft ? 'Unpublish' : 'Publish',
-        documents,
-      });
+      };
+
+      // Pass the data to the parent component's handler
+      // onSubmit(submitData);
       onClose(null, true);
     },
   });
@@ -71,28 +118,108 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // Handle file upload and create document objects with unique IDs
-  const handleFileUpload = (files: File[]) => {
-    const newDocs: IDocument[] = files.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      url: URL.createObjectURL(file),
-      file,
-    }));
-    setDocuments((prev) => [...prev, ...newDocs]);
+  // Initialize subject option when editing
+  useEffect(() => {
+    if (isEdit && data && isInitializing) {
+      // Find the corresponding subject option
+      const option = subjectOptions.find(
+        (opt) =>
+          opt.value === data.subjectName ||
+          (opt.type === 'elective' &&
+            opt.subjects?.some((s) => data.subjects?.some((ds) => ds.subjectName === s.name)))
+      );
+
+      if (option) {
+        setSelectedOption(option);
+
+        // If we're editing, make sure the subjects array is initialized in formik values
+        if (data.subjects && data.subjects.length > 0) {
+          formik.setFieldValue('subjects', data.subjects);
+        }
+      }
+
+      setIsInitializing(false);
+    }
+  }, [data, isEdit, isInitializing, formik]);
+
+  // Handle subject selection change
+  const handleSubjectChange = (newValue: any) => {
+    if (!newValue) {
+      formik.setFieldValue('subjectName', '');
+      formik.setFieldValue('subjectType', 'core');
+      formik.setFieldValue('subjects', []);
+      setSelectedOption(null);
+      return;
+    }
+
+    // Update Formik values for subject name and type
+    formik.setFieldValue('subjectName', newValue.value);
+    formik.setFieldValue('subjectType', newValue.type);
+    setSelectedOption(newValue);
+
+    // Determine if this is a core subject or an elective group
+    if (newValue.type === 'core') {
+      // For core subject, create a single subject entry
+      const newSubject = {
+        id: Date.now() + Math.random(),
+        name: newValue.name,
+        subjectName: newValue.name,
+        className: formik.values.className || '',
+        subjectCode: newValue.code,
+        primaryTeacher: '',
+        secondaryTeacher: [],
+        description: '',
+        learningGoal: '',
+        prerequisites: '',
+        subjectColor: '#1976d2',
+        scheduleDate: null,
+        status: 'Unpublish',
+      };
+      // Update subjects array in formik state
+      formik.setFieldValue('subjects', [newSubject]);
+    } else if (newValue.type === 'elective') {
+      // For elective group, create multiple subject entries
+      const initialElectives = newValue.subjects.map((subject: any) => ({
+        id: Date.now() + Math.random(),
+        name: subject.name,
+        subjectName: subject.name,
+        className: formik.values.className || '',
+        subjectCode: subject.code,
+        primaryTeacher: '',
+        secondaryTeacher: [],
+        description: '',
+        learningGoal: '',
+        prerequisites: '',
+        subjectColor: '#1976d2',
+        scheduleDate: null,
+        status: 'Unpublish',
+      }));
+
+      // Update subjects array in formik state
+      formik.setFieldValue('subjects', initialElectives);
+    }
   };
 
-  // Remove document from the documents array by ID
-  const handleRemoveDocument = (docId: string) => {
-    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  // Handle changes to individual subject fields
+  const handleSubjectFieldChange = (subjectId: string | number, field: string, value: any) => {
+    // Update the subjects array in Formik
+    const updatedSubjects = formik.values.subjects?.map((subject) =>
+      subject.id === subjectId ? { ...subject, [field]: value } : subject
+    );
+    formik.setFieldValue('subjects', updatedSubjects);
   };
+
+  // Log for debugging
+  console.log('formik values:', formik.values);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
+              {/* Class selection */}
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
@@ -105,6 +232,15 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                     valueKey="name"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
+
+                      // Also update className for all subjects in the array
+                      if ((formik?.values?.subjects ?? []).length > 0) {
+                        const updatedSubjects = (formik?.values?.subjects ?? []).map((subject) => ({
+                          ...subject,
+                          className: val,
+                        }));
+                        formik.setFieldValue('subjects', updatedSubjects);
+                      }
                     }}
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
@@ -113,39 +249,49 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
-                <ShakingTextField
-                  error={!!(formik.touched.subjectCode && formik.errors.subjectCode) || false}
-                >
-                  <TextField
-                    fullWidth
-                    label="Subject Code"
-                    name="subjectCode"
-                    size="small"
-                    value={formik.values.subjectCode}
-                    onChange={formik.handleChange}
-                    disabled={isPublished}
-                    error={formik.touched.subjectCode && Boolean(formik.errors.subjectCode)}
-                    helperText={formik.touched.subjectCode && formik.errors.subjectCode}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={4}>
+
+              {/* Subject/Group selection */}
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
                 >
-                  <TextField
+                  <Autocomplete
                     fullWidth
-                    label="Subject Name"
-                    name="subjectName"
                     size="small"
                     disabled={isPublished}
-                    value={formik.values.subjectName}
-                    onChange={formik.handleChange}
-                    error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
-                    helperText={formik.touched.subjectName && formik.errors.subjectName}
+                    options={subjectOptions}
+                    getOptionLabel={(option) => option.label}
+                    value={selectedOption}
+                    onChange={(_, newValue) => {
+                      handleSubjectChange(newValue);
+                    }}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Box
+                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                        >
+                          {option.label}
+                          <Chip
+                            size="small"
+                            label={option.type === 'core' ? 'Core' : 'Elective'}
+                            color={option.type === 'core' ? 'primary' : 'secondary'}
+                            sx={{ ml: 1, height: 20 }}
+                          />
+                        </Box>
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Subject Name/Group"
+                        name="subjectName"
+                        error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
+                        helperText={formik.touched.subjectName && formik.errors.subjectName}
+                      />
+                    )}
                   />
                 </ShakingTextField>
+                {/* Add Subject link */}
                 <Typography
                   variant="body2"
                   fontWeight={500}
@@ -170,229 +316,31 @@ const SubjectForm = ({ onSubmit, onClose, data, isEdit }: ISubjectFormProps) => 
                       addSubjectDialog.onFalse();
                     }}
                     editData={null}
-                  />{' '}
+                  />
                 </CustomDialog>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.primaryTeacher && formik.errors.primaryTeacher) || false}
-                >
-                  <CustomSelect
-                    label="Primary Teacher"
-                    options={[
-                      { value: 'Jiya', label: 'Jiya' },
-                      { value: 'Riya', label: 'Riya' },
-                      { value: 'Priya', label: 'Priya' },
-                    ]}
-                    name="primaryTeacher"
-                    value={formik.values.primaryTeacher}
-                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                    onChange={(val) => {
-                      formik.setFieldValue('primaryTeacher', val);
-                    }}
-                    error={formik.touched.primaryTeacher && Boolean(formik.errors.primaryTeacher)}
-                    helperText={
-                      (formik.touched.primaryTeacher && formik.errors.primaryTeacher) || ''
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={
-                    !!(formik.touched.secondaryTeacher && formik.errors.secondaryTeacher) || false
-                  }
-                >
-                  <CustomSelect
-                    label="Secondary Teacher"
-                    options={[
-                      { value: 'Jiya', label: 'Jiya' },
-                      { value: 'Riya', label: 'Riya' },
-                      { value: 'Priya', label: 'Priya' },
-                    ]}
-                    name="secondaryTeacher"
-                    multiple
-                    value={formik.values.secondaryTeacher}
-                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                    onChange={(val) => {
-                      formik.setFieldValue('secondaryTeacher', val);
-                    }}
-                    error={
-                      formik.touched.secondaryTeacher && Boolean(formik.errors.secondaryTeacher)
-                    }
-                    helperText={
-                      formik.touched.secondaryTeacher && formik.errors.secondaryTeacher
-                        ? Array.isArray(formik.errors.secondaryTeacher)
-                          ? formik.errors.secondaryTeacher.join(', ')
-                          : formik.errors.secondaryTeacher
-                        : ''
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false}
-                >
-                  <DateTimePicker
-                    label="Schedule Date"
-                    value={formik.values.scheduleDate ? dayjs(formik.values.scheduleDate) : null}
-                    onChange={(value) => {
-                      formik.setFieldValue('scheduleDate', value);
-                    }}
-                    disabled={isPublished}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: formik.touched.scheduleDate && Boolean(formik.errors.scheduleDate),
-                        helperText:
-                          formik.touched.scheduleDate && formik.errors.scheduleDate
-                            ? formik.errors.scheduleDate
-                            : '',
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
-                >
-                  <MuiColorInput
-                    placeholder="Subject Color"
-                    size="small"
-                    format="hex"
-                    value={formik.values.subjectColor}
-                    onChange={(e) => {
-                      formik.setFieldValue('subjectColor', e);
-                    }}
-                    disabled={isPublished}
-                    sx={{
-                      minWidth: 180,
-                      width: '100%',
-                      '& .MuiInputBase-root': {
-                        fontSize: '0.875rem',
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        fontSize: '0.875rem',
-                      },
-                    }}
-                    error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
-                    helperText={formik.touched.subjectColor && formik.errors.subjectColor}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.learningGoal && formik.errors.learningGoal) || false}
-                >
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    disabled={isPublished}
-                    label="Learning Goals"
-                    name="learningGoal"
-                    onChange={formik.handleChange}
-                    value={formik.values.learningGoal}
-                    size="small"
-                    error={formik.touched.learningGoal && Boolean(formik.errors.learningGoal)}
-                    helperText={formik.touched.learningGoal && formik.errors.learningGoal}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.prerequisites && formik.errors.prerequisites) || false}
-                >
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    disabled={isPublished}
-                    label="Prerequisites or Resources"
-                    name="prerequisites"
-                    size="small"
-                    value={formik.values.prerequisites}
-                    onChange={formik.handleChange}
-                    error={formik.touched.prerequisites && Boolean(formik.errors.prerequisites)}
-                    helperText={formik.touched.prerequisites && formik.errors.prerequisites}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12}>
-                <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                >
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    disabled={isPublished}
-                    label="Description"
-                    name="description"
-                    value={formik.values.description}
-                    onChange={formik.handleChange}
-                    error={formik.touched.description && Boolean(formik.errors.description)}
-                    helperText={formik.touched.description && formik.errors.description}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <UploadBox
-                  onDrop={handleFileUpload}
-                  placeholder={
-                    <Box
-                      sx={{
-                        gap: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.disabled',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Upload Document</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
-                />
-              </Grid>
-              {documents.length > 0 && (
+              {/* Subject Cards Section */}
+              {formik.values.subjects && formik.values.subjects.length > 0 && (
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Uploaded Documents
-                  </Typography>
-                  <List>
-                    {documents.map((doc, index) => (
-                      <ListItem
-                        key={doc.id}
-                        secondaryAction={
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleRemoveDocument(doc.id as unknown as string)}
-                          >
-                            <Iconify icon="mdi:delete" />
-                          </IconButton>
-                        }
-                      >
-                        <ListItemText primary={doc.name} />
-                      </ListItem>
-                    ))}
-                  </List>
+                  {/* Map and render all subject cards */}
+                  {formik.values.subjects.map((subject, index) => (
+                    <SubjectCard
+                      index={index}
+                      formik={formik}
+                      subject={subject}
+                      isCore={formik.values.subjectType === 'core'}
+                      isPublished={isPublished}
+                      teacherOptions={teacherOptions}
+                      onSubjectChange={handleSubjectFieldChange}
+                    />
+                  ))}
                 </Grid>
               )}
             </Grid>
           </Scrollbar>
+
+          {/* Action Buttons */}
           <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             {isEdit ? (
               <Button
