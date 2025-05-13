@@ -1,0 +1,20 @@
+[
+  {
+    "visitorName": "John Doe",
+    "visitorEmail": "johndoe@example.com",
+    "visitorPhone": "9876543210",
+    "visitingTime": "2025-05-15T14:30:00+05:30",
+    "visitingDate": "2025-05-15T14:30:00+05:30",
+    "visitingPurpose": "Discussion about project collaboration",
+    "status": "Approved"
+  },
+  {
+    "visitorName": "Ania Sharma",
+    "visitorEmail": "anita.sharma@example.com",
+    "visitorPhone": "9123456789",
+    "visitingTime": "2025-05-17T10:00:00+05:30",
+    "visitingDate": "2025-05-17T10:00:00+05:30",
+    "visitingPurpose": "Parent-Teacher meeting",
+    "status": "Approved"
+  }
+]

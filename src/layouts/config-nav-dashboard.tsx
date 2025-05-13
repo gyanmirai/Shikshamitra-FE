@@ -307,6 +307,23 @@ const securityModule = {
           ],
         },
         {
+          title: 'Visitor Management',
+          path: '',
+          _action: 'visitor-management',
+          children: [
+            {
+              title: 'Visitor Check In',
+              path: '/security/visitor-management/visitor-check-in',
+              _action: 'visitor-check-in',
+            },
+            {
+              title: 'Visitor Pre Approval',
+              path: '/security/visitor-management/visitor-pre-approval',
+              _action: 'visitor-pre-approval',
+            },
+          ],
+        },
+        {
           title: 'Gate Pass Management',
           path: '',
           _action: 'gate-pass-management',
