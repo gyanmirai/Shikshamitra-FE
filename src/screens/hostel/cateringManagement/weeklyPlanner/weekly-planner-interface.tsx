@@ -3,6 +3,8 @@ export interface IMealFormValues {
   mealDay: string;
   mealDescription: string;
   mealImage?: any;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface IAddWeeklyMenuDialogProps {

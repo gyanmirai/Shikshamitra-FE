@@ -33,13 +33,11 @@ const ArchivedIncidentTable: React.FC<IArchivedIncidentTableProps> = ({
     }}
     noDataText={<>No Archived Incident Data Found </>}
     columns={[
-      { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 130 },
-      { id: 'floor', label: 'Floor', align: 'left', minWidth: 70 },
+      { id: 'hostelName', label: 'Hostel Name', align: 'left' },
       {
         id: 'students',
         label: 'Students Involved',
         align: 'left',
-        minWidth: 170,
         render: (value: any) => (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             {value && value.length > 0
@@ -54,22 +52,19 @@ const ArchivedIncidentTable: React.FC<IArchivedIncidentTableProps> = ({
         id: 'incidentDate',
         label: 'Incident Date',
         align: 'left',
-        minWidth: 130,
       },
       {
         id: 'incidentTime',
         label: 'Incident Time',
         align: 'left',
-        minWidth: 130,
       },
       { id: 'description', label: 'Description', align: 'left' },
-      { id: 'incidentType', label: 'Incident Type', align: 'left', minWidth: 130 },
+      { id: 'incidentType', label: 'Incident Type', align: 'left' },
       {
         id: 'status',
         label: 'Status',
         filterType: 'enum',
         enumOptions: IncidentStatusOptions,
-        minWidth: '130px',
         align: 'left',
         render(value, row) {
           const color = IncidentStatusColors[value as IncidentStatusType] as LabelColor;

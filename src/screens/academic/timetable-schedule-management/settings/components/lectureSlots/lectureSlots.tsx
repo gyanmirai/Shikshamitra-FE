@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button, MenuList, MenuItem } from '@mui/material';
@@ -22,8 +22,10 @@ import AssignSlots from './assignSlotsComponent';
 const LectureSlots = () => {
   // Dialog state for creating new slots
   const createSlotsDialog = useBoolean();
+  const [disabled, setDisabled] = useState(false);
   // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
+  const viewSlotsDialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const actions = useCallback(
@@ -104,13 +106,17 @@ const LectureSlots = () => {
             sticky: true,
             isSort: false,
             isFilter: false,
+            minWidth: '100px',
             render(value, row) {
               return (
                 <ThreeDotsActions
                   actions={(prop) => actions({ ...prop, row })}
                   showEditIcon
                   showViewIcon
-                  handleViewClick={() => {}}
+                  handleViewClick={() => {
+                    viewSlotsDialog.onTrue();
+                    setDisabled(true);
+                  }}
                   handleEditClick={() => {
                     createSlotsDialog.onTrue();
                   }}
@@ -154,6 +160,23 @@ const LectureSlots = () => {
         // data={selectedEntry}
         // isEdit={isEdit}
         // allData={roomData}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        title="View Lecture Slots"
+        open={viewSlotsDialog.value}
+        handleClose={viewSlotsDialog.onFalse}
+        maxWidth="md"
+      >
+        <CreateSlotsForm
+          disabled={disabled}
+          // onSave={handleSave}
+          // dialogValue={dialog.value}
+          // onClose={closeDialog}
+          // data={selectedEntry}
+          // isEdit={isEdit}
+          // allData={roomData}
         />
       </CustomDialog>
 

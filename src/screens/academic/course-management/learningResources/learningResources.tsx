@@ -238,7 +238,7 @@ const LearningResources = (props: TabComponentType) => {
               isLoading={isLoading}
               labelKey="name"
               valueKey="name"
-              formControlProps={{ sx: { minWidth: 150 } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
               label="Course/Subject"
@@ -249,7 +249,7 @@ const LearningResources = (props: TabComponentType) => {
               ]}
               value={subject}
               onChange={(val) => setSubject(val as string)}
-              formControlProps={{ sx: { minWidth: 150 } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
           </Box>
 
@@ -317,21 +317,18 @@ const LearningResources = (props: TabComponentType) => {
                   {
                     id: 'resourceTitle',
                     label: 'Resource Title',
-                    minWidth: '200px',
                     align: 'left',
                   },
                   {
                     id: 'typeOfResource',
                     label: 'Type of Resource',
-                    minWidth: '200px',
                     align: 'left',
                   },
                   { id: 'className', label: 'Class', minWidth: '200px', align: 'left' },
-                  { id: 'subject', label: 'Subject', minWidth: '200px', align: 'left' },
+                  { id: 'subject', label: 'Subject', align: 'left' },
                   {
                     id: 'dateUploaded',
                     label: 'Date Uploaded',
-                    minWidth: '200px',
                     align: 'left',
                     filterType: 'date',
                     isDateRangeFilter: true,
@@ -339,7 +336,6 @@ const LearningResources = (props: TabComponentType) => {
                   {
                     id: 'status',
                     label: 'Publish',
-                    minWidth: '200px',
                     align: 'left',
                     filterType: 'enum',
                     enumOptions: PublishUnpublishStatusOptions,
@@ -356,7 +352,7 @@ const LearningResources = (props: TabComponentType) => {
                   {
                     id: 'action',
                     label: 'Actions',
-                    minWidth: 100,
+                    minWidth: 70,
                     isSort: false,
                     sticky: true,
                     isFilter: false,

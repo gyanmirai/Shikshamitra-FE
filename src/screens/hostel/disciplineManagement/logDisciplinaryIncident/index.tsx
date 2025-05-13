@@ -174,7 +174,6 @@ const LogDisciplinaryManagement = () => {
           </Button>
         }
       />
-
     </Box>
   );
 };

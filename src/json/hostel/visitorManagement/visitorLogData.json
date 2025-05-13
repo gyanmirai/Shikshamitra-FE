@@ -1,63 +1,47 @@
 [
-    {
-      "id": "1",
-      "visitorName": "Rajesh Kumar",
-      "idProof": "Aadhar Card",
-      "aadharNumber": "123456789012",
-      "contactNo": "9876543210",
-      "visingWhome": "Principal Office",
-      "entryTime": "10:30",
-      "exitTime": "11:15",
-      "reasonForVisit": "Meeting regarding admission",
-      "status": "Exited"
-    },
-    {
-      "id": "2",
-      "visitorName": "Pooja Sharma",
-      "idProof": "Driving License",
-      "aadharNumber": "234567890123",
-      "contactNo": "9123456780",
-      "visingWhome": "Accounts Department",
-      "entryTime": "09:45",
-      "exitTime": "10:20",
-      "reasonForVisit": "Fee inquiry",
-      "status": "Exited"
-    },
-    {
-      "id": "3",
-      "visitorName": "Amit Patel",
-      "idProof": "PAN Card",
-      "aadharNumber": "345678901234",
-      "contactNo": "9988776655",
-      "visingWhome": "Hostel Warden",
-      "entryTime": "14:00",
-      "exitTime": "14:45",
-      "reasonForVisit": "Meeting with student",
-      "status": "Overstayed"
-    },
-    {
-      "id": "4",
-      "visitorName": "Sneha Verma",
-      "idProof": "Voter ID",
-      "aadharNumber": "456789012345",
-      "contactNo": "9876512345",
-      "visingWhome": "Library Section",
-      "entryTime": "11:30",
-      "exitTime": "12:00",
-      "reasonForVisit": "Library membership",
-      "status": "Exited"
-    },
-    {
-      "id": "5",
-      "visitorName": "Sunil Mehta",
-      "idProof": "Passport",
-      "aadharNumber": "567890123456",
-      "contactNo": "9765432109",
-      "visingWhome": "Sports Department",
-      "entryTime": "16:10",
-      "exitTime": "17:00",
-      "reasonForVisit": "Discussion about sports event",
-      "status": "InHostel"
-    }
-  ]
-  
+  {
+    "visitorName": "Rajesh Kumar",
+    "contactNo": "9876543210",
+    "personToVisit": "Principal Office",
+    "entryTime": "2025-05-08T10:30:00",
+    "exitTime": "2025-05-08T11:15:00",
+    "reasonForVisit": "Meeting regarding admission",
+    "status": 1
+  },
+  {
+    "visitorName": "Pooja Sharma",
+    "contactNo": "9123456780",
+    "personToVisit": "Accounts Department",
+    "entryTime": "2025-05-08T09:45:00",
+    "exitTime": "2025-05-08T10:20:00",
+    "reasonForVisit": "Fee inquiry",
+    "status": 1
+  },
+  {
+    "visitorName": "Amit Patel",
+    "contactNo": "9988776655",
+    "personToVisit": "Hostel Warden",
+    "entryTime": "2025-05-08T14:00:00",
+    "exitTime": "2025-05-08T14:45:00",
+    "reasonForVisit": "Meeting with student",
+    "status": 2
+  },
+  {
+    "visitorName": "Sneha Verma",
+    "contactNo": "9876512345",
+    "personToVisit": "Library Section",
+    "entryTime": "2025-05-08T11:30:00",
+    "exitTime": "2025-05-08T12:00:00",
+    "reasonForVisit": "Library membership",
+    "status": 1
+  },
+  {
+    "visitorName": "Sunil Mehta",
+    "contactNo": "9765432109",
+    "personToVisit": "Sports Department",
+    "entryTime": "2025-05-08T16:10:00",
+    "exitTime": "2025-05-08T17:00:00",
+    "reasonForVisit": "Discussion about sports event",
+    "status": 0
+  }
+]

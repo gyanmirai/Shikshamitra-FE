@@ -21,22 +21,27 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { incidentValidationSchema } from './validationSchema';
 import { getTakeActionInitialValues } from './takeActionInitialValues';
+import DisciplineActionForm from '../../settings/disciplinaryAction/disciplineActionForm';
 
 import type { ITakeActionFormProps } from '../type';
 
 const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editData }) => {
+  const addActionDialog = useBoolean(false);
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
@@ -73,29 +78,6 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                     helperText={
                       formik.touched.hostelName && formik.errors.hostelName
                         ? String(formik.errors.hostelName)
-                        : undefined
-                    }
-                    options={[]}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.floor && formik.errors.floor) || false}>
-                  <CustomSelect
-                    size="small"
-                    label="Floor"
-                    name="floor"
-                    fullWidth
-                    disabled
-                    value={formik.values.floor}
-                    onChange={(val) => {
-                      formik.setFieldValue('floor', val);
-                    }}
-                    error={formik.touched.floor && Boolean(formik.errors.floor)}
-                    helperText={
-                      formik.touched.floor && formik.errors.floor
-                        ? String(formik.errors.floor)
                         : undefined
                     }
                     options={[]}
@@ -283,6 +265,32 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="h6">Take Action</Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    addActionDialog.onTrue();
+                  }}
+                >
+                  Add Action ?
+                </Typography>
+                <CustomDialog
+                  open={addActionDialog.value}
+                  handleClose={addActionDialog.onFalse}
+                  title="Add Action"
+                >
+                  <DisciplineActionForm
+                    dialog={addActionDialog}
+                    onClose={() => {
+                      addActionDialog.onFalse();
+                    }}
+                    editData={null}
+                  />{' '}
+                </CustomDialog>
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex" flexDirection="row" gap={2}>
@@ -315,6 +323,9 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                     placeholder="Notes"
                   />{' '}
                 </ShakingTextField>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="h6">Send Notification</Typography>
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex" flexDirection="row" gap={2}>

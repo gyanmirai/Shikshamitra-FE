@@ -591,6 +591,13 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+1',
             },
             {
+              title: 'Assign Elective Subject to Student',
+              path: '/academic/assign-elective-subject',
+              _action: 'assign-elective-subject',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
               title: 'Teacher',
               path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
@@ -1392,6 +1399,13 @@ const hostelModule = {
           shortcutKeyName: 'Alt+H+1',
         },
         {
+          title: 'New Request',
+          path: '/hostel/newRequest',
+          _action: 'hostel-new-request',
+          shortcutKey: 'Alt+H+1',
+          shortcutKeyName: 'Alt+H+1',
+        },
+        {
           title: 'Hostel Management',
           path: '',
           _action: 'hostel-configuration',
@@ -1406,6 +1420,13 @@ const hostelModule = {
               shortcutKeyName: 'Alt+A+C+1',
             },
             {
+              title: 'Room Configuration',
+              path: '/hostel/room-configuration',
+              _action: 'room-configuration',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
               title: 'Setting',
               path: '/hostel/setting',
               _action: 'hostel-setting',
@@ -1415,27 +1436,11 @@ const hostelModule = {
           ],
         },
         {
-          title: 'Student Allocation',
-          path: '',
+          title: 'Room Allocation to Students',
+          path: '/hostel/student-allocation',
           _action: 'hostel-student-allocation',
           shortcutKey: 'Alt+H+3',
           shortcutKeyName: 'Alt+H+3',
-          children: [
-            {
-              title: 'Assign Students',
-              path: '/hostel/assign-students',
-              _action: 'hostel-assign-students',
-              shortcutKey: 'Alt+A+C+1',
-              shortcutKeyName: 'Alt+A+C+1',
-            },
-            {
-              title: 'Allocated Rooms',
-              path: '/hostel/allocated-students',
-              _action: 'hostel-allocated-students',
-              shortcutKey: 'Alt+A+C+2',
-              shortcutKeyName: 'Alt+A+C+2',
-            },
-          ],
         },
         {
           title: 'Fee Management',
@@ -1518,13 +1523,6 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
             },
-            {
-              title: 'Visitor Log',
-              path: '/hostel/visitor-log',
-              _action: 'hostel-visitor-log',
-              shortcutKey: 'Alt+A+C+3',
-              shortcutKeyName: 'Alt+A+C+3',
-            },
           ],
         },
         {
@@ -1590,11 +1588,11 @@ const hostelModule = {
               path: '/hostel/catering-management/weekly-menu-planning',
               _action: 'weekly-menu-planning',
             },
-            {
-              title: 'Feedback Analytics',
-              path: '/hostel/catering-management/feedback-analytics',
-              _action: 'feedback-analytics',
-            },
+            // {
+            //   title: 'Feedback Analytics',
+            //   path: '/hostel/catering-management/feedback-analytics',
+            //   _action: 'feedback-analytics',
+            // },
             {
               title: 'Settings',
               path: '/hostel/catering-management/settings',
@@ -1615,6 +1613,13 @@ const hostelModule = {
           _action: 'hostel-settings',
           shortcutKey: 'Alt+H+7',
           shortcutKeyName: 'Alt+H+7',
+        },
+        {
+          title: 'Notification',
+          path: '/hostel/hostel-notification',
+          _action: 'notification',
+          shortcutKey: 'Alt+S+N',
+          shortcutKeyName: 'Alt+S+N',
         },
       ],
     },

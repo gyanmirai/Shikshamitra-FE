@@ -6,7 +6,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Chip, Button } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -99,6 +99,17 @@ const FacilitySetting = (props: TabComponentType) => {
           { id: 'facilityName', label: 'Facility Name' },
           { id: 'description', label: 'Description' },
           {
+            id: 'facilities',
+            label: 'Facilities',
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {value.map((facility: string) => (
+                  <Chip key={facility} label={facility} size="small" variant="outlined" />
+                ))}
+              </Box>
+            ),
+          },
+          {
             id: 'action',
             label: 'Action',
             isFilter: false,
@@ -127,10 +138,27 @@ const FacilitySetting = (props: TabComponentType) => {
           {
             facilityName: 'Wi-Fi',
             description: 'High-speed internet access for residents.',
+            facilities: ['Internet', '24/7 Access'],
           },
           {
             facilityName: 'Laundry',
             description: 'In-house laundry service for all hostel students.',
+            facilities: ['Washer', 'Dryer', 'Detergent Provided'],
+          },
+          {
+            facilityName: 'Gym',
+            description: 'Equipped with modern fitness machines and weights.',
+            facilities: ['Treadmill', 'Weights', 'Yoga Mats'],
+          },
+          {
+            facilityName: 'Cafeteria',
+            description: 'Healthy and hygienic meals served daily.',
+            facilities: ['Breakfast', 'Lunch', 'Dinner', 'Snacks'],
+          },
+          {
+            facilityName: 'Library',
+            description: 'Quiet study space with academic resources.',
+            facilities: ['Books', 'Wi-Fi Zone', 'Reading Tables'],
           },
         ]}
       />

@@ -1,52 +1,65 @@
 [
   {
-    "roomName": "A101",
+    "roomName": "Room A101",
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "roomStatus": 0,
-    "status": "Clean",
-    "currentOccupation": 0,
-    "beds": ["Bed A"]
+    "facility": ["WiFi", "Study Table", "Attached Bathroom"],
+    "facilityQuantities": [
+      { "id": "wifi", "facility": "WiFi", "quantity": 1 },
+      { "id": "study-table", "facility": "Study Table", "quantity": 1 },
+      { "id": "attached-bathroom", "facility": "Attached Bathroom", "quantity": 1 }
+    ],
+    "status": "Available"
   },
   {
-    "roomName": "B201",
+    "roomName": "Room B202",
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "roomStatus": 1,
-    "status": "Needs Cleaning",
-    "currentOccupation": 2,
-    "beds": ["Bed A", "Bed B"]
+    "facility": ["WiFi", "Fan"],
+    "facilityQuantities": [
+      { "id": "wifi", "facility": "WiFi", "quantity": 1 },
+      { "id": "fan", "facility": "Fan", "quantity": 2 }
+    ],
+    "status": "Occupied"
   },
   {
-    "roomName": "C301",
+    "roomName": "Room C303",
     "roomType": "Triple",
     "floorNumber": 3,
     "roomCapacity": 3,
-    "roomStatus": 2,
-    "status": "Under Repair",
-    "currentOccupation": 0,
-    "beds": ["Bed A", "Bed B", "Bed C"]
+    "facility": ["WiFi", "Common Washroom"],
+    "facilityQuantities": [
+      { "id": "wifi", "facility": "WiFi", "quantity": 1 },
+      { "id": "common-washroom", "facility": "Common Washroom", "quantity": 1 }
+    ],
+    "status": "Maintenance"
   },
   {
-    "roomName": "D102",
+    "roomName": "Room D104",
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "roomStatus": 1,
-    "status": "Clean",
-    "currentOccupation": 1,
-    "beds": ["Bed A"]
+    "facility": ["WiFi", "Heater", "Attached Bathroom"],
+    "facilityQuantities": [
+      { "id": "wifi", "facility": "WiFi", "quantity": 1 },
+      { "id": "heater", "facility": "Heater", "quantity": 1 },
+      { "id": "attached-bathroom", "facility": "Attached Bathroom", "quantity": 1 }
+    ],
+    "status": "Available"
   },
   {
-    "roomName": "E202",
+    "roomName": "Room E205",
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "roomStatus": 0,
-    "status": "Clean",
-    "currentOccupation": 0,
-    "beds": ["Bed A", "Bed B"]
+    "facility": ["WiFi", "Desk Lamp", "Shared Bathroom"],
+    "facilityQuantities": [
+      { "id": "wifi", "facility": "WiFi", "quantity": 1 },
+      { "id": "desk-lamp", "facility": "Desk Lamp", "quantity": 2 },
+      { "id": "shared-bathroom", "facility": "Shared Bathroom", "quantity": 1 }
+    ],
+    "status": "Occupied"
   }
 ]

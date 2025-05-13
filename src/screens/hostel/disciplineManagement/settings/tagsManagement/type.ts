@@ -1,7 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface ITag {
-  tagName: string;
+  emergencyLevel: string;
   description: string;
 }
 

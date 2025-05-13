@@ -2,18 +2,7 @@ import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import {
-  Box,
-  Grid,
-  Button,
-  Checkbox,
-  TextField,
-  FormControl,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -29,16 +18,12 @@ const AddRoomCategoryForm = ({ dialog, onClose, editData }: any) => {
   const formik = useFormik({
     // Set initial form values, using editData if available or empty defaults
     initialValues: {
-      categoryName: editData?.categoryName || '',
-      maximumOccupancy: editData?.maximumOccupancy || '',
-      facilities: editData?.facilities || [],
+      name: editData?.name || '',
+      description: editData?.description || '',
     },
     validationSchema: Yup.object().shape({
-      categoryName: Yup.string().required('Category Name is required'),
-      maximumOccupancy: Yup.number()
-        .required('Maximum Occupancy is required')
-        .positive('Must be positive')
-        .integer('Must be an integer'),
+      name: Yup.string().required('Category Name is required'),
+      description: Yup.string().required('Description is required'),
     }),
     onSubmit: (values) => {
       console.log('Form Values:', values);
@@ -51,20 +36,18 @@ const AddRoomCategoryForm = ({ dialog, onClose, editData }: any) => {
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <ShakingTextField
-                  error={!!(formik.touched.categoryName && formik.errors.categoryName)}
-                >
+                <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
                   <TextField
                     size="small"
-                    label="Category Name *"
-                    name="categoryName"
+                    label="Room Type *"
+                    name="name"
                     fullWidth
-                    value={formik.values.categoryName}
+                    value={formik.values.name}
                     onChange={formik.handleChange}
-                    error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                    error={formik.touched.name && Boolean(formik.errors.name)}
                     helperText={
-                      formik.touched.categoryName && typeof formik.errors.categoryName === 'string'
-                        ? formik.errors.categoryName
+                      formik.touched.name && typeof formik.errors.name === 'string'
+                        ? formik.errors.name
                         : undefined
                     }
                   />
@@ -73,72 +56,26 @@ const AddRoomCategoryForm = ({ dialog, onClose, editData }: any) => {
 
               <Grid item xs={12}>
                 <ShakingTextField
-                  error={!!(formik.touched.maximumOccupancy && formik.errors.maximumOccupancy)}
+                  error={!!(formik.touched.description && formik.errors.description)}
                 >
                   <TextField
                     size="small"
-                    label="Maximum Occupancy *"
-                    name="maximumOccupancy"
+                    label="Description *"
+                    name="description"
                     type="number"
                     fullWidth
-                    value={formik.values.maximumOccupancy}
+                    multiline
+                    rows={3}
+                    value={formik.values.description}
                     onChange={formik.handleChange}
-                    error={
-                      formik.touched.maximumOccupancy && Boolean(formik.errors.maximumOccupancy)
-                    }
+                    error={formik.touched.description && Boolean(formik.errors.description)}
                     helperText={
-                      formik.touched.maximumOccupancy &&
-                      typeof formik.errors.maximumOccupancy === 'string'
-                        ? formik.errors.maximumOccupancy
+                      formik.touched.description && typeof formik.errors.description === 'string'
+                        ? formik.errors.description
                         : undefined
                     }
                   />
                 </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small">
-                  <Autocomplete
-                    multiple
-                    id="students-select"
-                    options={[
-                      { label: 'Air Conditioning', value: 'AC' },
-                      { label: 'Wi-Fi', value: 'WIFI' },
-                      { label: 'TV', value: 'TV' },
-                      { label: 'Hot Water', value: 'HOT_WATER' },
-                      { label: 'Attached Bathroom', value: 'BATHROOM' },
-                      { label: 'Study Table', value: 'STUDY_TABLE' },
-                      { label: 'Wardrobe', value: 'WARDROBE' },
-                      { label: 'Laundry Service', value: 'LAUNDRY' },
-                      { label: 'Mini Fridge', value: 'FRIDGE' },
-                      { label: 'Housekeeping', value: 'HOUSEKEEPING' },
-                    ]}
-                    disableCloseOnSelect
-                    getOptionLabel={(option) => option.label}
-                    renderOption={(props, option, { selected }) => {
-                      const { key, ...optionProps } = props;
-                      return (
-                        <li key={key} {...optionProps}>
-                          <Checkbox
-                            icon={<CheckBoxOutlineBlankIcon />}
-                            checkedIcon={<CheckBoxIcon />}
-                            style={{ marginRight: 8 }}
-                            checked={selected}
-                          />
-                          {option.value}
-                        </li>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select Facilities"
-                        placeholder="Select Facilities"
-                        size="small"
-                      />
-                    )}
-                  />
-                </FormControl>
               </Grid>
             </Grid>
           </Scrollbar>

@@ -8,6 +8,7 @@
       "description": "Students were found causing disturbance during study hours.",
       "incidentType": "Disturbance",
       "documents": null,
+      "emeregencyLevel" : "High",
       "status" : 0
     },
     {
@@ -19,6 +20,7 @@
       "description": "Student was caught violating curfew rules.",
       "incidentType": "Curfew Violation",
       "documents": null,
+      "emeregencyLevel" : "High",
       "status" : 0
     }
   ]

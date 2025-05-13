@@ -20,21 +20,30 @@ import {
   FormHelperText,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
 import { getIncidentInitialValues } from './initialValues';
+import TagForm from '../../settings/tagsManagement/tagForm';
 import { incidentValidationSchema } from './validationSchema';
+import IncidentTypeForm from '../../settings/incidentType/incidentTypeForm';
 
 import type { IHostelIncidentFormProps } from '../type';
 
 const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editData }) => {
+  const addEmergencyLevelDialog = useBoolean();
+  const addIncidentTypeDialog = useBoolean();
+
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
@@ -70,28 +79,6 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                     helperText={
                       formik.touched.hostelName && formik.errors.hostelName
                         ? String(formik.errors.hostelName)
-                        : undefined
-                    }
-                    options={[]}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.floor && formik.errors.floor) || false}>
-                  <CustomSelect
-                    size="small"
-                    label="Floor *"
-                    name="floor"
-                    fullWidth
-                    value={formik.values.floor}
-                    onChange={(val) => {
-                      formik.setFieldValue('floor', val);
-                    }}
-                    error={formik.touched.floor && Boolean(formik.errors.floor)}
-                    helperText={
-                      formik.touched.floor && formik.errors.floor
-                        ? String(formik.errors.floor)
                         : undefined
                     }
                     options={[]}
@@ -152,6 +139,58 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                     )}
                   </FormControl>
                 </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={
+                    !!(formik.touched.emeregencyLevel && formik.errors.emeregencyLevel) || false
+                  }
+                >
+                  <CustomSelect
+                    size="small"
+                    label="Emeregency Level *"
+                    name="emeregencyLevel"
+                    fullWidth
+                    value={formik.values.emeregencyLevel}
+                    onChange={(val) => {
+                      formik.setFieldValue('emeregencyLevel', val);
+                    }}
+                    error={formik.touched.emeregencyLevel && Boolean(formik.errors.emeregencyLevel)}
+                    helperText={
+                      formik.touched.emeregencyLevel && formik.errors.emeregencyLevel
+                        ? String(formik.errors.emeregencyLevel)
+                        : undefined
+                    }
+                    options={[]}
+                  />
+                </ShakingTextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    addEmergencyLevelDialog.onTrue();
+                  }}
+                >
+                  Add Emergency Level ?
+                </Typography>
+                <CustomDialog
+                  open={addEmergencyLevelDialog.value}
+                  handleClose={addEmergencyLevelDialog.onFalse}
+                  title="Add Emergency Level"
+                >
+                  <TagForm
+                    dialog={addEmergencyLevelDialog}
+                    onClose={() => {
+                      addEmergencyLevelDialog.onFalse();
+                    }}
+                    editData={null}
+                  />{' '}
+                </CustomDialog>
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -224,6 +263,32 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                     options={[]}
                   />
                 </ShakingTextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    addIncidentTypeDialog.onTrue();
+                  }}
+                >
+                  Add Incident Type ?
+                </Typography>
+                <CustomDialog
+                  open={addIncidentTypeDialog.value}
+                  handleClose={addIncidentTypeDialog.onFalse}
+                  title="Add Incident Type"
+                >
+                  <IncidentTypeForm
+                    dialog={addIncidentTypeDialog}
+                    onClose={() => {
+                      addIncidentTypeDialog.onFalse();
+                    }}
+                    editData={null}
+                  />{' '}
+                </CustomDialog>
               </Grid>
 
               <Grid item xs={12}>
@@ -277,7 +342,9 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
           <DialogActions>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={onClose}
+              onClick={() => {
+                onClose(null, false);
+              }}
               variant="outlined"
             >
               Cancel
