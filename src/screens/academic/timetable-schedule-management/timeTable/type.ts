@@ -4,11 +4,15 @@ export interface TRemainingLectures {
 }
 
 // Type for subject objects in the timetable
-export interface TSubject {
-  id: number;
+export type TSubject = {
   name: string;
-  color: string;
   teachers: string[];
-  room?: string;
-  noOfLeacture: number;
-}
+};
+
+export type TSubjectGroup = {
+  id: string;
+  subjectName: string;
+  subjectColor: string;
+  subjects: TSubject[];
+  noOfLecture: number;
+};

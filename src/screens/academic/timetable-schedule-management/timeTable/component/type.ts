@@ -9,3 +9,9 @@ export interface ITimeTableCellProps {
   onRoomSelect: (room: string, timeSlot: string, day: string) => void;
   onDeleteSlot: (timeSlot: string, day: string) => void;
 }
+
+export interface IAssignRoomProps {
+  selectedRoom: string;
+  slotData: any;
+  onRoomSelect: (value: string) => void;
+}
