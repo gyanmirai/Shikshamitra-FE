@@ -14,23 +14,32 @@ import examTableData from 'src/json/examination/examTableData.json';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NewExamForm from './components/examFormComponent';
+import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
 
-import type { IScheduledExam } from './type';
+import type { IExamFormValues } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
 
 const ScheduleExam = (props: TabComponentType) => {
+  // State to control exam form visibility
   const [open, setOpen] = useState(false);
-  const [selectedExam, setSelectedExam] = useState<IScheduledExam | null>(null);
-  const [examData, setExamData] = useState(examTableData);
+  // State to store currently selected exam for editing
+  const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
+  // State to store all exam data, initialized with data from JSON
+  const [examData, setExamData] = useState<IExamFormValues[]>(examTableData);
+  // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
+  // Redux dispatch hook for state management
   const dispatch = useDispatch();
-  // Dynamic breadcrumb navigation links based on current view (form or list)
+  // Boolean hook to control time view dialog
+  const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
   const links = open
     ? [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
@@ -44,6 +53,10 @@ const ScheduleExam = (props: TabComponentType) => {
         { name: 'Schedule Exam' },
       ];
 
+  /**
+   * Handles the deletion of an exam from the exam data
+   * @param id - The unique identifier of the exam to be deleted
+   */
   const handleDelete = (id: string | undefined) => {
     const updatedExamData = examData.filter((exam) => exam.id !== id);
     setExamData(updatedExamData);
@@ -51,6 +64,11 @@ const ScheduleExam = (props: TabComponentType) => {
     setSelectedExam(null);
   };
 
+  /**
+   * Handles closing the exam form with confirmation if there are unsaved changes
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted successfully
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setOpen(false);
@@ -61,7 +79,6 @@ const ScheduleExam = (props: TabComponentType) => {
       setSelectedExam(null);
     }
   };
-
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -110,6 +127,10 @@ const ScheduleExam = (props: TabComponentType) => {
           editData={selectedExam}
           setEditData={setSelectedExam}
           data={examData}
+          onViewTimetable={(data) => {
+            viewTimeDialog.onTrue();
+            setSelectedExam(data);
+          }}
         />
       )}
       <ConfirmDialog
@@ -132,6 +153,18 @@ const ScheduleExam = (props: TabComponentType) => {
           </Button>
         }
       />
+
+      <CustomDialog
+        title="Exam Timetable"
+        open={viewTimeDialog.value}
+        handleClose={() => {
+          viewTimeDialog.onFalse();
+          setSelectedExam(null);
+        }}
+        maxWidth="md"
+      >
+        <ViewTimetableComp examData={selectedExam} />
+      </CustomDialog>
     </Box>
   );
 };
