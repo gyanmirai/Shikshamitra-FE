@@ -13,12 +13,18 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Settings from './settings';
 import SubjectCreation from './subjectCreation';
+import ElectiveSubjectSetting from './electiveSubjectSetting';
 
 const TABS = [
   {
     value: 'subjectSetting',
     label: 'Subject Creation',
     component: (props: TabComponentType) => <SubjectCreation {...props} />,
+  },
+  {
+    value: 'electiveSubjectSetting',
+    label: 'Elective Subject Creation',
+    component: (props: TabComponentType) => <ElectiveSubjectSetting {...props} />,
   },
   {
     value: 'notificationSetting',
