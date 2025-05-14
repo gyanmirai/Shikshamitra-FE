@@ -608,6 +608,13 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+1',
             },
             {
+              title: 'Assign Elective Subject to Student',
+              path: '/academic/assign-elective-subject',
+              _action: 'assign-elective-subject',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
               title: 'Teacher',
               path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
