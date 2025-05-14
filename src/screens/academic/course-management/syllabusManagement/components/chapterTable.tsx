@@ -1,5 +1,5 @@
 // components/ChapterTable.tsx
-import { Box, Chip, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -47,48 +47,30 @@ const ChapterTable = ({
       {
         id: 'chapterNo',
         label: 'Chapter No',
-        minWidth: '130px',
         align: 'left',
         filterType: 'number',
       },
       {
         id: 'chapterName',
         label: 'Chapter Name',
-        minWidth: '180px',
         align: 'left',
         filterType: 'string',
       },
       {
         id: 'startDate',
         label: 'Start Date',
-        minWidth: '120px',
         align: 'left',
         filterType: 'date',
       },
       {
         id: 'endDate',
         label: 'End Date',
-        minWidth: '120px',
         align: 'left',
         filterType: 'date',
       },
       {
-        id: 'assignedTeacher',
-        label: 'Secondary Teacher',
-        minWidth: '200px',
-        align: 'left',
-        render: (value) => (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {value.map((audience: string) => (
-              <Chip key={audience} label={audience} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ),
-      },
-      {
         id: 'viewMaterial',
         label: 'View Material',
-        minWidth: '150px',
         align: 'left',
         isFilter: false,
         render() {
@@ -98,7 +80,6 @@ const ChapterTable = ({
       {
         id: 'progress',
         label: 'Progress',
-        minWidth: '150px',
         align: 'left',
         filterType: 'number',
         render(value) {
@@ -128,7 +109,7 @@ const ChapterTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 100,
+        minWidth: 70,
         isSort: false,
         isFilter: false,
         align: 'left',
@@ -139,7 +120,6 @@ const ChapterTable = ({
               actions={(prop) => actions({ ...prop, row: row as IChapter })}
               placement="right-top"
               showEditIcon
-              showViewIcon
               showDeleteIcon
               handleViewClick={() => handleEyeClick(row.subjectName)}
               handleEditClick={() => {

@@ -23,6 +23,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -78,7 +80,7 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
                   <CustomSelect
@@ -637,6 +639,7 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
             <Button
               variant="contained"
               color="warning"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={() => formik.setFieldValue('status', 'draft')}
             >
               Save Draft
@@ -645,6 +648,7 @@ const HomeworkAssignmentCreationForm: React.FC<IHomeWorkCreationFormProps> = ({
               variant="contained"
               color="primary"
               type="submit"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={() => formik.setFieldValue('status', 'published')}
             >
               Publish

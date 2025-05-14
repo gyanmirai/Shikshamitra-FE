@@ -204,7 +204,7 @@ const Subjects = (props: TabComponentType) => {
               isLoading={isLoading}
               labelKey="name"
               valueKey="name"
-              formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
               options={[]}
@@ -215,7 +215,7 @@ const Subjects = (props: TabComponentType) => {
               }}
               label="Subject"
               isLoading={isLoading}
-              formControlProps={{ sx: { minWidth: 150, mb: 2 } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
           </Box>
           {/* Table component for displaying chapter data */}

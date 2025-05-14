@@ -3,15 +3,23 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
+import {
+  Box,
+  Grid,
+  Button,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -54,46 +62,6 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
 
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.idProof && formik.errors.idProof) || false}
-                >
-                  <CustomSelect
-                    label="ID Proof *"
-                    options={[
-                      { value: 'Aadhar Card', label: 'Aadhar Card' },
-                      { value: 'PAN Card', label: 'PAN Card' },
-                      { value: 'Driving License', label: 'Driving License' },
-                      { value: 'Passport', label: 'Passport' },
-                    ]}
-                    value={formik.values.idProof}
-                    onChange={(val) => {
-                      formik.setFieldValue('idProof', val);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                    error={formik.touched.idProof && Boolean(formik.errors.idProof)}
-                    helperText={(formik.touched.idProof && formik.errors.idProof) || undefined}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.aadharNumber && formik.errors.aadharNumber) || false}
-                >
-                  <TextField
-                    size="small"
-                    label="Aadhar Number *"
-                    name="aadharNumber"
-                    fullWidth
-                    value={formik.values.aadharNumber}
-                    onChange={formik.handleChange}
-                    error={formik.touched.aadharNumber && Boolean(formik.errors.aadharNumber)}
-                    helperText={formik.touched.aadharNumber && formik.errors.aadharNumber}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
                   error={!!(formik.touched.contactNo && formik.errors.contactNo) || false}
                 >
                   <TextField
@@ -111,24 +79,24 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
 
               <Grid item xs={12}>
                 <ShakingTextField
-                  error={!!(formik.touched.visingWhome && formik.errors.visingWhome) || false}
+                  error={!!(formik.touched.personToVisit && formik.errors.personToVisit) || false}
                 >
                   <Autocomplete
                     size="small"
                     options={[]}
                     getOptionLabel={(option) => option}
-                    value={formik.values.visingWhome}
+                    value={formik.values.personToVisit}
                     onChange={(_, newValue) => {
-                      formik.setFieldValue('visingWhome', newValue);
+                      formik.setFieldValue('personToVisit', newValue);
                     }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Visiting Whom *"
-                        name="visingWhome"
+                        label="Person To Visit *"
+                        name="personToVisit"
                         fullWidth
-                        error={formik.touched.visingWhome && Boolean(formik.errors.visingWhome)}
-                        helperText={formik.touched.visingWhome && formik.errors.visingWhome}
+                        error={formik.touched.personToVisit && Boolean(formik.errors.personToVisit)}
+                        helperText={formik.touched.personToVisit && formik.errors.personToVisit}
                       />
                     )}
                   />{' '}
@@ -136,9 +104,8 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TimePicker
-                  label="Entry Time *"
-                  format="HH:mm"
+                <DateTimePicker
+                  label="Entry Date Time *"
                   value={formik.values.entryTime}
                   onChange={(val) => {
                     formik.setFieldValue('entryTime', val);
@@ -158,8 +125,8 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TimePicker
-                  label="Exit Time *"
+                <DateTimePicker
+                  label="Exit Date Time *"
                   format="HH:mm"
                   value={formik.values.exitTime}
                   onChange={(val) => {
@@ -188,12 +155,37 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                     onChange={(value) => {
                       formik.setFieldValue('reasonForVisit', value);
                     }}
-                    placeholder="Question *"
+                    placeholder="Reason For Visit *"
                     sx={{ width: '100%', marginTop: '10px' }}
                     error={formik.touched.reasonForVisit && Boolean(formik.errors.reasonForVisit)}
                     helperText={formik.touched.reasonForVisit && formik.errors.reasonForVisit}
                   />
                 </ShakingTextField>
+              </Grid>
+              <Grid item xs={12}>
+                <UploadBox
+                  onDrop={() => {}}
+                  placeholder={
+                    <Box
+                      sx={{
+                        gap: 0.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: 'text.disabled',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      <Iconify icon="eva:cloud-upload-fill" width={40} />
+                      <Typography variant="body2">Upload Id Proof</Typography>
+                    </Box>
+                  }
+                  sx={{
+                    py: 2.5,
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 1.5,
+                  }}
+                />
               </Grid>
             </Grid>
           </Scrollbar>

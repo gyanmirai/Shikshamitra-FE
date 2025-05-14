@@ -3,14 +3,15 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
-import { Box, Card, Button, TextField, IconButton, Autocomplete } from '@mui/material';
+import { Box, Card, Button, MenuList, MenuItem, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -25,22 +26,24 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelLeaveForm from './components/leaveForm';
-import HostelLeaveAbsent from './components/leaveAbsent';
 
 import type { IStudentAttendanceLeave } from './type';
 
 const LeaveAndApprove = () => {
   // State to store the starting date of the leave request, initialized with current date
   const [fromDate, setFromDate] = useState<Dayjs | null>(dayjs());
+  const [selectedEntry, setSelectedEntry] = useState<IStudentAttendanceLeave | null>(null);
   // State to store the ending date of the leave request, initialized with current date
   const [toDate, setToDate] = useState<Dayjs | null>(dayjs()); // State for storing the selected hostel
   const [hostel, setHostel] = useState<string>('');
   // Dialog state for confirming rejection of leave requests
   const confirmRejectDialog = useBoolean();
+  const confirmApproveDialog = useBoolean();
 
   // State to manage the table data containing student attendance and leave information
   const [hostelTableData, setHostelTableData] =
@@ -73,12 +76,34 @@ const LeaveAndApprove = () => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setOpen(false);
       leaveRequestDialog.onFalse();
+      confirmApproveDialog.onFalse();
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       setOpen(false);
       leaveRequestDialog.onFalse();
+      confirmApproveDialog.onFalse();
     }
   };
+
+  const actions = useCallback(
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ popover }: { popover: UsePopoverReturn }, row: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={async () => {
+            confirmApproveDialog.onTrue();
+            setSelectedEntry(row);
+            popover.onClose();
+          }}
+        >
+          <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
+          Review
+        </MenuItem>
+      </MenuList>
+    ),
+    [confirmApproveDialog]
+  );
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -287,36 +312,10 @@ const LeaveAndApprove = () => {
                 isFilter: false,
                 render(value, row) {
                   return (
-                    <Box display="flex" gap={1}>
-                      {row.statusValue === 'Pending' ? (
-                        <>
-                          <IconButton
-                            size="small"
-                            color="success"
-                            onClick={() => {
-                              // setWhichStatus(EmployeeLeaveStatusType.Approved);
-                              // setLeaveId(row.id);
-                              confirmRejectDialog.onTrue();
-                            }}
-                          >
-                            <CheckCircleOutline />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => {
-                              // setWhichStatus(EmployeeLeaveStatusType.Rejected);
-                              // setLeaveId(row.id);
-                              confirmRejectDialog.onTrue();
-                            }}
-                          >
-                            <Cancel />
-                          </IconButton>
-                        </>
-                      ) : (
-                        '-'
-                      )}
-                    </Box>
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={(prop) => actions(prop, row)}
+                    />
                   );
                 },
               },
@@ -327,22 +326,20 @@ const LeaveAndApprove = () => {
       )}
 
       <CustomDialog
-        title="Remarks"
-        open={confirmRejectDialog.value}
+        title="Approve Leave Request"
+        maxWidth="md"
+        open={confirmApproveDialog.value}
         handleClose={() => {
-          // setWhichStatus(null);
-          confirmRejectDialog.onFalse();
-          // setLeaveId('');
+          confirmApproveDialog.onFalse();
+          setSelectedEntry(null);
         }}
       >
-        <HostelLeaveAbsent
-          handleClose={() => {
-            // setWhichStatus(null);
-            confirmRejectDialog.onFalse();
-            // setLeaveId('');
+        <HostelLeaveForm
+          open={confirmApproveDialog}
+          onClose={() => {
+            handleClose(null, false);
           }}
-          // leaveId={leaveId}
-          // status={whichStatus}
+          editData={selectedEntry}
         />
       </CustomDialog>
     </Box>

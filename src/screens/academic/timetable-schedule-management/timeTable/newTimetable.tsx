@@ -364,7 +364,7 @@ const TimeTableGrid = (props: TabComponentType) => {
       />
       {open && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
             <CustomSelect
               label="Class"
               options={classData?.items || []}
@@ -381,9 +381,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                 setDivisionOptions(selectedClass?.divisions || []);
               }}
               value={classes}
-              formControlProps={{
-                sx: { width: '100%', minWidth: '180px' },
-              }}
+              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
               label="Division"
@@ -395,7 +393,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               onChange={(val) => {
                 setDivision(val as string);
               }}
-              formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
+              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
               label="Classroom"
@@ -411,7 +409,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               onChange={(val) => {
                 setClassroom(val as string);
               }}
-              formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
+              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             />
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -457,7 +455,7 @@ const TimeTableGrid = (props: TabComponentType) => {
             options={classData?.items || []}
             valueKey="id"
             labelKey="name"
-            formControlProps={{ sx: { width: '150px', mb: 2 } }}
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             value={classes}
             onChange={(value) => {
               // setClasses(value);

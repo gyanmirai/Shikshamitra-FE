@@ -14,7 +14,7 @@ import AddWeeklyMenuDialog from './add-weekly-menu-dialog';
 
 import type { IMealFormValues } from '../weekly-planner-interface';
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MEAL_TYPES = ['BreakFast', 'Lunch', 'Snacks', 'Dinner'] as const;
 const CELL_WIDTH = '12.5%';
 const CELL_HEIGHT = '220px';
@@ -53,6 +53,21 @@ const getMenuColor = (meal: string, dayIndex: number): string => {
 const WeeklyPlanningForCatering = () => {
   const dialogToAddMenu = useBoolean();
   const [selectedMeal, setSelectedMeal] = useState<IMealFormValues | null>(null);
+  const readOnlyDialog = useBoolean();
+  const [readOnlyData, setReadOnlyData] = useState<IMealFormValues | null>(null);
+
+  const openReadOnlyDialog = (mealData: IMealFormValues) => {
+    setReadOnlyData(mealData);
+    readOnlyDialog.onTrue();
+  };
+
+  const hasDayPassed = (day: string): boolean => {
+    const todayIndex = new Date().getDay();
+    const dayIndex = DAYS.indexOf(day);
+
+    const adjustedTodayIndex = (todayIndex + 6) % 7;
+    return dayIndex < adjustedTodayIndex;
+  };
 
   const handleAddMenu = (day: string, dish: string, meal: string) => {
     setSelectedMeal({
@@ -92,6 +107,20 @@ const WeeklyPlanningForCatering = () => {
   const renderMealCell = (day: string, meal: string, colIdx: number) => {
     const dish = menuData[day]?.[meal];
     const bgColor = getMenuColor(meal, colIdx);
+    const isPast = hasDayPassed(day);
+
+    const handleClick = () => {
+      if (isPast) {
+        // Open read-only or alternate form
+        openReadOnlyDialog({
+          mealType: meal,
+          mealDescription: dish,
+          mealDay: day,
+        });
+      } else {
+        handleAddMenu(day, dish, meal);
+      }
+    };
 
     return (
       <Box
@@ -103,7 +132,7 @@ const WeeklyPlanningForCatering = () => {
         alignItems="center"
         justifyContent="center"
         p={1}
-        onClick={() => handleAddMenu(day, dish, meal)}
+        onClick={() => handleClick()}
         sx={{
           cursor: 'pointer',
           '&:hover': { bgcolor: COLORS.cell.hover },

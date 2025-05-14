@@ -12,7 +12,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FacilitySetting from './components/facility';
-import BedManagement from './components/bedManagement/bedManagement';
+import PackageManagement from './components/packageManagement';
 import HostelTypeSetting from './components/hostelTypeDefinition/hostelTypeDefinition';
 import RoomCategorySetting from './components/roomCategoryManagement/roomCategoryManagement';
 
@@ -24,18 +24,18 @@ const TABS = [
   },
   {
     value: 'facility',
-    label: 'Facility',
+    label: 'Facility Group',
     component: (props: TabComponentType) => <FacilitySetting {...props} />,
   },
   {
-    value: 'roomCategoryManagement',
-    label: 'Room Category Management',
-    component: (props: TabComponentType) => <RoomCategorySetting {...props} />,
+    value: 'package',
+    label: 'Package Management',
+    component: (props: TabComponentType) => <PackageManagement {...props} />,
   },
   {
-    value: 'bedManagement',
-    label: 'Bed Management',
-    component: (props: TabComponentType) => <BedManagement {...props} />,
+    value: 'roomCategoryManagement',
+    label: 'Room Type Management',
+    component: (props: TabComponentType) => <RoomCategorySetting {...props} />,
   },
 ];
 const HostelConfigurationSetting: React.FC = () => {

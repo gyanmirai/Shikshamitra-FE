@@ -4,6 +4,8 @@ import React, { useState, useCallback } from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
 
+import { useSearchParam } from 'src/hooks/use-search-param';
+
 import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -22,8 +24,10 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
   onEdit,
   onAddRoomDialog,
   onAddRoom,
-  onRoomDetails,
 }) => {
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
+
+  // State to manage the hostel data
   const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
 
   const actions = useCallback(
@@ -34,27 +38,18 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
           {/* {(row.status === 'Cancelled' || row.status === 'Scheduled') && ( */}
           <MenuItem
             onClick={() => {
-              onAddRoom(row as IHostelData);
+              setSearchParams({ hostel: row.hostelName });
               pop.onClose();
             }}
           >
             <Iconify icon="mdi:plus" sx={{ mr: 1 }} />
-            Room Configuration
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              onRoomDetails(row as IHostelData);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-            Room Details
+            Add Room
           </MenuItem>
           {/* )} */}
         </MenuList>
       </>
     ),
-    [onAddRoom, onRoomDetails]
+    [setSearchParams]
   );
 
   return (
@@ -88,16 +83,15 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
       }
       columns={[
         { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 130 },
+        { id: 'hostelType', label: 'Hostel Type', align: 'left', minWidth: 130 },
         {
-          id: 'totalRoomCapacity',
-          label: 'Total Room Capacity',
+          id: 'totalFloors',
+          label: 'Total Floors',
           align: 'left',
           filterType: 'number',
           minWidth: 180,
         },
-        { id: 'wardenDetails', label: 'Warden Details', align: 'left', minWidth: 150 },
-        { id: 'currentOccupation', label: 'Current Occupation', align: 'left', minWidth: 180 },
-        { id: 'hostelType', label: 'Hostel Type', align: 'left', minWidth: 130 },
+        { id: 'assignedWarden', label: 'Assigned Warden', align: 'left', minWidth: 180 },
         { id: 'location', label: 'Location', align: 'left' },
         {
           id: 'action',

@@ -120,7 +120,7 @@ const AssignTeacher = () => {
         onChange={(val) => {
           // formik.setFieldValue('organization', val);
         }}
-        formControlProps={{ fullWidth: true, sx: { maxWidth: '200px', mb: 2 } }}
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
       />
 
       <CustomizableTable

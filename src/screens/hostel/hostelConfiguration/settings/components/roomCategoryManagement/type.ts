@@ -1,5 +1,4 @@
-export interface IRoomCategory {
-  categoryName: string;
-  maximumOccupancy: number;
-  facilities: string[];
+export interface IHostelRoomType {
+  name: string;
+  description: number;
 }

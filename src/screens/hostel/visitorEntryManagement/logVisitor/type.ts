@@ -1,16 +1,16 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IDocument } from 'src/screens/academic/course-management/syllabusManagement/type';
 
 export interface IVisitorData {
   visitorName: string;
-  idProof: string;
-  aadharNumber: string;
+  idProof?: IDocument;
   contactNo: string; // e.g., "250/500"
-  visingWhome: string;
+  personToVisit: string;
   entryTime: string | Dayjs | null;
   exitTime: string | Dayjs | null;
   reasonForVisit: string;
-  status: string;
+  status: number;
 }
 
 export interface IVisitorDataTableProps {

@@ -218,7 +218,7 @@ const Subject = (props: TabComponentType) => {
             options={classData?.items || []}
             valueKey="id"
             labelKey="name"
-            formControlProps={{ sx: { width: '150px', mb: 2 } }}
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             value={classes}
             onChange={(value) => {
               setClasses(value as string);

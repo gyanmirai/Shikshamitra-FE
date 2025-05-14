@@ -10,9 +10,9 @@ export const visitorValidationSchema = Yup.object().shape({
   contactNo: Yup.string()
     .matches(/^\d{10}$/, 'Contact number must be 10 digits')
     .required('Contact Number is required'),
-  visitTime: Yup.date().nullable().required('Visit Time is required'),
+  visitStartDateTime: Yup.date().nullable().required('Visit Time is required'),
 
-  visitDate: Yup.date().nullable().required('Visit Date is required'),
+  visitEndDateTime: Yup.date().nullable().required('Visit Date is required'),
 
   reasonForVisit: Yup.string().required('Reason is required'),
   status: Yup.string()

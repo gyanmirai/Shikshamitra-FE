@@ -1,35 +1,30 @@
 [
-    {
-      "hostelName": "Hostel 1",
-      "totalRoomCapacity": 500,
-      "wardenDetails": "John Doe",
-      "currentOccupation": "250/500",
-      "hostelType": "Boys",
-      "location": "Building 1"
-    },
-    {
-      "hostelName": "Hostel 2",
-      "totalRoomCapacity": 500,
-      "wardenDetails": "John Doe",
-      "currentOccupation": "250/500",
-      "hostelType": "Girls",
-      "location": "Building 2"
-    },
-    {
-      "hostelName": "Hostel 3",
-      "totalRoomCapacity": 500,
-      "wardenDetails": "John Doe",
-      "currentOccupation": "250/500",
-      "hostelType": "Boys",
-      "location": "Building 3"
-    },
-    {
-      "hostelName": "Hostel 4",
-      "totalRoomCapacity": 500,
-      "wardenDetails": "John Doe",
-      "currentOccupation": "250/500",
-      "hostelType": "Girls",
-      "location": "Building 4"
-    }
-  ]
-  
+  {
+    "hostelName": "Sunrise Boys Hostel",
+    "totalFloors": 4,
+    "assignedWarden": "warden_101",
+    "hostelType": "Boys",
+    "location": "Campus Block A, Near Library"
+  },
+  {
+    "hostelName": "Moonlight Girls Hostel",
+    "totalFloors": 5,
+    "assignedWarden": "warden_102",
+    "hostelType": "Girls",
+    "location": "Campus Block B, Behind Auditorium"
+  },
+  {
+    "hostelName": "Galaxy Boys Hostel",
+    "totalFloors": 3,
+    "assignedWarden": "warden_103",
+    "hostelType": "Boys",
+    "location": "North Wing, Opposite Sports Complex"
+  },
+  {
+    "hostelName": "Starlight Girls Hostel",
+    "totalFloors": 4,
+    "assignedWarden": "warden_104",
+    "hostelType": "Girls",
+    "location": "East Campus, Near Cafeteria"
+  }
+]

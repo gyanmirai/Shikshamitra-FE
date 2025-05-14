@@ -1,7 +1,7 @@
 import React from 'react';
 
-import RollCallSetting from 'src/screens/hostel/attendanceManagement/setting';
+import HostelAttendanceSetting from 'src/screens/hostel/attendanceManagement/setting/hostelAttendanceSetting';
 
-const page = () => <RollCallSetting />;
+const page = () => <HostelAttendanceSetting />;
 
 export default page;

@@ -65,21 +65,6 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <CustomSelect
-                  size="small"
-                  label="Floor"
-                  name="floor"
-                  fullWidth
-                  disabled
-                  value={formik.values.floor}
-                  onChange={(val) => {
-                    formik.setFieldValue('floor', val);
-                  }}
-                  options={[]}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <Autocomplete
                     multiple

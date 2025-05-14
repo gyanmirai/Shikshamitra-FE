@@ -12,17 +12,23 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TagSetting from './tagsManagement';
+import IncidentTypeSetting from './incidentType';
 import DisciplineActionSetting from './disciplinaryAction';
 
 const TABS = [
+  {
+    value: 'incidentTypeSetting',
+    label: 'Incident Type Setting',
+    component: (props: TabComponentType) => <IncidentTypeSetting {...props} />,
+  },
   {
     value: 'disciplinaryAction',
     label: 'Disciplinary Action',
     component: (props: TabComponentType) => <DisciplineActionSetting {...props} />,
   },
   {
-    value: 'tagsManagement',
-    label: 'Tags Management',
+    value: 'emenergencyLevel',
+    label: 'Emenergency Level',
     component: (props: TabComponentType) => <TagSetting {...props} />,
   },
 ];
