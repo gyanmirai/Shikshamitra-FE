@@ -39,29 +39,41 @@ import SubjectList from './component/subjectList';
 import TimeTableCell from './component/timeTableCell';
 import CreateSlotsForm from '../settings/components/lectureSlots/createSlotsForm';
 
-import type { TSubject, TRemainingLectures } from './type';
+import type { TSubjectGroup, TRemainingLectures } from './type';
 
-export const subjects: TSubject[] = [
+export const subjectGroups: TSubjectGroup[] = [
   {
-    id: 1,
-    name: 'Math',
-    color: '#FFE0E0',
-    teachers: ['Mr. Smith', 'Mrs. Johnson'],
-    noOfLeacture: 5,
+    subjectName: 'Core Subjects',
+    subjectColor: '#FFB74D',
+    noOfLecture: 7,
+
+    subjects: [
+      {
+        name: 'Math',
+        teachers: ['Mr. Smith', 'Mrs. Johnson'],
+      },
+      {
+        name: 'Science',
+        teachers: ['Mrs. Johnson', 'Mr. Davis'],
+      },
+    ],
+    id: '1',
   },
   {
-    id: 2,
-    name: 'Science',
-    color: '#E0FFE0',
-    teachers: ['Mrs. Johnson', 'Mr. Davis'],
-    noOfLeacture: 7,
-  },
-  {
-    id: 3,
-    name: 'English',
-    color: '#E0E0FF',
-    teachers: ['Ms. Wilson', 'Mr. Brown'],
-    noOfLeacture: 6,
+    subjectName: 'Language Subjects',
+    subjectColor: '#64B5F6',
+    noOfLecture: 7,
+    subjects: [
+      {
+        name: 'English',
+        teachers: ['Ms. Wilson', 'Mr. Brown'],
+      },
+      {
+        name: 'Hindi',
+        teachers: ['Mr. Mehta', 'Mrs. Kapoor'],
+      },
+    ],
+    id: '2',
   },
 ];
 
@@ -94,10 +106,10 @@ const TimeTableGrid = (props: TabComponentType) => {
   // Initialize remaining lectures count for each subject
   // Creates an object with subject IDs as keys and their lecture counts as values
   const [remainingLectures, setRemainingLectures] = useState<TRemainingLectures>(() =>
-    subjects.reduce(
+    subjectGroups.reduce(
       (acc, subject) => ({
         ...acc,
-        [subject.id]: subject.noOfLeacture,
+        [subject.id]: subject.noOfLecture,
       }),
       {}
     )
@@ -148,7 +160,7 @@ const TimeTableGrid = (props: TabComponentType) => {
   const [timetable, setTimetable] = useState<
     Array<
       Array<{
-        subject?: TSubject;
+        subject?: TSubjectGroup;
         teacher?: string;
         room?: string;
       } | null>
@@ -160,7 +172,7 @@ const TimeTableGrid = (props: TabComponentType) => {
   );
 
   // Handle the start of a drag operation for a subject
-  const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubject) => {
+  const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubjectGroup) => {
     // Store the subject data in the drag event
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };

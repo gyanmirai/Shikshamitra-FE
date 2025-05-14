@@ -48,6 +48,8 @@ const TimeTableCell = ({
     }
   };
 
+  console.log('slotData', slotData);
+
   /**
    * Handles the drop event for the timetable cell
    * Processes the drop action only if the cell is empty and not a break slot
@@ -118,7 +120,7 @@ const TimeTableCell = ({
             sx={{
               p: 1,
               height: '90%',
-              bgcolor: slotData.subject.color,
+              bgcolor: slotData.subject.subjectColor,
               position: 'relative',
               '& .action-menu': {
                 opacity: 0,
@@ -139,7 +141,7 @@ const TimeTableCell = ({
               }}
             >
               <Typography variant="subtitle2" fontWeight="medium">
-                {slotData.subject.name}
+                {slotData.subject.subjectName}
               </Typography>
               <Box className="action-menu">
                 <ThreeDotsActions
@@ -218,9 +220,14 @@ const TimeTableCell = ({
             />
           </CustomDialog>
 
-          <CustomDialog open={roomDialog.value} handleClose={roomDialog.onFalse} title="Edit Room">
+          <CustomDialog
+            maxWidth="sm"
+            open={roomDialog.value}
+            handleClose={roomDialog.onFalse}
+            title="Edit Room"
+          >
             <AssignRoom
-              slotData={slotData}
+              slotData={slotData.subjects}
               selectedRoom={selectedRoom}
               onRoomSelect={(value) => {
                 onRoomSelect(value, timeSlot, day);
