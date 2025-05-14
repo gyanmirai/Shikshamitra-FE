@@ -66,14 +66,14 @@ const TagSetting = (props: TabComponentType) => {
           variant="contained"
           size="small"
         >
-          Tag
+          Emergency Level
         </Button>
       </Box>
 
       <CustomizableTable
         noDataText={
           <>
-            No Tags Found{' '}
+            No Emergency Level Found{' '}
             <Box
               onClick={() => {
                 setOpen(true);
@@ -83,7 +83,7 @@ const TagSetting = (props: TabComponentType) => {
               fontWeight={600}
               sx={{ '&:hover': { cursor: 'pointer', textDecoration: 'underline' } }}
             >
-              Add Tag
+              Emergency Level
             </Box>
           </>
         }
@@ -152,7 +152,7 @@ const TagSetting = (props: TabComponentType) => {
           dialog.onFalse();
           setSelectedEntry(null);
         }}
-        title={selectedEntry ? 'Edit Tag' : 'Add Tag'}
+        title={selectedEntry ? 'Edit Emergency Level' : 'Add Emergency Level'}
       >
         <TagForm dialog={dialog} editData={selectedEntry} onClose={handleClose} />
       </CustomDialog>

@@ -8,7 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomDialog from 'src/components/customDialog';
 
-import { subjects } from '../newTimetable';
+import { subjectGroups } from '../newTimetable';
 import CreateNoOfLecture from '../../settings/components/weeklyLectures/createWeeklyLectures';
 
 interface SubjectListProps {
@@ -20,7 +20,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
   const weeklyLecturesDialog = useBoolean();
   return (
     <Stack spacing={1}>
-      {subjects.map((subject) => (
+      {subjectGroups.map((subject) => (
         <Paper
           key={subject.id}
           elevation={1}
@@ -29,13 +29,13 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
           sx={{
             p: 1,
             cursor: 'move',
-            backgroundColor: subject.color,
+            backgroundColor: subject.subjectColor,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography variant="body2">{subject.name}</Typography>
+            <Typography variant="body2">{subject.subjectName}</Typography>
             <Typography variant="body2">
-              ({remainingLectures[subject.id]} / {subject.noOfLeacture})
+              ({remainingLectures[subject.id]} / {subject.noOfLecture})
             </Typography>
           </Box>
         </Paper>

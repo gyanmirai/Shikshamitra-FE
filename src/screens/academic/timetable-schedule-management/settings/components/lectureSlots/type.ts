@@ -11,4 +11,5 @@ export interface ITimeSlot {
 export interface ICreateSlotsFormProps {
   open?: boolean;
   onClose?: () => void;
+  disabled?: boolean;
 }

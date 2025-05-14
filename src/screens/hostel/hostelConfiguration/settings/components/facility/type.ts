@@ -1,6 +1,7 @@
 export interface IFacility {
   facilityName: string;
   description: string;
+  facilities: string[];
 }
 
 export interface IFacilityFormProps {

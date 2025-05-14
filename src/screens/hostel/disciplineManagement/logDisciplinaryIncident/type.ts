@@ -3,11 +3,11 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IHostelIncident {
   hostelName: string;
-  floor: string;
   students: string[];
   incidentDate: Dayjs | string | null;
   incidentTime: Dayjs | string | null;
   description: string;
+  emeregencyLevel: string;
   incidentType: string;
   documents?: File | null;
   status?: number;
@@ -15,7 +15,7 @@ export interface IHostelIncident {
 
 export interface IHostelIncidentFormProps {
   open: UseBooleanReturn;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   editData?: IHostelIncident | null;
 }
 

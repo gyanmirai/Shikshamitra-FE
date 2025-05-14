@@ -19,7 +19,8 @@ import type { IPreVisitorLog } from './pre-register-interface';
 const PreRegisterScreenForStudent = () => {
   // Controls the visibility of the Add/Edit visitor dialog
   const [open, setOpen] = useState(false);
-
+  const markInDialog = useBoolean();
+  const markOutDialog = useBoolean();
   // Tracks whether the dialog is in Edit mode (true) or Add mode (false)
   const [isEdit, setEdit] = useState(false);
 
@@ -89,7 +90,7 @@ const PreRegisterScreenForStudent = () => {
   };
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Pre Register Visitor"
         description={
@@ -118,8 +119,19 @@ const PreRegisterScreenForStudent = () => {
           </Button>
         }
       />
-      {!open && <PreRegisterTable onClick={handleClick} />}
-
+      {!open && (
+        <PreRegisterTable
+          onClick={handleClick}
+          onMarkOut={(data) => {
+            setSelectedVisitor(data);
+            markOutDialog.onTrue();
+          }}
+          onMarkIn={(data) => {
+            setSelectedVisitor(data);
+            markInDialog.onTrue();
+          }}
+        />
+      )}
       {open && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <PreRegisterForm
@@ -131,7 +143,6 @@ const PreRegisterScreenForStudent = () => {
           />
         </Card>
       )}
-
       {deleteDialog.value && (
         <ConfirmDialog
           open={deleteDialog.value}
@@ -148,6 +159,34 @@ const PreRegisterScreenForStudent = () => {
           }
         />
       )}
+      <ConfirmDialog
+        open={markInDialog.value}
+        onClose={() => {
+          setSelectedVisitor(null);
+          markInDialog.onFalse();
+        }}
+        title="Mark In"
+        content="Are you sure you want to mark this visitor as checked in?"
+        action={
+          <Button variant="contained" onClick={() => {}}>
+            Mark In
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={markOutDialog.value}
+        onClose={() => {
+          setSelectedVisitor(null);
+          markOutDialog.onFalse();
+        }}
+        title="Mark Out"
+        content="Are you sure you want to mark this visitor as checked out?"
+        action={
+          <Button variant="contained" onClick={() => {}}>
+            Mark Out
+          </Button>
+        }
+      />{' '}
     </Box>
   );
 };

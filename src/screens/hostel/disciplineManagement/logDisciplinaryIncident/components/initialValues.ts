@@ -4,7 +4,7 @@ import type { IHostelIncident } from '../type';
 
 export const getIncidentInitialValues = (editData?: IHostelIncident | null) => ({
   hostelName: editData?.hostelName || '',
-  floor: editData?.floor ?? '',
+  emeregencyLevel: editData?.emeregencyLevel || '',
   students: editData?.students || [],
   incidentDate: dayjs(editData?.incidentDate) || null,
   incidentTime: dayjs(editData?.incidentTime) || null,

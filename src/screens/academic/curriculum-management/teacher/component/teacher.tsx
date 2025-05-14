@@ -127,7 +127,7 @@ const Teacher = ({
           label="Class"
           name="class"
           options={classData?.items || []}
-          formControlProps={{ sx: { width: '150px' } }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           value={classes}
           labelKey="name"
           valueKey="id"
@@ -148,7 +148,7 @@ const Teacher = ({
             const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
             setDivision(val as string);
           }}
-          formControlProps={{ sx: { width: '150px' } }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
       </Box>
       <CustomizableTable

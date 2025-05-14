@@ -1,6 +1,6 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { Division } from 'src/types/school';
 
 import React, { useState } from 'react';
 
@@ -20,6 +20,9 @@ import StudentProfile from '../studentAllocation/compoenents/studentProfile';
 import HostelStudentDetailedFeeComponent from './components/feeManagementTabs';
 
 const HostelfeeManagement = () => {
+  const [hostelType, setHostelType] = useState('');
+  const [hostelName, setHostelName] = useState('');
+
   // State for selected class
   const [classes, setClasses] = useState<string>('');
   // State for selected division
@@ -62,19 +65,47 @@ const HostelfeeManagement = () => {
         }
       />
       <Box display="flex" alignItems="center" mb={2} gap={1}>
+        {/* Hostel Dropdown */}
         <Autocomplete
-          options={classData?.items || []}
+          options={[
+            { id: 'H1', name: 'Hostel A' },
+            { id: 'H2', name: 'Hostel B' },
+            { id: 'H3', name: 'Hostel C' },
+          ]}
           getOptionLabel={(option) => option.name || ''}
-          value={classes ? classData?.items.find((item: Standards) => item.id === classes) : null}
           onChange={(_, value) => {
-            setClasses(value?.id || '');
-            setDivisionOptions(value?.divisions || []);
+            setHostelType(value?.id || '');
           }}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Class"
-              name="className"
+              label="Hostel Type"
+              name="hostelType"
+              variant="outlined"
+              fullWidth
+              size="small"
+            />
+          )}
+          sx={{ maxWidth: '200px', width: '100%' }}
+        />
+
+        {/* Room Dropdown */}
+        <Autocomplete
+          options={[
+            { id: 'R101', name: 'Room 101' },
+            { id: 'R102', name: 'Room 102' },
+            { id: 'R103', name: 'Room 103' },
+          ]}
+          disabled={!hostelType}
+          getOptionLabel={(option) => option.name || ''}
+          onChange={(_, value) => {
+            setHostelName(value?.id || '');
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Hostel Name"
+              name="hostelName"
               variant="outlined"
               fullWidth
               size="small"
@@ -83,27 +114,7 @@ const HostelfeeManagement = () => {
           sx={{ maxWidth: '200px', width: '100%' }}
         />
         <Autocomplete
-          disabled={!classes}
-          options={divisionOptions || []}
-          getOptionLabel={(option) => option.name || ''}
-          value={division ? divisionOptions.find((item: Division) => item.id === division) : null}
-          onChange={(_, value) => {
-            setDivision(value?.id || '');
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Division"
-              name="division"
-              variant="outlined"
-              fullWidth
-              size="small"
-            />
-          )}
-          sx={{ maxWidth: '200px', width: '100%' }}
-        />
-        <Autocomplete
-          disabled={!division}
+          disabled={!hostelName}
           options={[
             { id: '1', name: 'Student 1' },
             { id: '2', name: 'Student 2' },

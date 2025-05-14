@@ -1,57 +1,49 @@
-import type { Dayjs } from 'dayjs';
+import type { FormikProps } from 'formik';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface ISubject {
   id: number;
   subjectName: string;
   subjectCode: string;
-  scheduleDate: Dayjs | string | null;
-  className: string;
+  subjectColor?: string;
   primaryTeacher: string;
   secondaryTeacher: string[] | null;
   documents?: IDocument[];
   prerequisites: string;
   learningGoal: string;
-  subjectColor: string;
   description: string;
-  status: string;
+  isSubjectOpen?: boolean;
 }
 
 export interface ISubjectFormValues {
-  subjectCode: string;
-  subjectName: string;
-  scheduleDate: Dayjs | string | null;
+  id?: number;
+  status?: string;
   className: string;
-  primaryTeacher: string;
-  secondaryTeacher: string[];
-  learningGoal: string;
-  prerequisites: string;
-  description: string;
-  subjectColor: string;
-  status: string;
+  subjectName: string;
+  subjects?: ISubject[];
+  subjectType?: string;
 }
 
 export interface ISubjectTableProps {
   addSubjectDialog: UseBooleanReturn;
-  editData: ISubject | null;
-  setEditData: React.Dispatch<React.SetStateAction<ISubject | null>>;
-  data: ISubject[];
-  subjectTableData: ISubject[];
-  onView: (subject: ISubject) => void;
-  onEdit: (subject: ISubject) => void;
-  onDelete: (subject: ISubject) => void;
+  editData: ISubjectFormValues | null;
+  setEditData: React.Dispatch<React.SetStateAction<ISubjectFormValues | null>>;
+  data: ISubjectFormValues[];
+  subjectTableData: ISubjectFormValues[];
+  onView: (subject: ISubjectFormValues) => void;
+  onEdit: (subject: ISubjectFormValues) => void;
+  onDelete: (subject: ISubjectFormValues) => void;
   onToggleStatus: (id: number, value: string) => void;
 }
 
 export interface ISubjectFormProps {
-  onSubmit: (values: ISubject) => void;
   onClose: (e: any, isSubmit: boolean) => void;
-  data: ISubject | null;
+  data: ISubjectFormValues | null;
   isEdit: boolean;
 }
 
 export interface IViewSubjectProps {
-  subject: ISubject | null;
+  subject: ISubjectFormValues | null;
 }
 
 export interface IDocument {
@@ -59,4 +51,14 @@ export interface IDocument {
   name: string;
   url: string;
   file?: File;
+}
+
+export interface ISubjectCardProps {
+  index: number; // add index to access nested Formik data
+  formik: FormikProps<ISubjectFormValues>;
+  subject: ISubject;
+  isCore: boolean;
+  isPublished: boolean;
+  teacherOptions: { value: string; label: string }[];
+  onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
 }

@@ -165,6 +165,7 @@ const RoomDetails = () => {
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            minWidth: '50px',
             sticky: true,
             render(value, row) {
               return (

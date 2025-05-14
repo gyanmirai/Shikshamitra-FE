@@ -21,7 +21,7 @@ import { noOfLectureValidationSchema } from './validationSchema';
 
 import type { ICreateNoOfLectureProps } from './type';
 
-const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose }) => {
+const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, disabled }) => {
   // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -77,6 +77,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose })
                         ? formik.errors.className
                         : undefined
                     }
+                    disabled={disabled}
                   />
                 </ShakingTextField>
               </Grid>
@@ -102,6 +103,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose })
                             value={value}
                             onChange={(e) => handleInputChange(row.id, e.target.value)}
                             className="w-24"
+                            disabled={disabled}
                           />
                         );
                       },
@@ -113,7 +115,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose })
             </Grid>
           </Scrollbar>
           <DialogActions>
-            <SubmitButton />
+            <SubmitButton disabled={disabled} />
           </DialogActions>
         </form>
       </Box>

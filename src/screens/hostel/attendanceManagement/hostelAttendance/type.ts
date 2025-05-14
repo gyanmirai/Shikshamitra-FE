@@ -5,4 +5,5 @@ export interface IStudentHostelManualAttendance {
   hostelName: string;
   isPresent: boolean; // true for Present, false for Absent
   remarks?: string;
+  onLeave?: boolean; // true for Leave, false for Absent
 }

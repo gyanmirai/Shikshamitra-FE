@@ -15,7 +15,6 @@ export interface ILeaveFormValues {
   description: string;
   status?: number;
   rejectionReason: string;
-
   docs: string;
 }
 
@@ -29,5 +28,5 @@ export interface IStudentAttendanceLeave {
   isHalfDay: boolean;
   description: string;
   rejectionReason?: string;
-  statusValue: string;
+  statusValue: number;
 }

@@ -4,7 +4,6 @@ import type { IHostelIncident } from '../type';
 
 export const getTakeActionInitialValues = (editData?: IHostelIncident | null) => ({
   hostelName: editData?.hostelName || '',
-  floor: editData?.floor ?? '',
   students: editData?.students || [],
   incidentDate: dayjs(editData?.incidentDate) || null,
   incidentTime: dayjs(editData?.incidentTime) || null,

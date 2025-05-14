@@ -18,7 +18,7 @@ const TagForm: React.FC<TagFormProps> = ({ dialog, onClose, editData }) => {
   const formik = useFormik({
     // Set initial form values, using editData if available
     initialValues: {
-      tagName: editData?.tagName || '',
+      emergencyLevel: editData?.emergencyLevel || '',
       description: editData?.description || '',
     },
     // Define validation schema using Yup
@@ -39,16 +39,18 @@ const TagForm: React.FC<TagFormProps> = ({ dialog, onClose, editData }) => {
           <Scrollbar sx={{ p: 2 }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <ShakingTextField error={!!(formik.touched.tagName && formik.errors.tagName)}>
+                <ShakingTextField
+                  error={!!(formik.touched.emergencyLevel && formik.errors.emergencyLevel)}
+                >
                   <TextField
                     size="small"
-                    label="Tag Name"
-                    name="tagName"
+                    label="Emergency Level"
+                    name="emergencyLevel"
                     fullWidth
-                    value={formik.values.tagName}
+                    value={formik.values.emergencyLevel}
                     onChange={formik.handleChange}
-                    error={formik.touched.tagName && Boolean(formik.errors.tagName)}
-                    helperText={formik.touched.tagName && formik.errors.tagName}
+                    error={formik.touched.emergencyLevel && Boolean(formik.errors.emergencyLevel)}
+                    helperText={formik.touched.emergencyLevel && formik.errors.emergencyLevel}
                   />
                 </ShakingTextField>
               </Grid>

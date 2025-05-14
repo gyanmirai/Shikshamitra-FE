@@ -1,45 +1,39 @@
-[
+{
+  "id": 1,
+  "status": "Unpublish",
+  "className": "10th Grade",
+  "subjectName": "Science",
+  "subjectType": "core",
+  "subjects": [
     {
-      "id": 1,
-      "subjectCode": "MTH101",
-      "subjectName": "Mathematics",
-      "subjectColor": "blue",
-      "primaryTeacher": "Mr. Rajesh Sharma",
-      "secondaryTeacher": ["Ms. Neha Verma", "Mr. Suresh Kumar"],
-      "scheduleDate": "2025-03-10T00:00:00.000Z",
-      "prerequisites": "Basic Arithmetic",
-      "learningGoal": "Understand algebra and geometry concepts",
-      "status": "Publish",
-      "className": "1",
-      "description": ""
+      "id": 101,
+      "subjectName": "Physics",
+      "subjectCode": "PHY-10",
+      "primaryTeacher": "teacher_1",
+      "secondaryTeacher": ["teacher_2", "teacher_3"],
+      "documents": [
+        {
+          "id": "doc1",
+          "name": "Syllabus.pdf",
+          "url": "https://example.com/syllabus.pdf"
+        }
+      ],
+      "prerequisites": "Basic understanding of Mathematics",
+      "learningGoal": "Learn the fundamentals of Physics.",
+      "description": "This subject covers classical mechanics, thermodynamics, and electromagnetism.",
+      "isSubjectOpen": true
     },
     {
-      "id": 2,
-      "subjectCode": "SCI202",
-      "subjectName": "Science",
-      "subjectColor": "green",
-      "primaryTeacher": "Ms. Priya Mehta",
-      "secondaryTeacher": ["Mr. Rohan Patel"],
-      "scheduleDate": "2025-04-15T00:00:00.000Z",
-      "prerequisites": "Introduction to Biology",
-      "learningGoal": "Develop understanding of ecosystems and physics fundamentals",
-      "status": "Unpublish",
-      "className": "1",
-      "description": ""
-    },
-    {
-      "id": 3,
-      "subjectCode": "ENG301",
-      "subjectName": "English Literature",
-      "subjectColor": "purple",
-      "primaryTeacher": "Mrs. Kavita Shah",
-      "secondaryTeacher": ["Ms. Pooja Iyer", "Mr. Ankit Tiwari"],
-      "scheduleDate": "2025-02-28T00:00:00.000Z",
-      "prerequisites": "Basic Grammar",
-      "learningGoal": "Improve writing and reading skills",
-      "status": "Publish",
-      "className": "1",
-      "description": ""
+      "id": 102,
+      "subjectName": "Chemistry",
+      "subjectCode": "CHEM-10",
+      "primaryTeacher": "teacher_4",
+      "secondaryTeacher": null,
+      "documents": [],
+      "prerequisites": "None",
+      "learningGoal": "Understand the basics of Chemistry.",
+      "description": "Introduction to chemical reactions, periodic table, and lab safety.",
+      "isSubjectOpen": false
     }
   ]
-  
+}

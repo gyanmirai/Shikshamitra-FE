@@ -91,12 +91,18 @@ const VisitorLogTable: React.FC<IVisitorDataTableProps> = ({
       }
       columns={[
         { id: 'visitorName', label: 'Visitor Name', align: 'left' },
-        { id: 'idProof', label: 'ID Proof', align: 'left' },
-        { id: 'aadharNumber', label: 'Aadhar Number', align: 'left' },
         { id: 'contactNo', label: 'Contact Number', align: 'left' },
-        { id: 'visingWhome', label: 'Visiting Whom', align: 'left' },
-        { id: 'entryTime', label: 'Entry Time', align: 'left' },
-        { id: 'exitTime', label: 'Exit Time', align: 'left' },
+        { id: 'personToVisit', label: 'Person To Visit', align: 'left' },
+        {
+          id: 'entryTime',
+          label: 'Entry Time',
+          align: 'left',
+        },
+        {
+          id: 'exitTime',
+          label: 'Exit Time',
+          align: 'left',
+        },
         { id: 'reasonForVisit', label: 'Reason for Visit', align: 'left' },
         {
           id: 'status',
@@ -105,7 +111,7 @@ const VisitorLogTable: React.FC<IVisitorDataTableProps> = ({
           enumOptions: VisitorStatusOptions,
           minWidth: '130px',
           align: 'left',
-          render(value, row) {
+          render(value) {
             const color = VisitorStatusColors[value as VisitorStatusType] as LabelColor;
             return <Label color={color}>{VisitorStatusType[value]}</Label>;
           },

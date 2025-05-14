@@ -42,11 +42,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGra
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '70vh' }}>
-          <PDFViewer width="100%" height="600">
+          <PDFViewer width="100%" height="800">
             <CertificateDocument />
           </PDFViewer>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <ShakingTextField error={!!(formik.touched.grade && formik.errors.grade) || false}>
                 <CustomSelect
                   options={[
@@ -76,7 +76,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGra
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <ShakingTextField
                 error={!!(formik.touched.feedback && formik.errors.feedback) || false}
               >

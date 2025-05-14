@@ -22,7 +22,6 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -167,36 +166,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Teacher Assignment Dropdown */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={
-                    !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false
-                  }
-                >
-                  <CustomSelect
-                    label="Assigned Teacher"
-                    options={[
-                      { value: 'Jiya', label: 'Jiya' },
-                      { value: 'Riya', label: 'Riya' },
-                      { value: 'Priya', label: 'Priya' },
-                    ]}
-                    name="assignedTeacher"
-                    value={formik.values.assignedTeacher}
-                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                    onChange={(val) => {
-                      formik.setFieldValue('assignedTeacher', val);
-                    }}
-                    error={
-                      !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false
-                    }
-                    helperText={
-                      (formik.touched.assignedTeacher && formik.errors.assignedTeacher) || ''
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
               {/* Rich Text Editor for Chapter Content */}
               <Grid item xs={12}>
                 <Editor
@@ -267,7 +236,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           {/* Form Actions */}
           <DialogActions>
             <Button startIcon={<Create />} type="submit" variant="contained">
-              {isEdit ? 'Update' : 'Create'}
+              {initialValues ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </Box>

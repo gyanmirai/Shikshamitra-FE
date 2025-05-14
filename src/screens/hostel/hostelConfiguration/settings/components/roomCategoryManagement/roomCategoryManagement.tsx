@@ -21,7 +21,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 import AddRoomCategoryForm from './roomCategoryForm';
 
-import type { IRoomCategory } from './type';
+import type { IHostelRoomType } from './type';
 
 const RoomCategorySetting = (props: TabComponentType) => {
   // Dialog state for add/edit room category form
@@ -29,7 +29,7 @@ const RoomCategorySetting = (props: TabComponentType) => {
   // Dialog state for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
   // State to store selected room category for edit/delete operations
-  const [selectedEntry, setSelectedEntry] = useState<IRoomCategory | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<IHostelRoomType | null>(null);
 
   const dispatch = useDispatch();
   // Get changes state from redux store
@@ -91,13 +91,8 @@ const RoomCategorySetting = (props: TabComponentType) => {
         isFilter={false}
         isSearch={false}
         columns={[
-          { id: 'categoryName', label: 'Category Name' },
-          { id: 'maximumOccupancy', label: 'Max Occupancy' },
-          {
-            id: 'facilities',
-            label: 'Facilities',
-            render: (val) => (Array.isArray(val) ? val.join(', ') : '-'),
-          },
+          { id: 'name', label: 'Room Type' },
+          { id: 'description', label: 'Description' },
           {
             id: 'action',
             label: 'Action',
@@ -113,7 +108,7 @@ const RoomCategorySetting = (props: TabComponentType) => {
                 handleDeleteClick={() => dialogForDeleteConfirmation.onTrue()}
                 showEditIcon
                 handleEditClick={() => {
-                  setSelectedEntry(row as IRoomCategory);
+                  setSelectedEntry(row as IHostelRoomType);
                   dialog.onTrue();
                 }}
               />

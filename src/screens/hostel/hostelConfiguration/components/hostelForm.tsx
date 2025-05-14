@@ -1,13 +1,12 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -24,6 +23,11 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
       console.log(values);
     },
   });
+
+  const wardenList = [
+    { value: 'warden_1', label: 'John Smith' },
+    { value: 'warden_2', label: 'Priya Patel' },
+  ];
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -52,43 +56,49 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 <ShakingTextField
                   error={!!(formik.touched.hostelType && formik.errors.hostelType) || false}
                 >
-                  <CustomSelect
-                    label="Hostel Type *"
+                  <Autocomplete
                     options={[
                       { value: 'Boys', label: 'Boys' },
                       { value: 'Girls', label: 'Girls' },
                     ]}
-                    value={formik.values.hostelType}
-                    onChange={(val) => {
-                      formik.setFieldValue('hostelType', val);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                    error={formik.touched.hostelType && Boolean(formik.errors.hostelType)}
-                    helperText={
-                      (formik.touched.hostelType && formik.errors.hostelType) || undefined
+                    getOptionLabel={(option) => option.label}
+                    value={
+                      [
+                        { value: 'Boys', label: 'Boys' },
+                        { value: 'Girls', label: 'Girls' },
+                      ].find((opt) => opt.value === formik.values.hostelType) || null
                     }
+                    onChange={(_, newValue) => {
+                      formik.setFieldValue('hostelType', newValue?.value || '');
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Hostel Type *"
+                        size="small"
+                        error={formik.touched.hostelType && Boolean(formik.errors.hostelType)}
+                        helperText={formik.touched.hostelType && formik.errors.hostelType}
+                        fullWidth
+                      />
+                    )}
                   />
                 </ShakingTextField>
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={
-                    !!(formik.touched.totalRoomCapacity && formik.errors.totalRoomCapacity) || false
-                  }
+                  error={!!(formik.touched.totalFloors && formik.errors.totalFloors) || false}
                 >
                   <TextField
                     size="small"
-                    label="Total Room Capacity *"
-                    name="totalRoomCapacity"
+                    label="Total Floors *"
+                    name="totalFloors"
                     type="number"
                     fullWidth
-                    value={formik.values.totalRoomCapacity}
+                    value={formik.values.totalFloors}
                     onChange={formik.handleChange}
-                    error={
-                      formik.touched.totalRoomCapacity && Boolean(formik.errors.totalRoomCapacity)
-                    }
-                    helperText={formik.touched.totalRoomCapacity && formik.errors.totalRoomCapacity}
+                    error={formik.touched.totalFloors && Boolean(formik.errors.totalFloors)}
+                    helperText={formik.touched.totalFloors && formik.errors.totalFloors}
                   />
                 </ShakingTextField>
               </Grid>
@@ -110,20 +120,31 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.wardenDetails && formik.errors.wardenDetails) || false}
+                  error={!!(formik.touched.assignedWarden && formik.errors.assignedWarden) || false}
                 >
-                  <TextField
-                    label="Warden Details *"
-                    name="wardenDetails"
-                    fullWidth
-                    rows={4}
-                    multiline
-                    value={formik.values.wardenDetails}
-                    onChange={formik.handleChange}
-                    error={formik.touched.wardenDetails && Boolean(formik.errors.wardenDetails)}
-                    helperText={formik.touched.wardenDetails && formik.errors.wardenDetails}
+                  <Autocomplete
+                    options={wardenList} // Make sure you pass this array as a prop or fetch it
+                    getOptionLabel={(option) => option.label}
+                    onChange={(_, val) => {
+                      formik.setFieldValue('assignedWarden', val?.value || '');
+                    }}
+                    value={
+                      wardenList.find((item) => item.value === formik.values.assignedWarden) || null
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Assigned Warden *"
+                        size="small"
+                        error={
+                          formik.touched.assignedWarden && Boolean(formik.errors.assignedWarden)
+                        }
+                        helperText={formik.touched.assignedWarden && formik.errors.assignedWarden}
+                        fullWidth
+                      />
+                    )}
                   />
                 </ShakingTextField>
               </Grid>
