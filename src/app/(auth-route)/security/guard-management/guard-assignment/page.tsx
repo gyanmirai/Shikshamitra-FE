@@ -1,5 +1,7 @@
 import React from 'react';
 
-const page = () => <div>page</div>;
+import GuardManagementScreen from 'src/screens/security/guard-management/guard-management-screen';
+
+const page = () => <GuardManagementScreen />;
 
 export default page;

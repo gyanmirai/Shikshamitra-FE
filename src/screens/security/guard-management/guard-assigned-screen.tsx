@@ -1,0 +1,283 @@
+'use client';
+
+import dayjs from 'dayjs';
+import React, { useState, useEffect } from 'react';
+
+import { DatePicker } from '@mui/x-date-pickers';
+import {
+  Box,
+  Grid,
+  Paper,
+  Table,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  TableContainer,
+} from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import data from 'src/json/security/guard-management/guard-list.json';
+
+import GuardList from './component/guard-list';
+import ItemCardWithActions from './component/guard-duty-hours-cell';
+
+import type { IGuard, IAssignedGuard } from './guard-management-interface';
+
+const timeSlots = ['00:00 - 07:00', '07:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
+
+const GuardRosterScreen = () => {
+  const alertDialog = useBoolean();
+  const [assignedGuards, setAssignedGuards] = useState<{ [key: string]: IAssignedGuard[] }>({});
+  const [guardList, setGuardList] = useState<IGuard[]>(data);
+
+  const normalizeAssignedShifts = (guardsData: IGuard[]): { [key: string]: IAssignedGuard[] } => {
+    const assigned: { [key: string]: IAssignedGuard[] } = {};
+
+    guardsData.forEach((guard) => {
+      guard.assignedShift.forEach((shift) => {
+        const formattedDate =
+          typeof shift.date === 'string'
+            ? dayjs(shift.date).format('YYYY-MM-DD')
+            : shift.date.format('YYYY-MM-DD');
+        const key = `${formattedDate}-${shift.timeSlot}`;
+
+        if (!assigned[key]) assigned[key] = [];
+
+        assigned[key].push({
+          ...guard,
+          assignedLocation: shift.location,
+          day: shift.day,
+          timeSlot: shift.timeSlot,
+          assignedDate: shift.date,
+        });
+      });
+    });
+
+    return assigned;
+  };
+
+  useEffect(() => {
+    const gdata = normalizeAssignedShifts(data);
+    setAssignedGuards(gdata);
+  }, []);
+
+  const handleDrop = (e: React.DragEvent<HTMLElement>, fullDate: string, timeSlot: string) => {
+    const guard: IGuard = JSON.parse(e.dataTransfer.getData('guard'));
+
+    if (!guard.guardShiftlist.includes(timeSlot)) {
+      alertDialog.onTrue();
+      alert(`${guard.guardName} is not available for the ${timeSlot} shift.`);
+      return;
+    }
+
+    const key = `${fullDate}-${timeSlot}`;
+    const existing = assignedGuards[key] || [];
+    const alreadyAssigned = existing.some((g) => g.guardName === guard.guardName);
+    if (alreadyAssigned) {
+      alertDialog.onTrue();
+      alert(`${guard.guardName} is already assigned to ${fullDate} - ${timeSlot}.`);
+      return;
+    }
+
+    setAssignedGuards((prev) => ({
+      ...prev,
+      [key]: [
+        ...existing,
+        {
+          ...guard,
+          assignedLocation: '',
+          day: dayjs(fullDate).format('ddd'),
+          timeSlot,
+          assignedDate: fullDate,
+        },
+      ],
+    }));
+  };
+
+  useEffect(() => {
+    console.log(assignedGuards, 'updated assignedGuards');
+  }, [assignedGuards]);
+
+  const onDeleteGuard = (fullDate: string, timeSlot: string, guardName: string) => {
+    const key = `${fullDate}-${timeSlot}`;
+    setAssignedGuards((prev) => {
+      const updated = { ...prev };
+      updated[key] = updated[key]?.filter((g) => g.guardName !== guardName) || [];
+      return updated;
+    });
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLElement>, guard: IGuard) => {
+    e.dataTransfer.setData('guard', JSON.stringify(guard));
+  };
+
+  const updateLocationHandler = (
+    guardName: string,
+    location: string,
+    fullDate: string,
+    timeSlot: string
+  ) => {
+    const key = `${fullDate}-${timeSlot}`;
+
+    setAssignedGuards((prev) => {
+      const updated = { ...prev };
+
+      if (!updated[key]) return prev; // No guards assigned at this key
+
+      updated[key] = updated[key].map((g) => {
+        if (g.guardName === guardName) {
+          return {
+            ...g,
+            assignedShift: g.assignedShift.map((shift) =>
+              shift.date === fullDate && shift.timeSlot === timeSlot
+                ? { ...shift, location }
+                : shift
+            ),
+          };
+        }
+        return g;
+      });
+
+      return updated;
+    });
+
+    setGuardList((prev) =>
+      prev.map((g) => (g.guardName === guardName ? { ...g, assignedLocation: location } : g))
+    );
+  };
+
+  // Week calculation
+  const [weekDates, setWeekDates] = useState<
+    { day: string; date: string; full: string; key: string }[]
+  >([]);
+
+  useEffect(() => {
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(start.getDate() - start.getDay()); // Sunday
+    const tempDates: any[] = [];
+
+    for (let i = 0; i < 7; i += 1) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
+      const key = dayjs(date).format('YYYY-MM-DD');
+      tempDates.push({
+        day: dayjs(date).format('ddd'),
+        date: dayjs(date).format('DD'),
+        full: dayjs(date).format('ddd DD MMM'),
+        key,
+      });
+    }
+
+    setWeekDates(tempDates);
+  }, []);
+
+  return (
+    <>
+      <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="40px">
+        <Grid item xs={12} md={3}>
+          <DatePicker
+            disabled
+            label="Start Date"
+            format="DD-MM-YYYY"
+            value={dayjs(weekDates[0]?.key)}
+            slotProps={{
+              textField: { size: 'small', fullWidth: true },
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <DatePicker
+            disabled
+            label="End Date"
+            format="DD-MM-YYYY"
+            value={dayjs(weekDates[6]?.key)}
+            slotProps={{
+              textField: { size: 'small', fullWidth: true },
+            }}
+          />
+        </Grid>
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 2, height: '100vh' }}>
+        <Paper elevation={2} sx={{ width: 200, height: 'fit-content' }}>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="h6">Guards</Typography>
+          </Box>
+          <Box sx={{ p: 1 }}>
+            <GuardList onDragStart={handleDragStart} guardList={guardList} />
+          </Box>
+        </Paper>
+
+        <Paper elevation={2} sx={{ flexGrow: 1 }}>
+          <TableContainer>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
+                  {weekDates.map((item) => (
+                    <TableCell key={item.key} align="center">
+                      <div style={{ fontWeight: 'bold' }}>{item.day}</div>
+                      <div style={{ fontSize: '0.875rem', color: '#666' }}>{item.date}</div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {timeSlots.map((timeSlot) => (
+                  <TableRow key={timeSlot}>
+                    <TableCell>{timeSlot}</TableCell>
+                    {weekDates.map((item) => {
+                      const key = `${item.key}-${timeSlot}`;
+                      return (
+                        <TableCell
+                          key={key}
+                          onDrop={(e) =>
+                            handleDrop(e as React.DragEvent<HTMLElement>, item.key, timeSlot)
+                          }
+                          onDragOver={(e) => e.preventDefault()}
+                          sx={{ width: '10%', height: 140 }}
+                        >
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {(assignedGuards[key] || []).map((g) => (
+                              <ItemCardWithActions
+                                key={g.guardName}
+                                title={g.guardName}
+                                subtitle="No Shift"
+                                guardName={g.guardName}
+                                day={item.day}
+                                timeSlot={timeSlot}
+                                bgColor="white"
+                                locationUpdate={updateLocationHandler}
+                                onDragStart={(e) =>
+                                  handleDragStart(e as React.DragEvent<HTMLElement>, g)
+                                }
+                                actions={[
+                                  {
+                                    label: 'Remove',
+                                    icon: 'mdi:trash',
+                                    color: 'red',
+                                    onClick: () => onDeleteGuard(item.key, timeSlot, g.guardName),
+                                  },
+                                ]}
+                              />
+                            ))}
+                          </Box>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
+    </>
+  );
+};
+
+export default GuardRosterScreen;
