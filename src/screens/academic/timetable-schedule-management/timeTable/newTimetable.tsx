@@ -46,15 +46,11 @@ export const subjectGroups: TSubjectGroup[] = [
     subjectName: 'Core Subjects',
     subjectColor: '#FFB74D',
     noOfLecture: 7,
-
+    subjectType: 'core',
     subjects: [
       {
         name: 'Math',
         teachers: ['Mr. Smith', 'Mrs. Johnson'],
-      },
-      {
-        name: 'Science',
-        teachers: ['Mrs. Johnson', 'Mr. Davis'],
       },
     ],
     id: '1',
@@ -63,6 +59,7 @@ export const subjectGroups: TSubjectGroup[] = [
     subjectName: 'Language Subjects',
     subjectColor: '#64B5F6',
     noOfLecture: 7,
+    subjectType: 'elective',
     subjects: [
       {
         name: 'English',
@@ -95,16 +92,19 @@ const TimeTableGrid = (props: TabComponentType) => {
   // Props for managing URL search parameters
   const { searchParams, setSearchParams } = props;
 
-  // State for managing selected class and division
+  // classes: Stores the selected class ID from the available classes
   const [classes, setClasses] = useState<string>('');
+
+  // division: Stores the selected division ID for the chosen class
   const [division, setDivision] = useState<string>('');
+
+  // divisionOptions: Stores array of available divisions for the selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // Theme object from Material-UI
   const theme = useTheme();
 
   // Initialize remaining lectures count for each subject
-  // Creates an object with subject IDs as keys and their lecture counts as values
   const [remainingLectures, setRemainingLectures] = useState<TRemainingLectures>(() =>
     subjectGroups.reduce(
       (acc, subject) => ({
@@ -351,7 +351,7 @@ const TimeTableGrid = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Timetable"
+        heading="New Timetable"
         links={links}
         description={
           open
@@ -404,22 +404,6 @@ const TimeTableGrid = (props: TabComponentType) => {
               value={division}
               onChange={(val) => {
                 setDivision(val as string);
-              }}
-              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              label="Classroom"
-              disabled={!division}
-              options={[
-                { id: 'A101', name: 'A101' },
-                { id: 'A102', name: 'A102' },
-                { id: 'B101', name: 'B101' },
-              ]}
-              labelKey="name"
-              valueKey="id"
-              value={classroom}
-              onChange={(val) => {
-                setClassroom(val as string);
               }}
               formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             />

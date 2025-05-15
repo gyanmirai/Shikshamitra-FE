@@ -13,6 +13,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import AssignRoom from './assignRoomDialog';
 import AssignTeacher from './assignTeacherDialog';
 
+import type { TSubject } from '../type';
 import type { ITimeTableCellProps } from './type';
 
 const TimeTableCell = ({
@@ -87,7 +88,6 @@ const TimeTableCell = ({
       <TableCell
         sx={{
           bgcolor: 'grey.100',
-          height: 40,
           width: '10%',
           textAlign: 'center',
           padding: '4px',
@@ -102,7 +102,7 @@ const TimeTableCell = ({
   return (
     <TableCell
       sx={{
-        height: 40,
+        height: 60,
         width: '10%',
         '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
         padding: '4px',
@@ -141,7 +141,7 @@ const TimeTableCell = ({
               }}
             >
               <Typography variant="subtitle2" fontWeight="medium">
-                {slotData.subject.subjectName}
+                {slotData.subject.subjects.map((sub: TSubject) => sub.name).join(', ')}
               </Typography>
               <Box className="action-menu">
                 <ThreeDotsActions
@@ -209,10 +209,11 @@ const TimeTableCell = ({
           <CustomDialog
             open={teacherDialog.value}
             handleClose={teacherDialog.onFalse}
-            title={slotData?.teacher ? 'Edit Teacher' : 'Assign Teacher'}
+            title="Assign Teacher"
+            maxWidth="sm"
           >
             <AssignTeacher
-              slotData={slotData}
+              slotData={slotData.subjects}
               onTeacherSelect={(value) => {
                 onTeacherSelect(value, timeSlot, day);
                 teacherDialog.onFalse();
@@ -224,7 +225,7 @@ const TimeTableCell = ({
             maxWidth="sm"
             open={roomDialog.value}
             handleClose={roomDialog.onFalse}
-            title="Edit Room"
+            title="Assign Room"
           >
             <AssignRoom
               slotData={slotData.subjects}
