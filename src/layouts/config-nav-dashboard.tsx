@@ -358,6 +358,16 @@ const securityModule = {
               path: '/security/gate-pass-management/access-logs-management-security',
               _action: 'access-logs-management-security',
             },
+            {
+              title: 'Gate Pass Request Staff',
+              path: '/security/gate-pass-management/gate-pass-staff',
+              _action: 'gate-pass-staff',
+            },
+            {
+              title: 'Review Gate Pass Request Staff',
+              path: '/security/gate-pass-management/review-gate-pass-staff',
+              _action: 'review-gate-pass-staff',
+            },
           ],
         },
         {
