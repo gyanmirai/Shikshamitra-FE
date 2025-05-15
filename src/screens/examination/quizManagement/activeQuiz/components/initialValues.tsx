@@ -9,7 +9,9 @@ export const getInitialValues = () => ({
   questions: [],
   attemptsAllowed: 1,
   passingMarks: 0,
+  isQuestionUpload: false,
   quizStartDateTime: null,
   quizEndDateTime: null,
   randomOrder: false,
+  quizTakenType: '',
 });
