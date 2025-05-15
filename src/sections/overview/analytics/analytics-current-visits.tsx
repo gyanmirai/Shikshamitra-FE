@@ -4,6 +4,7 @@ import type { ChartOptions } from 'src/components/chart';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
+import { Box, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
@@ -66,10 +67,10 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
   });
   return (
     <Card {...other}>
-      {/* <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
-        <Iconify icon="pepicons-pop:leave" width={32} height={32} sx={{ color: 'primary.main' }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
+        {/* <Iconify icon="pepicons-pop:leave" width={32} height={32} sx={{ color: 'primary.main' }} /> */}
         <CardHeader title={title} subheader={subheader} mb={3} />
-      </Box> */}
+      </Box>
 
       <Chart
         type="pie"
