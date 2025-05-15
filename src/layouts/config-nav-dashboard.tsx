@@ -370,6 +370,11 @@ const securityModule = {
               path: '/security/guard-management/duty-schedule',
               _action: 'duty-schedule',
             },
+            {
+              title: 'Setting Configuration',
+              path: '/security/guard-management/setting-configuration',
+              _action: 'setting-configuration',
+            },
           ],
         },
 
