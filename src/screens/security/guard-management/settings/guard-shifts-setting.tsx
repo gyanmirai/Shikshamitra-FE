@@ -32,13 +32,13 @@ const GuardShiftsSettings = () => {
   const links = open
     ? [
         { name: 'Security', href: '' },
-        { name: 'Guard Shifts Configuration', href: '' },
+        { name: 'Guard Shift Configuration', href: '' },
 
-        { name: 'Guard Shifts Configuration Form' },
+        { name: 'Guard Shift Configuration Form' },
       ]
     : [
         { name: 'Security', href: '' },
-        { name: 'Guard Shifts Configuration', href: '' },
+        { name: 'Guard Shift Configuration', href: '' },
       ];
 
   // Handles logic for each table action: edit, delete, view, or new entry
@@ -90,7 +90,7 @@ const GuardShiftsSettings = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Guard Shifts Configuration"
+        heading="Guard Shift Configuration"
         description="Create Shifts to manage Guard duty effeciently."
         links={links}
         sx={{ px: 1, mb: 2 }}

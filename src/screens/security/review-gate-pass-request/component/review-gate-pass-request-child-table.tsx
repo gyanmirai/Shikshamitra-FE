@@ -135,7 +135,7 @@ const ReviewGatePassRequestTableChild = () => {
       {reviewDetailsViewDialog.value && (
         <CustomDialog
           maxWidth="md"
-          title="Review Early Gate Pass Request"
+          title="Review Gate Pass Request"
           handleClose={() => {
             reviewDetailsViewDialog.onFalse();
           }}

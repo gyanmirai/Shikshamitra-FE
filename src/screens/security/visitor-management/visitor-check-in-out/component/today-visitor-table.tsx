@@ -3,7 +3,8 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import React from 'react';
 
-import { MenuItem, MenuList } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Grid, MenuItem, MenuList } from '@mui/material';
 
 import data from 'src/json/security/visitor-management/visitor-check-in-data.json';
 import {
@@ -23,124 +24,158 @@ import type {
 } from '../visitor-check-in-out-interface';
 
 const TodayVisitorTable: React.FC<IWalkInVisitorTableProps> = ({ onClick }) => (
-  <CustomizableTable
-    tableId="today-visitor-table"
-    searchFieldProps={{
-      placeholder: 'Search by Name,...',
-      label: 'Search by Name...',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
-    noDataText={<>No Visitor Found.</>}
-    columns={[
-      {
-        label: 'Visitor Name',
-        id: 'visitorName',
-      },
-      {
-        label: 'Visiting Contact',
-        id: 'visitorPhone',
-      },
-      {
-        label: 'Visiting Email',
-        id: 'visitorEmail',
-      },
-
-      {
-        label: 'Visiting Date',
-        id: 'visitingDate',
-
-        filterType: 'date',
-        render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
-      },
-      {
-        label: 'Visiting Time',
-        id: 'visitingTime',
-        isFilter: false,
-        isSort: false,
-
-        render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        align: 'left',
-        minWidth: '130px',
-        filterType: 'enum',
-        enumOptions: VisitorVisitingStatusOptions,
-        render(value) {
-          const color = VisitorVisitingStatusColors[
-            value as VisitorVisitingStatusType
-          ] as LabelColor;
-          return <Label color={color}>{VisitorVisitingStatusType[value]}</Label>;
+  <>
+    <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
+      <Grid item xs={12} md={3}>
+        <DatePicker
+          label="Start Date"
+          format="DD-MM-YYYY"
+          onChange={(value) => {
+            // Filter table data based on start date
+          }}
+          slotProps={{
+            textField: {
+              size: 'small',
+              fullWidth: true,
+            },
+          }}
+        />
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <DatePicker
+          label="End Date"
+          format="DD-MM-YYYY"
+          onChange={(value) => {
+            // Filter table data based on end date
+          }}
+          slotProps={{
+            textField: {
+              size: 'small',
+              fullWidth: true,
+            },
+          }}
+        />
+      </Grid>
+    </Box>
+    <CustomizableTable
+      tableId="today-visitor-table"
+      searchFieldProps={{
+        placeholder: 'Search by Name,...',
+        label: 'Search by Name...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
         },
-      },
-      {
-        id: 'action',
-        label: 'Actions',
-        align: 'left',
-        minWidth: 100,
-        sticky: true,
-        isFilter: false,
-        isSort: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              placement="right-top"
-              showThreeDots
-              //   showDeleteIcon
-              //   showEditIcon
-              //   showViewIcon
-              handleDeleteClick={() => {
-                onClick(row as IWalkInVisitorFormValues, 'delete');
-              }}
-              handleEditClick={() => {
-                onClick(row as IWalkInVisitorFormValues, 'edit');
-              }}
-              handleViewClick={() => {
-                onClick(row as IWalkInVisitorFormValues, 'view');
-              }}
-              actions={({ popover }) => (
-                <MenuList>
-                  {row.status === 1 && (
-                    <MenuItem
-                      onClick={() => {
-                        // onClick(row as IMyResources, 'concern');
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="hugeicons:calendar-check-in-02"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Check Out
-                    </MenuItem>
-                  )}
-                  {row.status === 0 && (
-                    <MenuItem
-                      onClick={() => {
-                        // onClick(row as IMyResources, 'concern');
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify
-                        icon="hugeicons:calendar-check-out-02"
-                        sx={{ height: '16px', width: '16px' }}
-                      />
-                      Check In
-                    </MenuItem>
-                  )}
-                </MenuList>
-              )}
-            />
-          );
+      }}
+      noDataText={<>No Visitor Found.</>}
+      columns={[
+        {
+          label: 'Visitor Name',
+          id: 'visitorName',
         },
-      },
-    ]}
-    data={data}
-  />
+        {
+          label: 'Visiting Contact',
+          id: 'visitorPhone',
+        },
+        {
+          label: 'Visiting Email',
+          id: 'visitorEmail',
+        },
+
+        {
+          label: 'Visiting Date',
+          id: 'visitingDate',
+
+          filterType: 'date',
+          render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
+        },
+        {
+          label: 'Visiting Time',
+          id: 'visitingTime',
+          isFilter: false,
+          isSort: false,
+
+          render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
+        },
+        {
+          id: 'status',
+          label: 'Status',
+          align: 'left',
+          minWidth: '130px',
+          filterType: 'enum',
+          enumOptions: VisitorVisitingStatusOptions,
+          render(value) {
+            const color = VisitorVisitingStatusColors[
+              value as VisitorVisitingStatusType
+            ] as LabelColor;
+            return <Label color={color}>{VisitorVisitingStatusType[value]}</Label>;
+          },
+        },
+        {
+          id: 'action',
+          label: 'Actions',
+          align: 'left',
+          minWidth: 100,
+          sticky: true,
+          isFilter: false,
+          isSort: false,
+          render(value, row) {
+            return (
+              <ThreeDotsActions
+                placement="right-top"
+                showThreeDots
+                //   showDeleteIcon
+                //   showEditIcon
+                //   showViewIcon
+                handleDeleteClick={() => {
+                  onClick(row as IWalkInVisitorFormValues, 'delete');
+                }}
+                handleEditClick={() => {
+                  onClick(row as IWalkInVisitorFormValues, 'edit');
+                }}
+                handleViewClick={() => {
+                  onClick(row as IWalkInVisitorFormValues, 'view');
+                }}
+                actions={({ popover }) => (
+                  <MenuList>
+                    {row.status === 1 && (
+                      <MenuItem
+                        onClick={() => {
+                          // onClick(row as IMyResources, 'concern');
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify
+                          icon="hugeicons:calendar-check-in-02"
+                          sx={{ height: '16px', width: '16px' }}
+                        />
+                        Check Out
+                      </MenuItem>
+                    )}
+                    {row.status === 0 && (
+                      <MenuItem
+                        onClick={() => {
+                          // onClick(row as IMyResources, 'concern');
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify
+                          icon="hugeicons:calendar-check-out-02"
+                          sx={{ height: '16px', width: '16px' }}
+                        />
+                        Check In
+                      </MenuItem>
+                    )}
+                  </MenuList>
+                )}
+              />
+            );
+          },
+        },
+      ]}
+      data={data}
+    />
+  </>
 );
 
 export default TodayVisitorTable;

@@ -10,8 +10,8 @@ import data from 'src/json/security/guard-management/my-duties-data.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import CheckInCheckOutDialog from './check-in-check-out-dialog';
 
@@ -23,7 +23,7 @@ const MyDutytable = () => {
   const [selectedData, setSelectedData] = useState<IMyDuties | null>(null);
   return (
     <>
-      <Box display="flex" alignItems="center" flexDirection="row" gap={2}>
+      <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
         <Grid item xs={12} md={3}>
           <DatePicker
             label="Start Date"

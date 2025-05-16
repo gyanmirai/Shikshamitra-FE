@@ -34,13 +34,13 @@ const GatePassParentScreen = () => {
   const links = open
     ? [
         { name: 'Security', href: '' },
-        { name: 'Gate Pass', href: '' },
+        { name: 'Gate Pass Request', href: '' },
 
-        { name: 'Early Request Form' },
+        { name: 'Request Form' },
       ]
     : [
         { name: 'Security', href: '' },
-        { name: 'Gate Pass', href: '' },
+        { name: 'Gate Pass Reques', href: '' },
       ];
 
   // Handles logic for each table action: edit, delete, view, or new entry
@@ -90,9 +90,9 @@ const GatePassParentScreen = () => {
   };
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Gate Pass"
+        heading="Gate Pass Request"
         description={
           open
             ? 'Fill out the early gate pass request form by entering visitor details, purpose, and visit timing. Submit it for approval to ensure timely processing.'

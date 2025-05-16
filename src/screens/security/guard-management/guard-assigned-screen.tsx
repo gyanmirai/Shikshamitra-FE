@@ -202,17 +202,17 @@ const GuardRosterScreen = () => {
         </Grid>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 2, height: '100vh' }}>
-        <Paper elevation={2} sx={{ width: 200, height: 'fit-content' }}>
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Paper elevation={6} sx={{ width: 200, height: 'fit-content' }}>
+          <Box sx={{ p: 2, borderBottom: 3, borderColor: 'divider', mb: 2 }}>
             <Typography variant="h6">Guards</Typography>
           </Box>
-          <Box sx={{ p: 1 }}>
+          <Box sx={{ p: 0 }}>
             <GuardList onDragStart={handleDragStart} guardList={guardList} />
           </Box>
         </Paper>
 
-        <Paper elevation={2} sx={{ flexGrow: 1 }}>
+        <Paper elevation={4} sx={{ flexGrow: 1 }}>
           <TableContainer>
             <Table stickyHeader>
               <TableHead>

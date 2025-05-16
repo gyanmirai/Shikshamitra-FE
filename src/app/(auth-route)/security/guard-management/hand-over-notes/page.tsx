@@ -1,7 +1,7 @@
 import React from 'react';
 
-import HandOverNotesScreen from 'src/screens/security/hand-over-notes/hand-over-notes';
+import GuardDutyOverview from 'src/screens/security/hand-over-notes/guard-duty-overview';
 
-const page = () => <HandOverNotesScreen />;
+const page = () => <GuardDutyOverview />;
 
 export default page;

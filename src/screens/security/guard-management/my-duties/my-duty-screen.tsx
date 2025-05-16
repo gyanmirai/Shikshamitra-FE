@@ -9,10 +9,10 @@ import MyDutyTable from './component/my-duty-table';
 const MyDutyScreen = () => (
   <>
     <CustomBreadcrumbs
-      heading="My Duties"
+      heading="My Duty Schedule"
       links={[
         { name: 'Security', href: '' },
-        { name: 'My Duties', href: '' },
+        { name: 'My Duty Schedule', href: '' },
       ]}
       sx={{ px: 1, mb: 2 }}
     />
