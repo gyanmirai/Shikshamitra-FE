@@ -1,6 +1,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
+import * as yup from 'yup';
 import { useFormik } from 'formik';
 
 import { Box, Grid, Button, TextField } from '@mui/material';
@@ -11,8 +12,6 @@ import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { paymentMethodValidationSchema } from './validationSchema';
-
 const HostelPaymentMethodDialog = (props: TabComponentType) => {
   const formik = useFormik({
     // Initial form values
@@ -20,7 +19,9 @@ const HostelPaymentMethodDialog = (props: TabComponentType) => {
       paymentMethodName: '',
     },
     // Validation schema for form fields
-    validationSchema: paymentMethodValidationSchema,
+    validationSchema: yup.object({
+      paymentMethodName: yup.string().required('Fee Head Name is required'),
+    }),
     // Handle form submission
     onSubmit: (values) => {
       console.log('Submitted Payment Method:', values);

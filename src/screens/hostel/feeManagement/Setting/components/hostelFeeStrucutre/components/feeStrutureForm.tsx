@@ -1,12 +1,10 @@
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -25,9 +23,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import HostelFeeHead from '../../hostelFeeHead/hostelFeeHead';
 import HostelPaymentMethodDialog from './hostelPaymentMethod';
-import HostelFeeHeadForFeeStructure from './financeAddedFeeHead';
-import { feeStructurevalidationSchema } from './validationSchema';
-import HostelReceiptBookDialogForDropdown from './FinanceReceiptBookDialogForDropdown';
+import { hostelFeeStrctureValidationSchema } from './validationSchema';
 
 import type {
   IFeeStructure,
@@ -55,16 +51,13 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
   const initialValues = useMemo<IHostelFormikValue>(
     () => ({
       id: Math.floor(Math.random() * 10000),
-      bookRecipt: '',
-      applicableGrade: '',
+      roomType: '',
       hostelFeeHead: '',
       grossFee: '',
       discountAmount: '',
       discountRemark: '',
       payableFee: '',
       paymentMethod: [],
-      paymentDueDate: dayjs(),
-      multipleApplicableGrade: [],
       chargesType: '',
       lateFeeChargesType: '',
       lateFeeChargesAmount: '',
@@ -75,48 +68,9 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik<IHostelFormikValue>({
     initialValues,
-    validationSchema: feeStructurevalidationSchema,
+    validationSchema: hostelFeeStrctureValidationSchema,
     onSubmit: (values) => {
       // Check if the fee head combination already exists
-      const isDuplicate = feeHeadListForFeeStructure.some(
-        (item) =>
-          item.hostelFeeHead === values.hostelFeeHead &&
-          item.applicableGrade === values.applicableGrade &&
-          item.bookRecipt === values.bookRecipt
-      );
-      if (isDuplicate) {
-        alert('This Fee Head is already added.');
-        return;
-      }
-
-      // Add new fee structure to the list
-      setFeeHeadListForFeeStructure((prev: IFeeStructure[]) => [
-        ...prev,
-        {
-          ...values,
-          lateFeeChargesAmount:
-            values.lateFeeChargesType === 'none' ? 0 : values.lateFeeChargesAmount,
-        } as IFeeStructure,
-      ]);
-
-      // Disable receipt book & grade fields after first entry
-      setIsFieldsDisabled(true);
-
-      // Reset form while keeping some field values
-      formik.setValues({
-        ...values, // Keep existing values
-        hostelFeeHead: '',
-        grossFee: '',
-        discountAmount: '',
-        discountRemark: '',
-        payableFee: '',
-        paymentMethod: [],
-        lateFeeChargesAmount: '',
-        lateFeeChargesType: '',
-        // Preserve these fields
-        applicableGrade: values.applicableGrade,
-        bookRecipt: values.bookRecipt,
-      });
     },
   });
 
@@ -124,12 +78,6 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
   useEffect(() => {
     dispatch(setIsChanges(!isEqual(formik.values, initialValues)));
   }, [dispatch, formik.values, initialValues]);
-
-  // Handler to clear form and enable fields
-  const handleClear = () => {
-    formik.resetForm();
-    setIsFieldsDisabled(false);
-  };
 
   // Handler for dialog close with unsaved changes check
   const handleCloseDialog = () => {
@@ -148,10 +96,6 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
     setFeeHeadListForFeeStructure(updatedFeeHeadList);
   };
 
-  // Handler to edit existing fee structure
-  const handleEdit = (row: any) => {
-    formik.setValues(row);
-  };
   const handleSubmit = () => {};
 
   const receiptBookDialog = useBoolean();
@@ -161,74 +105,21 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
     <Box p={2}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ height: '450px' }}>
-          <Box display="flex" justifyContent="flex-end" gap={1}>
-            <Button
-              startIcon={<Iconify icon="si:add-duotone" />}
-              type="submit"
-              variant="contained"
-              size="small"
-            >
-              Add
-            </Button>
-            <Button
-              startIcon={<Iconify icon="si:add-duotone" />}
-              variant="contained"
-              size="small"
-              onClick={handleClear}
-              disabled={feeHeadListForFeeStructure.length === 0}
-            >
-              Add For Other Class
-            </Button>
-          </Box>
           <Grid container spacing={3} py="30px">
             <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-              >
+              <ShakingTextField error={formik.touched.roomType && Boolean(formik.errors.roomType)}>
                 <CustomSelect
-                  label="Receipt Book *"
-                  options={[
-                    { value: 'cbse', label: 'CBSE' },
-                    { value: 'gseb', label: 'GSEB' },
-                  ]}
-                  autoFocus
-                  value={formik.values.bookRecipt}
-                  onChange={(e) => formik.setFieldValue('bookRecipt', e)}
-                  disabled={isFieldsDisabled}
-                  error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
-                  helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
-                  addOtherItemText="Add Receipt Book"
-                  addOtherItemOnClick={receiptBookDialog.onTrue}
-                />
-              </ShakingTextField>
-              {receiptBookDialog.value && (
-                <CustomDialog
-                  title="Add Receipt Book"
-                  open={receiptBookDialog.value}
-                  handleClose={receiptBookDialog.onFalse}
-                >
-                  <HostelReceiptBookDialogForDropdown />
-                </CustomDialog>
-              )}
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-              >
-                <CustomSelect
-                  label="Applicable Class *"
+                  label="Room Type *"
                   options={[
                     { value: '1', label: '1' },
                     { value: '2', label: '2' },
                     { value: '3', label: '3' },
                   ]}
-                  value={formik.values.applicableGrade}
-                  onChange={(e) => formik.setFieldValue('applicableGrade', e)}
+                  value={formik.values.roomType}
+                  onChange={(e) => formik.setFieldValue('roomType', e)}
                   disabled={isFieldsDisabled}
-                  error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
-                  helperText={
-                    formik.touched.applicableGrade ? formik.errors.applicableGrade : undefined
-                  }
+                  error={formik.touched.roomType && Boolean(formik.errors.roomType)}
+                  helperText={formik.touched.roomType ? formik.errors.roomType : undefined}
                 />
               </ShakingTextField>
             </Grid>
@@ -337,7 +228,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
               </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
+              <NumericFormatCustom
                 size="small"
                 fullWidth
                 label="Payable Fee *"
@@ -428,26 +319,12 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 </ShakingTextField>
               </Grid>
             )}
-            <Grid item xs={12} md={6}>
-              <DatePicker
-                label="Fees Due Date *"
-                value={formik.values.paymentDueDate}
-                onChange={(newValue) => formik.setFieldValue('paymentDueDate', newValue)}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
-            </Grid>
           </Grid>{' '}
-          {/* We can create multiple fee heads for a single fee structure. Previous entries are listed below in a table, similar to a to-do list, for easy tracking and management. */}
-          <HostelFeeHeadForFeeStructure
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            data={feeHeadListForFeeStructure}
-          />
         </Scrollbar>
         <DialogActions>
           <Button
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            variant="contained"
+            variant="outlined"
             size="small"
             onClick={handleCloseDialog}
           >
@@ -468,20 +345,3 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
 };
 
 export default HostelFeeCategorySettingDialog;
-function resetForm(arg0: {
-  values: {
-    feeHead: string;
-    grossFee: string;
-    discountAmount: string;
-    discountRemark: string;
-    payableFee: string;
-    paymentMethod: never[];
-    lateFeeChargesAmount: string;
-    lateFeeChargesType: string;
-    // Keep these fields unchanged
-    applicableGrade: string;
-    bookRecipt: string;
-  };
-}) {
-  throw new Error('Function not implemented.');
-}

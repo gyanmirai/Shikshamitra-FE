@@ -10,12 +10,12 @@ export interface IHostelRequestFormType {
   name: string;
   gender: string;
   dateOfBirth: string;
-  packageName: string;
+  roomType: string;
   totalAmount: number;
   scheduleDate: string | Dayjs | null;
   joinDate: string | Dayjs | null;
   feesFrequency: string;
-  interationCost: string;
+  iterationCost: string;
   email: string;
   parentsContactNo: string;
   alternateContactDetails: string;

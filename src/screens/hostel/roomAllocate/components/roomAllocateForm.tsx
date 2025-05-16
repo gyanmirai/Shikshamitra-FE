@@ -120,7 +120,7 @@ const RoomAllocateForm: React.FC<{
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Room Name *"
+                        label="Room Number *"
                         size="small"
                         error={formik.touched.roomName && Boolean(formik.errors.roomName)}
                         helperText={formik.touched.roomName && formik.errors.roomName}

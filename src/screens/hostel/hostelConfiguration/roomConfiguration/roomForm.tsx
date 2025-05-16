@@ -2,13 +2,10 @@ import React from 'react';
 import { useFormik } from 'formik';
 
 // eslint-disable-next-line import/no-duplicates
-import { Checkbox, Autocomplete } from '@mui/material';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { Autocomplete } from '@mui/material';
 // eslint-disable-next-line import/no-duplicates
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
-import { uuidv4 } from 'src/utils/uuidv4';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
@@ -26,14 +23,6 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
   // Available room types that can be selected
   const roomTypeOptions = ['Single', 'Double', 'Triple'];
 
-  // Available facilities that can be added to a room
-  const facilitiesOptions = [
-    { label: 'Gym', value: 'gym' },
-    { label: 'Swimming Pool', value: 'pool' },
-    { label: 'Parking', value: 'parking' },
-    { label: 'WiFi', value: 'wifi' },
-    { label: 'Laundry', value: 'laundry' },
-  ];
   // Possible status options for a room
   const statusOptions = ['Available', 'Occupied', 'Maintenance'];
 
@@ -142,61 +131,8 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.facility && formik.errors.facility)}>
-                  <Autocomplete
-                    size="small"
-                    multiple
-                    options={facilitiesOptions}
-                    getOptionLabel={(option: { label: string; value: string }) => option.label}
-                    value={facilitiesOptions.filter((opt) =>
-                      formik.values.facility?.includes(opt.value)
-                    )}
-                    onChange={(_, newValue) => {
-                      const selectedFacilities = newValue.map((val) => val.value);
-                      formik.setFieldValue('facility', selectedFacilities);
-
-                      const existingQuantities = formik.values.facilityQuantities || [];
-                      const updatedQuantities = selectedFacilities.map((facility) => {
-                        const existing = existingQuantities.find((f) => f.facility === facility);
-                        return existing || { id: uuidv4(), facility, quantity: 1 };
-                      });
-
-                      formik.setFieldValue('facilityQuantities', updatedQuantities);
-                    }}
-                    isOptionEqualToValue={(option: { value: string }, value: { value: string }) =>
-                      option.value === value.value
-                    }
-                    renderOption={(props, option, { selected }) => {
-                      const { key, ...optionProps } = props;
-                      return (
-                        <li key={key} {...optionProps}>
-                          <Checkbox
-                            icon={<CheckBoxOutlineBlankIcon />}
-                            checkedIcon={<CheckBoxIcon />}
-                            style={{ marginRight: 8 }}
-                            checked={selected}
-                          />
-                          {option.label}
-                        </li>
-                      );
-                    }}
-                    renderInput={(params: any) => (
-                      <TextField
-                        {...params}
-                        label="Facilities *"
-                        name="facility"
-                        fullWidth
-                        error={formik.touched.facility && Boolean(formik.errors.facility)}
-                        helperText={formik.touched.facility && formik.errors.facility}
-                      />
-                    )}
-                  />
-                </ShakingTextField>
-              </Grid>
-
               <Grid item xs={12}>
-                {formik.values.facilityQuantities?.length > 0 && (
+                {formik.values.roomType && (
                   <Box mt={2}>
                     <CustomizableTable
                       tableId="room-facility-quantities"
@@ -234,7 +170,13 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                           ),
                         },
                       ]}
-                      data={formik.values.facilityQuantities}
+                      data={[
+                        { id: 'wifi', facility: 'Wi-Fi', quantity: 0 },
+                        { id: 'gym', facility: 'Gym', quantity: 0 },
+                        { id: 'laundry', facility: 'Laundry', quantity: 0 },
+                        { id: 'ac', facility: 'Air Conditioning', quantity: 0 },
+                        { id: 'tv', facility: 'Television', quantity: 0 },
+                      ]}
                     />
                   </Box>
                 )}

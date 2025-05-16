@@ -19,6 +19,7 @@ import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import StudentLeftForm from './components/studentLeftForm';
 import StudentTableData from './components/studentTableData';
 import RoomAllocateForm from './components/roomAllocateForm';
 import RequestDetails from '../newRequest/components/requestDetails';
@@ -33,7 +34,7 @@ const StudentRoomAllocate = () => {
 
   const requestDetailsDialog = useBoolean();
   const assignRoom = useBoolean();
-
+  const leftStudentDialog = useBoolean();
   // State for managing form disable status
   const [disabled, setDisabled] = useState(false);
   // State for storing selected hostel request
@@ -59,10 +60,12 @@ const StudentRoomAllocate = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       assignRoom.onFalse();
+      leftStudentDialog.onFalse();
       dispatch(setIsChanges(false));
       setSelectedRequest(null);
     } else if (!isChanges) {
       assignRoom.onFalse();
+      leftStudentDialog.onFalse();
       setSelectedRequest(null);
     }
   };
@@ -93,6 +96,10 @@ const StudentRoomAllocate = () => {
         onRejected={(req) => {
           setSelectedRequest(req);
           rejectDialog.onTrue();
+        }}
+        onLeftStudent={(req) => {
+          setSelectedRequest(req);
+          leftStudentDialog.onTrue();
         }}
       />
 
@@ -159,6 +166,24 @@ const StudentRoomAllocate = () => {
           open={rejectDialog}
           handleClose={() => {
             rejectDialog.onFalse();
+          }}
+          selectedRequest={selectedRequest}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        title="Reason"
+        open={leftStudentDialog.value}
+        handleClose={() => {
+          // setWhichStatus(null);
+          leftStudentDialog.onFalse();
+          // setLeaveId('');
+        }}
+      >
+        <StudentLeftForm
+          open={leftStudentDialog}
+          handleClose={() => {
+            leftStudentDialog.onFalse();
           }}
           selectedRequest={selectedRequest}
         />
