@@ -4,8 +4,8 @@ import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesT
 
 export const getNoOfLectureInitialValues = () => ({
   className: '',
-  weeklyLectures: weeklyLecturesTableData.map(({ id, weeklyLectures }) => ({
+  weeklyLectures: weeklyLecturesTableData.map(({ id, noOfLecture }) => ({
     id: id.toString(),
-    weeklyLectures,
+    weeklyLectures: noOfLecture,
   })),
 });

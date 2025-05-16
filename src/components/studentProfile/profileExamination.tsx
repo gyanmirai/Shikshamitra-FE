@@ -197,7 +197,7 @@ const ProfileExamination = () => {
         </Grid>
       </Grid>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Previous Exams</Typography>
             <CustomizableTable
@@ -267,7 +267,7 @@ const ProfileExamination = () => {
             />{' '}
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography variant="h6">Upcoming Exams</Typography>

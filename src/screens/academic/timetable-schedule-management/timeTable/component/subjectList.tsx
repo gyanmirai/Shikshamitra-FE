@@ -33,7 +33,10 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography variant="body2">{subject.subjectName}</Typography>
+            {subject.subjects.map((sub) => (
+              <Typography variant="body2">{sub.name}</Typography>
+            ))}
+
             <Typography variant="body2">
               ({remainingLectures[subject.id]} / {subject.noOfLecture})
             </Typography>

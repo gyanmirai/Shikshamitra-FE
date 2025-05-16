@@ -62,6 +62,23 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         ),
       },
       {
+        id: 'subjectColor',
+        label: 'Subject Color',
+        align: 'left',
+        render(value, row) {
+          return (
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                backgroundColor: row.subjectColor,
+              }}
+            />
+          );
+        },
+      },
+      {
         id: 'action',
         label: 'Actions',
         minWidth: 80,
