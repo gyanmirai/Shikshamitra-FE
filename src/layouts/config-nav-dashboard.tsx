@@ -375,6 +375,11 @@ const securityModule = {
               path: '/security/guard-management/setting-configuration',
               _action: 'setting-configuration',
             },
+            {
+              title: 'Guard Duties',
+              path: '/security/guard-management/hand-over-notes',
+              _action: 'hand-over-notes',
+            },
           ],
         },
 
