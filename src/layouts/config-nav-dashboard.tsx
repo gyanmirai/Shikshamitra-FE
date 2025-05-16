@@ -279,6 +279,11 @@ const securityModule = {
       subheader: '',
       items: [
         {
+          title: 'Dashboard',
+          path: '/security/dashboard',
+          _action: 'dashboard',
+        },
+        {
           title: 'Role And Permission',
           path: '',
           _action: 'role-and-permission',
@@ -349,9 +354,68 @@ const securityModule = {
               _action: 'gate-pass',
             },
             {
+              title: 'Review Gate Pass Request For Child',
+              path: '/security/gate-pass-management/review-gate-pass-request',
+              _action: 'review-gate-pass-request',
+            },
+            {
               title: 'Access Logs Management Security',
               path: '/security/gate-pass-management/access-logs-management-security',
               _action: 'access-logs-management-security',
+            },
+            {
+              title: 'Gate Pass Request Staff',
+              path: '/security/gate-pass-management/gate-pass-staff',
+              _action: 'gate-pass-staff',
+            },
+            {
+              title: 'Review Gate Pass Request Staff',
+              path: '/security/gate-pass-management/review-gate-pass-staff',
+              _action: 'review-gate-pass-staff',
+            },
+          ],
+        },
+        {
+          title: 'Guard Management',
+          path: '',
+          _action: 'guard-management',
+          children: [
+            {
+              title: 'Guard Assignment',
+              path: '/security/guard-management/guard-assignment',
+              _action: 'guard-assignment',
+            },
+            {
+              title: 'My Duty Schedule',
+              path: '/security/guard-management/duty-schedule',
+              _action: 'duty-schedule',
+            },
+            {
+              title: 'Setting Configuration',
+              path: '/security/guard-management/setting-configuration',
+              _action: 'setting-configuration',
+            },
+          ],
+        },
+        {
+          title: 'Guard Management',
+          path: '',
+          _action: 'guard-management',
+          children: [
+            {
+              title: 'Guard Assignment',
+              path: '/security/guard-management/guard-assignment',
+              _action: 'guard-assignment',
+            },
+            {
+              title: 'My Duty Schedule',
+              path: '/security/guard-management/duty-schedule',
+              _action: 'duty-schedule',
+            },
+            {
+              title: 'Setting Configuration',
+              path: '/security/guard-management/setting-configuration',
+              _action: 'setting-configuration',
             },
           ],
         },

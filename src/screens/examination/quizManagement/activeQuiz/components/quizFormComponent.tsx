@@ -32,11 +32,11 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -88,7 +88,104 @@ const QuizInformation = ({ formik }: any) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={!!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime) || false}
+          >
+            <DateTimePicker
+              label="Quiz Start Date/Time"
+              format="DD/MM/YYYY HH:mm"
+              value={formik.values.quizStartDateTime}
+              onChange={(value) => {
+                formik.setFieldValue('quizStartDateTime', value);
+              }}
+              disablePast
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: !!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime),
+                  helperText: formik.touched.quizStartDateTime && formik.errors.quizStartDateTime,
+                },
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={!!(formik.touched.quizEndDateTime && formik.errors.quizEndDateTime) || false}
+          >
+            <DateTimePicker
+              label="Quiz End Date/Time"
+              value={formik.values.quizEndDateTime}
+              onChange={(value) => {
+                formik.setFieldValue('quizEndDateTime', value);
+              }}
+              disablePast
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: !!(formik.touched.quizEndDateTime && formik.errors.quizEndDateTime),
+                  helperText: formik.touched.quizEndDateTime && formik.errors.quizEndDateTime,
+                },
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={!!(formik.touched.attemptsAllowed && formik.errors.attemptsAllowed) || false}
+          >
+            <TextField
+              fullWidth
+              label="Attempts Allowed"
+              name="attemptsAllowed"
+              value={formik.values.attemptsAllowed}
+              onChange={formik.handleChange}
+              error={formik.touched.attemptsAllowed && Boolean(formik.errors.attemptsAllowed)}
+              helperText={formik.touched.attemptsAllowed && formik.errors.attemptsAllowed}
+              size="small"
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Switch
+              checked={formik.values.randomOrder}
+              onChange={() => {
+                formik.setFieldValue('randomOrder', !formik.values.randomOrder);
+              }}
+              inputProps={{ 'aria-label': 'controlled' }}
+            />
+            <Typography sx={{ mr: 2 }} variant="body2">
+              Random Questions
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType) || false}
+          >
+            <CustomSelect
+              label="Quiz Taken Type"
+              options={[
+                { value: 'online', label: 'Online' },
+                { value: 'offline', label: 'Offline' },
+              ]}
+              name="quizTakenType"
+              value={formik.values.quizTakenType}
+              onChange={(val) => formik.setFieldValue('quizTakenType', val as string)}
+              error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType) || false}
+              helperText={formik.touched.quizTakenType && formik.errors.quizTakenType}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.quizTitle && formik.errors.quizTitle) || false}
           >
@@ -104,7 +201,7 @@ const QuizInformation = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.className && formik.errors.className) || false}
           >
@@ -125,10 +222,11 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division) || false}>
             <CustomSelect
               label="Select Divisions"
+              disabled={!formik.values.className}
               options={[
                 {
                   value: isAllSelected ? 'deselectAll' : 'all',
@@ -136,7 +234,7 @@ const QuizInformation = ({ formik }: any) => {
                 },
                 ...divisionOption,
               ]}
-              value={formik.values.division || []}
+              value={formik.values.division}
               onChange={(val) => {
                 handleDivisionChange(val as string[]);
               }}
@@ -154,7 +252,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject) || false}>
             <CustomSelect
               label="Subject"
@@ -163,6 +261,7 @@ const QuizInformation = ({ formik }: any) => {
                 { value: 'english', label: 'English' },
                 { value: 'science', label: 'Science' },
               ]}
+              disabled={!(formik.values.division && formik.values.division.length > 0)}
               name="subject"
               value={formik.values.subject}
               onChange={(val) => formik.setFieldValue('subject', val as string)}
@@ -173,7 +272,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter) || false}>
             <CustomSelect
               label="Chapter"
@@ -184,6 +283,7 @@ const QuizInformation = ({ formik }: any) => {
               ]}
               name="chapter"
               multiple
+              disabled={!formik.values.subject}
               value={formik.values.chapter}
               onChange={(val) => formik.setFieldValue('chapter', val)}
               error={!!(formik.touched.chapter && formik.errors.chapter) || false}
@@ -197,7 +297,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
           >
@@ -214,7 +314,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.passingMarks && formik.errors.passingMarks) || false}
           >
@@ -231,7 +331,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.quizDuration && formik.errors.quizDuration) || false}
           >
@@ -829,18 +929,28 @@ const QuizBuilder = ({ formik }: any) => {
           {formik.errors.questions}
         </Typography>
       )}
-
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">{formik.values.quizTitle}</Typography>
-        <Button
-          variant="contained"
+      <Box display="flex" gap={2}>
+        <Typography variant="body2">Generate Question</Typography>
+        <Switch
           size="small"
-          startIcon={<Add />}
-          onClick={() => addQuestionDialog.onTrue()}
-        >
-          Add Question
-        </Button>
+          checked={formik.values.isQuestionUpload}
+          onChange={() => formik.setFieldValue('isQuestionUpload', !formik.values.isQuestionUpload)}
+        />
+        <Typography variant="body2">Upload Question</Typography>
       </Box>
+      {!formik.values.isQuestionUpload && (
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h6">{formik.values.quizTitle}</Typography>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Add />}
+            onClick={() => addQuestionDialog.onTrue()}
+          >
+            Add Question
+          </Button>
+        </Box>
+      )}
 
       <CustomDialog
         maxWidth="sm"
@@ -866,138 +976,38 @@ const QuizBuilder = ({ formik }: any) => {
         )}
       </CustomDialog>
 
-      <QuestionList
-        questions={formik.values.questions}
-        onDragEnd={handleDragEnd}
-        onDeleteQuestion={handleDeleteQuestion}
-        onEditQuestion={handleEditQuestion}
-      />
+      {!formik.values.isQuestionUpload ? (
+        <QuestionList
+          questions={formik.values.questions}
+          onDragEnd={handleDragEnd}
+          onDeleteQuestion={handleDeleteQuestion}
+          onEditQuestion={handleEditQuestion}
+        />
+      ) : (
+        <UploadBox
+          onDrop={() => {}}
+          placeholder={
+            <Box
+              sx={{
+                gap: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                color: 'text.disabled',
+                flexDirection: 'column',
+              }}
+            >
+              <Iconify icon="eva:cloud-upload-fill" width={40} />
+              <Typography variant="body2">Upload Document</Typography>
+            </Box>
+          }
+          sx={{ py: 1.4, width: '100%', borderRadius: 1.5 }}
+        />
+      )}
     </Box>
   );
 };
 
-const QuizSetting = ({ formik }: any) => {
-  // State to store and manage question table data - currently unused
-  const [questionTableData, setQuestionTableData] = useState(formik.values.questions || []);
-
-  return (
-    <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
-      <Typography variant="h6">{formik.values.quizTitle}</Typography>{' '}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
-          <ShakingTextField
-            error={!!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime) || false}
-          >
-            <DateTimePicker
-              label="Quiz Start Date/Time"
-              format="DD/MM/YYYY HH:mm"
-              value={formik.values.quizStartDateTime}
-              onChange={(value) => {
-                formik.setFieldValue('quizStartDateTime', value);
-              }}
-              disablePast
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  error: !!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime),
-                  helperText: formik.touched.quizStartDateTime && formik.errors.quizStartDateTime,
-                },
-              }}
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <ShakingTextField
-            error={!!(formik.touched.quizEndDateTime && formik.errors.quizEndDateTime) || false}
-          >
-            <DateTimePicker
-              label="Quiz End Date/Time"
-              value={formik.values.quizEndDateTime}
-              onChange={(value) => {
-                formik.setFieldValue('quizEndDateTime', value);
-              }}
-              disablePast
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  error: !!(formik.touched.quizEndDateTime && formik.errors.quizEndDateTime),
-                  helperText: formik.touched.quizEndDateTime && formik.errors.quizEndDateTime,
-                },
-              }}
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <ShakingTextField
-            error={!!(formik.touched.attemptsAllowed && formik.errors.attemptsAllowed) || false}
-          >
-            <TextField
-              fullWidth
-              label="Attempts Allowed"
-              name="attemptsAllowed"
-              value={formik.values.attemptsAllowed}
-              onChange={formik.handleChange}
-              error={formik.touched.attemptsAllowed && Boolean(formik.errors.attemptsAllowed)}
-              helperText={formik.touched.attemptsAllowed && formik.errors.attemptsAllowed}
-              size="small"
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch
-              checked={formik.values.randomOrder}
-              onChange={() => {
-                formik.setFieldValue('randomOrder', !formik.values.randomOrder);
-              }}
-              inputProps={{ 'aria-label': 'controlled' }}
-            />
-            <Typography sx={{ mr: 2 }} variant="body2">
-              Random Questions
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
-      <CustomizableTable
-        isFilter={false}
-        isSearch={false}
-        isPagination={false}
-        isShowedDense={false}
-        isScrollbar={false}
-        tableId="quiz-questions"
-        columns={[
-          { id: 'question', label: 'Question' },
-          { id: 'questionType', label: 'Question Type' },
-          {
-            id: 'options',
-            label: 'Options',
-            render(value, row) {
-              return (
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  {value.length
-                    ? value.map((audience: string) => (
-                        <Chip key={audience} label={audience} size="small" variant="outlined" />
-                      ))
-                    : '-'}
-                </Box>
-              );
-            },
-          },
-          { id: 'correctAnswer', label: 'Correct Answer' },
-          { id: 'marks', label: 'Marks' },
-        ]}
-        data={questionTableData}
-      />
-    </Box>
-  );
-};
-
-const allSurveySteps = [QuizInformation, QuizBuilder, QuizSetting];
+const allSurveySteps = [QuizInformation, QuizBuilder];
 
 const AddNewQuiz = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
   // State to track the current active step in the quiz creation stepper
@@ -1006,7 +1016,7 @@ const AddNewQuiz = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void 
   return (
     <CustomStepperWithFormik
       initialValues={getInitialValues()}
-      steps={['Quiz Information', 'Quiz Builder', 'Quiz Setting']}
+      steps={['Quiz Information', 'Quiz Builder']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);

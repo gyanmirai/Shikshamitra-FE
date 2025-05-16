@@ -1,0 +1,24 @@
+[
+    {
+      "childName": "Aarav Sharma",
+      "pickupTime": "2025-04-29T13:30:00+05:30",
+      "pickupDate": "2025-04-29T00:00:00+05:30",
+      "reasonForPickup": "Doctor appointment",
+      "status":0
+    },
+    {
+      "childName": "Ishita Verma",
+      "pickupTime": "2025-04-30T12:00:00+05:30",
+      "pickupDate": "2025-04-30T00:00:00+05:30",
+      "reasonForPickup": "Family function",
+      "status":1
+    },
+    {
+      "childName": "Kabir Das",
+      "pickupTime": "2025-05-01T14:15:00+05:30",
+      "pickupDate": "2025-05-01T00:00:00+05:30",
+      "reasonForPickup": "Parent meeting",
+      "status":2
+    }
+  ]
+  

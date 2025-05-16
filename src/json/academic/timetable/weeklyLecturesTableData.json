@@ -1,8 +1,71 @@
 [
-    { "id": 1, "subjects": "Mathematics", "weeklyLectures": 0 },
-    { "id": 2, "subjects": "Science", "weeklyLectures": 0 },
-    { "id": 3, "subjects": "English", "weeklyLectures": 0 },
-    { "id": 4, "subjects": "History", "weeklyLectures": 0 },
-    { "id": 5, "subjects": "Geography", "weeklyLectures": 0 }
-  ]
-  
+  {
+    "subjectName": "Mathematics",
+    "subjectColor": "#FFB74D",
+    "noOfLecture": 0,
+    "subjectType": "core",
+    "subjects": [
+      {
+        "name": "Mathematics",
+        "teachers": []
+      }
+    ],
+    "id": "1"
+  },
+  {
+    "subjectName": "Science",
+    "subjectColor": "#81C784",
+    "noOfLecture": 0,
+    "subjectType": "core",
+    "subjects": [
+      {
+        "name": "Science",
+        "teachers": []
+      }
+    ],
+    "id": "2"
+  },
+  {
+    "subjectName": "English",
+    "subjectColor": "#64B5F6",
+    "noOfLecture": 0,
+    "subjectType": "core",
+    "subjects": [
+      {
+        "name": "English",
+        "teachers": []
+      },
+      {
+        "name": "Math",
+        "teachers": []
+      }
+    ],
+    "id": "3"
+  },
+  {
+    "subjectName": "History",
+    "subjectColor": "#E57373",
+    "noOfLecture": 0,
+    "subjectType": "core",
+    "subjects": [
+      {
+        "name": "History",
+        "teachers": []
+      }
+    ],
+    "id": "4"
+  },
+  {
+    "subjectName": "Geography",
+    "subjectColor": "#BA68C8",
+    "noOfLecture": 0,
+    "subjectType": "core",
+    "subjects": [
+      {
+        "name": "Geography",
+        "teachers": []
+      }
+    ],
+    "id": "5"
+  }
+]

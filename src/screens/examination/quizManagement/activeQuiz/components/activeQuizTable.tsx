@@ -14,6 +14,10 @@ const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick, handl
           <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
           Attempt Quiz
         </MenuItem>
+        <MenuItem onClick={() => {}}>
+          <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+          View Questions
+        </MenuItem>
       </MenuList>
     </Box>
   );

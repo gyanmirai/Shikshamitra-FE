@@ -75,6 +75,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
           {
             title: 'Language Electives',
             subjects: [{ name: 'French' }, { name: 'German' }, { name: 'Spanish' }],
+            subjectColor: '#FF5733',
           },
           {
             title: 'Science Electives',
@@ -83,10 +84,12 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
               { name: 'Biotechnology' },
               { name: 'Environmental Science' },
             ],
+            subjectColor: '#33FF57',
           },
           {
             title: 'Arts Electives',
             subjects: [{ name: 'Painting' }, { name: 'Sculpture' }, { name: 'Music' }],
+            subjectColor: '#3357FF',
           },
         ]}
       />

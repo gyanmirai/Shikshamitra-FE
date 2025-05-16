@@ -12,6 +12,7 @@ export type TSubject = {
 export type TSubjectGroup = {
   id: string;
   subjectName: string;
+  subjectType: string;
   subjectColor: string;
   subjects: TSubject[];
   noOfLecture: number;

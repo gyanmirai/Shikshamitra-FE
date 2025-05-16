@@ -44,8 +44,10 @@ const ActiveQuiz = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addQuizDialog.onFalse();
+      setOpen(false);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
+      setOpen(false);
       addQuizDialog.onFalse();
     }
   };
