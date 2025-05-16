@@ -349,6 +349,11 @@ const securityModule = {
               _action: 'gate-pass',
             },
             {
+              title: 'Review Gate Pass Request For Child',
+              path: '/security/gate-pass-management/review-gate-pass-request',
+              _action: 'review-gate-pass-request',
+            },
+            {
               title: 'Access Logs Management Security',
               path: '/security/gate-pass-management/access-logs-management-security',
               _action: 'access-logs-management-security',
