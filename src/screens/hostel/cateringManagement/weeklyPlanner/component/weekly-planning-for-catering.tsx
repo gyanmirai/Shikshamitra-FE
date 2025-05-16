@@ -53,10 +53,12 @@ const getMenuColor = (meal: string, dayIndex: number): string => {
 const WeeklyPlanningForCatering = () => {
   // Dialog state for adding new menu items
   const dialogToAddMenu = useBoolean();
+  // State to store the currently selected meal details for editing/adding
   const [selectedMeal, setSelectedMeal] = useState<IMealFormValues | null>(null);
 
   // Dialog state for viewing past menu items
   const readOnlyDialog = useBoolean();
+  // State to store the meal data for read-only view in dialog
   const [readOnlyData, setReadOnlyData] = useState<IMealFormValues | null>(null);
 
   // Selected hostel state
