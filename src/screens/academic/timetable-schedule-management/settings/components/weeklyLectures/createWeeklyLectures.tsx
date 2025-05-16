@@ -3,7 +3,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Chip, TextField, DialogActions } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -20,6 +20,7 @@ import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
 
 import type { ICreateNoOfLectureProps } from './type';
+import type { TSubject } from '../../../timeTable/type';
 
 const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, disabled }) => {
   // Fetch class data using custom hook
@@ -44,7 +45,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
    * Updates the number of lectures for a specific subject
    * Ensures value is non-negative and converts string to number
    */
-  const handleInputChange = (id: number, value: string) => {
+  const handleInputChange = (id: string, value: string) => {
     const numValue = Math.max(0, parseInt(value, 10) || 0);
 
     setSubjectList((prevData) =>
@@ -91,6 +92,18 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                     {
                       id: 'subjects',
                       label: 'Subjects',
+                      render: (value) => (
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                          {value.map((subject: TSubject) => (
+                            <Chip
+                              key={subject.name}
+                              label={subject.name}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Box>
+                      ),
                     },
                     {
                       id: 'weeklyLectures',

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { MuiColorInput } from 'mui-color-input';
 
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -116,6 +117,34 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     </FormHelperText>
                   )}
                 </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <ShakingTextField
+                  error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
+                >
+                  <MuiColorInput
+                    placeholder="Subject Color"
+                    size="small"
+                    format="hex"
+                    value={formik.values.subjectColor}
+                    onChange={(e) => {
+                      formik.setFieldValue('subjectColor', e);
+                    }}
+                    sx={{
+                      minWidth: 180,
+                      width: '100%',
+                      '& .MuiInputBase-root': {
+                        fontSize: '0.875rem',
+                      },
+                      '& .MuiInputBase-input::placeholder': {
+                        fontSize: '0.875rem',
+                      },
+                    }}
+                    error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
+                    helperText={formik.touched.subjectColor && formik.errors.subjectColor}
+                  />
+                </ShakingTextField>
               </Grid>
             </Grid>
           </Scrollbar>

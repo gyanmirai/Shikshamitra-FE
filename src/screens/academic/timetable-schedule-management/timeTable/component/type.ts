@@ -15,3 +15,8 @@ export interface IAssignRoomProps {
   slotData: any;
   onRoomSelect: (value: string) => void;
 }
+
+export interface IAssignTeacherProps {
+  slotData: any;
+  onTeacherSelect: (value: string) => void;
+}
