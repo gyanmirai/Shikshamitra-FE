@@ -1,0 +1,23 @@
+[
+    {
+        "name": "John Doe",
+        "leaveTime": "2025-05-16T15:00:00",
+        "leaveDate": "2025-05-16T00:00:00",
+        "reasonForLeave": "Doctor's appointment",
+        "status": 0
+    },
+    {
+        "name": "John Doe",
+        "leaveTime": "2025-05-16T15:00:00",
+        "leaveDate": "2025-05-16T00:00:00",
+        "reasonForLeave": "Doctor's appointment",
+        "status": 1
+    },
+    {
+        "name": "John Doe",
+        "leaveTime": "2025-05-16T15:00:00",
+        "leaveDate": "2025-05-16T00:00:00",
+        "reasonForLeave": "Doctor's appointment",
+        "status": 2
+    }
+]

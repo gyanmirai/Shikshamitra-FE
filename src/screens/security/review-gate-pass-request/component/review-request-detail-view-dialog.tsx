@@ -149,7 +149,7 @@ const ReviewRequestDetailView: React.FC<IReviewRequestDetailViewDialogProps> = (
                     formik.setFieldValue('description', value);
                   }}
                   placeholder="Description *"
-                  editable
+                  editable={status === 'Pending'}
                   sx={{ width: '100%', marginTop: '10px' }}
                   error={formik.touched.description && Boolean(formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
