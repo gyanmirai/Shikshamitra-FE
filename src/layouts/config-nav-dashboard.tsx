@@ -355,6 +355,28 @@ const securityModule = {
             },
           ],
         },
+        {
+          title: 'Guard Management',
+          path: '',
+          _action: 'guard-management',
+          children: [
+            {
+              title: 'Guard Assignment',
+              path: '/security/guard-management/guard-assignment',
+              _action: 'guard-assignment',
+            },
+            {
+              title: 'My Duty Schedule',
+              path: '/security/guard-management/duty-schedule',
+              _action: 'duty-schedule',
+            },
+            {
+              title: 'Setting Configuration',
+              path: '/security/guard-management/setting-configuration',
+              _action: 'setting-configuration',
+            },
+          ],
+        },
 
         {
           title: 'Alert',

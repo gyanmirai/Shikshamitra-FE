@@ -1,0 +1,31 @@
+[
+  {
+    "guardName": "John Doe",
+    "guardShiftPerDay": 2,
+    "guardShiftlist": [
+      "07:00 - 12:00"
+    ],
+    "assignedShift": [
+      {
+        "day": "Monday",
+        "timeSlot": "07:00 - 12:00",
+        "location": "Main Gate",
+        "date": "2025-05-14T00:00:00.000Z"
+      },
+      {
+        "day": "Wednesday",
+        "timeSlot": "07:00 - 12:00",
+        "location": "Parking Lot",
+        "date": "2025-05-15T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "guardName": "Rajesh",
+    "guardShiftPerDay": 2,
+    "guardShiftlist": [
+      "12:00 - 18:00"
+    ],
+    "assignedShift": []
+  }
+]
