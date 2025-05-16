@@ -279,6 +279,11 @@ const securityModule = {
       subheader: '',
       items: [
         {
+          title: 'Dashboard',
+          path: '/security/dashboard',
+          _action: 'dashboard',
+        },
+        {
           title: 'Role And Permission',
           path: '',
           _action: 'role-and-permission',
