@@ -15,7 +15,7 @@ import type {
 
 const VisitorApprovalTable: React.FC<IVisitorPreApprovalTableTableProps> = ({ onClick }) => (
   <CustomizableTable
-    tableId="my-resources-table"
+    tableId="my-pre-approved-visitor-table"
     searchFieldProps={{
       placeholder: 'Search by Name,...',
       label: 'Search by Name...',

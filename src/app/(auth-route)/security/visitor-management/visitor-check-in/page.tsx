@@ -1,7 +1,7 @@
 import React from 'react';
 
-import UserManagementScreen from 'src/screens/security/user';
+import VisitorCheckInOutScreen from 'src/screens/security/visitor-management/visitor-check-in-out/visitor-check-in-out-screen';
 
-const Page = () => <UserManagementScreen />;
+const Page = () => <VisitorCheckInOutScreen />;
 
 export default Page;
