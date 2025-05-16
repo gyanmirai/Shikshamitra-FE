@@ -1,62 +1,76 @@
 [
   {
-    "id": "1",
-    "class": "10",
-    "subjectName": "Mathematics",
-    "examType": "Unit Test",
-    "examName": "Maths Unit Test - Chapter 1",
-    "examDate": "2024-12-20",
-    "examTime": "10:00 AM",
-    "examDuration": "2 Hours",
-    "totalMarks": 50,
-    "status": "Pending"
-  },
-  {
-    "id": "2",
-    "class": "9",
-    "subjectName": "English",
     "examType": "Mid-term Exam",
-    "examName": "English Literature Mid-Term",
-    "examDate": "2024-12-22",
-    "examTime": "11:30 AM",
-    "examDuration": "3 Hours",
-    "totalMarks": 100,
-    "status": "Completed"
+    "examName": "Science Mid-Term Assessment",
+    "className": "10",
+    "divisions": ["A", "B"],
+    "subjects": [
+      {
+        "id": 1,
+        "subjectName": "Physics",
+        "examDate": "2024-09-15T00:00:00.000Z",
+        "examTime": "2024-09-15T10:00:00.000Z",
+        "examDuration": "2024-09-15T02:00:00.000Z",
+        "totalMarks": 70,
+        "passingMarks": 28,
+        "invigilationTeacher": "Mr. Mehta",
+        "teacher": "Mrs. Iyer"
+      },
+      {
+        "id": 2,
+        "subjectName": "Chemistry",
+        "examDate": "2024-09-17T00:00:00.000Z",
+        "examTime": "2024-09-17T10:00:00.000Z",
+        "examDuration": "2024-09-17T02:00:00.000Z",
+        "totalMarks": 70,
+        "passingMarks": 28,
+        "invigilationTeacher": "Mr. Patel",
+        "teacher": "Dr. Shah"
+      }
+    ],
+    "description": "This exam covers chapters 1 to 5 from the Science syllabus.",
+    "status": 1
   },
   {
-    "id": "3",
-    "class": "8",
-    "subjectName": "Science",
+    "examType": "Unit Test",
+    "examName": "Mathematics Unit Test - Chapter 2",
+    "className": "9",
+    "divisions": ["C"],
+    "subjects": [
+      {
+        "id": 3,
+        "subjectName": "Mathematics",
+        "examDate": "2024-09-20T00:00:00.000Z",
+        "examTime": "2024-09-20T09:00:00.000Z",
+        "examDuration": "2024-09-20T01:30:00.000Z",
+        "totalMarks": 40,
+        "passingMarks": 16,
+        "invigilationTeacher": "Mrs. Desai",
+        "teacher": "Mr. Sharma"
+      }
+    ],
+    "description": "Unit test based on Chapter 2: Algebraic Expressions.",
+    "status": 0
+  },
+  {
     "examType": "Final Exam",
-    "examName": "Science Final - Part B",
-    "examDate": "2024-12-25",
-    "examTime": "09:00 AM",
-    "examDuration": "2.5 Hours",
-    "totalMarks": 80,
-    "status": "Pending"
-  },
-  {
-    "id": "4",
-    "class": "11",
-    "subjectName": "Chemistry",
-    "examType": "Practical Exam",
-    "examName": "Chemistry Lab - Semester 1",
-    "examDate": "2024-12-18",
-    "examTime": "01:00 PM",
-    "examDuration": "1.5 Hours",
-    "totalMarks": 30,
-    "status": "Completed"
-  },
-  {
-    "id": "5",
-    "class": "12",
-    "subjectName": "Biology",
-    "examType": "Quarterly Exam",
-    "examName": "Biology Quarterly Test",
-    "examDate": "2024-12-30",
-    "examTime": "08:30 AM",
-    "examDuration": "2 Hours",
-    "totalMarks": 70,
-    "status": "Pending"
+    "examName": "English Final Examination",
+    "className": "8",
+    "divisions": ["A", "D"],
+    "subjects": [
+      {
+        "id": 4,
+        "subjectName": "English",
+        "examDate": "2024-10-05T00:00:00.000Z",
+        "examTime": "2024-10-05T11:00:00.000Z",
+        "examDuration": "2024-10-05T02:30:00.000Z",
+        "totalMarks": 100,
+        "passingMarks": 40,
+        "invigilationTeacher": "Mr. Roy",
+        "teacher": "Ms. Fernandes"
+      }
+    ],
+    "description": "Comprehensive final exam covering entire syllabus.",
+    "status": 1
   }
 ]
