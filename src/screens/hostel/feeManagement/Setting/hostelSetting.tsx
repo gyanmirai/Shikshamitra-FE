@@ -13,7 +13,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelFeeHead from './components/hostelFeeHead/hostelFeeHead';
 import HostelFeeStructure from './components/hostelFeeStrucutre/feeStructure';
-import HostelReceiptBookSetting from './components/hostelFeeStrucutre/components/hostelReceiptBookSetting';
 import HostelPaymentMethodComponent from './components/hostelFeeStrucutre/components/hostelPaymentMethodComp';
 
 const TABS = [
@@ -21,11 +20,6 @@ const TABS = [
     value: 'feeHead',
     label: 'Fee Head Management',
     component: (props: TabComponentType) => <HostelFeeHead {...props} />,
-  },
-  {
-    value: 'feeReceipt',
-    label: 'Fee Receipt',
-    component: (props: TabComponentType) => <HostelReceiptBookSetting {...props} />,
   },
   {
     value: 'paymentMethod',

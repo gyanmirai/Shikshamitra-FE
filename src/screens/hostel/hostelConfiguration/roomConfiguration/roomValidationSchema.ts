@@ -5,6 +5,5 @@ export const hostelRoomValidationSchema = Yup.object().shape({
   roomType: Yup.string().required('Room type is required'),
   floorNumber: Yup.number().required('Floor number is required'),
   roomCapacity: Yup.number().required('Room capacity is required'),
-  facility: Yup.array().of(Yup.string()),
   status: Yup.string().required('Room status is required'),
 });

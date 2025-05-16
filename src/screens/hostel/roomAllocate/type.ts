@@ -6,6 +6,7 @@ export interface IHostelTableDataProps {
   onRequestDetails: (request: IHostelRequestFormType) => void;
   onAssignRoom: (request: IHostelRequestFormType) => void;
   onRejected: (request: IHostelRequestFormType) => void;
+  onLeftStudent: (request: IHostelRequestFormType) => void;
 }
 
 export interface IAllocateRoomDialogProps {

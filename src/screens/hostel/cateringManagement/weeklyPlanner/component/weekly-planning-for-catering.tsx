@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, TextField, Typography, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -55,6 +55,7 @@ const WeeklyPlanningForCatering = () => {
   const [selectedMeal, setSelectedMeal] = useState<IMealFormValues | null>(null);
   const readOnlyDialog = useBoolean();
   const [readOnlyData, setReadOnlyData] = useState<IMealFormValues | null>(null);
+  const [hostel, setHostel] = useState('');
 
   const openReadOnlyDialog = (mealData: IMealFormValues) => {
     setReadOnlyData(mealData);
@@ -164,55 +165,81 @@ const WeeklyPlanningForCatering = () => {
   };
 
   return (
-    <Box pb={5}>
-      <Box
-        display="flex"
-        flexDirection="column"
-        border={`1px solid ${COLORS.cell.border}`}
-        width="100%"
-      >
-        <Box display="flex">
-          <Box width={CELL_WIDTH} bgcolor={COLORS.cell.background} />
-          {DAYS.map(renderHeaderCell)}
+    <Box>
+      <Box display="flex" gap={2} mb={1}>
+        <Autocomplete
+          options={[
+            { id: 'H1', name: 'Hostel A' },
+            { id: 'H2', name: 'Hostel B' },
+            { id: 'H3', name: 'Hostel C' },
+          ]}
+          getOptionLabel={(option) => option.name || ''}
+          onChange={(_, value) => {
+            setHostel(value?.id || '');
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Hostel"
+              name="hostel"
+              variant="outlined"
+              fullWidth
+              size="small"
+            />
+          )}
+          sx={{ maxWidth: '200px', width: '100%' }}
+        />
+      </Box>
+      <Box pb={5}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          border={`1px solid ${COLORS.cell.border}`}
+          width="100%"
+        >
+          <Box display="flex">
+            <Box width={CELL_WIDTH} bgcolor={COLORS.cell.background} />
+            {DAYS.map(renderHeaderCell)}
+          </Box>
+
+          {MEAL_TYPES.map((meal) => (
+            <Box key={meal} display="flex" borderTop={`1px solid ${COLORS.cell.border}`}>
+              <Box
+                width={CELL_WIDTH}
+                borderRight={`1px solid ${COLORS.cell.border}`}
+                p={1}
+                bgcolor={COLORS.cell.background}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Typography variant="subtitle2">{meal}</Typography>
+              </Box>
+
+              {DAYS.map((day, colIdx) => renderMealCell(day, meal, colIdx))}
+            </Box>
+          ))}
         </Box>
 
-        {MEAL_TYPES.map((meal) => (
-          <Box key={meal} display="flex" borderTop={`1px solid ${COLORS.cell.border}`}>
-            <Box
-              width={CELL_WIDTH}
-              borderRight={`1px solid ${COLORS.cell.border}`}
-              p={1}
-              bgcolor={COLORS.cell.background}
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Typography variant="subtitle2">{meal}</Typography>
-            </Box>
-
-            {DAYS.map((day, colIdx) => renderMealCell(day, meal, colIdx))}
-          </Box>
-        ))}
+        {dialogToAddMenu.value && (
+          <CustomDialog
+            title={
+              selectedMeal?.mealDescription
+                ? `Edit Weekly Menu For ${selectedMeal.mealDay} ${selectedMeal.mealType}`
+                : 'Add Weekly Menu'
+            }
+            maxWidth="md"
+            open={dialogToAddMenu.value}
+            handleClose={dialogToAddMenu.onFalse}
+          >
+            <AddWeeklyMenuDialog
+              isEdit={Boolean(selectedMeal?.mealDescription)}
+              data={selectedMeal}
+              onClose={dialogToAddMenu.onFalse}
+            />
+          </CustomDialog>
+        )}
       </Box>
-
-      {dialogToAddMenu.value && (
-        <CustomDialog
-          title={
-            selectedMeal?.mealDescription
-              ? `Edit Weekly Menu For ${selectedMeal.mealDay} ${selectedMeal.mealType}`
-              : 'Add Weekly Menu'
-          }
-          maxWidth="md"
-          open={dialogToAddMenu.value}
-          handleClose={dialogToAddMenu.onFalse}
-        >
-          <AddWeeklyMenuDialog
-            isEdit={Boolean(selectedMeal?.mealDescription)}
-            data={selectedMeal}
-            onClose={dialogToAddMenu.onFalse}
-          />
-        </CustomDialog>
-      )}
     </Box>
   );
 };

@@ -7,7 +7,17 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Divider, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Chip,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -30,6 +40,12 @@ import { getHostelRequestInitialValues } from './getHostelInitialValues';
 
 import type { IHostelRequestFormType } from './type';
 
+const roomTypeFacilities: Record<string, string[]> = {
+  single: ['Wi-Fi', 'AC', 'Laundry'],
+  double: ['Wi-Fi', 'Laundry'],
+  deluxe: ['Wi-Fi', 'AC', 'TV', 'Gym', 'Laundry'],
+};
+
 const HostelRequestForm: React.FC<{
   open: UseBooleanReturn;
   onClose: () => void;
@@ -38,6 +54,7 @@ const HostelRequestForm: React.FC<{
 }> = ({ open, onClose, editData, disabled }) => {
   // State to store division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  const [facilities, setFacilities] = useState<string[]>([]);
 
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -469,34 +486,32 @@ const HostelRequestForm: React.FC<{
               </Grid>
               {/* Package Name */}
               <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.packageName && formik.errors.packageName)}
-                >
+                <ShakingTextField error={!!(formik.touched.roomType && formik.errors.roomType)}>
                   <CustomSelect
                     size="small"
-                    label="Package Name *"
-                    name="packageName"
+                    label="Room Type *"
+                    name="roomType"
                     fullWidth
                     disabled={disabled}
-                    value={formik.values.packageName}
-                    onChange={(val) => formik.setFieldValue('packageName', val)}
+                    value={formik.values.roomType}
+                    onChange={(val: any) => {
+                      formik.setFieldValue('roomType', val);
+                      setFacilities(roomTypeFacilities[val] || []);
+                    }}
                     options={[
-                      { value: 'Package A', label: 'Package A' },
-                      { value: 'Package B', label: 'Package B' },
-                      { value: 'Package C', label: 'Package C' },
-                      { value: 'Package D', label: 'Package D' },
-                      { value: 'Package E', label: 'Package E' },
+                      { value: 'single', label: 'single' },
+                      { value: 'double', label: 'double' },
+                      { value: 'deluxe', label: 'deluxe' },
                     ]}
-                    error={formik.touched.packageName && Boolean(formik.errors.packageName)}
+                    error={formik.touched.roomType && Boolean(formik.errors.roomType)}
                     helperText={
-                      formik.touched.packageName && formik.errors.packageName
-                        ? String(formik.errors.packageName)
+                      formik.touched.roomType && formik.errors.roomType
+                        ? String(formik.errors.roomType)
                         : undefined
                     }
                   />
                 </ShakingTextField>
               </Grid>
-              {/* Total Amount */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.totalAmount && formik.errors.totalAmount)}
@@ -504,7 +519,7 @@ const HostelRequestForm: React.FC<{
                   <NumericFormatCustom
                     size="small"
                     label="Total Amount *"
-                    disabled
+                    disabled={!formik.values.roomType}
                     name="totalAmount"
                     fullWidth
                     value={formik.values.totalAmount}
@@ -514,6 +529,21 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+              <Grid item xs={12}>
+                {facilities.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Facilities of Room :
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {facilities.map((facility) => (
+                        <Chip key={facility} label={facility} variant="outlined" />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Grid>
+              {/* Total Amount */}
               {/* Schedule Date */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
@@ -592,18 +622,18 @@ const HostelRequestForm: React.FC<{
               {/* Interaction Cost */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.interationCost && formik.errors.interationCost)}
+                  error={!!(formik.touched.iterationCost && formik.errors.iterationCost)}
                 >
                   <NumericFormatCustom
                     size="small"
-                    label="Interaction Cost *"
-                    name="interationCost"
+                    label="Interation Cost *"
+                    name="iterationCost"
                     disabled
                     fullWidth
-                    value={formik.values.interationCost}
+                    value={formik.values.iterationCost}
                     onChange={formik.handleChange}
-                    error={formik.touched.interationCost && Boolean(formik.errors.interationCost)}
-                    helperText={formik.touched.interationCost && formik.errors.interationCost}
+                    error={formik.touched.iterationCost && Boolean(formik.errors.iterationCost)}
+                    helperText={formik.touched.iterationCost && formik.errors.iterationCost}
                   />
                 </ShakingTextField>
               </Grid>

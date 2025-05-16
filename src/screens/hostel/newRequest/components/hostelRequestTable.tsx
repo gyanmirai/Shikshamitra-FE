@@ -56,7 +56,7 @@ const HostelRequestTable: React.FC<IHostelRequestTableProps> = ({
       { id: 'division', label: 'Division', align: 'left', minWidth: 100 },
       { id: 'hostelName', label: 'Hostel Name', align: 'left', minWidth: 130 },
       { id: 'hostelType', label: 'Hostel Type', align: 'left', minWidth: 130 },
-      { id: 'packageName', label: 'Package', align: 'left', minWidth: 130 },
+      { id: 'roomType', label: 'Room Type', align: 'left', minWidth: 130 },
       {
         id: 'totalAmount',
         label: 'Amount',

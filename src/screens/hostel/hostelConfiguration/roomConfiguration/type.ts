@@ -1,4 +1,5 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
 
 export interface IFacilityQuantities {
   id: string; // e.g., 'wifi', 'gym'
@@ -11,9 +12,9 @@ export interface IHostelRoom {
   roomType: string;
   floorNumber: number;
   roomCapacity: number;
-  facility: string[];
   facilityQuantities: IFacilityQuantities[];
   status: string;
+  images?: IDocument[];
 }
 
 export interface IRoomFormProps {

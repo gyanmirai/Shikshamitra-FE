@@ -25,10 +25,10 @@ const BiometricIntegrationScreen = () => (
       ]}
       action={
         <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
-          <Button variant="outlined" startIcon={<Iconify icon="eva:download-fill" />}>
+          <Button variant="outlined" size="small" startIcon={<Iconify icon="eva:download-fill" />}>
             Download Sample File
           </Button>
-          <Button variant="contained" startIcon={<Iconify icon="eva:upload-fill" />}>
+          <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
             Upload File
           </Button>
         </Box>
