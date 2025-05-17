@@ -4,18 +4,21 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Chip } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { RestartAlt } from '@mui/icons-material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import teacherTableData from 'src/json/academic/curriculum/teacherTableData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -36,6 +39,33 @@ const Teacher = ({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  const [tableData, setTableData] = useState([
+    {
+      division: 'A',
+      subjects: {
+        Math: 'teacher1',
+        english: '',
+        science: 'teacher3',
+      },
+    },
+    {
+      division: 'B',
+      subjects: {
+        Math: 'teacher2',
+        english: 'teacher1',
+        science: '',
+      },
+    },
+    {
+      division: 'C',
+      subjects: {
+        Math: '',
+        english: 'teacher3',
+        science: 'teacher2',
+      },
+    },
+  ]);
 
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
@@ -81,6 +111,9 @@ const Teacher = ({
       shikshaMitraToast.success({ message: 'Teachar added successfully' });
     }
   };
+
+  const subjectList = ['math', 'english', 'science'];
+
   /**
    * Filters the teacher data based on selected class and subject
    * @returns {Array} Filtered array of teacher data
@@ -110,6 +143,23 @@ const Teacher = ({
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const handleTeacherChange = (div: string, subject: string, newTeacher: String) => {
+    setTableData((prev) =>
+      prev.map((row) =>
+        row.division === div
+          ? {
+              ...row,
+              subjects: {
+                ...row.subjects,
+                [subject]: newTeacher,
+              },
+            }
+          : row
+      )
+    );
+  };
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -122,34 +172,39 @@ const Teacher = ({
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <CustomSelect
-          label="Class"
-          name="class"
-          options={classData?.items || []}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          value={classes}
-          labelKey="name"
-          valueKey="id"
-          onChange={(value) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === value);
-            setClasses(selectedClass?.id);
-            setDivisionOptions(selectedClass?.divisions || []);
-          }}
-        />
-        <CustomSelect
-          label="Division"
-          disabled={!classes}
-          labelKey="name"
-          valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
-            setDivision(val as string);
-          }}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <CustomSelect
+            label="Class"
+            name="class"
+            options={classData?.items || []}
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            value={classes}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => {
+              const selectedClass: Standards = classData.items.find(
+                (i: Standards) => i.id === value
+              );
+              setClasses(selectedClass?.id);
+              setDivisionOptions(selectedClass?.divisions || []);
+            }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button size="small" variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+            Reset
+          </Button>
+
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={() => {}}
+          >
+            Save
+          </Button>
+        </Box>
       </Box>
       <CustomizableTable
         // onSendNotification={handlerSendNotification}
@@ -162,50 +217,33 @@ const Teacher = ({
         }}
         columns={[
           {
-            id: 'subject',
-            label: 'Subject',
+            id: 'division',
+            label: 'Division',
             filterType: 'string',
-            minWidth: 400,
+            minWidth: 70,
             align: 'left',
           },
-          {
-            id: 'assignedTeacher',
-            label: 'Assigned Teacher',
-            align: 'left',
-            minWidth: 400,
-            filterType: 'string',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((audience: string) => (
-                  <Chip key={audience} label={audience} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Actions',
+          ...subjectList.map((subject) => ({
+            id: subject,
+            label: subject.charAt(0).toUpperCase() + subject.slice(1), // Fixed capitalization
             isFilter: false,
             isSort: false,
-            sticky: true,
-            minWidth: 50,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...props, row })}
-                  placement="right-top"
-                  showEditIcon
-                  showThreeDots={false}
-                  handleEditClick={() => {
-                    dialog.onTrue();
-                    setSelectedTeacher(row as any);
-                  }}
-                />
-              );
-            },
-          },
+            render: (value: any, row: any) => (
+              <CustomSelect
+                size="small"
+                value={row.subjects?.[subject] || ''}
+                options={[
+                  { label: 'Mr. Sharma', value: 'teacher1' },
+                  { label: 'Ms. Patel', value: 'teacher2' },
+                  { label: 'Mr. Khan', value: 'teacher3' },
+                ]}
+                onChange={(val) => handleTeacherChange(row.division, subject, val as string)}
+                placeholder="Assign Teacher"
+              />
+            ),
+          })),
         ]}
-        data={filteredData}
+        data={tableData}
       />{' '}
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog

@@ -2,7 +2,7 @@
 
 import type { Division, Standards } from 'src/types/school';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import { Box, Button, MenuList, MenuItem } from '@mui/material';
 
@@ -22,56 +22,66 @@ import GradeEntryTable from './components/GradeEntryTable';
 import type { IStudentExamGradeEntry } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
 
-export const dummyData: IStudentExamGradeEntry[] = [
+const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '1',
-    studentName: 'John Smith',
-    assignments: 'Math Quiz 1',
+    studentName: 'Aarav Sharma',
+    assignments: 'Assignment 1, Assignment 2',
     subject: 'Mathematics',
-    grade: 'A',
-    feedback: 'Excellent',
-    weightedAverage: '85%',
-    status: 'Assigned',
+    marks: 78,
+    totalMarks: 100,
+    grade: 'B+',
+    feedback: 'Good understanding of concepts, needs to improve accuracy.',
+    weightedAverage: '78%',
+    status: 1, // e.g., 1 = Submitted
   },
   {
     id: '2',
-    studentName: 'Emma Wilson',
-    assignments: 'Science Project',
+    studentName: 'Kiara Mehta',
+    assignments: 'Assignment 1, Quiz 1',
     subject: 'Science',
-    grade: '',
-    feedback: '',
+    marks: 92,
+    totalMarks: 100,
+    grade: 'A',
+    feedback: 'Excellent performance.',
     weightedAverage: '92%',
-    status: 'Pending',
+    status: 1,
   },
   {
     id: '3',
-    studentName: 'Michael Brown',
-    assignments: 'English Essay',
+    studentName: 'Dev Patel',
+    assignments: 'Assignment 1',
     subject: 'English',
-    grade: 'C',
-    feedback: 'Need Improvement',
-    weightedAverage: '75%',
-    status: 'Assigned',
+    marks: 65,
+    totalMarks: 100,
+    grade: 'C+',
+    feedback: 'Needs to improve vocabulary and grammar.',
+    weightedAverage: '65%',
+    status: 0, // e.g., 0 = Not Submitted / Pending
   },
   {
     id: '4',
-    studentName: 'Sarah Davis',
-    assignments: 'Math Homework',
-    subject: 'Mathematics',
-    grade: '',
-    feedback: '',
-    weightedAverage: '88%',
-    status: 'Pending',
+    studentName: 'Ishita Reddy',
+    assignments: 'Project, Assignment 2',
+    subject: 'Social Studies',
+    marks: 85,
+    totalMarks: 100,
+    grade: 'A-',
+    feedback: 'Well-researched answers and neat presentation.',
+    weightedAverage: '85%',
+    status: 1,
   },
   {
     id: '5',
-    studentName: 'James Johnson',
-    assignments: 'Science Quiz',
-    subject: 'Science',
-    grade: 'B',
-    feedback: 'Good',
-    weightedAverage: '87%',
-    status: 'Assigned',
+    studentName: 'Rohan Gupta',
+    assignments: 'Assignment 3, Quiz 2',
+    subject: 'Computer Science',
+    marks: 98,
+    totalMarks: 100,
+    grade: 'A+',
+    feedback: 'Outstanding work and logical approach.',
+    weightedAverage: '98%',
+    status: 1,
   },
 ];
 
@@ -81,7 +91,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Search parameters from URL and function to update them
   const { searchParams, setSearchParams } = props;
   // Selected class ID from search params
-  const classes = searchParams?.classId ? searchParams?.classId : '';
+  const [classes, setClasses] = useState('');
 
   // Selected division/section ID
   const [division, setDivision] = useState('');
@@ -106,7 +116,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<IStudentExamGradeEntry | null>(null);
   // Table data containing student grades and information
-  const [tableData, setTableData] = useState<IStudentExamGradeEntry[]>(dummyData);
+  const [tableData, setTableData] = useState<IStudentExamGradeEntry[]>(studentExamGradeEntries);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -167,46 +177,17 @@ const GradeEntry = (props: TabComponentType) => {
     bulkGradeDialog.onFalse();
   };
 
-  /**
-   * Effect to handle class and division selection logic
-   * When class data changes or selected class changes:
-   * - Updates division options based on selected class
-   * - Sets default division to first available division
-   * - Sets URL params for first class if no class selected
-   */
-  useEffect(() => {
-    if (classData?.items?.length) {
-      if (classes) {
-        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
-        setDivisionOptions(selectedClass?.divisions || []);
-        // Set first division if available
-        if (selectedClass?.divisions?.length) {
-          setDivision(selectedClass.divisions[0].id);
-        }
-      } else {
-        const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
-        setDivisionOptions(firstClass?.divisions || []);
-        // Set first division if available
-        if (firstClass?.divisions?.length) {
-          setDivision(firstClass.divisions[0].id);
-        }
-      }
-    }
-  }, [classData?.items, classes, setSearchParams]);
-
   const actions = useCallback(
     ({ popover, row }: any) => (
       <>
         {' '}
         <MenuList>
-          {row.status === 'Pending' && (
+          {row.status === 0 && (
             <MenuItem
               onClick={() => {
                 viewSubmissionDialog.onTrue();
                 setSelectedStudent(row);
+                popover.onClose();
               }}
             >
               {' '}
@@ -215,9 +196,10 @@ const GradeEntry = (props: TabComponentType) => {
             </MenuItem>
           )}
 
-          {row.status === 'Assigned' && (
+          {row.status === 1 && (
             <MenuItem
               onClick={() => {
+                popover.onClose();
                 //   viewSubmissionDialog.onTrue();
                 //   setSelectedStudent(row);
               }}
@@ -248,7 +230,7 @@ const GradeEntry = (props: TabComponentType) => {
             <Button
               variant="contained"
               size="small"
-              startIcon={<Iconify icon="mdi:pencil" />}
+              startIcon={<Iconify icon="mdi:edit" />}
               disabled={selectedStudents.length === 0}
               onClick={bulkGradeDialog.onTrue}
               sx={{ mr: 1 }}
@@ -275,10 +257,7 @@ const GradeEntry = (props: TabComponentType) => {
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             // formik.setFieldValue('class', selectedClass?.name || '');
-            setSearchParams?.({
-              classId: val as string,
-            });
-
+            setClasses(selectedClass.id);
             setDivisionOptions(selectedClass?.divisions || []);
           }}
           value={classes}
@@ -357,7 +336,7 @@ const GradeEntry = (props: TabComponentType) => {
         handleClose={handleCloseDialog}
         title="Assign Grade"
       >
-        <AssignGrade data={selectedStudent} onSubmit={handleSingleGradeAssignment} />
+        <AssignGrade data={selectedStudent} />
       </CustomDialog>
 
       <CustomDialog
@@ -365,7 +344,7 @@ const GradeEntry = (props: TabComponentType) => {
         handleClose={bulkGradeDialog.onFalse}
         title={`Assign Grade to ${selectedStudents.length} Students`}
       >
-        <AssignGrade onSubmit={handleBulkGradeAssignment} />
+        <AssignGrade />
       </CustomDialog>
     </Box>
   );

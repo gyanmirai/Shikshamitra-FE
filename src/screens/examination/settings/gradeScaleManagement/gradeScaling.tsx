@@ -99,11 +99,15 @@ const GradingScale = () => {
           </>
         }
         columns={[
-          { id: 'totalMarks', label: 'Total Marks' },
+          { id: 'name', label: 'Name' },
+          { id: 'totalMarks', label: 'Total Marks', filterType: 'number' },
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            sticky: true,
+            minWidth: 90,
+            isFilter: false,
             render(value, row) {
               return (
                 <ThreeDotsActions

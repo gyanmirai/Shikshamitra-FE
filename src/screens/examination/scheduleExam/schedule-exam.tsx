@@ -155,7 +155,7 @@ const ScheduleExam = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        title="Exam Timetable"
+        title={`${selectedExam?.examName} Timetable`}
         open={viewTimeDialog.value}
         handleClose={() => {
           viewTimeDialog.onFalse();

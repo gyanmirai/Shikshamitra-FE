@@ -3,22 +3,21 @@ import { useFormik } from 'formik';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './validationSchema';
 
 import type { IAssignGradeProps } from '../type';
 
-const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({ data }: IAssignGradeProps) => {
   const formik = useFormik({
     initialValues: {
-      grade: data?.grade || '',
+      marks: data?.marks || '',
       feedback: data?.feedback || '',
     },
     validationSchema,
     onSubmit(values) {
-      onSubmit(values);
+      console.log('values---', values);
     },
   });
 
@@ -26,34 +25,23 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGra
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
-              <ShakingTextField error={!!(formik.touched?.grade && formik.errors.grade) || false}>
-                <CustomSelect
-                  options={[
-                    { value: 'A+', label: 'A+' },
-                    { value: 'A', label: 'A' },
-                    { value: 'A-', label: 'A-' },
-                    { value: 'B+', label: 'B+' },
-                    { value: 'B', label: 'B' },
-                    { value: 'B-', label: 'B-' },
-                    { value: 'C+', label: 'C+' },
-                    { value: 'C', label: 'C' },
-                    { value: 'C-', label: 'C-' },
-                    { value: 'D', label: 'D' },
-                    { value: 'F', label: 'F' },
-                  ]}
-                  label="Grade"
-                  name="grade"
-                  value={formik.values.grade}
-                  onChange={(val) => {
-                    formik.setFieldValue('grade', val);
-                  }}
-                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                  error={formik.touched.grade && Boolean(formik.errors.grade)}
+              <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
+                <TextField
+                  label="Marks"
+                  name="marks"
+                  type="number"
+                  value={formik.values.marks}
+                  onChange={formik.handleChange}
+                  error={formik.touched.marks && Boolean(formik.errors.marks)}
                   helperText={
-                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
+                    formik.touched.marks && formik.errors.marks ? formik.errors.marks : undefined
                   }
+                  size="small"
+                  sx={{
+                    width: '100%',
+                  }}
                 />
               </ShakingTextField>
             </Grid>

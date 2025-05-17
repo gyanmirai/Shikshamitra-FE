@@ -127,6 +127,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               labelKey="name"
               valueKey="id"
               multiple
+              disabled={!formik.values.className}
               options={
                 classData?.items.find((i: Standards) => i.id === formik.values.className)
                   ?.divisions || []
@@ -170,6 +171,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 formik.setFieldValue('subjects', updatedSubjects);
               }}
               multiple
+              disabled={formik.values.divisions.length === 0}
               label="Subjects"
               isLoading={isLoading}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
