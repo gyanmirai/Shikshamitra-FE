@@ -25,8 +25,11 @@ import ReviewRequestDetailView from './review-request-detail-view-dialog';
 import type { IReviewEarlyPassRequestFormValues } from '../review-gate-pass-request-interface';
 
 const ReviewGatePassRequestTableChild = () => {
+  // State to store the selected row data for viewing details
   const [selectedRow, setSelectedRow] = useState<IReviewEarlyPassRequestFormValues | null>(null);
+  // Boolean state to control the visibility of review details dialog
   const reviewDetailsViewDialog = useBoolean();
+  // State to store the current status of the request
   const [status, setStatus] = useState('');
   return (
     <Box>

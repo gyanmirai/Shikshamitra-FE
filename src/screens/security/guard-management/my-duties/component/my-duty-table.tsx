@@ -18,8 +18,11 @@ import CheckInCheckOutDialog from './check-in-check-out-dialog';
 import type { IMyDuties } from '../my-duties-interface';
 
 const MyDutytable = () => {
+  // Dialog state for check-in/check-out modal
   const checkInDialog = useBoolean();
+  // State to track if user has checked in (true) or checked out (false)
   const [isCheckIn, setIsCheckIn] = useState<boolean | null>(false);
+  // Selected duty data for check-in/check-out operations
   const [selectedData, setSelectedData] = useState<IMyDuties | null>(null);
   return (
     <>

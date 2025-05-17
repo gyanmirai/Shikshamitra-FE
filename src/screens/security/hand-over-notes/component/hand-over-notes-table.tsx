@@ -9,16 +9,19 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import data from 'src/json/security/guard-management/all-guard-handover-data.json';
 
 import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import CheckInCheckOutDialog from '../../guard-management/my-duties/component/check-in-check-out-dialog';
 
 import type { IMyDuties } from '../../guard-management/my-duties/my-duties-interface';
 
 const HandOverNotesTable = () => {
+  // Dialog state for check-in/check-out modal
   const checkInDialog = useBoolean();
+  // State to track if user is checking in (true) or checking out (false)
   const [isCheckIn, setIsCheckIn] = useState<boolean | null>(false);
+  // Selected row data for check-in/check-out operations
   const [selectedData, setSelectedData] = useState<IMyDuties | null>(null);
   return (
     <>

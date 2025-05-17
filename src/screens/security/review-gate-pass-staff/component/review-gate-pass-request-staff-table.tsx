@@ -25,10 +25,13 @@ import ReviewStaffGatePassRequestDialog from './review-staff-gate-pass-request-d
 import type { IReviewStaffGatePassRequestFormValues } from '../review-gate-pass-staff-interfcae';
 
 const ReviewGatePassRequestStaffTable = () => {
+  // State to store the selected row data for viewing/editing gate pass request details
   const [selectedRow, setSelectedRow] = useState<IReviewStaffGatePassRequestFormValues | null>(
     null
   );
+  // Boolean state to control the visibility of review details dialog
   const reviewDetailsViewDialog = useBoolean();
+  // State to store the current status of the gate pass request
   const [status, setStatus] = useState('');
   return (
     <Box>
