@@ -9,8 +9,8 @@ import AdminResourceTable from './component/admin-resource-table';
 const AdminBookingScreen = () => (
   <>
     <CustomBreadcrumbs
-      heading="Boooking Approval"
-      links={[{ name: 'Resource Management' }, { name: 'Boooking Approval' }]}
+      heading="Booking Approval"
+      links={[{ name: 'Resource Management' }, { name: 'Booking Approval' }]}
       sx={{ px: 1, mb: 2 }}
     />
     <AdminResourceTable />

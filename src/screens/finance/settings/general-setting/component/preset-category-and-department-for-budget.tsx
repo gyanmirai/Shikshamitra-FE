@@ -209,6 +209,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
                 isSort: false,
                 sticky: true,
                 align: 'center',
+                minWidth: 100,
                 render(row: any, value) {
                   return (
                     <ThreeDotsActions
