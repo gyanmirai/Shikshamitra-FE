@@ -46,8 +46,8 @@ const ResourceRequestOrderTable = () => {
             resourceRequestOrderDialog.onTrue();
           }}
         >
-          <Iconify icon="pepicons-pencil:raise-hand" sx={{ height: '16px', width: '16px' }} />
-          Want to Order
+          <Iconify icon="f7:cart" sx={{ height: '16px', width: '16px' }} />
+          Order
         </MenuItem>,
       ];
     }
@@ -162,7 +162,7 @@ const ResourceRequestOrderTable = () => {
           handleClose={() => {
             resourceRequestOrderDialog.onFalse();
           }}
-          title="Order Management"
+          title="Order Request"
         >
           <ResourceRequestOrderDialog
             data={selectedRow}

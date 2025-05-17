@@ -22,8 +22,8 @@ const ResourceAssignedScreen = () => {
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
         <Box>
           <CustomBreadcrumbs
-            heading="Assigned Resource List"
-            links={[{ name: 'Resource Management' }, { name: 'Assigned Resource List' }]}
+            heading="Assigned Resources"
+            links={[{ name: 'Resource Management' }, { name: 'Assigned Resources' }]}
             sx={{ px: 1, mb: 2 }}
           />
         </Box>

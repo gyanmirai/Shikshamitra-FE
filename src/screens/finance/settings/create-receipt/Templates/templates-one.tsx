@@ -7,136 +7,184 @@ import { numberToWords } from 'src/utils/numberToWords';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
 
+interface ReceiptItem {
+  feeHead: string;
+  feeHeadMonth: string;
+  amount: number;
+}
+
+interface ReceiptData {
+  from: {
+    name: string;
+    address: string;
+  };
+  to: {
+    name: string;
+    class: string;
+  };
+  paymentMode: string;
+  bank: string;
+  ref: string;
+  date: string;
+  pendingFees: number;
+  total: number;
+  tableData: ReceiptItem[];
+}
+
 interface TemplateOneProps {
   selectedTemplate: string;
   onSelectTemplate: (data: any) => void;
+  data?: ReceiptData; // ✅ Optional
 }
 
-const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate }) => (
-  <Grid container spacing={2} mb={3} justifyContent="flex-start">
-    <Grid item xs={12} md={12}>
-      <Box
-        sx={{
-          position: 'relative', // For absolute positioning of radio button
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          p: 1.5,
-          textAlign: 'center',
-          height: '100%',
-          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-          overflow: 'hidden',
-          '&:hover': {
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
-          },
-        }}
-      >
-        {/* Radio Button at Top Right */}
-        <Radio
-          checked={selectedTemplate === 'TemplateOne'}
-          onChange={() => onSelectTemplate('TemplateOne')}
-          value="TemplateOne"
-          sx={{ position: 'absolute', top: 8, right: 8 }}
-        />
+const defaultData: ReceiptData = {
+  from: {
+    name: 'Deep Darshan Vidhya Sankool',
+    address: 'Dindoli - 560078',
+  },
+  to: {
+    name: 'Vishal Patel',
+    class: '10-A',
+  },
+  paymentMode: 'Payment Gateway',
+  bank: 'Paytm',
+  ref: '09788nhgh679jlk',
+  date: '06/08/2025',
+  pendingFees: 900,
+  total: 900,
+  tableData: [
+    { feeHead: 'Library Fee', amount: 1000, feeHeadMonth: 'March' },
+    { feeHead: 'Sports Fee', amount: 800, feeHeadMonth: 'March' },
+  ],
+};
 
-        <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
-          Template 1
-        </Typography>
+const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
+  const receipt = data || defaultData;
 
-        {/* Preview content */}
-        <Box sx={{ mb: 1 }}>
-          <Grid
-            container
-            sx={{ fontSize: '0.75rem', alignItems: 'flex-start', justifyContent: 'space-between' }}
-          >
-            <Grid item xs={5}>
-              <Box display="flex" flexDirection="column" alignItems="flex-start">
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  From:
-                </Typography>
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  Deep Darshan Vidhya Sankool
-                </Typography>
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  Dindoli - 560078
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={5}>
-              <Box display="flex" flexDirection="column" alignItems="flex-start">
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  To:
-                </Typography>
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  <strong>Name:</strong> Vishal Patel
-                </Typography>
-                <Typography fontSize="10px" variant="body2" noWrap>
-                  <strong>Class:</strong> 10-A
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-
-        <Divider sx={{ mb: 1 }} />
+  return (
+    <Grid container spacing={2} mb={3} justifyContent="flex-start">
+      <Grid item xs={12}>
         <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="space-between"
-          pb="10px"
-          sx={{ fontSize: '0.75rem' }}
+          sx={{
+            position: 'relative',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            p: 1.5,
+            textAlign: 'center',
+            height: '100%',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden',
+            '&:hover': {
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
+            },
+          }}
         >
-          <Box display="flex" justifyContent="space-between">
-            <Typography fontSize="10px">
-              <strong>Payment Mode :</strong> Payment Gateway
-            </Typography>
-            <Typography fontSize="10px">
-              <strong>Bank:</strong> Paytm
-            </Typography>
+          {/* Radio */}
+          <Radio
+            checked={selectedTemplate === 'TemplateOne'}
+            onChange={() => onSelectTemplate('TemplateOne')}
+            value="TemplateOne"
+            sx={{ position: 'absolute', top: 8, right: 8 }}
+          />
+
+          <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
+            Template 1
+          </Typography>
+
+          {/* From & To */}
+          <Box sx={{ mb: 1 }}>
+            <Grid
+              container
+              sx={{
+                fontSize: '0.75rem',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Grid item xs={5}>
+                <Box display="flex" flexDirection="column" alignItems="flex-start">
+                  <Typography fontSize="10px">From:</Typography>
+                  <Typography fontSize="10px">{receipt.from.name}</Typography>
+                  <Typography fontSize="10px">{receipt.from.address}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={5}>
+                <Box display="flex" flexDirection="column" alignItems="flex-start">
+                  <Typography fontSize="10px">To:</Typography>
+                  <Typography fontSize="10px">
+                    <strong>Name:</strong> {receipt.to.name}
+                  </Typography>
+                  <Typography fontSize="10px">
+                    <strong>Class:</strong> {receipt.to.class}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
 
-          <Box display="flex" justifyContent="space-between">
-            <Typography fontSize="10px">
-              <strong>Ref:</strong> 09788nhgh679jlk
-            </Typography>
-            <Typography fontSize="10px">
-              <strong>Date:</strong> 06/08/2025
-            </Typography>
+          <Divider sx={{ mb: 1 }} />
+
+          {/* Payment Info */}
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-between"
+            pb="10px"
+            sx={{ fontSize: '0.75rem' }}
+          >
+            <Box display="flex" justifyContent="space-between">
+              <Typography fontSize="10px">
+                <strong>Payment Mode :</strong> {receipt.paymentMode}
+              </Typography>
+              <Typography fontSize="10px">
+                <strong>Bank:</strong> {receipt.bank}
+              </Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between">
+              <Typography fontSize="10px">
+                <strong>Ref:</strong> {receipt.ref}
+              </Typography>
+              <Typography fontSize="10px">
+                <strong>Date:</strong> {receipt.date}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 1 }} />
+
+          {/* Receipt Table */}
+          <ReceiptTable
+            columns={[
+              { id: 'feeHead', label: 'Fee Head' },
+              { id: 'feeHeadMonth', label: 'Paid For' },
+              { id: 'amount', label: 'Amount' },
+            ]}
+            data={receipt.tableData}
+          />
+
+          {/* Footer Totals */}
+          <Box mt={7} display="flex" justifyContent="space-between" sx={{ fontSize: '0.65rem' }}>
+            <Box>
+              <Typography fontSize="10px">
+                <strong>Pending Fees:</strong> {formatNumber(receipt.pendingFees, 'INR')}
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'right', fontSize: '10px' }}>
+              <Typography fontSize="10px">
+                <strong>Total:</strong> {formatNumber(receipt.total, 'INR')}
+              </Typography>
+              <Typography sx={{ pb: '10px', fontSize: '10px' }}>
+                (In Words: {numberToWords(receipt.total)} Rupees Only)
+              </Typography>
+              <Typography fontSize="10px">_________________________</Typography>
+              <Typography fontSize="10px">Receiver Sign</Typography>
+            </Box>
           </Box>
         </Box>
-
-        <Divider sx={{ mb: 1 }} />
-
-        <ReceiptTable
-          columns={[
-            { id: 'feeHead', label: 'Fee Head' },
-            { id: 'feeHeadMonth', label: 'Paid For' },
-            { id: 'amount', label: 'Amount' },
-          ]}
-          data={[
-            { feeHead: 'Library Fee', amount: 1000, feeHeadMonth: 'March' },
-            { feeHead: 'Sports Fee', amount: 800, feeHeadMonth: 'March' },
-          ]}
-        />
-        <Box mt={7} display="flex" justifyContent="space-between" sx={{ fontSize: '0.65rem' }}>
-          <Box>
-            <Typography fontSize="10px">
-              <strong>Pending Fees:</strong> {formatNumber(900, 'INR')}
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'right', fontSize: '10px' }}>
-            <Typography fontSize="10px">
-              <strong>Total:</strong> {formatNumber(900, 'INR')}
-            </Typography>
-            <Typography sx={{ pb: '10px', fontSize: '10px' }}>
-              (In Words: {numberToWords(900)} Rupees Only)
-            </Typography>
-            <Typography fontSize="10px">_________________________</Typography>
-            <Typography fontSize="10px">Receiver Sign</Typography>
-          </Box>
-        </Box>
-      </Box>
+      </Grid>
     </Grid>
-  </Grid>
-);
+  );
+};
 
 export default TemplateOne;

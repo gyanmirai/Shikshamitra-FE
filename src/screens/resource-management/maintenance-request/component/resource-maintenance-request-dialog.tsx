@@ -317,7 +317,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
           />
 
           {maintenanceStatus === 'pending' && (
-            <SubmitButton buttonText="Assigned Engineer" onClick={() => {}} />
+            <SubmitButton buttonText="Assign Technician" onClick={() => {}} />
           )}
           {maintenanceStatus === 'Repair Completed' && (
             <SubmitButton buttonText="Mark As Repaired" onClick={() => {}} />

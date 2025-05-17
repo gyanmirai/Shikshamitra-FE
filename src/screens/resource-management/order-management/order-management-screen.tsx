@@ -10,11 +10,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ResourceRequestOrderTable from './component/resource-request-order-table';
 
 const OrderManagementScreen = () => {
-  const links = [{ name: 'Resource Management' }, { name: 'Order Management' }];
+  const links = [{ name: 'Resource Management' }, { name: 'Order Request' }];
 
   return (
     <>
-      <CustomBreadcrumbs heading="Order Management" links={links} sx={{ px: 1, mb: 2 }} />
+      <CustomBreadcrumbs heading="Order Request" links={links} sx={{ px: 1, mb: 2 }} />
 
       <Grid container spacing={2}>
         <Grid item xs={6} lg={3} pb="20px">

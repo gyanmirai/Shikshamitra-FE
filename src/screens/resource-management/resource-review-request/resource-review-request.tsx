@@ -10,11 +10,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ResourceRequestReviewTable from './component/resource-request-table';
 
 const ResourceRequestReviewScreen = () => {
-  const links = [{ name: 'Resource Management' }, { name: 'Resource Review Request' }];
+  const links = [{ name: 'Resource Management' }, { name: 'Review Resource Request' }];
 
   return (
     <>
-      <CustomBreadcrumbs heading="Resource Review Request" links={links} sx={{ px: 1, mb: 2 }} />
+      <CustomBreadcrumbs heading="Review Resource Request" links={links} sx={{ px: 1, mb: 2 }} />
 
       <Grid container spacing={2}>
         <Grid item xs={6} lg={3} pb="20px">

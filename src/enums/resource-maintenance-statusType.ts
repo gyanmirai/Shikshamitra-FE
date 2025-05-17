@@ -2,7 +2,7 @@ export enum ResourceMaintenanceRequestStatusType {
   Pending,
   'Under Maintenance',
   'Repair Completed',
-  'Not Repaired',
+  'Not Repairable',
 }
 
 export const ResourceMaintenanceRequestStatusTypeOptions = [
@@ -19,8 +19,8 @@ export const ResourceMaintenanceRequestStatusTypeOptions = [
     value: ResourceMaintenanceRequestStatusType['Repair Completed'],
   },
   {
-    label: 'Not Repaired',
-    value: ResourceMaintenanceRequestStatusType['Not Repaired'],
+    label: 'Not Repairable',
+    value: ResourceMaintenanceRequestStatusType['Not Repairable'],
   },
 ];
 
@@ -28,5 +28,5 @@ export const ResourceMaintenanceRequestStatusTypeColors = {
   [ResourceMaintenanceRequestStatusType.Pending]: 'warning',
   [ResourceMaintenanceRequestStatusType['Under Maintenance']]: 'info',
   [ResourceMaintenanceRequestStatusType['Repair Completed']]: 'success',
-  [ResourceMaintenanceRequestStatusType['Not Repaired']]: 'error',
+  [ResourceMaintenanceRequestStatusType['Not Repairable']]: 'error',
 };

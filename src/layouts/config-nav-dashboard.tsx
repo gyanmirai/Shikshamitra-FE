@@ -1728,7 +1728,7 @@ const resourceManagement = {
           _action: 'my-resources',
         },
         {
-          title: 'My Resources Request',
+          title: 'My Resource Query',
           path: '/resourceManagement/my-resources-request',
           _action: 'my-resources-request',
         },
@@ -1748,7 +1748,7 @@ const resourceManagement = {
           _action: 'maintenance-request',
         },
         {
-          title: 'Disposed Resource',
+          title: 'Disposed Resources',
           path: '/resourceManagement/disposed-resource',
           _action: 'disposed-resource',
         },
@@ -1758,12 +1758,12 @@ const resourceManagement = {
           _action: 'resource-allocation',
           children: [
             {
-              title: 'Allocation Of Resources',
+              title: 'Resource Allocation',
               path: '/resourceManagement/resource-allocation/allocation-of-resources',
               _action: 'allocation-of-resources',
             },
             {
-              title: 'Assigned Resource',
+              title: 'Assigned Resources',
               path: '/resourceManagement/resource-allocation/assigned-resource',
               _action: 'assigned-resource',
             },
@@ -1824,21 +1824,21 @@ const resourceManagement = {
           path: '/resourceManagement/audit-verification',
           _action: 'audit-verification',
         },
-        {
-          title: 'Usage & Maintenance',
-          path: '/resourceManagement/usage-maintenance',
-          _action: 'usage-maintenance',
-        },
+        // {
+        //   title: 'Usage & Maintenance',
+        //   path: '/resourceManagement/usage-maintenance',
+        //   _action: 'usage-maintenance',
+        // },
         {
           title: 'Reports & Analytics',
           path: '/resourceManagement/reports-analytics',
           _action: 'reports-analytics',
         },
-        {
-          title: 'Documentation',
-          path: '/resourceManagement/documentation',
-          _action: 'documentation',
-        },
+        // {
+        //   title: 'Documentation',
+        //   path: '/resourceManagement/documentation',
+        //   _action: 'documentation',
+        // },
         {
           title: 'Settings',
           path: '/resourceManagement/settings',
