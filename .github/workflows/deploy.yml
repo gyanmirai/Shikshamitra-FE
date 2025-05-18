@@ -29,6 +29,7 @@ jobs:
 
       - name: Copy static files
         run: |
+          mkdir -p .next/standalone/public
           cp -R ./public ./build/standalone/public
           cp -R ./build/static ./build/standalone/build/static
 
