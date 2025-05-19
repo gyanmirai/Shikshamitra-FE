@@ -18,10 +18,17 @@ const GuardList: React.FC<IGuardListProps> = ({ onDragStart, guardList }) => (
           draggable
           onDragStart={(e) => onDragStart(e, guard)}
           sx={{
-            p: 1.5,
+            p: 2,
             cursor: 'move',
             borderLeft: '4px solid #1976d2',
-            mb: '15px',
+            mb: 2,
+            bgcolor: '#f9f9fc', // light background
+            borderRadius: 2,
+            transition: 'box-shadow 0.3s ease, transform 0.2s ease',
+            '&:hover': {
+              boxShadow: 6,
+              transform: 'scale(1.01)',
+            },
           }}
         >
           {/* Guard name and shift summary */}

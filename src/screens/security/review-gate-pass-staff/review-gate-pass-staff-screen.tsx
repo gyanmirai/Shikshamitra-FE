@@ -11,10 +11,11 @@ import ReviewGatePassRequestStaffTable from './component/review-gate-pass-reques
 const ReviewGatePassStaffScreen = () => (
   <Box>
     <CustomBreadcrumbs
-      heading="Review Gate Pass Request For Staff"
+      heading="Review Gate Pass Request"
+      description="Review and respond to gate pass requests submitted by staff. As a Admin, you can approve or reject these requests."
       links={[
         { name: 'Security', href: '' },
-        { name: 'Review Gate Pass Request For Staff', href: '' },
+        { name: 'Review Gate Pass Request', href: '' },
       ]}
       sx={{ px: 1, mb: 2 }}
     />

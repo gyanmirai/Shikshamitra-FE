@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "name": "Morning Shift",
+        "startTime": "2025-05-15T07:00:00",
+        "endTime": "2025-05-15T12:00:00",
+        "day": "Monday",
+        "status": "finished",
+        "checkInNotes": "Checked all entry points. No unusual activity observed.",
+        "guardName": "Ravi",
+        "checkOutNotes": "Shift ended smoothly. Handed over to SUMIT.",
+        "location":"Main Gate",
+        "isPresent": "Present"
+    
+
+    }
+    
+]
