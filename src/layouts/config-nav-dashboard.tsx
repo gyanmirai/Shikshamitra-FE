@@ -426,6 +426,11 @@ const securityModule = {
             },
           ],
         },
+        {
+          title: 'Reports',
+          path: '/security/reports',
+          _action: 'reports',
+        },
       ],
     },
   ],
