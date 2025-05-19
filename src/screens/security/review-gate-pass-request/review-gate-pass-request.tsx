@@ -11,10 +11,11 @@ import ReviewGatePassRequestTableChild from './component/review-gate-pass-reques
 const ReviewGatePassRequestForChild = () => (
   <Box>
     <CustomBreadcrumbs
-      heading="Review Gate Pass Request For Child"
+      heading="Review Gate Pass Request"
+      description="Review and respond to gate pass requests submitted by students. As a teacher, you can approve or reject these requests."
       links={[
         { name: 'Security', href: '' },
-        { name: 'Review Gate Pass Request For Child', href: '' },
+        { name: 'Review Gate Pass Request', href: '' },
       ]}
       sx={{ px: 1, mb: 2 }}
     />

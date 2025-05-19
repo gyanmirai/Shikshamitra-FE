@@ -134,6 +134,7 @@ const SetPaymentMethodComponent = () => {
                 isSort: false,
                 sticky: true,
                 align: 'center',
+                minWidth: 100,
                 render(row, value) {
                   return (
                     <ThreeDotsActions

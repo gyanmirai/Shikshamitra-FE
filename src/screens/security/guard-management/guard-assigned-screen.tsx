@@ -29,15 +29,20 @@ import type { IGuard, IAssignedGuard } from './guard-management-interface';
 const timeSlots = ['00:00 - 07:00', '07:00 - 12:00', '12:00 - 18:00', '18:00 - 00:00'];
 
 const GuardRosterScreen = () => {
+  // Dialog state for showing alerts
   const alertDialog = useBoolean();
+  // State to store assigned guards with their shifts
   const [assignedGuards, setAssignedGuards] = useState<{ [key: string]: IAssignedGuard[] }>({});
+  // State to store list of all guards from data
   const [guardList, setGuardList] = useState<IGuard[]>(data);
 
+  // Function to organize guard assignments by date and time slot
   const normalizeAssignedShifts = (guardsData: IGuard[]): { [key: string]: IAssignedGuard[] } => {
     const assigned: { [key: string]: IAssignedGuard[] } = {};
 
     guardsData.forEach((guard) => {
       guard.assignedShift.forEach((shift) => {
+        // Format date consistently regardless of input type
         const formattedDate =
           typeof shift.date === 'string'
             ? dayjs(shift.date).format('YYYY-MM-DD')
@@ -46,6 +51,7 @@ const GuardRosterScreen = () => {
 
         if (!assigned[key]) assigned[key] = [];
 
+        // Add guard to assignments with additional shift details
         assigned[key].push({
           ...guard,
           assignedLocation: shift.location,
@@ -59,20 +65,24 @@ const GuardRosterScreen = () => {
     return assigned;
   };
 
+  // Initialize assigned guards data on component mount
   useEffect(() => {
     const gdata = normalizeAssignedShifts(data);
     setAssignedGuards(gdata);
   }, []);
 
+  // Handle dropping a guard into a shift slot
   const handleDrop = (e: React.DragEvent<HTMLElement>, fullDate: string, timeSlot: string) => {
     const guard: IGuard = JSON.parse(e.dataTransfer.getData('guard'));
 
+    // Check if guard is available for this time slot
     if (!guard.guardShiftlist.includes(timeSlot)) {
       alertDialog.onTrue();
       alert(`${guard.guardName} is not available for the ${timeSlot} shift.`);
       return;
     }
 
+    // Check if guard is already assigned to this slot
     const key = `${fullDate}-${timeSlot}`;
     const existing = assignedGuards[key] || [];
     const alreadyAssigned = existing.some((g) => g.guardName === guard.guardName);
@@ -82,6 +92,7 @@ const GuardRosterScreen = () => {
       return;
     }
 
+    // Add guard to assignments
     setAssignedGuards((prev) => ({
       ...prev,
       [key]: [
@@ -97,10 +108,12 @@ const GuardRosterScreen = () => {
     }));
   };
 
+  // Debug log for assigned guards updates
   useEffect(() => {
     console.log(assignedGuards, 'updated assignedGuards');
   }, [assignedGuards]);
 
+  // Remove a guard from a shift slot
   const onDeleteGuard = (fullDate: string, timeSlot: string, guardName: string) => {
     const key = `${fullDate}-${timeSlot}`;
     setAssignedGuards((prev) => {
@@ -110,10 +123,12 @@ const GuardRosterScreen = () => {
     });
   };
 
+  // Initialize drag operation for a guard
   const handleDragStart = (e: React.DragEvent<HTMLElement>, guard: IGuard) => {
     e.dataTransfer.setData('guard', JSON.stringify(guard));
   };
 
+  // Update a guard's assigned location
   const updateLocationHandler = (
     guardName: string,
     location: string,
@@ -122,6 +137,7 @@ const GuardRosterScreen = () => {
   ) => {
     const key = `${fullDate}-${timeSlot}`;
 
+    // Update location in assigned guards
     setAssignedGuards((prev) => {
       const updated = { ...prev };
 
@@ -144,22 +160,25 @@ const GuardRosterScreen = () => {
       return updated;
     });
 
+    // Update location in guard list
     setGuardList((prev) =>
       prev.map((g) => (g.guardName === guardName ? { ...g, assignedLocation: location } : g))
     );
   };
 
-  // Week calculation
+  // State to store dates for the current week
   const [weekDates, setWeekDates] = useState<
     { day: string; date: string; full: string; key: string }[]
   >([]);
 
+  // Calculate and set dates for the current week on component mount
   useEffect(() => {
     const today = new Date();
     const start = new Date(today);
-    start.setDate(start.getDate() - start.getDay()); // Sunday
+    start.setDate(start.getDate() - start.getDay()); // Start from Sunday
     const tempDates: any[] = [];
 
+    // Generate array of dates for the week
     for (let i = 0; i < 7; i += 1) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
@@ -174,7 +193,6 @@ const GuardRosterScreen = () => {
 
     setWeekDates(tempDates);
   }, []);
-
   return (
     <>
       <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="40px">
@@ -202,17 +220,17 @@ const GuardRosterScreen = () => {
         </Grid>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 2, height: '100vh' }}>
-        <Paper elevation={2} sx={{ width: 200, height: 'fit-content' }}>
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Paper elevation={6} sx={{ width: 200, height: 'fit-content' }}>
+          <Box sx={{ p: 2, borderBottom: 3, borderColor: 'divider', mb: 2 }}>
             <Typography variant="h6">Guards</Typography>
           </Box>
-          <Box sx={{ p: 1 }}>
+          <Box sx={{ p: 0 }}>
             <GuardList onDragStart={handleDragStart} guardList={guardList} />
           </Box>
         </Paper>
 
-        <Paper elevation={2} sx={{ flexGrow: 1 }}>
+        <Paper elevation={4} sx={{ flexGrow: 1 }}>
           <TableContainer>
             <Table stickyHeader>
               <TableHead>

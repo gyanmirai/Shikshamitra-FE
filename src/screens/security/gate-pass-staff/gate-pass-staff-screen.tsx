@@ -32,13 +32,13 @@ const GatePassStaffScreen = () => {
   const links = open
     ? [
         { name: 'Security', href: '' },
-        { name: 'Gate Pass', href: '' },
+        { name: 'Gate Pass Request', href: '' },
 
-        { name: 'Early Request Form' },
+        { name: 'Gate Pass Request Form' },
       ]
     : [
         { name: 'Security', href: '' },
-        { name: 'Gate Pass', href: '' },
+        { name: 'Gate Pass Request', href: '' },
       ];
 
   // Handles logic for each table action: edit, delete, view, or new entry
@@ -90,7 +90,7 @@ const GatePassStaffScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Gate Pass"
+        heading="Gate Pass Request"
         description={
           open
             ? 'Fill out the early gate pass request form by entering the required information and submitting it for approval.'

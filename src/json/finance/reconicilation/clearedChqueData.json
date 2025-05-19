@@ -1,0 +1,28 @@
+[
+    {
+        "srNo": 1,
+        "chequeNumber": "123456",
+        "chequeDate": "15-08-2024",
+        "clearedDate": "20-08-2024",
+        "amount": "5000",
+        "status": "cleared",
+        "studentName": "Ishita Desai",
+       
+        "feeHead": "Library",
+        "grNumber": 89554,
+        "parentsContactNumber": 9843539133
+    },
+    {
+        "srNo": 2,
+        "chequeNumber": "789012",
+        "chequeDate": "10-09-2024",
+        "clearedDate": "15-09-2024",
+        "amount": "25000",
+        "status": "cleared",
+        "studentName": "Ishita Desai",
+        
+        "feeHead": "Library",
+        "grNumber": 89554,
+        "parentsContactNumber": 9843539133
+    }
+]

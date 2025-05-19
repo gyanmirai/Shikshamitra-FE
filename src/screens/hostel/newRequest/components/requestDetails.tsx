@@ -32,9 +32,9 @@ const RequestDetails = ({ hostelRequest }: any) => (
         value={hostelRequest?.hostelType}
       />
       <DetailRow
-        label="Package Name"
+        label="Room Type"
         icon="mdi:package-variant-closed"
-        value={hostelRequest?.packageName}
+        value={hostelRequest?.roomType}
       />
       <DetailRow
         label="Total Amount"

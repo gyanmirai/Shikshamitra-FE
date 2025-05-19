@@ -9,7 +9,9 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import SetPaymentTerm from './component/setting-up-payment-term';
 import SetPaymentMethodComponent from './component/set-payment-method';
+import SetLateFeeTypeMethod from './component/set-late-fee-type-method';
 import SetDefaultFeeComponent from './component/set-default-fee-component';
 import ConfigurePaymentStatusComponent from './component/configure-payment-status-component';
 import PresetCategoryAndDepartmentForBudget from './component/preset-category-and-department-for-budget';
@@ -18,13 +20,23 @@ import PredefinedCategoryIncomeExpenseComponent from './component/predefined-cat
 const TABS = [
   {
     value: 'setDefaultFeeComponents',
-    label: 'Set Default Fee Components',
+    label: 'Set Fee Type',
     component: () => <SetDefaultFeeComponent />,
   },
   {
     value: 'setPaymentMethodComponents',
     label: 'Set Payment Method',
     component: () => <SetPaymentMethodComponent />,
+  },
+  {
+    value: 'lateFeeType',
+    label: 'Set Late Fee Type Method',
+    component: () => <SetLateFeeTypeMethod />,
+  },
+  {
+    value: 'setPaymentTerm',
+    label: 'Set Payment Term',
+    component: () => <SetPaymentTerm />,
   },
 
   {
