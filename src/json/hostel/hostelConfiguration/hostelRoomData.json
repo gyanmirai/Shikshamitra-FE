@@ -4,7 +4,6 @@
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "facility": ["WiFi", "Study Table", "Attached Bathroom"],
     "facilityQuantities": [
       { "id": "wifi", "facility": "WiFi", "quantity": 1 },
       { "id": "study-table", "facility": "Study Table", "quantity": 1 },
@@ -17,7 +16,6 @@
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "facility": ["WiFi", "Fan"],
     "facilityQuantities": [
       { "id": "wifi", "facility": "WiFi", "quantity": 1 },
       { "id": "fan", "facility": "Fan", "quantity": 2 }
@@ -29,7 +27,6 @@
     "roomType": "Triple",
     "floorNumber": 3,
     "roomCapacity": 3,
-    "facility": ["WiFi", "Common Washroom"],
     "facilityQuantities": [
       { "id": "wifi", "facility": "WiFi", "quantity": 1 },
       { "id": "common-washroom", "facility": "Common Washroom", "quantity": 1 }
@@ -41,7 +38,6 @@
     "roomType": "Single",
     "floorNumber": 1,
     "roomCapacity": 1,
-    "facility": ["WiFi", "Heater", "Attached Bathroom"],
     "facilityQuantities": [
       { "id": "wifi", "facility": "WiFi", "quantity": 1 },
       { "id": "heater", "facility": "Heater", "quantity": 1 },
@@ -54,7 +50,6 @@
     "roomType": "Double",
     "floorNumber": 2,
     "roomCapacity": 2,
-    "facility": ["WiFi", "Desk Lamp", "Shared Bathroom"],
     "facilityQuantities": [
       { "id": "wifi", "facility": "WiFi", "quantity": 1 },
       { "id": "desk-lamp", "facility": "Desk Lamp", "quantity": 2 },

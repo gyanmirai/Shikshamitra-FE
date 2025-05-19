@@ -1,4 +1,5 @@
 import React from 'react';
+import * as yup from 'yup';
 import { useFormik } from 'formik';
 
 import { Box, Grid, Button, TextField } from '@mui/material';
@@ -9,8 +10,6 @@ import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { feeHeadValidationSchema } from './validationSchema';
-
 const HostelFeeHeadDialog = () => {
   const formik = useFormik({
     // Initial form values
@@ -18,7 +17,10 @@ const HostelFeeHeadDialog = () => {
       feeHeadName: '',
     },
     // Validation schema for form fields
-    validationSchema: feeHeadValidationSchema,
+    validationSchema: yup.object({
+      feeHeadName: yup.string().required('Fee Head Name is required'),
+    }),
+
     // Handle form submission
     onSubmit: (values) => {
       console.log('Submitted Fee Head:', values);

@@ -9,18 +9,14 @@ export interface IHostelFinanceAddFeeCategorySettingDialogProps {
 
 export interface IHostelFormikValue {
   id: number;
-  bookRecipt: string;
-  applicableGrade: string;
+  roomType: string;
   hostelFeeHead: string;
   grossFee: string;
   discountAmount: string;
   discountRemark: string;
   payableFee: string;
   paymentMethod: string[];
-  paymentDueDate: any;
-  multipleApplicableGrade: string[];
   chargesType: string;
-
   lateFeeChargesType: string;
   lateFeeChargesAmount: string;
 }
