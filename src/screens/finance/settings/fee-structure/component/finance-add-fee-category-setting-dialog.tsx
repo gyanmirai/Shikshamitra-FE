@@ -267,7 +267,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
             </ShakingTextField>
             {feeHeadDialog.value && (
               <CustomDialog
-                title="Add Receipt Book"
+                title="Add Fee Head"
                 open={feeHeadDialog.value}
                 handleClose={feeHeadDialog.onFalse}
               >
@@ -378,7 +378,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
             </ShakingTextField>
             {paymentMethodDialog.value && (
               <CustomDialog
-                title="Add Receipt Book"
+                title="Add Payment Method"
                 open={paymentMethodDialog.value}
                 handleClose={paymentMethodDialog.onFalse}
               >

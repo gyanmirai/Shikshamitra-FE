@@ -9,10 +9,10 @@ import AccessLogsManagementTable from './component/access-logs-management-table'
 const AccessLogsManagementScreen = () => (
   <>
     <CustomBreadcrumbs
-      heading="Access Logs Management"
+      heading="Access Logs"
       links={[
         { name: 'Security', href: '' },
-        { name: 'Access Logs & Gate Pass System', href: '' },
+        { name: 'Access Logs', href: '' },
       ]}
       sx={{ px: 1, mb: 2 }}
     />
