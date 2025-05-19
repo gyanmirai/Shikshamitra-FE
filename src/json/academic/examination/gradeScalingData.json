@@ -1,6 +1,7 @@
 [
     {
       "id": 1,
+      "name" : "Grade Scale 1",
       "totalMarks": 80,
       "gradingScale": [
         { "minMarks": 72, "maxMarks": 80, "grade": "A+" },

@@ -1,4 +1,12 @@
+import type { LabelColor } from 'src/components/label';
+
 import { Checkbox, Typography } from '@mui/material';
+
+import {
+  ExamGradeStatusType,
+  ExamGradeStatusColor,
+  ExamGradeStatusOptions,
+} from 'src/enums/grade-entry-status';
 
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -20,6 +28,7 @@ const GradeEntryTable = ({
         id: 'select',
         label: 'Select',
         minWidth: 60,
+        sticky: true,
         isFilter: false,
         isSort: false,
         render: (value, row) => (
@@ -29,9 +38,9 @@ const GradeEntryTable = ({
           />
         ),
       },
-      { id: 'studentName', label: 'Student Name' },
-      { id: 'assignments', label: 'Assignments' },
-      { id: 'subject', label: 'Subject' },
+      { id: 'Gr No', label: 'Gr No', minWidth: 80 },
+      { id: 'studentName', label: 'Student Name', minWidth: 150 },
+      { id: 'marks', label: 'Marks', minWidth: 80, filterType: 'number' },
       {
         id: 'grade',
         label: 'Grade',
@@ -63,13 +72,14 @@ const GradeEntryTable = ({
       {
         id: 'status',
         label: 'Status',
-        render: (value, row) => (
-          <Label
-            color={value === 'Assigned' ? 'primary' : value === 'Pending' ? 'warning' : 'default'}
-          >
-            {value}
-          </Label>
-        ),
+        minWidth: '200px',
+        align: 'left',
+        filterType: 'enum',
+        enumOptions: ExamGradeStatusOptions,
+        render(value: ExamGradeStatusType, row: any) {
+          const color = ExamGradeStatusColor[value as ExamGradeStatusType] as LabelColor;
+          return <Label color={color}>{ExamGradeStatusType[value]}</Label>;
+        },
       },
       {
         id: 'actions',

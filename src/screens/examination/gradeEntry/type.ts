@@ -3,10 +3,12 @@ export interface IStudentExamGradeEntry {
   studentName: string;
   assignments: string;
   subject: string;
+  marks: number;
+  totalMarks: number;
   grade: string;
   feedback: string;
   weightedAverage: string;
-  status: 'Assigned' | 'Pending'; // You can also use `string` if these values are dynamic
+  status: number;
 }
 
 /**
@@ -16,7 +18,6 @@ export interface IStudentExamGradeEntry {
  */
 export interface IAssignGradeProps {
   data?: IStudentExamGradeEntry | null;
-  onSubmit: (values: { grade: string; feedback: string }) => void;
 }
 
 export interface IGradeEntryTableProps {

@@ -19,7 +19,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
     <Box sx={{ p: 2 }}>
       <Stack spacing={2}>
         <Typography variant="h6" fontWeight={600}>
-          {examData.examName} ({examData.examType})
+          Exam Type : {examData.examType}
         </Typography>
 
         <Stack direction="row" spacing={2} flexWrap="wrap">
@@ -34,7 +34,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
             <Box display="flex">
               <Typography variant="body2" mb={0.5}>
                 {' '}
-                Divisions :
+                Divisions :{' '}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {Array.isArray(examData.divisions) ? (
@@ -154,7 +154,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           onClick={() => {
             // Implement print or download functionality here
           }}
-          variant="contained"
+          variant="outlined"
         >
           Print Timetable
         </Button>

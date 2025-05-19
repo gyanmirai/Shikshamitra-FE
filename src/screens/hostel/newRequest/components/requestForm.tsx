@@ -54,6 +54,7 @@ const HostelRequestForm: React.FC<{
 }> = ({ open, onClose, editData, disabled }) => {
   // State to store division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
   // State to store selected facilities for the hostel room
   const [facilities, setFacilities] = useState<string[]>([]);
 
