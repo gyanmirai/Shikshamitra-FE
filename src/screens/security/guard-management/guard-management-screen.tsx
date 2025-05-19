@@ -7,10 +7,10 @@ import GuardRosterScreen from './guard-assigned-screen';
 const GuardManagementScreen = () => (
   <>
     <CustomBreadcrumbs
-      heading="Guard Assigned"
+      heading="Guard Assignment"
       links={[
         { name: 'Security', href: '' },
-        { name: 'Guard Assigned', href: '' },
+        { name: 'Guard Assignment', href: '' },
       ]}
       sx={{ px: 1, mb: 2 }}
     />

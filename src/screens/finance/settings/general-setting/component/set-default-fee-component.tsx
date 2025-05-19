@@ -232,6 +232,7 @@ const SetDefaultFeeComponent = () => {
                   isSort: false,
                   sticky: true,
                   align: 'center',
+                  minWidth: 100,
                   render(row, value) {
                     return (
                       <ThreeDotsActions

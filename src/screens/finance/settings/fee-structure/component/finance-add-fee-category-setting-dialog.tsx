@@ -158,7 +158,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   return (
     <>
       <form onSubmit={formik.handleSubmit}>
-        <Box display="flex" justifyContent="space-between">
+        <Box display="flex" justifyContent="flex-end">
           <Box display="flex" gap={2}>
             <Button
               startIcon={<Iconify icon="bx:arrow-back" />}

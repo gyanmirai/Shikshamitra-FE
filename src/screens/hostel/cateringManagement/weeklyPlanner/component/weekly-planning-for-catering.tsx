@@ -51,17 +51,27 @@ const getMenuColor = (meal: string, dayIndex: number): string => {
 };
 
 const WeeklyPlanningForCatering = () => {
+  // Dialog state for adding new menu items
   const dialogToAddMenu = useBoolean();
+  // State to store the currently selected meal details for editing/adding
   const [selectedMeal, setSelectedMeal] = useState<IMealFormValues | null>(null);
+
+  // Dialog state for viewing past menu items
   const readOnlyDialog = useBoolean();
+  // State to store the meal data for read-only view in dialog
   const [readOnlyData, setReadOnlyData] = useState<IMealFormValues | null>(null);
   const [hostel, setHostel] = useState('');
 
+  // Selected hostel state
+  const [hostel, setHostel] = useState('');
+
+  // Opens the read-only dialog with the selected meal data
   const openReadOnlyDialog = (mealData: IMealFormValues) => {
     setReadOnlyData(mealData);
     readOnlyDialog.onTrue();
   };
 
+  // Checks if a given day has already passed in the current week
   const hasDayPassed = (day: string): boolean => {
     const todayIndex = new Date().getDay();
     const dayIndex = DAYS.indexOf(day);
@@ -70,6 +80,7 @@ const WeeklyPlanningForCatering = () => {
     return dayIndex < adjustedTodayIndex;
   };
 
+  // Handles opening the add menu dialog with the selected meal details
   const handleAddMenu = (day: string, dish: string, meal: string) => {
     setSelectedMeal({
       mealType: meal,
@@ -79,6 +90,7 @@ const WeeklyPlanningForCatering = () => {
     dialogToAddMenu.onTrue();
   };
 
+  // Transforms raw menu data into a structured format organized by day and meal type
   const buildMenuData = (menuItems: any) =>
     menuItems.reduce((acc: any, item: any) => {
       const day = DAY_MAPPING[item.mealDay.trim()];
@@ -90,8 +102,10 @@ const WeeklyPlanningForCatering = () => {
       return acc;
     }, {});
 
+  // Process the imported menu data
   const menuData = buildMenuData(data);
 
+  // Renders a header cell for each day of the week
   const renderHeaderCell = (day: string) => (
     <Box
       key={day}
@@ -105,20 +119,23 @@ const WeeklyPlanningForCatering = () => {
     </Box>
   );
 
+  // Renders a cell for each meal slot in the weekly planner
   const renderMealCell = (day: string, meal: string, colIdx: number) => {
     const dish = menuData[day]?.[meal];
     const bgColor = getMenuColor(meal, colIdx);
     const isPast = hasDayPassed(day);
 
+    // Handles cell click based on whether the day has passed
     const handleClick = () => {
       if (isPast) {
-        // Open read-only or alternate form
+        // Open read-only view for past meals
         openReadOnlyDialog({
           mealType: meal,
           mealDescription: dish,
           mealDay: day,
         });
       } else {
+        // Open edit dialog for future meals
         handleAddMenu(day, dish, meal);
       }
     };
@@ -140,6 +157,7 @@ const WeeklyPlanningForCatering = () => {
         }}
       >
         {dish ? (
+          // Display existing menu item
           <Paper
             elevation={1}
             sx={{
@@ -156,6 +174,7 @@ const WeeklyPlanningForCatering = () => {
             {dish}
           </Paper>
         ) : (
+          // Display placeholder for empty menu slot
           <Typography variant="body2" color="text.secondary">
             + Add Menu
           </Typography>

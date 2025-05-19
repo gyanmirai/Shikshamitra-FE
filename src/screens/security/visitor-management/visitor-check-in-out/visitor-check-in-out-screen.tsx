@@ -26,8 +26,8 @@ const VisitorCheckInOutScreen = () => {
   // Holds the visitor data selected for editing; null when adding a new visitor
   const [selectedData, setSelectedData] = useState<IWalkInVisitorFormValues | null>(null);
   const links = open
-    ? [{ name: 'Security' }, { name: 'Visitors ' }, { name: 'Walk In Visitor' }]
-    : [{ name: 'Security' }, { name: 'Visitors' }];
+    ? [{ name: 'Security' }, { name: 'Visitor Checkpoint ' }, { name: 'Walk In Visitor' }]
+    : [{ name: 'Security' }, { name: 'Visitor Checkpoint' }];
 
   //   // Handles logic for each table action: edit, delete, view, or new entry
   const handleClick = (data: IWalkInVisitorFormValues | null, action: string) => {
@@ -72,7 +72,8 @@ const VisitorCheckInOutScreen = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Visitors"
+        heading="Visitor Checkpoint"
+        description="This is the Pre-Approved Visitor screen. Here, you can enter visitor details and request approval in advance. Once approved, guards can easily manage their check-in and check-out."
         links={links}
         sx={{ px: 1, mb: 2 }}
         action={

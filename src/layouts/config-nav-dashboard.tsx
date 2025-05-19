@@ -317,7 +317,7 @@ const securityModule = {
           _action: 'visitor-management',
           children: [
             {
-              title: 'Visitor Check In',
+              title: 'Visitor Checkpoint',
               path: '/security/visitor-management/visitor-check-in',
               _action: 'visitor-check-in',
             },
@@ -349,32 +349,33 @@ const securityModule = {
               _action: 'create-gate-pass',
             },
             {
-              title: 'Early Gate Pass Request',
+              title: 'Gate Pass Request',
               path: '/security/gate-pass-management/gate-pass',
               _action: 'gate-pass',
             },
             {
-              title: 'Review Gate Pass Request For Child',
+              title: 'Review Gate Pass Request',
               path: '/security/gate-pass-management/review-gate-pass-request',
               _action: 'review-gate-pass-request',
             },
+            // {
+            //   title: 'Access Logs Management Security',
+            //   path: '/security/gate-pass-management/access-logs-management-security',
+            //   _action: 'access-logs-management-security',
+            // },
             {
-              title: 'Access Logs Management Security',
-              path: '/security/gate-pass-management/access-logs-management-security',
-              _action: 'access-logs-management-security',
-            },
-            {
-              title: 'Gate Pass Request Staff',
+              title: 'Gate Pass Request',
               path: '/security/gate-pass-management/gate-pass-staff',
               _action: 'gate-pass-staff',
             },
             {
-              title: 'Review Gate Pass Request Staff',
+              title: 'Review Gate Pass Request',
               path: '/security/gate-pass-management/review-gate-pass-staff',
               _action: 'review-gate-pass-staff',
             },
           ],
         },
+
         {
           title: 'Guard Management',
           path: '',
@@ -391,31 +392,14 @@ const securityModule = {
               _action: 'duty-schedule',
             },
             {
-              title: 'Setting Configuration',
+              title: 'Guard Shift Configuration',
               path: '/security/guard-management/setting-configuration',
               _action: 'setting-configuration',
             },
-          ],
-        },
-        {
-          title: 'Guard Management',
-          path: '',
-          _action: 'guard-management',
-          children: [
             {
-              title: 'Guard Assignment',
-              path: '/security/guard-management/guard-assignment',
-              _action: 'guard-assignment',
-            },
-            {
-              title: 'My Duty Schedule',
-              path: '/security/guard-management/duty-schedule',
-              _action: 'duty-schedule',
-            },
-            {
-              title: 'Setting Configuration',
-              path: '/security/guard-management/setting-configuration',
-              _action: 'setting-configuration',
+              title: 'Guard Duty Overview',
+              path: '/security/guard-management/hand-over-notes',
+              _action: 'hand-over-notes',
             },
           ],
         },
@@ -441,6 +425,11 @@ const securityModule = {
               _action: 'alert-report',
             },
           ],
+        },
+        {
+          title: 'Reports',
+          path: '/security/reports',
+          _action: 'reports',
         },
       ],
     },
@@ -1204,15 +1193,18 @@ const financeModule = {
               title: 'Cheque Transactions',
               path: '/finance/reconciliation/payment-by-cheque',
               _action: 'payment-by-cheque',
-              shortcutKey: 'Alt+F+6',
-              shortcutKeyName: 'Alt+F+6',
             },
             {
-              title: 'Bounce Cheque',
+              title: 'Bounced Cheque',
               path: '/finance/reconciliation/bounce-cheque',
               _action: 'bounce-cheque',
               shortcutKey: 'Alt+F+6',
               shortcutKeyName: 'Alt+F+6',
+            },
+            {
+              title: 'Cleared Cheque',
+              path: '/finance/reconciliation/cleared-cheque',
+              _action: 'payment-by-cheque',
             },
           ],
         },

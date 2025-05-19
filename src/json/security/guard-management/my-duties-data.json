@@ -1,0 +1,73 @@
+
+    [
+  {
+    "id": 1,
+    "name": "Morning Shift",
+    "startTime": "2025-05-15T07:00:00",
+    "endTime": "2025-05-15T12:00:00",
+    "day": "Monday",
+    "status": null,
+    "checkInNotes": "Checked all entry points. No unusual activity observed.",
+    "checkOutNotes": "Shift ended smoothly. Handed over to Ravi."
+  },
+  {
+    "id": 2,
+    "name": "Morning Shift",
+    "startTime": "2025-05-16T07:00:00",
+    "endTime": "2025-05-16T12:00:00",
+    "day": "Tuesday",
+    "status": null,
+    "checkInNotes": "Weather is clear. Visitors log is empty so far.",
+    "checkOutNotes": "Briefed incoming guard about visitor entry expected at noon."
+  },
+  {
+    "id": 3,
+    "name": "Morning Shift",
+    "startTime": "2025-05-17T07:00:00",
+    "endTime": "2025-05-17T12:00:00",
+    "day": "Wednesday",
+    "status": null,
+    "checkInNotes": "Garage door was left open. Closed it and informed maintenance.",
+    "checkOutNotes": "All equipment accounted for. Handed over to Sunil."
+  },
+  {
+    "id": 4,
+    "name": "Morning Shift",
+    "startTime": "2025-05-18T07:00:00",
+    "endTime": "2025-05-18T12:00:00",
+    "day": "Thrusday",
+    "status": null,
+    "checkInNotes": "Gate cam restarted due to freeze. Working fine now.",
+    "checkOutNotes": "Quiet shift. No major incidents. Shift passed to Rahul."
+  },
+  {
+    "id": 5,
+    "name": "Morning Shift",
+    "startTime": "2025-05-19T07:00:00",
+    "endTime": "2025-05-19T12:00:00",
+    "day": "Friday",
+    "status": null,
+    "checkInNotes": "Gate lock working fine. Area clean.",
+    "checkOutNotes": "Handed over duty to Ramesh. No issues during shift."
+  },
+  {
+    "id": 6,
+    "name": "Morning Shift",
+    "startTime": "2025-05-20T07:00:00",
+    "endTime": "2025-05-20T12:00:00",
+    "day": "Satureday",
+    "status": "checkedIn",
+    "checkInNotes": "Lights at entrance flickering. Will monitor.",
+    "checkOutNotes": ""
+  },
+  {
+    "id": 7,
+    "name": "Morning Shift",
+    "startTime": "2025-05-21T07:00:00",
+    "endTime": "2025-05-21T12:00:00",
+    "day": "Sunday",
+    "status": null,
+    "checkInNotes": "",
+    "checkOutNotes": ""
+  }
+]
