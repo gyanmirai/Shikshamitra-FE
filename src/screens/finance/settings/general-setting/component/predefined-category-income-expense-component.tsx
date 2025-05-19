@@ -78,6 +78,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
                 isSort: false,
                 sticky: true,
                 align: 'center',
+                minWidth: 100,
                 render(row: any) {
                   return (
                     <ThreeDotsActions

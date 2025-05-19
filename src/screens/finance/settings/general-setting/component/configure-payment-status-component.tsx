@@ -226,6 +226,7 @@ const ConfigurePaymentStatusComponent = () => {
                 isSort: false,
                 sticky: true,
                 align: 'center',
+                minWidth: 100,
                 render(_, value) {
                   return (
                     <ThreeDotsActions
