@@ -10,11 +10,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ResourceDisposedTable from './component/disposed-screen-table';
 
 const DisposedResourceScreen = () => {
-  const links = [{ name: 'Resource Management' }, { name: 'Disposed Resource Screen' }];
+  const links = [{ name: 'Resource Management' }, { name: 'Disposed Resources ' }];
 
   return (
     <>
-      <CustomBreadcrumbs heading="Disposed Resource Screen" links={links} sx={{ px: 1, mb: 2 }} />
+      <CustomBreadcrumbs heading="Disposed Resources" links={links} sx={{ px: 1, mb: 2 }} />
 
       <Grid container spacing={2}>
         <Grid item xs={6} lg={3} pb="20px">

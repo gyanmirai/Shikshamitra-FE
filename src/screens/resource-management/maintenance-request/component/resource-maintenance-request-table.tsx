@@ -38,7 +38,7 @@ const ResourceMaintenanceRequestTable = () => {
     if (status === 0) {
       return [
         <MenuItem
-          key="Assigned Engineer"
+          key="Assign Technician"
           onClick={() => {
             setMaintenanceStatus('pending');
             setIsEdit(false);
@@ -47,7 +47,7 @@ const ResourceMaintenanceRequestTable = () => {
           }}
         >
           <Iconify icon="ic:outline-engineering" sx={{ height: '16px', width: '16px' }} />
-          Assigned Technician
+          Assign Technician
         </MenuItem>,
       ];
     }
@@ -76,7 +76,7 @@ const ResourceMaintenanceRequestTable = () => {
           }}
         >
           <Iconify icon={GlobalIcons.cancel} sx={{ height: '16px', width: '16px' }} />
-          Not Repaired
+          Not Repairable
         </MenuItem>,
       ];
     }
@@ -112,7 +112,7 @@ const ResourceMaintenanceRequestTable = () => {
             width: '100%',
           },
         }}
-        noDataText={<>No Resources Maintenance Request Found.</>}
+        noDataText={<>No Maintenance Request Found.</>}
         columns={[
           {
             label: 'Name',
@@ -167,7 +167,7 @@ const ResourceMaintenanceRequestTable = () => {
           handleClose={() => {
             ResourceRequestMaintenanceDialog.onFalse();
           }}
-          title="Order Management"
+          title="Maintenance Request"
         >
           <ResourceRequestMaintenaceDialog
             data={selectedRow}

@@ -75,7 +75,7 @@ const MyResourcesScreen = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="My Assigned Resources"
+        heading="My Resources"
         links={links}
         sx={{ px: 1, mb: 2 }}
         action={
