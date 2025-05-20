@@ -29,26 +29,34 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
-import FeeRefundRequestDialog from './component/fee-refund-request-dialog';
 import FinanceFeeRefundedViewDialog from './component/fee-refunded-view-dialog';
 import FinanceFeeRefundAllocationDialog from './component/finance-fee-refund-allocated';
 import FinanceFeeCollectionRefundApprovedDialog from './component/fee-refund-approved-dialog';
+import NewFeeRefundRequestForm from '../new-fee-refund/component/new-fee-refund-request-form';
 
 import type { IFeeRefundScreenProps } from './interface/fee-refund-interface';
+import type { IStudentRefundRequest } from '../new-fee-refund/new-refund-request-interface';
 
 const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedView = false }) => {
   const dialog = useBoolean();
   const dialogForCreateRequest = useBoolean();
   const dialogForApprovalRequest = useBoolean();
   const dialogForFeeRefundedView = useBoolean();
-  const [selectedStudent, setSelectedStudent] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any>([]);
+  const [selectedRefundRequest, setSelectedRefundRequest] = useState<IStudentRefundRequest | null>(
+    null
+  );
+
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
+  const confirmDelete = useBoolean();
+  const [isEdit, setIsEdit] = useState(false);
 
   const links = open
     ? [
@@ -65,6 +73,8 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   };
   const handleClose = () => {
     setOpen(false);
+    setIsEdit(false);
+    setSelectedRefundRequest(null);
     setEditData(null);
   };
 
@@ -111,7 +121,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
   return (
-    <>
+    <Box height="100%" display="flex" flexDirection="column">
       <>
         {!fromStudentDetailedView && (
           <CustomBreadcrumbs
@@ -141,7 +151,11 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
         )}
       </>
       {open ? (
-        <FeeRefundRequestDialog onClose={handleClose} />
+        <NewFeeRefundRequestForm
+          onClose={handleClose}
+          isEdit={isEdit}
+          data={selectedRefundRequest}
+        />
       ) : (
         <>
           {/* fee refund screen view for fee collection screen  */}
@@ -411,18 +425,18 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                       );
                     },
                   },
-                  {
-                    id: 'rollNo',
-                    label: 'Roll No',
-                    filterType: 'number',
-                    render(value, row) {
-                      return (
-                        <Typography minWidth="120px" fontSize="12px">
-                          {value}
-                        </Typography>
-                      );
-                    },
-                  },
+                  // {
+                  //   id: 'rollNo',
+                  //   label: 'Roll No',
+                  //   filterType: 'number',
+                  //   render(value, row) {
+                  //     return (
+                  //       <Typography minWidth="120px" fontSize="12px">
+                  //         {value}
+                  //       </Typography>
+                  //     );
+                  //   },
+                  // },
                   {
                     id: 'studentName',
                     label: 'Student Name',
@@ -549,14 +563,21 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                         placement="right-top"
                         showViewIcon
                         showEditIcon
+                        showDeleteIcon
+                        handleDeleteClick={() => {
+                          setSelectedRefundRequest(row);
+                          confirmDelete.onTrue();
+                        }}
                         handleViewClick={() => {
                           // setSelectedStudent(studentRefundData[0]);
 
                           dialogForFeeRefundedView.onTrue();
                         }}
                         handleEditClick={() => {
+                          setSelectedRefundRequest(row);
                           setSelectedStudent(row);
                           setOpen(true);
+                          setIsEdit(true);
                         }}
                         actions={() => (
                           <MenuList>
@@ -633,7 +654,23 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
           selectedData={selectedStudent}
         />
       )}
-    </>
+
+      {confirmDelete.value && (
+        <ConfirmDialog
+          open={confirmDelete.value}
+          onClose={() => {
+            confirmDelete.onFalse();
+          }}
+          title="Delete"
+          content="Are you sure want to delete?"
+          action={
+            <Button variant="contained" color="error" onClick={async () => {}}>
+              Delete
+            </Button>
+          }
+        />
+      )}
+    </Box>
   );
 };
 

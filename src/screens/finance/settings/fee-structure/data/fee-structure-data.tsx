@@ -10,6 +10,7 @@ export const feestructureDummyData: IFeeItem[] = [
     lateFeeChargesType: 'fixed',
     lateFeeChargesAmount: '1000',
     isActive: true,
+    discountReason: 'none',
   },
   {
     feeHead: 'Tuition',
@@ -20,6 +21,8 @@ export const feestructureDummyData: IFeeItem[] = [
     lateFeeChargesType: 'perDay',
     lateFeeChargesAmount: '1',
     isActive: true,
+    discountReason:
+      'promotion campaign promotion campaign promotion campaign promotion campaign promotion campaign promotion campaign',
   },
   {
     feeHead: 'Sports',
@@ -30,6 +33,7 @@ export const feestructureDummyData: IFeeItem[] = [
     lateFeeChargesType: 'perDay',
     lateFeeChargesAmount: '1',
     isActive: false,
+    discountReason: 'promotion campaign',
   },
   {
     feeHead: 'Transport',
@@ -40,5 +44,6 @@ export const feestructureDummyData: IFeeItem[] = [
     lateFeeChargesType: 'fixed',
     lateFeeChargesAmount: '1000',
     isActive: false,
+    discountReason: 'promotion campaign',
   },
 ];

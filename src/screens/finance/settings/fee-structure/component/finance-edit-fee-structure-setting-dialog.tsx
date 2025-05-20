@@ -34,6 +34,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
 
   return (
     <CustomDialog
+      fullWidth
       maxWidth="xl"
       title={
         <Box display="flex" flexDirection="row" gap={2} alignItems="center">

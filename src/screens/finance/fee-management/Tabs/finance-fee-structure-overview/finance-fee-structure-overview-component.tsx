@@ -222,11 +222,11 @@ const FinanceFeeStructureOverviewComponent = () => {
         maxWidth="xl"
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-            <Typography variant="h5">Detail Fee Structure Of Standard 1</Typography>
+            <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
             <Tooltip
               arrow
               placement="right"
-              title="This is the detailed fee structure for standard 1, applicable to all students of that class except for specific scenarios."
+              title="This is the detailed fee structure for class 1, applicable to all students of that class except for specific scenarios."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>

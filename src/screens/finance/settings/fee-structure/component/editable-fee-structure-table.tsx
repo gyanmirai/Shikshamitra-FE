@@ -52,7 +52,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
           flexDirection="column"
           sx={{ flex: 1, justifyContent: 'space-between' }}
         >
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 1, mb: 5 }}>
             <FieldArray
               name="fees"
               render={() => (
@@ -66,12 +66,19 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                     sx: { margin: '12px' },
                   })}
                   columns={[
-                    { id: 'feeHead', label: 'Fee Head', isFilter: false, isSort: false },
+                    {
+                      id: 'feeHead',
+                      label: 'Fee Head',
+                      minWidth: '100px',
+                      isFilter: false,
+                      isSort: false,
+                    },
                     {
                       id: 'grossFee',
                       label: 'Gross Fee',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '170px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -115,6 +122,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                       label: 'General Discount',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '170px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -162,6 +170,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                       label: 'Payable Fee',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '100px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -180,6 +189,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                       label: 'Payment Method',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '200px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -221,6 +231,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                       label: 'Late Fee Charges Amount',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '200px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -264,6 +275,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                       label: 'Late Fee Charges Type',
                       isFilter: false,
                       isSort: false,
+                      minWidth: '200px',
                       render: (value, row) => {
                         const index = formik.values.fees.findIndex(
                           (item) => item.feeHead === row.feeHead
@@ -298,6 +310,30 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({ 
                                 )}
                             </FormControl>
                           </Box>
+                        );
+                      },
+                    },
+                    {
+                      id: 'discountReason',
+                      label: 'Discount Reason',
+                      isFilter: false,
+                      isSort: false,
+                      minWidth: '500px',
+                      render: (value, row) => {
+                        const index = formik.values.fees.findIndex(
+                          (item) => item.discountReason === row.discountReason
+                        );
+                        return (
+                          <TextField
+                            multiline
+                            rows={3}
+                            value={formik.values.fees[index].discountReason}
+                            onChange={(e) =>
+                              formik.setFieldValue(`fees[${index}].discountReason`, e)
+                            }
+                            sx={{ width: '500px' }}
+                            fullWidth
+                          />
                         );
                       },
                     },

@@ -187,6 +187,7 @@ const TemplatesOneFeeReceipt: React.FC<TemplatesOneFeeReceiptProps> = ({
                 </Text>
                 
               </View> */}
+
               <View style={styles.row}>
                 {paymentDetails.mode === 'Cheque' && (
                   <View>

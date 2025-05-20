@@ -91,7 +91,7 @@ const FinanceNewFeeStructureSetting = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Fee Structure Found.{' '}
+                No Fee Structure Found.
                 <Box
                   onClick={() => {
                     setIsEdit(false);
