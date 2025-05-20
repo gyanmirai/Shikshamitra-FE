@@ -7,11 +7,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { CONFIG } from 'src/config-global';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 
 import { students } from '../student-fee-data/student-fee-data';
 import FinanceCollectCharges from '../../charges/component/collect-charges';
 import FinanceStudentAdditionalDiscountDialog from './student-additional-discount';
-import FeeCollectionMonthWise from '../../collectFees/component/fee-collect-monthwise';
+import FeeCollectionTable from '../../new-collect-fee/component/new-fee-collection-tableview';
 import FinanceFeeRefundAllocationDialog from '../../../fee-refund/component/finance-fee-refund-allocated';
 
 import type { Student } from '../student-fee-data/student-fee-data';
@@ -256,14 +257,26 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           selectedData={selectedStudent}
         />
       )}
-
       {dialog.value && (
+        <CustomDialog
+          maxWidth="xl"
+          open={dialog.value}
+          handleClose={() => {
+            dialog.onFalse();
+          }}
+          title="Collect Fees"
+        >
+          <FeeCollectionTable />
+        </CustomDialog>
+      )}
+
+      {/* {dialog.value && (
         <FeeCollectionMonthWise
           dialogValue={dialog.value}
           onClose={closeDialog}
           students={selectedStudent}
         />
-      )}
+      )} */}
 
       {collectChargesDialog.value && (
         <FinanceCollectCharges

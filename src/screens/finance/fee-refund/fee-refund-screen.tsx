@@ -1,19 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
-import {
-  Box,
-  Grid,
-  Button,
-  Tooltip,
-  MenuItem,
-  MenuList,
-  Checkbox,
-  Typography,
-} from '@mui/material';
+import Add from '@mui/icons-material/Add';
+import { Box, Button, Tooltip, MenuItem, MenuList, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -55,6 +50,15 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
+  const links = open
+    ? [
+        { name: 'Finance', href: '/finance/dashboard' },
+        { name: 'Fee Refund' },
+
+        { name: 'Refund Request Form' },
+      ]
+    : [{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Refund' }];
+
   const closeDialog = () => {
     setOpen(false);
     setEditData(null);
@@ -70,35 +74,76 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
     sendInstantNotificationDialogValue.onTrue();
   };
 
+  // States for managing organization/stage selection
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<string>('');
+
+  // States for managing class/standard selection
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClass] = useState<string>('');
+
+  // States for managing division selection
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Effect to update organizations when medium changes
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
+
+  // Effect to update classes when organization changes
+  useEffect(() => {
+    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
+    setClass(
+      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+    );
+  }, [organization, allOrganization]);
+
+  // Effect to update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
   return (
     <>
+      <>
+        {!fromStudentDetailedView && (
+          <CustomBreadcrumbs
+            description="This is the Refund Screen, where all created refund requests are displayed. By clicking the Approve action from the table, you can review and make a decision on the refund request. To create a new request, click on the Create Request Button"
+            heading="Fee Refund"
+            links={links}
+            sx={{ px: 1, mb: 2 }}
+            action={
+              <Button
+                size="small"
+                startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+                variant="contained"
+                onClick={
+                  open
+                    ? () => setOpen(false)
+                    : () => {
+                        // setSelectedVisitor(null);
+                        // setEdit(false);
+                        setOpen(true);
+                      }
+                }
+              >
+                {open ? 'Back' : ' Create Request'}
+              </Button>
+            }
+          />
+        )}
+      </>
       {open ? (
         <FeeRefundRequestDialog onClose={handleClose} />
       ) : (
         <>
-          {!fromStudentDetailedView && (
-            <Box
-              display="flex"
-              flexDirection="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <CustomBreadcrumbs
-                description="This is the Refund Screen, where all created refund requests are displayed. By clicking the Approve action from the table, you can review and make a decision on the refund request. To create a new request, click on the Create Request Button"
-                heading="Fee Refunds"
-                links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Refund' }]}
-                sx={{ px: 1, mb: 2 }}
-              />
-
-              {/* Header Section */}
-              <Box pt={2} pb={5} display="flex" justifyContent="flex-end" alignItems="center">
-                <Button variant="contained" size="small" onClick={() => setOpen(true)}>
-                  Create Request
-                </Button>
-              </Box>
-            </Box>
-          )}
-
           {/* fee refund screen view for fee collection screen  */}
 
           {fromStudentDetailedView && (
@@ -197,8 +242,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   label: 'Status',
                   filterType: 'enum',
                   enumOptions: FinancePaymentHistoryStatusOptions,
-                  minWidth: '180px',
-                  align: 'left',
+
                   isSort: false,
                   render(value, row) {
                     const color = FinancePaymentHistoryStatusTypeColors[
@@ -217,7 +261,8 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   label: 'Action',
                   isFilter: false,
                   isSort: false,
-                  align: 'right',
+                  align: 'center',
+                  minWidth: 100,
                   sticky: true,
                   render: (row: any, popover) => (
                     <ThreeDotsActions
@@ -255,31 +300,38 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
           {/* fee refund view for fee refund route or fee refund menu */}
           {!fromStudentDetailedView && (
             <>
-              <Grid container sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-                <Grid item lg={2}>
-                  <CustomSelect
-                    label="Class"
-                    name="className"
-                    options={[]}
-                    labelKey="name"
-                    valueKey="name"
-                    value={[]}
-                    onChange={(value) => console.log('className', value)}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item lg={2}>
-                  <CustomSelect
-                    fullWidth
-                    label="Division"
-                    labelKey="name"
-                    valueKey="id"
-                    options={[]}
-                    value={[]}
-                    onChange={(val) => console.log(val as string)}
-                  />
-                </Grid>
-              </Grid>
+              <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+                <CustomSelect
+                  options={allOrganization}
+                  label="Organization"
+                  value={organization}
+                  onChange={(val) => setOrganization(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!medium}
+                />
+                <CustomSelect
+                  options={allClass}
+                  label="Class"
+                  value={classes}
+                  onChange={(val) => setClass(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!organization}
+                />
+                <CustomSelect
+                  options={allDivision}
+                  label="Division"
+                  value={division}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                  disabled={!classes}
+                />
+              </Box>
               <CustomizableTable
                 searchFieldProps={{
                   placeholder: 'Search by Roll No, Status...',
@@ -496,10 +548,15 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                       <ThreeDotsActions
                         placement="right-top"
                         showViewIcon
+                        showEditIcon
                         handleViewClick={() => {
                           // setSelectedStudent(studentRefundData[0]);
 
                           dialogForFeeRefundedView.onTrue();
+                        }}
+                        handleEditClick={() => {
+                          setSelectedStudent(row);
+                          setOpen(true);
                         }}
                         actions={() => (
                           <MenuList>

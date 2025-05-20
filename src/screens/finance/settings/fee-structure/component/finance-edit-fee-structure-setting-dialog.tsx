@@ -26,8 +26,8 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
 }) => {
   // Define tab options
   const TABS = [
-    { value: 'reference', label: 'Reference' },
-    { value: 'editable', label: 'Editable' },
+    { value: 'reference', label: 'For View' },
+    { value: 'editable', label: 'For Edit' },
   ];
 
   const tabs = useTabs('editable'); // Initialize tabs with default value
@@ -38,7 +38,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
       title={
         <Box display="flex" flexDirection="row" gap={2} alignItems="center">
           <Typography variant="h5">
-            {tabs.value === 'editable' ? 'Editing For Class 1' : 'Details For Class 1'}
+            {tabs.value === 'editable' ? 'Edit For Class 1' : 'Details For Class 1'}
           </Typography>
           <Tooltip
             arrow

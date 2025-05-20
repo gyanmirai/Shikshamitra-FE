@@ -1,12 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { Division, Standards, Organization } from 'src/types/school';
+import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Tooltip, Checkbox, Typography } from '@mui/material';
+import { Box, Tooltip, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -80,6 +85,7 @@ const FinanceStudentFeeManagement = () => {
       minWidth: '60px',
       isSort: false,
       isFilter: false,
+      sticky: true,
       label: '',
       // Render checkbox for selecting all students
       renderColumn: () => (
@@ -103,6 +109,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'grNo',
       label: 'Gr No',
       filterType: 'number',
+
       render: (value: string) => (
         <Typography minWidth="120px" fontSize="12px">
           {value}
@@ -227,6 +234,51 @@ const FinanceStudentFeeManagement = () => {
       ),
     },
   ];
+
+  // State to store the selected fee structure items when a row is clicked/selected
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
+
+  // States for managing organization/stage selection
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<string>('');
+
+  // States for managing class/standard selection
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClass] = useState<string>('');
+
+  // States for managing division selection
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Effect to update organizations when medium changes
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
+
+  // Effect to update classes when organization changes
+  useEffect(() => {
+    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
+    setClass(
+      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+    );
+  }, [organization, allOrganization]);
+
+  // Effect to update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+  const [searchParams, setSearchParams] = useSearchParam({
+    isSearch: '',
+    student: '',
+    searchValue: '',
+  });
   return (
     <>
       <CustomBreadcrumbs
@@ -240,31 +292,38 @@ const FinanceStudentFeeManagement = () => {
         sx={{ px: 1, mb: 2 }}
       />
 
-      <Grid container sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-        <Grid item lg={2}>
-          <CustomSelect
-            label="Class"
-            name="className"
-            options={[]}
-            labelKey="name"
-            valueKey="name"
-            value={[]}
-            onChange={(value) => console.log('className', value)}
-            fullWidth
-          />
-        </Grid>
-        <Grid item lg={2}>
-          <CustomSelect
-            fullWidth
-            label="Division"
-            labelKey="name"
-            valueKey="id"
-            options={[]}
-            value={[]}
-            onChange={(val) => console.log(val as string)}
-          />
-        </Grid>
-      </Grid>
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <CustomSelect
+          options={allOrganization}
+          label="Organization"
+          value={organization}
+          onChange={(val) => setOrganization(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!medium}
+        />
+        <CustomSelect
+          options={allClass}
+          label="Class"
+          value={classes}
+          onChange={(val) => setClass(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!organization}
+        />
+        <CustomSelect
+          options={allDivision}
+          label="Division"
+          value={division}
+          onChange={(val) => setDivision(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!classes}
+        />
+      </Box>
 
       <CustomizableTable
         searchFieldProps={{
@@ -297,7 +356,7 @@ const FinanceStudentFeeManagement = () => {
           title={
             <Box display="flex" flexDirection="row" gap={2} alignItems="center">
               <Typography variant="h5">
-                {`Fee Details for ${selectedStudent.name} / Standard: ${selectedStudent.grade}th -A `}
+                {`Fee Details for ${selectedStudent.name} , Standard: ${selectedStudent.grade} -A `}
               </Typography>
               <Tooltip
                 arrow

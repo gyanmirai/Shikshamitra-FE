@@ -1,3 +1,5 @@
+'use client';
+
 import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React from 'react';

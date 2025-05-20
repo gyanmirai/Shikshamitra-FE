@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, Switch, Typography } from '@mui/material';
+import { Box, Button, Switch, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -12,17 +12,22 @@ import { formatNumber } from 'src/utils/formate_number';
 import initialData from 'src/json/finance/settings/fee-structure/feeStructureData.json';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
+import { feestructureDummyData } from './data/fee-structure-data';
+import ReadOnlyFeeStructureTable from './component/read-only-fee-structure-table';
 import FinanceAddFeeCategorySettingDialog from './component/finance-add-fee-category-setting-dialog';
 import FinanceEditFeeStructureSettingDialog from './component/finance-edit-fee-structure-setting-dialog';
 
 const FinanceNewFeeStructureSetting = () => {
   const dialog = useBoolean();
   const financeEditFeeStructureDialog = useBoolean();
+  const finanveViewFeeStructureDialog = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
 
   const [selectedEntry, setSelectedEntry] = useState<any[]>(initialData);
@@ -62,7 +67,7 @@ const FinanceNewFeeStructureSetting = () => {
             alignItems="center"
           >
             <CustomBreadcrumbs
-              heading="Fee Structure"
+              heading="Create Fee Structure"
               links={[
                 { name: 'Finance', href: '/finance/dashboard' },
                 { name: 'Settings' },
@@ -163,6 +168,16 @@ const FinanceNewFeeStructureSetting = () => {
                 },
               },
               {
+                id: 'isLocked',
+                label: 'Locked',
+                isFilter: false,
+                isSort: false,
+                render(statusToggle) {
+                  return <Switch value={statusToggle} />;
+                },
+              },
+
+              {
                 id: 'action',
                 label: 'Action',
                 isFilter: false,
@@ -174,6 +189,7 @@ const FinanceNewFeeStructureSetting = () => {
                     <ThreeDotsActions
                       showThreeDots={false}
                       showDeleteIcon
+                      showViewIcon
                       handleDeleteClick={() => {
                         dialogForDeleteConfirmation.onTrue();
 
@@ -185,6 +201,12 @@ const FinanceNewFeeStructureSetting = () => {
 
                         dialog.onFalse();
                         financeEditFeeStructureDialog.onTrue();
+                      }}
+                      handleViewClick={() => {
+                        setSelectedEntry(row);
+                        dialog.onFalse();
+                        financeEditFeeStructureDialog.onFalse();
+                        finanveViewFeeStructureDialog.onTrue();
                       }}
                     />
                   );
@@ -210,16 +232,6 @@ const FinanceNewFeeStructureSetting = () => {
             </LoadingButton>
           }
         />
-
-        // <DeleteConfirmationDialog
-        // open={dialogForDeleteConfirmation.value}
-        // onClose={() => {
-        //   dialogForDeleteConfirmation.onFalse();
-        // }}
-        //   onConfirm={() => {}}
-        //   title="Delete Item"
-        //   description="Are you sure you want to delete this item? This action cannot be undone."
-        // />
       )}
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
@@ -230,6 +242,30 @@ const FinanceNewFeeStructureSetting = () => {
           }}
         />
       )}
+
+      <CustomDialog
+        maxWidth="xl"
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
+            <Tooltip
+              arrow
+              placement="right"
+              title="This is the detailed fee structure for Class 1, applicable to all students of that class except for specific scenarios."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>
+          </Box>
+        }
+        open={finanveViewFeeStructureDialog.value}
+        handleClose={() => {
+          finanveViewFeeStructureDialog.onFalse();
+        }}
+      >
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '600px' }}>
+          <ReadOnlyFeeStructureTable data={feestructureDummyData} />
+        </Scrollbar>
+      </CustomDialog>
     </>
   );
 };

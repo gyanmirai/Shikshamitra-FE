@@ -1,8 +1,17 @@
+import type { LabelColor } from 'src/components/label';
+
 import React from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 
+import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
+
+import {
+  FinancePaymentHistoryStatusType,
+  FinancePaymentHistoryStatusOptions,
+  FinancePaymentHistoryStatusTypeColors,
+} from 'src/enums/finance-payment-history';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -17,8 +26,8 @@ interface ChargesViewDetailsProps {
 
 const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, onClose, data }) => (
   <CustomDialog
-    maxWidth={data.chargeHead === 'Late Fee' ? 'md' : 'lg'}
-    title={data.description}
+    maxWidth="lg"
+    title={capitalizeWords(data.description)}
     open={dialogValue}
     handleClose={onClose}
   >
@@ -31,10 +40,11 @@ const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, on
         columns={
           data.chargeHead === 'Late Fee'
             ? [
-                { id: 'dueDate', label: 'Due Date' },
+                { id: 'dueDate', label: 'Due Date', filterType: 'date' },
                 {
                   id: 'chargesPerDay',
                   label: 'ChargesPerDay',
+                  filterType: 'number',
                   render(value, row) {
                     return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                   },
@@ -42,6 +52,7 @@ const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, on
                 {
                   id: 'noOfDay',
                   label: 'No Of Day',
+                  filterType: 'number',
                   render(value, row) {
                     return <Typography fontSize="12px">{value}</Typography>;
                   },
@@ -49,6 +60,7 @@ const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, on
                 {
                   id: 'totalCharges',
                   label: 'Total Charges',
+                  filterType: 'formattedNumber',
                   render(value, row) {
                     return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                   },
@@ -56,56 +68,48 @@ const ChargesViewDetails: React.FC<ChargesViewDetailsProps> = ({ dialogValue, on
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: FinancePaymentHistoryStatusOptions,
+                  minWidth: '180px',
+                  align: 'left',
+                  isSort: false,
                   render(value, row) {
-                    return value !== '' ? (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Overdue'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Paid'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
+                    const color = FinancePaymentHistoryStatusTypeColors[
+                      value as FinancePaymentHistoryStatusType
+                    ] as LabelColor;
+
+                    return (
+                      <Label color={color}>
+                        {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
                       </Label>
-                    ) : (
-                      <Box />
                     );
                   },
                 },
               ]
             : [
                 { id: 'feeHead', label: 'Fee Head' },
-                { id: 'checkDate', label: 'Date on Check' },
-                { id: 'receivedCheckDate', label: 'Received Check Date' },
-                { id: 'chequeAmount', label: 'Cheque Amount' },
-                { id: 'charges', label: 'Charges' },
+                { id: 'checkDate', label: 'Date on Check', filterType: 'date' },
+                { id: 'receivedCheckDate', label: 'Received Check Date', filterType: 'date' },
+                { id: 'chequeAmount', label: 'Cheque Amount', filterType: 'formattedNumber' },
+                { id: 'charges', label: 'Charges', filterType: 'formattedNumber' },
                 { id: 'bankName', label: 'Bank Name' },
                 {
                   id: 'status',
                   label: 'Status',
+                  filterType: 'enum',
+                  enumOptions: FinancePaymentHistoryStatusOptions,
+                  minWidth: '180px',
+                  align: 'left',
+                  isSort: false,
                   render(value, row) {
-                    return value !== '' ? (
-                      <Label
-                        variant="soft"
-                        color={
-                          value === 'Overdue'
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : value === 'Paid'
-                                ? 'success'
-                                : 'default'
-                        }
-                      >
-                        {value}
+                    const color = FinancePaymentHistoryStatusTypeColors[
+                      value as FinancePaymentHistoryStatusType
+                    ] as LabelColor;
+
+                    return (
+                      <Label color={color}>
+                        {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
                       </Label>
-                    ) : (
-                      <Box />
                     );
                   },
                 },

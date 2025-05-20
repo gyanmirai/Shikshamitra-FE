@@ -77,7 +77,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             label: 'Status',
             filterType: 'enum',
             enumOptions: FinancePaymentHistoryStatusOptions,
-            minWidth: '180px',
+
             align: 'left',
             isSort: false,
             render(value, row) {
@@ -97,8 +97,9 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             label: 'Action',
             isFilter: false,
             isSort: false,
-            align: 'right',
+            align: 'center',
             sticky: true,
+            minWidth: 100,
             render: (value, row) => (
               <ThreeDotsActions
                 placement="right-top"

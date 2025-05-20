@@ -1,8 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -41,45 +45,88 @@ const FinanceChequeTransectionScreen = () => {
 
   // Effect to handle changes when selected entry or clear check status changes
   useEffect(() => {}, [selectedEntry, isClearCheck]);
+
+  // States for managing organization/stage selection
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<string>('');
+
+  // States for managing class/standard selection
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClass] = useState<string>('');
+
+  // States for managing division selection
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Effect to update organizations when medium changes
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
+
+  // Effect to update classes when organization changes
+  useEffect(() => {
+    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
+    setClass(
+      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+    );
+  }, [organization, allOrganization]);
+
+  // Effect to update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   return (
     <>
       <CustomBreadcrumbs
-        heading="Cheque Transection"
+        heading="Cheque Transactions"
         description="The Cheque transection screen displays all payments made by cheque. You can also move cheques to Cleared or Bounced by clicking the action button"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Reconciliation' },
-          { name: 'Cheque Transection' },
+          { name: 'Cheque Transactions' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box py="15px" display="flex" justifyContent="space-between">
-        <Box display="flex" flexDirection="row" gap={3}>
-          <CustomSelect
-            label="Class/Grade"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <CustomSelect
-            label="Division"
-            options={[]}
-            value=""
-            onChange={() => {}}
-            formControlProps={{ sx: { minWidth: 140 } }}
-          />
-          <TextField
-            label="Search by student name"
-            variant="outlined"
-            size="small"
-            value=""
-            onChange={(e: any) => {
-              console.log(e);
-            }}
-          />
-        </Box>
-      </Box>{' '}
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <CustomSelect
+          options={allOrganization}
+          label="Organization"
+          value={organization}
+          onChange={(val) => setOrganization(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!medium}
+        />
+        <CustomSelect
+          options={allClass}
+          label="Class"
+          value={classes}
+          onChange={(val) => setClass(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!organization}
+        />
+        <CustomSelect
+          options={allDivision}
+          label="Division"
+          value={division}
+          onChange={(val) => setDivision(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!classes}
+        />
+      </Box>
       <CustomizableTable
         noDataText={
           <>

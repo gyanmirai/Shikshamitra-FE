@@ -368,6 +368,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   { value: 'cash', label: 'Cash' },
                   { value: 'check', label: 'Check' },
                 ]}
+                disabled={isFieldsDisabled}
                 value={formik.values.paymentMethod}
                 onChange={(e) => formik.setFieldValue('paymentMethod', e)}
                 error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
