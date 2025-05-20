@@ -47,6 +47,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                     name="subjectName"
                     size="small"
                     value={formik.values.subjectName}
+                    placeholder="Enter Subject Name"
                     onChange={formik.handleChange}
                     error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                     helperText={formik.touched.subjectName && formik.errors.subjectName}

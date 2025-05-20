@@ -230,6 +230,7 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     value={formik.values.className}
                     labelKey="name"
                     valueKey="name"
+                    placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
 
@@ -291,7 +292,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     )}
                   />
                 </ShakingTextField>
-                {/* Add Subject link */}
                 <Typography
                   variant="body2"
                   fontWeight={500}
@@ -303,12 +303,12 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     addSubjectDialog.onTrue();
                   }}
                 >
-                  Add Subject
+                  Add Subject ?
                 </Typography>
                 <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
-                  title="Add Subject"
+                  title="Add Subject ?"
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}
@@ -318,6 +318,7 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     editData={null}
                   />
                 </CustomDialog>
+                {/* Add Subject link */}
               </Grid>
 
               {/* Subject Cards Section */}
