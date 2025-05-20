@@ -22,8 +22,12 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   <CustomizableTable
     tableId="elective-subject-data-table"
     searchFieldProps={{
-      placeholder: 'Search by Title...',
-      label: 'Search by Title...',
+      placeholder: 'Search by Elective Subject Title, Subjects...',
+      label: 'Search by Elective Subject Title, Subjects...',
+      sx: {
+        maxWidth: '450px',
+        width: '100%',
+      },
     }}
     noDataText={
       <>
@@ -48,10 +52,10 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       </>
     }
     columns={[
-      { id: 'title', label: 'Title', align: 'left' },
+      { id: 'title', label: 'Elective Subject', align: 'left' },
       {
         id: 'subjects',
-        label: 'Subjects',
+        label: 'List of Subjects',
         align: 'left',
         render: (value) => (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -63,8 +67,10 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       },
       {
         id: 'subjectColor',
-        label: 'Subject Color',
+        label: 'Elective Subject Color',
         align: 'left',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Box
@@ -80,8 +86,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       },
       {
         id: 'action',
-        label: 'Actions',
-        minWidth: 80,
+        label: 'Action',
+        minWidth: 50,
         isSort: false,
         sticky: true,
         isFilter: false,

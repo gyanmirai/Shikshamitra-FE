@@ -53,9 +53,10 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                   <TextField
                     fullWidth
-                    label="Elective Title"
+                    label="Elective Subject *"
                     name="title"
                     size="small"
+                    placeholder="Enter Elective Subject"
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     error={formik.touched.title && Boolean(formik.errors.title)}
@@ -124,7 +125,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
                   <MuiColorInput
-                    placeholder="Subject Color"
+                    placeholder="Elective Subject Color"
                     size="small"
                     format="hex"
                     value={formik.values.subjectColor}

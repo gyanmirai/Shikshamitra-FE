@@ -60,8 +60,6 @@ const WeeklyPlanningForCatering = () => {
   const readOnlyDialog = useBoolean();
   // State to store the meal data for read-only view in dialog
   const [readOnlyData, setReadOnlyData] = useState<IMealFormValues | null>(null);
-  const [hostel, setHostel] = useState('');
-
   // Selected hostel state
 
   // Opens the read-only dialog with the selected meal data

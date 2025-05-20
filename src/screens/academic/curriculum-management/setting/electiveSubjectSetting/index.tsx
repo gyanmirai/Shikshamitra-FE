@@ -21,8 +21,11 @@ import type { IElectiveSubject } from './type';
 
 const ElectiveSubjectSetting = (props: TabComponentType) => {
   // Dialog control hooks
+  // Controls visibility of add/edit elective subject dialog
   const addDialog = useBoolean();
+  // Controls visibility of delete confirmation dialog
   const deleteDialog = useBoolean();
+  // Controls visibility of main dialog window
   const [open, setOpen] = useState(false);
 
   // Redux state and dispatch

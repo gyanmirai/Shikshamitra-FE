@@ -4,8 +4,10 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Button } from '@mui/material';
 import { RestartAlt } from '@mui/icons-material';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { Box, Button, Checkbox, TextField, Autocomplete } from '@mui/material';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -40,6 +42,7 @@ const Teacher = ({
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // State to store the table data with division and subject-teacher mappings
   const [tableData, setTableData] = useState([
     {
       division: 'A',
@@ -67,6 +70,14 @@ const Teacher = ({
     },
   ]);
 
+  // Array of available teachers with their IDs and names for selection
+  const teacherOptions = [
+    { id: '1', name: 'Teacher 1' },
+    { id: '2', name: 'Teacher 2' },
+    { id: '3', name: 'Teacher 3' },
+    { id: '4', name: 'Teacher 4' },
+    { id: '5', name: 'Teacher 5' },
+  ];
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
 
@@ -132,33 +143,6 @@ const Teacher = ({
       }),
     [teacherData, classData?.items, selectedSubject, classes]
   );
-
-  /**
-   * Handles the opening of send notification dialog
-   * @description Toggles the notification dialog visibility state to true
-   * if it's currently not visible
-   */
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
-
-  const handleTeacherChange = (div: string, subject: string, newTeacher: String) => {
-    setTableData((prev) =>
-      prev.map((row) =>
-        row.division === div
-          ? {
-              ...row,
-              subjects: {
-                ...row.subjects,
-                [subject]: newTeacher,
-              },
-            }
-          : row
-      )
-    );
-  };
 
   return (
     <Box>
@@ -229,16 +213,28 @@ const Teacher = ({
             isFilter: false,
             isSort: false,
             render: (value: any, row: any) => (
-              <CustomSelect
-                size="small"
-                value={row.subjects?.[subject] || ''}
-                options={[
-                  { label: 'Mr. Sharma', value: 'teacher1' },
-                  { label: 'Ms. Patel', value: 'teacher2' },
-                  { label: 'Mr. Khan', value: 'teacher3' },
-                ]}
-                onChange={(val) => handleTeacherChange(row.division, subject, val as string)}
-                placeholder="Assign Teacher"
+              <Autocomplete
+                multiple
+                options={teacherOptions}
+                disableCloseOnSelect
+                getOptionLabel={(option) => option.name}
+                value={teacherOptions.filter((opt) => division.includes(opt.id))}
+                onChange={(_, newValue) => {}}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon />}
+                      checkedIcon={<CheckBoxIcon />}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.name}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField {...params} label="Elective Subject" variant="outlined" size="small" />
+                )}
+                sx={{ maxWidth: '600px', width: '100%' }}
               />
             ),
           })),
