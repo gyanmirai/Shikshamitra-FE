@@ -1160,9 +1160,9 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+3',
             },
             {
-              title: 'Student Fee Management',
-              path: '/finance/fee-management/student-fee-management',
-              _action: 'student-fee-management',
+              title: 'Student Fee Structure',
+              path: '/finance/fee-management/student-fee-strcuture',
+              _action: 'student-fee-strcuture',
               shortcutKey: 'Alt+F+4',
               shortcutKeyName: 'Alt+F+4',
             },
@@ -1272,7 +1272,7 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+S+3',
             },
             {
-              title: 'Create Receipt',
+              title: 'Receipt Templates',
               path: '/finance/settings/create-receipt',
               _action: 'create-receipt',
               shortcutKey: 'Alt+F+S+4',
