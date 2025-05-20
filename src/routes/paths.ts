@@ -18,3 +18,4 @@ export const transportPath = '/transport';
 export const communicationPath = '/communication';
 export const hostelPath = '/hostel';
 export const resourceManagementPath = '/resourceManagement';
+export const securityGuardPath = '/security-guard';

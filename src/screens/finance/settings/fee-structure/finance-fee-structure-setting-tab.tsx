@@ -320,10 +320,6 @@ const FinanceFeeStructureSettingTab = () => {
           <CustomizableTable
             tableId="finance-fee-structure-setting-tab"
             columns={[
-              {
-                id: 'bookRecipt',
-                label: 'Receipt Book',
-              },
               { id: 'applicableGrade', label: 'Applicable Class' },
 
               {
@@ -355,9 +351,6 @@ const FinanceFeeStructureSettingTab = () => {
                         : total,
                     0
                   );
-
-                  console.log('Row data:', row);
-                  console.log('Total amount:', totalAmount);
 
                   return (
                     <Typography sx={{ fontSize: '12px' }}>

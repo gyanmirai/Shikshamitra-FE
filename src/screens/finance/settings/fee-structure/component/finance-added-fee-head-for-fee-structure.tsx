@@ -66,7 +66,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
         isSort: false,
         render(value, row) {
           return (
-            <Typography sx={{ fontSize: '12px' }}>{formatNumber('INR', row.grossFee)}</Typography>
+            <Typography sx={{ fontSize: '12px' }}>{formatNumber(row.grossFee, 'INR')}</Typography>
           );
         },
       },
@@ -77,7 +77,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
         isSort: false,
         render(value, row) {
           return (
-            <Typography sx={{ fontSize: '12px' }}>{formatNumber('INR', row.payableFee)}</Typography>
+            <Typography sx={{ fontSize: '12px' }}>{formatNumber(row.payableFee, 'INR')}</Typography>
           );
         },
       },
@@ -89,7 +89,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>
-              {formatNumber('INR', row.discountAmount)}
+              {formatNumber(row.discountAmount, 'INR')}
             </Typography>
           );
         },
@@ -145,7 +145,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
         render(value, row) {
           return (
             <Typography sx={{ fontSize: '12px' }}>
-              {formatNumber('INR', row.lateFeeChargesAmount)}
+              {formatNumber(row.lateFeeChargesAmount, 'INR')}
             </Typography>
           );
         },
