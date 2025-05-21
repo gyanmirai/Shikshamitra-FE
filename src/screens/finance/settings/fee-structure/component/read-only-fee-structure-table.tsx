@@ -1,8 +1,10 @@
+'use client';
+
 import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React from 'react';
 
-import { Switch, Typography } from '@mui/material';
+import { Switch, Tooltip, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -113,6 +115,35 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
             {` ${row.lateFeeChargesType} `}
           </Typography>
+        );
+      },
+    },
+    {
+      id: 'discountReason',
+      label: 'Discount Reason',
+      filterType: 'string',
+      render(value: any, row: any) {
+        const fullText = row.discountReason || '';
+        const wordLimit = 15;
+        const words = fullText.trim().split(' ');
+        const shortText =
+          words.length > wordLimit ? `${words.slice(0, wordLimit).join(' ')}...` : fullText;
+
+        return (
+          <Tooltip title={fullText} arrow placement="top">
+            <Typography
+              sx={{
+                fontSize: '12px',
+                textTransform: 'capitalize',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '200px',
+              }}
+            >
+              {shortText}
+            </Typography>
+          </Tooltip>
         );
       },
     },

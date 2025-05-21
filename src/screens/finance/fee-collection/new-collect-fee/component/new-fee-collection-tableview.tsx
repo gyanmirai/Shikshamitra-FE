@@ -391,8 +391,12 @@ const FeeCollectionTable = () => {
           open={receiptViewDialog.value}
         >
           <FeeReceiptPDF
-            from={{ name: 'ABC School', address: 'Main Street, City', branch: 'North Branch' }}
-            to={{ name: 'John Doe', className: '5A', rollNo: '23' }}
+            from={{
+              name: 'Deep Darshan Vidhya Sankool',
+              address: 'Near Madhuvan Circle',
+              branch: 'Dindoli - 560078',
+            }}
+            to={{ name: 'Vishal Patel', className: '5-A', rollNo: '23' }}
             selectedFees={receiptData}
           />
         </CustomDialog>

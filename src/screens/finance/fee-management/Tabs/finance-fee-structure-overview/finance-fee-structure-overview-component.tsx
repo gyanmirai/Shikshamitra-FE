@@ -10,7 +10,6 @@ import React, { useState, useEffect } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -71,11 +70,6 @@ const FinanceFeeStructureOverviewComponent = () => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
-  const [searchParams, setSearchParams] = useSearchParam({
-    isSearch: '',
-    student: '',
-    searchValue: '',
-  });
   return (
     <>
       <CustomBreadcrumbs
@@ -227,11 +221,11 @@ const FinanceFeeStructureOverviewComponent = () => {
         maxWidth="xl"
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-            <Typography variant="h5">Detail Fee Structure For 1st standard</Typography>
+            <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
             <Tooltip
               arrow
               placement="right"
-              title="This is the detailed fee structure for 1st standard, applicable to all students of that class except for specific scenarios."
+              title="This is the detailed fee structure for class 1, applicable to all students of that class except for specific scenarios."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>

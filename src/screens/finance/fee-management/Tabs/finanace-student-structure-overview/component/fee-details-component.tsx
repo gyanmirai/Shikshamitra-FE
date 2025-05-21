@@ -3,20 +3,11 @@ import type { PaymentDate } from 'src/screens/student/studentProfile/finance-pro
 
 import React from 'react';
 
-import {
-  Box,
-  MenuList,
-  MenuItem,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { StudentForFeeStructure } from '../data/student-fee-structure-interface';
@@ -86,30 +77,30 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
     },
-    {
-      id: 'Action',
-      label: 'Action',
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      // align: 'right',
-      render: (_: unknown, row: { Pending: number }) => (
-        <ThreeDotsActions
-          placement="right-top"
-          actions={({ popover }) => (
-            <MenuList>
-              <MenuItem>
-                <Iconify
-                  icon={row.Pending > 0 ? 'hugeicons:payment-02' : 'noto:receipt'}
-                  sx={{ height: '16px', width: '16px' }}
-                />
-                {row.Pending > 0 ? 'Make Payment' : 'View Receipt'}
-              </MenuItem>
-            </MenuList>
-          )}
-        />
-      ),
-    },
+    // {
+    //   id: 'Action',
+    //   label: 'Action',
+    //   isSort: false,
+    //   isFilter: false,
+    //   sticky: true,
+    //   // align: 'right',
+    //   render: (_: unknown, row: { Pending: number }) => (
+    //     <ThreeDotsActions
+    //       placement="right-top"
+    //       actions={({ popover }) => (
+    //         <MenuList>
+    //           <MenuItem>
+    //             <Iconify
+    //               icon={row.Pending > 0 ? 'hugeicons:payment-02' : 'noto:receipt'}
+    //               sx={{ height: '16px', width: '16px' }}
+    //             />
+    //             {row.Pending > 0 ? 'Make Payment' : 'View Receipt'}
+    //           </MenuItem>
+    //         </MenuList>
+    //       )}
+    //     />
+    //   ),
+    // },
   ];
 
   const getTableData = (

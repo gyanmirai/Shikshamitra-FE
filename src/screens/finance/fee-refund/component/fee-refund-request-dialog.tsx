@@ -5,17 +5,15 @@ import type { RootState } from 'src/redux/store';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
+import { Box, Grid, Card, TextField, Autocomplete } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { feeRefundValidationSchema } from './validationSchema';
@@ -66,22 +64,6 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
 
   return (
     <Box display="flex" flexDirection="column" gap={2} height="100%">
-      <CustomBreadcrumbs
-        heading="Fee Refund"
-        links={[{ name: 'Finance' }, { name: 'Fee Refund' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="eva:arrow-back-fill" />}
-            onClick={handleCloseDialog}
-          >
-            Back
-          </Button>
-        }
-      />
-
       <form
         onSubmit={formik.handleSubmit}
         style={{ flex: 1, display: 'flex', flexDirection: 'column' }}

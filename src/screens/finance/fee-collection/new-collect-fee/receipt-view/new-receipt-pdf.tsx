@@ -42,10 +42,50 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 10,
   },
+  container: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  leftColumn: { flex: 1, marginRight: 10 },
+  rightColumn: { flex: 1, alignItems: 'flex-end' },
+  totalText: { fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
+  inWords: { fontSize: 12, marginBottom: 10 },
+  separator: { fontSize: 12, marginBottom: 5 },
+  receiverSign: { fontSize: 12, fontStyle: 'italic' },
 });
 
+const numberToWords = (num: number): string => {
+  const a = [
+    '',
+    'One',
+    'Two',
+    'Three',
+    'Four',
+    'Five',
+    'Six',
+    'Seven',
+    'Eight',
+    'Nine',
+    'Ten',
+    'Eleven',
+    'Twelve',
+    'Thirteen',
+    'Fourteen',
+    'Fifteen',
+    'Sixteen',
+    'Seventeen',
+    'Eighteen',
+    'Nineteen',
+  ];
+  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  if (num < 20) return a[num];
+  if (num < 100) return b[Math.floor(num / 10)] + (num % 10 !== 0 ? ` ${a[num % 10]}` : '');
+  if (num < 1000)
+    return `${a[Math.floor(num / 100)]} Hundred${num % 100 !== 0 ? ` and ${numberToWords(num % 100)}` : ''}`;
+  if (num < 100000)
+    return `${numberToWords(Math.floor(num / 1000))} Thousand${num % 1000 !== 0 ? ` ${numberToWords(num % 1000)}` : ''}`;
+  return num.toString();
+};
+
 const FeeReceiptPDF: React.FC<IFeeReceiptPDFProps> = ({ from, to, selectedFees }) => {
-  // Function to get payment details based on payment mode
   const getPaymentDetail = (row: any) => {
     if (row.paymentMode === 'Cheque') {
       return `Cheque No: ${row.chequeNo.toUpperCase() || '-'} / Bank: ${row.bank.toUpperCase() || '-'}`;
@@ -56,68 +96,84 @@ const FeeReceiptPDF: React.FC<IFeeReceiptPDFProps> = ({ from, to, selectedFees }
     return '-';
   };
 
-  // Calculate total received amount from all selected fees
   const totalReceived = selectedFees.reduce((sum, row) => sum + (row.receivedAmount || 0), 0);
+
   return (
     <PDFViewer width="100%" height="1000px">
       <Document>
         <Page size="A3" style={styles.page}>
-          {/* Header */}
-          <View style={styles.grid}>
-            <View style={styles.column}>
-              <Text style={styles.title}>From</Text>
-              <Text style={styles.typography}>{from.name}</Text>
-              <Text style={styles.typography}>{from.address}</Text>
-              <Text style={styles.typography}>{from.branch}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text style={styles.title}>To</Text>
-              <Text style={styles.typography}>
-                <Text style={{ fontWeight: 'bold' }}>Name: </Text>
-                {to.name}
-              </Text>
-              <Text style={styles.typography}>
-                <Text style={{ fontWeight: 'bold' }}>Class: </Text>
-                {to.className}
-              </Text>
-              <Text style={styles.typography}>
-                <Text style={{ fontWeight: 'bold' }}>Roll No: </Text>
-                {to.rollNo}
-              </Text>
-            </View>
-          </View>
-
-          {/* Payment Table */}
-          <View style={styles.footer}>
-            <Text style={styles.title}>Payment Breakdown</Text>
-
-            {/* Table Header */}
-            <View style={[styles.row, { fontWeight: 'bold', borderBottom: 1, paddingBottom: 4 }]}>
-              <Text style={[styles.cell, { flex: 2 }]}>Fee Head</Text>
-              <Text style={styles.cell}>Month</Text>
-              <Text style={styles.cell}>Due</Text>
-              <Text style={styles.cell}>Received</Text>
-              <Text style={[styles.cell, { flex: 1.5 }]}>Mode</Text>
-              <Text style={[styles.cell, { flex: 2 }]}>Details</Text>
-            </View>
-
-            {/* Table Rows */}
-            {selectedFees.map((row, index) => (
-              <View style={styles.row} key={index}>
-                <Text style={[styles.cell, { flex: 2 }]}>{row.feeHead}</Text>
-                <Text style={styles.cell}>{row.month}</Text>
-                <Text style={styles.cell}>{row.dueAmount}</Text>
-                <Text style={styles.cell}>{row.receivedAmount}</Text>
-                <Text style={[styles.cell, { flex: 1.5 }]}>{row.paymentMode}</Text>
-                <Text style={[styles.cell, { flex: 2 }]}>{getPaymentDetail(row)}</Text>
+          <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View style={styles.grid}>
+              <View style={styles.column}>
+                <Text style={styles.title}>From</Text>
+                <Text style={styles.typography}>{from.name}</Text>
+                <Text style={styles.typography}>{from.address}</Text>
+                <Text style={styles.typography}>{from.branch}</Text>
               </View>
-            ))}
+              <View style={styles.column}>
+                <Text style={styles.title}>To</Text>
+                <Text style={styles.typography}>
+                  <Text style={{ fontWeight: 'bold' }}>Name: </Text>
+                  {to.name}
+                </Text>
+                <Text style={styles.typography}>
+                  <Text style={{ fontWeight: 'bold' }}>Class: </Text>
+                  {to.className}
+                </Text>
+                <Text style={styles.typography}>
+                  <Text style={{ fontWeight: 'bold' }}>Roll No: </Text>
+                  {to.rollNo}
+                </Text>
+              </View>
+            </View>
 
-            {/* Total */}
-            <View style={[styles.row, { marginTop: 10 }]}>
+            {/* Payment Table */}
+            <View style={styles.footer}>
+              {/* <Text style={styles.title}>Payment Breakdown</Text> */}
+
+              {/* Table Header */}
+              <View style={[styles.row, { fontWeight: 'bold', borderBottom: 1, paddingBottom: 4 }]}>
+                <Text style={[styles.cell, { flex: 2 }]}>Fee Head</Text>
+                <Text style={styles.cell}>Month</Text>
+                <Text style={styles.cell}>Due</Text>
+                <Text style={styles.cell}>Received</Text>
+                <Text style={[styles.cell, { flex: 1.5 }]}>Mode</Text>
+                <Text style={[styles.cell, { flex: 2 }]}>Details</Text>
+              </View>
+
+              {/* Table Rows */}
+              {selectedFees.map((row, index) => (
+                <View style={styles.row} key={index}>
+                  <Text style={[styles.cell, { flex: 2 }]}>{row.feeHead}</Text>
+                  <Text style={styles.cell}>{row.month}</Text>
+                  <Text style={styles.cell}>{row.dueAmount}</Text>
+                  <Text style={styles.cell}>{row.receivedAmount}</Text>
+                  <Text style={[styles.cell, { flex: 1.5 }]}>{row.paymentMode}</Text>
+                  <Text style={[styles.cell, { flex: 2 }]}>{getPaymentDetail(row)}</Text>
+                </View>
+              ))}
+
+              {/* Total */}
+              {/* <View style={[styles.row, { marginTop: 10 }]}>
               <Text style={[styles.typography, { fontWeight: 'bold' }]}>
                 Total Received: ₹{totalReceived}
               </Text>
+            </View> */}
+            </View>
+          </View>
+          {/* Footer Section at Bottom */}
+          <View style={styles.container}>
+            <View style={styles.rightColumn}>
+              <Text style={styles.totalText}>
+                <Text style={{ fontWeight: 'bold' }}>Total Paid: </Text>
+                {totalReceived}
+              </Text>
+              <Text style={styles.inWords}>
+                (In Words: {numberToWords(totalReceived)} Rupees Only)
+              </Text>
+              <Text style={styles.separator}>_________________________</Text>
+              <Text style={styles.receiverSign}>Receiver Sign</Text>
             </View>
           </View>
         </Page>

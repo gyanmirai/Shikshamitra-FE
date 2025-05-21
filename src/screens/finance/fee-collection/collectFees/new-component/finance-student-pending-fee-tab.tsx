@@ -2,7 +2,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -14,8 +14,6 @@ import {
 } from 'src/enums/finance-pending-fee-status';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const FinanceStudentPendingFeeTab = () => (
@@ -62,31 +60,31 @@ const FinanceStudentPendingFeeTab = () => (
             );
           },
         },
-        {
-          id: 'action',
-          label: 'Action',
-          isFilter: false,
-          isSort: false,
-          align: 'right',
-          sticky: true,
-          render: (data, popover) => (
-            <ThreeDotsActions
-              placement="right-top"
-              actions={() => (
-                <MenuList>
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                    }}
-                  >
-                    <Iconify icon="mdi:check" />
-                    Mark As Paid
-                  </MenuItem>
-                </MenuList>
-              )}
-            />
-          ),
-        },
+        // {
+        //   id: 'action',
+        //   label: 'Action',
+        //   isFilter: false,
+        //   isSort: false,
+        //   align: 'right',
+        //   sticky: true,
+        //   render: (data, popover) => (
+        //     <ThreeDotsActions
+        //       placement="right-top"
+        //       actions={() => (
+        //         <MenuList>
+        //           <MenuItem
+        //             onClick={() => {
+        //               popover.onClose();
+        //             }}
+        //           >
+        //             <Iconify icon="mdi:check" />
+        //             Mark As Paid
+        //           </MenuItem>
+        //         </MenuList>
+        //       )}
+        //     />
+        //   ),
+        // },
       ]}
       data={studentPendingFeeData}
     />

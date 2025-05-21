@@ -47,6 +47,7 @@ export interface IFeeItem {
   lateFeeChargesType: 'fixed' | 'perDay';
   lateFeeChargesAmount: string;
   isActive: boolean;
+  discountReason: string;
 }
 
 export interface IEditableFeeStructureTableProps {

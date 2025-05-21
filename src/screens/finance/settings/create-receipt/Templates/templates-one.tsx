@@ -11,6 +11,9 @@ interface ReceiptItem {
   feeHead: string;
   feeHeadMonth: string;
   amount: number;
+  received: number;
+  paymentMode: string;
+  details: string;
 }
 
 interface ReceiptData {
@@ -51,13 +54,38 @@ const defaultData: ReceiptData = {
   ref: '09788nhgh679jlk',
   date: '06/08/2025',
   pendingFees: 900,
-  total: 900,
+  total: 1600,
   tableData: [
-    { feeHead: 'Library Fee', amount: 1000, feeHeadMonth: 'March' },
-    { feeHead: 'Sports Fee', amount: 800, feeHeadMonth: 'March' },
+    {
+      feeHead: 'Library',
+      amount: 1000,
+      feeHeadMonth: 'March',
+      received: 800,
+      paymentMode: 'Cheque',
+      details: 'Cheque No: 1234567890 , Bank: HDFC',
+    },
+    {
+      feeHead: 'Sports',
+      amount: 800,
+      feeHeadMonth: 'March',
+      received: 800,
+      paymentMode: 'Cash',
+      details: '-',
+    },
   ],
 };
 
+/**
+ * TemplateOne component renders a receipt template with customizable details.
+ *
+ * @component
+ * @param {Object} props - Component properties
+ * @param {string} props.selectedTemplate - Currently selected template identifier
+ * @param {Function} props.onSelectTemplate - Callback function for template selection
+ * @param {ReceiptData} [props.data] - Optional receipt data to populate the template
+ *
+ * @returns {React.ReactElement} A rendered receipt template with radio selection
+ */
 const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
   const receipt = data || defaultData;
 
@@ -124,55 +152,24 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
 
           <Divider sx={{ mb: 1 }} />
 
-          {/* Payment Info */}
-          <Box
-            display="flex"
-            flexDirection="column"
-            justifyContent="space-between"
-            pb="10px"
-            sx={{ fontSize: '0.75rem' }}
-          >
-            <Box display="flex" justifyContent="space-between">
-              <Typography fontSize="10px">
-                <strong>Payment Mode :</strong> {receipt.paymentMode}
-              </Typography>
-              <Typography fontSize="10px">
-                <strong>Bank:</strong> {receipt.bank}
-              </Typography>
-            </Box>
-
-            <Box display="flex" justifyContent="space-between">
-              <Typography fontSize="10px">
-                <strong>Ref:</strong> {receipt.ref}
-              </Typography>
-              <Typography fontSize="10px">
-                <strong>Date:</strong> {receipt.date}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ mb: 1 }} />
-
           {/* Receipt Table */}
           <ReceiptTable
             columns={[
               { id: 'feeHead', label: 'Fee Head' },
-              { id: 'feeHeadMonth', label: 'Paid For' },
-              { id: 'amount', label: 'Amount' },
+              { id: 'feeHeadMonth', label: 'Month' },
+              { id: 'amount', label: 'Due' },
+              { id: 'received', label: 'Received' },
+              { id: 'paymentMode', label: 'mode' },
+              { id: 'details', label: 'etails' },
             ]}
             data={receipt.tableData}
           />
 
           {/* Footer Totals */}
-          <Box mt={7} display="flex" justifyContent="space-between" sx={{ fontSize: '0.65rem' }}>
-            <Box>
-              <Typography fontSize="10px">
-                <strong>Pending Fees:</strong> {formatNumber(receipt.pendingFees, 'INR')}
-              </Typography>
-            </Box>
+          <Box mt={7} display="flex" justifyContent="flex-end" sx={{ fontSize: '0.65rem' }}>
             <Box sx={{ textAlign: 'right', fontSize: '10px' }}>
               <Typography fontSize="10px">
-                <strong>Total:</strong> {formatNumber(receipt.total, 'INR')}
+                <strong>Total Paid:</strong> {formatNumber(receipt.total, 'INR')}
               </Typography>
               <Typography sx={{ pb: '10px', fontSize: '10px' }}>
                 (In Words: {numberToWords(receipt.total)} Rupees Only)

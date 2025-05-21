@@ -36,6 +36,7 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
     <CustomDialog maxWidth="md" title="Payment History" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
         <CustomizableTable
+          noDataText="No payment history found. It looks like no payments have been made yet."
           tableId="financeStudentPaymentHistory"
           isFilter={false}
           isScrollbar={false}
@@ -48,6 +49,7 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
             {
               id: 'amount',
               label: 'Amount',
+              filterType: 'formattedNumber',
               render(value, row) {
                 return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
               },

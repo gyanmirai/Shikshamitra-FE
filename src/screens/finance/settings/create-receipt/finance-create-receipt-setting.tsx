@@ -5,12 +5,8 @@ import React, { useState } from 'react';
 import { Box, Grid, Button, Typography } from '@mui/material';
 
 import TemplateOne from './Templates/templates-one';
-import TemplateTwo from './Templates/templates-two';
 
-const templates = [
-  { id: 'TemplateOne', component: TemplateOne },
-  { id: 'TemplateTwo', component: TemplateTwo },
-];
+const templates = [{ id: 'TemplateOne', component: TemplateOne }];
 
 const FinanceCreateReceiptSetting = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('TemplateOne');

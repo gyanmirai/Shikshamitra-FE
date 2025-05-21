@@ -133,6 +133,7 @@ const FinanceReceiptBookSetting = () => {
                 isSort: false,
                 sticky: true,
                 align: 'right',
+                minWidth: 100,
                 render: (value, row: any) => (
                   <ThreeDotsActions
                     showThreeDots={false}
