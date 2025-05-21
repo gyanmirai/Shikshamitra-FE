@@ -234,52 +234,72 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 Please select at least one term to see fee details.
               </Typography>
             ) : (
-              Object.entries(groupedFeesBySection).map(([feeHead, fees]) => (
-                <Box key={feeHead} sx={{ mb: 4, border: '1px solid #ccc', borderRadius: 1, p: 2 }}>
-                  <Box display="flex" gap={37} alignItems="center">
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                      {feeHead} Fees
-                    </Typography>
-                    <Typography variant="h6" sx={{ mb: 2 }}>
-                      Due Amount
-                    </Typography>
-                  </Box>
-                  {fees.map((fee: any) => {
-                    const { key } = fee;
-                    return (
-                      <Grid container spacing={2} key={key} alignItems="center" sx={{ mb: 1 }}>
-                        <Grid item xs={3}>
-                          <Typography>{fee.month}</Typography>
-                        </Grid>
-                        {/* <Grid item xs={3}>
-                          <Typography>{formatNumber(fee.amount, "INR")}</Typography>
-                        </Grid> */}
-                        <Grid item xs={3}>
-                          <Typography>{formatNumber(fee.pending, 'INR')}</Typography>
-                        </Grid>
-                        {fee.pending > 0 && (
+              Object.entries(groupedFeesBySection).map(([feeHead, fees]) => {
+                const totalPending = fees.reduce((sum, fee) => sum + fee.pending, 0);
+                const totalReceived = fees.reduce(
+                  (sum, fee) => sum + Number(values.receivedAmountsByFeeItem[fee.key] || 0),
+                  0
+                );
+
+                return (
+                  <Box
+                    key={feeHead}
+                    sx={{ mb: 4, border: '1px solid #ccc', borderRadius: 1, p: 2 }}
+                  >
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{ mb: 2 }}
+                    >
+                      <Typography variant="h6">{feeHead} Fees</Typography>
+                      <Typography variant="h6">Due Amount</Typography>
+                    </Box>
+
+                    {fees.map((fee: any) => {
+                      const { key } = fee;
+                      return (
+                        <Grid container spacing={2} key={key} alignItems="center" sx={{ mb: 1 }}>
                           <Grid item xs={3}>
-                            <TextField
-                              fullWidth
-                              label="Received Amount"
-                              size="small"
-                              type="number"
-                              inputProps={{ min: 0, max: fee.amount }}
-                              value={values.receivedAmountsByFeeItem[key] || ''}
-                              onChange={(e) =>
-                                setFieldValue('receivedAmountsByFeeItem', {
-                                  ...values.receivedAmountsByFeeItem,
-                                  [key]: e.target.value,
-                                })
-                              }
-                            />
+                            <Typography>{fee.month}</Typography>
                           </Grid>
-                        )}
-                      </Grid>
-                    );
-                  })}
-                </Box>
-              ))
+                          <Grid item xs={3}>
+                            <Typography>{formatNumber(fee.pending, 'INR')}</Typography>
+                          </Grid>
+                          {fee.pending > 0 && (
+                            <Grid item xs={3}>
+                              <TextField
+                                fullWidth
+                                label="Received Amount"
+                                size="small"
+                                type="number"
+                                inputProps={{ min: 0, max: fee.pending }}
+                                value={values.receivedAmountsByFeeItem[key] || ''}
+                                onChange={(e) =>
+                                  setFieldValue('receivedAmountsByFeeItem', {
+                                    ...values.receivedAmountsByFeeItem,
+                                    [key]: e.target.value,
+                                  })
+                                }
+                              />
+                            </Grid>
+                          )}
+                        </Grid>
+                      );
+                    })}
+
+                    {/* Totals Row */}
+                    <Box display="flex" justifyContent="flex-end" sx={{ mt: 2 }}>
+                      <Typography variant="subtitle1" sx={{ mr: 4 }}>
+                        <strong>Total Due:</strong> {formatNumber(totalPending, 'INR')}
+                      </Typography>
+                      <Typography variant="subtitle1">
+                        <strong>Total Received:</strong> {formatNumber(totalReceived, 'INR')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              })
             )}
 
             {/* Payment Mode Select */}

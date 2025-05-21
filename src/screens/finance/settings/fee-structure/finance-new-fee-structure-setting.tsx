@@ -163,6 +163,16 @@ const FinanceNewFeeStructureSetting = () => {
                 },
               },
               {
+                id: 'isLocked',
+                label: 'Locked',
+                isFilter: false,
+                isSort: false,
+                render(statusToggle) {
+                  return <Switch value={statusToggle} />;
+                },
+              },
+
+              {
                 id: 'action',
                 label: 'Action',
                 isFilter: false,
@@ -174,6 +184,7 @@ const FinanceNewFeeStructureSetting = () => {
                     <ThreeDotsActions
                       showThreeDots={false}
                       showDeleteIcon
+                      // showViewIcon
                       handleDeleteClick={() => {
                         dialogForDeleteConfirmation.onTrue();
 
@@ -186,6 +197,11 @@ const FinanceNewFeeStructureSetting = () => {
                         dialog.onFalse();
                         financeEditFeeStructureDialog.onTrue();
                       }}
+                      // handleViewClick={()=>{
+                      //    setSelectedEntry(row);
+                      //    dialog.onFalse();
+                      //      financeEditFeeStructureDialog.onTrue();
+                      // }}
                     />
                   );
                 },
@@ -210,16 +226,6 @@ const FinanceNewFeeStructureSetting = () => {
             </LoadingButton>
           }
         />
-
-        // <DeleteConfirmationDialog
-        // open={dialogForDeleteConfirmation.value}
-        // onClose={() => {
-        //   dialogForDeleteConfirmation.onFalse();
-        // }}
-        //   onConfirm={() => {}}
-        //   title="Delete Item"
-        //   description="Are you sure you want to delete this item? This action cannot be undone."
-        // />
       )}
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
