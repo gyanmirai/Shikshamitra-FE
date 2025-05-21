@@ -1,28 +1,28 @@
-import {
-  Box,
-  Card,
-  Grid,
-  Link,
-  Paper,
-  Tooltip,
-  Typography,
-  IconButton,
-  CardContent,
-} from '@mui/material';
+import { useState } from 'react';
+
+import { Box, Card, Grid, Link, Tooltip, Typography, IconButton, CardContent } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
+
+import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments.json';
 
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
+
+import type { ISubject } from '../type';
 
 // Documents panel content
-const SubjectDocument = ({ subject }: { subject: any }) => (
-  <Card sx={{ height: '100%' }}>
-    <CardContent>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        {subject?.subjects?.[0]?.documents && subject?.subjects?.[0]?.documents.length > 0 ? (
+const SubjectDocument = ({ subject }: { subject: ISubject | null }) => {
+  const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
+  console.log('subjectDocuments--', subjectDocuments);
+
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ mb: 2 }}>
           <Grid container spacing={2}>
-            {subject.subjects[0].documents.map((doc: any, index: number) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Paper
+            {subjectDocuments.documents?.map((doc: any, index: number) => (
+              <Grid item xs={12} key={index}>
+                <Card
                   variant="outlined"
                   sx={{
                     p: 2,
@@ -52,7 +52,8 @@ const SubjectDocument = ({ subject }: { subject: any }) => (
                                 : 'mdi:file-outline'
                       }
                       sx={{
-                        fontSize: 40,
+                        height: 40,
+                        width: 40,
                         color: doc.name?.endsWith('.pdf')
                           ? '#f44336'
                           : doc.name?.endsWith('.doc') || doc.name?.endsWith('.docx')
@@ -72,85 +73,45 @@ const SubjectDocument = ({ subject }: { subject: any }) => (
                         {doc.size || 'Unknown size'} • {doc.uploadDate || 'Unknown date'}
                       </Typography>
                     </Box>
-                  </Box>
-
-                  <Box
-                    className="document-actions"
-                    sx={{
-                      mt: 'auto',
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      opacity: 0.4,
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    <Tooltip title="Preview">
-                      <IconButton size="small">
-                        <Iconify icon="mdi:eye" />
-                      </IconButton>
-                    </Tooltip>
-                    {doc.url && (
-                      <Tooltip title="Download">
-                        <IconButton
-                          component={Link}
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener"
-                          download
-                          size="small"
-                        >
-                          <Iconify icon="mdi:download" />
+                    <Box
+                      className="document-actions"
+                      sx={{
+                        mt: 'auto',
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        opacity: 0.4,
+                        transition: 'opacity 0.2s ease',
+                      }}
+                    >
+                      <Tooltip title="Preview">
+                        <IconButton size="small">
+                          <Iconify icon={GlobalIcons.eye} />
                         </IconButton>
                       </Tooltip>
-                    )}
+                      {doc.url && (
+                        <Tooltip title="Download">
+                          <IconButton
+                            component={Link}
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener"
+                            download
+                            size="small"
+                          >
+                            <Iconify icon={GlobalIcons.download} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   </Box>
-                </Paper>
+                </Card>
               </Grid>
             ))}
           </Grid>
-        ) : (
-          <Box sx={{ justifyItems: 'center' }}>
-            <Iconify
-              icon="mdi:file-document-off"
-              sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }}
-            />
-            <Typography variant="subtitle1" color="text.secondary">
-              No documents attached
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Upload course materials, syllabi, or other relevant documents
-            </Typography>
-            <UploadBox
-              onDrop={() => {}}
-              placeholder={
-                <Box
-                  sx={{
-                    gap: 0.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'text.disabled',
-                    flexDirection: 'column',
-                    minHeight: 120,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Iconify icon="eva:cloud-upload-fill" width={40} />
-                  <Typography variant="body2">Upload Document</Typography>
-                </Box>
-              }
-              sx={{
-                height: '100%',
-                width: '100%',
-                borderRadius: 1.5,
-                minHeight: 120,
-                bgcolor: 'grey.50',
-              }}
-            />
-          </Box>
-        )}
-      </Box>
-    </CardContent>
-  </Card>
-);
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default SubjectDocument;

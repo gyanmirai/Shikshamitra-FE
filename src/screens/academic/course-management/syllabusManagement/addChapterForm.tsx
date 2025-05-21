@@ -18,6 +18,8 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -89,7 +91,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 >
                   <TextField
                     fullWidth
-                    label="Chapter Number"
+                    label="Chapter Number *"
+                    placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
                     value={formik.values.chapterNo}
@@ -107,7 +110,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 >
                   <TextField
                     fullWidth
-                    label="Chapter Name"
+                    label="Chapter Name  *"
+                    placeholder="Enter Chapter Name"
                     name="chapterName"
                     value={formik.values.chapterName}
                     onChange={formik.handleChange}
@@ -123,7 +127,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   error={!!(formik.touched.startTime && formik.errors.startTime) || false}
                 >
                   <DatePicker
-                    label="Chapter StartTime"
+                    label="Chapter StartTime *"
                     format="DD/MM/YYYY"
                     value={formik.values.startTime}
                     onChange={(newValue) => {
@@ -134,6 +138,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       textField: {
                         fullWidth: true,
                         size: 'small',
+                        placeholder: 'Select Start Date',
                         helperText: formik.touched.startTime && (formik.errors.startTime as string),
                         error: formik.touched.startTime && Boolean(formik.errors.startTime),
                       },
@@ -148,7 +153,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   error={!!(formik.touched.startTime && formik.errors.startTime) || false}
                 >
                   <DatePicker
-                    label="Chapter EndTime"
+                    label="Chapter EndTime *"
                     format="DD/MM/YYYY"
                     value={formik.values.endTime}
                     onChange={(newValue) => {
@@ -158,6 +163,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     slotProps={{
                       textField: {
                         size: 'small',
+                        placeholder: 'Select End Date',
                         error: !!(formik.touched.endTime && formik.errors.endTime) || false,
                         helperText: formik.touched.endTime && formik.errors.endTime,
                       },
@@ -235,8 +241,21 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           </Scrollbar>
           {/* Form Actions */}
           <DialogActions>
-            <Button startIcon={<Create />} type="submit" variant="contained">
-              {initialValues ? 'Update' : 'Create'}
+            <Button
+              variant="outlined"
+              onClick={() => {
+                onClose(null, false);
+              }}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <Button
+              startIcon={initialValues ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+              type="submit"
+              variant="contained"
+            >
+              {initialValues ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

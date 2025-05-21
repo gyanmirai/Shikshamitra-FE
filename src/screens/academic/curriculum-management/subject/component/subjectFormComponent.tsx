@@ -163,9 +163,9 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
       const newSubject = {
         id: Date.now() + Math.random(),
         name: newValue.name,
-        subjectName: newValue.name,
+        subjectName: newValue.value,
         className: formik.values.className || '',
-        subjectCode: newValue.code,
+        subjectCode: '',
         primaryTeacher: '',
         secondaryTeacher: [],
         description: '',

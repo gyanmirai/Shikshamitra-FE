@@ -7,8 +7,8 @@ import {
   Box,
   Tab,
   Tabs,
-  Chip,
   Avatar,
+  Divider,
   Accordion,
   Typography,
   AccordionSummary,
@@ -17,6 +17,7 @@ import {
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -107,24 +108,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                   <Iconify icon="mdi:atom" sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">
-                    {subject?.subjects?.[0]?.subjectName || 'Physics'}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mr: 1 }}>
-                      {subject?.subjects?.[0]?.subjectCode || 'PHY-10'}
-                    </Typography>
-                    <Chip
-                      label={subject?.subjectType || 'Elective'}
-                      size="small"
-                      variant="outlined"
-                      sx={{ mr: 1 }}
-                    />
-                    <Chip
-                      label={subject?.className || '10th Grade'}
-                      size="small"
-                      variant="outlined"
-                    />
+                  <Typography variant="h4">{subject?.subjectName}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Label color="info">Subject Type : {subject?.subjectType}</Label>
+                    <Label color="secondary">Class : {subject?.className}</Label>
                   </Box>
                 </Box>
               </Box>
@@ -132,12 +119,21 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
           </Box>
         </Box>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Box sx={{ borderColor: 'divider', mb: 2 }}>
           {subject?.subjects?.map((sub) => (
             <Accordion
               key={sub.subjectCode}
               expanded={expandedSubject === sub.subjectCode}
               onChange={handleAccordionChange(sub.subjectCode)}
+              sx={{
+                border: '1px solid #ccc',
+                borderRadius: 2,
+                boxShadow: 'none', // optional, remove default shadow
+                '&:before': {
+                  display: 'none', // remove default divider line at top
+                },
+                mb: 2, // optional margin between accordions
+              }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography variant="subtitle1" fontWeight={600}>
@@ -162,6 +158,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     />
                   ))}
                 </Tabs>
+                <Divider sx={{ mb: 1 }} />
 
                 {currentActiveComponent?.component && (
                   <currentActiveComponent.component tabs={tabs} subject={sub} />

@@ -17,6 +17,8 @@ import { Box, Card, Button, MenuItem, MenuList } from '@mui/material';
 // Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,6 +27,7 @@ import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 
 // Import custom components
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -33,6 +36,7 @@ import { AddNewChapter } from './addChapterForm';
 // Import mock data
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
+import ChapterDocuments from './components/chapterDocuments';
 
 import type { IChapter } from './type';
 
@@ -45,6 +49,7 @@ const Subjects = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
   // Custom hook for chapter dialog visibility
   const chapterDialog = useBoolean();
+  const viewDocumentDialog = useBoolean();
   const deleteDialog = useBoolean();
   // Custom hook for add chapter dialog visibility
   const addChapterDialog = useBoolean();
@@ -118,16 +123,17 @@ const Subjects = (props: TabComponentType) => {
     ? [
         // Links for form view (adding/editing chapter)
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Syllabus' },
         { name: 'Syllabus Management' },
         { name: 'Add Chapter' },
       ]
     : [
         // Links for list view (showing chapters)
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Syllabus' },
         { name: 'Syllabus Management' },
       ];
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addChapterDialog.onFalse();
@@ -153,7 +159,7 @@ const Subjects = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
-        heading="Syllabus"
+        heading="Syllabus Management"
         description={
           addChapterDialog.value
             ? 'Create or update chapter details, including the title, content, and associated subject. Manage chapters efficiently by adding new ones or editing existing entries.'
@@ -193,7 +199,7 @@ const Subjects = (props: TabComponentType) => {
         // Table view for displaying chapters
         <>
           {/* Filter controls for class and subject selection */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
             <CustomSelect
               options={classData?.items || []}
               value={classes}
@@ -209,6 +215,7 @@ const Subjects = (props: TabComponentType) => {
             <CustomSelect
               options={[]}
               value={subject}
+              disabled={!classes}
               onChange={(val) => {
                 // setClasses(val as string);
                 setSubject(val as string);
@@ -229,6 +236,10 @@ const Subjects = (props: TabComponentType) => {
             data={chapterData}
             actions={actions}
             handleEyeClick={handleEyeClick}
+            onViewDocuments={(chapter) => {
+              setSelectedChapter(chapter as IChapter);
+              viewDocumentDialog.onTrue();
+            }}
           />
         </>
       )}
@@ -240,11 +251,12 @@ const Subjects = (props: TabComponentType) => {
           setSelectedChapter(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure want to Delete Chapter?"
         action={
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedChapter?.id);
             }}
@@ -253,6 +265,17 @@ const Subjects = (props: TabComponentType) => {
           </Button>
         }
       />
+
+      <CustomDialog
+        maxWidth="md"
+        open={viewDocumentDialog.value}
+        handleClose={() => {
+          viewDocumentDialog.onFalse();
+        }}
+        title={`${selectedChapter?.chapterName} Documents`}
+      >
+        <ChapterDocuments documents={selectedChapter?.documents} />
+      </CustomDialog>
     </Box>
   );
 };

@@ -6,6 +6,8 @@ import { Box, Paper, MenuList, MenuItem, TableCell, Typography } from '@mui/mate
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -190,7 +192,7 @@ const TimeTableCell = ({
                         }}
                       >
                         <Iconify
-                          icon="mdi:trash"
+                          icon={GlobalIcons.delete}
                           sx={{ height: '18px', width: '18px' }}
                           color="red"
                         />

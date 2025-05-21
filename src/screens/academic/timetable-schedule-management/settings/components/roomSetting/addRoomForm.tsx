@@ -6,6 +6,9 @@ import React, { useState } from 'react';
 import { Close, Create } from '@mui/icons-material';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -137,8 +140,12 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             >
               Cancel
             </Button>
-            <Button startIcon={<Create />} type="submit" variant="contained">
-              {isEdit ? 'Update' : 'Create'}
+            <Button
+              startIcon={isEdit ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+              type="submit"
+              variant="contained"
+            >
+              {isEdit ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>

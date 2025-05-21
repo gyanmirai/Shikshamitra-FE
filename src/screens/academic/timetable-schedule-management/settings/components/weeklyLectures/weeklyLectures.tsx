@@ -51,8 +51,12 @@ const WeeklyLectures = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
-          placeholder: 'Search by Class, Total Lectures',
-          label: 'Search by Class, Total Lectures',
+          placeholder: 'Search by Class, Total Lectures...',
+          label: 'Search by Class, Total Lectures...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
         }}
         noDataText={
           <>
@@ -136,12 +140,12 @@ const WeeklyLectures = () => {
         maxWidth="md"
       >
         <CreateNoOfLecture
-        // onSave={handleSave}
-        // dialogValue={dialog.value}
-        // onClose={closeDialog}
-        // data={selectedEntry}
-        // isEdit={isEdit}
-        // allData={roomData}
+          // onSave={handleSave}
+          // dialogValue={dialog.value}
+          onClose={handleClose}
+          // data={selectedEntry}
+          // isEdit={isEdit}
+          // allData={roomData}
         />
       </CustomDialog>
 

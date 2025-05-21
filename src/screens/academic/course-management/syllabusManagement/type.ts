@@ -50,4 +50,5 @@ export interface IChapterTableProps {
   data: IChapter[];
   actions: (params: { popover: any; row: IChapter }) => JSX.Element;
   handleEyeClick: (subjectName: string) => void;
+  onViewDocuments: (chapter: IChapter) => void;
 }

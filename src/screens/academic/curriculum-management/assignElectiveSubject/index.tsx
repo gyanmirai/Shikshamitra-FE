@@ -24,7 +24,7 @@ const AssignElectiveSubject = () => {
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
   const [electiveSubject, setElectiveSubject] = useState<string>('');
-
+  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
   // State to store available division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
@@ -94,20 +94,21 @@ const AssignElectiveSubject = () => {
               { id: '5', name: 'Economics' },
             ]}
             value={electiveSubject}
-            onChange={(val) => {}}
+            onChange={(value) => {
+              setElectiveSubject(value as string);
+            }}
             formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
           />
         </Box>
 
         {/* Right side - Save Button */}
         <Box display="flex" gap={2} justifyContent="flex-end">
-          <Button size="small" variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
             Reset
           </Button>
           <Button
             startIcon={<Save />}
-            size="small"
-            variant="outlined"
+            variant="contained"
             disabled={!classes || !division || !electiveSubject}
           >
             Save
@@ -119,8 +120,8 @@ const AssignElectiveSubject = () => {
         tableId="elective-subject-table"
         noDataText={<>No Bulk Update Data Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Sr. No, GR No, Name',
-          label: 'Search by Sr. No, GR No, Name',
+          placeholder: 'Search by Sr. No, GR No, Name...',
+          label: 'Search by Sr. No, GR No, Name...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -145,12 +146,12 @@ const AssignElectiveSubject = () => {
                 getOptionLabel={(option) => option.name}
                 value={teacherOptions.find((opt) => opt.id === division) || null}
                 onChange={(_, newValue) => {
-                  setElectiveSubject(newValue?.id || '');
+                  setSelectedElectiveSubject(newValue?.id || '');
                 }}
                 renderInput={(params) => (
                   <TextField {...params} label="Elective Subject" variant="outlined" size="small" />
                 )}
-                sx={{ maxWidth: '600px', width: '100%' }}
+                sx={{ minWidth: '200px', width: '100%' }}
               />
             ),
 

@@ -67,8 +67,8 @@ const SubjectTable = ({
     <CustomizableTable
       tableId="subject-table"
       searchFieldProps={{
-        placeholder: 'Search by Subject Code, Name, Primary Teacher...',
-        label: 'Search by Subject Code, Name, Primary Teacher...',
+        placeholder: 'Search by Subject Code, Type, Name...',
+        label: 'Search by Subject Code, Type, Name...',
         sx: {
           maxWidth: '500px',
           width: '100%',
@@ -100,7 +100,6 @@ const SubjectTable = ({
         {
           id: 'subjectCode',
           label: 'Subject Code',
-          minWidth: '180px',
           align: 'left',
           render: (value, row) => (
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -119,13 +118,11 @@ const SubjectTable = ({
         {
           id: 'subjectType',
           label: 'Subject Type',
-          minWidth: '150px',
           align: 'left',
         },
         {
           id: 'subjectName',
           label: 'Subject Name',
-          minWidth: '200px',
           align: 'left',
           render: (value, row) => (
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -140,45 +137,42 @@ const SubjectTable = ({
             </Box>
           ),
         },
-        {
-          id: 'primaryTeacher',
-          label: 'Primary Teacher',
-          minWidth: '200px',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {row.subjectType === 'core' ? (
-                <Chip key={value} label={value} size="small" variant="outlined" />
-              ) : (
-                Array.isArray(value) &&
-                value.map((teacher: string) => (
-                  <Chip key={teacher} label={teacher} size="small" variant="outlined" />
-                ))
-              )}
-            </Box>
-          ),
-        },
-        {
-          id: 'secondaryTeacher',
-          label: 'Secondary Teacher',
-          minWidth: '200px',
-          align: 'left',
-          render: (value) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {Array.isArray(value) && value.length > 0 ? (
-                value.map((teacher: string) => (
-                  <Chip key={teacher} label={teacher} size="small" variant="outlined" />
-                ))
-              ) : (
-                <Chip label="None" size="small" variant="outlined" />
-              )}
-            </Box>
-          ),
-        },
+        // {
+        //   id: 'primaryTeacher',
+        //   label: 'Primary Teacher',
+        //   align: 'left',
+        //   render: (value, row) => (
+        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        //       {row.subjectType === 'core' ? (
+        //         <Chip key={value} label={value} size="small" variant="outlined" />
+        //       ) : (
+        //         Array.isArray(value) &&
+        //         value.map((teacher: string) => (
+        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+        //         ))
+        //       )}
+        //     </Box>
+        //   ),
+        // },
+        // {
+        //   id: 'secondaryTeacher',
+        //   label: 'Secondary Teacher',
+        //   align: 'left',
+        //   render: (value) => (
+        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        //       {Array.isArray(value) && value.length > 0 ? (
+        //         value.map((teacher: string) => (
+        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+        //         ))
+        //       ) : (
+        //         <Chip label="None" size="small" variant="outlined" />
+        //       )}
+        //     </Box>
+        //   ),
+        // },
         {
           id: 'status',
           label: 'Publish',
-          minWidth: '200px',
           align: 'left',
           isFilter: false,
           isSort: false,

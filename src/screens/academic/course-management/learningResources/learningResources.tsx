@@ -20,14 +20,13 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusOptions,
-} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -209,7 +208,7 @@ const LearningResources = (props: TabComponentType) => {
                   }
             }
           >
-            {addLearningResourceDialog.value ? 'Back' : 'Learning Resources'}
+            {addLearningResourceDialog.value ? 'Back' : 'Learning Resource'}
           </Button>
         }
       />
@@ -241,7 +240,7 @@ const LearningResources = (props: TabComponentType) => {
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
-              label="Course/Subject"
+              label="Subject"
               disabled={!classes}
               options={[
                 { value: 'Math', label: 'Math' },
@@ -288,8 +287,12 @@ const LearningResources = (props: TabComponentType) => {
               <CustomizableTable
                 tableId="learning-resources"
                 searchFieldProps={{
-                  placeholder: 'Search by Resource Title, Type, Class, Subject',
-                  label: 'Search by Resource Title, Type, Class, Subject',
+                  placeholder: 'Search by Resource Title, Type, Class, Subject...',
+                  label: 'Search by Resource Title, Type, Class, Subject...',
+                  sx: {
+                    maxWidth: '500px',
+                    width: '100%',
+                  },
                 }}
                 noDataText={
                   <>
@@ -324,7 +327,7 @@ const LearningResources = (props: TabComponentType) => {
                     label: 'Type of Resource',
                     align: 'left',
                   },
-                  { id: 'className', label: 'Class', minWidth: '200px', align: 'left' },
+                  { id: 'className', label: 'Class', align: 'left' },
                   { id: 'subject', label: 'Subject', align: 'left' },
                   {
                     id: 'dateUploaded',
@@ -337,27 +340,30 @@ const LearningResources = (props: TabComponentType) => {
                     id: 'status',
                     label: 'Publish',
                     align: 'left',
-                    filterType: 'enum',
-                    enumOptions: PublishUnpublishStatusOptions,
+                    isFilter: false,
+                    isSort: false,
                     render: (value: PublishUnpublishStatusType, row: any) => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Switch
                           size="small"
                           checked={value === PublishUnpublishStatusType.Publish}
-                          onChange={() => handleStatusChange(row.id, value)}
+                          onChange={() => {
+                            confirm_dialog.onTrue();
+                          }}
                         />
                       </Box>
                     ),
                   },
                   {
                     id: 'action',
-                    label: 'Actions',
-                    minWidth: 70,
+                    label: 'Action',
+                    minWidth: 120,
                     isSort: false,
                     sticky: true,
                     isFilter: false,
                     render: (value, row) => (
                       <ThreeDotsActions
+                        placement="right-top"
                         actions={(prop) => actions({ ...prop, row })}
                         showEditIcon
                         showDeleteIcon
@@ -398,16 +404,37 @@ const LearningResources = (props: TabComponentType) => {
           setSelectedEntry(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure want to Delete Resource ?"
         action={
           <Button
             variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {
               handleDelete(selectedEntry?.id as string);
             }}
           >
             Delete
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={confirm_dialog.value}
+        onClose={() => {
+          confirm_dialog.onFalse();
+        }}
+        title="Confirm Publication"
+        content="Are you sure want to Publish Resource ?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              confirm_dialog.onFalse();
+            }}
+          >
+            Publish
           </Button>
         }
       />

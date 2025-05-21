@@ -1,8 +1,21 @@
-import { Box, Grid, Card, Avatar, Divider, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Avatar,
+  Divider,
+  ListItem,
+  Typography,
+  CardContent,
+  ListItemText,
+  ListItemAvatar,
+} from '@mui/material';
 
 import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import UserHoverProfile from 'src/components/student-popover';
 
 import type { ISubject } from '../type';
 
@@ -10,8 +23,8 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
   <Box sx={{ height: '100%' }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={8}>
-        <Card>
-          <CardContent>
+        <Card sx={{ height: '100%' }}>
+          <CardContent sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
               <Iconify icon="mdi:information-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
               Basic Information
@@ -35,44 +48,127 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
       </Grid>
 
       <Grid item xs={12} md={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              <Iconify icon="mdi:account-group" sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Teachers
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Primary Teacher
+        <Card sx={{ height: '100%' }}>
+          <Scrollbar sx={{ height: '100%' }}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                <Iconify icon="mdi:account-group" sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Teachers
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                  {subject?.primaryTeacher?.charAt(0) || 'T'}
-                </Avatar>
-                <Typography>{subject?.primaryTeacher || 'Not assigned'}</Typography>
-              </Box>
-            </Box>
+              <Divider sx={{ mb: 2 }} />
 
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Secondary Teachers
-            </Typography>
-            {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
-              subject?.secondaryTeacher.map((teacher: string, idx: number) => (
-                <Box key={idx} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'secondary.main' }}>
-                    {teacher.charAt(0) || 'T'}
-                  </Avatar>
-                  <Typography>{teacher}</Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Primary Teacher
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ListItem
+                    disablePadding
+                    sx={{
+                      backgroundColor: 'background.paper',
+                      borderRadius: '8px',
+                      p: 1,
+                      boxShadow: 2,
+                      my: 1,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <UserHoverProfile
+                        avatarComp={
+                          <Avatar
+                            sx={{
+                              bgcolor: 'secondary.main',
+                              width: 36,
+                              height: 36,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {subject?.primaryTeacher
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </Avatar>
+                        }
+                        user={{
+                          name: subject?.primaryTeacher,
+                          avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                          role: 'Student',
+                          email: 'john.doe@example.com',
+                          class: '10th',
+                          division: 'A',
+                          board: 'CBSE',
+                          medium: 'English',
+                          organization: 'Higher Secondary',
+                        }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle2">{subject?.primaryTeacher}</Typography>
+                      }
+                    />
+                  </ListItem>
                 </Box>
-              ))
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No secondary teachers assigned
+              </Box>
+
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Secondary Teachers
               </Typography>
-            )}
-          </CardContent>
+              {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
+                subject?.secondaryTeacher.map((teacher: string, idx: number) => (
+                  <ListItem
+                    key={idx}
+                    disablePadding
+                    sx={{
+                      backgroundColor: 'background.paper',
+                      borderRadius: '8px',
+                      p: 1,
+                      boxShadow: 2,
+                      my: 1,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <UserHoverProfile
+                        avatarComp={
+                          <Avatar
+                            sx={{
+                              bgcolor: 'secondary.main',
+                              width: 36,
+                              height: 36,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {teacher
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </Avatar>
+                        }
+                        user={{
+                          name: teacher,
+                          avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                          role: 'Student',
+                          email: 'john.doe@example.com',
+                          class: '10th',
+                          division: 'A',
+                          board: 'CBSE',
+                          medium: 'English',
+                          organization: 'Higher Secondary',
+                        }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={<Typography variant="subtitle2">{teacher}</Typography>}
+                    />
+                  </ListItem>
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No secondary teachers assigned
+                </Typography>
+              )}
+            </CardContent>
+          </Scrollbar>
         </Card>
       </Grid>
     </Grid>

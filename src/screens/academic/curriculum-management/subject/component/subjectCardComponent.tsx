@@ -34,18 +34,36 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onSubjectChange,
   index,
 }: ISubjectCardProps) => {
+  // State to control accordion expansion, initialized with subject's isSubjectOpen or false
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
 
+  // Handler for updating subject fields
+  // @param field - The field name to update
+  // @param value - The new value to set
   const handleChange = (field: string, value: any) => {
     onSubjectChange(subject.id, field, value);
   };
 
+  // Get validation error for a specific field
+  // @param field - The field name to check for errors
+  // @returns The error message if field is touched and has error, otherwise undefined
   const getError = (field: string) =>
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
-
   return (
-    <Accordion expanded={isExpanded} onChange={() => setIsExpanded(!isExpanded)}>
+    <Accordion
+      expanded={isExpanded}
+      onChange={() => setIsExpanded(!isExpanded)}
+      sx={{
+        border: '1px solid #ccc',
+        borderRadius: 2,
+        boxShadow: 'none', // optional, remove default shadow
+        '&:before': {
+          display: 'none', // remove default divider line at top
+        },
+        mb: 2, // optional margin between accordions
+      }}
+    >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="subtitle1" fontWeight={600}>
           {subject.subjectName || 'CHEMISTRY'}
@@ -141,31 +159,31 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </FormControl>
           </Grid>
           {/* Learning Goal */}
-          <Grid item xs={18} sm={12} md={6}>
+          <Grid item xs={12} md={6}>
             <ShakingTextField error={!!getError('learningGoal')}>
               <Editor
                 onChange={(value) => handleChange('learningGoal', value)}
                 value={subject.learningGoal || ''}
-                placeholder="Learning Goal"
+                placeholder="Enter Learning Goal"
                 error={!!getError('learningGoal')}
                 helperText={getError('learningGoal')}
               />
             </ShakingTextField>
           </Grid>
           {/* Prerequisites */}
-          <Grid item xs={18} sm={12} md={6}>
+          <Grid item xs={12} md={6}>
             <ShakingTextField error={!!getError('prerequisites')}>
               <Editor
                 onChange={(value) => handleChange('prerequisites', value)}
                 value={subject.prerequisites || ''}
-                placeholder="Prerequisites"
+                placeholder="Enter Prerequisites"
                 error={!!getError('prerequisites')}
                 helperText={getError('prerequisites')}
               />
             </ShakingTextField>
           </Grid>
           {/* Description */}
-          <Grid item xs={18} sm={12} md={6}>
+          <Grid item xs={12} md={6}>
             <ShakingTextField error={!!getError('description')}>
               <TextField
                 fullWidth
@@ -183,7 +201,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </ShakingTextField>
           </Grid>
           {/* Upload Document */}
-          <Grid item xs={18} sm={12} md={6}>
+          <Grid item xs={12} md={6}>
             <UploadBox
               onDrop={() => {}}
               placeholder={
@@ -194,7 +212,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     alignItems: 'center',
                     color: 'text.disabled',
                     flexDirection: 'column',
-                    minHeight: 120,
+                    minHeight: 110,
                     justifyContent: 'center',
                   }}
                 >
@@ -206,7 +224,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 height: '100%',
                 width: '100%',
                 borderRadius: 1.5,
-                minHeight: 120,
+                minHeight: 50,
                 bgcolor: 'grey.50',
               }}
               disabled={isPublished}
