@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Box, Card, Stack, Button, Divider, Typography, CardContent } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from 'src/components/iconify';
 
 import type { ILearningResourceCardProps } from '../type';
@@ -13,7 +15,7 @@ const LearningResourceCard: React.FC<ILearningResourceCardProps> = ({
   subject,
   dateUploaded,
 }: ILearningResourceCardProps) => (
-  <Card sx={{ width: 344, height: 235, borderRadius: 4 }}>
+  <Card sx={{ width: 344, borderRadius: 4, boxShadow: 3 }}>
     <CardContent>
       {/* Top PDF icon and title */}
       <Box display="flex" alignItems="center" gap={2}>
@@ -54,32 +56,10 @@ const LearningResourceCard: React.FC<ILearningResourceCardProps> = ({
 
       {/* Action buttons */}
       <Stack direction="row" spacing={2} justifyContent="right">
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            backgroundColor: '#ff5722',
-            borderRadius: 1,
-            px: 3,
-            fontWeight: 'bold',
-            '&:hover': { backgroundColor: '#e64a19' },
-          }}
-          startIcon={<Iconify icon="mdi:download" />}
-        >
+        <Button variant="outlined" size="small" startIcon={<Iconify icon={GlobalIcons.download} />}>
           Download
         </Button>
-        <Button
-          variant="contained"
-          size="small"
-          sx={{
-            backgroundColor: '#212121',
-            borderRadius: 1,
-            px: 3,
-            fontWeight: 'bold',
-            '&:hover': { backgroundColor: '#000' },
-          }}
-          startIcon={<Iconify icon="mdi:share-variant" />}
-        >
+        <Button variant="contained" size="small" startIcon={<Iconify icon={GlobalIcons.share} />}>
           Share
         </Button>
       </Stack>

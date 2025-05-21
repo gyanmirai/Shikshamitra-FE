@@ -69,7 +69,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Class selection dropdown */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
@@ -77,12 +77,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     options={classData?.items || []}
                     value={formik.values.className}
                     onChange={(val) => formik.setFieldValue('className', val as string)}
-                    label="Class"
+                    label="Class *"
                     isLoading={isLoading}
                     disabled={!!currentClass}
                     labelKey="name"
                     valueKey="name"
-                    placeholder="Select Class"
+                    placeholder="Class"
                     formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
                     error={!!(formik.touched.className && formik.errors.className) || false}
                     helperText={(formik.touched.className && formik.errors.className) || ''}
@@ -90,12 +90,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
               {/* Subject selection dropdown */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <ShakingTextField
                   error={!!(formik.touched.subject && formik.errors.subject) || false}
                 >
                   <CustomSelect
-                    label="Subject"
+                    label="Subject *"
                     options={[
                       { value: 'Math', label: 'Math' },
                       { value: 'English', label: 'English' },
@@ -112,6 +112,31 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
+
+              <Grid item xs={12} md={4}>
+                <ShakingTextField
+                  error={!!(formik.touched.subject && formik.errors.subject) || false}
+                >
+                  <CustomSelect
+                    label="Chapter"
+                    options={[
+                      { value: 'chapter1', label: 'Chapter 1' },
+                      { value: 'chapter2', label: 'Chapter 2' },
+                      { value: 'chapter3', label: 'Chapter 3' },
+                      { value: 'chapter4', label: 'Chapter 4' },
+                      { value: 'chapter5', label: 'Chapter 5' },
+                    ]}
+                    disabled={!formik.values.subject}
+                    name="chapter"
+                    value={formik.values.chapter || ''}
+                    onChange={(val) => formik.setFieldValue('chapter', val as string)}
+                    placeholder="Select chapter"
+                    formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
+                    error={!!(formik.touched.chapter && formik.errors.chapter) || false}
+                    helperText={(formik.touched.chapter && formik.errors.chapter) || ''}
+                  />
+                </ShakingTextField>
+              </Grid>
               {/* Resource title input */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
@@ -119,7 +144,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 >
                   <TextField
                     disabled={isEdit}
-                    label="Resource Title"
+                    label="Resource Title *"
                     placeholder="Enter Resource Title"
                     size="small"
                     name="resourceTitle"
@@ -137,7 +162,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
                 >
                   <CustomSelect
-                    label="Select Resource Type"
+                    label="Select Resource Type *"
                     options={[
                       { value: 'video', label: 'Video' },
                       { value: 'audio', label: 'Audio' },
@@ -185,12 +210,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </CustomDialog>
               </Grid>
               {/* Description text area */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description) || false}
                 >
                   <TextField
-                    label="Description"
+                    label="Description *"
                     size="small"
                     multiline
                     rows={4}
@@ -205,7 +230,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
               {/* File upload box */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={
@@ -219,7 +244,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                       }}
                     >
                       <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Drag Your Document</Typography>
+                      <Typography variant="body2">Upload Material</Typography>
                     </Box>
                   }
                   sx={{
@@ -234,27 +259,53 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
           </Scrollbar>
           {/* Action buttons */}
           <DialogActions>
-            <Button
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              onClick={() => {
-                setIsDraft(true);
-                formik.handleSubmit();
-              }}
-            >
-              Save Draft
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.publish} />}
-              onClick={() => {
-                setIsDraft(false);
-                formik.handleSubmit();
-              }}
-            >
-              Publish
-            </Button>
+            {isEdit ? (
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  onClick={() => {
+                    onClose(null, false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  onClick={() => {
+                    setIsDraft(true);
+                    formik.handleSubmit();
+                  }}
+                >
+                  Update
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+                  onClick={() => {
+                    setIsDraft(true);
+                    formik.handleSubmit();
+                  }}
+                >
+                  Save Draft
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.publish} />}
+                  onClick={() => {
+                    setIsDraft(false);
+                    formik.handleSubmit();
+                  }}
+                >
+                  Publish
+                </Button>
+              </>
+            )}
           </DialogActions>
         </Box>
       </form>

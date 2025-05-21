@@ -13,6 +13,7 @@ export interface IResourceData {
   id: string; // Unique identifier for the resource
   resourceTitle: string; // Title of the learning resource
   typeOfResource: string; // Type of resource (document, audio, video, etc.)
+  chapter?: string;
   className: string; // Class/grade the resource is intended for
   subject: string; // Subject area of the resource
   dateUploaded: string; // Date when the resource was uploaded

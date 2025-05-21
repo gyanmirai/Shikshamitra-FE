@@ -1,7 +1,7 @@
 import React from 'react';
 
-import Setting from 'src/screens/academic/homework-assignment-management/setting/setting';
+import HomeworkSetting from 'src/screens/academic/homework-assignment-management/setting';
 
-const Settings = () => <Setting />;
+const Settings = () => <HomeworkSetting />;
 
 export default Settings;

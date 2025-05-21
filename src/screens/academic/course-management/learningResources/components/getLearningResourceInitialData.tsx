@@ -11,6 +11,7 @@ export const getLearningResourceInitialData = (
   typeOfResource: isEdit && data ? data.typeOfResource : '',
   className: currentClass,
   subject: isEdit && data ? data.subject : currentSubject,
+  chapter: isEdit && data ? data.chapter : '',
   description: isEdit && data ? data.description : '',
   dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
   status: isEdit && data ? data.status : 'draft',

@@ -5,6 +5,7 @@
     "typeOfResource": "document",
     "className": "1",
     "subject": "Math",
+    "chapter": "Chapter 1",
     "dateUploaded": "01-12-20",
     "description": "Math resource description",
     "status": "Publish"
@@ -15,6 +16,7 @@
     "typeOfResource": "Audio",
     "className": "1",
     "subject": "Science",
+    "chapter": "Chapter 1",
     "dateUploaded": "01-12-20",
     "description": "Science resource description",
     "status": "Unpublish"
@@ -25,6 +27,7 @@
     "typeOfResource": "Video",
     "className": "1",
     "subject": "Physics",
+    "chapter": "Chapter 1",
     "dateUploaded": "01-12-20",
     "description": "Physics video description",
     "status": "Publish"

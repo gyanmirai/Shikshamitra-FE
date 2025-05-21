@@ -46,7 +46,7 @@ const SettingResourceTypeForm: React.FC<IResourceTypeFormProps> = ({ open, onClo
                 >
                   <TextField
                     fullWidth
-                    label="Resource Type Name"
+                    label="Resource Type Name *"
                     name="resourceTypeName"
                     size="small"
                     value={formik.values.resourceTypeName}

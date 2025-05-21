@@ -18,8 +18,8 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignGrade from './homeworkCreation/component/assignGradeForm';
-import { StudentSubmissions } from './homeworkCreation/homework-creation';
 import { dummyData } from '../gradebook-performance-tracking/gradebook/gradebook';
+import { StudentSubmissions } from './homeworkCreation/component/studentSubmission';
 
 import type { TStudentGrade } from '../gradebook-performance-tracking/gradebook/gradebook';
 

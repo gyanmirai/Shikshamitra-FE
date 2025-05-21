@@ -65,9 +65,20 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="subtitle1" fontWeight={600}>
-          {subject.subjectName || 'CHEMISTRY'}
-        </Typography>
+        <Box display="flex" gap={1}>
+          <Typography variant="subtitle1" fontWeight={600}>
+            {subject.subjectName || 'CHEMISTRY'}
+          </Typography>
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              mt: 0.5,
+              borderRadius: '50%',
+              backgroundColor: subject.subjectColor,
+            }}
+          />
+        </Box>
       </AccordionSummary>
       <AccordionDetails>
         <Grid container spacing={3} alignItems="flex-start">
@@ -217,7 +228,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   }}
                 >
                   <Iconify icon="eva:cloud-upload-fill" width={40} />
-                  <Typography variant="body2">Upload Document</Typography>
+                  <Typography variant="body2">Upload Material</Typography>
                 </Box>
               }
               sx={{
