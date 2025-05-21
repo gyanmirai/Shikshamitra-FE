@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
 });
 
 const FeeReceiptPDF: React.FC<IFeeReceiptPDFProps> = ({ from, to, selectedFees }) => {
+  // Function to get payment details based on payment mode
   const getPaymentDetail = (row: any) => {
     if (row.paymentMode === 'Cheque') {
       return `Cheque No: ${row.chequeNo.toUpperCase() || '-'} / Bank: ${row.bank.toUpperCase() || '-'}`;
@@ -55,8 +56,8 @@ const FeeReceiptPDF: React.FC<IFeeReceiptPDFProps> = ({ from, to, selectedFees }
     return '-';
   };
 
+  // Calculate total received amount from all selected fees
   const totalReceived = selectedFees.reduce((sum, row) => sum + (row.receivedAmount || 0), 0);
-
   return (
     <PDFViewer width="100%" height="1000px">
       <Document>
