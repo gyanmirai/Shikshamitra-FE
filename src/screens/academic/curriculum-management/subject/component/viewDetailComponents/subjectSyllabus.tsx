@@ -61,55 +61,43 @@ const chapters = [
   },
 ];
 
-const SubjectSyllabus = ({ subject }: { subject: ISubject }) => {
-  const handleDownload = (doc: any) => {
-    console.log(`Downloading ${doc.name}`);
-    // Implement actual download logic here
-    window.open(doc.url, '_blank');
-  };
+const SubjectSyllabus = ({ subject }: { subject: ISubject }) => (
+  <Card>
+    <CardContent sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Chapters
+      </Typography>
 
-  return (
-    <Card>
-      <CardContent sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Chapters
-        </Typography>
+      <Divider sx={{ my: 2 }} />
 
-        <Divider sx={{ my: 2 }} />
+      {/* Chapters Section */}
+      {chapters.length > 0 ? (
+        chapters.map((chapter, index) => (
+          <Paper key={chapter.id} elevation={1} sx={{ p: 2, mb: 2, bgcolor: 'background.neutral' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Iconify icon="mdi:book-open-variant" sx={{ mr: 1 }} />
+              <Typography variant="subtitle1">{`${index + 1}. ${chapter.title}`}</Typography>
+            </Box>
 
-        {/* Chapters Section */}
-        {chapters.length > 0 ? (
-          chapters.map((chapter, index) => (
-            <Paper
-              key={chapter.id}
-              elevation={1}
-              sx={{ p: 2, mb: 2, bgcolor: 'background.neutral' }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Iconify icon="mdi:book-open-variant" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1">{`${index + 1}. ${chapter.title}`}</Typography>
+            <Typography variant="body2" sx={{ ml: 3, mb: 2 }}>
+              {chapter.description || 'No description provided.'}
+            </Typography>
+
+            {/* Documents List */}
+            {chapter.documents?.length > 0 && (
+              <Box sx={{ ml: 3 }}>
+                <DocumentList documents={chapter.documents} onDownload={() => {}} />
               </Box>
-
-              <Typography variant="body2" sx={{ ml: 3, mb: 2 }}>
-                {chapter.description || 'No description provided.'}
-              </Typography>
-
-              {/* Documents List */}
-              {chapter.documents?.length > 0 && (
-                <Box sx={{ ml: 3 }}>
-                  <DocumentList documents={chapter.documents} onDownload={() => {}} />
-                </Box>
-              )}
-            </Paper>
-          ))
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-            No chapters available for this subject.
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+            )}
+          </Paper>
+        ))
+      ) : (
+        <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+          No chapters available for this subject.
+        </Typography>
+      )}
+    </CardContent>
+  </Card>
+);
 
 export default SubjectSyllabus;

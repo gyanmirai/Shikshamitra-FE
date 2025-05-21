@@ -1,8 +1,6 @@
 import type { ISubjectFormValues } from './type';
 
 export const getSubjectInitialValues = (editData: ISubjectFormValues | null) => {
-  console.log('editData', editData);
-
   // Base initial values with empty fields
   const initialValues = {
     subjectName: '',

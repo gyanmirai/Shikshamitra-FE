@@ -209,9 +209,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
-  // Log for debugging
-  console.log('formik values:', formik.values);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>

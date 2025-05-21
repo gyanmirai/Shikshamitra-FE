@@ -12,9 +12,8 @@ import type { ISubject } from '../type';
 
 // Documents panel content
 const SubjectDocument = ({ subject }: { subject: ISubject | null }) => {
+  // State to manage subject documents data
   const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
-  console.log('subjectDocuments--', subjectDocuments);
-
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent sx={{ p: 2 }}>

@@ -11,10 +11,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import type { IExamFormValues } from '../type';
 
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
-  // State to track exam schedules for subjects - currently not being used
+  // Formik instance for form handling and validation
   const formik = props;
+  // State to store and manage exam schedules data for each subject, initialized with subjects from formik values
   const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
-  console.log('formik exam error---', formik.values);
   return (
     <CustomizableTable
       isFilter={false}

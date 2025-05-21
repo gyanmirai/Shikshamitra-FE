@@ -48,32 +48,46 @@ const LearningResources = (props: TabComponentType) => {
   const { searchParams } = props;
   // State for controlling view mode (list/grid)
   const [view, setView] = useState('list');
+  // Dialog state for adding/editing learning resources
   const addLearningResourceDialog = useBoolean();
-  // Extract class and subject from URL parameters with default empty string
-  const classFromUrl = searchParams?.class || ''; // Use optional chaining
-  const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
-  // State for managing selected resource entry and edit mode
+  // Get class value from URL parameters, default to empty string if not present
+  const classFromUrl = searchParams?.class || '';
+
+  // Get subject value from URL parameters, default to empty string if not present
+  const subjectFromUrl = searchParams?.subject || '';
+
+  // State to store currently selected resource entry for editing
   const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
-  const [isEdit, setIsEdit] = useState(false);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-  // State for storing all learning resources data
-  const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
-  // const dialog = useBoolean();
-  // State for confirmation dialog
-  const confirm_dialog = useBoolean();
-  const deleteDialog = useBoolean();
 
+  // Boolean state to track if we're in edit mode
+  const [isEdit, setIsEdit] = useState(false);
+
+  // Redux state to track if there are unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function
+  const dispatch = useDispatch();
+
+  // State to store all learning resource data, initialized with sample data
+  const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
+
+  // Dialog state for general confirmations
+  const confirm_dialog = useBoolean();
+
+  // Dialog state specifically for delete confirmations
+  const deleteDialog = useBoolean();
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // State for selected class and subject filters
+  // State to store selected class, initialized from URL parameter
   const [classes, setClasses] = useState<string>(classFromUrl);
+  // State to store selected subject, initialized from URL parameter
   const [subject, setSubject] = useState(subjectFromUrl);
+  // State to track pending status changes for publish/unpublish actions
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newStatus: string;
@@ -106,8 +120,6 @@ const LearningResources = (props: TabComponentType) => {
   // Function to close the dialog and reset form state
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      console.log('isSubmit---', isSubmit);
-      console.log('isChanges---', isChanges);
       dispatch(setIsChanges(false));
 
       setIsEdit(false);

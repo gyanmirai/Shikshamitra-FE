@@ -37,10 +37,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
   const formik = useFormik({
     initialValues,
     validationSchema,
-    onSubmit: (values) => {
-      console.log('Form Submitted', values);
-      // submission logic here
-    },
+    onSubmit: (values) => {},
   });
 
   // State for managing total number of slots

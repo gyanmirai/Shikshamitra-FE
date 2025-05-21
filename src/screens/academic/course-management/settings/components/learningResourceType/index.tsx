@@ -36,7 +36,7 @@ const ResourceTypeCreation = () => {
   const [selected, setSelected] = useState<IResourceType | null>(null);
   // State to store the list of resource types
   const [resourceTypes, setResourceTypes] = useState<IResourceType[]>([]);
-
+  // Redux dispatch function for dispatching actions
   const dispatch = useDispatch();
 
   // Handler for closing dialogs with optional submit flag

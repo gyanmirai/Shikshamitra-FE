@@ -12,8 +12,8 @@ import type { IDocument } from '../type';
 
 // Documents panel content
 const ChapterDocuments = ({ documents }: { documents: IDocument[] | undefined }) => {
+  // State to manage subject documents data initialized with mock data from JSON
   const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
-  console.log('subjectDocuments--', subjectDocuments);
 
   return (
     <Card sx={{ height: '100%' }}>

@@ -51,8 +51,6 @@ const TimeTableCell = ({
     }
   };
 
-  console.log('slotData', slotData);
-
   /**
    * Handles the drop event for the timetable cell
    * Processes the drop action only if the cell is empty and not a break slot

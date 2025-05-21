@@ -17,15 +17,16 @@ import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeS
 import type { ISubjectDetail, IExamFormValues } from '../type';
 
 const SelectExam = (props: FormikProps<IExamFormValues>) => {
+  // Dialog state to control exam type creation modal visibility
   const examTypeDialog = useBoolean();
 
+  // Formik form instance passed down as props
   const formik = props;
   // Fetch class data using custom hook and handle loading state
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  console.log('formik vakue----', formik.values);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

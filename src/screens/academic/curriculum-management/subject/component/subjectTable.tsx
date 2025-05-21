@@ -58,8 +58,6 @@ const SubjectTable = ({
         });
       }
     }
-    console.log('rows----', rows);
-
     return rows;
   }
 
@@ -211,12 +209,7 @@ const SubjectTable = ({
                   }
                 }}
                 handleEditClick={() => {
-                  console.log('row', row);
-                  console.log('data', data);
-
                   const originalFormData = data.find((item) => item.id === row.id);
-                  console.log('originalFormData', originalFormData);
-
                   if (originalFormData) {
                     onEdit(originalFormData);
                   }

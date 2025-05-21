@@ -35,9 +35,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
   const formik = useFormik({
     initialValues: getNoOfLectureInitialValues(),
     validationSchema: noOfLectureValidationSchema,
-    onSubmit: (values) => {
-      console.log('Submitted data:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   // Initialize subject list state with default data
