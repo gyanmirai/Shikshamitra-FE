@@ -70,7 +70,6 @@ const FinanceFeeStructureOverviewComponent = () => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
-
   return (
     <>
       <CustomBreadcrumbs
