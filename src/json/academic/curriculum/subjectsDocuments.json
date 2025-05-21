@@ -1,0 +1,17 @@
+{
+  "name": "Mathematics",
+  "documents": [
+    {
+      "name": "Algebra_Lesson.pdf",
+      "size": "2.5 MB",
+      "uploadDate": "2025-05-10",
+      "url": "https://example.com/Algebra_Lesson.pdf"
+    },
+    {
+      "name": "Math_Notes.docx",
+      "size": "1.2 MB",
+      "uploadDate": "2025-05-08",
+      "url": "https://example.com/Math_Notes.docx"
+    }
+  ]
+}

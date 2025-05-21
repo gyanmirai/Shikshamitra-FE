@@ -3,12 +3,15 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Box, Grid, Chip, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Chip, Button, TextField, DialogActions } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesTableData.json';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -32,9 +35,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
   const formik = useFormik({
     initialValues: getNoOfLectureInitialValues(),
     validationSchema: noOfLectureValidationSchema,
-    onSubmit: (values) => {
-      console.log('Submitted data:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   // Initialize subject list state with default data
@@ -108,6 +109,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                     {
                       id: 'weeklyLectures',
                       label: 'Weekly Lectures',
+                      isSort: false,
+                      isFilter: false,
                       render(value, row) {
                         return (
                           <TextField
@@ -117,6 +120,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                             onChange={(e) => handleInputChange(row.id, e.target.value)}
                             className="w-24"
                             disabled={disabled}
+                            sx={{ minWidth: '200px', width: '100%' }}
                           />
                         );
                       },
@@ -128,6 +132,15 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
             </Grid>
           </Scrollbar>
           <DialogActions>
+            <Button
+              onClick={() => {
+                onClose?.(null, false);
+              }}
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
             <SubmitButton disabled={disabled} />
           </DialogActions>
         </form>

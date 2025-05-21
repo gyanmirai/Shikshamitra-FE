@@ -1,8 +1,6 @@
 // SubjectTable.tsx
 
-import dayjs from 'dayjs';
-
-import { Box, Switch, Typography } from '@mui/material';
+import { Box, Chip, Switch } from '@mui/material';
 
 import {
   PublishUnpublishStatusType,
@@ -46,30 +44,33 @@ const SubjectTable = ({
         // All subjects in one row
         rows.push({
           id: formData.id,
-          subjectName: (formData.subjects || []).map((s) => s.subjectName).join(', '),
-          subjectCode: (formData.subjects || []).map((s) => s.subjectCode).join(', '),
-          primaryTeacher: (formData.subjects || []).map((s) => s.primaryTeacher).join(', '),
+          subjectName: (formData.subjects || []).map((s) => s.subjectName),
+          subjectCode: (formData.subjects || []).map((s) => s.subjectCode),
+          primaryTeacher: (formData.subjects || []).map((s) => s.primaryTeacher),
           secondaryTeacher: (formData.subjects || []).flatMap((s) => s.secondaryTeacher || []),
-          subjectColor: '#1976d2', // Or leave blank or pick a default
-          scheduleDate: new Date().toISOString(), // Or pick first/last/none
-          prerequisites: (formData.subjects || []).map((s) => s.prerequisites).join(', '),
-          learningGoal: (formData.subjects || []).map((s) => s.learningGoal).join(', '),
+          subjectColor: '#1976d2',
+          scheduleDate: new Date().toISOString(),
+          prerequisites: (formData.subjects || []).map((s) => s.prerequisites),
+          learningGoal: (formData.subjects || []).map((s) => s.learningGoal),
           status: formData.status,
-          description: (formData.subjects || []).map((s) => s.description).join(', '),
+          description: (formData.subjects || []).map((s) => s.description),
           isSubjectOpen: false,
         });
       }
     }
     return rows;
   }
+
   return (
     <CustomizableTable
       tableId="subject-table"
       searchFieldProps={{
-        placeholder:
-          'Search by Subject Code, Subject Name, Primary Teacher, Secondary Teacher, Prerequisites, Learning Goal',
-        label:
-          'Search by Subject Code, Subject Name, Primary Teacher, Secondary Teacher, Prerequisites, Learning Goal',
+        placeholder: 'Search by Subject Code, Type, Name...',
+        label: 'Search by Subject Code, Type, Name...',
+        sx: {
+          maxWidth: '500px',
+          width: '100%',
+        },
       }}
       noDataText={
         <>
@@ -94,62 +95,85 @@ const SubjectTable = ({
         </>
       }
       columns={[
-        { id: 'subjectCode', label: 'Subject Code', minWidth: '180px', align: 'left' },
         {
-          id: 'subjectName',
-          label: 'Subject Name',
-          minWidth: '200px',
+          id: 'subjectCode',
+          label: 'Subject Code',
           align: 'left',
-          render(value, row) {
-            return (
-              <Typography variant="caption" color={row.subjectColor}>
-                {value}
-              </Typography>
-            );
-          },
-        },
-        {
-          id: 'primaryTeacher',
-          label: 'Primary Teacher',
-          minWidth: '200px',
-          align: 'left',
-        },
-        {
-          id: 'secondaryTeacher',
-          label: 'Secondary Teacher',
-          minWidth: '200px',
-          align: 'left',
-          render: (value) => (
+          render: (value, row) => (
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {value.map((audience: string, index: number) => (
-                <Typography key={index} variant="caption">
-                  {audience}
-                  {index < value.length - 1 && ' | '}
-                </Typography>
-              ))}
+              {row.subjectType === 'core' ? (
+                <Chip key={value} label={value} size="small" variant="outlined" />
+              ) : Array.isArray(value) ? (
+                value.map((subjectCode: string) => (
+                  <Chip key={subjectCode} label={subjectCode} size="small" variant="outlined" />
+                ))
+              ) : (
+                <Chip key={value} label={value} size="small" variant="outlined" />
+              )}
             </Box>
           ),
         },
         {
-          id: 'scheduleDate',
-          label: 'Schedule Date',
-          minWidth: '180px',
+          id: 'subjectType',
+          label: 'Subject Type',
           align: 'left',
-          filterType: 'date',
-          isDateRangeFilter: true,
-          render: (value) => (
-            <Typography fontSize="12px" gutterBottom>
-              {dayjs(value).format('DD MMM YYYY')}
-            </Typography>
+        },
+        {
+          id: 'subjectName',
+          label: 'Subject Name',
+          align: 'left',
+          render: (value, row) => (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {row.subjectType === 'core' ? (
+                <Chip key={value} label={value} size="small" variant="outlined" />
+              ) : (
+                Array.isArray(value) &&
+                value.map((name: string) => (
+                  <Chip key={name} label={name} size="small" variant="outlined" />
+                ))
+              )}
+            </Box>
           ),
         },
-        { id: 'prerequisites', label: 'Prerequisites', minWidth: '200px', align: 'left' },
-        { id: 'learningGoal', label: 'Learning Goal', minWidth: '200px', align: 'left' },
+        // {
+        //   id: 'primaryTeacher',
+        //   label: 'Primary Teacher',
+        //   align: 'left',
+        //   render: (value, row) => (
+        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        //       {row.subjectType === 'core' ? (
+        //         <Chip key={value} label={value} size="small" variant="outlined" />
+        //       ) : (
+        //         Array.isArray(value) &&
+        //         value.map((teacher: string) => (
+        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+        //         ))
+        //       )}
+        //     </Box>
+        //   ),
+        // },
+        // {
+        //   id: 'secondaryTeacher',
+        //   label: 'Secondary Teacher',
+        //   align: 'left',
+        //   render: (value) => (
+        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+        //       {Array.isArray(value) && value.length > 0 ? (
+        //         value.map((teacher: string) => (
+        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+        //         ))
+        //       ) : (
+        //         <Chip label="None" size="small" variant="outlined" />
+        //       )}
+        //     </Box>
+        //   ),
+        // },
         {
           id: 'status',
           label: 'Publish',
-          minWidth: '200px',
           align: 'left',
+          isFilter: false,
+          isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
           render: (value: PublishUnpublishStatusType, row: any) => (
@@ -165,7 +189,6 @@ const SubjectTable = ({
         {
           id: 'action',
           label: 'Actions',
-          align: 'left',
           minWidth: 100,
           sticky: true,
           isFilter: false,
@@ -186,12 +209,7 @@ const SubjectTable = ({
                   }
                 }}
                 handleEditClick={() => {
-                  console.log('row', row);
-                  console.log('data', data);
-
                   const originalFormData = data.find((item) => item.id === row.id);
-                  console.log('originalFormData', originalFormData);
-
                   if (originalFormData) {
                     onEdit(originalFormData);
                   }

@@ -34,13 +34,24 @@ const data = [
 ];
 
 const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoomSelect }) => {
+  // State to store the selected room value, initialized with selectedRoom prop or empty string
   const [room, setRoom] = useState<string>(selectedRoom || '');
-  console.log('selectedRoom', room);
+
+  // State to store and manage the table data, initialized with default subject data
   const [tableData, setTableData] = useState(data);
+
+  /**
+   * Handles form submission by calling onRoomSelect callback with selected room value
+   */
   const handleSubmit = () => {
     onRoomSelect(room);
   };
 
+  /**
+   * Updates the teacher assignment for a specific subject in the table data
+   * @param subjectName - The name of the subject to update
+   * @param newTeacherId - The ID of the newly assigned teacher
+   */
   const handleTeacherChange = (subjectName: string, newTeacherId: any) => {
     setTableData((prev) =>
       prev.map((row) =>

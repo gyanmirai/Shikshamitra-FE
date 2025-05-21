@@ -163,9 +163,9 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
       const newSubject = {
         id: Date.now() + Math.random(),
         name: newValue.name,
-        subjectName: newValue.name,
+        subjectName: newValue.value,
         className: formik.values.className || '',
-        subjectCode: newValue.code,
+        subjectCode: '',
         primaryTeacher: '',
         secondaryTeacher: [],
         description: '',
@@ -209,9 +209,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
-  // Log for debugging
-  console.log('formik values:', formik.values);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -230,6 +227,7 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     value={formik.values.className}
                     labelKey="name"
                     valueKey="name"
+                    placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
 
@@ -291,7 +289,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     )}
                   />
                 </ShakingTextField>
-                {/* Add Subject link */}
                 <Typography
                   variant="body2"
                   fontWeight={500}
@@ -303,12 +300,12 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     addSubjectDialog.onTrue();
                   }}
                 >
-                  Add Subject
+                  Add Subject ?
                 </Typography>
                 <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
-                  title="Add Subject"
+                  title="Add Subject ?"
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}
@@ -318,6 +315,7 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     editData={null}
                   />
                 </CustomDialog>
+                {/* Add Subject link */}
               </Grid>
 
               {/* Subject Cards Section */}

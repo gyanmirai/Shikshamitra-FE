@@ -4,8 +4,8 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 
-import { Save } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Save, RestartAlt } from '@mui/icons-material';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,12 +24,19 @@ const AssignElectiveSubject = () => {
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
   const [electiveSubject, setElectiveSubject] = useState<string>('');
-
+  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
   // State to store available division options
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // State to store the selected class
   const [classes, setClasses] = useState<string>('');
+  const teacherOptions = [
+    { id: '1', name: 'Physics' },
+    { id: '2', name: 'Chemistry' },
+    { id: '3', name: 'Biology' },
+    { id: '4', name: 'Computer Science' },
+    { id: '5', name: 'Economics' },
+  ];
   return (
     <Box>
       <CustomBreadcrumbs
@@ -37,7 +44,7 @@ const AssignElectiveSubject = () => {
         description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculum-management' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Assign Elective Subject to Students' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -78,6 +85,7 @@ const AssignElectiveSubject = () => {
             label="Elective Subject"
             labelKey="name"
             valueKey="id"
+            disabled={!division}
             options={[
               { id: '1', name: 'Physics' },
               { id: '2', name: 'Chemistry' },
@@ -86,27 +94,34 @@ const AssignElectiveSubject = () => {
               { id: '5', name: 'Economics' },
             ]}
             value={electiveSubject}
-            onChange={(val) => {}}
+            onChange={(value) => {
+              setElectiveSubject(value as string);
+            }}
             formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
           />
         </Box>
 
         {/* Right side - Save Button */}
-        <Button
-          startIcon={<Save />}
-          variant="outlined"
-          disabled={!classes || !division || !electiveSubject}
-        >
-          Save
-        </Button>
+        <Box display="flex" gap={2} justifyContent="flex-end">
+          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+            Reset
+          </Button>
+          <Button
+            startIcon={<Save />}
+            variant="contained"
+            disabled={!classes || !division || !electiveSubject}
+          >
+            Save
+          </Button>
+        </Box>
       </Box>
 
       <CustomizableTable
         tableId="elective-subject-table"
         noDataText={<>No Bulk Update Data Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Sr. No, GR No, Name',
-          label: 'Search by Sr. No, GR No, Name',
+          placeholder: 'Search by Sr. No, GR No, Name...',
+          label: 'Search by Sr. No, GR No, Name...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -126,20 +141,17 @@ const AssignElectiveSubject = () => {
             // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
             // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
             render: (value, row: any) => (
-              <CustomSelect
-                label="Elective Subject"
-                labelKey="name"
-                valueKey="id"
-                options={[
-                  { id: '1', name: 'Physics' },
-                  { id: '2', name: 'Chemistry' },
-                  { id: '3', name: 'Biology' },
-                  { id: '4', name: 'Computer Science' },
-                  { id: '5', name: 'Economics' },
-                ]}
-                value={division}
-                onChange={(val) => {}}
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              <Autocomplete
+                options={teacherOptions}
+                getOptionLabel={(option) => option.name}
+                value={teacherOptions.find((opt) => opt.id === division) || null}
+                onChange={(_, newValue) => {
+                  setSelectedElectiveSubject(newValue?.id || '');
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="Elective Subject" variant="outlined" size="small" />
+                )}
+                sx={{ minWidth: '200px', width: '100%' }}
               />
             ),
 

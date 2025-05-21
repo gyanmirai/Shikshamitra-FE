@@ -44,12 +44,12 @@ const CurriculumSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Settings"
-        description="Configure curriculum settings, manage notification preferences, and define user permissions to ensure smooth and secure academic operations. Customize settings according to your institution's needs."
+        heading="Setting"
+        description="Setting for creating global subjects, elective subject and notification setting"
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculum-management' },
-          { name: 'Settings' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+          { name: 'Setting' },
           { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}

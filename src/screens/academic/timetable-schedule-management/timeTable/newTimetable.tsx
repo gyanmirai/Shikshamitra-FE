@@ -24,6 +24,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -341,7 +343,7 @@ const TimeTableGrid = (props: TabComponentType) => {
     ? [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
         { name: 'Time Table', href: '/academic/timeTableDashboard' },
-        { name: 'New Time Table', href: '/academic/newTimetable' },
+        { name: 'New Timetable', href: '/academic/newTimetable' },
       ]
     : [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
@@ -409,10 +411,18 @@ const TimeTableGrid = (props: TabComponentType) => {
             />
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="contained" color="warning" size="small">
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+              variant="outlined"
+              size="small"
+            >
               Draft
             </Button>
-            <Button variant="contained" size="small">
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
+              variant="contained"
+              size="small"
+            >
               Publish
             </Button>
           </Box>
@@ -444,19 +454,23 @@ const TimeTableGrid = (props: TabComponentType) => {
       </CustomDialog>
       {!open && (
         <>
-          <CustomSelect
-            label="Class"
-            name="class"
-            isLoading={isLoading}
-            options={classData?.items || []}
-            valueKey="id"
-            labelKey="name"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            value={classes}
-            onChange={(value) => {
-              // setClasses(value);
-            }}
-          />
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+          >
+            <CustomSelect
+              label="Class"
+              name="class"
+              isLoading={isLoading}
+              options={classData?.items || []}
+              valueKey="id"
+              labelKey="name"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              value={classes}
+              onChange={(value) => {
+                setClasses(value as string);
+              }}
+            />
+          </Box>
           <CustomizableTable
             tableId="timetable-table"
             searchFieldProps={{
@@ -488,7 +502,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               {
                 id: 'action',
                 label: 'Actions',
-                minWidth: 100,
+                minWidth: 50,
                 sticky: true,
                 isSort: false,
                 isFilter: false,

@@ -11,6 +11,8 @@ import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -24,7 +26,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import SubjectTable from './component/subjectTable';
 import SubjectForm from './component/subjectFormComponent';
-import { ViewSubject } from './component/viewSubjectComponent';
+import { ViewSubject } from './component/viewDetailComponents/viewSubjectComponent';
 
 import type { ISubjectFormValues } from './component/type';
 
@@ -121,14 +123,14 @@ const Subject = (props: TabComponentType) => {
     ? [
         // Links when form is open
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum', href: '/academic/curriculum-management' },
+        { name: 'Curriculum' },
         { name: 'Subject' },
         { name: 'Subject Form' },
       ]
     : [
         // Links when viewing subject list
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum', href: '/academic/curriculum-management' },
+        { name: 'Curriculum' },
         { name: 'Subject' },
       ];
 
@@ -174,19 +176,23 @@ const Subject = (props: TabComponentType) => {
       ) : (
         <>
           {/* Class selection dropdown */}
-          <CustomSelect
-            label="Class"
-            name="class"
-            isLoading={isLoading}
-            options={classData?.items || []}
-            valueKey="id"
-            labelKey="name"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            value={classes}
-            onChange={(value) => {
-              setClasses(value as string);
-            }}
-          />
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+          >
+            <CustomSelect
+              label="Class"
+              name="class"
+              isLoading={isLoading}
+              options={classData?.items || []}
+              valueKey="id"
+              labelKey="name"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              value={classes}
+              onChange={(value) => {
+                setClasses(value as string);
+              }}
+            />
+          </Box>
           {/* Subject table displayed when class is selected */}
 
           <SubjectTable
@@ -217,11 +223,12 @@ const Subject = (props: TabComponentType) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure want to Delete ?"
+        content="Are you sure want to Delete Subject ?"
         action={
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete();
             }}
@@ -238,12 +245,12 @@ const Subject = (props: TabComponentType) => {
           confirmPublishDialog.onFalse();
           setSelectedSubject(null);
         }}
-        title="Confirm Publication"
-        content="Are you sure want to Publish ?"
+        title="Publish"
+        content="Are you sure want to Publish Subject ?"
         action={
           <Button
             variant="contained"
-            color="error"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               confirmStatusChange();
             }}
@@ -261,7 +268,7 @@ const Subject = (props: TabComponentType) => {
           showSubjectDialog.onFalse();
           setSelectedSubject(null);
         }}
-        maxWidth="sm"
+        maxWidth="md"
       >
         <ViewSubject subject={selectedSubject} />
       </CustomDialog>

@@ -20,14 +20,13 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import learningResourceTableData from 'src/json/academic/syllabus/learningResourceTableData.json';
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusOptions,
-} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -49,32 +48,46 @@ const LearningResources = (props: TabComponentType) => {
   const { searchParams } = props;
   // State for controlling view mode (list/grid)
   const [view, setView] = useState('list');
+  // Dialog state for adding/editing learning resources
   const addLearningResourceDialog = useBoolean();
-  // Extract class and subject from URL parameters with default empty string
-  const classFromUrl = searchParams?.class || ''; // Use optional chaining
-  const subjectFromUrl = searchParams?.subject || ''; // Use optional chaining
 
-  // State for managing selected resource entry and edit mode
+  // Get class value from URL parameters, default to empty string if not present
+  const classFromUrl = searchParams?.class || '';
+
+  // Get subject value from URL parameters, default to empty string if not present
+  const subjectFromUrl = searchParams?.subject || '';
+
+  // State to store currently selected resource entry for editing
   const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
-  const [isEdit, setIsEdit] = useState(false);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-  // State for storing all learning resources data
-  const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
-  // const dialog = useBoolean();
-  // State for confirmation dialog
-  const confirm_dialog = useBoolean();
-  const deleteDialog = useBoolean();
 
+  // Boolean state to track if we're in edit mode
+  const [isEdit, setIsEdit] = useState(false);
+
+  // Redux state to track if there are unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function
+  const dispatch = useDispatch();
+
+  // State to store all learning resource data, initialized with sample data
+  const [resourceData, setResourceData] = useState<IResourceData[]>(learningResourceTableData);
+
+  // Dialog state for general confirmations
+  const confirm_dialog = useBoolean();
+
+  // Dialog state specifically for delete confirmations
+  const deleteDialog = useBoolean();
   // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // State for selected class and subject filters
+  // State to store selected class, initialized from URL parameter
   const [classes, setClasses] = useState<string>(classFromUrl);
+  // State to store selected subject, initialized from URL parameter
   const [subject, setSubject] = useState(subjectFromUrl);
+  // State to track pending status changes for publish/unpublish actions
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newStatus: string;
@@ -107,8 +120,6 @@ const LearningResources = (props: TabComponentType) => {
   // Function to close the dialog and reset form state
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      console.log('isSubmit---', isSubmit);
-      console.log('isChanges---', isChanges);
       dispatch(setIsChanges(false));
 
       setIsEdit(false);
@@ -209,7 +220,7 @@ const LearningResources = (props: TabComponentType) => {
                   }
             }
           >
-            {addLearningResourceDialog.value ? 'Back' : 'Learning Resources'}
+            {addLearningResourceDialog.value ? 'Back' : 'Learning Resource'}
           </Button>
         }
       />
@@ -241,7 +252,7 @@ const LearningResources = (props: TabComponentType) => {
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
             <CustomSelect
-              label="Course/Subject"
+              label="Subject"
               disabled={!classes}
               options={[
                 { value: 'Math', label: 'Math' },
@@ -288,8 +299,12 @@ const LearningResources = (props: TabComponentType) => {
               <CustomizableTable
                 tableId="learning-resources"
                 searchFieldProps={{
-                  placeholder: 'Search by Resource Title, Type, Class, Subject',
-                  label: 'Search by Resource Title, Type, Class, Subject',
+                  placeholder: 'Search by Resource Title, Type, Class, Subject...',
+                  label: 'Search by Resource Title, Type, Class, Subject...',
+                  sx: {
+                    maxWidth: '500px',
+                    width: '100%',
+                  },
                 }}
                 noDataText={
                   <>
@@ -324,7 +339,7 @@ const LearningResources = (props: TabComponentType) => {
                     label: 'Type of Resource',
                     align: 'left',
                   },
-                  { id: 'className', label: 'Class', minWidth: '200px', align: 'left' },
+                  { id: 'className', label: 'Class', align: 'left' },
                   { id: 'subject', label: 'Subject', align: 'left' },
                   {
                     id: 'dateUploaded',
@@ -337,27 +352,30 @@ const LearningResources = (props: TabComponentType) => {
                     id: 'status',
                     label: 'Publish',
                     align: 'left',
-                    filterType: 'enum',
-                    enumOptions: PublishUnpublishStatusOptions,
+                    isFilter: false,
+                    isSort: false,
                     render: (value: PublishUnpublishStatusType, row: any) => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Switch
                           size="small"
                           checked={value === PublishUnpublishStatusType.Publish}
-                          onChange={() => handleStatusChange(row.id, value)}
+                          onChange={() => {
+                            confirm_dialog.onTrue();
+                          }}
                         />
                       </Box>
                     ),
                   },
                   {
                     id: 'action',
-                    label: 'Actions',
-                    minWidth: 70,
+                    label: 'Action',
+                    minWidth: 120,
                     isSort: false,
                     sticky: true,
                     isFilter: false,
                     render: (value, row) => (
                       <ThreeDotsActions
+                        placement="right-top"
                         actions={(prop) => actions({ ...prop, row })}
                         showEditIcon
                         showDeleteIcon
@@ -398,16 +416,37 @@ const LearningResources = (props: TabComponentType) => {
           setSelectedEntry(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure want to Delete Resource ?"
         action={
           <Button
             variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {
               handleDelete(selectedEntry?.id as string);
             }}
           >
             Delete
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={confirm_dialog.value}
+        onClose={() => {
+          confirm_dialog.onFalse();
+        }}
+        title="Confirm Publication"
+        content="Are you sure want to Publish Resource ?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              confirm_dialog.onFalse();
+            }}
+          >
+            Publish
           </Button>
         }
       />

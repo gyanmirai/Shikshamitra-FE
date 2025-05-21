@@ -4,6 +4,10 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from '../iconify';
+
 import type { ConfirmDialogProps } from './types';
 
 // ----------------------------------------------------------------------
@@ -23,7 +27,12 @@ export function ConfirmDialog({
       {content && <DialogContent sx={{ typography: 'body2' }}> {content} </DialogContent>}
 
       <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={onClose}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          color="inherit"
+          onClick={onClose}
+        >
           Cancel
         </Button>
         {action}

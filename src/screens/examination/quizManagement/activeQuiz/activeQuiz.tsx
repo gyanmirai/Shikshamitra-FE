@@ -32,10 +32,7 @@ const ActiveQuiz = () => {
   const attemptQuizDialog = useBoolean();
   // State to control quiz portal visibility
   const [open, setOpen] = useState(false);
-  const handleTogglePublish = (row: any) => {
-    // Handle status toggle here
-    console.log('Toggling publish for:', row.id);
-  };
+  const handleTogglePublish = (row: any) => {};
 
   const handleAttemptClick = (row: any) => {
     setOpen(true);

@@ -7,6 +7,8 @@ import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/ma
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
@@ -20,7 +22,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import { validationSchema } from '../validationSchema';
 import { getLearningResourceInitialData } from './getLearningResourceInitialData';
-import LearningResourceTypeForm from '../../settings/components/learningResourceForm';
+import SettingResourceTypeForm from '../../settings/components/learningResourceType/settingResourceTypeForm';
 
 import type { IResourceData, ICreateLearningResourcesProps } from '../type';
 // Component for creating and editing learning resources
@@ -80,6 +82,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     disabled={!!currentClass}
                     labelKey="name"
                     valueKey="name"
+                    placeholder="Select Class"
                     formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
                     error={!!(formik.touched.className && formik.errors.className) || false}
                     helperText={(formik.touched.className && formik.errors.className) || ''}
@@ -102,6 +105,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     name="subject"
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val as string)}
+                    placeholder="Select Subject"
                     formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                     error={!!(formik.touched.subject && formik.errors.subject) || false}
                     helperText={(formik.touched.subject && formik.errors.subject) || ''}
@@ -116,6 +120,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   <TextField
                     disabled={isEdit}
                     label="Resource Title"
+                    placeholder="Enter Resource Title"
                     size="small"
                     name="resourceTitle"
                     value={formik.values.resourceTitle}
@@ -142,6 +147,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     onChange={(val) => {
                       formik.setFieldValue('typeOfResource', val as string);
                     }}
+                    placeholder="Select Resource Type"
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={
                       !!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false
@@ -162,7 +168,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     resourceDialog.onTrue();
                   }}
                 >
-                  Add Resource Type
+                  Add Resource Type ?
                 </Typography>
                 <CustomDialog
                   open={resourceDialog.value}
@@ -171,10 +177,10 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   }}
                   title="Add Learning Resource"
                 >
-                  <LearningResourceTypeForm
-                    data={null}
+                  <SettingResourceTypeForm
+                    open={resourceDialog}
                     onClose={resourceDialog.onFalse}
-                    isEdit={false}
+                    editData={null}
                   />
                 </CustomDialog>
               </Grid>
@@ -191,6 +197,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     name="description"
                     value={formik.values.description}
                     onChange={formik.handleChange}
+                    placeholder="Enter Description"
                     fullWidth
                     error={!!(formik.touched.description && formik.errors.description) || false}
                     helperText={(formik.touched.description && formik.errors.description) || ''}
@@ -228,24 +235,25 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
           {/* Action buttons */}
           <DialogActions>
             <Button
-              variant="contained"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
               onClick={() => {
                 setIsDraft(true);
                 formik.handleSubmit();
               }}
-              color="warning"
             >
-              Save as Draft
+              Save Draft
             </Button>
             <Button
               type="submit"
               variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={() => {
                 setIsDraft(false);
                 formik.handleSubmit();
               }}
             >
-              Save and Publish
+              Publish
             </Button>
           </DialogActions>
         </Box>

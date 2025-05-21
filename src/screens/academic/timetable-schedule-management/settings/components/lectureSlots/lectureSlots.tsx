@@ -72,8 +72,12 @@ const LectureSlots = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
-          placeholder: 'Search by Class, Period Slots, Break Slots',
-          label: 'Search by Class, Period Slots, Break Slots',
+          placeholder: 'Search by Class, Period Slots, Break Slots...',
+          label: 'Search by Class, Period Slots, Break Slots...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
         }}
         noDataText={
           <>

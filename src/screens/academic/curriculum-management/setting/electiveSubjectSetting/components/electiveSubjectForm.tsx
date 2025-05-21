@@ -35,9 +35,13 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   onClose,
   editData,
 }: IElectiveSubjectFormProps) => {
+  // Initialize formik form with initial values, validation schema and submit handler
   const formik = useFormik({
+    // Get initial form values from edit data or default values
     initialValues: getElectiveSubjectInitialValues(editData),
+    // Apply validation rules to form fields
     validationSchema: electiveSubjectValidationSchema,
+    // Handle form submission
     onSubmit: (values) => {
       console.log(values);
     },
@@ -53,9 +57,10 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                   <TextField
                     fullWidth
-                    label="Elective Title"
+                    label="Elective Subject *"
                     name="title"
                     size="small"
+                    placeholder="Enter Elective Subject"
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     error={formik.touched.title && Boolean(formik.errors.title)}
@@ -124,7 +129,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
                   <MuiColorInput
-                    placeholder="Subject Color"
+                    placeholder="Elective Subject Color"
                     size="small"
                     format="hex"
                     value={formik.values.subjectColor}

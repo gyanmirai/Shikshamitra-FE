@@ -22,8 +22,12 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
   <CustomizableTable
     tableId="hostel-incident-data-table"
     searchFieldProps={{
-      placeholder: 'Search by Hostel Name...',
-      label: 'Search by Hostel Name...',
+      placeholder: 'Search by Subject Name...',
+      label: 'Search by Subject Name...',
+      sx: {
+        maxWidth: '400px',
+        width: '100%',
+      },
     }}
     noDataText={
       <>
@@ -53,6 +57,8 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
         id: 'subjectColor',
         label: 'Subject Color',
         align: 'left',
+        isFilter: false,
+        isSort: false,
         render(value, row) {
           return (
             <Box
@@ -68,8 +74,8 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
       },
       {
         id: 'action',
-        label: 'Actions',
-        minWidth: 80,
+        label: 'Action',
+        minWidth: 50,
         isSort: false,
         sticky: true,
         isFilter: false,
