@@ -4,20 +4,17 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useMemo, useState } from 'react';
 
-import { RestartAlt } from '@mui/icons-material';
+import { Save, RestartAlt } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { Box, Button, Checkbox, TextField, Autocomplete } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import teacherTableData from 'src/json/academic/curriculum/teacherTableData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -147,22 +144,22 @@ const Teacher = ({
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Teacher"
+        heading="Assign Teachers to Subject"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculum-management' },
-          { name: 'Teacher' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+          { name: 'Assign Teachers to Subject' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <CustomSelect
             label="Class"
             name="class"
             options={classData?.items || []}
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             value={classes}
             labelKey="name"
             valueKey="id"
@@ -175,17 +172,11 @@ const Teacher = ({
             }}
           />
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Button size="small" variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+        <Box display="flex" gap={2} justifyContent="flex-end">
+          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
             Reset
           </Button>
-
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            onClick={() => {}}
-          >
+          <Button startIcon={<Save />} variant="contained">
             Save
           </Button>
         </Box>
@@ -196,15 +187,19 @@ const Teacher = ({
         tableId="teacher-table"
         noDataText={<>No Teachers Data Found Select Class and Division</>}
         searchFieldProps={{
-          placeholder: 'Search by Subject, Assigned Teacher',
-          label: 'Search by Subject, Assigned Teacher',
+          placeholder: 'Search by Subject, Assigned Teacher...',
+          label: 'Search by Subject, Assigned Teacher...',
+          sx: {
+            maxWidth: '500px',
+            width: '100%',
+          },
         }}
         columns={[
           {
             id: 'division',
             label: 'Division',
             filterType: 'string',
-            minWidth: 70,
+            minWidth: 90,
             align: 'left',
           },
           ...subjectList.map((subject) => ({
@@ -232,9 +227,9 @@ const Teacher = ({
                   </li>
                 )}
                 renderInput={(params) => (
-                  <TextField {...params} label="Elective Subject" variant="outlined" size="small" />
+                  <TextField {...params} label="Assign Teacher" variant="outlined" size="small" />
                 )}
-                sx={{ maxWidth: '600px', width: '100%' }}
+                sx={{ minWidth: '200px', width: '100%' }}
               />
             ),
           })),

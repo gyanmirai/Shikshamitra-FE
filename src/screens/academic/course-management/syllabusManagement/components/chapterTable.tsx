@@ -1,5 +1,7 @@
 // components/ChapterTable.tsx
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -14,12 +16,17 @@ const ChapterTable = ({
   data,
   actions,
   handleEyeClick,
+  onViewDocuments,
 }: IChapterTableProps) => (
   <CustomizableTable
     tableId="chapterTable"
     searchFieldProps={{
-      placeholder: 'Search by Chapter No, Chapter Name, Secondary Teacher',
-      label: 'Search by Chapter No, Chapter Name, Secondary Teacher',
+      placeholder: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
+      label: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
+      sx: {
+        maxWidth: '500px',
+        width: '100%',
+      },
     }}
     noDataText={
       <>
@@ -71,10 +78,19 @@ const ChapterTable = ({
       {
         id: 'viewMaterial',
         label: 'View Material',
-        align: 'left',
         isFilter: false,
-        render() {
-          return <Iconify icon="mdi:eye" sx={{ ml: 7 }} />;
+        isSort: false,
+        align: 'center',
+        render(value, row) {
+          return (
+            <IconButton
+              onClick={() => {
+                onViewDocuments(row as IChapter);
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} />
+            </IconButton>
+          );
         },
       },
       {
@@ -108,16 +124,16 @@ const ChapterTable = ({
       },
       {
         id: 'actions',
-        label: 'Actions',
+        label: 'Action',
         minWidth: 70,
         isSort: false,
         isFilter: false,
-        align: 'left',
+        align: 'center',
         sticky: true,
         render(value, row) {
           return (
             <ThreeDotsActions
-              actions={(prop) => actions({ ...prop, row: row as IChapter })}
+              showThreeDots={false}
               placement="right-top"
               showEditIcon
               showDeleteIcon

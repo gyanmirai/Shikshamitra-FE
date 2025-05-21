@@ -669,7 +669,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+1',
             },
             {
-              title: 'Teacher',
+              title: 'Assign Teachers to Subject',
               path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
               shortcutKey: 'Alt+A+C+2',
@@ -727,7 +727,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+S+4',
             },
             {
-              title: 'Settings',
+              title: 'Setting',
               path: '/academic/courseSettings',
               _action: 'course-management-settings',
               shortcutKey: 'Alt+A+S+5',

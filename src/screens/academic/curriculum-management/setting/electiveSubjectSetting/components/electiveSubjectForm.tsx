@@ -35,9 +35,13 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   onClose,
   editData,
 }: IElectiveSubjectFormProps) => {
+  // Initialize formik form with initial values, validation schema and submit handler
   const formik = useFormik({
+    // Get initial form values from edit data or default values
     initialValues: getElectiveSubjectInitialValues(editData),
+    // Apply validation rules to form fields
     validationSchema: electiveSubjectValidationSchema,
+    // Handle form submission
     onSubmit: (values) => {
       console.log(values);
     },

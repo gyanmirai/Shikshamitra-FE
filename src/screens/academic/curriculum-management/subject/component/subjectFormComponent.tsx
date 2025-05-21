@@ -163,9 +163,9 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
       const newSubject = {
         id: Date.now() + Math.random(),
         name: newValue.name,
-        subjectName: newValue.name,
+        subjectName: newValue.value,
         className: formik.values.className || '',
-        subjectCode: newValue.code,
+        subjectCode: '',
         primaryTeacher: '',
         secondaryTeacher: [],
         description: '',
@@ -208,9 +208,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
     );
     formik.setFieldValue('subjects', updatedSubjects);
   };
-
-  // Log for debugging
-  console.log('formik values:', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

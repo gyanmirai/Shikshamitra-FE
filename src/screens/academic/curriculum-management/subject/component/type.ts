@@ -51,6 +51,8 @@ export interface IDocument {
   name: string;
   url: string;
   file?: File;
+  type?: string;
+  size?: string;
 }
 
 export interface ISubjectCardProps {
@@ -62,3 +64,19 @@ export interface ISubjectCardProps {
   teacherOptions: { value: string; label: string }[];
   onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
 }
+
+export type IDocType =
+  | 'pdf'
+  | 'doc'
+  | 'docx'
+  | 'ppt'
+  | 'pptx'
+  | 'xls'
+  | 'xlsx'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'zip'
+  | 'csv'
+  | 'txt'
+  | string;

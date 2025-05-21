@@ -11,6 +11,8 @@ import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -226,6 +228,7 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete();
             }}
@@ -242,12 +245,12 @@ const Subject = (props: TabComponentType) => {
           confirmPublishDialog.onFalse();
           setSelectedSubject(null);
         }}
-        title="Confirm Publication"
+        title="Publish"
         content="Are you sure want to Publish Subject ?"
         action={
           <Button
             variant="contained"
-            color="error"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               confirmStatusChange();
             }}

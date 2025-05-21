@@ -16,9 +16,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data }: IAssignGradeProps) =
       feedback: data?.feedback || '',
     },
     validationSchema,
-    onSubmit(values) {
-      console.log('values---', values);
-    },
+    onSubmit(values) {},
   });
 
   return (

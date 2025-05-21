@@ -22,6 +22,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -114,7 +116,7 @@ const CourseProgress = (props: TabComponentType) => {
           }}
         >
           {' '}
-          <Iconify icon="solar:pen-bold" />
+          <Iconify icon={GlobalIcons.edit} />
           Update Progress
         </MenuItem>
       </MenuList>
@@ -154,7 +156,7 @@ const CourseProgress = (props: TabComponentType) => {
           valueKey="id"
           labelKey="name"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          value={searchParams?.classId || ''}
+          value={classes}
           onChange={(value) => {
             setClasses(value as string);
           }}
@@ -186,6 +188,10 @@ const CourseProgress = (props: TabComponentType) => {
             searchFieldProps={{
               placeholder: 'Search by Chapter Name, Teacher Name, Progress...',
               label: 'Search by Chapter Name, Teacher Name, Progress...',
+              sx: {
+                maxWidth: '450px',
+                width: '100%',
+              },
             }}
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
@@ -301,6 +307,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
             id="completePercentage"
             name="completePercentage"
             label="Add Approax Percentage"
+            placeholder="Enter Add Approax Percentage"
             value={formik.values.completePercentage}
             onChange={formik.handleChange}
             error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
