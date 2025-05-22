@@ -1,0 +1,63 @@
+'use client';
+
+import React from 'react';
+
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+import type { IAssignmentType, IAssignmentTypeTableProps } from './type';
+
+const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({ data, onDelete, onEdit }) => (
+  <CustomizableTable
+    tableId="assignment-type-data-table"
+    searchFieldProps={{
+      placeholder: 'Search by Assignment Type Name...',
+      label: 'Search by Assignment Type Name...',
+      sx: {
+        maxWidth: '400px',
+        width: '100%',
+      },
+    }}
+    noDataText="No Assignment Type Data Found"
+    columns={[
+      {
+        id: 'assignmentTypeName',
+        label: 'Assignment Type Name',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        minWidth: 50,
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render: (_value, row) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            placement="right-top"
+            showDeleteIcon
+            showEditIcon
+            handleDeleteClick={() => {
+              onDelete(row as IAssignmentType);
+            }}
+            handleEditClick={() => {
+              onEdit(row as IAssignmentType);
+            }}
+          />
+        ),
+      },
+    ]}
+    data={[
+      { assignmentTypeName: 'Essay' },
+      { assignmentTypeName: 'Research Paper' },
+      { assignmentTypeName: 'Presentation' },
+      { assignmentTypeName: 'Lab Report' },
+      { assignmentTypeName: 'Case Study' },
+      { assignmentTypeName: 'Project Work' },
+      { assignmentTypeName: 'Reflection Paper' },
+    ]}
+  />
+);
+
+export default AssignmentTypeTable;

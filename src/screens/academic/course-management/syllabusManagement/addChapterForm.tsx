@@ -173,21 +173,18 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Grid>
 
               {/* Rich Text Editor for Chapter Content */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <Editor
                   value={editorContent}
                   onChange={(value) => {
                     formik.setFieldValue('content', value);
                   }}
                   placeholder="Chapter Description"
-                  sx={{ width: '100%', marginTop: '10px' }}
+                  sx={{ width: '100%' }}
                 />
               </Grid>
               {/* Document Upload Section */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Upload the chapter Material
-                </Typography>
+              <Grid item xs={12} md={6}>
                 <UploadBox
                   onDrop={handleFileUpload}
                   placeholder={
@@ -201,13 +198,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       }}
                     >
                       <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Drag Your Document</Typography>
+                      <Typography variant="body2">Upload Material</Typography>
                     </Box>
                   }
                   sx={{
                     py: 2.5,
                     width: '100%',
-                    height: 'auto',
+                    height: '100%',
                     borderRadius: 1.5,
                   }}
                 />
