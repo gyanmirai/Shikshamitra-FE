@@ -32,6 +32,7 @@ import SubjectCard from './subjectCardComponent';
 import { validationSchema } from './validationSchema';
 import { getSubjectInitialValues } from './initialValues';
 import SettingSubjectForm from '../../setting/subjectCreation/subjectForm';
+import SettingElectiveSubjectForm from '../../setting/electiveSubjectSetting/components/electiveSubjectForm';
 
 import type { ISubjectFormProps, ISubjectFormValues } from './type';
 
@@ -86,8 +87,10 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   // Flag to check if the subject is already published
   const isPublished = data?.status === 'Publish';
+  // State to control visibility of add subject dialog
   const addSubjectDialog = useBoolean();
-
+  // State to control visibility of add elective subject dialog
+  const addElectiveSubjectDialog = useBoolean();
   // State to track selected option for the autocomplete
   const [selectedOption, setSelectedOption] = useState<any>(null);
   // Flag to prevent infinite update loops
@@ -289,28 +292,57 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     )}
                   />
                 </ShakingTextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    addSubjectDialog.onTrue();
-                  }}
-                >
-                  Add Subject ?
-                </Typography>
+                <Box gap={1}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    textAlign="right"
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      addSubjectDialog.onTrue();
+                    }}
+                  >
+                    Add Subject ?
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    textAlign="right"
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      addElectiveSubjectDialog.onTrue();
+                    }}
+                  >
+                    Add Elective Subject ?
+                  </Typography>
+                </Box>
+
                 <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
-                  title="Add Subject ?"
+                  title="Add Subject"
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}
                     onClose={() => {
                       addSubjectDialog.onFalse();
+                    }}
+                    editData={null}
+                  />
+                </CustomDialog>
+                <CustomDialog
+                  open={addElectiveSubjectDialog.value}
+                  handleClose={addElectiveSubjectDialog.onFalse}
+                  title="Add Elective Subject"
+                >
+                  <SettingElectiveSubjectForm
+                    open={addElectiveSubjectDialog}
+                    onClose={() => {
+                      addElectiveSubjectDialog.onFalse();
                     }}
                     editData={null}
                   />
@@ -341,15 +373,27 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
           {/* Action Buttons */}
           <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             {isEdit ? (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setIsDraft(true);
-                  formik.handleSubmit();
-                }}
-              >
-                Update
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  onClick={() => {
+                    onClose(null, false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  onClick={() => {
+                    setIsDraft(true);
+                    formik.handleSubmit();
+                  }}
+                >
+                  Update
+                </Button>
+              </>
             ) : (
               <>
                 <Button

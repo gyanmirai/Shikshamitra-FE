@@ -148,11 +148,11 @@ const LearningResources = (props: TabComponentType) => {
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem onClick={() => {}}>
-          <Iconify icon="mdi:download" />
+          <Iconify icon={GlobalIcons.download} />
           Download
         </MenuItem>
         <MenuItem onClick={() => {}}>
-          <Iconify icon="solar:share-bold" />
+          <Iconify icon={GlobalIcons.share} />
           Share with classes/teachers
         </MenuItem>
       </MenuList>
@@ -341,6 +341,7 @@ const LearningResources = (props: TabComponentType) => {
                   },
                   { id: 'className', label: 'Class', align: 'left' },
                   { id: 'subject', label: 'Subject', align: 'left' },
+                  { id: 'chapter', label: 'Chapter', align: 'left' },
                   {
                     id: 'dateUploaded',
                     label: 'Date Uploaded',

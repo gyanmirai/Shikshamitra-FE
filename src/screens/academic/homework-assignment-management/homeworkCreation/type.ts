@@ -1,37 +1,28 @@
 import type { Dayjs } from 'dayjs';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import type { TStudentGrade } from '../../gradebook-performance-tracking/gradebook/gradebook';
 
-export interface IHomeworkAssignment {
+export interface IHomework {
   title: string;
   description: string;
   class: string;
   division: string[];
   subjects: string[];
+  chapters: string[];
+  homeworkType: string;
   submissionType: string;
-  dueDate: Dayjs | null;
-  dueTime: Dayjs | null;
+  dueDate: Dayjs | null | string;
   attachments: File[];
   createdBy: string;
   status: string;
-  // Homework-Specific Fields
-  chapters?: string[];
-  homeworkType?: string;
-  isDailyTask?: boolean;
-  parentAcknowledgement?: boolean;
-  isRecurring?: boolean;
-  recurringFrequency?: string;
-  todaysDate?: Dayjs | null;
-  dayOfSubmission?: string;
-  endDate?: Dayjs | null;
-  scheduleDate?: Dayjs | null;
-  // Assignment-Specific Fields
-  assignmentType?: string;
-  evaluationCriteria?: string;
-  assignedResources?: string;
-  rubricRequired?: boolean;
-  rubric?: string;
+  isDailyTask: boolean;
+  dayOfSubmission: string;
+  endDate: Dayjs | null | string;
+
   isScheduled: boolean;
+  scheduleDate: Dayjs | null | string;
+  todaysDate: Dayjs | string;
 }
 
 export interface IStudentSubmissionsProps {
@@ -53,7 +44,17 @@ export interface IAssignGradeProps {
  * @property {string} view - View mode of the form
  */
 export interface IHomeWorkCreationFormProps {
-  onsubmit: (values: IHomeworkAssignment, status: 'draft' | 'publish') => void;
-  view: string;
+  dialog: UseBooleanReturn;
   onClose: (e: any, isSubmit: boolean) => void;
+  editData: IHomework | null;
+}
+
+export interface IHomeworkTableProps {
+  filteredData: any[]; // ideally use proper type like IHomeworkAssignment[]
+  setOpen: (open: boolean) => void;
+  dialog: UseBooleanReturn;
+  handleSwitchChange: (row: IHomework) => void;
+  onViewDetails: (row: IHomework) => void;
+  onEditDetails: (row: IHomework) => void;
+  onDeleteDetails: (row: IHomework) => void;
 }

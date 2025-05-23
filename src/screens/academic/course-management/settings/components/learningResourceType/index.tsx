@@ -13,10 +13,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import learningResourceData from 'src/json/academic/syllabus/learningResourceData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ResourceTypeTable from './learningResource';
 import SettingResourceTypeForm from './settingResourceTypeForm';
@@ -35,7 +37,7 @@ const ResourceTypeCreation = () => {
   // State to store the currently selected resource type for edit/delete
   const [selected, setSelected] = useState<IResourceType | null>(null);
   // State to store the list of resource types
-  const [resourceTypes, setResourceTypes] = useState<IResourceType[]>([]);
+  const [resourceTypes, setResourceTypes] = useState<IResourceType[]>(learningResourceData);
   // Redux dispatch function for dispatching actions
   const dispatch = useDispatch();
 
@@ -55,12 +57,21 @@ const ResourceTypeCreation = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
-        <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
-          Resource Type
-        </Button>
-      </Box>
-
+      <CustomBreadcrumbs
+        heading="Setting"
+        description="Setting for learning resource type and notification setting"
+        links={[
+          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Syllabus', href: '/academic/courseSubjects' },
+          { name: 'Setting' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        action={
+          <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
+            Resource Type
+          </Button>
+        }
+      />
       <ResourceTypeTable
         onDelete={(data) => {
           setSelected(data);

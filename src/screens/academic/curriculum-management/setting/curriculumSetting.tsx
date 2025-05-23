@@ -11,7 +11,6 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Settings from './settings';
 import SubjectCreation from './subjectCreation';
 import ElectiveSubjectSetting from './electiveSubjectSetting';
 
@@ -25,11 +24,6 @@ const TABS = [
     value: 'electiveSubjectSetting',
     label: 'Elective Subject Creation',
     component: (props: TabComponentType) => <ElectiveSubjectSetting {...props} />,
-  },
-  {
-    value: 'notificationSetting',
-    label: 'Notification Setting',
-    component: (props: TabComponentType) => <Settings {...props} />,
   },
 ];
 const CurriculumSetting = () => {

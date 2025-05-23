@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "resourceTypeName": "Video"
+  },
+  {
+    "id": "2",
+    "resourceTypeName": "Document"
+  },
+  {
+    "id": "3",
+    "resourceTypeName": "Quiz"
+  },
+  {
+    "id": "4",
+    "resourceTypeName": "Presentation"
+  },
+  {
+    "id": "5",
+    "resourceTypeName": "Assignment"
+  }
+]

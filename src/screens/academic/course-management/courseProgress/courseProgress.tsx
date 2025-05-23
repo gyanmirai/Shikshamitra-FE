@@ -99,7 +99,7 @@ const CourseProgress = (props: TabComponentType) => {
         {/* Reminder action item */}
         <MenuItem onClick={() => {}}>
           {' '}
-          <Iconify icon="mdi:bell" />
+          <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
         {/* Mark as complete action item */}
@@ -239,7 +239,7 @@ const CourseProgress = (props: TabComponentType) => {
                 filterType: 'date',
                 render: (value, row) => (
                   <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
+                    {dayjs(value).format('DD-MM-YYYY')}
                   </Typography>
                 ),
               },

@@ -15,31 +15,48 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { StudentSubmissions } from './homeworkCreation/homework-creation';
+import { StudentSubmissions } from './homeworkCreation/component/studentSubmission';
 
 const StudentSubmission = (props: TabComponentType) => {
+  // Dialog state for modal/popup control
   const dialog = useBoolean();
+
+  // Props destructuring for search parameters and setter
   const { searchParams, setSearchParams } = props;
 
+  // State for selected class ID from search params
   const classes = searchParams?.classId ? searchParams?.classId : '';
 
+  // State for selected division ID
   const [division, setDivision] = useState('');
+
+  // State for available division options array
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+
+  // State for selected subject from search params
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
+
+  // State for selected assignment type from search params
   const [assignmentType, setAssignmentType] = useState(
     searchParams?.assignmentType ? searchParams?.assignmentType : ''
   );
+
+  // State for selected assignment title from search params
   const [assignmentTitle, setAssignmentTitle] = useState(
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
+
+  // Query hook for fetching class data
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // Effect to handle division options and initial selection based on class data
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
+        // If class is selected, set divisions for that class
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
         setDivisionOptions(selectedClass?.divisions || []);
         // Set first division if available
@@ -47,6 +64,7 @@ const StudentSubmission = (props: TabComponentType) => {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
+        // If no class selected, set first class and its divisions
         const firstClass = classData.items[0];
         setSearchParams?.({
           classId: firstClass.id,
@@ -59,7 +77,6 @@ const StudentSubmission = (props: TabComponentType) => {
       }
     }
   }, [classData?.items, classes, setSearchParams]);
-
   return (
     <Box>
       <CustomBreadcrumbs

@@ -877,7 +877,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+H+1',
             },
             {
-              title: 'Homework & Assignment Creation',
+              title: 'Homework and Assignment Creation',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
@@ -891,7 +891,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+H+3',
             },
             {
-              title: 'Settings',
+              title: 'Setting',
               path: '/academic/homeworkSettings',
               _action: 'homework-assignment-management-settings',
               shortcutKey: 'Alt+A+H+4',

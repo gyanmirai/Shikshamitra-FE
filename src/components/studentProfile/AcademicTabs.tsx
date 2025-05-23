@@ -8,7 +8,7 @@ import { Scrollbar } from '../scrollbar';
 import { CustomTabs } from '../custom-tabs';
 import AcademicTimetable from './academicTimetable';
 import SubjectPerformance from './subjectPerformance';
-import HomeworkAssignment from './homeworkAssignment';
+// import HomeworkAssignment from './homeworkAssignment';
 import ProfileExamination from './profileExamination';
 
 const TABS = [
@@ -36,7 +36,7 @@ const AcademicTabs = () => {
         <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
           {tabs.value === 'timetable' && <AcademicTimetable />}
           {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
-          {tabs.value === 'homework/assignments' && <HomeworkAssignment />}
+          {/* {tabs.value === 'homework/assignments' && <HomeworkAssignment />} */}
           {tabs.value === 'examination' && <ProfileExamination />}
         </Box>
       </Scrollbar>

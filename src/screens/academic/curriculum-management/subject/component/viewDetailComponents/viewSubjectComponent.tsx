@@ -107,11 +107,15 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                 >
                   <Iconify icon="mdi:atom" sx={{ fontSize: 28 }} />
                 </Avatar>
-                <Box>
+                <Box display="flex" flexDirection="column" gap={0.5}>
                   <Typography variant="h4">{subject?.subjectName}</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Label color="info">Subject Type : {subject?.subjectType}</Label>
-                    <Label color="secondary">Class : {subject?.className}</Label>
+                    <Label color="info" sx={{ fontSize: '1rem' }}>
+                      Subject Type : {subject?.subjectType}
+                    </Label>
+                    <Label color="secondary" sx={{ fontSize: '1rem' }}>
+                      Class : {subject?.className}
+                    </Label>{' '}
                   </Box>
                 </Box>
               </Box>
