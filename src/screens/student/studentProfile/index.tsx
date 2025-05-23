@@ -249,7 +249,7 @@ export function StudentProfile() {
           { name: 'Student List' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="This section displays a list of all students. Click on a students name to be redirected to their detailed profile view."
+        description="Find and view detailed information for each student by clicking their name in the list below."
         action={
           currentStudent && (
             <Button

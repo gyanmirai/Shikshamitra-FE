@@ -143,7 +143,7 @@ const AttendanceType = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             loading={isDeleteLoading}
@@ -155,7 +155,7 @@ const AttendanceType = () => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -168,7 +168,7 @@ const AttendanceType = () => {
             <Tooltip
               arrow
               placement="right"
-              title="You can add different attendance types (e.g., Sick, Casual, etc.) and assign a specific color to each for better visibility."
+              title="Define attendance types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>

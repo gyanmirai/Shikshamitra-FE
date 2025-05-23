@@ -68,7 +68,7 @@ const ExamType = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             // loading={isDeleteLoading}
@@ -80,7 +80,7 @@ const ExamType = () => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

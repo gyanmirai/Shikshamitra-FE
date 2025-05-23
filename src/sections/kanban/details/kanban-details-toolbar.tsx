@@ -122,12 +122,12 @@ export function KanbanDetailsToolbar({
         title="Delete"
         content={
           <>
-            Are you sure want to delete <strong> {taskName} </strong>?
+            Are you sure you want to delete <strong> {taskName} </strong>?
           </>
         }
         action={
           <Button variant="contained" color="error" onClick={onDelete}>
-            Delete
+            Yes
           </Button>
         }
       />

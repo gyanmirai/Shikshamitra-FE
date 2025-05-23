@@ -137,7 +137,7 @@ const RoomCategorySetting = (props: TabComponentType) => {
           content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

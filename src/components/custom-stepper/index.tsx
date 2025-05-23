@@ -125,10 +125,17 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     },
   });
 
-  console.log(formik, '][][][][][');
-
   return (
-    <Box sx={{ width: '100%', p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        p: 2,
+      }}
+    >
       <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
         {steps.map((label: string, index: number) => (
           <Step
@@ -153,15 +160,39 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
+          flex: 1,
+          minHeight: 0, // Important for proper flex behavior
+          position: 'relative',
         }}
         onSubmit={formik.handleSubmit}
       >
-        {' '}
-        <Scrollbar sx={{ height: scrollbarHeight, overflow: 'auto' }}>
+        <Scrollbar
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            '& .simplebar-content': {
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }}
+        >
           {formik && renderItem({ formik, activeStep, isBackClick })}
         </Scrollbar>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 2,
+            position: 'sticky',
+            bottom: 0,
+            backgroundColor: 'transparent',
+            p: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
           <Button
             size="small"
             variant="outlined"
@@ -175,11 +206,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           </Button>
           <LoadingButton
             variant="contained"
-            color="primary"
+            // color="primary"
             type="submit"
             size="small"
             loading={isLoading}
-            // onClick={activeStep === steps.length - 1 ? undefined : handleNext}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </LoadingButton>

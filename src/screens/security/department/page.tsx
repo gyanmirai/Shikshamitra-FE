@@ -319,7 +319,7 @@ const Department = () => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -331,7 +331,7 @@ const Department = () => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -638,7 +638,7 @@ const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -654,7 +654,7 @@ const RenderRoleTable = ({ organizationId }: { organizationId: string }) => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -849,7 +849,7 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -865,7 +865,7 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

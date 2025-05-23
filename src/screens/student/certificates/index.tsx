@@ -50,7 +50,7 @@ const StudentCertificatesScreen = () => {
           { name: 'Certificates' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="This tab allows you to generate various certificates, such as Bonafide, Leaving, and more."
+        description="Generate certificates like Bonafide, Leaving, and others here."
       />
       <Card
         sx={{

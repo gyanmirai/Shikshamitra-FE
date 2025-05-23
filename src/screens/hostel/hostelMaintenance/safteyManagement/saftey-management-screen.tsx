@@ -143,7 +143,7 @@ const SafteyManagemtScreen = () => {
           content="Are you sure you want to delete this Incident entry?"
           action={
             <Button variant="contained" color="error" onClick={() => {}}>
-              Delete
+              Yes
             </Button>
           }
         />

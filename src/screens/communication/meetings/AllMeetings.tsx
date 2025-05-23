@@ -306,7 +306,7 @@ const AllMeetings = (props: TabComponentType) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -315,7 +315,7 @@ const AllMeetings = (props: TabComponentType) => {
               handleDelete(selectedMeeting?.id);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

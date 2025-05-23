@@ -230,14 +230,14 @@ const RegistrationTable = ({
           { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px', align: 'left' },
           {
             id: 'alternativeContactNumber',
-            label: 'Alternate Contact Details',
+            label: 'Alternate Contact No.',
             minWidth: '232px',
             align: 'left',
           },
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Preferences',
+            label: 'Inquiry Type',
             minWidth: '200px',
             align: 'left',
           },

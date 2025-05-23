@@ -1,11 +1,11 @@
 import type { RootState } from 'src/redux/store';
-import type { Board, AcademicYear } from 'src/types/school';
+import type { Board, Medium, AcademicYear } from 'src/types/school';
 
 import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Stack, useTheme, ButtonBase } from '@mui/material';
+import { useTheme, TextField, Autocomplete } from '@mui/material';
 
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
@@ -16,33 +16,27 @@ import {
   setCurrentMedium,
 } from 'src/redux/globalState/globalSlice';
 
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { NavItem } from 'src/components/nav-section/vertical/nav-item';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import {
-  NavLi,
-  NavUl,
-  NavCollapse,
-  navSectionClasses,
-  navSectionCssVars,
-} from 'src/components/nav-section';
+import { NavLi, NavUl, NavCollapse, navSectionClasses } from 'src/components/nav-section';
 
+import type { GlobalAcademicSearchOption } from './types';
+
+/**
+ * GlobalAcademicSearch Component
+ * Provides an interface for selecting academic year, board and medium
+ */
 const GlobalAcademicSearch = () => {
-  const popover = usePopover();
+  // Custom hooks for UI components
   const theme = useTheme();
-  const cssVars = {
-    ...navSectionCssVars.vertical(theme),
-  };
 
   const dispatch = useDispatch();
 
-  // const [currentItem, setCurrentItem] = useState<any>(null);
-
+  // Redux state selectors for current academic selections
   const { currentYear, currentBoard, currentMedium } = useSelector(
     (state: RootState) => state.globalState
   );
 
+  // Query hooks for fetching academic data
   const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
@@ -53,6 +47,7 @@ const GlobalAcademicSearch = () => {
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
+  // Memoized computation of merged academic data
   const allData = useMemo(() => {
     if (!years?.items?.length) return [];
     const mergedData = years?.items?.map((year: AcademicYear) => ({
@@ -62,6 +57,7 @@ const GlobalAcademicSearch = () => {
     return mergedData || [];
   }, [boardData?.items, years?.items]);
 
+  // Effect to handle academic selection updates
   useEffect(() => {
     if (!isYearLoading && !isBoardLoading && allData.length && currentMedium?.id) {
       const findValues = (items: any[], id: string): any =>
@@ -81,7 +77,6 @@ const GlobalAcademicSearch = () => {
         );
         dispatch(setCurrentYear(year));
         dispatch(setCurrentBoard(selectedBoard));
-        // dispatch(setCurrentMedium(currentMedium));
       } else {
         dispatch(setCurrentYear(null));
         dispatch(setCurrentBoard(null));
@@ -90,104 +85,77 @@ const GlobalAcademicSearch = () => {
     }
   }, [allData, currentMedium, dispatch, isBoardLoading, isYearLoading]);
 
+  /**
+   * Generates options for the division autocomplete
+   * @returns Array of division options with formatted labels
+   */
+  const getDivisionOptions = (): GlobalAcademicSearchOption[] => {
+    const options: GlobalAcademicSearchOption[] = [];
+    allData.forEach((year: AcademicYear & { boards: Board[] }) => {
+      year.boards.forEach((board: Board) => {
+        board.educationMediums.forEach((medium: Medium) => {
+          options.push({
+            label: `${year.name} / ${board.name} / ${medium.name}`,
+            value: `${year.id}-${board.id}-${medium.id}`,
+            academicYear: year,
+            board,
+            medium,
+          });
+        });
+      });
+    });
+    return options;
+  };
+
+  // State for selected division in autocomplete
+  const [selectedDivision, setSelectedDivision] = React.useState<null | GlobalAcademicSearchOption>(
+    null
+  );
+
+  // Effect to update selected division when current selections change
+  useEffect(() => {
+    if (currentYear?.id && currentBoard?.id && currentMedium?.id) {
+      setSelectedDivision({
+        label: `${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name}`,
+        value: `${currentYear?.id}-${currentBoard?.id}-${currentMedium?.id}`,
+        academicYear: currentYear,
+        board: currentBoard,
+        medium: currentMedium,
+      });
+    }
+  }, [currentBoard, currentMedium, currentYear]);
+
   return (
-    <>
-      <ButtonBase
-        disableRipple
-        onClick={popover.onOpen}
-        sx={{
-          p: 0.5,
-          gap: { xs: 0.5, sm: 1 },
-          boxShadow: 'var(--shadows-1)',
-          borderRadius: 1,
-          // ...sx,
-        }}
-      >
-        {currentYear?.name ? (
-          <>
-            <Label color="primary">{currentYear?.name}</Label>
-
-            <Label color="secondary">{currentBoard?.name}</Label>
-
-            <Label
-              color="info"
-              sx={{
-                height: 22,
-                display: { xs: 'none', sm: 'inline-flex' },
-              }}
-            >
-              {currentMedium?.name}
-            </Label>
-          </>
-        ) : (
-          'Please select a year, board and medium'
-        )}
-
-        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
-      </ButtonBase>
-      <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={popover.onClose}
-        slotProps={{
-          paper: {
-            elevation: 6,
-            sx: {
-              mt: 0.5,
-              width: { xs: 1, sm: 250 },
-              border: `1px solid ${theme.vars.palette.grey[300]}`,
-            },
-          },
-        }}
-      >
-        <Stack
-          component="nav"
-          className={navSectionClasses.vertical.root}
-          sx={{ p: 0.5, ...cssVars }}
-        >
-          <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-            <Group1 items={allData} popover={popover} />
-          </NavUl>
-        </Stack>
-      </CustomPopover>
-      {/* <Popover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={popover.onClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        slotProps={{
-          paper: {
-            elevation: 6,
-            sx: {
-              mt: 0.5,
-              width: { xs: 1, sm: 250 },
-              border: `1px solid ${theme.vars.palette.grey[300]}`,
-            },
-          },
-        }}
-      >
-        <Stack
-          component="nav"
-          className={navSectionClasses.vertical.root}
-          sx={{ p: 0.5, ...cssVars }}
-        >
-          <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-            <Group1 items={allData} popover={popover} />
-          </NavUl>
-        </Stack>
-      </Popover> */}
-    </>
+    <Autocomplete
+      options={getDivisionOptions()}
+      getOptionLabel={(option) => option.label}
+      value={selectedDivision}
+      loading={isYearLoading || isBoardLoading}
+      onChange={(event, newValue) => {
+        dispatch(setCurrentYear(newValue?.academicYear));
+        dispatch(setCurrentBoard(newValue?.board));
+        dispatch(setCurrentMedium(newValue?.medium));
+        setSelectedDivision(newValue);
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          variant="standard"
+          size="small"
+          label="Academic Year, Board and Medium"
+          placeholder="Select a academic year, board and medium"
+        />
+      )}
+      sx={{ minWidth: '300px', width: '100%' }}
+    />
   );
 };
 export default GlobalAcademicSearch;
 
+/**
+ * Group1 Component
+ * Renders a list of navigation items for the first level of grouping
+ */
 function Group1({ items, depth = 1, popover }: any) {
   return (
     <NavUl sx={{ gap: 'var(--nav-item-gap)' }}>
@@ -205,13 +173,20 @@ function Group1({ items, depth = 1, popover }: any) {
   );
 }
 
+/**
+ * Group Component
+ * Renders a collapsible navigation group with nested items
+ */
 function Group({ items, group, depth, popover }: any) {
+  // State for tracking currently open menu
   const [currentOpenMenu, setCurrentOpenMenu] = useState('');
   const dispatch = useDispatch();
+
+  // Callback for handling menu toggle
   const handleToggleMenu = useCallback(
     (e: any) => {
       if (items.length) {
-        setCurrentOpenMenu(currentOpenMenu === group.id ? '' : (group.id as string)); // setOpenMenu((prev) => !prev);
+        setCurrentOpenMenu(currentOpenMenu === group.id ? '' : (group.id as string));
       } else if (depth === 3) {
         dispatch(setCurrentMedium(group));
         popover.onClose();
@@ -223,6 +198,7 @@ function Group({ items, group, depth, popover }: any) {
     },
     [currentOpenMenu, depth, dispatch, group, items.length, popover]
   );
+
   if (items.length)
     return (
       <NavLi
@@ -231,7 +207,6 @@ function Group({ items, group, depth, popover }: any) {
             '&:first-of-type': { mt: 'var(--nav-item-gap)' },
           },
         }}
-        // className={stateClasses({ active: currentOpenMenu === data._action && !openMenu })}
       >
         <NavItem
           title={group.name}

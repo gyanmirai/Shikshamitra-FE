@@ -540,7 +540,7 @@ const RegisterForm = ({
 
 export default RegisterForm;
 
-const FormSlider = ({
+export const FormSlider = ({
   step,
   steps: allStep,
   children,

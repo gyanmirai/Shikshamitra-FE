@@ -171,7 +171,7 @@ const FacilitySetting = (props: TabComponentType) => {
           content="Are you sure you want to delete this facility?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

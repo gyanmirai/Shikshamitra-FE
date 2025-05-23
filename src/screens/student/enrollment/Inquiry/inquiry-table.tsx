@@ -92,42 +92,6 @@ const InquiryTable = ({
         },
       }}
       columns={[
-        // {
-        //   id: 'checkBox',
-        //   align: 'left',
-        //   minWidth: '60px',
-        //   isSort: false,
-        //   isFilter: false,
-        //   label: '',
-        //   renderColumn() {
-        //     return (
-        //       <Checkbox
-        //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-        //         onChange={(e) => {
-        //           if (e.target.checked) {
-        //             setSelectedStudents(tableData || []);
-        //           } else {
-        //             setSelectedStudents([]);
-        //           }
-        //         }}
-        //       />
-        //     );
-        //   },
-        //   render(value, row) {
-        //     return (
-        //       <Checkbox
-        //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-        //         onChange={(e) => {
-        //           if (e.target.checked) {
-        //             setSelectedStudents([...selectedStudents, row]);
-        //           } else {
-        //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-        //           }
-        //         }}
-        //       />
-        //     );
-        //   },
-        // },
         {
           id: 'inquiryNumber',
           label: 'Inquiry Number',
@@ -156,11 +120,11 @@ const InquiryTable = ({
         { id: 'genderValue', label: 'Gender' },
         { id: 'address', label: 'Address', minWidth: '120px' },
         { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },
-        { id: 'alternativeContactNumber', label: 'Alternate Contact Details', minWidth: '222px' },
+        { id: 'alternativeContactNumber', label: 'Alternate Contact No.', minWidth: '222px' },
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px' },
         {
           id: 'inquiryPreference.preferenceName',
-          label: 'Inquiry Preferences',
+          label: 'Inquiry Type',
           minWidth: '180px',
         },
         {
@@ -170,6 +134,7 @@ const InquiryTable = ({
           enumOptions: FollowUpStatusTypeOptions,
           minWidth: '180px',
           align: 'left',
+          sticky: true,
           render(value, row) {
             const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
@@ -182,6 +147,7 @@ const InquiryTable = ({
           isFilter: false,
           isSort: false,
           sticky: true,
+
           render(value, row) {
             return (
               <ThreeDotsActions

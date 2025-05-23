@@ -101,7 +101,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                           name={`On Notification For ${recipient.name}`}
                         />
                       }
-                      label={`On Notification For ${recipient.name}`}
+                      label={`enable/disable notification For ${recipient.name}`}
                     />
 
                     {/* <Button  startIcon={<Iconify icon="solar:trash-bin-trash-bold" />} color="error" onClick={() => removeRecipient(recipient.name)} /> */}

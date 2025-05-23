@@ -21,6 +21,7 @@ export interface IColumn {
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;
   sticky?: boolean;
+  stickyPosition?: 'left' | 'right';
   isDateFilter?: boolean;
   isDateRangeFilter?: boolean;
   enumOptions?: { label: string; value: any }[];

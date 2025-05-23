@@ -193,7 +193,7 @@ export function FileManagerView() {
         title="Delete"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            Are you sure you want to delete <strong> {table.selected.length} </strong> items?
           </>
         }
         action={
@@ -205,7 +205,7 @@ export function FileManagerView() {
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

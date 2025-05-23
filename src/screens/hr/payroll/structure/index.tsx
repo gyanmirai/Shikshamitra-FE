@@ -246,7 +246,7 @@ export const Sections = ({
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -259,7 +259,7 @@ export const Sections = ({
               setDeleteInformation(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

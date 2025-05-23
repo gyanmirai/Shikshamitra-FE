@@ -574,7 +574,7 @@ const AdmissionScreen = () => {
         heading="Admission"
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Admission' }]}
         sx={{ px: 1, mb: 2 }}
-        description="This is the Admission tab, where you can manage student admissions by approving or rejecting applications."
+        description="Manage student admissions: Approve or reject applications here."
       />
       <Box display="flex" gap={1} alignItems="flex-start">
         <Tabs
@@ -703,14 +703,14 @@ const AdmissionScreen = () => {
           { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '150px', align: 'left' },
           {
             id: 'alternativeContactNumber',
-            label: 'Alternate Contact Details',
+            label: 'Alternate Contact No.',
             minWidth: '220px',
             align: 'left',
           },
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Preferences',
+            label: 'Inquiry Type',
             minWidth: '200px',
             align: 'left',
           },

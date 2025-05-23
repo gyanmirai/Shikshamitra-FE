@@ -9,12 +9,9 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -104,15 +101,10 @@ const SubjectCreation = (props: TabComponentType) => {
           deleteSubjectDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to Delete Subject ?"
+        content="Are you sure you want to delete?"
         action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
-            color="error"
-            onClick={() => {}}
-          >
-            Delete
+          <Button variant="contained" color="error" onClick={() => {}}>
+            Yes
           </Button>
         }
       />

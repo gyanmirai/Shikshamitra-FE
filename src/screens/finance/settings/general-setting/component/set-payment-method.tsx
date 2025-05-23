@@ -169,10 +169,10 @@ const SetPaymentMethodComponent = () => {
             setSelectedPaymentMethodName(null);
           }}
           title="Delete Item"
-          content="Are you sure want to delete?"
+          content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={handleDelete}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

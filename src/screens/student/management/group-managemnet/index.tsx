@@ -134,7 +134,7 @@ const GroupManagement = ({
         title="Delete House"
         content={
           <>
-            Are you sure want to Delete <b>{`${editData?.name}`}</b> House ?
+            Are you sure you want to delete <b>{`${editData?.name}`}</b> House ?
           </>
         }
         action={
@@ -155,7 +155,7 @@ const GroupManagement = ({
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

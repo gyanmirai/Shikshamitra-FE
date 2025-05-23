@@ -146,7 +146,7 @@ export function KanbanColumnToolBar({
         title="Delete"
         content={
           <>
-            Are you sure want to delete column?
+            Are you sure you want to delete column?
             <Box sx={{ typography: 'caption', color: 'error.main', mt: 2 }}>
               <strong> NOTE: </strong> All tasks related to this category will also be deleted.
             </Box>
@@ -161,7 +161,7 @@ export function KanbanColumnToolBar({
               confirmDialog.onFalse();
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

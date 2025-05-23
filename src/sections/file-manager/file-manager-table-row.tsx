@@ -257,10 +257,10 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow }:
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            Yes
           </Button>
         }
       />
