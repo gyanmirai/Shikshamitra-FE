@@ -139,7 +139,7 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -152,7 +152,7 @@ const ClassSetup = ({ organizationId }: ClassSetupProps) => {
               // isInitial.current = true;
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

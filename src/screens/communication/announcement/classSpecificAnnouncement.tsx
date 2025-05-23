@@ -201,7 +201,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
           confirm_dialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -210,7 +210,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
               handleDelete(deleteAnnouncement);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

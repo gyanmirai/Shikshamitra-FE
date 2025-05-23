@@ -118,7 +118,7 @@ const LeaveAndAbsentScreen = () => {
             Add Leave Request
           </Button>
         }
-        description="On this page, you can create new leave requests. All previously created requests are listed below, where you can approve or reject them as needed."
+        description="Submit a new leave request by clicking 'add leave request', manage requests in 'Actions'."
       />
       <CustomizableTable
         onSendNotification={handlerSendNotification}
@@ -292,7 +292,7 @@ const LeaveAndAbsentScreen = () => {
             <Tooltip
               arrow
               placement="right"
-              title="From here, you can create a leave request by selecting the student and providing the necessary details such as leave dates, reason, and any additional notes."
+              title="Create a student leave request here by filling below fields."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>

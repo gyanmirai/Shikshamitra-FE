@@ -255,7 +255,7 @@ const UpcomingEvents = (props: TabComponentType) => {
           confirm_dialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -264,7 +264,7 @@ const UpcomingEvents = (props: TabComponentType) => {
               handleDelete(deleteEvent);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

@@ -19,7 +19,7 @@ import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
 
-const icon = (name: string) => (
+export const icon = (name: string) => (
   <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
 );
 
@@ -241,7 +241,7 @@ const studentModule = {
               shortcutKeyName: 'Alt+S+A+2',
             },
             {
-              title: 'Leave & Absence',
+              title: 'Leave & Absent',
               path: '/student/attendance/leave-absent',
               _action: 'student-attendance-leave-absent',
               shortcutKey: 'Alt+S+A+3',

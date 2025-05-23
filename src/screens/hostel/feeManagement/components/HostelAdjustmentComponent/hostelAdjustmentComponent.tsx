@@ -236,10 +236,10 @@ const HostelAdjustmentComponent = () => {
           deleteAdjustmentDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to Delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button variant="contained" color="error" onClick={() => {}}>
-            Delete
+            Yes
           </Button>
         }
       />

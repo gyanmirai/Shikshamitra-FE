@@ -91,7 +91,7 @@ const StudentBirthDate = () => {
         )}
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-            Todays Birthday
+            Today&apos;s Birthday
           </Typography>
 
           <Card sx={{ bgcolor: 'background.neutral' }}>

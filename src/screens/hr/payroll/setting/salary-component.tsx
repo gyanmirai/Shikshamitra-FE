@@ -82,7 +82,7 @@ const SalaryComponent = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -92,7 +92,7 @@ const SalaryComponent = () => {
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

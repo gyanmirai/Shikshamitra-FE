@@ -143,7 +143,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -157,7 +157,7 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
               // isInitial.current = true;
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

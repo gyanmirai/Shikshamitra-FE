@@ -208,7 +208,7 @@ export const CertificateDocument = () => (
               alignItems: 'baseline',
             }}
           >
-            <Text style={styles.content}>Her Gr. No :</Text>
+            <Text style={styles.content}>Her Gr No :</Text>
             <View style={{ borderBottom: '1px solid black', width: '100%' }}>
               <Text style={styles.boldContent}>2244</Text>
             </View>

@@ -143,10 +143,10 @@ const EntranceExamDashboard = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton variant="contained" loading={false} color="error" onClick={async () => {}}>
-            Delete
+            Yes
           </LoadingButton>
         }
       />

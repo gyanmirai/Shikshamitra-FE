@@ -240,7 +240,7 @@ const AssessmentTypeSettings = () => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -249,7 +249,7 @@ const AssessmentTypeSettings = () => {
               handleDelete(selectedAssessmentType);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

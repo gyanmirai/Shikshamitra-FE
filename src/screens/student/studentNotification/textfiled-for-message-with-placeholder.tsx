@@ -121,7 +121,7 @@ const CustomPlaceholderInput: React.FC<CustomPlaceholderInputProps> = ({
           borderRadius: '4px',
           resize: 'none',
         }}
-        placeholder="Type your message here. Use @ to insert placeholders."
+        placeholder="Type your SMS here. Use @ to insert placeholders."
       />
 
       {/* Dropdown appears exactly below @ */}

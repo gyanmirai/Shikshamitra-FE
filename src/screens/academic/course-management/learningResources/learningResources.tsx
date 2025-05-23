@@ -417,7 +417,7 @@ const LearningResources = (props: TabComponentType) => {
           setSelectedEntry(null);
         }}
         title="Delete"
-        content="Are you sure want to Delete Resource ?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -427,7 +427,7 @@ const LearningResources = (props: TabComponentType) => {
               handleDelete(selectedEntry?.id as string);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

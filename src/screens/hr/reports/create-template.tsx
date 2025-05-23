@@ -152,7 +152,7 @@ const employeeFields = [
   },
   {
     name: 'pinCode',
-    label: 'Pin Code',
+    label: 'Pincode',
   },
   {
     name: 'employeeId',
@@ -184,7 +184,7 @@ const employeeFields = [
   },
   {
     name: 'fatherPinCode',
-    label: 'Father Pin Code',
+    label: 'Father Pincode',
   },
   {
     name: 'motherName',
@@ -212,7 +212,7 @@ const employeeFields = [
   },
   {
     name: 'motherPinCode',
-    label: 'Mother Pin Code',
+    label: 'Mother Pincode',
   },
   {
     name: 'spouseName',
@@ -240,7 +240,7 @@ const employeeFields = [
   },
   {
     name: 'spousePinCode',
-    label: 'Spouse Pin Code',
+    label: 'Spouse Pincode',
   },
   {
     name: 'bankName',
@@ -1625,7 +1625,7 @@ const ElementForm = ({ handleClose, handleSubmit }: IElementFormProps) => {
                   value: 'city',
                 },
                 {
-                  label: 'Pin Code',
+                  label: 'Pincode',
                   value: 'pinCode',
                 },
                 {
@@ -1657,7 +1657,7 @@ const ElementForm = ({ handleClose, handleSubmit }: IElementFormProps) => {
                   value: 'fatherCity',
                 },
                 {
-                  label: 'Father Pin Code',
+                  label: 'Father Pincode',
                   value: 'fatherPinCode',
                 },
                 {
@@ -1685,7 +1685,7 @@ const ElementForm = ({ handleClose, handleSubmit }: IElementFormProps) => {
                   value: 'motherCity',
                 },
                 {
-                  label: 'Mother Pin Code',
+                  label: 'Mother Pincode',
                   value: 'motherPinCode',
                 },
                 {
@@ -1713,7 +1713,7 @@ const ElementForm = ({ handleClose, handleSubmit }: IElementFormProps) => {
                   value: 'spouseCity',
                 },
                 {
-                  label: 'Spouse Pin Code',
+                  label: 'Spouse Pincode',
                   value: 'spousePinCode',
                 },
                 {

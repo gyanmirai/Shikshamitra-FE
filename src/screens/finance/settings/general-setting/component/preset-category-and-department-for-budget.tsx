@@ -246,7 +246,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
               setSelectedbudgetCategory(null);
             }}
             title="Delete Item"
-            content="Are you sure want to delete?"
+            content="Are you sure you want to delete?"
             action={
               <LoadingButton
                 variant="contained"
@@ -254,7 +254,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
                 color="error"
                 onClick={handleDeleteBudgetCategory}
               >
-                Delete
+                Yes
               </LoadingButton>
             }
           />

@@ -9,13 +9,13 @@ const generalFieldValidation = Yup.object({
   formNo: Yup.string().required('Form No is required'),
   firstName: Yup.string().required('First Name is required'),
   lastName: Yup.string().required('Last Name is required'),
-  middleName: Yup.string().required('Middle Name is required'),
+  middleName: Yup.string(),
   dob: Yup.date().required('Date of Birth is required'),
   age: Yup.string(),
   gender: Yup.string().required('Gender is required'),
   adharNo: Yup.string()
     .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
-    .required('Adhar No is required'),
+    .required('Aadhar No is required'),
   religion: Yup.string(),
   familyCast: Yup.string(),
   castCategory: Yup.string()

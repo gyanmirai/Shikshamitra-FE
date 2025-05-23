@@ -265,7 +265,7 @@ const ConfigurePaymentStatusComponent = () => {
             setSelectedPaymentStatus(null);
           }}
           title="Delete Item"
-          content="Are you sure want to delete?"
+          content="Are you sure you want to delete?"
           action={
             <LoadingButton
               variant="contained"
@@ -273,7 +273,7 @@ const ConfigurePaymentStatusComponent = () => {
               color="error"
               onClick={handleDeletePaymentStatus}
             >
-              Delete
+              Yes
             </LoadingButton>
           }
         />

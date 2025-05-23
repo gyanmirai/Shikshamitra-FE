@@ -175,7 +175,7 @@ const StatutoryTemplate = () => {
           content=" Are you sure you want to delete?"
           action={
             <Button variant="contained" color="error" onClick={() => {}}>
-              Delete
+              Yes
             </Button>
           }
         />

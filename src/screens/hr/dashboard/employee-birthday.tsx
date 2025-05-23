@@ -55,7 +55,7 @@ const EmployeeBirthDay = () => {
 
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-            Todays Birthday & Anniversary
+            Today&apos;s Birthday & Anniversary
           </Typography>
 
           <Card sx={{ bgcolor: 'background.neutral' }}>

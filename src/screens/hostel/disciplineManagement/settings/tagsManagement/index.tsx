@@ -137,10 +137,10 @@ const TagSetting = (props: TabComponentType) => {
           open={dialogForDeleteConfirmation.value}
           onClose={dialogForDeleteConfirmation.onFalse}
           title="Delete Item"
-          content="Are you sure want to delete?"
+          content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

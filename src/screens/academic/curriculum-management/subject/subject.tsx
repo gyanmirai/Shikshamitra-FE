@@ -223,7 +223,7 @@ const Subject = (props: TabComponentType) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure want to Delete Subject ?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -233,7 +233,7 @@ const Subject = (props: TabComponentType) => {
               handleDelete();
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

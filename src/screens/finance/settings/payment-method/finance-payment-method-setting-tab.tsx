@@ -204,10 +204,10 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
                 dialogForDeleteConfirmation.onFalse();
               }}
               title="Delete Item"
-              content="Are you sure want to delete?"
+              content="Are you sure you want to delete?"
               action={
                 <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-                  Delete
+                  Yes
                 </LoadingButton>
               }
             />

@@ -6,15 +6,15 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Card, Divider, useTheme } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
+import TabsComponent from 'src/components/custom-tabs/New-tab';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ChangeClassScreen from './change-class';
@@ -87,6 +87,77 @@ const StudentManagementScreen = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   const [division, setDivision] = useState<string>('');
+  const theme = useTheme();
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
+
+  const [value, setValue] = React.useState(0);
+  const handleChange = (event: any, newValue: any) => {
+    console.log(newValue, 'newValue');
+    setValue(newValue);
+    setSearchParams({ tab: newValue });
+  };
+
+  console.log(value);
+
+  const tabs = [
+    {
+      tabs: [
+        { label: 'Gr Generation' },
+        { label: 'Roll Generation' },
+        { label: 'Change Division' },
+        { label: 'Change Class' },
+        { label: 'Bulk Data Update' },
+        { label: 'Bulk Student Add' },
+        { label: 'House Management' },
+
+        // { label: "Template Manager New" },
+      ],
+      tabPanel: [
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+        {
+          value,
+          component: <></>,
+          dir: theme.direction,
+        },
+
+        // {
+        //   value: value,
+        //   component: <TemplateManagerNew />,
+        //   dir: theme.direction,
+        // },
+      ],
+    },
+  ];
 
   const {
     currentBoard,
@@ -112,7 +183,6 @@ const StudentManagementScreen = () => {
   }, [allClass, classes]);
 
   // const tabs = useTabs('grGeneration');
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
 
   const CurrentComponent = TABS.find((tab) => tab.value === searchParams.tab)?.component;
 
@@ -180,24 +250,18 @@ const StudentManagementScreen = () => {
       </Box>
       <Card
         sx={{
-          px: 0,
+          py: 2,
+          px: 2,
+          mt: 1,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(_, val) => setSearchParams({ tab: val })}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 1 } }}
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
-          ))}
-        </CustomTabs>
+        <TabsComponent tabs={TABS} value={searchParams.tab} onChange={handleChange} />
+        <Divider sx={{ my: 2 }} />
+        <Box px={1} pt={2}>
+          {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
+        </Box>
       </Card>
-      <Box px={1} pt={2}>
-        {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
-      </Box>
     </Box>
   );
 };

@@ -146,7 +146,7 @@ const BoardActions = (data: Board & { parentsData: OrgChartListProps['parentsDat
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -158,7 +158,7 @@ const BoardActions = (data: Board & { parentsData: OrgChartListProps['parentsDat
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -269,7 +269,7 @@ const MediumActions = (data: Medium & { parentsData: OrgChartListProps['parentsD
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -281,7 +281,7 @@ const MediumActions = (data: Medium & { parentsData: OrgChartListProps['parentsD
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -400,7 +400,7 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -412,7 +412,7 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -508,7 +508,7 @@ const DivisionActions = (data: Division & { parentsData: OrgChartListProps['pare
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -520,7 +520,7 @@ const DivisionActions = (data: Division & { parentsData: OrgChartListProps['pare
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -632,7 +632,7 @@ const OrganizationActions = (
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -644,7 +644,7 @@ const OrganizationActions = (
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />
@@ -891,7 +891,7 @@ const YearSetup = () => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             variant="contained"
@@ -904,7 +904,7 @@ const YearSetup = () => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

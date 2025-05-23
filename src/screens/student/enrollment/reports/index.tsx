@@ -64,7 +64,7 @@ const StudentReportsScreen = () => {
     <Box sx={{ height: '100%' }}>
       <CustomBreadcrumbs
         heading="Reports"
-        description="Reports provide detailed insights into student enrollment statistics, trends, and registration data to help manage admissions effectively."
+        description="Manage admissions with reports that provide detailed statistics, trend analysis, and registration data on student enrollment."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -231,7 +231,7 @@ const StudentReportsScreen = () => {
                         name="fromInquiryNumber"
                         value={values.fromInquiryNumber}
                         onChange={handleChange}
-                        label="fromInquiryNumber"
+                        label="From inquiry number"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>
@@ -256,7 +256,7 @@ const StudentReportsScreen = () => {
                         name="toInquiryNumber"
                         value={values.toInquiryNumber}
                         onChange={handleChange}
-                        label="toInquiryNumber"
+                        label="To Inquiry Number"
                         size="small"
                       >
                         <MenuItem value="all">All</MenuItem>

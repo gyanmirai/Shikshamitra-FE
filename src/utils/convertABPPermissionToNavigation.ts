@@ -162,7 +162,7 @@ const firstDataset = [
             _action: 'student-attendance-take-attendance',
           },
           {
-            title: 'Leave & Absence',
+            title: 'Leave & Absent',
             path: '/student/attendance/leave-absent',
             _action: 'student-attendance-leave-absent',
           },

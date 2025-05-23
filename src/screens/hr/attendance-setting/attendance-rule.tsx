@@ -162,7 +162,7 @@ const AttendanceRule = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -172,7 +172,7 @@ const AttendanceRule = () => {
               confirm.onFalse();
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />
@@ -184,7 +184,7 @@ const AttendanceRule = () => {
             <Tooltip
               arrow
               placement="right"
-              title="In this dialog, you can create attendance rules by defining criteria such as working hours, attendance thresholds, and any specific conditions that apply to employees."
+              title="Define the criteria for half-day and late attendance by creating rules here. "
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>
@@ -366,7 +366,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                       name="enableNotification"
                     />
                   }
-                  label="Enable notification for Upper Authority if the rule is violated."
+                  label="Enable notification for Upper Authority if the rule is violated to Send notification to relevant authority when rule is violated."
                 />
               </Grid>
             </Grid>

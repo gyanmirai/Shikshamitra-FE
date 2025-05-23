@@ -89,7 +89,7 @@ const StudentDocumentType = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure you want to delete?"
         action={
           <LoadingButton
             loading={isDeleteLoading}
@@ -101,7 +101,7 @@ const StudentDocumentType = () => {
               setEditData(null);
             }}
           >
-            Delete
+            Yes
           </LoadingButton>
         }
       />

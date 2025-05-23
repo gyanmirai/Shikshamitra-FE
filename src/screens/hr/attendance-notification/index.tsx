@@ -24,7 +24,7 @@ const HrAttendanceNotificationScreen = () => {
       name: 'John Doe',
       date: '2023-05-15',
       recipient: 'Parent',
-      notificationType: 'Absence',
+      notificationType: 'Absent',
       status: 'Delivered',
     },
     {

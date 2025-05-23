@@ -142,7 +142,7 @@ const GatePassSystemScreen = () => {
           content="Are you sure you want to delete this entry?"
           action={
             <Button variant="contained" color="error" onClick={() => {}}>
-              Delete
+              Yes
             </Button>
           }
         />

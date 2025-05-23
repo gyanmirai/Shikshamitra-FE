@@ -251,7 +251,7 @@ const Subjects = (props: TabComponentType) => {
           setSelectedChapter(null);
         }}
         title="Delete"
-        content="Are you sure want to Delete Chapter?"
+        content="Are you sure you want to delete?"
         action={
           <Button
             variant="contained"
@@ -261,7 +261,7 @@ const Subjects = (props: TabComponentType) => {
               handleDelete(selectedChapter?.id);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

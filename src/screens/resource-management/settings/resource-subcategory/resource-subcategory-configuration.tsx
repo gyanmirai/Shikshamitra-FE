@@ -165,7 +165,7 @@ const ResourceSubCategoryConfiguration = () => {
           open={deleteItem.value}
           onClose={deleteItem.onFalse}
           title="Delete"
-          content="Are you sure want to delete?"
+          content="Are you sure you want to delete?"
           action={
             <Button
               variant="contained"
@@ -174,7 +174,7 @@ const ResourceSubCategoryConfiguration = () => {
                 deleteItem.onFalse();
               }}
             >
-              Delete
+              Yes
             </Button>
           }
         />

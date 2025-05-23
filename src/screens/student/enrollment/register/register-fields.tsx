@@ -825,7 +825,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
   return (
     <>
       <CustomSelect
-        label="Inquiry Preferences"
+        label="Inquiry Type"
         name="inquiryPreference"
         isLoading={inquiryPrefrenceLoading}
         options={inquiryPreference?.items || []}
@@ -851,7 +851,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
           dialog.onTrue();
         }}
       >
-        Add Inquiry Preferences
+        Add Inquiry Type
       </Typography>
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
@@ -882,8 +882,8 @@ const RenderStudent = ({ formik, ...props }: any) => {
         <TextField
           {...params}
           size="small"
-          label="Sponsor Student"
-          placeholder="Search Sponsor Student"
+          label="Student Referrer"
+          placeholder="Search Student Referrer"
           fullWidth
         />
       )}
@@ -1115,7 +1115,7 @@ export const generalFormFields: FieldsType[] = [
       </FormControl>
     ),
   },
-  { name: 'adharNo', label: 'Adhar No', type: 'number', otherProps: {} },
+  { name: 'adharNo', label: 'Aadhar No', type: 'number', otherProps: {} },
   { name: 'panNo', label: 'Pan No', type: 'text', otherProps: {} },
   { name: 'apparId', label: 'ApparId', type: 'text', otherProps: {} },
   {
@@ -1276,10 +1276,10 @@ export const generalFormFields: FieldsType[] = [
       );
     },
   },
-  { name: 'village', label: 'Village', type: 'text', otherProps: {} },
+  { name: 'village', label: 'Town/District', type: 'text', otherProps: {} },
   {
     name: 'pinCode',
-    label: 'Pin Code',
+    label: 'Pincode',
     type: 'number',
     otherProps: {},
   },
@@ -1649,7 +1649,7 @@ export const additionalDetailsFields: FieldsType[] = [
   },
   {
     name: 'sponsorStudent',
-    label: 'Sponsor Student',
+    label: 'Student Referrer',
     type: 'text',
     otherProps: {},
     renderComp: (props) => <RenderStudent {...props} />,
@@ -2037,7 +2037,7 @@ function RenderFamilyInformation(props: any) {
               >
                 <TextField
                   name="fatherName"
-                  label="Father Name"
+                  label=" Father full name"
                   value={formik.values.fatherName}
                   autoFocus
                   onChange={(e) => {
@@ -2087,6 +2087,39 @@ function RenderFamilyInformation(props: any) {
                 size="small"
                 disabled={!isEdit}
               />
+
+              <TextField
+                name="fatherEmail"
+                label="Father Email"
+                value={formik.values.fatherEmail}
+                onChange={formik.handleChange}
+                error={formik.touched.fatherEmail && Boolean(formik.errors.fatherEmail)}
+                helperText={formik.touched.fatherEmail && formik.errors.fatherEmail}
+                fullWidth
+                size="small"
+                disabled={!isEdit}
+                InputProps={{
+                  startAdornment: (
+                    <>
+                      <Iconify icon="mdi-light:email" />{' '}
+                      <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                    </>
+                  ),
+                }}
+              />
+
+              <TextField
+                name="fatherPassOutYear"
+                label="Father's Year of Passing"
+                type="number"
+                value={formik.values.fatherPassOutYear}
+                onChange={formik.handleChange}
+                error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
+                helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
+                fullWidth
+                size="small"
+                disabled={!isEdit}
+              />
               <TextField
                 name="fatherQualification"
                 label="Father Qualification"
@@ -2114,39 +2147,6 @@ function RenderFamilyInformation(props: any) {
                 disabled={!isEdit}
                 error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
                 helperText={formik.touched.fatherContactNo && formik.errors.fatherContactNo}
-              />
-
-              <TextField
-                name="fatherEmail"
-                label="Father Email"
-                value={formik.values.fatherEmail}
-                onChange={formik.handleChange}
-                error={formik.touched.fatherEmail && Boolean(formik.errors.fatherEmail)}
-                helperText={formik.touched.fatherEmail && formik.errors.fatherEmail}
-                fullWidth
-                size="small"
-                disabled={!isEdit}
-                InputProps={{
-                  startAdornment: (
-                    <>
-                      <Iconify icon="mdi-light:email" />{' '}
-                      <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                    </>
-                  ),
-                }}
-              />
-
-              <TextField
-                name="fatherPassOutYear"
-                label="Father Pass out Year"
-                type="number"
-                value={formik.values.fatherPassOutYear}
-                onChange={formik.handleChange}
-                error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
-                helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
-                fullWidth
-                size="small"
-                disabled={!isEdit}
               />
 
               <PhoneInput
@@ -2262,7 +2262,7 @@ function RenderFamilyInformation(props: any) {
               >
                 <TextField
                   name="motherName"
-                  label="Mother Name"
+                  label="Mother full name"
                   disabled={!isEdit}
                   value={formik.values.motherName}
                   onChange={(e) => {
@@ -2311,6 +2311,39 @@ function RenderFamilyInformation(props: any) {
                 fullWidth
                 size="small"
               />
+
+              <TextField
+                name="motherEmail"
+                label="Mother Email"
+                disabled={!isEdit}
+                value={formik.values.motherEmail}
+                onChange={formik.handleChange}
+                error={formik.touched.motherEmail && Boolean(formik.errors.motherEmail)}
+                helperText={formik.touched.motherEmail && formik.errors.motherEmail}
+                fullWidth
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <>
+                      <Iconify icon="mdi-light:email" />{' '}
+                      <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                    </>
+                  ),
+                }}
+              />
+
+              <TextField
+                name="motherPassOutYear"
+                label="Mother's Year of Passing"
+                type="number"
+                disabled={!isEdit}
+                value={formik.values.motherPassOutYear}
+                onChange={formik.handleChange}
+                error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
+                helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
+                fullWidth
+                size="small"
+              />
               <TextField
                 name="motherQualification"
                 label="Mother Qualification"
@@ -2339,40 +2372,6 @@ function RenderFamilyInformation(props: any) {
                 error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
                 helperText={formik.touched.motherContactNo && formik.errors.motherContactNo}
               />
-
-              <TextField
-                name="motherEmail"
-                label="Mother Email"
-                disabled={!isEdit}
-                value={formik.values.motherEmail}
-                onChange={formik.handleChange}
-                error={formik.touched.motherEmail && Boolean(formik.errors.motherEmail)}
-                helperText={formik.touched.motherEmail && formik.errors.motherEmail}
-                fullWidth
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <>
-                      <Iconify icon="mdi-light:email" />{' '}
-                      <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                    </>
-                  ),
-                }}
-              />
-
-              <TextField
-                name="motherPassOutYear"
-                label="Mother Pass out Year"
-                type="number"
-                disabled={!isEdit}
-                value={formik.values.motherPassOutYear}
-                onChange={formik.handleChange}
-                error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
-                helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
-                fullWidth
-                size="small"
-              />
-
               <PhoneInput
                 name="motherOfficeNo"
                 disabled={!isEdit}
@@ -2486,7 +2485,7 @@ function RenderFamilyInformation(props: any) {
               >
                 <TextField
                   name="guardianName"
-                  label="Guardian Name"
+                  label="Guardian Full Name"
                   disabled={!isEdit}
                   value={formik.values.guardianName}
                   onChange={(e) => {
@@ -2537,37 +2536,7 @@ function RenderFamilyInformation(props: any) {
                 fullWidth
                 size="small"
               />
-              <TextField
-                name="guardianQualification"
-                label="Guardian Qualification"
-                disabled={!isEdit}
-                value={formik.values.guardianQualification}
-                onChange={(e) => {
-                  const value = capitalize(e.target.value);
-                  formik.setFieldValue('guardianQualification', value);
-                }}
-                error={
-                  formik.touched.guardianQualification &&
-                  Boolean(formik.errors.guardianQualification)
-                }
-                helperText={
-                  formik.touched.guardianQualification && formik.errors.guardianQualification
-                }
-                fullWidth
-                size="small"
-              />
-              <PhoneInput
-                name="guardianContactNo"
-                disabled={!isEdit}
-                value={formik.values.guardianContactNo}
-                onChange={(value) => {
-                  formik.setFieldValue('guardianContactNo', value);
-                }}
-                label="Guardian Contact No."
-                placeholder="Enter Guardian Contact No."
-                error={formik.touched.guardianContactNo && Boolean(formik.errors.guardianContactNo)}
-                helperText={formik.touched.guardianContactNo && formik.errors.guardianContactNo}
-              />
+
               <TextField
                 name="guardianEmail"
                 label="Guardian Email"
@@ -2590,7 +2559,7 @@ function RenderFamilyInformation(props: any) {
 
               <TextField
                 name="guardianPassOutYear"
-                label="Guardian Pass out Year"
+                label="Guardian's Year of Passing"
                 type="number"
                 disabled={!isEdit}
                 value={formik.values.guardianPassOutYear}
@@ -2601,6 +2570,39 @@ function RenderFamilyInformation(props: any) {
                 helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
                 fullWidth
                 size="small"
+              />
+
+              <TextField
+                name="guardianQualification"
+                label="Guardian Qualification"
+                disabled={!isEdit}
+                value={formik.values.guardianQualification}
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('guardianQualification', value);
+                }}
+                error={
+                  formik.touched.guardianQualification &&
+                  Boolean(formik.errors.guardianQualification)
+                }
+                helperText={
+                  formik.touched.guardianQualification && formik.errors.guardianQualification
+                }
+                fullWidth
+                size="small"
+              />
+
+              <PhoneInput
+                name="guardianContactNo"
+                disabled={!isEdit}
+                value={formik.values.guardianContactNo}
+                onChange={(value) => {
+                  formik.setFieldValue('guardianContactNo', value);
+                }}
+                label="Guardian Contact No."
+                placeholder="Enter Guardian Contact No."
+                error={formik.touched.guardianContactNo && Boolean(formik.errors.guardianContactNo)}
+                helperText={formik.touched.guardianContactNo && formik.errors.guardianContactNo}
               />
 
               <PhoneInput

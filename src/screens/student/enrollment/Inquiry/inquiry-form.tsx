@@ -267,7 +267,7 @@ const InquiryForm = ({
                     >
                       <CustomSelect
                         name="academicYear"
-                        label="Academic Year"
+                        label="Academic Year *"
                         isLoading={yearLoading}
                         options={academicYear?.items || []}
                         value={values.academicYear}
@@ -292,7 +292,7 @@ const InquiryForm = ({
                     <ShakingTextField error={!!(touched.board && errors.board) || false}>
                       <CustomSelect
                         name="board"
-                        label="Board"
+                        label="Board *"
                         isLoading={boardLoading}
                         options={boards || []}
                         labelKey="name"
@@ -313,7 +313,7 @@ const InquiryForm = ({
                     <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
                       <CustomSelect
                         name="medium"
-                        label="Medium"
+                        label="Medium *"
                         disabled={!values.board}
                         options={
                           board?.items?.find((item: Board) => item.id === values.board)
@@ -341,7 +341,7 @@ const InquiryForm = ({
                             fullWidth
                             size="small"
                             name="lastName"
-                            label="Last Name"
+                            label="Last Name *"
                             error={meta.touched && Boolean(meta.error)}
                             helperText={meta.touched && meta.error}
                             value={field.value}
@@ -360,7 +360,7 @@ const InquiryForm = ({
                         fullWidth
                         size="small"
                         name="firstName"
-                        label="First Name"
+                        label="First Name *"
                         error={touched.firstName && Boolean(errors.firstName)}
                         helperText={touched.firstName && errors.firstName}
                         value={values.firstName}
@@ -377,7 +377,7 @@ const InquiryForm = ({
                         fullWidth
                         size="small"
                         name="middleName"
-                        label="Middle Name"
+                        label="Middle Name *"
                         error={touched.middleName && Boolean(errors.middleName)}
                         helperText={touched.middleName && errors.middleName}
                         value={values.middleName}
@@ -426,7 +426,7 @@ const InquiryForm = ({
                       error={!!(touched.dateOfBirth && errors.dateOfBirth) || false}
                     >
                       <DatePicker
-                        label="Date of Birth"
+                        label="Date of Birth *"
                         name="dateOfBirth"
                         value={values.dateOfBirth}
                         format="DD/MM/YYYY"
@@ -514,7 +514,7 @@ const InquiryForm = ({
                         fullWidth
                         size="small"
                         name="email"
-                        label="Email"
+                        label="Email *"
                         onChange={handleChange}
                         placeholder="Email"
                         error={touched.email && Boolean(errors.email)}
@@ -544,7 +544,7 @@ const InquiryForm = ({
                         error={touched.parentsContactNo && Boolean(errors.parentsContactNo)}
                         helperText={touched.parentsContactNo && errors.parentsContactNo}
                         variant="outlined"
-                        label="Parents Contact No."
+                        label="Parents Contact No. *"
                         size="small"
                       />
                     </ShakingTextField>
@@ -562,7 +562,7 @@ const InquiryForm = ({
                         onChange={(value) => {
                           setFieldValue('alternateContactDetails', value);
                         }}
-                        placeholder="Alternate Contact Details"
+                        placeholder="Alternate Contact No."
                         error={
                           touched.alternateContactDetails && Boolean(errors.alternateContactDetails)
                         }
@@ -570,7 +570,7 @@ const InquiryForm = ({
                           touched.alternateContactDetails && errors.alternateContactDetails
                         }
                         variant="outlined"
-                        label="Alternate Contact Details"
+                        label="Alternate Contact No."
                         onBlur={handleBlur}
                       />
                     </ShakingTextField>
@@ -578,7 +578,7 @@ const InquiryForm = ({
                   <Grid item xs={12} md={4}>
                     <ShakingTextField>
                       <CustomSelect
-                        label="Inquiry Preferences"
+                        label="Inquiry Type"
                         name="inquiryPreferences"
                         isLoading={inquiryPrefrenceLoading}
                         options={inquiryPreference?.items || []}
@@ -605,7 +605,7 @@ const InquiryForm = ({
                         dialog.onTrue();
                       }}
                     >
-                      add Inquiry Preferences
+                      add Inquiry Type
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={4}>
@@ -669,6 +669,7 @@ const InquiryForm = ({
                         }}
                         error={touched.country && Boolean(errors?.country?.name)}
                         helperText={(touched.country && errors?.country?.name) || ''}
+                        label="Country *"
                       />
                     </ShakingTextField>
                   </Grid>
@@ -683,6 +684,7 @@ const InquiryForm = ({
                         error={touched.state && Boolean(errors?.state?.name)}
                         helperText={touched.state && errors?.state?.name}
                         countryValue={values.country}
+                        label="State *"
                       />
                     </ShakingTextField>
                   </Grid>
@@ -694,6 +696,7 @@ const InquiryForm = ({
                         error={touched.city && Boolean(errors?.city?.name)}
                         helperText={touched.city && errors?.city?.name}
                         stateValue={values.state}
+                        label="City *"
                       />
                     </ShakingTextField>
                   </Grid>
@@ -706,9 +709,9 @@ const InquiryForm = ({
                         error={touched.village && Boolean(errors.village)}
                         helperText={touched.village && errors.village}
                         fullWidth
-                        placeholder="Village"
+                        placeholder="Town/District"
                         size="small"
-                        label="Village"
+                        label="Town/District"
                       />
                     </ShakingTextField>
                   </Grid>
@@ -721,9 +724,9 @@ const InquiryForm = ({
                         error={touched.pinCode && Boolean(errors.pinCode)}
                         helperText={touched.pinCode && errors.pinCode}
                         fullWidth
-                        placeholder="Pincode"
+                        placeholder="Pincode *"
                         size="small"
-                        label="Pincode"
+                        label="Pincode *"
                       />
                     </ShakingTextField>
                   </Grid>
