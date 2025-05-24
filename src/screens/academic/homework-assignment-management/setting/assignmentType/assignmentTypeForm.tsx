@@ -32,7 +32,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
+          <Scrollbar sx={{ p: 2 }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField
@@ -45,7 +45,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
                     fullWidth
                     size="small"
                     name="assignmentTypeName"
-                    label="Assignment Type Name"
+                    label="Assignment Type Name *"
                     placeholder="Enter Assignment Type"
                     value={formik.values.assignmentTypeName}
                     onChange={formik.handleChange}

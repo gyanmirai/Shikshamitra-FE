@@ -1,11 +1,15 @@
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -16,10 +20,13 @@ import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import AssignmentForm from './components/assignmentForm';
 import AssignmentTable from './components/assignmentTable';
+import ViewAssignmentDetails from './assignmentDetail/assignmentDetail';
+import { StudentSubmissions } from './studentSubmission/studentSubmission';
 
 import type { IAssignment } from './type';
 
@@ -30,9 +37,10 @@ const AssignmentCreation = (props: TabComponentType) => {
   const deleteAssignmentDialog = useBoolean();
   // Dialog state for publish assignment confirmation
   const publishAssignmentDialog = useBoolean();
-
-  // State to control modal open/close
-  const [open, setOpen] = useState(false);
+  // Dialog state for viewing student assignment submissions
+  const viewAssignmentSubmissionDialog = useBoolean();
+  // Dialog state for viewing assignment details
+  const viewAssignmentDetails = useBoolean();
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to store currently selected assignment for edit/delete/publish
@@ -41,6 +49,42 @@ const AssignmentCreation = (props: TabComponentType) => {
   const [assignmentData, setAssignmentData] = useState<IAssignment[]>(assignmentTableData);
   // Redux dispatch function
   const dispatch = useDispatch();
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [subject, setSubject] = useState('');
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClass] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  // State to store and update the selected date using dayjs
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+  console.log('medium ----', medium);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClass(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
 
   /**
    * Handles dialog close with confirmation if there are unsaved changes
@@ -49,12 +93,10 @@ const AssignmentCreation = (props: TabComponentType) => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
       dispatch(setIsChanges(false));
       setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
     } else if (!isChanges) {
-      setOpen(false);
       setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
     }
@@ -62,15 +104,69 @@ const AssignmentCreation = (props: TabComponentType) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          onClick={addAssignmentDialog.onTrue}
-          startIcon={<Add />}
-          size="small"
-        >
-          Assignment
-        </Button>
+      <Box display="flex" gap={2} justifyContent="space-between" mb={2}>
+        <Box display="flex" gap={2}>
+          <CustomSelect
+            options={allClass}
+            label="Class"
+            value={classes}
+            onChange={(val) => setClass(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+          />
+          <CustomSelect
+            options={allDivision}
+            label="Division"
+            value={division}
+            onChange={(val) => setDivision(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!classes}
+          />
+          <CustomSelect
+            options={[
+              { id: '1', name: 'Mathematics' },
+              { id: '2', name: 'Science' },
+              { id: '3', name: 'English' },
+              { id: '4', name: 'History' },
+              { id: '5', name: 'Geography' },
+              { id: '6', name: 'Physics' },
+              { id: '7', name: 'Chemistry' },
+              { id: '8', name: 'Biology' },
+            ]}
+            label="Subject"
+            value={subject}
+            onChange={(val) => setSubject(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!division}
+          />
+          <DatePicker
+            label="Assignment Date"
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            name="date"
+            value={date}
+            onChange={(val) => {
+              setDate(val);
+            }}
+            format="DD/MM/YYYY"
+            sx={{ minWidth: '250px' }}
+          />
+        </Box>
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            variant="contained"
+            onClick={addAssignmentDialog.onTrue}
+            startIcon={<Add />}
+            size="small"
+            disabled={!date || dayjs(date).isBefore(dayjs().startOf('day'))}
+          >
+            Assignment
+          </Button>
+        </Box>
       </Box>
 
       <CustomDialog
@@ -83,6 +179,7 @@ const AssignmentCreation = (props: TabComponentType) => {
         maxWidth="md"
       >
         <AssignmentForm
+          classes={classes}
           dialog={addAssignmentDialog}
           onClose={() => {
             handleClose(null, false);
@@ -107,7 +204,12 @@ const AssignmentCreation = (props: TabComponentType) => {
           deleteAssignmentDialog.onTrue();
         }}
         onView={(row) => {
-          console.log('View clicked', row);
+          viewAssignmentDetails.onTrue();
+          setSelectedAssignment(row);
+        }}
+        onViewSubmission={(row) => {
+          viewAssignmentSubmissionDialog.onTrue();
+          setSelectedAssignment(row);
         }}
       />
 
@@ -149,6 +251,32 @@ const AssignmentCreation = (props: TabComponentType) => {
           </Button>
         }
       />
+
+      <CustomDialog
+        title={selectedAssignment?.title || 'Assignment Submission'}
+        open={viewAssignmentSubmissionDialog.value}
+        handleClose={() => {
+          viewAssignmentSubmissionDialog.onFalse();
+          setSelectedAssignment(null);
+        }}
+        maxWidth="md"
+      >
+        <Box sx={{ p: 2 }}>
+          <StudentSubmissions selectedAssignment={selectedAssignment} />
+        </Box>
+      </CustomDialog>
+
+      <CustomDialog
+        title={selectedAssignment?.title || 'Assignment Details'}
+        open={viewAssignmentDetails.value}
+        handleClose={() => {
+          viewAssignmentDetails.onFalse();
+          setSelectedAssignment(null);
+        }}
+        maxWidth="md"
+      >
+        <ViewAssignmentDetails assignment={selectedAssignment} />
+      </CustomDialog>
     </Box>
   );
 };

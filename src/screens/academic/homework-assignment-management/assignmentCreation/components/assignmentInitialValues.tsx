@@ -2,13 +2,13 @@ import dayjs from 'dayjs';
 
 import type { IAssignment } from '../type';
 
-export const getAssignmentInitialValues = (editData: IAssignment | null) => ({
+export const getAssignmentInitialValues = (editData: IAssignment | null, classes: string) => ({
   title: editData?.title || '',
   description: editData?.description || '',
-  class: editData?.class || '',
+  class: editData?.class || classes || '',
   division: editData?.division || [],
-  subjects: editData?.subjects || [],
-  submissionType: editData?.submissionType || '',
+  subjects: editData?.subjects || '',
+  submissionType: editData?.submissionType || 'online_text',
   dueDate: dayjs(editData?.dueDate) || null,
   attachments: editData?.attachments || [],
   createdBy: editData?.createdBy || '',
@@ -16,9 +16,6 @@ export const getAssignmentInitialValues = (editData: IAssignment | null) => ({
 
   // Assignment specific fields
   assignmentType: editData?.assignmentType || '',
-  rubricRequired: editData?.rubricRequired || false,
-  rubric: editData?.rubric || '',
-  rubricAttachment: editData?.rubricAttachment || [],
 
   // Scheduling
   isScheduled: editData?.isScheduled || false,

@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 
 import { Box, Button, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -14,22 +17,6 @@ const data = [
   {
     subjectName: 'Physics',
     teacherName: '', // You can map this to a default teacher ID or leave it blank for selection
-  },
-  {
-    subjectName: 'Chemistry',
-    teacherName: '',
-  },
-  {
-    subjectName: 'Biology',
-    teacherName: '',
-  },
-  {
-    subjectName: 'Computer Science',
-    teacherName: '',
-  },
-  {
-    subjectName: 'Economics',
-    teacherName: '',
   },
 ];
 
@@ -79,7 +66,13 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoom
               },
             }}
             columns={[
-              { id: 'subjectName', label: 'Subject Name', minWidth: '200px', align: 'left' },
+              {
+                id: 'subjectName',
+                label: 'Subject Name',
+                minWidth: '200px',
+                align: 'left',
+                isFilter: false,
+              },
               {
                 id: 'classRoom',
                 label: 'Class Room',
@@ -95,11 +88,11 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoom
                     labelKey="name"
                     valueKey="id"
                     options={[
-                      { id: '1', name: 'Physics' },
-                      { id: '2', name: 'Chemistry' },
-                      { id: '3', name: 'Biology' },
-                      { id: '4', name: 'Computer Science' },
-                      { id: '5', name: 'Economics' },
+                      { id: '1', name: 'Room 101' },
+                      { id: '2', name: 'Room 102' },
+                      { id: '3', name: 'Room 103' },
+                      { id: '4', name: 'Room 104' },
+                      { id: '5', name: 'Room 105' },
                     ]}
                     value={row.teacherName}
                     onChange={(val) => handleTeacherChange(row.subjectName, val)}
@@ -114,7 +107,18 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoom
           />
         </Scrollbar>
         <DialogActions>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button
+            onClick={() => {}}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={handleSubmit}
+            variant="contained"
+          >
             Save
           </Button>
         </DialogActions>

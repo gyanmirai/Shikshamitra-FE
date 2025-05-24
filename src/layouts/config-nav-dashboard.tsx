@@ -870,25 +870,25 @@ const academicModule = {
           shortcutKeyName: 'Alt+A+H',
           children: [
             {
-              title: 'Dashboard',
-              path: '/academic/homeworkDashboard',
-              _action: 'homework-assignment-management-homeworkDashboard',
-              shortcutKey: 'Alt+A+H+1',
-              shortcutKeyName: 'Alt+A+H+1',
-            },
-            {
-              title: 'Homework and Assignment Creation',
+              title: 'Add Homework/Assignment',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
             },
             {
-              title: 'Grading And Feedback',
+              title: 'Add Marks/Feedback',
               path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',
               shortcutKeyName: 'Alt+A+H+3',
+            },
+            {
+              title: 'My Submission',
+              path: '/academic/mySubmission',
+              _action: 'homework-assignment-management-mySubmission',
+              shortcutKey: 'Alt+A+H+4',
+              shortcutKeyName: 'Alt+A+H+4',
             },
             {
               title: 'Setting',

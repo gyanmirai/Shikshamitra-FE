@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 
 import { Box, Button, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -43,6 +46,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelec
                 label: 'Subject Name',
                 minWidth: '200px',
                 align: 'left',
+                isFilter: false,
               },
               {
                 id: 'teacherName',
@@ -59,11 +63,11 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelec
                     labelKey="name"
                     valueKey="id"
                     options={[
-                      { id: '1', name: 'Physics' },
-                      { id: '2', name: 'Chemistry' },
-                      { id: '3', name: 'Biology' },
-                      { id: '4', name: 'Computer Science' },
-                      { id: '5', name: 'Economics' },
+                      { id: '1', name: 'John Smith' },
+                      { id: '2', name: 'Mary Johnson' },
+                      { id: '3', name: 'David Williams' },
+                      { id: '4', name: 'Sarah Brown' },
+                      { id: '5', name: 'Michael Davis' },
                     ]}
                     value={row.teacherName}
                     onChange={(val) => {}}
@@ -77,14 +81,22 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelec
             data={[
               { id: 1, subjectName: 'Mathematics', teacherName: '1' },
               { id: 2, subjectName: 'English', teacherName: '2' },
-              { id: 3, subjectName: 'Science', teacherName: '3' },
-              { id: 4, subjectName: 'History', teacherName: '4' },
-              { id: 5, subjectName: 'Geography', teacherName: '5' },
             ]}
           />{' '}
         </Scrollbar>
         <DialogActions>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button
+            onClick={() => {}}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            variant="contained"
+          >
             Save
           </Button>
         </DialogActions>

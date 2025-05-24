@@ -26,7 +26,6 @@ import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
 import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
 import archievedQuizTableData from 'src/json/academic/examination/archievedQuizTableData.json';
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
@@ -903,32 +902,6 @@ const ViewAnalysis = () => {
         </Grid>
 
         <Grid container spacing={2} mt={1}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-              <PerformanceOverTime
-                id="demo__4"
-                title="Time Distribution Analysis"
-                //   subheader="(+43%) than last year"
-                chart={{
-                  categories: ['0-5min', '5-10min', '10-15min', '15-20min', '20-25min'],
-                  series: [
-                    {
-                      name: 'Students',
-                      data: [5, 10, 4, 12, 2],
-                    },
-                  ],
-                  options: {
-                    legend: {
-                      show: true,
-                      position: 'top',
-                    },
-                  },
-                }}
-                sx={{ height: '100%', boxShadow: 'none' }}
-              />
-            </Card>
-          </Grid>
-
           <Grid item xs={12} md={6}>
             <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
               <Box display="flex" justifyContent="space-between" alignItems="center">

@@ -13,7 +13,6 @@ import { fShortenNumber } from 'src/utils/format-number';
 import { varAlpha } from 'src/theme/styles';
 import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -174,48 +173,6 @@ const CommunicationDashboard = () => {
                 ],
               }}
               sx={{ boxShadow: 'none', height: '100%' }}
-            />
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <PerformanceOverTime
-              id="demo__4"
-              title="Response Overview"
-              //   subheader="(+43%) than last year"
-              chart={{
-                categories: [
-                  'Jan',
-                  'Feb',
-                  'Mar',
-                  'Apr',
-                  'May',
-                  'Jun',
-                  'Jul',
-                  'Aug',
-                  'Sep',
-                  'Oct',
-                  'Nov',
-                  'Dec',
-                ],
-                series: [
-                  {
-                    name: 'Positive',
-                    data: [5, 10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                  },
-                  {
-                    name: 'Negative',
-                    data: [40, 60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                  },
-                ],
-                options: {
-                  legend: {
-                    show: true,
-                    position: 'top',
-                  },
-                },
-              }}
-              sx={{ height: '100%', boxShadow: 'none' }}
             />
           </Card>
         </Grid>
