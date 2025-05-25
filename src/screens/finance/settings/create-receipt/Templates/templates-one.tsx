@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 
 import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
 
-import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
@@ -158,7 +157,7 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
           <Box mt={7} display="flex" justifyContent="flex-end" sx={{ fontSize: '0.65rem' }}>
             <Box sx={{ textAlign: 'right', fontSize: '10px' }}>
               <Typography fontSize="10px">
-                <strong>Total Paid:</strong> {formatNumber(receipt.total, 'INR')}
+                <strong>Total Paid:</strong> {receipt.total}
               </Typography>
               <Typography sx={{ pb: '10px', fontSize: '10px' }}>
                 (In Words: {numberToWords(receipt.total)} Rupees Only)
