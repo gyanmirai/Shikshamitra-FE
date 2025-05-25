@@ -137,6 +137,7 @@ const TemplateTwo: React.FC<TemplateTwoProps> = ({ selectedTemplate, onSelectTem
           </Box>
           <Box>
             <Box pb="70px" />
+            <Typography fontSize="10px">_________________________</Typography>
             <Typography fontSize="10px">Receiver Sign</Typography>
           </Box>
         </Box>
