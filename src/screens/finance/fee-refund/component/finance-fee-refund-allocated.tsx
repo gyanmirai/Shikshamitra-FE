@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
 import { Box, Button, Tooltip, Typography, DialogActions } from '@mui/material';
@@ -13,6 +14,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundPaymentDialog from './fee-refund-payment-dialog';
 import { studentPayment } from '../data/fee-refund-approved-dialog-data';
+import FeeRefundReceiptPDF from '../../transection-receipt/fee-refund-receipt';
 
 import type { StudentPayment } from '../data/fee-refund-approved-dialog-data';
 import type { IFinanceFeeRefundAllocationDialogProps } from '../interface/fee-refund-interface';
@@ -72,6 +74,8 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
   const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
     setlibraryFeeRefundAmount(formattedValue);
   };
+
+  const feeRefundReceiptDialog = useBoolean();
 
   return (
     <CustomDialog
@@ -176,8 +180,46 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
           totalFeeAmount={totalFeeRefundAmount}
         />
       </Scrollbar>
+      {feeRefundReceiptDialog.value && (
+        <CustomDialog
+          title="Charges"
+          maxWidth="md"
+          handleClose={() => {
+            feeRefundReceiptDialog.onFalse();
+            // setReceiptData(null);
+          }}
+          open={feeRefundReceiptDialog.value}
+        >
+          <FeeRefundReceiptPDF
+            from={{
+              name: 'Deep Darshan Vidhya Sankool',
+              address: 'Near Madhuvan Circle',
+              branch: 'Dindoli - 560078',
+            }}
+            to={{ name: 'Vishal Patel', className: '5-A', rollNo: '23' }}
+            selectedCharges={[
+              { feeHead: 'Tuition Fee', refundedAmount: 1500 },
+              { feeHead: 'Library Fee', refundedAmount: 500 },
+            ]}
+            paymentDetails={{
+              paymentMode: 'Cheque',
+              chequeNo: '123456',
+              bank: 'SBI',
+              dateOnCheque: dayjs('2025-05-20'),
+            }}
+          />
+        </CustomDialog>
+      )}
+
       <DialogActions>
-        <Button type="submit" variant="contained" size="small">
+        <Button
+          type="submit"
+          variant="contained"
+          size="small"
+          onClick={() => {
+            feeRefundReceiptDialog.onTrue();
+          }}
+        >
           View Receipt
         </Button>
       </DialogActions>

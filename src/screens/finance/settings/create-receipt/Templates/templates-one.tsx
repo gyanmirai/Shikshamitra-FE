@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 
 import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
 
@@ -20,10 +21,12 @@ interface ReceiptData {
   from: {
     name: string;
     address: string;
+    branch: string;
   };
   to: {
     name: string;
-    class: string;
+    className: string;
+    rollNo: string;
   };
   paymentMode: string;
   bank: string;
@@ -37,18 +40,16 @@ interface ReceiptData {
 interface TemplateOneProps {
   selectedTemplate: string;
   onSelectTemplate: (data: any) => void;
-  data?: ReceiptData; // ✅ Optional
+  data?: ReceiptData;
 }
 
 const defaultData: ReceiptData = {
   from: {
     name: 'Deep Darshan Vidhya Sankool',
-    address: 'Dindoli - 560078',
+    address: 'Near Madhuvan Circle',
+    branch: 'Dindoli - 560078',
   },
-  to: {
-    name: 'Vishal Patel',
-    class: '10-A',
-  },
+  to: { name: 'Vishal Patel', className: '5-A', rollNo: '23' },
   paymentMode: 'Payment Gateway',
   bank: 'Paytm',
   ref: '09788nhgh679jlk',
@@ -75,19 +76,9 @@ const defaultData: ReceiptData = {
   ],
 };
 
-/**
- * TemplateOne component renders a receipt template with customizable details.
- *
- * @component
- * @param {Object} props - Component properties
- * @param {string} props.selectedTemplate - Currently selected template identifier
- * @param {Function} props.onSelectTemplate - Callback function for template selection
- * @param {ReceiptData} [props.data] - Optional receipt data to populate the template
- *
- * @returns {React.ReactElement} A rendered receipt template with radio selection
- */
 const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
   const receipt = data || defaultData;
+  const { from, to } = receipt;
 
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
@@ -107,7 +98,6 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
             },
           }}
         >
-          {/* Radio */}
           <Radio
             checked={selectedTemplate === 'TemplateOne'}
             onChange={() => onSelectTemplate('TemplateOne')}
@@ -116,41 +106,40 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
           />
 
           <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
-            Template 1
+            Fee Receipt
           </Typography>
 
           {/* From & To */}
-          <Box sx={{ mb: 1 }}>
-            <Grid
-              container
-              sx={{
-                fontSize: '0.75rem',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Grid item xs={5}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                  <Typography fontSize="10px">From:</Typography>
-                  <Typography fontSize="10px">{receipt.from.name}</Typography>
-                  <Typography fontSize="10px">{receipt.from.address}</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={5}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                  <Typography fontSize="10px">To:</Typography>
-                  <Typography fontSize="10px">
-                    <strong>Name:</strong> {receipt.to.name}
-                  </Typography>
-                  <Typography fontSize="10px">
-                    <strong>Class:</strong> {receipt.to.class}
-                  </Typography>
-                </Box>
-              </Grid>
+          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between' }}>
+            <Grid item xs={5}>
+              <Box display="flex" flexDirection="column" alignItems="flex-start">
+                <Typography fontSize="10px" fontWeight="bold">
+                  From:
+                </Typography>
+                <Typography fontSize="10px">{from.name}</Typography>
+                <Typography fontSize="10px">{from.address}</Typography>
+                <Typography fontSize="10px">{from.branch}</Typography>
+              </Box>
             </Grid>
-          </Box>
+            <Grid item xs={5}>
+              <Box display="flex" flexDirection="column" alignItems="flex-start">
+                <Typography fontSize="10px" fontWeight="bold">
+                  To:
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Name:</strong> {to.name}
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Class:</strong> {to.className}
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Roll No:</strong> {to.rollNo}
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
 
-          <Divider sx={{ mb: 1 }} />
+          <Divider sx={{ my: 1 }} />
 
           {/* Receipt Table */}
           <ReceiptTable
@@ -159,8 +148,8 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
               { id: 'feeHeadMonth', label: 'Month' },
               { id: 'amount', label: 'Due' },
               { id: 'received', label: 'Received' },
-              { id: 'paymentMode', label: 'mode' },
-              { id: 'details', label: 'etails' },
+              { id: 'paymentMode', label: 'Mode' },
+              { id: 'details', label: 'Details' },
             ]}
             data={receipt.tableData}
           />
@@ -173,6 +162,9 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
               </Typography>
               <Typography sx={{ pb: '10px', fontSize: '10px' }}>
                 (In Words: {numberToWords(receipt.total)} Rupees Only)
+              </Typography>
+              <Typography sx={{ pb: '10px', fontSize: '10px' }}>
+                {dayjs().format('DD/MM/YYYY')}
               </Typography>
               <Typography fontSize="10px">_________________________</Typography>
               <Typography fontSize="10px">Receiver Sign</Typography>

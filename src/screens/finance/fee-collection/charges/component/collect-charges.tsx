@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -15,7 +16,11 @@ import {
   DialogActions,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { formatNumber } from 'src/utils/formate_number';
+
+import ChargesReceiptPDF from 'src/screens/finance/transection-receipt/charges-receipt';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -75,6 +80,8 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
       return [...prev, sdata];
     });
   };
+
+  const chargesDialog = useBoolean();
 
   return (
     <CustomDialog
@@ -319,6 +326,48 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
               )} */}
             </Grid>
           )}
+          {chargesDialog.value && (
+            <CustomDialog
+              title="Charges"
+              maxWidth="md"
+              handleClose={() => {
+                chargesDialog.onFalse();
+                // setReceiptData(null);
+              }}
+              open={chargesDialog.value}
+            >
+              <ChargesReceiptPDF
+                from={{
+                  name: 'Deep Darshan Vidhya Sankool',
+                  address: 'Near Madhuvan Circle',
+                  branch: 'Dindoli - 560078',
+                }}
+                to={{ name: 'Vishal Patel', className: '5-A', rollNo: '23' }}
+                selectedCharges={[
+                  {
+                    dueDate: dayjs('2025-05-01'),
+                    dayOverDue: 10,
+                    chargePerDay: 50,
+                    totalCharges: 500,
+                    receivedAmount: 800,
+                    dateOnCheque: dayjs('2025-05-15'),
+                    ReceivedChequeDate: dayjs('2025-05-17'),
+                    chequeAmount: 2000,
+                    bankName: 'HDFC Bank',
+                    feeHead: 'Tuition Fee',
+                    type: 'late',
+                  },
+                ]}
+                paymentDetails={{
+                  paymentMode: 'Cheque',
+                  chequeNo: '9876543210',
+                  bank: 'State Bank of India',
+                  dateOnCheque: dayjs('2025-06-01'),
+                  transectionId: 'TXN1234567890',
+                }}
+              />
+            </CustomDialog>
+          )}
         </Scrollbar>
         <DialogActions>
           <Button
@@ -329,6 +378,18 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
             color="primary"
           >
             {`Collect Charges ${formatNumber(selectedChargesAmount, 'INR')}`}
+          </Button>
+          <Button
+            disabled={selectedChargesAmount < 1}
+            type="submit"
+            variant="outlined"
+            size="medium"
+            color="primary"
+            onClick={() => {
+              chargesDialog.onTrue();
+            }}
+          >
+            View Receipt
           </Button>
         </DialogActions>
       </form>
