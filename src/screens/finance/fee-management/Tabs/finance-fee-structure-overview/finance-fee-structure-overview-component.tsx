@@ -140,8 +140,8 @@ const FinanceFeeStructureOverviewComponent = () => {
           }
           tableId="fee-structure-overview"
           searchFieldProps={{
-            placeholder: 'Search by Receipt Book, Class..',
-            label: 'Search by Receipt Book, Class..',
+            placeholder: 'Search by Receipt Book, Applicable Class..',
+            label: 'Search by Receipt Book, Applicable Class..',
             sx: {
               maxWidth: '400px',
               width: '100%',

@@ -1,7 +1,9 @@
+import type { Dayjs } from 'dayjs';
+
 import React from 'react';
 import dayjs from 'dayjs';
 
-import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
+import { Box, Grid, Radio, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
@@ -15,6 +17,17 @@ interface ReceiptItem {
   received: number;
   paymentMode: string;
   details: string;
+}
+
+interface PaymentDetails {
+  paymentMode: 'Cash' | 'Cheque' | 'Online' | 'UPI';
+  transectionId?: string; // Consider renaming to `transactionId`
+  chequeNo?: string;
+  bank?: string;
+  dateOnCheque?: Dayjs | null;
+  refundedBy?: string;
+
+  remarks?: string;
 }
 
 interface ReceiptData {
@@ -35,6 +48,7 @@ interface ReceiptData {
   pendingFees: number;
   total: number;
   tableData: ReceiptItem[];
+  paymentDetails: PaymentDetails;
 }
 
 interface TemplateOneProps {
@@ -74,12 +88,60 @@ const defaultData: ReceiptData = {
       details: '-',
     },
   ],
+  paymentDetails: {
+    paymentMode: 'UPI',
+    transectionId: 'TXN123456789',
+    refundedBy: 'Admin - Prakash Patel',
+    remarks: 'Overpayment adjustment',
+  },
 };
 
 const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
   const receipt = data || defaultData;
   const { from, to } = receipt;
+  const renderPaymentDetails = (paymentDetails: any) => {
+    const mode = paymentDetails.paymentMode;
 
+    const getFormattedRows = (rows: { label: string; value?: string }[]) => (
+      <Grid container spacing={1}>
+        {rows.map((row, index) => (
+          <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
+            <Typography fontSize="10px">
+              <strong>{row.label}:</strong> {row.value || '-'}
+            </Typography>
+          </Grid>
+        ))}
+      </Grid>
+    );
+
+    switch (mode) {
+      case 'Cash':
+        return getFormattedRows([{ label: 'Payment Mode', value: 'Cash' }]);
+
+      case 'Cheque':
+        return getFormattedRows([
+          { label: 'Payment Mode', value: 'Cheque' },
+          { label: 'Cheque No', value: paymentDetails.chequeNo },
+          { label: 'Bank', value: paymentDetails.bank },
+          {
+            label: 'Date on Cheque',
+            value: paymentDetails.dateOnCheque
+              ? dayjs(paymentDetails.dateOnCheque).format('DD/MM/YYYY')
+              : '-',
+          },
+        ]);
+
+      case 'Online':
+      case 'UPI':
+        return getFormattedRows([
+          { label: 'Payment Mode', value: mode },
+          { label: 'Transaction ID', value: paymentDetails.transectionId },
+        ]);
+
+      default:
+        return null;
+    }
+  };
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
       <Grid item xs={12}>
@@ -139,7 +201,9 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
             </Grid>
           </Grid>
 
-          <Divider sx={{ my: 1 }} />
+          <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
+            {renderPaymentDetails(receipt.paymentDetails)}
+          </Box>
 
           {/* Receipt Table */}
           <ReceiptTable
