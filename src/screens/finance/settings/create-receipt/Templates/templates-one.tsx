@@ -1,5 +1,3 @@
-import type { Dayjs } from 'dayjs';
-
 import React from 'react';
 import dayjs from 'dayjs';
 
@@ -9,99 +7,21 @@ import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
+import defaultData from 'src/json/finance/create-receipt/fee-receipt-template-one.json';
 
-interface ReceiptItem {
-  feeHead: string;
-  feeHeadMonth: string;
-  amount: number;
-  received: number;
-  paymentMode: string;
-  details: string;
-}
+import type { ITemplateOneProps } from './fee-receipt-interface';
 
-interface PaymentDetails {
-  paymentMode: 'Cash' | 'Cheque' | 'Online' | 'UPI';
-  transectionId?: string; // Consider renaming to `transactionId`
-  chequeNo?: string;
-  bank?: string;
-  dateOnCheque?: Dayjs | null;
-  refundedBy?: string;
-
-  remarks?: string;
-}
-
-interface ReceiptData {
-  from: {
-    name: string;
-    address: string;
-    branch: string;
-  };
-  to: {
-    name: string;
-    className: string;
-    rollNo: string;
-  };
-  paymentMode: string;
-  bank: string;
-  ref: string;
-  date: string;
-  pendingFees: number;
-  total: number;
-  tableData: ReceiptItem[];
-  paymentDetails: PaymentDetails;
-}
-
-interface TemplateOneProps {
-  selectedTemplate: string;
-  onSelectTemplate: (data: any) => void;
-  data?: ReceiptData;
-}
-
-const defaultData: ReceiptData = {
-  from: {
-    name: 'Deep Darshan Vidhya Sankool',
-    address: 'Near Madhuvan Circle',
-    branch: 'Dindoli - 560078',
-  },
-  to: { name: 'Vishal Patel', className: '5-A', rollNo: '23' },
-  paymentMode: 'Payment Gateway',
-  bank: 'Paytm',
-  ref: '09788nhgh679jlk',
-  date: '06/08/2025',
-  pendingFees: 900,
-  total: 1600,
-  tableData: [
-    {
-      feeHead: 'Library',
-      amount: 1000,
-      feeHeadMonth: 'March',
-      received: 800,
-      paymentMode: 'Cheque',
-      details: 'Cheque No: 1234567890 , Bank: HDFC',
-    },
-    {
-      feeHead: 'Sports',
-      amount: 800,
-      feeHeadMonth: 'March',
-      received: 800,
-      paymentMode: 'Cash',
-      details: '-',
-    },
-  ],
-  paymentDetails: {
-    paymentMode: 'UPI',
-    transectionId: 'TXN123456789',
-    refundedBy: 'Admin - Prakash Patel',
-    remarks: 'Overpayment adjustment',
-  },
-};
-
-const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
+const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
+  // Extract receipt data from props or use default data if not provided
   const receipt = data || defaultData;
+  // Destructure 'from' and 'to' from receipt data for easier access
   const { from, to } = receipt;
+
+  // Helper function to render payment details based on payment mode
   const renderPaymentDetails = (paymentDetails: any) => {
     const mode = paymentDetails.paymentMode;
 
+    // Helper function to format and display payment information in a grid layout
     const getFormattedRows = (rows: { label: string; value?: string }[]) => (
       <Grid container spacing={1}>
         {rows.map((row, index) => (

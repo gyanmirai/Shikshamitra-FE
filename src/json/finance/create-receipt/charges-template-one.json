@@ -1,0 +1,46 @@
+{
+  "from": {
+    "name": "Deep Darshan Vidhya Sankool",
+    "address": "Near Madhuvan Circle",
+    "branch": "Dindoli - 560078"
+  },
+  "to": {
+    "name": "Vishal Patel",
+    "className": "5-A",
+    "rollNo": "23"
+  },
+  "lateFeeCharges": [
+    {
+      "feeHead": "Tuition Fee",
+      "dueDate": "05-Apr-2025",
+      "daysOverdue": "12",
+      "chargePerDay": "₹10",
+      "total": "₹120"
+    },
+    {
+      "feeHead": "Transport Fee",
+      "dueDate": "10-Apr-2025",
+      "daysOverdue": "7",
+      "chargePerDay": "₹5",
+      "total": "₹35"
+    }
+  ],
+  "chequeBounceCharges": [
+    {
+      "feeHead": "Tuition Fee",
+      "chequeDate": "01-Apr-2025",
+      "receivedDate": "04-Apr-2025",
+      "amount": "₹5000",
+      "bank": "HDFC",
+      "charges": "₹150"
+    }
+  ],
+  "paymentDetails": {
+    "paymentMode": "UPI",
+    "transectionId": "TXN123456789",
+    "refundedBy": "Admin - Prakash Patel",
+    "refundDate": "2025-05-26T00:00:00+05:30",
+    "remarks": "Overpayment adjustment"
+  },
+  "total": 600
+}

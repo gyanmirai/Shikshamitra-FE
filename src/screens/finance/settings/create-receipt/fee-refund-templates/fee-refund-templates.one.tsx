@@ -4,31 +4,7 @@ import dayjs from 'dayjs';
 import { Box, Grid, Divider, Typography } from '@mui/material';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
-
-const dummyReceipt = {
-  from: {
-    name: 'Deep Darshan Vidhya Sankool',
-    address: 'Near Madhuvan Circle',
-    branch: 'Dindoli - 560078',
-  },
-  to: {
-    name: 'Vishal Patel',
-    className: '5-A',
-    rollNo: '23',
-  },
-  data: [
-    { feeHead: 'Tuition Fee', refundedAmount: '₹500' },
-    { feeHead: 'Transport Fee', refundedAmount: '₹100' },
-  ],
-  total: 600,
-  paymentDetails: {
-    paymentMode: 'UPI',
-    transectionId: 'TXN123456789',
-    refundedBy: 'Admin - Prakash Patel',
-    refundDate: dayjs().format('DD/MM/YYYY hh:mm A'),
-    remarks: 'Overpayment adjustment',
-  },
-};
+import dummyReceipt from 'src/json/finance/create-receipt/fee-refund-template-one.json';
 
 const numberToWords = (num: number) => `${num} only`;
 
@@ -36,9 +12,13 @@ const FeeRefundTemplateOne = () => {
   const { from, to, total } = dummyReceipt;
 
   const renderPaymentDetails = (paymentDetails: any) => {
+    // Extract payment mode from paymentDetails object
     const mode = paymentDetails.paymentMode;
 
     const getFormattedRows = (rows: { label: string; value?: string }[]) => (
+      // Helper function to format and display payment details in a grid layout
+      // Takes an array of objects with label and value properties
+      // Returns a Grid component with formatted rows of payment information
       <Grid container spacing={1}>
         {rows.map((row, index) => (
           <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
