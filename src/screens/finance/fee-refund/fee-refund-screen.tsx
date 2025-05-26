@@ -588,7 +588,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                               }}
                             >
                               <Iconify icon="mdi:check" />
-                              Approved
+                              Approve
                             </MenuItem>
                             <MenuItem
                               onClick={() => {

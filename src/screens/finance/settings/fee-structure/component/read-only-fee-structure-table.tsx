@@ -101,7 +101,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
-            {`${formatNumber(row.lateFeeChargesAmount)}   `}
+            {`${formatNumber(row.lateFeeChargesAmount, 'INR')}   `}
           </Typography>
         );
       },
@@ -149,7 +149,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     },
     {
       id: 'active',
-      label: 'Active/In Active',
+      label: 'Active/Not Active',
       isSort: false,
       isFilter: false,
       sticky: true,

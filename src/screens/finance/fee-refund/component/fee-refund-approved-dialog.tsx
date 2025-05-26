@@ -121,7 +121,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
       maxWidth="xl"
       title={
         <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-          <Typography variant="h5">Fee Refund Approval Dialog</Typography>
+          <Typography variant="h5">Fee Refund Approval</Typography>
           <Tooltip
             arrow
             placement="right"
@@ -178,7 +178,17 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
                 );
               },
             },
-            { id: 'askForRefund', label: 'Ask For Refund', isFilter: false, isSort: false },
+            {
+              id: 'askForRefund',
+              label: 'Refund Amount',
+              isFilter: false,
+              isSort: false,
+              render(value, row) {
+                return (
+                  <Typography fontSize="12px">{formatNumber(row.askForRefund, 'INR')}</Typography>
+                );
+              },
+            },
             {
               id: 'refundAmount',
               label: 'Discount Amount',
@@ -246,7 +256,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
         />
         <SubmitButton
           onClick={() => {}}
-          buttonText="Approved"
+          buttonText="Approve"
           startIcon={<Iconify icon="material-symbols:check-circle-outline-rounded" />}
         />
       </DialogActions>

@@ -1,0 +1,43 @@
+{
+  "from": {
+    "name": "Deep Darshan Vidhya Sankool",
+    "address": "Near Madhuvan Circle",
+    "branch": "Dindoli - 560078"
+  },
+  "to": {
+    "name": "Vishal Patel",
+    "className": "5-A",
+    "rollNo": "23"
+  },
+  "paymentMode": "Payment Gateway",
+  "bank": "Paytm",
+  "ref": "09788nhgh679jlk",
+  "date": "2025-08-06T00:00:00+05:30",
+  "pendingFees": 900,
+  "total": 1600,
+  "tableData": [
+    {
+      "feeHead": "Library",
+      "amount": 1000,
+      "feeHeadMonth": "March",
+      "received": 800,
+      "paymentMode": "Cheque",
+      "details": "Cheque No: 1234567890 , Bank: HDFC"
+    },
+    {
+      "feeHead": "Sports",
+      "amount": 800,
+      "feeHeadMonth": "March",
+      "received": 800,
+      "paymentMode": "Cash",
+      "details": "-"
+    }
+  ],
+  "paymentDetails": {
+    "paymentMode": "UPI",
+    "transectionId": "TXN123456789",
+    "refundedBy": "Admin - Prakash Patel",
+    "remarks": "Overpayment adjustment",
+    "refundDate": "2025-05-26T00:00:00+05:30"
+  }
+}

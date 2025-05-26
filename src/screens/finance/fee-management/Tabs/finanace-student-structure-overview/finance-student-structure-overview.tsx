@@ -327,8 +327,8 @@ const FinanceStudentFeeManagement = () => {
 
       <CustomizableTable
         searchFieldProps={{
-          placeholder: 'Search by GR NO, Roll No, Class..',
-          label: 'Search by GR NO, Roll No, Class..',
+          placeholder: 'Search by Gr No, Roll No, Class..',
+          label: 'Search by Gr No, Roll No, Class..',
           sx: {
             maxWidth: '400px',
             width: '100%',

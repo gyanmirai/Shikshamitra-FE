@@ -1,94 +1,67 @@
 import React from 'react';
+import dayjs from 'dayjs';
 
-import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
+import { Box, Grid, Radio, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
 
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
+import defaultData from 'src/json/finance/create-receipt/fee-receipt-template-one.json';
 
-interface ReceiptItem {
-  feeHead: string;
-  feeHeadMonth: string;
-  amount: number;
-  received: number;
-  paymentMode: string;
-  details: string;
-}
+import type { ITemplateOneProps } from './fee-receipt-interface';
 
-interface ReceiptData {
-  from: {
-    name: string;
-    address: string;
-  };
-  to: {
-    name: string;
-    class: string;
-  };
-  paymentMode: string;
-  bank: string;
-  ref: string;
-  date: string;
-  pendingFees: number;
-  total: number;
-  tableData: ReceiptItem[];
-}
-
-interface TemplateOneProps {
-  selectedTemplate: string;
-  onSelectTemplate: (data: any) => void;
-  data?: ReceiptData; // ✅ Optional
-}
-
-const defaultData: ReceiptData = {
-  from: {
-    name: 'Deep Darshan Vidhya Sankool',
-    address: 'Dindoli - 560078',
-  },
-  to: {
-    name: 'Vishal Patel',
-    class: '10-A',
-  },
-  paymentMode: 'Payment Gateway',
-  bank: 'Paytm',
-  ref: '09788nhgh679jlk',
-  date: '06/08/2025',
-  pendingFees: 900,
-  total: 1600,
-  tableData: [
-    {
-      feeHead: 'Library',
-      amount: 1000,
-      feeHeadMonth: 'March',
-      received: 800,
-      paymentMode: 'Cheque',
-      details: 'Cheque No: 1234567890 , Bank: HDFC',
-    },
-    {
-      feeHead: 'Sports',
-      amount: 800,
-      feeHeadMonth: 'March',
-      received: 800,
-      paymentMode: 'Cash',
-      details: '-',
-    },
-  ],
-};
-
-/**
- * TemplateOne component renders a receipt template with customizable details.
- *
- * @component
- * @param {Object} props - Component properties
- * @param {string} props.selectedTemplate - Currently selected template identifier
- * @param {Function} props.onSelectTemplate - Callback function for template selection
- * @param {ReceiptData} [props.data] - Optional receipt data to populate the template
- *
- * @returns {React.ReactElement} A rendered receipt template with radio selection
- */
-const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
+const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTemplate, data }) => {
+  // Extract receipt data from props or use default data if not provided
   const receipt = data || defaultData;
+  // Destructure 'from' and 'to' from receipt data for easier access
+  const { from, to } = receipt;
 
+  // Helper function to render payment details based on payment mode
+  const renderPaymentDetails = (paymentDetails: any) => {
+    const mode = paymentDetails.paymentMode;
+
+    // Helper function to format and display payment information in a grid layout
+    const getFormattedRows = (rows: { label: string; value?: string }[]) => (
+      <Grid container spacing={1}>
+        {rows.map((row, index) => (
+          <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
+            <Typography fontSize="10px">
+              <strong>{row.label}:</strong> {row.value || '-'}
+            </Typography>
+          </Grid>
+        ))}
+      </Grid>
+    );
+
+    switch (mode) {
+      case 'Cash':
+        return getFormattedRows([{ label: 'Payment Mode', value: 'Cash' }]);
+
+      case 'Cheque':
+        return getFormattedRows([
+          { label: 'Payment Mode', value: 'Cheque' },
+          { label: 'Cheque No', value: paymentDetails.chequeNo },
+          { label: 'Bank', value: paymentDetails.bank },
+          {
+            label: 'Date on Cheque',
+            value: paymentDetails.dateOnCheque
+              ? dayjs(paymentDetails.dateOnCheque).format('DD/MM/YYYY')
+              : '-',
+          },
+        ]);
+
+      case 'Online':
+      case 'UPI':
+        return getFormattedRows([
+          { label: 'Payment Mode', value: mode },
+          { label: 'Transaction ID', value: paymentDetails.transectionId },
+        ]);
+
+      default:
+        return null;
+    }
+  };
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
       <Grid item xs={12}>
@@ -107,7 +80,6 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
             },
           }}
         >
-          {/* Radio */}
           <Radio
             checked={selectedTemplate === 'TemplateOne'}
             onChange={() => onSelectTemplate('TemplateOne')}
@@ -116,41 +88,42 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
           />
 
           <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
-            Template 1
+            Fee Receipt
           </Typography>
 
           {/* From & To */}
-          <Box sx={{ mb: 1 }}>
-            <Grid
-              container
-              sx={{
-                fontSize: '0.75rem',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Grid item xs={5}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                  <Typography fontSize="10px">From:</Typography>
-                  <Typography fontSize="10px">{receipt.from.name}</Typography>
-                  <Typography fontSize="10px">{receipt.from.address}</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={5}>
-                <Box display="flex" flexDirection="column" alignItems="flex-start">
-                  <Typography fontSize="10px">To:</Typography>
-                  <Typography fontSize="10px">
-                    <strong>Name:</strong> {receipt.to.name}
-                  </Typography>
-                  <Typography fontSize="10px">
-                    <strong>Class:</strong> {receipt.to.class}
-                  </Typography>
-                </Box>
-              </Grid>
+          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between' }}>
+            <Grid item xs={5}>
+              <Box display="flex" flexDirection="column" alignItems="flex-start">
+                <Typography fontSize="10px" fontWeight="bold">
+                  From:
+                </Typography>
+                <Typography fontSize="10px">{from.name}</Typography>
+                <Typography fontSize="10px">{from.address}</Typography>
+                <Typography fontSize="10px">{from.branch}</Typography>
+              </Box>
             </Grid>
-          </Box>
+            <Grid item xs={5}>
+              <Box display="flex" flexDirection="column" alignItems="flex-start">
+                <Typography fontSize="10px" fontWeight="bold">
+                  To:
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Name:</strong> {to.name}
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Class:</strong> {to.className}
+                </Typography>
+                <Typography fontSize="10px">
+                  <strong>Roll No:</strong> {to.rollNo}
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
 
-          <Divider sx={{ mb: 1 }} />
+          <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
+            {renderPaymentDetails(receipt.paymentDetails)}
+          </Box>
 
           {/* Receipt Table */}
           <ReceiptTable
@@ -159,8 +132,8 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
               { id: 'feeHeadMonth', label: 'Month' },
               { id: 'amount', label: 'Due' },
               { id: 'received', label: 'Received' },
-              { id: 'paymentMode', label: 'mode' },
-              { id: 'details', label: 'etails' },
+              { id: 'paymentMode', label: 'Mode' },
+              { id: 'details', label: 'Details' },
             ]}
             data={receipt.tableData}
           />
@@ -173,6 +146,9 @@ const TemplateOne: React.FC<TemplateOneProps> = ({ selectedTemplate, onSelectTem
               </Typography>
               <Typography sx={{ pb: '10px', fontSize: '10px' }}>
                 (In Words: {numberToWords(receipt.total)} Rupees Only)
+              </Typography>
+              <Typography sx={{ pb: '10px', fontSize: '10px' }}>
+                {dayjs().format('DD/MM/YYYY')}
               </Typography>
               <Typography fontSize="10px">_________________________</Typography>
               <Typography fontSize="10px">Receiver Sign</Typography>
