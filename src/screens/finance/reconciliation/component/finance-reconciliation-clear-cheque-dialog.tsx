@@ -189,10 +189,37 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                   </Grid2>
                 )}
               </Grid2>
+              {/* Bounce Charges */}
               {!fromClearCheck && (
-                <Grid2 container spacing={2}>
+                <Grid2 xs={6} xl={6}>
+                  <ShakingTextField
+                    error={
+                      formik.touched.checkBounceCharges && Boolean(formik.errors.checkBounceCharges)
+                    }
+                  >
+                    <NumericFormatCustom
+                      size="small"
+                      name="checkBounceCharges"
+                      label="Bounce Charges"
+                      value={formik.values.checkBounceCharges}
+                      onChange={formik.handleChange}
+                      fullWidth
+                      error={
+                        formik.touched.checkBounceCharges &&
+                        Boolean(formik.errors.checkBounceCharges)
+                      }
+                      helperText={
+                        formik.touched.checkBounceCharges &&
+                        (formik.errors.checkBounceCharges as string)
+                      }
+                    />
+                  </ShakingTextField>
+                </Grid2>
+              )}
+              {!fromClearCheck && (
+                <Grid2 container spacing={2} pb="10px">
                   {/* Check Bounce Reason */}
-                  <Grid2 xs={6}>
+                  <Grid2 xs={12}>
                     <ShakingTextField
                       error={
                         formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
@@ -202,6 +229,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         size="small"
                         label="Check Bounce Reason"
                         name="checkBounceReason"
+                        multiline
+                        rows={2}
                         value={formik.values.checkBounceReason}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -214,33 +243,6 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         helperText={
                           formik.touched.checkBounceReason &&
                           (formik.errors.checkBounceReason as string)
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid2>
-
-                  {/* Bounce Charges */}
-                  <Grid2 xs={6}>
-                    <ShakingTextField
-                      error={
-                        formik.touched.checkBounceCharges &&
-                        Boolean(formik.errors.checkBounceCharges)
-                      }
-                    >
-                      <NumericFormatCustom
-                        size="small"
-                        name="checkBounceCharges"
-                        label="Bounce Charges"
-                        value={formik.values.checkBounceCharges}
-                        onChange={formik.handleChange}
-                        fullWidth
-                        error={
-                          formik.touched.checkBounceCharges &&
-                          Boolean(formik.errors.checkBounceCharges)
-                        }
-                        helperText={
-                          formik.touched.checkBounceCharges &&
-                          (formik.errors.checkBounceCharges as string)
                         }
                       />
                     </ShakingTextField>

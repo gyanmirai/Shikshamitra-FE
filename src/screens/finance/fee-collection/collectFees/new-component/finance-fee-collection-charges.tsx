@@ -21,17 +21,23 @@ import ChargesViewDetails from '../../charges/component/charges-view-details';
 import FinanceChequeBounceChargeCollectDialog from '../../charges/component/finance-cheque-bounce-charge-collect';
 
 const FinanceFeeCollectionCharges = () => {
+  // Dialog state for charge collection modal
   const dialog = useBoolean();
+  // Dialog state for viewing charge details
   const dialogForViewCharges = useBoolean();
 
+  // State to store the currently selected charge entry
   const [selectedEntry, setSelectedEntry] = useState<any>();
 
+  // Handler to close the charge collection dialog
   const closeDialog = () => {
     dialog.onFalse();
   };
 
+  // Handler for saving charge collection data
   const handleSave = () => {};
 
+  // Effect to handle changes when selected entry updates
   useEffect(() => {}, [selectedEntry]);
 
   return (
@@ -58,15 +64,17 @@ const FinanceFeeCollectionCharges = () => {
             id: 'chargeHead',
             label: 'Charge Head',
           },
+
+          { id: 'description', label: 'Description' },
           {
             id: 'amount',
             label: 'Tota Charges Amount',
             filterType: 'number',
+            align: 'right',
             render(value, row) {
               return <Typography fontSize="12px">{row.amount}</Typography>;
             },
           },
-          { id: 'description', label: 'Description' },
 
           {
             id: 'status',

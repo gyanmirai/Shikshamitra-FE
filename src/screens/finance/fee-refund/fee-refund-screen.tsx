@@ -229,8 +229,9 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 },
                 {
                   id: 'askForRefund',
-                  label: 'Ask For Refund',
+                  label: 'Refund Amount',
                   filterType: 'formattedNumber',
+                  align: 'right',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px" textAlign="center">
@@ -243,6 +244,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   id: 'approvedAmount',
                   label: 'Approved Amount',
                   filterType: 'number',
+                  align: 'right',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px">
@@ -512,8 +514,9 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   },
                   {
                     id: 'askForRefund',
-                    label: 'Ask For Refund',
+                    label: 'Refund Amount',
                     filterType: 'formattedNumber',
+                    align: 'right',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px" textAlign="left">
@@ -526,6 +529,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                     id: 'approvedAmount',
                     label: 'Approved Amount',
                     filterType: 'number',
+                    align: 'right',
                     render(value, row) {
                       return (
                         <Typography minWidth="100px" fontSize="12px">

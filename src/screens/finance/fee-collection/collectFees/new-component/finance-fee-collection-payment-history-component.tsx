@@ -23,14 +23,18 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import FinanceStudentPaymentHistoryDialog from '../component/finance-student-payment-history-dialog';
 
 const FinanceFeeCollectionPaymentHistoryComponent = () => {
+  // Dialog state to control visibility of payment history dialog
   const dialog = useBoolean();
 
+  // State to store the selected payment history entry
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
+  // Handler to close the payment history dialog
   const closeDialog = () => {
     dialog.onFalse();
   };
 
+  // Handler for saving changes (currently not implemented)
   const handleSave = () => {};
   return (
     <>
@@ -57,6 +61,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             id: 'amountPaid',
             label: 'Amount',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row: any) {
               return <Typography fontSize="12px">{formatNumber(row.amountPaid, 'INR')}</Typography>;
             },
@@ -65,6 +70,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             id: 'amountPending',
             label: 'Amount Pending',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row: any) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.amountPending, 'INR')}</Typography>

@@ -15,7 +15,7 @@
         "payableFee": 1000,
         "generalDiscount": 0,
         "paymentMethod": [
-          "cash"
+          "Cash"
         ],
         "lateFeeChargesType": "fixed",
         "lateFeeChargesAmount": "1000",
@@ -28,8 +28,10 @@
         "payableFee": 4500,
         "generalDiscount": 500,
         "paymentMethod": [
-          "cash",
-          "online"
+          "Cash",
+          "Online",
+          "Cheque",
+          "UPI"
         ],
         "lateFeeChargesType": "perDay",
         "lateFeeChargesAmount": "1",

@@ -118,7 +118,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
             <strong>Name:</strong> Vishal RameshBhai Patel
           </Typography>
           <Typography>
-            <strong>Standard:</strong> 10/B
+            <strong>Standard:</strong> 10-B
           </Typography>
           <Typography>
             <strong>Gr Number:</strong> 89866
@@ -142,6 +142,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
               label: 'Gross Fee',
               isFilter: false,
               isSort: false,
+              align: 'right',
               render(value, row) {
                 if (row.paidAmount === 'Total') {
                   return (
@@ -160,6 +161,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
               label: 'General Discount',
               isFilter: false,
               isSort: false,
+              align: 'right',
               render(value, row) {
                 return (
                   <Typography fontSize="12px">
@@ -173,6 +175,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
               label: 'Payable Fee',
               isFilter: false,
               isSort: false,
+              align: 'right',
               render(value, row) {
                 return (
                   <Typography fontSize="12px">{formatNumber(row.payableFee, 'INR')}</Typography>
@@ -185,6 +188,7 @@ const FinanceStudentAdditionalDiscountDialog: React.FC<
 
               isSort: false,
               isFilter: false,
+
               render: (value: any, row: any) =>
                 row.feeHead === paymentHistoryData[0].feeHead ? (
                   <NumericFormatCustom

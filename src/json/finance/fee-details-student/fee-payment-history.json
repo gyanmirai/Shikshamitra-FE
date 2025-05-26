@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "date": "25-12-2024",
+    "amount": "10000",
+    "paymentMode": "Cash",
+    "feeType": "Tuition"
+  },
+  {
+    "id": 2,
+    "date": "25-03-2025",
+    "amount": "5000",
+    "paymentMode": "Cash",
+    "feeType": "Tuition"
+  },
+  {
+    "id": 3,
+    "date": "25-05-2025",
+    "amount": "15000",
+    "paymentMode": "Cash",
+    "feeType": "Tuition"
+  }
+]

@@ -5,7 +5,7 @@ export const feeRefundValidationSchema = Yup.object({
   division: Yup.string().required('Division is required'),
   studentName: Yup.string().required('Student Name is required'),
   grNo: Yup.string().required('GR No is required'),
-  feeType: Yup.array().min(1, 'Select at least one Fee Type'),
+  feeType: Yup.string().required('Fee Type is required'),
   paidTerms: Yup.array().min(1, 'Select at least one Paid Term'),
   amountApplicableForRefund: Yup.string().required('Refund Amount is required'),
   askForRefund: Yup.number()
