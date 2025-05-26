@@ -87,6 +87,24 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'paymentMethod',
       label: 'Payment Method',
       render(value: any, row: any) {
+        if (row.paymentMethod.length > 2) {
+          return (
+            <Tooltip title={row.paymentMethod.join(' , ')} arrow placement="top">
+              <Typography
+                sx={{
+                  fontSize: '12px',
+                  textTransform: 'capitalize',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '200px',
+                }}
+              >
+                {row.paymentMethod.slice(0, 2).join(' , ')}
+              </Typography>
+            </Tooltip>
+          );
+        }
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
             {row.paymentMethod.join(' , ')}

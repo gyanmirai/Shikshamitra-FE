@@ -238,7 +238,7 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                   >
                     <NumericFormatCustom
                       size="small"
-                      label="Ask For Refund"
+                      label="Refund Amount"
                       name="askForRefund"
                       value={formik.values.askForRefund}
                       onChange={formik.handleChange}

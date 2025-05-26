@@ -29,6 +29,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'Gross Fee',
       label: 'Gross Fee',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -37,6 +38,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'Payable Fee',
       label: 'Payable Fee',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -45,6 +47,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'Paid',
       label: 'Paid',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14} color="#138e58">
           {formatNumber(value, 'INR')}
@@ -55,6 +58,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'Pending',
       label: 'Pending',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14} color="#b76e00">
           {formatNumber(value, 'INR')}
@@ -65,6 +69,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'General Discount',
       label: 'General Discount',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -73,6 +78,7 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
       id: 'Additional Discount',
       label: 'Additional Discount',
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize={14}>{formatNumber(value, 'INR')}</Typography>
       ),
@@ -160,6 +166,15 @@ const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) =
               columns={tableColumns as IColumn[]}
               data={getTableData(feeHead, feeHead.paymentDates as PaymentDate[])}
               tableId="student-fee-details"
+              noDataText="No Fee Details Available"
+              searchFieldProps={{
+                placeholder: 'Search by Gross Fee, Due Date..',
+                label: 'Search by Gross Fee, Due Date..',
+                sx: {
+                  maxWidth: '400px',
+                  width: '100%',
+                },
+              }}
             />
           </AccordionDetails>
         </Accordion>

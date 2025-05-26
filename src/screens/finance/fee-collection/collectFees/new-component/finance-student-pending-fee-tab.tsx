@@ -29,17 +29,19 @@ const FinanceStudentPendingFeeTab = () => (
       isShowedDense={false}
       isSearch={false}
       columns={[
+        { id: 'dueDate', label: 'Due Date', filterType: 'date' },
         { id: 'feeName', label: 'Fee Name' },
         // { id: 'statusId', label: 'Status Id' },
         {
           id: 'amountDue',
           label: 'Amount Due',
           filterType: 'formattedNumber',
+          align: 'right',
           render(value, row) {
             return <Typography fontSize="12px">{formatNumber(row.amountDue, 'INR')}</Typography>;
           },
         },
-        { id: 'dueDate', label: 'Due Date', filterType: 'date' },
+
         {
           id: 'status',
           label: 'Status',

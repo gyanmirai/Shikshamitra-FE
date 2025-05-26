@@ -178,7 +178,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
                 );
               },
             },
-            { id: 'askForRefund', label: 'Ask For Refund', isFilter: false, isSort: false },
+            { id: 'askForRefund', label: 'Refund Amount', isFilter: false, isSort: false },
             {
               id: 'refundAmount',
               label: 'Discount Amount',

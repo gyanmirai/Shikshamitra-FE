@@ -25,16 +25,17 @@ const FinanceExpenseDetailsDialog: React.FC<IFinanceExpenseDetailsDialogProps> =
         isPagination={false}
         isShowedDense={false}
         columns={[
+          { id: 'date', label: 'Received Date', filterType: 'date' },
           { id: 'expenseName', label: 'Expense Name' },
           {
             id: 'amount',
             label: 'Amount',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
             },
           },
-          { id: 'date', label: 'Received Date', filterType: 'date' },
         ]}
         data={data.expenseList}
       />

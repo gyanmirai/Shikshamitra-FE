@@ -109,7 +109,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'grNo',
       label: 'Gr No',
       filterType: 'number',
-
+      minWidth: '30px',
       render: (value: string) => (
         <Typography minWidth="120px" fontSize="12px">
           {value}
@@ -120,15 +120,24 @@ const FinanceStudentFeeManagement = () => {
       id: 'rollNo',
       label: 'Roll No',
       filterType: 'number',
+      minWidth: '30px',
       render: (value: string) => (
         <Typography minWidth="120px" fontSize="12px">
           {value}
         </Typography>
       ),
     },
+
+    {
+      id: 'grade',
+      label: 'Class',
+      filterType: 'number',
+      minWidth: '30px',
+    },
     {
       id: 'division',
       label: 'Division',
+      minWidth: '30px',
       render: () => (
         <Typography minWidth="120px" fontSize="12px">
           A
@@ -138,21 +147,20 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'name',
       label: 'Student Name',
+      minWidth: '150px',
       render: (value: string, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px">
           {row.name}
         </Typography>
       ),
     },
-    {
-      id: 'grade',
-      label: 'Class',
-      filterType: 'number',
-    },
+
     {
       id: 'totalFees',
       label: 'Gross Fees',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted total fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="100px" fontSize="12px">
@@ -164,6 +172,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'finalFees',
       label: 'Payable Fees',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted final fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px">
@@ -175,6 +185,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalGeneralDiscount',
       label: 'Total General Discount',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted general discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography sx={{ textAlign: 'center' }} minWidth="200px" fontSize="12px">
@@ -186,6 +198,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalAdditionalDiscount',
       label: 'Total Additional Discount',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted additional discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="180px" fontSize="12px" sx={{ textAlign: 'center' }}>
@@ -197,6 +211,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalPaid',
       label: 'Total Paid',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted total paid amount in INR currency with green color
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="100px" fontSize="12px" color="#1a8877">
@@ -208,6 +224,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalPending',
       label: 'Total Pending',
       filterType: 'formattedNumber',
+      align: 'right',
+      minWidth: '130px',
       // Render formatted pending amount in INR currency with red color
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px" color="red">

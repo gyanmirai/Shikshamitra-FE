@@ -23,20 +23,30 @@ import FinanceIncomeDetailsDialog from './component/finance-income-details-dialo
 import type { IncomeData } from './interface/income-screen-interface';
 
 const FinanceIncomeTrackingScreen = () => {
+  // Dialog control for main actions
   const dialog = useBoolean();
+  // Dialog control for showing income source details
   const dialogForDetailsInSource = useBoolean();
+  // Dialog control for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
+  // State to store the currently selected income entry
   const [selectedEntry, setSelectedEntry] = useState<IncomeData>(incomeTrackingData[0]);
+  // State to track if we're in edit mode
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  // State to store all income tracking data
   const [tableData] = useState<IncomeData[]>(incomeTrackingData);
+  // State to control the visibility of the add/edit dialog
   const [open, setOpen] = useState<boolean>(false);
 
+  // Handler to close the income source details dialog
   const closeDialogForDetailsInSource = () => {
     dialogForDetailsInSource.onFalse();
   };
 
+  // Effect to handle changes in selected entry or edit mode
   useEffect(() => {}, [selectedEntry, isEdit]);
 
+  // Handler to close the add/edit dialog and reset edit mode
   const handleClose = () => {
     setOpen(false);
     setIsEdit(false);
@@ -127,14 +137,13 @@ const FinanceIncomeTrackingScreen = () => {
                 id: 'incomeAmount',
                 label: 'Income Amount',
                 filterType: 'formattedNumber',
+                align: 'right',
                 render(value, row) {
                   return (
                     <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
                   );
                 },
               },
-
-              { id: 'date', label: `Today / Received Date`, filterType: 'date' },
 
               {
                 id: 'action',

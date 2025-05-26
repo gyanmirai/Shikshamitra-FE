@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "date": "25-04-2025",
+    "type": "Tuition Fee",
+    "discount": "2500",
+    "amount": "50000",
+    "additionalDiscount": 0,
+    "grossFee": 52500
+  },
+  {
+    "id": 2,
+    "date": "25-04-2025",
+    "type": "Sports Fee",
+    "discount": "500",
+    "amount": "5000",
+    "additionalDiscount": 0,
+    "grossFee": 5500
+  },
+  {
+    "id": 3,
+    "date": "25-04-2025",
+    "type": "Library Fee",
+    "discount": "0",
+    "amount": "2500",
+    "additionalDiscount": 0,
+    "grossFee": 2500
+  }
+]
