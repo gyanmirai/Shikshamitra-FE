@@ -50,15 +50,22 @@ const HOMEWORK_TABS = [
 ];
 
 const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
+  // Custom hook to manage tab state with 'overview' as the default selected tab
   const tabs = useTabs('overview');
+
+  // State to track whether the subject accordion section is expanded or collapsed
   const [isSubjectExpanded, setIsSubjectExpanded] = useState<boolean>(true);
 
-  // Find the currently active tab component based on selected tab value
+  // Memoized value that finds and returns the currently active tab component
+  // Updates only when the selected tab value changes
   const currentActiveComponent = useMemo(
     () => HOMEWORK_TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
 
+  // Handler for subject accordion expansion/collapse events
+  // @param _event - React synthetic event (unused)
+  // @param isExpanded - Boolean indicating if accordion should be expanded
   const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setIsSubjectExpanded(isExpanded);
   };

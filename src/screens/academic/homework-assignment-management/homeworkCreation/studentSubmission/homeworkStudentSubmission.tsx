@@ -70,16 +70,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
   };
 
+  // Memoized callback that returns the action menu items for each row
+  // @param pop - Popover control object for menu visibility
+  // @param row - Current row data containing submission and marks status
+  // @returns JSX element containing conditional menu items
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
         {' '}
         <MenuList>
+          {/* Show 'Assign Grade' option only when marks are not assigned (marksStatus=0)
+              but submission is completed (submissionStatus!=0) */}
           {row.marksStatus === 0 && row.submissionStatus !== 0 && (
             <MenuItem
               onClick={() => {
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
+                viewSubmissionDialog.onTrue(); // Open grade assignment dialog
+                pop.onClose(); // Close the menu popover
               }}
             >
               {' '}
@@ -87,6 +93,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               Assign Grade
             </MenuItem>
           )}
+
+          {/* Show 'Send Reminder' option only when submission is pending (submissionStatus=0) */}
           {row.submissionStatus === 0 && (
             <MenuItem onClick={() => {}}>
               {' '}
@@ -97,7 +105,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         </MenuList>
       </>
     ),
-    [viewSubmissionDialog]
+    [viewSubmissionDialog] // Re-create callback only when viewSubmissionDialog changes
   );
 
   /**

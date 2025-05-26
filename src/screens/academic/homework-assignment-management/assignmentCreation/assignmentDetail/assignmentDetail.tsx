@@ -50,10 +50,19 @@ const ASSIGNMENT_TABS = [
 ];
 
 const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null }) => {
+  // Hook to manage tab state with 'overview' as the default selected tab
   const tabs = useTabs('overview');
+
+  // State to track expanded/collapsed state of individual subjects
+  // Record<string, boolean> maps subject IDs to their expanded state
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
+
+  // State to track whether the main subject accordion is expanded
   const [isSubjectExpanded, setIsSubjectExpanded] = useState<boolean>(true);
 
+  // Handler for main subject accordion expansion/collapse
+  // @param event - React synthetic event
+  // @param isExpanded - Boolean indicating if accordion is expanded
   const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setIsSubjectExpanded(isExpanded);
   };

@@ -16,6 +16,18 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IHomework, IHomeworkTableProps } from '../type';
 
+/**
+ * HomeworkTable Component - Displays a table of homework assignments with filtering and action capabilities
+ * @param {Object} props - Component props
+ * @param {Array<IHomework>} props.filteredData - Array of filtered homework data to display
+ * @param {Function} props.setOpen - Function to control the dialog open state
+ * @param {Object} props.dialog - Dialog control object containing onTrue method
+ * @param {Function} props.handleSwitchChange - Handler for publish/unpublish status toggle
+ * @param {Function} props.onDeleteDetails - Handler for deleting homework
+ * @param {Function} props.onEditDetails - Handler for editing homework
+ * @param {Function} props.onViewDetails - Handler for viewing homework details
+ * @param {Function} props.onViewSubmission - Handler for viewing homework submissions
+ */
 const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   filteredData,
   setOpen,
@@ -26,6 +38,13 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   onViewDetails,
   onViewSubmission,
 }) => {
+  /**
+   * Memoized actions menu renderer for the table
+   * @param {Object} params - Action menu parameters
+   * @param {Object} params.popover - Popover control object
+   * @param {IHomework} params.row - Current row data
+   * @returns {JSX.Element} Menu list with view submission action
+   */
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -42,6 +61,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
     ),
     [onViewSubmission]
   );
+
   return (
     <CustomizableTable
       tableId="homework-assignment-management"
@@ -53,6 +73,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           width: '100%',
         },
       }}
+      // Custom no data message with action to create new homework
       noDataText={
         <>
           No Homework Created
