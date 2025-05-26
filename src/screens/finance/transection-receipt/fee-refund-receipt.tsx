@@ -114,11 +114,14 @@ const FeeRefundReceiptPDF: React.FC<IFeeRefundReceiptPDFProps> = ({
   selectedCharges,
   paymentDetails,
 }) => {
+  // Calculate total refunded amount from all selected charges
   const totalRefunded = selectedCharges.reduce((sum, row) => sum + (row.refundedAmount || 0), 0);
 
+  // Renders payment details section based on payment mode (Cash/Cheque/Online/UPI)
   const renderPaymentDetails = () => {
     const mode = paymentDetails.paymentMode;
 
+    // Helper function to format and display payment detail rows
     const getFormattedRows = (rows: { label: string; value?: string }[]) => (
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         {rows.map((row, index) => (
@@ -129,6 +132,7 @@ const FeeRefundReceiptPDF: React.FC<IFeeRefundReceiptPDFProps> = ({
       </View>
     );
 
+    // Return different payment details based on payment mode
     switch (mode) {
       case 'Cash':
         return getFormattedRows([{ label: 'Payment Mode', value: 'Cash' }]);
@@ -203,9 +207,9 @@ const FeeRefundReceiptPDF: React.FC<IFeeRefundReceiptPDFProps> = ({
               </View>
             </>
           )}
+
           {/* Footer Summary */}
-          {/* Footer Summary */}
-          <View style={{ flexGrow: 1 }} /> {/* Spacer to push the footer down */}
+          <View style={{ flexGrow: 1 }} />
           <View style={styles.container}>
             <View style={styles.rightColumn}>
               <Text style={styles.totalText}>

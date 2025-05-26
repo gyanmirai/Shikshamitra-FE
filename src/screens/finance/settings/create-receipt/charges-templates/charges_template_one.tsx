@@ -11,6 +11,7 @@ import dummyReceipt from 'src/json/finance/create-receipt/charges-template-one.j
 const numberToWords = (num: number) => `${num} only`;
 
 const ChargesTemplateOne = () => {
+  // State to track which template is currently selected
   const [selectedTemplate, setSelectedTemplate] = useState('LateBounceChargeTemplate');
 
   // const receipt = dummyReceipt;

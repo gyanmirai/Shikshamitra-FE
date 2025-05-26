@@ -100,128 +100,115 @@ const numberToWords = (num: number): string => {
   return num.toString();
 };
 
-const ChargesReceiptPDF: React.FC<IChargesReceiptPDFProps> = ({ from, to, selectedCharges }) => {
-  const getPaymentDetail = (row: any) => {
-    if (row.paymentMode === 'Cheque') {
-      return `Cheque No: ${row.chequeNo.toUpperCase() || '-'} / Bank: ${row.bank.toUpperCase() || '-'}`;
-    }
-    if (row.paymentMode === 'Online' || row.paymentMode === 'UPI') {
-      return `Txn ID: ${row.transectionId.toUpperCase() || '-'}`;
-    }
-    return '-';
-  };
-
+const ChargesReceiptPDF: React.FC<IChargesReceiptPDFProps> = ({ from, to, selectedCharges }) => (
   // const totalReceived = selectedFees.reduce((sum, row) => sum + (row.receivedAmount || 0), 0);
 
-  return (
-    <PDFViewer width="100%" height="1000px">
-      <Document>
-        <Page size="A3" style={styles.page}>
-          <View style={{ flex: 1 }}>
-            {/* Header */}
-            <View style={styles.grid}>
-              <View style={styles.column}>
-                <Text style={styles.title}>From</Text>
-                <Text style={styles.typography}>{from.name}</Text>
-                <Text style={styles.typography}>{from.address}</Text>
-                <Text style={styles.typography}>{from.branch}</Text>
-              </View>
-              <View style={styles.column}>
-                <Text style={styles.title}>To</Text>
-                <Text style={styles.typography}>
-                  <Text style={{ fontWeight: 'bold' }}>Name: </Text>
-                  {to.name}
-                </Text>
-                <Text style={styles.typography}>
-                  <Text style={{ fontWeight: 'bold' }}>Class: </Text>
-                  {to.className}
-                </Text>
-                <Text style={styles.typography}>
-                  <Text style={{ fontWeight: 'bold' }}>Roll No: </Text>
-                  {to.rollNo}
-                </Text>
-              </View>
+  <PDFViewer width="100%" height="1000px">
+    <Document>
+      <Page size="A3" style={styles.page}>
+        <View style={{ flex: 1 }}>
+          {/* Header */}
+          <View style={styles.grid}>
+            <View style={styles.column}>
+              <Text style={styles.title}>From</Text>
+              <Text style={styles.typography}>{from.name}</Text>
+              <Text style={styles.typography}>{from.address}</Text>
+              <Text style={styles.typography}>{from.branch}</Text>
             </View>
-
-            {/* Late Fee Charges Table */}
-            {selectedCharges.some((row) => row.type === 'late') && (
-              <>
-                <Text style={styles.sectionTitle}>Late Fee Charges</Text>
-                <View style={styles.footer}>
-                  <View style={[styles.row, styles.tableHeader]}>
-                    <Text style={styles.cell}>Fee Head</Text>
-                    <Text style={styles.cell}>Due Date</Text>
-                    <Text style={styles.cell}>Days Overdue</Text>
-                    <Text style={styles.cell}>Charge Per Day</Text>
-                    <Text style={styles.cell}>Total Charges</Text>
-                  </View>
-
-                  {selectedCharges
-                    .filter((row) => row.type === 'late')
-                    .map((row, index) => (
-                      <View style={styles.row} key={index}>
-                        <Text style={styles.cell}>{row.feeHead}</Text>
-                        <Text style={styles.cell}>{dayjs(row.dueDate).format('DD/MM/YYYY')}</Text>
-                        <Text style={styles.cell}>{row.dayOverDue}</Text>
-                        <Text style={styles.cell}>{row.chargePerDay}</Text>
-                        <Text style={styles.cell}>{row.totalCharges}</Text>
-                      </View>
-                    ))}
-                </View>
-              </>
-            )}
-
-            {/* Cheque Bounce Charges Table */}
-            {selectedCharges.some((row) => row.type === 'bounce') && (
-              <>
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Cheque Bounce Charges</Text>
-                <View style={styles.footer}>
-                  <View style={[styles.row, styles.tableHeader]}>
-                    <Text style={[styles.cell, { flex: 2 }]}>Fee Head</Text>
-                    <Text style={styles.cell}>Cheque Date</Text>
-                    <Text style={styles.cell}>Received Date</Text>
-                    <Text style={styles.cell}>Cheque Amount</Text>
-                    <Text style={styles.cell}>Bank Name</Text>
-                    <Text style={styles.cell}>Bounce Charges</Text>
-                  </View>
-
-                  {selectedCharges
-                    .filter((row) => row.type === 'bounce')
-                    .map((row, index) => (
-                      <View style={styles.row} key={index}>
-                        <Text style={[styles.cell, { flex: 2 }]}>{row.feeHead}</Text>
-                        <Text style={styles.cell}>
-                          {dayjs(row.dateOnCheque).format('DD/MM/YYYY')}
-                        </Text>
-                        <Text style={styles.cell}>
-                          {dayjs(row.ReceivedChequeDate).format('DD/MM/YYYY')}
-                        </Text>
-                        <Text style={styles.cell}>{row.chequeAmount}</Text>
-                        <Text style={styles.cell}>{row.bankName}</Text>
-                        <Text style={styles.cell}>{row.totalCharges}</Text>
-                      </View>
-                    ))}
-                </View>
-              </>
-            )}
-          </View>
-
-          {/* Footer Section at Bottom */}
-          <View style={styles.container}>
-            <View style={styles.rightColumn}>
-              <Text style={styles.totalText}>
-                <Text style={{ fontWeight: 'bold' }}>Total Paid: 900 </Text>-
+            <View style={styles.column}>
+              <Text style={styles.title}>To</Text>
+              <Text style={styles.typography}>
+                <Text style={{ fontWeight: 'bold' }}>Name: </Text>
+                {to.name}
               </Text>
-              <Text style={styles.inWords}>(In Words: {numberToWords(900)} Rupees Only)</Text>
-              <Text style={styles.typography}>{dayjs().format('DD/MM/YYYY')}</Text>
-              <Text style={styles.separator}>_________________________</Text>
-              <Text style={styles.receiverSign}>Receiver Sign</Text>
+              <Text style={styles.typography}>
+                <Text style={{ fontWeight: 'bold' }}>Class: </Text>
+                {to.className}
+              </Text>
+              <Text style={styles.typography}>
+                <Text style={{ fontWeight: 'bold' }}>Roll No: </Text>
+                {to.rollNo}
+              </Text>
             </View>
           </View>
-        </Page>
-      </Document>
-    </PDFViewer>
-  );
-};
 
+          {/* Late Fee Charges Table */}
+          {selectedCharges.some((row) => row.type === 'late') && (
+            <>
+              <Text style={styles.sectionTitle}>Late Fee Charges</Text>
+              <View style={styles.footer}>
+                <View style={[styles.row, styles.tableHeader]}>
+                  <Text style={styles.cell}>Fee Head</Text>
+                  <Text style={styles.cell}>Due Date</Text>
+                  <Text style={styles.cell}>Days Overdue</Text>
+                  <Text style={styles.cell}>Charge Per Day</Text>
+                  <Text style={styles.cell}>Total Charges</Text>
+                </View>
+
+                {selectedCharges
+                  .filter((row) => row.type === 'late')
+                  .map((row, index) => (
+                    <View style={styles.row} key={index}>
+                      <Text style={styles.cell}>{row.feeHead}</Text>
+                      <Text style={styles.cell}>{dayjs(row.dueDate).format('DD/MM/YYYY')}</Text>
+                      <Text style={styles.cell}>{row.dayOverDue}</Text>
+                      <Text style={styles.cell}>{row.chargePerDay}</Text>
+                      <Text style={styles.cell}>{row.totalCharges}</Text>
+                    </View>
+                  ))}
+              </View>
+            </>
+          )}
+
+          {/* Cheque Bounce Charges Table */}
+          {selectedCharges.some((row) => row.type === 'bounce') && (
+            <>
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Cheque Bounce Charges</Text>
+              <View style={styles.footer}>
+                <View style={[styles.row, styles.tableHeader]}>
+                  <Text style={[styles.cell, { flex: 2 }]}>Fee Head</Text>
+                  <Text style={styles.cell}>Cheque Date</Text>
+                  <Text style={styles.cell}>Received Date</Text>
+                  <Text style={styles.cell}>Cheque Amount</Text>
+                  <Text style={styles.cell}>Bank Name</Text>
+                  <Text style={styles.cell}>Bounce Charges</Text>
+                </View>
+
+                {selectedCharges
+                  .filter((row) => row.type === 'bounce')
+                  .map((row, index) => (
+                    <View style={styles.row} key={index}>
+                      <Text style={[styles.cell, { flex: 2 }]}>{row.feeHead}</Text>
+                      <Text style={styles.cell}>
+                        {dayjs(row.dateOnCheque).format('DD/MM/YYYY')}
+                      </Text>
+                      <Text style={styles.cell}>
+                        {dayjs(row.ReceivedChequeDate).format('DD/MM/YYYY')}
+                      </Text>
+                      <Text style={styles.cell}>{row.chequeAmount}</Text>
+                      <Text style={styles.cell}>{row.bankName}</Text>
+                      <Text style={styles.cell}>{row.totalCharges}</Text>
+                    </View>
+                  ))}
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* Footer Section at Bottom */}
+        <View style={styles.container}>
+          <View style={styles.rightColumn}>
+            <Text style={styles.totalText}>
+              <Text style={{ fontWeight: 'bold' }}>Total Paid: 900 </Text>-
+            </Text>
+            <Text style={styles.inWords}>(In Words: {numberToWords(900)} Rupees Only)</Text>
+            <Text style={styles.typography}>{dayjs().format('DD/MM/YYYY')}</Text>
+            <Text style={styles.separator}>_________________________</Text>
+            <Text style={styles.receiverSign}>Receiver Sign</Text>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  </PDFViewer>
+);
 export default ChargesReceiptPDF;
