@@ -35,7 +35,7 @@ build
 .vscode
 .idea
 .eslintcache
-# .env
+.env
 .unimportedrc.json
 tsconfig.tsbuildinfo
 
