@@ -10,6 +10,8 @@ import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   ScheduleExamStatus,
@@ -84,13 +86,27 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {row.marksStatus === 0 && row.submissionStatus !== 0 && (
             <MenuItem
               onClick={() => {
-                viewSubmissionDialog.onTrue(); // Open grade assignment dialog
-                pop.onClose(); // Close the menu popover
+                setSelectedStudent(row);
+                viewSubmissionDialog.onTrue();
+                pop.onClose();
               }}
             >
               {' '}
               <Iconify icon="mdi:arrow" sx={{ height: '16px', width: '16px' }} />
-              Assign Grade
+              Assign Feedback
+            </MenuItem>
+          )}
+          {row.marksStatus === 1 && row.submissionStatus === 1 && (
+            <MenuItem
+              onClick={() => {
+                setSelectedStudent(row);
+                viewSubmissionDialog.onTrue();
+                pop.onClose();
+              }}
+            >
+              {' '}
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+              Edit Feedback
             </MenuItem>
           )}
 
@@ -214,11 +230,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 <ThreeDotsActions
                   actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedStudent(row as TStudentGrade);
-                    viewSubmissionDialog.onTrue();
-                  }}
                 />
               );
             },
@@ -230,6 +241,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             grNo: 'GR001',
             studentName: 'Aarav Mehta',
             homework: 'Math Assignment 1',
+            homeworkType: 'Assignment',
+            submissionType: 'Online',
             submissionDate: '20-05-2025',
             marks: 18,
             totalMarks: 20,
@@ -242,6 +255,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             grNo: 'GR002',
             studentName: 'Nisha Patel',
             homework: 'Science Homework',
+            homeworkType: 'Homework',
+            submissionType: 'File Upload',
             submissionDate: '19-05-2025',
             marks: 30,
             totalMarks: 35,
@@ -254,6 +269,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             grNo: 'GR003',
             studentName: 'Ravi Shah',
             homework: 'English Essay',
+            homeworkType: 'Essay',
+            submissionType: 'Online',
             submissionDate: '18-05-2025',
             marks: 15,
             totalMarks: 25,
@@ -266,6 +283,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             grNo: 'GR004',
             studentName: 'Sneha Desai',
             homework: 'History Worksheet',
+            homeworkType: 'Worksheet',
+            submissionType: 'File Upload',
             submissionDate: '',
             marks: 0,
             totalMarks: 30,
@@ -287,13 +306,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       <CustomDialog
         open={viewSubmissionDialog.value}
         handleClose={handleCloseDialog}
-        title="Add Marks"
-        maxWidth={selectedHomework?.submissionType === 'file_upload' ? 'md' : 'sm'}
+        title={selectedStudent ? 'Edit Feedback' : 'Add Feedback'}
+        maxWidth="sm"
       >
         {selectedHomework?.submissionType === 'file_upload' ? (
-          <AssignGrade data={selectedStudent} onClose={handleClose} />
+          <AssignGrade data={selectedStudent} onClose={handleClose} isEdit />
         ) : (
-          <AssignMarksForText data={selectedStudent} onClose={handleClose} />
+          <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />
         )}
       </CustomDialog>
     </Box>

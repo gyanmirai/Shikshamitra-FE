@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import { Create } from '@mui/icons-material';
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Card,
@@ -334,10 +334,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           <ShakingTextField
                             error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                           >
-                            <DatePicker
+                            <DateTimePicker
                               name="endDate"
                               label="Select End Date"
-                              format="DD/MM/YYYY"
+                              format="DD/MM/YYYY hh:mm "
                               value={dayjs(formik.values.endDate)}
                               onChange={(date) => formik.setFieldValue('endDate', date)}
                               slotProps={{
@@ -360,9 +360,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                             error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
                           >
                             <DateTimePicker
-                              label="Due Date"
+                              label="Due Date Time"
                               value={dayjs(formik.values.dueDate)}
-                              format="DD/MM/YYYY"
+                              format="DD/MM/YYYY hh:mm"
                               onChange={(date) => formik.setFieldValue('dueDate', date)}
                               slotProps={{
                                 textField: {
@@ -409,10 +409,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                               !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
                             }
                           >
-                            <DatePicker
+                            <DateTimePicker
                               label="Schedule Date"
                               value={dayjs(formik.values.scheduleDate)}
-                              format="DD/MM/YYYY"
+                              format="DD/MM/YYYY hh:mm"
                               onChange={(date) => formik.setFieldValue('scheduleDate', date)}
                               slotProps={{
                                 textField: {

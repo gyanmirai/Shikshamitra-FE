@@ -86,26 +86,26 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
                   label={`Class : ${homework?.class}`}
-                  size="small"
                   variant="outlined"
-                  sx={{ fontSize: '1rem' }}
+                  sx={{ fontSize: '0.9rem' }}
                 />
                 <Chip
                   label={`Type : ${homework?.homeworkType}`}
-                  size="small"
                   variant="outlined"
-                  sx={{ fontSize: '1rem' }}
+                  sx={{ fontSize: '0.9rem' }}
                 />
-                <Label
+                <Chip
+                  label="Status : Published"
+                  variant="outlined"
                   color={
                     PublishUnpublishStatusTypeColors[
                       homework?.status as PublishUnpublishStatusType
                     ] as LabelColor
                   }
-                  sx={{ fontSize: '1rem' }}
-                >
-                  Status : Published
-                </Label>
+                  sx={{
+                    fontSize: '0.9rem',
+                  }}
+                />
                 {homework?.isDailyTask && (
                   <Label color="warning" sx={{ fontSize: '0.875rem' }}>
                     Daily Task

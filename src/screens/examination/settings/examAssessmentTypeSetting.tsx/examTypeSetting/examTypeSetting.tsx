@@ -3,17 +3,11 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import {
-  Box,
-  Button,
-  Switch,
-  Typography,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-} from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
@@ -76,14 +70,6 @@ const ExamTypeSettings = () => {
     setPendingStatusChange(null);
   };
 
-  // Function to close all dialogs.
-  const handleCloseDialog = () => {
-    dialog.onFalse();
-    confirmPublishDialog.onFalse();
-    confirmDeleteDialog.onFalse();
-    setSelectedExamType(null);
-  };
-
   // Function to handle the deletion of an exam type.
   const handleDelete = (comingExamType: any) => {
     // Filter out the deleted exam type from the table data.
@@ -91,7 +77,6 @@ const ExamTypeSettings = () => {
       prevData.filter((examType) => examType.id !== comingExamType.id)
     );
     // Close the dialogs after deletion.
-    handleCloseDialog();
   };
 
   // Function to handle form submission for creating or editing an exam type.
@@ -113,16 +98,16 @@ const ExamTypeSettings = () => {
     setSelectedExamType(null);
   };
 
-  // Function to handle closing of the dialog.
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // If submit button is clicked or there are unsaved changes, show confirmation dialog.
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+  // Function to handle closing of the dialog
+  const handleClose = (e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dialog.onFalse();
       dispatch(setIsChanges(false));
+      setIsEdit(false);
       setSelectedExamType(null);
     } else if (!isChanges) {
-      // If no unsaved changes, close the dialog directly.
       dialog.onFalse();
+      setIsEdit(false);
       setSelectedExamType(null);
     }
   };
@@ -147,6 +132,10 @@ const ExamTypeSettings = () => {
         searchFieldProps={{
           placeholder: 'Search by Exam Type, Description, Status...',
           label: 'Search by Exam Type, Description, Status...',
+          sx: {
+            maxWidth: '500px',
+            width: '100%',
+          },
         }}
         noDataText={
           <>
@@ -173,21 +162,8 @@ const ExamTypeSettings = () => {
           { id: 'examType', label: 'Exam Type' },
           { id: 'description', label: 'Description' },
           {
-            id: 'status',
-            label: 'Publish',
-            render: (value: string, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
-                />
-              </Box>
-            ),
-          },
-          {
             id: 'actions',
-            label: 'Actions',
+            label: 'Action',
             isSort: false,
             render(value, row) {
               return (
@@ -227,44 +203,24 @@ const ExamTypeSettings = () => {
         />
       </CustomDialog>
 
-      <CustomDialog
-        title="Confirm Publication"
-        open={confirmPublishDialog.value}
-        handleClose={confirmPublishDialog.onFalse}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>
-            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
-            this Exam Type?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} variant="contained" color="error">
-            Cancel
-          </Button>
-          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
-            Confirm
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-
       <ConfirmDialog
         open={confirmDeleteDialog.value}
         onClose={() => {
-          handleCloseDialog();
+          confirmDeleteDialog.onFalse();
+          setSelectedExamType(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Exam Type ?"
         action={
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExamType);
             }}
           >
-            Yes
+            Delete
           </Button>
         }
       />

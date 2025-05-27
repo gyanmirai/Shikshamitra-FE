@@ -7,7 +7,6 @@ export const getInitialValues = () => ({
   chapter: [],
   totalMarks: 0,
   questions: [],
-  attemptsAllowed: 1,
   passingMarks: 0,
   isQuestionUpload: false,
   quizStartDateTime: null,

@@ -1,3 +1,5 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import React, { useState } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
@@ -131,23 +133,6 @@ const QuizInformation = ({ formik }: any) => {
                   helperText: formik.touched.quizEndDateTime && formik.errors.quizEndDateTime,
                 },
               }}
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <ShakingTextField
-            error={!!(formik.touched.attemptsAllowed && formik.errors.attemptsAllowed) || false}
-          >
-            <TextField
-              fullWidth
-              label="Attempts Allowed"
-              name="attemptsAllowed"
-              value={formik.values.attemptsAllowed}
-              onChange={formik.handleChange}
-              error={formik.touched.attemptsAllowed && Boolean(formik.errors.attemptsAllowed)}
-              helperText={formik.touched.attemptsAllowed && formik.errors.attemptsAllowed}
-              size="small"
             />
           </ShakingTextField>
         </Grid>
@@ -1009,7 +994,13 @@ const QuizBuilder = ({ formik }: any) => {
 
 const allSurveySteps = [QuizInformation, QuizBuilder];
 
-const AddNewQuiz = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
+const AddNewQuiz = ({
+  onClose,
+  dialog,
+}: {
+  dialog: UseBooleanReturn;
+  onClose: (e: any, isSubmit: boolean) => void;
+}) => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
 

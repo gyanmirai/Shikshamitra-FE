@@ -11,7 +11,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ArchievedQuiz from './quizManagement/archievedQuiz';
 import ActiveQuiz from './quizManagement/activeQuiz/activeQuiz';
 
 const TABS = [
@@ -21,12 +20,12 @@ const TABS = [
     description: 'Manage quizzes, including scheduling, archiving, and viewing quiz results.',
     component: () => <ActiveQuiz />,
   },
-  {
-    value: 'archieved',
-    label: 'Archieved',
-    description: 'View archived quizzes and their results.',
-    component: () => <ArchievedQuiz />,
-  },
+  // {
+  //   value: 'archieved',
+  //   label: 'Archieved',
+  //   description: 'View archived quizzes and their results.',
+  //   component: () => <ArchievedQuiz />,
+  // },
   //   {
   //     value: 'eventType',
   //     label: 'Event Type',

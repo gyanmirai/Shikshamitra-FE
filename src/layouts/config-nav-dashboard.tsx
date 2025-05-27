@@ -914,13 +914,6 @@ const academicModule = {
           shortcutKeyName: 'Alt+E+1',
           children: [
             {
-              title: 'Dashboard',
-              path: '/academic/examinationDashboard',
-              _action: 'examination-homeworkDashboard',
-              shortcutKey: 'Alt+E+1+1',
-              shortcutKeyName: 'Alt+E+1+1',
-            },
-            {
               title: 'Schedule Exam',
               path: '/academic/scheduleExam',
               _action: 'academic-scheduleExam',
@@ -935,25 +928,11 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+3',
             },
             {
-              title: 'Assessment',
-              path: '/academic/assessmentManagement',
-              _action: 'academic-assessmentManagement',
-              shortcutKey: 'Alt+E+1+4',
-              shortcutKeyName: 'Alt+E+1+4',
-            },
-            {
               title: 'Quiz Management',
               path: '/academic/quizManagement',
               _action: 'academic-quizManagement',
               shortcutKey: 'Alt+E+1+5',
               shortcutKeyName: 'Alt+E+1+5',
-            },
-            {
-              title: 'Student Performance And Analytics',
-              path: '/academic/studentPerformanceAndAnalytics',
-              _action: 'academic-studentPerformanceAndAnalytics',
-              shortcutKey: 'Alt+E+1+6',
-              shortcutKeyName: 'Alt+E+1+6',
             },
             {
               title: 'Settings',

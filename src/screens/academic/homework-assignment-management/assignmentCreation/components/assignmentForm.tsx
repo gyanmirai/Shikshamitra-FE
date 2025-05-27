@@ -6,10 +6,10 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Create } from '@mui/icons-material';
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Card,
@@ -47,7 +47,7 @@ import { getAssignmentInitialValues } from './assignmentInitialValues';
 import { assignmentValidationSchema } from './assignmentValidationSchema';
 import AssignmentTypeForm from '../../setting/assignmentType/assignmentTypeForm';
 
-import type { IAssignmentFormProps } from '../type';
+import type { IAssignment, IAssignmentFormProps } from '../type';
 
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editData, onClose }) => {
   // State to control assignment type dialog visibility
@@ -90,6 +90,32 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
       console.log('Submitted values:', values);
     },
   });
+
+  // Configuration for file upload component
+  const uploadProps = {
+    multiple: true,
+    accept: { 'application/pdf': [] },
+  };
+
+  // Handler to remove a single file attachment
+  const handleRemoveFile = useCallback(
+    (
+      inputFile: File | string,
+      values: IAssignment,
+      setFieldValue: (field: string, value: any) => void
+    ) => {
+      setFieldValue('rubric', '');
+    },
+    []
+  );
+
+  // Handler to remove all file attachments
+  const handleRemoveAllFiles = useCallback(
+    (values: IAssignment, setFieldValue: (field: string, value: any) => void) => {
+      setFieldValue('docs', '');
+    },
+    []
+  );
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -171,6 +197,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                 </ShakingTextField>
               </Grid>
 
+              <Grid item xs={12}>
+                <UploadDocument formik={formik} name="attachments" title="Upload Attachment" />
+              </Grid>
+
               {/* Assignment Title */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
@@ -245,7 +275,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
                 >
                   <DateTimePicker
-                    label="Due Date *"
+                    label="Due Date Time *"
                     value={formik.values.dueDate}
                     format="DD/MM/YYYY HH:mm"
                     onChange={(date) => formik.setFieldValue('dueDate', date)}
@@ -282,7 +312,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
               {/* File Upload */}
               <Grid item xs={12}>
-                <UploadDocument formik={formik} name="attachments" title="Upload Attachment" />
+                <UploadDocument
+                  formik={formik}
+                  name="rubric"
+                  title="Upload Rubric"
+                  accept={{ 'application/pdf': [] }}
+                />
               </Grid>
 
               {/* Schedule Assignment */}
@@ -313,10 +348,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                               !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
                             }
                           >
-                            <DatePicker
+                            <DateTimePicker
                               label="Schedule Date"
                               value={dayjs(formik.values.scheduleDate)}
-                              format="DD/MM/YYYY"
+                              format="DD/MM/YYYY hh:mm"
                               onChange={(date) => formik.setFieldValue('scheduleDate', date)}
                               slotProps={{
                                 textField: {

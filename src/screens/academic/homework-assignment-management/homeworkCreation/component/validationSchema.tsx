@@ -68,5 +68,5 @@ export const getValidationSchema = (view: string) =>
   });
 
 export const assignGradeValidationSchema = Yup.object({
-  marks: Yup.string().required('Grade is required'),
+  feedback: Yup.string().required('feedback is required'),
 });

@@ -1,6 +1,13 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+export interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  base64: string;
+}
+
 export interface IHomework {
   title: string;
   description: string;
@@ -11,7 +18,7 @@ export interface IHomework {
   homeworkType: string;
   submissionType: string;
   dueDate: Dayjs | null | string;
-  attachments?: string[];
+  attachments?: UploadedFile[];
   createdBy: string;
   status: number;
   isDailyTask: boolean;
@@ -32,6 +39,7 @@ export interface IStudentSubmissionsProps {
 }
 
 export interface IAssignGradeProps {
+  isEdit?: boolean;
   data?: TStudentGrade | null;
   onClose: (e: any, isSubmit: boolean) => void;
 }

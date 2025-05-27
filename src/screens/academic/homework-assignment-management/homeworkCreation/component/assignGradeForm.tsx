@@ -1,13 +1,24 @@
 'use client';
 
-import { useFormik } from 'formik';
-import { PDFViewer } from '@react-pdf/renderer';
+import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { useFormik } from 'formik';
+
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Tooltip,
+  TextField,
+  Typography,
+  IconButton,
+  DialogActions,
+} from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -15,6 +26,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { assignGradeValidationSchema } from './validationSchema';
+import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
 
 import type { IAssignGradeProps } from '../type';
 
@@ -23,7 +35,7 @@ import type { IAssignGradeProps } from '../type';
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onClose }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
   /**
    * Initialize formik form with grade and feedback fields
    * @param initialValues Object containing initial grade and feedback values from data prop
@@ -31,7 +43,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onClose }: IAssignGrad
    */
   const formik = useFormik({
     initialValues: {
-      marks: data?.marks || '',
       totalMarks: data?.totalMarks || '',
       feedback: data?.feedback || '',
     },
@@ -39,48 +50,52 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onClose }: IAssignGrad
     onSubmit(values) {},
   });
 
+  const handleDownload = (doc: IDocument) => {
+    window.open(doc.url, '_blank');
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '70vh' }}>
-            <PDFViewer width="100%" height="800">
-              <CertificateDocument />
-            </PDFViewer>
+          <Scrollbar sx={{ p: 2, height: '350px' }}>
             <Grid container spacing={2} mt={1}>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
-                >
-                  <TextField
-                    label="Total Marks"
-                    fullWidth
-                    name="totalMarks"
-                    disabled
-                    size="small"
-                    value={formik.values.totalMarks}
-                    onChange={formik.handleChange}
-                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
-                  <TextField
-                    placeholder="Enter Marks"
-                    label="Marks"
-                    fullWidth
-                    name="marks"
-                    size="small"
-                    value={formik.values.marks}
-                    onChange={formik.handleChange}
-                    error={formik.touched.marks && Boolean(formik.errors.marks)}
-                    helperText={formik.touched.marks && formik.errors.marks}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              <Card
+                key={document.id}
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {getFileIconByType(document.type ?? 'txt', 32)}
+                  <Box>
+                    <Typography variant="subtitle2">{document.name}</Typography>
+                    {document.size && (
+                      <Typography variant="body2" color="text.secondary">
+                        {document.size}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                <Tooltip title="Preview">
+                  <IconButton
+                    edge="end"
+                    aria-label="preview"
+                    onClick={() => handleDownload(document)}
+                  >
+                    <Iconify icon={GlobalIcons.eye} />
+                  </IconButton>
+                </Tooltip>
+              </Card>
+              <Grid item xs={12}>
                 <ShakingTextField
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
@@ -89,6 +104,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onClose }: IAssignGrad
                     label="Feedback"
                     multiline
                     size="small"
+                    disabled={!isEdit}
                     rows={3}
                     fullWidth
                     name="feedback"

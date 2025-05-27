@@ -259,7 +259,7 @@ const AssignmentCreation = (props: TabComponentType) => {
           viewAssignmentSubmissionDialog.onFalse();
           setSelectedAssignment(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
       >
         <Box sx={{ p: 2 }}>
           <StudentSubmissions selectedAssignment={selectedAssignment} />

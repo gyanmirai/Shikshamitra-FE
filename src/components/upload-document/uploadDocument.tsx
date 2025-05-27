@@ -1,3 +1,5 @@
+import type { UploadedFile } from 'src/screens/academic/homework-assignment-management/homeworkCreation/type';
+
 import { useState } from 'react';
 
 import { Box, Card, Grid, Tooltip, Typography, IconButton } from '@mui/material';
@@ -9,12 +11,24 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from '../iconify';
 import { Upload } from '../upload/upload';
 import CustomDialog from '../customDialog';
+import { DeleteButton } from '../upload/components/preview-single-file';
 
-const UploadDocument = ({ formik, name, title }: any) => {
-  // Dialog state for image preview
+type UploadDocumentProps = {
+  formik: any;
+  name: string;
+  title: string;
+  multiple?: boolean;
+  accept?: Record<string, string[]>;
+};
+
+const UploadDocument = ({
+  formik,
+  name,
+  title = '',
+  multiple = true,
+  accept = { 'image/*': [], 'application/pdf': [], 'video/*': [] },
+}: UploadDocumentProps) => {
   const priviewDialog = useBoolean();
-
-  // State to store the currently previewed image
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
@@ -33,29 +47,35 @@ const UploadDocument = ({ formik, name, title }: any) => {
           {title}
         </Typography>
         <Upload
-          multiple
+          multiple={multiple}
           isPreview={false}
-          accept={{ 'image/*': [], 'application/pdf': [], 'video/*': [] }}
+          accept={accept}
           thumbnail
           value={formik.values[name]}
           error={formik.touched[name] && formik.errors[name]}
           helperText={formik.touched[name] && formik.errors[name]}
           onDrop={async (acceptedFiles) => {
-            const base64StringArray = await Promise.all(
+            const newFiles = await Promise.all(
               acceptedFiles.map(
-                async (file) =>
+                (file) =>
                   new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.readAsDataURL(file);
                     reader.onload = () => {
-                      resolve(reader.result);
+                      resolve({
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        base64: reader.result,
+                      });
                     };
                   })
               )
             );
-            formik.setFieldValue(name, [...formik.values[name], ...base64StringArray]);
+
+            formik.setFieldValue(name, [...(formik.values[name] || []), ...newFiles]);
           }}
-          onRemove={(file) => {}}
+          onRemove={() => {}}
           onRemoveAll={() => {}}
           sx={{
             '& svg': {
@@ -67,19 +87,19 @@ const UploadDocument = ({ formik, name, title }: any) => {
           }}
         />
       </Box>
+
       {formik.values?.[name]?.length > 0 && (
         <>
           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-            Documents:
+            Documents :
           </Typography>
           <Grid container spacing={2}>
-            {formik.values?.[name]?.map((file: string, index: number) => {
-              const isImage = file.startsWith('data:image');
-              const isPDF = file.startsWith('data:application/pdf');
-              const isVideo = file.startsWith('data:video');
-
-              // Fallback metadata
-              const fileName = `File ${index + 1}`;
+            {formik.values?.[name]?.map((file: UploadedFile, index: number) => {
+              const isImage = file.base64?.startsWith('data:image');
+              const isPDF = file.base64?.startsWith('data:application/pdf');
+              const isVideo = file.base64?.startsWith('data:video');
+              const fileSize = (file.size / 1024).toFixed(2);
+              const fileName = file.name || `File ${index + 1}`;
 
               return (
                 <Grid item xs={12} sm={6} md={4} key={index}>
@@ -88,15 +108,40 @@ const UploadDocument = ({ formik, name, title }: any) => {
                     sx={{
                       p: 2,
                       display: 'flex',
-                      flexDirection: 'column',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                       height: '100%',
                       position: 'relative',
+                      borderRadius: 2,
+                      boxShadow: 1,
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Tooltip title="Remove">
+                      <DeleteButton
+                        onClick={() => {
+                          const updatedFiles = formik.values[name].filter(
+                            (_: any, i: number) => i !== index
+                          );
+                          formik.setFieldValue(name, updatedFiles);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          boxShadow: 1,
+                          padding: '1px',
+                          minWidth: 'unset',
+                          width: '18px',
+                          height: '18px',
+                        }}
+                      />
+                    </Tooltip>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       {isImage ? (
                         <img
-                          src={file}
+                          src={file.base64}
                           alt={fileName}
                           style={{ height: 40, width: 40, objectFit: 'cover', borderRadius: 4 }}
                         />
@@ -117,51 +162,28 @@ const UploadDocument = ({ formik, name, title }: any) => {
                         />
                       )}
 
-                      <Box sx={{ ml: 2, flex: 1 }}>
-                        <Typography variant="subtitle2" noWrap title={fileName}>
+                      <Box sx={{ ml: 2 }}>
+                        <Typography variant="subtitle2" noWrap sx={{ maxWidth: 140 }}>
                           {fileName}
                         </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {fileSize} KB
+                        </Typography>
                       </Box>
+                    </Box>
 
-                      <Box
-                        className="document-actions"
-                        sx={{
-                          mt: 'auto',
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                        }}
-                      >
-                        <Tooltip title="Preview">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              setPreviewImage(file);
-                              priviewDialog.onTrue();
-                            }}
-                          >
-                            <Iconify height={17} width={17} icon={GlobalIcons.eye} />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title="Remove">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              const updatedFiles = formik.values[name].filter(
-                                (_: string, i: number) => i !== index
-                              );
-                              formik.setFieldValue(name, updatedFiles);
-                            }}
-                          >
-                            <Iconify
-                              height={17}
-                              width={17}
-                              icon={GlobalIcons.delete}
-                              color="error.main"
-                            />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Preview">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setPreviewImage(file.base64);
+                            priviewDialog.onTrue();
+                          }}
+                        >
+                          <Iconify height={18} width={18} icon={GlobalIcons.eye} />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </Card>
                 </Grid>
@@ -170,6 +192,7 @@ const UploadDocument = ({ formik, name, title }: any) => {
           </Grid>
         </>
       )}
+
       <CustomDialog
         maxWidth="md"
         open={priviewDialog.value}

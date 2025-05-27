@@ -278,7 +278,7 @@ const HomeworkCreation = (props: TabComponentType) => {
           viewHomeworkSubmissionDialog.onFalse();
           setSelectedHomework(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
       >
         <Box sx={{ p: 2 }}>
           <StudentSubmissions selectedHomework={selectedHomework} />

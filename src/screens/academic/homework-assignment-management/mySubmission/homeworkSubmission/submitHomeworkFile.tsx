@@ -36,7 +36,7 @@ export const SubmitHomeworkFile = ({
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '300px' }}>
-            <UploadDocument formik={formik} name="submission" />
+            <UploadDocument formik={formik} name="submission" title="" />
           </Scrollbar>
           <DialogActions>
             <Button

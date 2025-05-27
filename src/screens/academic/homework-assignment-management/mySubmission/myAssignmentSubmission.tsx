@@ -1,3 +1,4 @@
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
@@ -6,16 +7,21 @@ import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, Tab, Tabs, MenuItem, MenuList, Typography } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment-table-data.json';
+import mySubmissionData from 'src/json/academic/homeworkAssignment/myAssignmentData.json';
+import {
+  ScheduleExamStatus,
+  ScheduleExamStatusColor,
+  ScheduleExamStatusOptions,
+} from 'src/enums/schedule-exam-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -23,88 +29,139 @@ import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import AssignGrade from '../assignmentCreation/studentSubmission/assignMarksForm';
 import { SubmitAssignmentFile } from './assignmentSubmission/submitAssignmentFile';
 import { SubmitAssignmentContent } from './assignmentSubmission/submitAssignmentContent';
+import AssignMarksForText from '../assignmentCreation/studentSubmission/assignMarksForText';
+import ViewAssignmentDetails from '../assignmentCreation/assignmentDetail/assignmentDetail';
 
 import type { IAssignment } from '../assignmentCreation/type';
 
 const MyAssignmentSubmission = (props: TabComponentType) => {
+  // State to manage active tab using custom hook
   const tabs = useTabs(ScheduleExamStatus.Pending);
+
+  // Dialog state for assignment submission
   const assignmentSubmissionDialog = useBoolean();
+
+  // Dialog state for viewing submission
+  const viewSubmissionDialog = useBoolean();
+  // Dialog control state for viewing homework details
+  const viewAssignmentDetails = useBoolean();
+
+  // State to store currently selected assignment
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
 
-  const assignmentCounts = useMemo(
+  // State to store and update the selected date using dayjs
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
+  // Memoized count of pending and completed assignments
+  const examCounts = useMemo(
     () => ({
       pending:
-        assignmentTableData?.filter((i) => i.status === ScheduleExamStatus.Pending)?.length || 0,
+        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Pending)
+          ?.length || 0,
       completed:
-        assignmentTableData?.filter((i) => i.status === ScheduleExamStatus.Completed)?.length || 0,
+        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Completed)
+          ?.length || 0,
     }),
     []
   );
 
+  // Memoized tab configuration based on exam counts
   const TABS = useMemo(
     () => [
       {
         label: 'Pending',
         value: ScheduleExamStatus.Pending,
-        count: assignmentCounts.pending,
+        count: examCounts.pending,
         color: 'warning',
       },
       {
         label: 'Completed',
         value: ScheduleExamStatus.Completed,
-        count: assignmentCounts.completed,
+        count: examCounts.completed,
         color: 'success',
       },
     ],
-    [assignmentCounts]
+    [examCounts]
   );
 
+  // Callback for handling menu actions (upload/view submission)
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem
-          onClick={() => {
-            assignmentSubmissionDialog.onTrue();
-            setSelectedAssignment(row);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon={GlobalIcons.upload} />
-          Upload
-        </MenuItem>
+        {tabs.value === 0 ? (
+          <MenuItem
+            onClick={() => {
+              assignmentSubmissionDialog.onTrue();
+              setSelectedAssignment(row);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.upload} />
+            Upload
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              viewSubmissionDialog.onTrue();
+              setSelectedAssignment(row);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.eye} />
+            View Submission
+          </MenuItem>
+        )}
       </MenuList>
     ),
-    [assignmentSubmissionDialog]
+    [assignmentSubmissionDialog, tabs.value, viewSubmissionDialog]
   );
 
+  // Redux dispatch and state
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Handler for tab change events
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
   };
 
+  // Memoized filtered table data based on active tab
   const tableData = useMemo(
-    () => assignmentTableData?.filter((i: any) => i.status === tabs.value),
+    () => mySubmissionData?.filter((i: any) => i.submissionStatus === tabs.value),
     [tabs.value]
   );
 
+  // Handler for closing dialogs with confirmation if there are unsaved changes
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
       setSelectedAssignment(null);
+      viewSubmissionDialog.onFalse();
       assignmentSubmissionDialog.onFalse();
     } else if (!isChanges) {
       setSelectedAssignment(null);
+      viewSubmissionDialog.onFalse();
       assignmentSubmissionDialog.onFalse();
     }
   };
 
   return (
     <Box>
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start">
+        <DatePicker
+          label="Assignment Date"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          name="date"
+          value={date}
+          onChange={(val) => {
+            setDate(val);
+          }}
+          format="DD/MM/YYYY"
+          sx={{ maxWidth: '250px' }}
+        />
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -132,60 +189,158 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
       <CustomizableTable
         tableId="assignment-submission-management"
         searchFieldProps={{
-          placeholder: 'Search by Assignment Title, Type, Creation Date...',
-          label: 'Search by Assignment Title, Type, Creation Date...',
+          placeholder: 'Search by Subject, Title, Assignment Type...',
+          label: 'Search by Subject, Title, Assignment Type...',
           sx: {
             maxWidth: '500px',
             width: '100%',
           },
         }}
         noDataText={<>No Assignment Available</>}
-        columns={[
-          {
-            id: 'title',
-            label: 'Assignment Title',
-            align: 'left',
-            filterType: 'string',
-          },
-          {
-            id: 'assignmentType',
-            label: 'Assignment Type',
-            align: 'left',
-            filterType: 'string',
-          },
-          {
-            id: 'submissionType',
-            label: 'Submission Type',
-            align: 'left',
-            filterType: 'string',
-          },
-          {
-            id: 'dueDate',
-            label: 'Due Date Time',
-            align: 'left',
-            filterType: 'date',
-            render: (value) => (
-              <Typography fontSize="12px" gutterBottom>
-                {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            align: 'center',
-            minWidth: 50,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={(prop) => actions({ ...prop, row })}
-              />
-            ),
-          },
-        ]}
+        columns={
+          tabs.value === ScheduleExamStatus.Pending
+            ? [
+                {
+                  id: 'subject',
+                  label: 'Subject',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'title',
+                  label: 'Assignment Title',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'submissionType',
+                  label: 'Assignment Type',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'endDate',
+                  label: 'End Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'createdBy',
+                  label: 'Created By',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'submissionType',
+                  label: 'Submission Type',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  isFilter: false,
+                  sticky: true,
+                  align: 'center',
+                  minWidth: 50,
+                  render: (value, row) => (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      showViewIcon
+                      handleViewClick={() => {
+                        setSelectedAssignment(row as IAssignment);
+                        viewAssignmentDetails.onTrue();
+                      }}
+                      actions={(prop) => actions({ ...prop, row })}
+                    />
+                  ),
+                },
+              ]
+            : [
+                {
+                  id: 'subject',
+                  label: 'Subject',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'title',
+                  label: 'Assignment Title',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'submissionType',
+                  label: 'Assignment Type',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'endDate',
+                  label: 'End Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'createdBy',
+                  label: 'Created By',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'submissionType',
+                  label: 'Submission Type',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'marks',
+                  label: 'Feedback',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'feedback',
+                  label: 'Feedback',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'marksStatus',
+                  label: 'Marks Status',
+                  filterType: 'enum',
+                  enumOptions: ScheduleExamStatusOptions,
+                  align: 'left',
+                  render(value, row) {
+                    const color = ScheduleExamStatusColor[
+                      value as ScheduleExamStatus
+                    ] as LabelColor;
+                    return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+                  },
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  isFilter: false,
+                  sticky: true,
+                  align: 'center',
+                  minWidth: 50,
+                  render: (value, row) => (
+                    <ThreeDotsActions
+                      placement="right-top"
+                      actions={(prop) => actions({ ...prop, row })}
+                      showViewIcon
+                      handleViewClick={() => {
+                        setSelectedAssignment(row as IAssignment);
+                        viewAssignmentDetails.onTrue();
+                      }}
+                    />
+                  ),
+                },
+              ]
+        }
         data={tableData}
       />
       <CustomDialog
@@ -202,6 +357,34 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
         ) : (
           <SubmitAssignmentContent selectedAssignment={selectedAssignment} onClose={handleClose} />
         )}
+      </CustomDialog>
+
+      <CustomDialog
+        open={viewSubmissionDialog.value}
+        handleClose={() => {
+          viewSubmissionDialog.onFalse();
+          setSelectedAssignment(null);
+        }}
+        title="View Submission"
+        maxWidth="sm"
+      >
+        {selectedAssignment?.submissionType === 'file_upload' ? (
+          <AssignGrade isEdit={false} data={null} onClose={handleClose} />
+        ) : (
+          <AssignMarksForText isEdit={false} data={null} onClose={handleClose} />
+        )}
+      </CustomDialog>
+
+      <CustomDialog
+        title={selectedAssignment?.title || 'Homework Details'}
+        open={viewAssignmentDetails.value}
+        handleClose={() => {
+          viewAssignmentDetails.onFalse();
+          setSelectedAssignment(null);
+        }}
+        maxWidth="md"
+      >
+        <ViewAssignmentDetails assignment={selectedAssignment} />
       </CustomDialog>
     </Box>
   );

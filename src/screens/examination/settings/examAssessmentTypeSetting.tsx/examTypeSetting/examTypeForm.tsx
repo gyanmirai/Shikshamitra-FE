@@ -1,9 +1,13 @@
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getExamTypeInitialValues } from '../initialValues';
@@ -17,16 +21,20 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
   data = null,
   isEdit = false,
 }) => {
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
-
+  // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
+    // Set initial form values based on provided data
     initialValues: getExamTypeInitialValues(data),
+
+    // Apply validation schema for form fields
     validationSchema: examTypeValidationSchema,
+
+    // Handle form submission
     onSubmit: (values) => {
       onSubmit({
         ...values,
+        // Generate new ID if not editing existing record
         id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
       });
     },
   });
@@ -38,65 +46,60 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Exam Type"
-                  name="examType"
-                  size="small"
-                  value={formik.values.examType}
-                  onChange={formik.handleChange}
-                  error={formik.touched.examType && Boolean(formik.errors.examType)}
-                />
+                <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
+                  <TextField
+                    fullWidth
+                    label="Exam Type *"
+                    name="examType"
+                    size="small"
+                    placeholder="Enter Exam Type"
+                    value={formik.values.examType}
+                    onChange={formik.handleChange}
+                    error={formik.touched.examType && Boolean(formik.errors.examType)}
+                    helperText={formik.touched.examType && formik.errors.examType}
+                  />
+                </ShakingTextField>
               </Grid>
 
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  size="small"
-                  rows={4}
-                  multiline
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  error={formik.touched.description && Boolean(formik.errors.description)}
-                />
+                <ShakingTextField
+                  error={!!(formik.touched.description && formik.errors.description)}
+                >
+                  <TextField
+                    fullWidth
+                    label="Description *"
+                    name="description"
+                    size="small"
+                    rows={4}
+                    multiline
+                    placeholder="Enter Description"
+                    value={formik.values.description}
+                    onChange={formik.handleChange}
+                    error={formik.touched.description && Boolean(formik.errors.description)}
+                    helperText={formik.touched.description && formik.errors.description}
+                  />
+                </ShakingTextField>
               </Grid>
             </Grid>
           </Scrollbar>
           <DialogActions>
-            {isEdit ? (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setIsDraft(true);
-                  formik.handleSubmit();
-                }}
-              >
-                Update
-              </Button>
-            ) : (
-              <>
-                <Button
-                  onClick={() => {
-                    setIsDraft(true);
-                    formik.handleSubmit();
-                  }}
-                >
-                  Save Draft
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  onClick={() => {
-                    setIsDraft(false);
-                    formik.handleSubmit();
-                  }}
-                >
-                  Publish
-                </Button>
-              </>
-            )}
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={(e) => onClose(e, false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              onClick={(e) => {
+                formik.handleSubmit();
+                onClose(e, true);
+              }}
+            >
+              {isEdit ? 'Update' : 'Submit'}
+            </Button>
           </DialogActions>
         </form>
       </Box>

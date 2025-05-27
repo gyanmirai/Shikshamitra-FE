@@ -21,7 +21,11 @@ import type { IAssignGradeProps } from '../type';
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignMarksForText: React.FC<IAssignGradeProps> = ({ data, onClose }: IAssignGradeProps) => {
+const AssignMarksForText: React.FC<IAssignGradeProps> = ({
+  isEdit,
+  data,
+  onClose,
+}: IAssignGradeProps) => {
   /**
    * Initialize formik form with grade and feedback fields
    * @param initialValues Object containing initial grade and feedback values from data prop
@@ -29,8 +33,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({ data, onClose }: IAss
    */
   const formik = useFormik({
     initialValues: {
-      marks: data?.marks || '',
-      totalMarks: data?.totalMarks || '',
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
@@ -41,44 +43,12 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({ data, onClose }: IAss
     <Box display="flex" flexDirection="column" gap={2} p={1}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '55vh' }}>
+          <Scrollbar sx={{ p: 2, height: '350px' }}>
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12}>
                 <Editor onChange={(value) => {}} value="Submission Data" editable={false} />
               </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
-                >
-                  <TextField
-                    label="Total Marks"
-                    fullWidth
-                    name="totalMarks"
-                    disabled
-                    size="small"
-                    value={formik.values.totalMarks}
-                    onChange={formik.handleChange}
-                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
-                  <TextField
-                    placeholder="Enter Marks"
-                    label="Marks *"
-                    fullWidth
-                    name="marks"
-                    size="small"
-                    value={formik.values.marks}
-                    onChange={formik.handleChange}
-                    error={formik.touched.marks && Boolean(formik.errors.marks)}
-                    helperText={formik.touched.marks && formik.errors.marks}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <ShakingTextField
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
@@ -88,6 +58,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({ data, onClose }: IAss
                     multiline
                     size="small"
                     rows={3}
+                    disabled={!isEdit}
                     fullWidth
                     name="feedback"
                     value={formik.values.feedback}

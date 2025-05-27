@@ -15,7 +15,7 @@ export const getHomeworkInitialValues = (
   homeworkType: editData?.homeworkType || '',
   submissionType: editData?.submissionType || 'online_text',
   dueDate: dayjs(editData?.dueDate) || null,
-  attachments: editData?.attachments || [],
+  attachments: editData?.attachments ?? [],
   createdBy: editData?.createdBy || '',
   status: editData?.status || 0,
 

@@ -24,10 +24,19 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       isSearch={false}
       tableId="examschedule-table"
       columns={[
-        { id: 'subjectName', label: 'Subject Name', minWidth: '160px', align: 'left' },
+        {
+          id: 'subjectName',
+          label: 'Subject Name',
+          minWidth: '160px',
+          align: 'left',
+          isFilter: false,
+          isSort: false,
+        },
         {
           id: 'examDate',
           label: 'Exam Date',
+          isFilter: false,
+          isSort: false,
           render(value, row) {
             return (
               <DatePicker
@@ -39,6 +48,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   setExamSchedules(updatedSchedules);
                 }}
                 slotProps={{ textField: { size: 'small' } }}
+                sx={{ minWidth: '250px', width: '100%' }}
               />
             );
           },
@@ -46,6 +56,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         {
           id: 'examTime',
           label: 'Exam Time',
+          isFilter: false,
+          isSort: false,
           render(value, row) {
             return (
               <TimePicker
@@ -57,6 +69,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   setExamSchedules(updatedSchedules);
                 }}
                 slotProps={{ textField: { size: 'small' } }}
+                sx={{ minWidth: '250px', width: '100%' }}
               />
             );
           },
@@ -64,6 +77,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         {
           id: 'examDuration',
           label: 'Exam Duration',
+          isFilter: false,
+          isSort: false,
           render(value, row) {
             return (
               <TimePicker
@@ -75,6 +90,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   setExamSchedules(updatedSchedules);
                 }}
                 slotProps={{ textField: { size: 'small' } }}
+                sx={{ minWidth: '250px', width: '100%' }}
               />
             );
           },
@@ -82,6 +98,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         {
           id: 'totalMarks',
           label: 'Total Marks',
+          isFilter: false,
+          isSort: false,
           render(value, row) {
             return (
               <TextField
@@ -93,6 +111,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   setExamSchedules(updatedSchedules);
                 }}
                 size="small"
+                sx={{ minWidth: '250px', width: '100%' }}
               />
             );
           },
@@ -100,6 +119,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         {
           id: 'passingMarks',
           label: 'Passing Marks',
+          isFilter: false,
+          isSort: false,
           render(value, row) {
             return (
               <TextField
@@ -111,6 +132,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   setExamSchedules(updatedSchedules);
                 }}
                 size="small"
+                sx={{ minWidth: '250px', width: '100%' }}
               />
             );
           },

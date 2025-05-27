@@ -21,7 +21,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import { PublishUnpublishStatusTypeColors } from 'src/enums/publishUnpublish-status';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -89,26 +88,26 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
                   label={`Class : ${assignment?.class}`}
-                  size="small"
                   variant="outlined"
-                  sx={{ fontSize: '1rem' }}
+                  sx={{ fontSize: '0.9rem' }}
                 />
                 <Chip
                   label={`Type : ${assignment?.assignmentType}`}
-                  size="small"
                   variant="outlined"
-                  sx={{ fontSize: '1rem' }}
+                  sx={{ fontSize: '0.9rem' }}
                 />
-                <Label
+                <Chip
+                  label="Status : Published"
+                  variant="outlined"
                   color={
                     PublishUnpublishStatusTypeColors[
                       assignment?.status as PublishUnpublishStatusType
                     ] as LabelColor
                   }
-                  sx={{ fontSize: '1rem' }}
-                >
-                  Status : Published
-                </Label>
+                  sx={{
+                    fontSize: '0.9rem',
+                  }}
+                />
               </Box>
             </Box>
           </Box>
