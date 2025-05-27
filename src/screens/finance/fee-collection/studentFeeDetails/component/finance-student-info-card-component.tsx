@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Box, Card, Avatar, Button, Typography } from '@mui/material';
+import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -168,7 +168,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           </Box>
 
           {/* Action Buttons */}
-          <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} mt={3} mr={3}>
+          {/* <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} mt={3} mr={3}>
             <Button
               onClick={() => {
                 feeRefundDialog.onFalse();
@@ -246,7 +246,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
             >
               Process For Refund
             </Button>
-          </Box>
+          </Box> */}
         </Box>
       </Card>
 
@@ -269,14 +269,6 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           <FeeCollectionTable />
         </CustomDialog>
       )}
-
-      {/* {dialog.value && (
-        <FeeCollectionMonthWise
-          dialogValue={dialog.value}
-          onClose={closeDialog}
-          students={selectedStudent}
-        />
-      )} */}
 
       {collectChargesDialog.value && (
         <FinanceCollectCharges

@@ -18,6 +18,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
 import ChargesReceiptPDF from 'src/screens/finance/transection-receipt/charges-receipt';
@@ -374,17 +375,15 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
             disabled={selectedChargesAmount < 1}
             type="submit"
             variant="outlined"
-            size="medium"
-            color="primary"
+            startIcon={<Iconify icon="game-icons:receive-money" />}
           >
             {`Collect Charges ${formatNumber(selectedChargesAmount, 'INR')}`}
           </Button>
           <Button
             disabled={selectedChargesAmount < 1}
             type="submit"
-            variant="outlined"
-            size="medium"
-            color="primary"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
             onClick={() => {
               chargesDialog.onTrue();
             }}

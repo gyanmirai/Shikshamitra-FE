@@ -1,99 +1,58 @@
 import React, { useState } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Button, TextField, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import capitalizeWords from 'src/utils/capitalizeText';
+import data from 'src/json/finance/settings/late-fee-type.json';
 
-import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
+import AddLateFeeTypeDialog from '../dialogs/finance-add-late-fee-type-method-dialog';
+
+import type { IFinanceAddLateFeeTypeInterface } from '../dialogs/finance-general-settings-interface';
+
 const SetLateFeeTypeMethod = () => {
-  const [newLateFeeType, setNewLateFeeType] = useState('');
-  const [isEdit, setIsEdit] = useState(false);
-  const [selectedLateFeeTypeId, setSelectedLateFeeTypeId] = useState<string | null>(null);
-  const [selectedLateFeeTypeName, setSelectedLateFeeTypeName] = useState<string | null>(null);
-  const [data, setData] = useState<{ id: string; lateFeeTypeName: string }[]>([]);
+  // Dialog state for delete confirmation modal
   const dialogForDeleteConfirmation = useBoolean();
-
-  const handleAddOrUpdate = () => {
-    if (!newLateFeeType.trim()) {
-      alert('Late Fee Type name cannot be empty!');
-      return;
-    }
-
-    const isDuplicate = data.some(
-      (item) =>
-        item.lateFeeTypeName.toLowerCase() === newLateFeeType.toLowerCase() &&
-        (!isEdit || item.id !== selectedLateFeeTypeId)
-    );
-
-    if (isDuplicate) {
-      alert('This late fee type already exists!');
-      return;
-    }
-
-    if (isEdit) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === selectedLateFeeTypeId ? { ...item, lateFeeTypeName: newLateFeeType } : item
-        )
-      );
-    } else {
-      const newId = `${Date.now()}`;
-      setData((prev) => [...prev, { id: newId, lateFeeTypeName: newLateFeeType }]);
-    }
-
-    setNewLateFeeType('');
-    setIsEdit(false);
-    setSelectedLateFeeTypeId(null);
-  };
-
-  const handleEdit = (row: any) => {
-    setNewLateFeeType(row.lateFeeTypeName);
-    setSelectedLateFeeTypeId(row.id);
-    setIsEdit(true);
-  };
-
-  const handleDelete = () => {
-    setData((prev) => prev.filter((item) => item.id !== selectedLateFeeTypeId));
-    dialogForDeleteConfirmation.onFalse();
-    setSelectedLateFeeTypeId(null);
-    setSelectedLateFeeTypeName(null);
-  };
+  // Dialog state for edit/add modal
+  const editDialog = useBoolean();
+  // State to track if we're in edit mode
+  const [isEdit, setIsEdit] = useState(false);
+  // State to store the currently selected late fee type entry
+  const [selectedEntry, setSelectedEntry] = useState<IFinanceAddLateFeeTypeInterface | null>(null);
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Grid item xs={12} md={6}>
-        <Box pt="15px" display="flex" alignItems="center" gap={3}>
-          <TextField
-            autoFocus
-            name="newLateFeeType"
-            label="Add New Late Fee Type"
-            size="small"
-            value={newLateFeeType}
-            onChange={(e) => setNewLateFeeType(capitalizeWords(e.target.value))}
-          />
-          <Button
-            startIcon={!isEdit && <Iconify icon="ic:outline-plus" />}
-            variant="contained"
-            size="small"
-            onClick={handleAddOrUpdate}
-            disabled={newLateFeeType.trim() === ''}
-          >
-            {isEdit ? 'Save' : 'Add New Late Fee Type'}
-          </Button>
-        </Box>
-      </Grid>
-
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <CustomizableTable
-            noDataText={<>No Late Fee Type Found</>}
+            noDataText={
+              <>
+                No Late Fee Type Found
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    editDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Late Fee Type
+                </Box>
+              </>
+            }
             isLoading={false}
             tableId="late-fee-type"
             isShowedDense={false}
@@ -126,13 +85,12 @@ const SetLateFeeTypeMethod = () => {
                       showThreeDots={false}
                       showDeleteIcon
                       showEditIcon
-                      handleEditClick={() => handleEdit(value)}
+                      handleEditClick={() => {
+                        setSelectedEntry(row);
+                        setIsEdit(true);
+                        editDialog.onTrue();
+                      }}
                       handleDeleteClick={() => {
-                        setSelectedLateFeeTypeId(value.id);
-                        setSelectedLateFeeTypeName(
-                          value.lateFeeTypeName.charAt(0).toUpperCase() +
-                            value.lateFeeTypeName.slice(1).toLowerCase()
-                        );
                         dialogForDeleteConfirmation.onTrue();
                       }}
                     />
@@ -145,18 +103,37 @@ const SetLateFeeTypeMethod = () => {
         </Grid>
       </Grid>
 
+      {editDialog.value && (
+        <CustomDialog
+          open={editDialog.value}
+          handleClose={() => {
+            editDialog.onFalse();
+          }}
+          title={`${isEdit ? 'Edit' : 'Add'} Late Fee Type`}
+          maxWidth="md"
+        >
+          <AddLateFeeTypeDialog
+            onClose={() => {
+              editDialog.onFalse();
+            }}
+            isEditMode={isEdit}
+            data={selectedEntry}
+            onSave={() => {
+              editDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
       {dialogForDeleteConfirmation.value && (
         <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
-            setSelectedLateFeeTypeId(null);
-            setSelectedLateFeeTypeName(null);
           }}
           title="Delete Item"
           content="Are you sure want to delete?"
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={handleDelete}>
+            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
               Delete
             </LoadingButton>
           }

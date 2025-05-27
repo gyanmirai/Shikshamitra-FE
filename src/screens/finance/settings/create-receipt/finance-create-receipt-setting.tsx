@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 
 import { Box, Button, Typography } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TemplateOne from './Templates/templates-one';
@@ -11,31 +14,38 @@ import ChargesTemplateOne from './charges-templates/charges_template_one';
 import FeeRefundTemplateOne from './fee-refund-templates/fee-refund-templates.one';
 
 const FinanceCreateReceiptSetting = () => {
+  // State to track which template is currently selected
   const [selectedTemplate, setSelectedTemplate] = useState<string>('TemplateOne');
 
+  // Handler for when a template is selected by the user
   const handleTemplateSelection = (templateName: string) => {
     setSelectedTemplate(templateName);
   };
 
+  // Handler for saving the selected template configuration
   const handleSave = () => {
     console.log('Selected Template:', selectedTemplate);
   };
 
+  // Array of available fee receipt templates
   const feeTemplates = [
     { id: 'TemplateOne', component: TemplateOne },
     // add more fee templates here later
   ];
 
+  // Array of available charge receipt templates
   const chargeTemplates = [
     { id: 'TemplateTwo', component: ChargesTemplateOne },
     // add more charge templates here later
   ];
 
+  // Array of available refund receipt templates
   const refundTemplates = [
     { id: 'TemplateThree', component: FeeRefundTemplateOne },
     // add more refund templates here later
   ];
 
+  // Navigation breadcrumb links configuration
   const links = [
     {
       name: 'Finance',
@@ -51,11 +61,13 @@ const FinanceCreateReceiptSetting = () => {
     },
   ];
 
+  // Renders a section of templates with a title and scrollable container
   const renderTemplateSection = (title: string, templates: any[]) => (
     <Box mb={5} mt={5}>
       <Typography variant="h6" mb={2}>
         {title}
       </Typography>
+      {/* Horizontally scrollable container for template previews */}
       <Box sx={{ display: 'flex', overflowX: 'auto', gap: 2, pb: 1 }}>
         {templates.map((template) => {
           const TemplateComponent = template.component;
@@ -76,7 +88,6 @@ const FinanceCreateReceiptSetting = () => {
       </Box>
     </Box>
   );
-
   return (
     <>
       <CustomBreadcrumbs
@@ -86,11 +97,11 @@ const FinanceCreateReceiptSetting = () => {
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
-            size="small"
             variant="contained"
             onClick={() => {
               handleSave();
             }}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             Save
           </Button>

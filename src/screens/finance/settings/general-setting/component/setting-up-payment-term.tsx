@@ -1,99 +1,54 @@
 import React, { useState } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Button, TextField, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
+import AddPaymentTermDialog from '../dialogs/finance-add-payment-term-dialog';
+
 const SetPaymentTerm = () => {
-  const [newPaymentTerm, setNewPaymentTerm] = useState('');
+  // State to track if we are in edit mode
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedPaymentTermId, setSelectedPaymentTermId] = useState<string | null>(null);
-  const [selectedPaymentTermName, setSelectedPaymentTermName] = useState<string | null>(null);
-  const [data, setData] = useState<{ id: string; paymentTermName: string }[]>([]);
+
+  // Dialog state for delete confirmation popup
   const dialogForDeleteConfirmation = useBoolean();
 
-  const handleAddOrUpdate = () => {
-    if (!newPaymentTerm.trim()) {
-      alert('Payment Term name cannot be empty!');
-      return;
-    }
-
-    const isDuplicate = data.some(
-      (item) =>
-        item.paymentTermName.toLowerCase() === newPaymentTerm.toLowerCase() &&
-        (!isEdit || item.id !== selectedPaymentTermId)
-    );
-
-    if (isDuplicate) {
-      alert('This payment term already exists!');
-      return;
-    }
-
-    if (isEdit) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === selectedPaymentTermId ? { ...item, paymentTermName: newPaymentTerm } : item
-        )
-      );
-    } else {
-      const newId = `${Date.now()}`;
-      setData((prev) => [...prev, { id: newId, paymentTermName: newPaymentTerm }]);
-    }
-
-    setNewPaymentTerm('');
-    setIsEdit(false);
-    setSelectedPaymentTermId(null);
-  };
-
-  const handleEdit = (row: any) => {
-    setNewPaymentTerm(row.paymentTermName);
-    setSelectedPaymentTermId(row.id);
-    setIsEdit(true);
-  };
-
-  const handleDelete = () => {
-    setData((prev) => prev.filter((item) => item.id !== selectedPaymentTermId));
-    dialogForDeleteConfirmation.onFalse();
-    setSelectedPaymentTermId(null);
-    setSelectedPaymentTermName(null);
-  };
+  // Dialog state for edit/add payment term popup
+  const editDialog = useBoolean();
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Grid item xs={12} md={6}>
-        <Box pt="15px" display="flex" alignItems="center" gap={3}>
-          <TextField
-            autoFocus
-            name="newPaymentTerm"
-            label="Add New Payment Term"
-            size="small"
-            value={newPaymentTerm}
-            onChange={(e) => setNewPaymentTerm(capitalizeWords(e.target.value))}
-          />
-          <Button
-            startIcon={!isEdit && <Iconify icon="ic:outline-plus" />}
-            variant="contained"
-            size="small"
-            onClick={handleAddOrUpdate}
-            disabled={newPaymentTerm.trim() === ''}
-          >
-            {isEdit ? 'Save' : 'Add New Payment Term'}
-          </Button>
-        </Box>
-      </Grid>
-
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <CustomizableTable
-            noDataText={<>No Payment Term Found</>}
+            noDataText={
+              <>
+                No Payment Term Found
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    editDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Payment Term
+                </Box>
+              </>
+            }
             isLoading={false}
             tableId="payment-term"
             isShowedDense={false}
@@ -126,13 +81,11 @@ const SetPaymentTerm = () => {
                       showThreeDots={false}
                       showDeleteIcon
                       showEditIcon
-                      handleEditClick={() => handleEdit(value)}
+                      handleEditClick={() => {
+                        setIsEdit(true);
+                        editDialog.onTrue();
+                      }}
                       handleDeleteClick={() => {
-                        setSelectedPaymentTermId(value.id);
-                        setSelectedPaymentTermName(
-                          value.paymentTermName.charAt(0).toUpperCase() +
-                            value.paymentTermName.slice(1).toLowerCase()
-                        );
                         dialogForDeleteConfirmation.onTrue();
                       }}
                     />
@@ -140,23 +93,42 @@ const SetPaymentTerm = () => {
                 },
               },
             ]}
-            data={data}
+            data={[]}
           />
         </Grid>
       </Grid>
 
+      {editDialog.value && (
+        <CustomDialog
+          open={editDialog.value}
+          handleClose={() => {
+            editDialog.onFalse();
+          }}
+          title={`${isEdit ? 'Edit' : 'Add'} Payment Term`}
+          maxWidth="md"
+        >
+          <AddPaymentTermDialog
+            onClose={() => {
+              editDialog.onFalse();
+            }}
+            isEditMode={isEdit}
+            data={null}
+            onSave={() => {
+              editDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
       {dialogForDeleteConfirmation.value && (
         <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
-            setSelectedPaymentTermId(null);
-            setSelectedPaymentTermName(null);
           }}
           title="Delete Item"
           content="Are you sure want to delete?"
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={handleDelete}>
+            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
               Delete
             </LoadingButton>
           }

@@ -1,207 +1,51 @@
 import React, { useState } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Button, TextField, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetpaymentOptionQuery,
-  useAddpaymentOptionMutation,
-  useUpdatepaymentOptionMutation,
-  useDeletepaymentOptionMutation,
-} from 'src/redux/paymentStatusOption/paymentStatusOptionApi';
-
-import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
+import AddPaymentStatusDialog from '../dialogs/finance-add-payment-status-dialog';
+
 const ConfigurePaymentStatusComponent = () => {
-  interface PaymentStatus {
-    paymentStatusOptionName: string;
-    [key: string]: any;
-  }
-
-  // State to track if we're in edit mode
-  const [isEdit, setIsEdit] = useState<boolean>(false);
-  // State to store the payment status input value
-  const [paymentStatus, setPaymentStatus] = useState<string>('');
-  // State to store the currently selected payment status for editing/deleting
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatus | null>(null);
-
-  // Boolean hook for controlling delete confirmation dialog
+  // Dialog state for delete confirmation popup
   const dialogForDeleteConfirmation = useBoolean();
-
-  // Fetch all payment status options from the API
-  const { data: paymentStatusList, isLoading: ispaymentStatusLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetpaymentOptionQuery,
-  });
-
-  // Mutation hook for adding new payment status
-  const [addPaymentStatus] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddpaymentOptionMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Payment Status added Successfully',
-    },
-  });
-
-  // Mutation hook for updating existing payment status
-  const [updatePaymentStatus, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdatepaymentOptionMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Payment Status Update Successfully',
-    },
-  });
-
-  // Mutation hook for deleting payment status
-  const [deletePaymentStatus, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeletepaymentOptionMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Payment status Delete Successfully',
-    },
-  });
-
-  // Handler for both adding new and updating existing payment status
-  const handleAddPaymentStatus = async () => {
-    if (isEdit) {
-      // Validation for empty input
-      if (!paymentStatus.trim()) {
-        alert('Payment status cannot be empty!');
-        return;
-      }
-
-      // Check for duplicate payment status
-      const isDuplicate = paymentStatusList?.items?.some(
-        (item: PaymentStatus) =>
-          item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
-      );
-
-      if (isDuplicate) {
-        alert('This Payment status already exists!');
-        return;
-      }
-
-      try {
-        // Validate selected payment status exists
-        if (!selectedPaymentStatus) {
-          console.error('No payment status selected');
-          return;
-        }
-
-        // Update the payment status
-        await updatePaymentStatus({
-          id: selectedPaymentStatus.id,
-          body: {
-            paymentStatusOptionName: paymentStatus,
-          },
-        }).unwrap();
-
-        await updatePaymentStatus({
-          id: selectedPaymentStatus?.id,
-          body: {
-            paymentStatusOptionName: paymentStatus,
-          },
-        }).unwrap();
-        setPaymentStatus('');
-        setIsEdit(false);
-      } catch (error) {
-        console.error('Failed to update Payment status:', error);
-      }
-    } else {
-      // Validation for empty input when adding new status
-      if (!paymentStatus.trim()) {
-        alert('Payment status cannot be empty!');
-        return;
-      }
-
-      // Check for duplicate payment status
-      const isDuplicate = paymentStatusList?.items?.some(
-        (item: PaymentStatus) =>
-          item.paymentStatusOptionName.toLowerCase() === paymentStatus.toLowerCase()
-      );
-
-      if (isDuplicate) {
-        alert('This Payment staus already exists!');
-        return;
-      }
-
-      try {
-        // Add new payment status
-        await addPaymentStatus({ paymentStatusOptionName: paymentStatus }).unwrap();
-        setPaymentStatus('');
-      } catch (error) {
-        console.error('Failed to add Payment status:', error);
-      }
-    }
-  };
-
-  // Handler for editing payment status
-  const handleEditClick = (data: PaymentStatus) => {
-    setIsEdit(true);
-    setPaymentStatus(data.paymentStatusOptionName);
-    setSelectedPaymentStatus(data);
-  };
-
-  // Handler for deleting payment status
-  const handleDeletePaymentStatus = async () => {
-    if (!selectedPaymentStatus) return;
-
-    try {
-      await deletePaymentStatus(selectedPaymentStatus.id).unwrap();
-      dialogForDeleteConfirmation.onFalse();
-    } catch (error) {
-      console.error('Failed to delete Payment status:', error);
-    }
-  };
+  // Dialog state for edit/add payment status popup
+  const editDialog = useBoolean();
+  // State to track if we are in edit mode or add mode
+  const [isEdit, setIsEdit] = useState(false);
   return (
     <Box py="20px" display="flex" flexDirection="column" gap={3}>
       <Grid container spacing={2}>
-        <Box px="15px" display="flex" flexDirection="row" gap={1} alignItems="center">
-          <TextField
-            name="Add new status"
-            label="Add New Status"
-            size="small"
-            autoFocus
-            value={paymentStatus}
-            onChange={(e) => setPaymentStatus(capitalizeWords(e.target.value))}
-          />
-
-          {isEdit ? (
-            <Button
-              onClick={handleAddPaymentStatus}
-              variant="contained"
-              size="small"
-              disabled={isUpdateLoading || paymentStatus.trim() === ''}
-            >
-              {isUpdateLoading ? 'Updating...' : ' Save'}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleAddPaymentStatus}
-              disabled={ispaymentStatusLoading || paymentStatus.trim() === ''}
-              startIcon={<Iconify icon="ic:outline-plus" />}
-              variant="contained"
-              size="small"
-            >
-              {ispaymentStatusLoading ? 'Adding...' : ' Payment Status'}
-            </Button>
-          )}
-        </Box>
         <Grid item xs={12} md={12}>
           <CustomizableTable
-            noDataText={<>No Payment Status Found </>}
-            isLoading={ispaymentStatusLoading}
+            noDataText={
+              <>
+                No Payment Status Found
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    editDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Payment Status
+                </Box>
+              </>
+            }
             tableId="payment-status"
             isShowedDense={false}
             isPagination={false}
@@ -233,46 +77,54 @@ const ConfigurePaymentStatusComponent = () => {
                       showThreeDots={false}
                       showDeleteIcon
                       handleDeleteClick={() => {
-                        setSelectedPaymentStatus({
-                          ...value,
-                          paymentStatusOptionName: value.paymentStatusOptionName
-                            ? value.paymentStatusOptionName.charAt(0).toUpperCase() +
-                              value.paymentStatusOptionName.slice(1).toLowerCase()
-                            : '',
-                        });
-
                         dialogForDeleteConfirmation.onTrue();
                       }}
                       showEditIcon
                       handleEditClick={() => {
-                        handleEditClick(value as PaymentStatus);
+                        editDialog.onTrue();
+                        setIsEdit(true);
                       }}
                     />
                   );
                 },
               },
             ]}
-            data={paymentStatusList?.items || []}
+            data={[]}
           />
         </Grid>
       </Grid>
+      {editDialog.value && (
+        <CustomDialog
+          open={editDialog.value}
+          handleClose={() => {
+            editDialog.onFalse();
+          }}
+          title={isEdit ? 'Edit Payment Status' : 'Add Payment Status'}
+          maxWidth="md"
+        >
+          <AddPaymentStatusDialog
+            onClose={() => {
+              editDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              editDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
 
       {dialogForDeleteConfirmation.value && (
         <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
-            setSelectedPaymentStatus(null);
           }}
           title="Delete Item"
           content="Are you sure you want to delete?"
           action={
-            <LoadingButton
-              variant="contained"
-              loading={isDeleteLoading}
-              color="error"
-              onClick={handleDeletePaymentStatus}
-            >
+            <LoadingButton variant="contained" color="error" onClick={() => {}}>
               Yes
             </LoadingButton>
           }

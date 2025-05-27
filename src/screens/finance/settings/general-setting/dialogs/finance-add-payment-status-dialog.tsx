@@ -1,0 +1,104 @@
+import React from 'react';
+import { useFormik } from 'formik';
+
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import ShakingTextField from 'src/components/shaking-text-field';
+
+import { getInitialPaymentStatusValues } from './initialValues';
+import { addPaymentStatusValidationSchema } from './validationSchema';
+
+import type {
+  IFinanceAddPaymentStatusInterface,
+  IFinanceAddPaymentStatusDialogProps,
+} from './finance-general-settings-interface';
+
+const AddPaymentStatusDialog: React.FC<IFinanceAddPaymentStatusDialogProps> = ({
+  isEditMode,
+  data,
+  onClose,
+  onSave,
+}) => {
+  // Get initial values for the payment status form based on provided data
+  const initialValues = getInitialPaymentStatusValues(data);
+
+  // Initialize form handling using Formik hook with type safety
+  const {
+    values, // Current form values
+    errors, // Validation errors
+    touched, // Fields that have been touched/visited
+    handleSubmit, // Form submission handler
+    handleChange, // Input change handler
+    handleBlur, // Input blur handler
+    isSubmitting, // Form submission status
+    setSubmitting, // Function to update submission status
+  } = useFormik<IFinanceAddPaymentStatusInterface>({
+    initialValues,
+    validationSchema: addPaymentStatusValidationSchema,
+    onSubmit: async (formValues) => {
+      // Call the parent save handler with form values
+      onSave?.(formValues);
+      // Reset submission status after save
+      setSubmitting(false);
+    },
+  });
+
+  // Check if payment status name field has error and has been touched
+  const isPaymentStatusNameError = touched.paymentStatusName && Boolean(errors.paymentStatusName);
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Scrollbar
+        sx={{
+          p: 2,
+          bgcolor: 'background.neutral',
+          height: '100%',
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12} pb="10px">
+            <ShakingTextField error={isPaymentStatusNameError}>
+              <TextField
+                size="small"
+                fullWidth
+                name="paymentStatusName"
+                label="Payment Status Name"
+                value={values.paymentStatusName}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={isPaymentStatusNameError}
+                helperText={touched.paymentStatusName && errors.paymentStatusName}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </Scrollbar>
+
+      <DialogActions>
+        <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            disabled={isSubmitting}
+          >
+            {isEditMode ? 'Update' : 'Submit'}
+          </Button>
+        </Box>
+      </DialogActions>
+    </form>
+  );
+};
+
+export default AddPaymentStatusDialog;

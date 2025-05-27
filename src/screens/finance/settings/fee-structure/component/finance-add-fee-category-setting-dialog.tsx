@@ -11,6 +11,7 @@ import { Box, Grid, Button, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -184,14 +185,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
               disabled={feeHeadListForFeeStructure.length === 0}
             >
               Add For Other Class
-            </Button>
-            <Button
-              startIcon={<Iconify icon="material-symbols-light:save" />}
-              variant="contained"
-              size="small"
-              onClick={handleSubmit}
-            >
-              Submit
             </Button>
           </Box>
         </Box>
@@ -452,6 +445,16 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
         onEdit={handleEdit}
         data={feeHeadListForFeeStructure}
       />
+
+      <Box display="flex" justifyContent="flex-end" p={2}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          variant="contained"
+          onClick={handleSubmit}
+        >
+          Submit
+        </Button>
+      </Box>
     </>
   );
 };

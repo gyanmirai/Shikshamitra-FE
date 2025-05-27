@@ -61,10 +61,32 @@ const FinanceStudentFeeBreakdownTab = () => {
         tableId="finance-student-fee-breakdown-tab"
         isFilter={false}
         isPagination={false}
-        isSearch={false}
+        searchFieldProps={{
+          placeholder: 'Search by Due Date, Fee Head...',
+          label: 'Search by Due Date, Fee Head...',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         columns={[
           { id: 'date', label: 'Due Date', filterType: 'date' },
-          { id: 'type', label: 'Type' },
+          {
+            id: 'type',
+            label: 'Type',
+            render(value, row) {
+              return (
+                <Typography
+                  sx={{
+                    fontSize: '12px',
+                    ...(row.id === 'total' ? { fontWeight: 'bold' } : {}),
+                  }}
+                >
+                  {value}
+                </Typography>
+              );
+            },
+          },
           {
             id: 'grossFee',
             label: 'Gross Fee',

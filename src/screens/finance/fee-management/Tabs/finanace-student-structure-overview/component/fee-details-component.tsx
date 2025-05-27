@@ -1,3 +1,4 @@
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { PaymentDate } from 'src/screens/student/studentProfile/finance-profile-data/finance-profile-fee-data';
 
@@ -7,6 +8,7 @@ import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -17,12 +19,33 @@ interface FeeDetailsComponentProps {
 }
 
 const FeeDetailsComponent: React.FC<FeeDetailsComponentProps> = ({ students }) => {
-  const renderFeeInfo = (label: string, amount: number, color?: string) => (
-    <Typography variant="body2" sx={{ color, fontWeight: color ? 'bold' : 'normal' }}>
-      <strong>{label}:</strong> {formatNumber(amount, 'INR')}
-    </Typography>
-  );
+  // Helper function to render fee information with different styles based on the label
+  // For 'Paid' and 'Pending' labels, it shows a colored Label component
+  // For other labels, it shows a Typography component with optional color
+  const renderFeeInfo = (label: string, amount: number, color?: string) => {
+    // Map of label types to their corresponding color values
+    const colorMap: Record<string, string> = {
+      Paid: 'success',
+      Pending: 'warning', // or use a custom theme color like 'pending.main' if defined
+    };
 
+    const colors = colorMap[label];
+
+    // Special handling for Paid and Pending labels using Label component
+    if (label === 'Paid' || label === 'Pending') {
+      return (
+        <Label color={colors as LabelColor} sx={{ fontWeight: 'bold' }}>
+          <strong>{label}:</strong> {formatNumber(amount, 'INR')}
+        </Label>
+      );
+    }
+    // Default rendering for other fee information using Typography
+    return (
+      <Typography variant="body2" sx={{ color, fontWeight: color ? 'bold' : 'normal' }}>
+        <strong>{label}:</strong> {formatNumber(amount, 'INR')}
+      </Typography>
+    );
+  };
   const tableColumns = [
     { id: 'Month', label: 'Due Date', filterType: 'date' },
     {
