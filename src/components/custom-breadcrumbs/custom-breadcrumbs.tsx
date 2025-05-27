@@ -1,9 +1,9 @@
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import { Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
+import { Tooltip, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { BreadcrumbsLink } from './breadcrumb-link';
@@ -18,10 +18,17 @@ export function CustomBreadcrumbs({
   heading,
   moreLink,
   activeLast,
-  slotProps,
+  slotProps = {
+    action: {},
+    heading: {},
+    moreLink: {},
+    breadcrumbs: {},
+  },
   sx,
   description,
   tooltipProps,
+  isBack = false,
+  onBack = () => {},
   ...other
 }: CustomBreadcrumbsProps) {
   const lastLink = links[links.length - 1].name;
@@ -31,6 +38,12 @@ export function CustomBreadcrumbs({
       variant="h4"
       sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2, ...slotProps?.heading }}
     >
+      {isBack && (
+        <IconButton onClick={onBack}>
+          {' '}
+          <Iconify icon="ic:outline-arrow-back-ios-new" />{' '}
+        </IconButton>
+      )}
       {heading}{' '}
       {description && (
         <Tooltip arrow placement="right" title={description} {...tooltipProps}>
@@ -39,7 +52,10 @@ export function CustomBreadcrumbs({
       )}
     </Typography>
   );
-
+  if (isBack) {
+    // @ts-ignore
+    slotProps.breadcrumbs.pl = '52px';
+  }
   const renderLinks = (
     <Breadcrumbs separator={<Separator />} sx={slotProps?.breadcrumbs} {...other}>
       {links.map((link, index) => (
@@ -72,7 +88,6 @@ export function CustomBreadcrumbs({
       <Stack direction="row" alignItems="center">
         <Box sx={{ flexGrow: 1 }}>
           {heading && renderHeading}
-
           {!!links.length && renderLinks}
         </Box>
 

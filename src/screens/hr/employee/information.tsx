@@ -21,12 +21,15 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validations } from './employee-form-validation';
-import {
-  FamilyFields,
-  PayrollFields,
-  InformationFields,
-  WorkExperienceFields,
-} from './employee-form-fields';
+// import {
+//   FamilyFields,
+//   PayrollFields,
+//   WorkExperienceFields,
+import { FamilyFields } from './employee-form-fields/FamilyFields';
+import { PayrollFields } from './employee-form-fields/PayrollFields';
+import { InformationFields } from './employee-form-fields/InformationFields';
+import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
+// } from './employee-form-fields';
 import {
   payrollInitialValues,
   workExperienceInitialValues,
@@ -34,7 +37,8 @@ import {
   personalInformationInitialValues,
 } from './employee-form';
 
-import type { FieldsType } from './employee-form-fields';
+//   InformationFields,
+import type { FieldsType } from './employee-form-fields/types';
 
 const fields = [InformationFields, FamilyFields, WorkExperienceFields, PayrollFields];
 // const fields = [InformationFields];
@@ -355,6 +359,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                     xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
                     md={[1, 2].includes(activeTabIndex) ? 12 : 4}
                     key={field.name}
+                    {...field.gridProps}
                     mb="15px"
                   >
                     {field.renderComp ? (

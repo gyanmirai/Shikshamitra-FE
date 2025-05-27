@@ -13,7 +13,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeavePolicy from './leave-policy';
 import AttendanceRule from './attendance-rule';
-import LateArrivalPolicy from './lateArrivalPolicy';
 
 const TABS = [
   // {
@@ -40,12 +39,12 @@ const TABS = [
     icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
     component: () => <LeavePolicy />,
   },
-  {
-    value: 'lateArrivalPolicy',
-    label: 'Late Arrival Policy',
-    icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
-    component: () => <LateArrivalPolicy />,
-  },
+  // {
+  //   value: 'lateArrivalPolicy',
+  //   label: 'Late Arrival Policy',
+  //   icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
+  //   component: () => <LateArrivalPolicy />,
+  // },
 ];
 
 const HrAttendanceSettingScreen = () => {

@@ -20,7 +20,6 @@ import {
   Button,
   useTheme,
   TextField,
-  ButtonGroup,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -30,6 +29,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
+import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -43,6 +43,7 @@ import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -189,7 +190,7 @@ const HrEventsAndHolidaysScreen = () => {
           }}
         />
 
-        <Box display="flex" alignItems="center" gap={1}>
+        {/* <Box display="flex" alignItems="center" gap={1}>
           <ButtonGroup>
             <Button
               variant={view === 'list' ? 'outlined' : 'contained'}
@@ -206,7 +207,7 @@ const HrEventsAndHolidaysScreen = () => {
               <Iconify icon="lucide:layout-list" />
             </Button>
           </ButtonGroup>
-        </Box>
+        </Box> */}
       </Box>
       {view === 'list' ? (
         <CustomizableTable
@@ -244,7 +245,7 @@ const HrEventsAndHolidaysScreen = () => {
           columns={[
             { id: 'sDate', label: 'Start Date', filterType: 'date' },
             { id: 'eDate', label: 'End Date', filterType: 'date' },
-            { id: 'reason', label: 'Reason' },
+            { id: 'reason', label: 'Description' },
             {
               id: 'actions',
               label: 'Actions',
@@ -281,6 +282,9 @@ const HrEventsAndHolidaysScreen = () => {
           rowProps={(row) => ({
             sx: {
               borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
+              background: row.isHoliday
+                ? varAlpha(theme.palette.error.mainChannel, 0.2)
+                : varAlpha(theme.palette.success.mainChannel, 0.2),
             },
           })}
         />
@@ -392,6 +396,11 @@ export const HrEventsAndHolidaysForm = ({
               reason: value.reason,
               isHoliday: value.isHoliday,
             },
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: value.isHoliday
+              ? 'Holiday updated successfully'
+              : 'Event updated successfully',
           });
         } else {
           // If creating new event, add it with provided values
@@ -400,6 +409,11 @@ export const HrEventsAndHolidaysForm = ({
             endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
             reason: value.reason,
             isHoliday: value.isHoliday,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: value.isHoliday
+              ? 'Holiday created successfully'
+              : 'Event created successfully',
           });
         }
         // Close form after successful submission
@@ -420,7 +434,7 @@ export const HrEventsAndHolidaysForm = ({
               >
                 <DatePicker
                   format="DD-MM-YYYY"
-                  label="Start Date"
+                  label="Start Date *"
                   value={formik.values.startDate}
                   onChange={(value) => formik.setFieldValue('startDate', value)}
                   disabled={isCalenderPreview}
@@ -439,7 +453,7 @@ export const HrEventsAndHolidaysForm = ({
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <DatePicker
                   format="DD-MM-YYYY"
-                  label="End Date"
+                  label="End Date *"
                   value={formik.values.endDate}
                   onChange={(value) => formik.setFieldValue('endDate', value)}
                   disabled={isCalenderPreview}
@@ -457,7 +471,7 @@ export const HrEventsAndHolidaysForm = ({
             <Grid item xs={12}>
               <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                 <TextField
-                  label="Reason"
+                  label="Description *"
                   value={formik.values.reason}
                   size="small"
                   name="reason"

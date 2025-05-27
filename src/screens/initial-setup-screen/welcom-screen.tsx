@@ -39,7 +39,7 @@ const WelcomeScreen = ({ formik }: any) => {
         >
           <Box
             component="img"
-            src={`https://api.pexels.com/v1/search?query=school education&per_page=1&page=${Math.floor(Math.random() * 100) + 1}`}
+            src="https://img.freepik.com/free-vector/welcome-concept-illustration_114360-27447.jpg?semt=ais_hybrid&w=740"
             alt="Random School Image"
             sx={{
               width: '100%',

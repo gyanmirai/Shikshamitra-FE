@@ -1,6 +1,9 @@
 'use client';
 
+import 'driver.js/dist/driver.css';
+
 import React from 'react';
+import { driver } from 'driver.js';
 
 import { Box, Paper, styled, Container } from '@mui/material';
 
@@ -19,6 +22,79 @@ import { FormSlider } from '../student/enrollment/register/register-form';
  * Array of step titles for the setup process
  */
 const steps = ['Welcome screen', 'Basic Information', 'Institute Setup'];
+/**
+ * Driver.js step configurations for each setup screen
+ */
+const driverSteps = {
+  welcome: [
+    {
+      element: '#step-label-0',
+      popover: {
+        title: 'Welcome to Setup',
+        description: 'This is the beginning of your setup journey',
+        position: 'bottom',
+      },
+    },
+    {
+      element: '#initial-0',
+      popover: {
+        title: 'Getting Started',
+        description:
+          'Welcome to Gyanmirai This screen provides an overview of the setup process. Take a moment to read through the welcome message which explains the key steps needed to configure your institute, including basic information setup and academic configurations. This guided tour will help ensure you complete all necessary setup steps correctly.',
+        position: 'bottom',
+      },
+    },
+  ],
+  basicInfo: [
+    {
+      element: '#step-label-1',
+      popover: {
+        title: 'Basic Information',
+        description:
+          "This section allows you to enter your institute's basic details. Start by providing your institute's official registered name as it appears on legal documents. This name will be used across the system and on official documents generated through Shiksha Mitra.",
+        position: 'bottom',
+      },
+    },
+    {
+      element: '#initial-1',
+      popover: {
+        title: 'Institute Logo',
+        description:
+          "Upload your institute's official logo here. The logo should be a high-quality image file (PNG or JPG) with dimensions of at least 300x300 pixels. This logo will appear on all official documents, reports, and the institute's dashboard. Make sure the image clearly represents your institute's identity and branding.",
+        position: 'right',
+      },
+    },
+  ],
+  instituteSetup: [
+    {
+      element: '#step-label-2',
+      popover: {
+        title: 'Academic Settings',
+        description:
+          "In this section, you can configure essential academic parameters for your institute. Set up your academic calendar by defining the start and end dates of the academic year. You can also configure class schedules, subjects, and other important educational settings that will form the foundation of your institute's academic operations.",
+        position: 'bottom',
+      },
+    },
+    {
+      element: '#initial-2',
+      popover: {
+        title: 'Final Review & Confirmation',
+        description:
+          "Take a moment to carefully review all the information you've entered throughout the setup process. This includes your institute's basic details, logo, contact information, and academic configurations. Ensure everything is accurate before finalizing the setup, as these settings will be used across the platform for various administrative and academic functions.",
+        position: 'bottom',
+      },
+    },
+  ],
+};
+
+/**
+ * Mapping of step index to driver.js configurations
+ */
+const stepToDriverConfig = {
+  0: driverSteps.welcome,
+  1: driverSteps.basicInfo,
+  2: driverSteps.instituteSetup,
+};
 
 /**
  * Component that renders different setup screens based on active step
@@ -99,6 +175,33 @@ const InitialSetupScreen = () => {
     2: {},
   };
 
+  React.useEffect(() => {
+    const driverConfig = driver({
+      allowClose: false,
+      showProgress: true,
+      animate: true,
+      showButtons: ['next', 'previous', 'close'],
+      popoverClass: 'driver-popover',
+      steps: stepToDriverConfig[activeStep as keyof typeof stepToDriverConfig],
+      // onNext: (step) => {
+      //   if (step.options.onNext) {
+      //     step.options.onNext();
+      //   }
+      // },
+      // onPrevious: (step) => {
+      //   if (step.options.onPrevious) {
+      //     step.options.onPrevious();
+      //   }
+      // },
+    });
+
+    driverConfig.drive();
+
+    return () => {
+      driverConfig.destroy();
+    };
+  }, [activeStep]);
+
   return (
     <Box sx={{ bgcolor: 'background.neutral' }}>
       <Container
@@ -140,6 +243,7 @@ const InitialSetupScreen = () => {
               <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
                 <Paper
                   elevation={6}
+                  id={`initial-${step}`}
                   sx={{
                     padding: 2,
                     width: '100%',

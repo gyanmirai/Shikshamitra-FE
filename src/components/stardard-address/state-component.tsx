@@ -30,7 +30,9 @@ const StateComponent = ({
       value={value}
       onChange={onChange}
       options={allState || []}
-      getOptionLabel={(option: any) => `${option?.isoCode || ''} ${option?.name}`}
+      getOptionLabel={(option: any) =>
+        `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`
+      }
       renderInput={(params) => (
         <TextField
           {...params}

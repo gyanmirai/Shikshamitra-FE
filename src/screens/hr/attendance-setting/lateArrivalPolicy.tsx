@@ -163,7 +163,7 @@ const LateArrivalPolicy = () => {
         open={leaveRuleDialog.value}
         handleClose={() => {
           leaveRuleDialog.onFalse();
-          editData(null);
+          setEditData(null);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">

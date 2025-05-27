@@ -5,7 +5,7 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Close } from '@mui/icons-material';
-import { Box, Dialog, useTheme, IconButton, Typography } from '@mui/material';
+import { Box, Dialog, Divider, useTheme, IconButton, Typography } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -72,6 +72,7 @@ const CustomDialog = ({
           <Close />
         </IconButton>
       </Box>
+      <Divider />
       {children}
     </Dialog>
   );

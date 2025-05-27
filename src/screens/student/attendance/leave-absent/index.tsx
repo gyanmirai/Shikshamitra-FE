@@ -356,11 +356,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   // State to store the selected student
   const [student, setStudent] = useState<IInquiryData | null>(null);
   // Selector to get the current board from Redux store
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update all organizations and set default organization when medium changes
   useEffect(() => {
@@ -383,7 +379,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   }, [allClass, classes]);
 
   // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+  const [getStudents, { data: StudentsData }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });

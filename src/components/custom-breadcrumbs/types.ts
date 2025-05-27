@@ -20,6 +20,8 @@ export type CustomBreadcrumbsProps = BreadcrumbsProps & {
   links: BreadcrumbsLinkProps[];
   sx?: SxProps<Theme>;
   tooltipProps?: TooltipProps;
+  isBack?: boolean;
+  onBack?: () => void;
   slotProps?: {
     action: SxProps<Theme>;
     heading: SxProps<Theme>;

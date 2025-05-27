@@ -48,8 +48,19 @@ const generalFieldValidation = Yup.object({
   class: Yup.string().required('Class is required'),
   previousSchool: Yup.string(),
   photo: Yup.string(),
-  // state: Yup.string().required('State is required'),
-  // country: Yup.string().required('Country is required'),
+  country: Yup.object()
+    .shape({ name: Yup.string().required('Country is required') })
+    .default(() => ({ name: '' }))
+    .required('Country is required'),
+
+  city: Yup.object()
+    .shape({ name: Yup.string().required('City is required') })
+    .default(() => ({ name: '' }))
+    .required('City is required'),
+  state: Yup.object()
+    .shape({ name: Yup.string().required('State is required') })
+    .default(() => ({ name: '' }))
+    .required('State is required'),
   temporaryGr: Yup.string().required('Temporary GR is required'),
 });
 

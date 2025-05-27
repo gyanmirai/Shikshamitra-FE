@@ -4,11 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { Field, Formik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
-import { Form, Field, Formik } from 'formik';
 
-import { LoadingButton } from '@mui/lab';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -96,9 +95,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
 
-  // Modal state for leave request form
-  const leaveRequestModal = useBoolean();
-
   // Mutation hook for changing leave request status
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -131,16 +127,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   };
 
   // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback(
-    (
-      inputFile: File | string,
-      values: FormValues,
-      setFieldValue: (field: string, value: any) => void
-    ) => {
-      setFieldValue('docs', '');
-    },
-    []
-  );
+  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('docs', '');
+  }, []);
 
   // Handler to remove all file attachments
   const handleRemoveAllFiles = useCallback(
@@ -246,17 +235,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         }
       }}
     >
-      {({ initialValues, errors, touched, setFieldValue, values, submitForm }) => (
-        <Form>
+      {({ initialValues, errors, touched, setFieldValue, values, submitForm, handleSubmit }) => (
+        <Box component="form" onSubmit={handleSubmit} height="600px">
           <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-            <Scrollbar sx={{ p: 2, height: '30vh' }}>
+            <Scrollbar sx={{ p: 2, height: '100%' }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                   <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                     <CustomSelect
                       isLoading={isLeavePolicyLoading}
                       options={leavePolicyData?.items || []}
-                      label="Leave Type"
+                      label="Leave Type *"
                       value={values.leaveType}
                       name="leaveType"
                       valueKey="id"
@@ -301,7 +290,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     </CustomDialog>
                   )}
                 </Grid>
-                <Grid item xs={12} md={6}>
+
+                <Grid item xs={12}>
                   <FormControlLabel
                     control={
                       <Field
@@ -309,6 +299,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                         as={Checkbox}
                         checked={values.isHalfDay}
                         disabled={editData}
+                        sx={{ py: 0, pl: 1.5 }}
                         onChange={(e: any) => {
                           setFieldValue('isHalfDay', e.target.checked);
                           if (e.target.checked) {
@@ -320,10 +311,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     label="Half Day"
                   />
                 </Grid>
-                <Grid item xs={values.isHalfDay ? 12 : 6}>
+                <Grid item xs={12}>
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
-                      label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                      label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
                       onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
                       value={values.startDate}
@@ -340,10 +331,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   </ShakingTextField>
                 </Grid>
                 {!values.isHalfDay && (
-                  <Grid item xs={6}>
+                  <Grid item xs={12}>
                     <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                       <DateTimePicker
-                        label="End Date and Time"
+                        label="End Date and Time *"
                         onChange={(value) => setFieldValue('endDate', value)}
                         value={values.endDate}
                         format="DD-MM-YYYY HH:mm:ss"
@@ -378,7 +369,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               disabled={editData}
             />
           </Grid> */}
-                <Grid item xs={6}>
+                <Grid item xs={12}>
                   <Upload
                     {...uploadProps}
                     thumbnail
@@ -393,12 +384,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       };
                     }}
                     multiple={false}
-                    onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
+                    onDelete={() => handleRemoveFile(setFieldValue)}
                     onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
                     disabled={editData}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item xs={12}>
                   <ShakingTextField error={touched.description && Boolean(errors.description)}>
                     <Editor
                       onChange={(value) => {
@@ -413,13 +404,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       slotProps={{
                         wrap: {
                           height: '100%',
+                          position: 'relative',
                         },
                       }}
                     />
                   </ShakingTextField>
                 </Grid>
 
-                <Grid item xs={12} display="flex" justifyContent="flex-end">
+                {/* <Grid item xs={12} display="flex" justifyContent="flex-end">
                   {editData && (
                     <>
                       {editData.status !== EmployeeLeaveStatusType.Rejected && (
@@ -457,7 +449,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       </LoadingButton>
                     </>
                   )}
-                </Grid>
+                </Grid> */}
                 {values.status === EmployeeLeaveStatusType.Rejected && (
                   <Grid item xs={12}>
                     <TextField
@@ -476,7 +468,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 )}
               </Grid>
             </Scrollbar>
-            <DialogActions>
+            <DialogActions sx={{ flexShrink: 0, p: 2 }}>
               {!editData && <SubmitButton loading={isLoading} />}
 
               {values.status === EmployeeLeaveStatusType.Rejected && (
@@ -484,7 +476,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               )}
             </DialogActions>
           </BackPopUpChecked>
-        </Form>
+        </Box>
       )}
     </Formik>
   );

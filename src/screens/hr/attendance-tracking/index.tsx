@@ -171,21 +171,21 @@ const DateWise = ({
         label: 'Present',
         count: counts.Present || 0,
         color: 'success',
-        icon: <Iconify icon="oui:check-in-circle-empty" />,
+        // icon: <Iconify icon="oui:check-in-circle-empty" />,
       },
       {
         value: EmployeeAttendanceStatus.FullDayLeave,
         label: 'Absent',
         count: counts.Absent || 0,
         color: 'error',
-        icon: <Iconify icon="mdi:cross-circle-outline" />,
+        // icon: <Iconify icon="mdi:cross-circle-outline" />,
       },
       {
         value: EmployeeAttendanceStatus.HalfDayLeave,
         label: 'Half-Day',
         count: counts['Half-Day'] || 0,
         color: 'warning',
-        icon: <Iconify icon="radix-icons:half-2" />,
+        // icon: <Iconify icon="radix-icons:half-2" />,
       },
     ],
     [counts]
@@ -234,7 +234,7 @@ const DateWise = ({
           <Tab
             sx={{ fontSize: '12px' }}
             key={tab.value}
-            icon={tab.icon}
+            // icon={tab.icon}
             label={
               <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                 {tab.label}{' '}
@@ -271,6 +271,7 @@ const DateWise = ({
             id: 'checkBox',
             align: 'left',
             minWidth: '60px',
+            sticky: true,
             isSort: false,
             isFilter: false,
             label: '',
@@ -312,6 +313,7 @@ const DateWise = ({
             id: 'status',
             label: 'Status',
             filterType: 'enum',
+            sticky: true,
             enumOptions: EmployeeAttendanceStatusOptions,
             render(value, row) {
               return (
@@ -392,9 +394,6 @@ const EmployeeWise = ({
     [setSearchParams]
   );
 
-  console.log('employees?.items---', employees?.items);
-  console.log('searchParams?.employeeId---', searchParams?.employeeId);
-
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -415,12 +414,14 @@ const EmployeeWise = ({
       <Box display="flex" gap={1} mb={2}>
         <Autocomplete
           options={employees?.items || []}
-          getOptionLabel={(option: any) => option.lastName}
+          getOptionLabel={(option: any) =>
+            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''}`
+          }
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Schedule Type"
-              placeholder="Search Schedule Type"
+              label="Employee"
+              placeholder="Search Employee"
               size="small"
               fullWidth
               sx={{ width: '100%', minWidth: '250px' }}
@@ -464,19 +465,26 @@ const EmployeeWise = ({
         />
       </Box>
       {searchParams?.employeeId && (
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={2} mb={2}>
           <Card
             sx={{
               maxWidth: 280,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-              color: (theme) => theme.palette.primary.main,
+              backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+              color: (theme) => theme.palette.success.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               p: 2,
             }}
           >
-            <Typography variant="subtitle1">Total Present Days</Typography>
+            <Box>
+              <Typography variant="subtitle1">Total Present Days</Typography>
 
-            <Typography variant="h3">{data?.[0]?.presentDays || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.presentDays || 0}</Typography>
+            </Box>
+
+            <Iconify icon="fluent:person-available-16-regular" width={32} />
           </Card>
           <Card
             sx={{
@@ -485,11 +493,17 @@ const EmployeeWise = ({
               width: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
               color: (theme) => theme.palette.error.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <Typography variant="subtitle1">Full Day Leave</Typography>
+            <Box>
+              <Typography variant="subtitle1">Full Day Leave</Typography>
 
-            <Typography variant="h3">{data?.[0]?.leaveDays || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.leaveDays || 0}</Typography>
+            </Box>
+            <Iconify icon="fluent-mdl2:leave-user" width={32} />
           </Card>
           <Card
             sx={{
@@ -498,11 +512,17 @@ const EmployeeWise = ({
               width: '100%',
               backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
               color: (theme) => theme.palette.warning.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <Typography variant="subtitle1">Half Day Leave</Typography>
+            <Box>
+              <Typography variant="subtitle1">Half Day Leave</Typography>
 
-            <Typography variant="h3">{data?.[0]?.halfDayLeaves || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 0}</Typography>
+            </Box>
+            <Iconify icon="mdi:fraction-one-half" width={32} />
           </Card>
         </Box>
       )}
@@ -518,6 +538,7 @@ const EmployeeWise = ({
               id: 'checkBox',
               align: 'left',
               minWidth: '60px',
+              sticky: true,
               isSort: false,
               isFilter: false,
               label: '',
@@ -564,6 +585,7 @@ const EmployeeWise = ({
             {
               id: 'status',
               label: 'Status',
+              sticky: true,
               render(value: number, row) {
                 const status = EmployeeAttendanceStatus[row.statusType];
                 return (

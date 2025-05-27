@@ -10,12 +10,10 @@ import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
-  Radio,
   Button,
   Switch,
   Tooltip,
   TextField,
-  RadioGroup,
   Typography,
   DialogActions,
   FormControlLabel,
@@ -59,7 +57,6 @@ const LeavePolicy = () => {
   const dialog = useBoolean(false);
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
-  console.log('🚀 ~ file: leave-policy.tsx:55 ~ LeavePolicy ~ editData:', editData);
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
@@ -210,38 +207,7 @@ const LeavePolicy = () => {
             },
           },
         ]}
-        data={[
-          {
-            id: '1',
-            leaveType: 'Annual Leave',
-            leaveDays: '20',
-            isCarryForward: 'Yes',
-            accrualRateString: 'Monthly',
-            color: '#FF5733',
-            carryForward: true,
-            accrualRate: 0,
-          },
-          {
-            id: '2',
-            leaveType: 'Sick Leave',
-            leaveDays: '10',
-            isCarryForward: 'No',
-            accrualRateString: 'Yearly',
-            color: '#33FF57',
-            carryForward: false,
-            accrualRate: 1,
-          },
-          {
-            id: '3',
-            leaveType: 'Maternity Leave',
-            leaveDays: '90',
-            isCarryForward: 'No',
-            accrualRateString: 'Yearly',
-            color: '#3357FF',
-            carryForward: false,
-            accrualRate: 1,
-          },
-        ]}
+        data={tableData || []}
       />
 
       <CustomDialog
@@ -441,7 +407,7 @@ export const LeavePolicyForm = ({
                 size="small"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            {/* <Grid item xs={12} md={6}>
               <Typography variant="subtitle2" gutterBottom>
                 Is Negative Balance Allowed
               </Typography>
@@ -718,7 +684,7 @@ export const LeavePolicyForm = ({
                 <FormControlLabel value="No Limit" control={<Radio />} label="No Limit" />
                 <FormControlLabel value="Set Limit" control={<Radio />} label="Set Limit" />
               </RadioGroup>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Scrollbar>
         <DialogActions>

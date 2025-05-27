@@ -39,7 +39,7 @@ const CityComponent = ({
       )}
       disabled={!stateValue}
       options={allCities || []}
-      getOptionLabel={(option: any) => `${option?.name}`}
+      getOptionLabel={(option: any) => `${option?.name || ''}`}
       renderInput={(params) => (
         <TextField
           {...params}

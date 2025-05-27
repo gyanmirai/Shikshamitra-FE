@@ -9,7 +9,15 @@ import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import React, { useMemo, useState, Fragment, useEffect, useCallback } from 'react';
+import React, {
+  useRef,
+  useMemo,
+  useState,
+  Fragment,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -91,14 +99,75 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [columns]
   );
 
-  const totalRows = data.length; // Get total number of rows
+  // const totalRows = data.length; // Get total number of rows
 
-  const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
+  // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
 
-  const handleSendNotification = () => {
-    // sendInstantNotificationDialogValue.onTrue();
-    // const selectedRowIds = Array.from(selectedRows);
-    // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
+  // const handleSendNotification = () => {
+  //   // sendInstantNotificationDialogValue.onTrue();
+  //   // const selectedRowIds = Array.from(selectedRows);
+  //   // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
+  // };
+
+  const [stickyMap, setStickyMap] = useState<{
+    left: Record<string, number>;
+    right: Record<string, number>;
+  }>({ left: {}, right: {} });
+  const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+
+  useLayoutEffect(() => {
+    const leftSticky: { col: IColumn; idx: number }[] = [];
+    const rightSticky: { col: IColumn; idx: number }[] = [];
+
+    // Divide sticky columns into left and right halves
+    const stickyCols = columns.filter((col) => col.sticky);
+    const half = Math.ceil(stickyCols.length / 2);
+
+    columns.forEach((col, idx) => {
+      if (col.sticky) {
+        const indexInSticky = stickyCols.findIndex((sc) => sc.id === col.id);
+        if (indexInSticky < half) {
+          leftSticky.push({ col, idx });
+        } else {
+          rightSticky.push({ col, idx });
+        }
+      }
+    });
+
+    const leftOffsets: Record<string, number> = {};
+    let left = 0;
+    leftSticky.forEach(({ col, idx }) => {
+      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
+      leftOffsets[col.id as string] = left;
+      left += width;
+    });
+
+    const rightOffsets: Record<string, number> = {};
+    let right = 0;
+    [...rightSticky].reverse().forEach(({ col, idx }) => {
+      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
+      rightOffsets[col.id as string] = right;
+      right += width;
+    });
+
+    setStickyMap({ left: leftOffsets, right: rightOffsets });
+  }, [columns]);
+
+  const getStickyStyle = (col: IColumn): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: col.sticky ? 'sticky' : 'static',
+      background: col.sticky ? '#fff' : undefined,
+    };
+
+    const colId = col.id as string;
+    if (stickyMap.left[colId] !== undefined) {
+      return { ...base, left: stickyMap.left[colId] };
+    }
+    if (stickyMap.right[colId] !== undefined) {
+      return { ...base, right: stickyMap.right[colId] };
+    }
+
+    return base;
   };
 
   const [tableConfig, setTableConfig] = useState<IParams>({
@@ -645,12 +714,15 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                       <TableCell
                         key={column.id}
                         align={column.align || 'center'}
+                        ref={(el) => {
+                          headerRefs.current[index] = el as HTMLTableCellElement;
+                        }}
                         sx={{
                           fontSize: '14px',
                           width: column.minWidth,
 
-                          position: 'sticky',
-                          left: column.sticky ? 0 : 'auto',
+                          // @ts-ignore
+                          left: column.sticky ? stickyMap[column.id] : 'auto',
                           right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
                           zIndex: column.sticky ? 99 : 10,
                           backgroundColor: column.sticky ? 'background.paper' : 'transparent',
@@ -678,6 +750,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           '&:last-child::after': {
                             borderRight: 'none',
                           },
+                          ...getStickyStyle(column),
+                          position: 'sticky',
                         }}
                       >
                         <Box
@@ -807,11 +881,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                 alignItems: 'center',
                                 fontSize: '13px',
                                 position: column.sticky ? 'sticky' : 'static',
-                                left: column.sticky ? 0 : 'auto',
+                                // @ts-ignore
+                                left: column.sticky ? stickyMap[column.id] : 'auto',
                                 right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
                                 zIndex: column.sticky ? 10 : 2,
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                ...getStickyStyle(column),
                               }}
                             >
                               {column.render

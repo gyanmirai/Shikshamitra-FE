@@ -70,7 +70,12 @@ const CustomSelect = <T extends string, J extends boolean>({
   };
 
   return (
-    <FormControl size="small" error={error} sx={{ width: '100%' }} {...formControlProps}>
+    <FormControl
+      size="small"
+      error={error}
+      sx={{ width: '100%', position: 'relative' }}
+      {...formControlProps}
+    >
       <InputLabel size="small" sx={{ fontSize: '14px' }}>
         {label}
       </InputLabel>
@@ -123,12 +128,12 @@ const CustomSelect = <T extends string, J extends boolean>({
 
       {addOtherItemText !== '' && (
         <Typography
-          variant="body2"
+          component="span"
           fontWeight={500}
           textAlign="right"
           color="primary.main"
           fontSize={12}
-          sx={{ cursor: 'pointer' }}
+          sx={{ cursor: 'pointer', position: 'absolute', bottom: '-20px', right: '0' }}
           onClick={addOtherItemOnClick}
         >
           {addOtherItemText}
