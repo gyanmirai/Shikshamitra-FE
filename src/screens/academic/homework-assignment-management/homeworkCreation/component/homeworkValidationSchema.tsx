@@ -2,7 +2,6 @@ import * as Yup from 'yup';
 
 export const homeworkValidationSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
-  description: Yup.string().required('Description is required'),
   class: Yup.string().required('Class is required'),
   division: Yup.array()
     .of(Yup.string().required('Division is required'))
@@ -23,7 +22,6 @@ export const homeworkValidationSchema = Yup.object().shape({
   status: Yup.string().oneOf(['draft', 'publish']),
 
   isDailyTask: Yup.boolean(),
-  dayOfSubmission: Yup.string(),
   endDate: Yup.date().nullable(),
 
   parentAcknowledgement: Yup.boolean(),

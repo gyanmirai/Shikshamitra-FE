@@ -15,7 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { StudentSubmissions } from './homeworkCreation/component/studentSubmission';
+import { StudentSubmissions } from './assignmentCreation/studentSubmission/studentSubmission';
 
 const StudentSubmission = (props: TabComponentType) => {
   // Dialog state for modal/popup control

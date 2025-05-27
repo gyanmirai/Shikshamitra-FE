@@ -1,6 +1,6 @@
 export enum PublishUnpublishStatusType {
-  'Publish' = 'Publish',
-  'Draft' = 'Draft',
+  Publish,
+  Draft,
 }
 
 export const PublishUnpublishStatusOptions = [

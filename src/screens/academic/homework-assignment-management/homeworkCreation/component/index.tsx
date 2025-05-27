@@ -1,11 +1,15 @@
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import React, { useState } from 'react';
+import dayjs from 'dayjs';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -16,10 +20,13 @@ import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-tab
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import HomeworkForm from './homeworkForm';
 import HomeworkTable from './homeworkTable';
+import ViewHomeworkDetails from './viewHomeworkDetails';
+import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmission';
 
 import type { IHomework } from '../type';
 
@@ -30,6 +37,46 @@ const HomeworkCreation = (props: TabComponentType) => {
   const deleteHomeworkDialog = useBoolean();
   // Dialog state for publishing homework assignments
   const publishHomeworkDialog = useBoolean();
+  // Dialog state for viewing homework assignment details
+  const viewHomeworkDetailDialog = useBoolean();
+  // Dialog state for viewing homework submissions from students
+  const viewHomeworkSubmissionDialog = useBoolean();
+  // State to store all organizations/stages from the selected medium
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [subject, setSubject] = useState('');
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClass] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  // State to store and update the selected date using dayjs
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClass(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
 
   // Controls form visibility
   const [open, setOpen] = useState(false);
@@ -59,15 +106,69 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          onClick={addHomeworkDialog.onTrue}
-          startIcon={<Add />}
-          size="small"
-        >
-          Homework
-        </Button>
+      <Box display="flex" gap={2} justifyContent="space-between" mb={2}>
+        <Box display="flex" gap={2}>
+          <CustomSelect
+            options={allClass}
+            label="Class"
+            value={classes}
+            onChange={(val) => setClass(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+          />
+          <CustomSelect
+            options={allDivision}
+            label="Division"
+            value={division}
+            onChange={(val) => setDivision(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!classes}
+          />
+          <CustomSelect
+            options={[
+              { id: '1', name: 'Mathematics' },
+              { id: '2', name: 'Science' },
+              { id: '3', name: 'English' },
+              { id: '4', name: 'History' },
+              { id: '5', name: 'Geography' },
+              { id: '6', name: 'Physics' },
+              { id: '7', name: 'Chemistry' },
+              { id: '8', name: 'Biology' },
+            ]}
+            label="Subject"
+            value={subject}
+            onChange={(val) => setSubject(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!division}
+          />
+          <DatePicker
+            label="Homework Date"
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            name="date"
+            value={date}
+            onChange={(val) => {
+              setDate(val);
+            }}
+            format="DD/MM/YYYY"
+            sx={{ minWidth: '250px' }}
+          />
+        </Box>
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            variant="contained"
+            onClick={addHomeworkDialog.onTrue}
+            startIcon={<Add />}
+            size="small"
+            disabled={!date || dayjs(date).isBefore(dayjs().startOf('day'))}
+          >
+            Homework
+          </Button>
+        </Box>
       </Box>
 
       <CustomDialog
@@ -80,6 +181,9 @@ const HomeworkCreation = (props: TabComponentType) => {
         maxWidth="md"
       >
         <HomeworkForm
+          classes={classes}
+          division={division}
+          subject={subject}
           dialog={addHomeworkDialog}
           onClose={() => {
             handleClose(null, false);
@@ -106,7 +210,12 @@ const HomeworkCreation = (props: TabComponentType) => {
           deleteHomeworkDialog.onTrue();
         }}
         onViewDetails={(row) => {
-          console.log('View clicked', row); // or navigate to a details page/modal
+          viewHomeworkDetailDialog.onTrue();
+          setSelectedHomework(row);
+        }}
+        onViewSubmission={(row) => {
+          viewHomeworkSubmissionDialog.onTrue();
+          setSelectedHomework(row);
         }}
       />
 
@@ -148,6 +257,33 @@ const HomeworkCreation = (props: TabComponentType) => {
           </Button>
         }
       />
+
+      {/* View subject details dialog */}
+      <CustomDialog
+        title={selectedHomework?.title || 'Homework Details'}
+        open={viewHomeworkDetailDialog.value}
+        handleClose={() => {
+          viewHomeworkDetailDialog.onFalse();
+          setSelectedHomework(null);
+        }}
+        maxWidth="md"
+      >
+        <ViewHomeworkDetails homework={selectedHomework} />
+      </CustomDialog>
+
+      <CustomDialog
+        title={selectedHomework?.title || 'Homework Details'}
+        open={viewHomeworkSubmissionDialog.value}
+        handleClose={() => {
+          viewHomeworkSubmissionDialog.onFalse();
+          setSelectedHomework(null);
+        }}
+        maxWidth="lg"
+      >
+        <Box sx={{ p: 2 }}>
+          <StudentSubmissions selectedHomework={selectedHomework} />
+        </Box>
+      </CustomDialog>
     </Box>
   );
 };

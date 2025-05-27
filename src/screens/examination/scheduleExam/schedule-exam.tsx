@@ -10,6 +10,8 @@ import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import examTableData from 'src/json/examination/examTableData.json';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -103,7 +105,7 @@ const ScheduleExam = (props: TabComponentType) => {
                   }
             }
           >
-            {open ? 'Back' : 'Scheudle Exam'}
+            {open ? 'Back' : 'Schedule Exam'}
           </Button>
         }
       />
@@ -140,16 +142,17 @@ const ScheduleExam = (props: TabComponentType) => {
           setSelectedExam(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Exam ?"
         action={
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExam?.id);
             }}
           >
-            Yes
+            Delete
           </Button>
         }
       />

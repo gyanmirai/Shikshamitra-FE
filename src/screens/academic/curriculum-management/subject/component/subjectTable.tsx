@@ -176,7 +176,7 @@ const SubjectTable = ({
           isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
-          render: (value: PublishUnpublishStatusType, row: any) => (
+          render: (value, row) => (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Switch
                 size="small"

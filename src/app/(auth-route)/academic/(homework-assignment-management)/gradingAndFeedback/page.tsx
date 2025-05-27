@@ -1,7 +1,7 @@
 import React from 'react';
 
-import GradingAndFeedback from 'src/screens/academic/homework-assignment-management/gradingAndFeedback';
+import MarksFeedbackHomeworkAssignment from 'src/screens/academic/homework-assignment-management/marksAndFeedback';
 
-const GradingAndFeedbackScreen = () => <GradingAndFeedback />;
+const page = () => <MarksFeedbackHomeworkAssignment />;
 
-export default GradingAndFeedbackScreen;
+export default page;

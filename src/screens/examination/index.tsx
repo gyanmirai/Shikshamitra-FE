@@ -14,7 +14,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
-import QuizManagement from './quizManagement';
+import QuizManagement from './quiz';
 import GradeEntry from './gradeEntry/gradeEntry';
 import ScheduleExam from './scheduleExam/schedule-exam';
 import GradingAndAnalytics from './gradingAndAnalytics';

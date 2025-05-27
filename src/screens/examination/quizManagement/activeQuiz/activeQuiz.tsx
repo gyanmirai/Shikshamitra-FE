@@ -7,6 +7,8 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 import activeQuizTableData from 'src/json/academic/examination/activeQuizTableData.json';
@@ -37,6 +39,8 @@ const ActiveQuiz = () => {
   const handleAttemptClick = (row: any) => {
     setOpen(true);
   };
+  const viewSubmissionDialog = useBoolean();
+  const viewAnalyticsDialog = useBoolean();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -52,7 +56,7 @@ const ActiveQuiz = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        {open ? (
+        {addQuizDialog.value ? (
           <Button
             startIcon={<Iconify icon="mdi:arrow-back" />}
             variant="contained"
@@ -98,7 +102,7 @@ const ActiveQuiz = () => {
         handleClose={addQuizDialog.onFalse}
         title="New Quiz"
       >
-        <AddNewQuiz onClose={handleClose} />
+        <AddNewQuiz dialog={addQuizDialog} onClose={handleClose} />
       </CustomDialog>
 
       <ConfirmDialog
@@ -107,10 +111,15 @@ const ActiveQuiz = () => {
           deleteQuizDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Quiz?"
         action={
-          <Button variant="contained" color="error" onClick={() => {}}>
-            Yes
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            variant="contained"
+            color="error"
+            onClick={() => {}}
+          >
+            Delete
           </Button>
         }
       />

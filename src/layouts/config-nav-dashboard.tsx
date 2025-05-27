@@ -870,25 +870,25 @@ const academicModule = {
           shortcutKeyName: 'Alt+A+H',
           children: [
             {
-              title: 'Dashboard',
-              path: '/academic/homeworkDashboard',
-              _action: 'homework-assignment-management-homeworkDashboard',
-              shortcutKey: 'Alt+A+H+1',
-              shortcutKeyName: 'Alt+A+H+1',
-            },
-            {
-              title: 'Homework and Assignment Creation',
+              title: 'Add Homework/Assignment',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
             },
             {
-              title: 'Grading And Feedback',
+              title: 'Add Marks/Feedback',
               path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',
               shortcutKeyName: 'Alt+A+H+3',
+            },
+            {
+              title: 'My Submission',
+              path: '/academic/mySubmission',
+              _action: 'homework-assignment-management-mySubmission',
+              shortcutKey: 'Alt+A+H+4',
+              shortcutKeyName: 'Alt+A+H+4',
             },
             {
               title: 'Setting',
@@ -914,13 +914,6 @@ const academicModule = {
           shortcutKeyName: 'Alt+E+1',
           children: [
             {
-              title: 'Dashboard',
-              path: '/academic/examinationDashboard',
-              _action: 'examination-homeworkDashboard',
-              shortcutKey: 'Alt+E+1+1',
-              shortcutKeyName: 'Alt+E+1+1',
-            },
-            {
               title: 'Schedule Exam',
               path: '/academic/scheduleExam',
               _action: 'academic-scheduleExam',
@@ -935,25 +928,11 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+3',
             },
             {
-              title: 'Assessment',
-              path: '/academic/assessmentManagement',
-              _action: 'academic-assessmentManagement',
-              shortcutKey: 'Alt+E+1+4',
-              shortcutKeyName: 'Alt+E+1+4',
-            },
-            {
               title: 'Quiz Management',
               path: '/academic/quizManagement',
               _action: 'academic-quizManagement',
               shortcutKey: 'Alt+E+1+5',
               shortcutKeyName: 'Alt+E+1+5',
-            },
-            {
-              title: 'Student Performance And Analytics',
-              path: '/academic/studentPerformanceAndAnalytics',
-              _action: 'academic-studentPerformanceAndAnalytics',
-              shortcutKey: 'Alt+E+1+6',
-              shortcutKeyName: 'Alt+E+1+6',
             },
             {
               title: 'Settings',

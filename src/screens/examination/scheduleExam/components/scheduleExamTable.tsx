@@ -101,8 +101,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       <CustomizableTable
         tableId="schedule-exam-table"
         searchFieldProps={{
-          placeholder: 'Search by Class, Subject Name...',
-          label: 'Search by Class, Subject Name...',
+          placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
+          label: 'Search by Class, Division, Exam Type,  Subject Name...',
+          sx: {
+            maxWidth: '500px',
+            width: '100%',
+          },
         }}
         noDataText={
           <>
@@ -127,12 +131,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           </>
         }
         columns={[
-          { id: 'className', label: 'Class', align: 'left', minWidth: 250 },
+          { id: 'className', label: 'Class', align: 'left' },
           {
             id: 'divisions',
             label: 'Division',
             align: 'left',
-            minWidth: 250,
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((division: string) => (
@@ -141,12 +144,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               </Box>
             ),
           },
-          { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 250 },
+          { id: 'examType', label: 'Exam Type', align: 'left' },
           {
             id: 'subjects',
             label: 'Subjects',
             align: 'left',
-            minWidth: 250,
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                 {value.map((subject: ISubjectDetail) => (

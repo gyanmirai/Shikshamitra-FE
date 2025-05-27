@@ -31,7 +31,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType) || false}>
             <CustomSelect
               options={[
@@ -43,7 +43,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               onChange={(val) => {
                 formik.setFieldValue('examType', val);
               }}
-              label="Exam Type"
+              label="Exam Type *"
               isLoading={isLoading}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.examType && formik.errors.examType)}
@@ -54,19 +54,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }
             />
           </ShakingTextField>
-          <Typography
-            variant="body2"
-            fontWeight={500}
-            textAlign="right"
-            color="primary.main"
-            fontSize={12}
-            sx={{ cursor: 'pointer' }}
-            onClick={() => {
-              examTypeDialog.onTrue();
-            }}
-          >
-            Add Exam Type
-          </Typography>
+          <Box mt={1} display="flex" justifyContent="flex-end">
+            <Typography
+              variant="body2"
+              fontWeight={500}
+              color="primary.main"
+              fontSize={12}
+              sx={{ cursor: 'pointer' }}
+              onClick={() => examTypeDialog.onTrue()}
+            >
+              Add Exam Type
+            </Typography>
+          </Box>
           <CustomDialog
             title="Create Exam Type"
             open={examTypeDialog.value}
@@ -81,12 +80,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </CustomDialog>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName) || false}>
             <TextField
               fullWidth
-              label="Exam Name"
+              label="Exam Name *"
               name="examName"
+              placeholder="Enter Exam Name"
               value={formik.values.examName}
               onChange={formik.handleChange}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
@@ -95,7 +95,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField
             error={!!(formik.touched.className && formik.errors.className) || false}
           >
@@ -119,7 +119,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField
             error={!!(formik.touched.divisions && formik.errors.divisions) || false}
           >
@@ -148,7 +148,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects) || false}>
             <CustomSelect
               options={[

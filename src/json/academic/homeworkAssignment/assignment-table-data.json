@@ -4,16 +4,21 @@
     "description": "Solve all problems from Chapter 5: Trigonometric Ratios.",
     "class": "10th Grade",
     "division": ["A", "B"],
-    "subjects": ["Mathematics"],
-    "submissionType": "Online",
+    "subjects": "Mathematics",
+    "submissionType": "file_upload",
     "dueDate": "2025-06-03T00:00:00.000Z",
     "attachments": [],
     "createdBy": "teacher01",
-    "status": "draft",
+    "status": 0,
     "assignmentType": "Worksheet",
-    "rubricRequired": true,
-    "rubric": "Accuracy, Steps, Presentation",
-    "rubricAttachment": [],
+    "rubric": [
+      {
+        "name": "trigonometry-rubric.pdf",
+        "size": 234567,
+        "type": "application/pdf",
+        "base64": "data:application/pdf;base64,JVBERi0xLjQKJc..."
+      }
+    ],
     "isScheduled": true,
     "scheduleDate": "2025-05-30T00:00:00.000Z",
     "todaysDate": "2025-05-22T00:00:00.000Z"
@@ -23,16 +28,21 @@
     "description": "Prepare a presentation on causes and effects of WWII.",
     "class": "9th Grade",
     "division": ["C"],
-    "subjects": ["History"],
-    "submissionType": "Offline",
+    "subjects": "History",
+    "submissionType": "online_text",
     "dueDate": "2025-06-10T00:00:00.000Z",
     "attachments": [],
     "createdBy": "teacher02",
-    "status": "published",
+    "status": 1,
     "assignmentType": "Presentation",
-    "rubricRequired": false,
-    "rubric": "",
-    "rubricAttachment": [],
+    "rubric": [
+      {
+        "name": "history-assignment-guidelines.docx",
+        "size": 154321,
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "base64": "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,UEsDBBQABg..."
+      }
+    ],
     "isScheduled": false,
     "scheduleDate": null,
     "todaysDate": "2025-05-22T00:00:00.000Z"
@@ -42,16 +52,21 @@
     "description": "Create a working model to demonstrate electric circuits.",
     "class": "8th Grade",
     "division": ["A", "B", "C"],
-    "subjects": ["Science"],
-    "submissionType": "Online",
+    "subjects": "Science",
+    "submissionType": "file_upload",
     "dueDate": "2025-06-15T00:00:00.000Z",
     "attachments": [],
     "createdBy": "teacher03",
-    "status": "archived",
+    "status": 0,
     "assignmentType": "Project",
-    "rubricRequired": true,
-    "rubric": "Innovation, Functionality, Explanation",
-    "rubricAttachment": [],
+    "rubric": [
+      {
+        "name": "electricity-model-rubric.pdf",
+        "size": 198765,
+        "type": "application/pdf",
+        "base64": "data:application/pdf;base64,UEsDBBQAAAAIA..."
+      }
+    ],
     "isScheduled": true,
     "scheduleDate": "2025-06-01T00:00:00.000Z",
     "todaysDate": "2025-05-22T00:00:00.000Z"

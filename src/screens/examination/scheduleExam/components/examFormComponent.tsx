@@ -7,7 +7,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import SelectExam from './selectExamStep1';
 import ExamDetails from './examDetailsStep2';
-import AssignTeachers from './assignTeacherStep4';
 import { validationSchema } from '../validationSchema';
 import EvaluationCriteria from './evaluationCriteriaStep3';
 
@@ -16,7 +15,7 @@ import type { INewExamFormProps } from '../type';
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   // Active step for stepper navigation
   const [activeStep, setActiveStep] = useState(0);
-  const allTimetableSteps = [SelectExam, ExamDetails, EvaluationCriteria, AssignTeachers];
+  const allTimetableSteps = [SelectExam, ExamDetails, EvaluationCriteria];
 
   return (
     <CustomStepperWithFormik
@@ -29,7 +28,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         subjects: [],
         description: '',
       }}
-      steps={['Select Exam Type', 'Exam Details', 'Evaluation Criteria', 'Assign Teacher & Review']}
+      steps={['Select Exam Type', 'Exam Details', 'Evaluation Criteria']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);

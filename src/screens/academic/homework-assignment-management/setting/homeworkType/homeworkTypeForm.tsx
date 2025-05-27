@@ -44,7 +44,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
                     fullWidth
                     size="small"
                     name="homeworkTypeName"
-                    label="Homework Type Name"
+                    label="Homework Type Name *"
                     placeholder="Enter Homework Type"
                     value={formik.values.homeworkTypeName}
                     onChange={formik.handleChange}

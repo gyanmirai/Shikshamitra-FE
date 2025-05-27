@@ -1,7 +1,7 @@
 import React from 'react';
 
-import StudentSubmission from 'src/screens/academic/homework-assignment-management/student-submission';
+import MarksFeedbackHomeworkAssignment from 'src/screens/academic/homework-assignment-management/marksAndFeedback';
 
-const StudentSubmissionScreen = () => <StudentSubmission />;
+const StudentSubmissionScreen = () => <MarksFeedbackHomeworkAssignment />;
 
 export default StudentSubmissionScreen;

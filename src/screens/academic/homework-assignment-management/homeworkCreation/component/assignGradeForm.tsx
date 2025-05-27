@@ -1,18 +1,32 @@
 'use client';
 
+import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
+
 import { useFormik } from 'formik';
-import { PDFViewer } from '@react-pdf/renderer';
 
-import { Box, Grid, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Tooltip,
+  TextField,
+  Typography,
+  IconButton,
+  DialogActions,
+} from '@mui/material';
 
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
+import { GlobalIcons } from 'src/utils/icons';
 
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
+
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { assignGradeValidationSchema } from './validationSchema';
+import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
 
 import type { IAssignGradeProps } from '../type';
 
@@ -21,7 +35,7 @@ import type { IAssignGradeProps } from '../type';
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
   /**
    * Initialize formik form with grade and feedback fields
    * @param initialValues Object containing initial grade and feedback values from data prop
@@ -29,76 +43,103 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ data, onSubmit }: IAssignGra
    */
   const formik = useFormik({
     initialValues: {
-      grade: data?.grade || '',
+      totalMarks: data?.totalMarks || '',
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
-    onSubmit(values) {
-      onSubmit(values);
-    },
+    onSubmit(values) {},
   });
+
+  const handleDownload = (doc: IDocument) => {
+    window.open(doc.url, '_blank');
+  };
 
   return (
     <Box display="flex" flexDirection="column" gap={2} p={1}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '70vh' }}>
-          <PDFViewer width="100%" height="800">
-            <CertificateDocument />
-          </PDFViewer>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <ShakingTextField error={!!(formik.touched.grade && formik.errors.grade) || false}>
-                <CustomSelect
-                  options={[
-                    { value: 'A+', label: 'A+' },
-                    { value: 'A', label: 'A' },
-                    { value: 'A-', label: 'A-' },
-                    { value: 'B+', label: 'B+' },
-                    { value: 'B', label: 'B' },
-                    { value: 'B-', label: 'B-' },
-                    { value: 'C+', label: 'C+' },
-                    { value: 'C', label: 'C' },
-                    { value: 'C-', label: 'C-' },
-                    { value: 'D', label: 'D' },
-                    { value: 'F', label: 'F' },
-                  ]}
-                  label="Grade"
-                  name="grade"
-                  value={formik.values.grade}
-                  onChange={(val) => {
-                    formik.setFieldValue('grade', val);
-                  }}
-                  formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                  error={formik.touched.grade && Boolean(formik.errors.grade)}
-                  helperText={
-                    formik.touched.grade && formik.errors.grade ? formik.errors.grade : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <form onSubmit={formik.handleSubmit}>
+          <Scrollbar sx={{ p: 2, height: '350px' }}>
+            <Grid container spacing={2} mt={1}>
+              <Card
+                key={document.id}
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
               >
-                <TextField
-                  placeholder="Detailed Feedback"
-                  multiline
-                  rows={3}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {getFileIconByType(document.type ?? 'txt', 32)}
+                  <Box>
+                    <Typography variant="subtitle2">{document.name}</Typography>
+                    {document.size && (
+                      <Typography variant="body2" color="text.secondary">
+                        {document.size}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                <Tooltip title="Preview">
+                  <IconButton
+                    edge="end"
+                    aria-label="preview"
+                    onClick={() => handleDownload(document)}
+                  >
+                    <Iconify icon={GlobalIcons.eye} />
+                  </IconButton>
+                </Tooltip>
+              </Card>
+              <Grid item xs={12}>
+                <ShakingTextField
+                  error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+                >
+                  <TextField
+                    placeholder="Enter Feedback"
+                    label="Feedback"
+                    multiline
+                    size="small"
+                    disabled={!isEdit}
+                    rows={3}
+                    fullWidth
+                    name="feedback"
+                    value={formik.values.feedback}
+                    onChange={formik.handleChange}
+                    error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                    helperText={formik.touched.feedback && formik.errors.feedback}
+                  />
+                </ShakingTextField>
+              </Grid>
             </Grid>
-          </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <SubmitButton onClick={() => {}} />
-        </DialogActions>
-      </form>
+          </Scrollbar>
+          <DialogActions>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                onClose(null, false);
+              }}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              type="submit"
+              onClick={() => {
+                formik.handleSubmit();
+              }}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Submit
+            </Button>
+          </DialogActions>
+        </form>
+      </BackPopUpChecked>
     </Box>
   );
 };

@@ -1,0 +1,68 @@
+[
+    {
+      "id": "1",
+      "title": "Algebra Worksheet",
+      "subject": "Mathematics",
+      "createdBy": "Mr. Sharma",
+      "submissionType": "Online",
+      "submissionStatus": 0,
+      "marksStatus": 1,
+      "endDate": "01-06-2025",
+      "status": 0,
+      "homeworkType": "Regular",
+      "class": "10th Grade"
+    },
+    {
+      "id": "2",
+      "title": "Science Project Report",
+      "subject": "Science",
+      "createdBy": "Ms. Verma",
+      "submissionType": "Offline",
+      "submissionStatus": 1,
+      "marksStatus": 1,
+      "endDate": "03-06-2025",
+      "status": 0,
+      "homeworkType": "Regular",
+      "class": "10th Grade"
+    },
+    {
+      "id": "3",
+      "title": "Essay on Climate Change",
+      "subject": "English",
+      "createdBy": "Mr. Iyer",
+      "submissionType": "Online",
+      "submissionStatus": 0,
+      "marksStatus": 0,
+      "endDate": "30-05-2025",
+      "status": 0,
+      "homeworkType": "Regular",
+      "class": "10th Grade"
+    },
+    {
+      "id": "4",
+      "title": "World War II Summary",
+      "subject": "History",
+      "createdBy": "Mrs. Khan",
+      "submissionType": "Offline",
+      "submissionStatus": 1,
+      "marksStatus": 0,
+      "endDate": "02-06-2025",
+      "status": 0,
+      "homeworkType": "Regular",
+      "class": "10th Grade"
+    },
+    {
+      "id": "5",
+      "title": "Laws of Motion Problems",
+      "subject": "Physics",
+      "createdBy": "Dr. Rao",
+      "submissionType": "Online",
+      "submissionStatus": 0,
+      "marksStatus": 1,
+      "endDate": "04-06-2025",
+      "status": 0,
+      "homeworkType": "Regular",
+      "class": "10th Grade"
+    }
+  ]
+  

@@ -44,9 +44,10 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                 <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
                   <TextField
                     fullWidth
-                    label="Title"
+                    label="Title *"
                     name="name"
                     size="small"
+                    placeholder="Enter Title"
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     error={formik.touched.name && Boolean(formik.errors.name)}
@@ -64,9 +65,10 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                 >
                   <TextField
                     fullWidth
-                    label="Total Marks"
+                    label="Total Marks *"
                     name="totalMarks"
                     size="small"
+                    placeholder="Enter Total Marks"
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}
                     error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
@@ -97,9 +99,10 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                     <Grid item xs={12} md={3}>
                       <TextField
                         fullWidth
-                        label="Min Marks"
+                        label="Min Marks *"
                         name={`gradingScale.${index}.minMarks`}
                         size="small"
+                        placeholder="Enter Min Marks"
                         value={scale.minMarks}
                         onChange={formik.handleChange}
                         // error={
@@ -111,9 +114,10 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                     <Grid item xs={12} md={3}>
                       <TextField
                         fullWidth
-                        label="Max Marks"
+                        label="Max Marks *"
                         name={`gradingScale.${index}.maxMarks`}
                         size="small"
+                        placeholder="Enter Max Marks"
                         value={scale.maxMarks}
                         onChange={formik.handleChange}
                         // error={
@@ -155,7 +159,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                     </Grid>
                     <Grid item xs={12} md={1}>
                       <Iconify
-                        icon="mdi:trash"
+                        icon={GlobalIcons.delete}
                         onClick={() => {
                           const updatedGradingScale = [...formik.values.gradingScale]; // Copy array
                           updatedGradingScale.splice(index, 1); // Remove row

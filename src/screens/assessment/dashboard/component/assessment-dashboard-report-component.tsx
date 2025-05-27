@@ -4,8 +4,6 @@ import { DatePicker } from '@mui/x-date-pickers';
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, alpha, useTheme, Typography } from '@mui/material';
 
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
 import CustomSelect from 'src/components/custom-select';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
@@ -70,45 +68,6 @@ const AssessmentDashboardReportComponent = () => {
               ],
             }}
             sx={{ height: '100%' }}
-          />
-        </Grid2>
-
-        <Grid2 xs={12} md={6}>
-          <PerformanceOverTime
-            id="demo-for-assessment-report"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                {
-                  name: 'Maths',
-                  data: [10, 41, 35, 51, 49, 62, 69, 91, 35, 51, 49, 12],
-                },
-                {
-                  name: 'Science',
-                  data: [49, 51, 35, 10, 41, 35, 51, 49, 62, 69, 91, 12],
-                },
-              ],
-              options: {
-                legend: {
-                  show: true,
-                  position: 'top',
-                },
-              },
-            }}
-            sx={{ height: '100%', boxShadow: 'none' }}
           />
         </Grid2>
       </Grid2>

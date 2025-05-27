@@ -7,7 +7,6 @@ import {
   Box,
   Tab,
   Tabs,
-  Avatar,
   Divider,
   Accordion,
   Typography,
@@ -97,16 +96,6 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
           >
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar
-                  sx={{
-                    bgcolor: subject?.subjects?.[0]?.subjectColor || 'primary.main',
-                    width: 56,
-                    height: 56,
-                    mr: 2,
-                  }}
-                >
-                  <Iconify icon="mdi:atom" sx={{ fontSize: 28 }} />
-                </Avatar>
                 <Box display="flex" flexDirection="column" gap={0.5}>
                   <Typography variant="h4">{subject?.subjectName}</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

@@ -1,121 +1,405 @@
-import React from 'react';
+import type { LabelColor } from 'src/components/label';
+import type { IQuizData } from 'src/screens/examination/quiz/type';
 
-import { Box, Chip, Switch, MenuList, MenuItem } from '@mui/material';
+import React, { useMemo } from 'react';
 
+import { Box, Tab, Chip, Tabs, MenuList, MenuItem } from '@mui/material';
+
+import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import {
+  ScheduleExamStatus,
+  ScheduleExamStatusColor,
+  ScheduleExamStatusOptions,
+} from 'src/enums/schedule-exam-status';
+
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const QuizTable = ({ data, addQuizDialog, onTogglePublish, onAttemptClick, handleDelete }: any) => {
+import { StudentSubmissions } from './studentSubmission';
+
+const QuizTable = ({
+  data,
+  addQuizDialog,
+  onTogglePublish,
+  onAttemptClick,
+  handleDelete,
+  onViewQuiz,
+  onDelete,
+  onQuizResult,
+  onEdit,
+}: any) => {
+  // Initialize tabs with default value of 'Pending'
+  const tabs = useTabs(ScheduleExamStatus.Pending);
+  const viewSubmissionDialog = useBoolean();
+  const viewAnalyticsDialog = useBoolean();
   const actions = ({ row, popover }: any) => (
     <Box>
       <MenuList>
-        <MenuItem onClick={() => onAttemptClick(row)}>
-          <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
-          Attempt Quiz
-        </MenuItem>
-        <MenuItem onClick={() => {}}>
-          <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-          View Questions
-        </MenuItem>
+        {tabs.value === ScheduleExamStatus.Pending && (
+          <>
+            <MenuItem onClick={() => onAttemptClick(row)}>
+              <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
+              Attempt Quiz
+            </MenuItem>
+
+            <MenuItem onClick={() => {}}>
+              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+              View Questions
+            </MenuItem>
+          </>
+        )}
+
+        {tabs.value === ScheduleExamStatus.Completed && (
+          <>
+            <MenuItem onClick={() => {}}>
+              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+              View Questions
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                viewSubmissionDialog.onTrue();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
+              View Submission
+            </MenuItem>
+          </>
+        )}
       </MenuList>
     </Box>
   );
 
+  // Calculate counts of exams by status
+  const examCounts = useMemo(
+    () => ({
+      pending: data?.filter((i: IQuizData) => i.status === ScheduleExamStatus.Pending)?.length || 0,
+      completed:
+        data?.filter((i: IQuizData) => i.status === ScheduleExamStatus.Completed)?.length || 0,
+    }),
+    [data]
+  );
+
+  // Define tab configuration with labels, values, counts and colors
+  const TABS = useMemo(
+    () => [
+      {
+        label: 'Pending',
+        value: ScheduleExamStatus.Pending,
+        count: examCounts.pending,
+        color: 'warning',
+      },
+      {
+        label: 'Completed',
+        value: ScheduleExamStatus.Completed,
+        count: examCounts.completed,
+        color: 'success',
+      },
+    ],
+    [examCounts]
+  );
+
+  // Handle tab change event
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+    tabs.onChange(event, newValue);
+  };
+
+  // Filter table data based on selected tab value
+  const tableData = useMemo(
+    () => data?.filter((i: any) => i.status === tabs.value),
+    [data, tabs.value]
+  );
+
   return (
-    <CustomizableTable
-      tableId="quiz-table"
-      searchFieldProps={{
-        placeholder: 'Search by Class, Division, Subject...',
-        label: 'Search by Class, Division, Subject...',
-      }}
-      noDataText={
-        <>
-          No Quiz Data Found{' '}
-          <Box
-            onClick={() => {
-              addQuizDialog.onTrue();
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Create Slots
-          </Box>
-        </>
-      }
-      columns={[
-        { id: 'class', label: 'Class' },
-        {
-          id: 'division',
-          label: 'Division',
-          render(value, row) {
-            return (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value?.length
-                  ? value.map((item: string) => (
-                      <Chip key={item} label={item} size="small" variant="outlined" />
-                    ))
-                  : '-'}
+    <Box>
+      {/* Tabs Section */}
+      <Tabs
+        value={tabs.value}
+        onChange={handleTabChange}
+        sx={{
+          mb: 2,
+          '& .MuiTabs-flexContainer': { gap: 2 },
+          flexGrow: 1,
+        }}
+      >
+        {TABS.map((tab) => (
+          <Tab
+            sx={{ fontSize: '12px' }}
+            key={tab.value}
+            label={
+              <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                {tab.label}{' '}
+                <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
               </Box>
-            );
+            }
+            value={tab.value}
+          />
+        ))}
+      </Tabs>
+
+      <CustomizableTable
+        tableId="quiz-table"
+        searchFieldProps={{
+          placeholder: 'Search by Class, Division, Subject...',
+          label: 'Search by Class, Division, Subject...',
+          sx: {
+            maxWidth: '500px',
+            width: '100%',
           },
-        },
-        { id: 'subject', label: 'Subject' },
-        { id: 'quizTitle', label: 'Quiz Title', minWidth: '130px', align: 'left' },
-        { id: 'createdAt', label: 'Created At', minWidth: '150px', align: 'left' },
-        { id: 'quizDate', label: 'Quiz Date', minWidth: '130px', align: 'left' },
-        { id: 'quizTime', label: 'Quiz Time', minWidth: '130px', align: 'left' },
-        { id: 'quizEndDate', label: 'Quiz End Date', minWidth: '200px', align: 'left' },
-        { id: 'quizEndTime', label: 'Quiz End Time', minWidth: '200px', align: 'left' },
-        { id: 'quizDuration', label: 'Quiz Duration', minWidth: '200px', align: 'left' },
-        { id: 'attemptsAllow', label: 'Attempts Allow', minWidth: '200px', align: 'left' },
-        { id: 'totalMarks', label: 'Total Marks', minWidth: '200px', align: 'left' },
-        { id: 'passingMarks', label: 'Passing Marks', minWidth: '200px', align: 'left' },
-        {
-          id: 'status',
-          label: 'Publish',
-          render(value: boolean, row: any) {
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch size="small" checked={value} onChange={() => onTogglePublish(row)} />
-              </Box>
-            );
-          },
-        },
-        {
-          id: 'actions',
-          label: 'Actions',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          minWidth: 100,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={(props) => actions({ ...props, row })}
-                placement="right-top"
-                showEditIcon
-                showDeleteIcon
-                handleEditClick={() => {
-                  addQuizDialog.onTrue();
-                }}
-                handleDeleteClick={() => {
-                  handleDelete(row.id);
-                }}
-              />
-            );
-          },
-        },
-      ]}
-      data={data}
-    />
+        }}
+        noDataText={
+          <>
+            No Quiz Data Found{' '}
+            <Box
+              onClick={() => {
+                addQuizDialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Quiz
+            </Box>
+          </>
+        }
+        columns={
+          tabs.value === ScheduleExamStatus.Pending
+            ? [
+                { id: 'class', label: 'Class', align: 'left', filterType: 'string' },
+                {
+                  id: 'division',
+                  label: 'Division',
+                  align: 'left',
+                  filterType: 'string',
+                  render(value, row) {
+                    return (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {value?.length
+                          ? value.map((item: string) => (
+                              <Chip key={item} label={item} size="small" variant="outlined" />
+                            ))
+                          : '-'}
+                      </Box>
+                    );
+                  },
+                },
+                { id: 'subject', label: 'Subject', align: 'left', filterType: 'string' },
+                {
+                  id: 'quizTitle',
+                  label: 'Quiz Title',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'createdAt',
+                  label: 'Created At',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizDate',
+                  label: 'Quiz Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizTime',
+                  label: 'Quiz Time',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizEndDate',
+                  label: 'Quiz End Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizEndTime',
+                  label: 'Quiz End Time',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizDuration',
+                  label: 'Quiz Duration',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'totalMarks',
+                  label: 'Total Marks',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'passingMarks',
+                  label: 'Passing Marks',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  isSort: false,
+                  sticky: true,
+                  isFilter: false,
+                  align: 'center',
+                  minWidth: 100,
+                  render(value, row) {
+                    return (
+                      <ThreeDotsActions
+                        actions={(props) => actions({ ...props, row })}
+                        placement="right-top"
+                        showEditIcon
+                        showDeleteIcon
+                        handleEditClick={() => {
+                          onEdit(row as IQuizData);
+                        }}
+                        handleDeleteClick={() => {
+                          onDelete(row as IQuizData);
+                        }}
+                      />
+                    );
+                  },
+                },
+              ]
+            : [
+                { id: 'class', label: 'Class', align: 'left', filterType: 'string' },
+                {
+                  id: 'division',
+                  label: 'Division',
+                  align: 'left',
+                  filterType: 'string',
+                  render(value, row) {
+                    return (
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {value?.length
+                          ? value.map((item: string) => (
+                              <Chip key={item} label={item} size="small" variant="outlined" />
+                            ))
+                          : '-'}
+                      </Box>
+                    );
+                  },
+                },
+                { id: 'subject', label: 'Subject', align: 'left', filterType: 'string' },
+                {
+                  id: 'quizTitle',
+                  label: 'Quiz Title',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'createdAt',
+                  label: 'Created At',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizDate',
+                  label: 'Quiz Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizTime',
+                  label: 'Quiz Time',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizEndDate',
+                  label: 'Quiz End Date',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizEndTime',
+                  label: 'Quiz End Time',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                {
+                  id: 'quizDuration',
+                  label: 'Quiz Duration',
+                  align: 'left',
+                  filterType: 'string',
+                },
+                {
+                  id: 'totalMarks',
+                  label: 'Total Marks',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'passingMarks',
+                  label: 'Passing Marks',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'obtainedMarks',
+                  label: 'Obtained Marks',
+                  align: 'left',
+                  filterType: 'number',
+                },
+                {
+                  id: 'marksStatus',
+                  label: 'Marks Status',
+                  filterType: 'enum',
+                  enumOptions: ScheduleExamStatusOptions,
+                  align: 'left',
+                  render(value, row) {
+                    const color = ScheduleExamStatusColor[
+                      value as ScheduleExamStatus
+                    ] as LabelColor;
+                    return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+                  },
+                },
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  isSort: false,
+                  sticky: true,
+                  isFilter: false,
+                  align: 'center',
+                  minWidth: 50,
+                  render(value, row) {
+                    return (
+                      <ThreeDotsActions
+                        actions={(props) => actions({ ...props, row })}
+                        placement="right-top"
+                      />
+                    );
+                  },
+                },
+              ]
+        }
+        data={tableData}
+      />
+
+      <CustomDialog
+        title="View Student Submission"
+        open={viewSubmissionDialog.value}
+        handleClose={viewSubmissionDialog.onFalse}
+        maxWidth="lg"
+      >
+        <StudentSubmissions />
+      </CustomDialog>
+    </Box>
   );
 };
 

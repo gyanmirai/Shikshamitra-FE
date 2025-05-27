@@ -3,17 +3,11 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import {
-  Box,
-  Button,
-  Switch,
-  Typography,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-} from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assessmentTypeTableData from 'src/json/academic/examination/assessmentTypeTableData.json';
@@ -29,25 +23,42 @@ import AssessmentTypeForm from './assessmentTypeForm';
 import type { IAssessmentType } from '../type';
 
 const AssessmentTypeSettings = () => {
+  // Dialog state for managing the create/edit assessment type form
   const dialog = useBoolean();
+
+  // State for storing and managing the assessment type table data
   const [assessmentTypeData, setAssessmentTypeData] =
     useState<IAssessmentType[]>(assessmentTypeTableData);
+
+  // Dialog state for confirming the publish/unpublish status change
   const confirmPublishDialog = useBoolean();
+
+  // Dialog state for confirming the deletion of an assessment type
   const confirmDeleteDialog = useBoolean();
+
+  // Redux state indicating if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // State for tracking whether the form is in edit mode
   const [isEdit, setIsEdit] = useState(false);
+
+  // State for storing the currently selected assessment type for editing or other actions
   const [selectedAssessmentType, setSelectedAssessmentType] = useState<any | null>(null);
+
+  // State for storing the pending status change of an assessment type before confirmation
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
   } | null>(null);
 
+  // Method to handle changes in the status of an assessment type
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirmPublishDialog.onTrue();
   };
 
+  // Method to confirm the status change of an assessment type
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;
@@ -61,6 +72,7 @@ const AssessmentTypeSettings = () => {
     setPendingStatusChange(null);
   };
 
+  // Method to close all dialogs and reset selected assessment type
   const handleCloseDialog = () => {
     dialog.onFalse();
     confirmPublishDialog.onFalse();
@@ -68,20 +80,19 @@ const AssessmentTypeSettings = () => {
     setSelectedAssessmentType(null);
   };
 
-  // Function to handle closing of the dialog.
+  // Method to handle closing of the dialog with confirmation for unsaved changes
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    // If submit button is clicked or there are unsaved changes, show confirmation dialog.
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       dialog.onFalse();
       dispatch(setIsChanges(false));
       setSelectedAssessmentType(null);
     } else if (!isChanges) {
-      // If no unsaved changes, close the dialog directly.
       dialog.onFalse();
       setSelectedAssessmentType(null);
     }
   };
 
+  // Method to handle the deletion of an assessment type
   const handleDelete = (comingAssessmentType: any) => {
     setAssessmentTypeData((prevData) =>
       prevData.filter((assessmentType) => assessmentType.id !== comingAssessmentType.id)
@@ -89,6 +100,7 @@ const AssessmentTypeSettings = () => {
     handleCloseDialog();
   };
 
+  // Method to handle form submission for creating or editing an assessment type
   const handleSubmit = (values: any) => {
     if (isEdit && selectedAssessmentType) {
       setAssessmentTypeData(
@@ -131,6 +143,10 @@ const AssessmentTypeSettings = () => {
         searchFieldProps={{
           placeholder: 'Search by Assessment Type, Description, Status...',
           label: 'Search by Assessment Type, Description, Status...',
+          sx: {
+            maxWidth: '500px',
+            width: '100%',
+          },
         }}
         tableId="assessment-type"
         noDataText={
@@ -150,26 +166,13 @@ const AssessmentTypeSettings = () => {
                 },
               }}
             >
-              Create Assessment Type
+              Assessment Type
             </Box>
           </>
         }
         columns={[
           { id: 'assessmentType', label: 'Assessment Type' },
           { id: 'description', label: 'Description' },
-          {
-            id: 'status',
-            label: 'Publish',
-            render: (value: string, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Switch
-                  size="small"
-                  checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
-                />
-              </Box>
-            ),
-          },
           {
             id: 'actions',
             label: 'Actions',
@@ -212,28 +215,6 @@ const AssessmentTypeSettings = () => {
         />
       </CustomDialog>
 
-      <CustomDialog
-        title="Confirm Publication"
-        open={confirmPublishDialog.value}
-        handleClose={confirmPublishDialog.onFalse}
-        maxWidth="sm"
-      >
-        <DialogContent>
-          <DialogContentText>
-            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
-            this Assessment Type?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} variant="contained" color="error">
-            Cancel
-          </Button>
-          <Button onClick={confirmStatusChange} autoFocus variant="contained" color="success">
-            Confirm
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-
       <ConfirmDialog
         open={confirmDeleteDialog.value}
         onClose={() => {
@@ -244,6 +225,7 @@ const AssessmentTypeSettings = () => {
         action={
           <Button
             variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {
               handleDelete(selectedAssessmentType);
