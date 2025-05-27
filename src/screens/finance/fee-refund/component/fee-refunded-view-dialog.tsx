@@ -38,16 +38,6 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
     0
   );
 
-  // const totalRow = {
-  //   paymentId: '',
-  //   feeHead: '',
-  //   paidAmount: 'Total',
-  //   refundAmount: totalRefundAmount,
-
-  //   paidDate: '',
-  //   status: '',
-  // };
-
   const handleSave = () => {};
 
   const closeDialog = () => {
@@ -126,57 +116,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
           isSearch={false}
           columns={[
             { id: 'feeHead', label: 'Fee Head' },
-            {
-              id: 'paidAmount',
-              label: 'Paid Amount',
-              filterType: 'formattedNumber',
-              render(value, row) {
-                if (row.paidAmount === 'Total') {
-                  return (
-                    <Typography fontSize="12px" fontWeight="bold" minWidth="120px">
-                      Total Refund
-                    </Typography>
-                  );
-                }
-                return (
-                  <Typography fontSize="12px" minWidth="120px">
-                    {formatNumber(row.paidAmount, 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'askForRefund',
-              label: 'Ask For Refund',
-              filterType: 'formattedNumber',
-              render(value, row) {
-                return (
-                  <Typography fontSize="12px" minWidth="120px">
-                    {formatNumber(value, 'INR')}
-                  </Typography>
-                );
-              },
-            },
-            {
-              id: 'refundAmount',
-              label: 'Approved Refund Amount',
-              filterType: 'formattedNumber',
-              render: (value, row) => (
-                <Typography fontSize="12px" minWidth="150px">
-                  {formatNumber(row.paidAmount, 'INR')}
-                </Typography>
-              ),
-            },
-            {
-              id: 'refundAmount',
-              label: 'Refunded Amount',
-              filterType: 'formattedNumber',
-              render: (value, row) => (
-                <Typography fontSize="12px" minWidth="150px">
-                  {formatNumber(row.paidAmount, 'INR')}
-                </Typography>
-              ),
-            },
+
             {
               id: 'requestedOn',
               label: 'Requested On',
@@ -225,27 +165,82 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
               },
             },
             {
-              id: 'receiptNo',
-              label: 'Receipt No',
+              id: 'paidAmount',
+              label: 'Paid Amount',
+              filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
+                if (row.paidAmount === 'Total') {
+                  return (
+                    <Typography fontSize="12px" fontWeight="bold" minWidth="120px">
+                      Total Refund
+                    </Typography>
+                  );
+                }
                 return (
                   <Typography fontSize="12px" minWidth="120px">
-                    8hsuqhs
+                    {formatNumber(row.paidAmount, 'INR')}
                   </Typography>
                 );
               },
             },
             {
-              id: 'transactionId',
-              label: 'Transaction Id',
+              id: 'askForRefund',
+              label: 'Refund Amount',
+              filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
                 return (
-                  <Typography fontSize="12px" minWidth="150px">
-                    -
+                  <Typography fontSize="12px" minWidth="120px">
+                    {formatNumber(value, 'INR')}
                   </Typography>
                 );
               },
             },
+            {
+              id: 'refundAmount',
+              label: 'Approved Refund Amount',
+              filterType: 'formattedNumber',
+              align: 'right',
+              render: (value, row) => (
+                <Typography fontSize="12px" minWidth="150px">
+                  {formatNumber(row.paidAmount, 'INR')}
+                </Typography>
+              ),
+            },
+            {
+              id: 'refundAmount',
+              label: 'Refunded Amount',
+              filterType: 'formattedNumber',
+              align: 'right',
+              render: (value, row) => (
+                <Typography fontSize="12px" minWidth="150px">
+                  {formatNumber(row.paidAmount, 'INR')}
+                </Typography>
+              ),
+            },
+            // {
+            //   id: 'receiptNo',
+            //   label: 'Receipt No',
+            //   render(value, row) {
+            //     return (
+            //       <Typography fontSize="12px" minWidth="120px">
+            //         8hsuqhs
+            //       </Typography>
+            //     );
+            //   },
+            // },
+            // {
+            //   id: 'transactionId',
+            //   label: 'Transaction Id',
+            //   render(value, row) {
+            //     return (
+            //       <Typography fontSize="12px" minWidth="150px">
+            //         -
+            //       </Typography>
+            //     );
+            //   },
+            // },
           ]}
           data={paymentHistoryData}
         />

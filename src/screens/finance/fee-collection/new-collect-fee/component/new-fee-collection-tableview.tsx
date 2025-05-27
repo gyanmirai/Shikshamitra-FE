@@ -22,6 +22,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FeeReceiptPDF from '../receipt-view/new-receipt-pdf';
 
@@ -144,11 +145,33 @@ const FeeCollectionTable = () => {
   return (
     <>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+        <Box display="flex" flexDirection="row" gap={2} py="12px">
+          <Typography>
+            <strong>Name:</strong> Vishal RameshBhai Patel
+          </Typography>
+          <Typography>
+            <strong>Standard:</strong> 10-B
+          </Typography>
+          <Typography>
+            <strong>Gr Number:</strong> 89866
+          </Typography>
+          <Typography>
+            <strong>Roll Number:</strong> 1
+          </Typography>
+        </Box>
         <Box>
           <CustomizableTable
             isFilter={false}
             tableId="fee-collection"
             noDataText="No Pending Fees"
+            searchFieldProps={{
+              placeholder: 'Search by Month, Fee Head, Pending Amount..',
+              label: 'Search by Month, Fee Head, Pending Amount..',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
             columns={[
               {
                 id: 'select',
@@ -182,15 +205,12 @@ const FeeCollectionTable = () => {
                   const value = receivedAmounts[row.id] || '';
 
                   return (
-                    <TextField
+                    <NumericFormatCustom
                       size="small"
-                      type="number"
                       fullWidth
-                      inputProps={{
-                        min: 0,
-                        max: row.pending,
-                      }}
+                      autoFocus
                       disabled={disabled}
+                      label={`${row.feeHead} Received`}
                       value={value}
                       error={Number(value) > row.pending}
                       helperText={
@@ -207,13 +227,13 @@ const FeeCollectionTable = () => {
                       onBlur={() => {
                         const amount = Number(value);
                         if (amount > row.pending) {
-                          // Auto-correct or notify
                           setReceivedAmounts((prev) => ({
                             ...prev,
                             [row.id]: row.pending,
                           }));
                         }
                       }}
+                      name={`${row.feeHead.toLowerCase()}Received`}
                       sx={{ mb: 2 }}
                     />
                   );

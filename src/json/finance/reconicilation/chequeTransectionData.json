@@ -2,7 +2,7 @@
     {
       "srNo": 1,
       "studentName": "Aarav Sharma",
-      "class": "5th",
+      "class": "5",
       "chequeNo": "784512",
       "bankName": "State Bank of India",
       "chequeDate": "01-11-2024",
@@ -16,7 +16,7 @@
     {
       "srNo": 2,
       "studentName": "Diya Mehta",
-      "class": "6th",
+      "class": "6",
       "chequeNo": "234589",
       "bankName": "HDFC Bank",
       "chequeDate": "01-11-2024",
@@ -30,7 +30,7 @@
     {
       "srNo": 3,
       "studentName": "Rohan Patel",
-      "class": "7th",
+      "class": "7",
       "chequeNo": "985632",
       "bankName": "ICICI Bank",
       "chequeDate": "01-08-2024",
@@ -44,7 +44,7 @@
     {
       "srNo": 4,
       "studentName": "Ishita Desai",
-      "class": "8th",
+      "class": "8",
       "chequeNo": "567890",
       "bankName": "Axis Bank",
       "chequeDate": "05-11-2024",

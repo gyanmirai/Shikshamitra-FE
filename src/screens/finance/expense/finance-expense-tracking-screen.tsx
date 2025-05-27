@@ -1,7 +1,5 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
-
 import React, { useState, useEffect } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -12,13 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 
 import expenseData from 'src/json/finance/expense/expenseTrackingData.json';
-import {
-  FinancePaymentHistoryStatusType,
-  FinancePaymentHistoryStatusOptions,
-  FinancePaymentHistoryStatusTypeColors,
-} from 'src/enums/finance-payment-history';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -29,25 +21,34 @@ import FinanceExpenseDetailsDialog from './component/finance-expense-details-dia
 import FinanceAddExpenseTrackingDialog from './component/finance-add-expense-tracking-dialog';
 
 const FinanceExpenseTrackingScreen = () => {
+  // Dialog control for add/edit expense form
   const dialog = useBoolean();
+  // Dialog control for viewing expense details
   const dialogForDetailsInExpense = useBoolean();
+  // Dialog control for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
+  // State to store the currently selected expense data
   const [selectedExpense, setSelectedExpense] = useState(expenseData);
+  // Flag to determine if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // State to store all expense data for the table
   const [tableData, setTableData] = useState(expenseData);
+  // Control visibility of the add/edit expense dialog
   const [open, setOpen] = useState(false);
 
+  // Reset edit mode and close the dialog
   const closeDialog = () => {
     setIsEdit(false);
     dialog.onFalse();
   };
 
+  // Close the expense details dialog
   const closeDialogForDetailsInExpense = () => {
     dialogForDetailsInExpense.onFalse();
   };
 
+  // Effect to handle changes in selected expense or edit mode
   useEffect(() => {}, [selectedExpense, isEdit]);
-
   return (
     <>
       {/* dialog for adding new expense */}
@@ -140,33 +141,32 @@ const FinanceExpenseTrackingScreen = () => {
                 id: 'expenseAmount',
                 label: 'Expense Amount',
                 filterType: 'formattedNumber',
+                align: 'right',
                 render(value) {
                   return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                 },
               },
-              { id: 'paymentMethod', label: 'Payment Method' },
-              { id: 'date', label: 'Date', filterType: 'date' },
 
-              {
-                id: 'paymentStatus',
-                label: 'Status',
-                filterType: 'enum',
-                enumOptions: FinancePaymentHistoryStatusOptions,
-                minWidth: '180px',
-                align: 'left',
-                isSort: false,
-                render(value, row) {
-                  const color = FinancePaymentHistoryStatusTypeColors[
-                    value as FinancePaymentHistoryStatusType
-                  ] as LabelColor;
+              // {
+              //   id: 'paymentStatus',
+              //   label: 'Status',
+              //   filterType: 'enum',
+              //   enumOptions: FinancePaymentHistoryStatusOptions,
+              //   minWidth: '180px',
+              //   align: 'left',
+              //   isSort: false,
+              //   render(value, row) {
+              //     const color = FinancePaymentHistoryStatusTypeColors[
+              //       value as FinancePaymentHistoryStatusType
+              //     ] as LabelColor;
 
-                  return (
-                    <Label color={color}>
-                      {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
-                    </Label>
-                  );
-                },
-              },
+              //     return (
+              //       <Label color={color}>
+              //         {FinancePaymentHistoryStatusType[value as FinancePaymentHistoryStatusType]}
+              //       </Label>
+              //     );
+              //   },
+              // },
               {
                 id: 'action',
                 label: 'Action',

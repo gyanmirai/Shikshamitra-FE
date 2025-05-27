@@ -3,70 +3,18 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Tooltip, TextField, Typography } from '@mui/material';
+import { Box, Grid, TextField, Typography } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import CustomSelect from 'src/components/custom-select';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-interface FeeRefundPaymentDialogProps {
-  dialogValue: boolean;
-  data: any;
-  onSave: (values: any) => void;
-  onClose: () => void;
-  isEdit: boolean;
-  allData: any;
-  total: any;
-  tuitionFeeAmount: any;
-  libraryFeeFeeAmount: any;
-  totalFeeAmount: any;
-}
+import type { IFormikValues, IFeeRefundPaymentDialogProps } from '../fee-refund-interface';
 
-interface FormikValues {
-  selectStudent: string;
-  feeType: number[];
-  amount: number;
-  paymentMode: string;
-  transactionId: string;
-  transactionIdOnline: string;
-  note: string;
-  selectedTerms: string[];
-  receiptNumber: string;
-  chequeDate: any;
-  bankName: string;
-  receivedPayment: 0;
-  chequeNumber: string;
-  chequeAmount: number;
-  cardAmount: number;
-  onlineAmount: number;
-  cashAmount: number;
-  charges: number;
-  chargesDetails: string;
-  totalAmount: number;
-
-  transectionIdOrCheque: string;
-
-  remarks: string;
-  id: number;
-  accountNumber: number;
-  bankNameForAccount: string;
-  accountAmount: number;
-  ifscNumber: string;
-  upiId: string;
-}
-
-interface feeRefundOptions {
-  feeHead: string;
-  refundAmount: string;
-}
-
-const columnsTable = [
-  { key: 'feeHead', label: 'Fee Head' },
-  { key: 'refundAmount', label: 'Refund Amount' },
-];
-const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
+const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
   dialogValue,
   data,
   onSave,
@@ -78,24 +26,11 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
   libraryFeeFeeAmount,
   totalFeeAmount,
 }) => {
-  const datax: feeRefundOptions[] = [];
-
-  allData.forEach((val: feeRefundOptions) => {
-    const refundData = {
-      feeHead: val.feeHead,
-      refundAmount: val.refundAmount,
-    };
-    datax.push(refundData);
-  });
-
-  const formik = useFormik<FormikValues>({
+  const formik = useFormik<IFormikValues>({
     initialValues: {
       totalAmount: totalFeeAmount,
-
       transectionIdOrCheque: '',
-
       remarks: '',
-
       id: isEdit
         ? (data.id ?? Math.floor(Math.random() * 1000000000))
         : Math.floor(Math.random() * 1000000000),
@@ -124,8 +59,9 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
       ifscNumber: '',
       upiId: '',
     },
-    // validationSchema: validationSchema,  // Uncomment this if you have validation schema
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      onSave(values);
+    },
   });
 
   const [chequeAmountState, setChequeAmountState] = useState<string>('');
@@ -133,284 +69,11 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
   const [cardAmountState, setCardAmountState] = useState<string>('');
   const [, setOnlineAmountState] = useState<string>('');
   const [, setCashAmountState] = useState<string>('');
-  const handleBankAmountChange = (formattedValue: string, numericValue: number) => {
-    setBankAmountState(formattedValue);
-  };
-  const handleChequeAmountChange = (formattedValue: string, numericValue: number) => {
-    setChequeAmountState(formattedValue);
-  };
-  const handleCardAmountChange = (formattedValue: string, numericValue: number) => {
-    setCardAmountState(formattedValue);
-  };
-  const handleOnlineAmountChange = (formattedValue: string, numericValue: number) => {
-    setOnlineAmountState(formattedValue);
-  };
-  const handleCashAmountChange = (formattedValue: string, numericValue: number) => {
-    setCashAmountState(formattedValue);
-  };
 
   return (
     <Box>
       <form onSubmit={formik.handleSubmit}>
-        <Box px="15px" pt="10px" display="flex" flexDirection="column" gap={3}>
-          <Box pt="10px" display="flex" flexDirection="row" gap={3}>
-            <CustomSelect
-              label="Payment Mode"
-              options={[
-                { value: 'Cash', label: 'Cash' },
-                { value: 'Account', label: 'Account' },
-                { value: 'Online', label: 'Upi' },
-                { value: 'Cheque', label: 'Cheque' },
-              ]}
-              // @ts-ignore
-              value={formik.values.paymentMode}
-              onChange={(selectedValues) => formik.setFieldValue('paymentMode', selectedValues)}
-              formControlProps={{ sx: { minWidth: 190 } }}
-            />
-          </Box>
-          {formik.values.paymentMode.length > 0 && (
-            <Grid container spacing={2} px={2}>
-              {/* Online Payment Details */}
-
-              {formik.values.paymentMode.includes('Online') && (
-                <Grid item xs={12} md={12}>
-                  <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
-                    <Typography sx={{ pb: '15px' }} variant="subtitle2">
-                      Online Details
-                    </Typography>
-
-                    <Box>
-                      {/* Linked Account Row */}
-                      <Tooltip placement="top-start" title="Issue refund to this account">
-                        <Box
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="center"
-                          gap={1}
-                          sx={{ pb: 1 }}
-                        >
-                          <Typography variant="subtitle2">Linked Account:</Typography>
-                          <Typography variant="subtitle2">notaxytz@oksbi</Typography>
-                        </Box>
-                      </Tooltip>
-
-                      {/* Last Transaction Row */}
-                      <Tooltip placement="top-start" title="Issue refund to this account">
-                        <Box
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="center"
-                          gap={1}
-                          sx={{ pb: 1 }}
-                        >
-                          <Typography variant="subtitle2">Last Transaction:</Typography>
-                          <Typography variant="subtitle2">dummy@upi</Typography>
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-
-                  <Box display="flex" gap={2} flexDirection="row">
-                    <TextField
-                      name="transactionIdForOnline"
-                      label="Transaction ID"
-                      value={formik.values.transactionIdOnline}
-                      onChange={formik.handleChange}
-                      size="small"
-                      fullWidth
-                    />
-                    <TextField
-                      name="upiId"
-                      label="Upi ID"
-                      value={formik.values.upiId}
-                      onChange={formik.handleChange}
-                      size="small"
-                      fullWidth
-                    />
-                    {/* <FormattedAmountInput
-
-                          label="Online Amount"
-                          value={onlineAmountState}
-                          onChange={handleOnlineAmountChange}
-
-                        /> */}
-                  </Box>
-                  <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
-                    <Button disabled onClick={onClose} variant="contained" size="small">
-                      Proceed
-                    </Button>
-                  </Box>
-                </Grid>
-              )}
-
-              {/* Card Payment Details */}
-              {formik.values.paymentMode.includes('Card') && (
-                <Grid item xs={12} md={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Card Details
-                  </Typography>
-                  <Box display="flex" gap={2} flexDirection="row">
-                    <TextField
-                      name="transactionId"
-                      label="Transaction ID"
-                      value={formik.values.transactionId}
-                      onChange={formik.handleChange}
-                      size="small"
-                      fullWidth
-                    />
-
-                    <FormattedAmountInput
-                      label="Card Amount"
-                      value={cardAmountState}
-                      onChange={handleCardAmountChange}
-                    />
-                  </Box>
-                  {/* <Divider sx={{ py: "12px", }} /> */}
-                </Grid>
-              )}
-
-              {/* Cheque Payment Details */}
-              {formik.values.paymentMode.includes('Cheque') && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Cheque Details
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        name="chequeId"
-                        label="Cheque Number"
-                        value={formik.values.chequeNumber}
-                        onChange={formik.handleChange}
-                        size="small"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <DatePicker
-                        label="Cheque Date"
-                        value={formik.values.chequeDate}
-                        onChange={(date) => formik.setFieldValue('chequeDate', date)}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            size: 'small',
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <TextField
-                        name="bankName"
-                        label="Bank Name"
-                        value={formik.values.bankName}
-                        onChange={formik.handleChange}
-                        size="small"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={3}>
-                      <FormattedAmountInput
-                        label="ChequeAmount"
-                        value={chequeAmountState}
-                        onChange={handleChequeAmountChange}
-                      />
-                    </Grid>
-                  </Grid>
-
-                  {/* <Divider sx={{ py: "12px", }} /> */}
-                </Grid>
-              )}
-
-              {formik.values.paymentMode.includes('Account') && (
-                <Grid item xs={12}>
-                  <Box display="flex" justifyContent="space-between" flexDirection="row" gap={3}>
-                    <Typography sx={{ pb: '15px' }} variant="subtitle2">
-                      Bank Details
-                    </Typography>
-
-                    <Box>
-                      {/* Linked Account Row */}
-                      <Tooltip placement="top-start" title="Issue refund to this account">
-                        <Box
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="center"
-                          gap={1}
-                          sx={{ pb: 1 }}
-                        >
-                          <Typography variant="subtitle2">Linked Account:</Typography>
-                          <Typography variant="subtitle2">Bank Of Baroda</Typography>
-                        </Box>
-                      </Tooltip>
-
-                      {/* Last Transaction Row */}
-                      <Tooltip placement="top-start" title="Issue refund to this account">
-                        <Box
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="center"
-                          gap={1}
-                          sx={{ pb: 1 }}
-                        >
-                          <Typography variant="subtitle2">Last Transaction:</Typography>
-                          <Typography variant="subtitle2">Bank Of Baroda</Typography>
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        name="accountNumber"
-                        label="Bank Account Number"
-                        value={formik.values.accountNumber}
-                        onChange={formik.handleChange}
-                        size="small"
-                        fullWidth
-                        type="number"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        name="ifscNumber"
-                        label="IFSC Number"
-                        value={formik.values.ifscNumber}
-                        onChange={formik.handleChange}
-                        size="small"
-                        fullWidth
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <CustomSelect
-                        label="Bank Name"
-                        options={[]}
-                        name="bankNameForAccount"
-                        value={formik.values.bankNameForAccount}
-                        onChange={(val) => formik.setFieldValue('bankNameForAccount', val)}
-                        formControlProps={{ fullWidth: true }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormattedAmountInput
-                        label="Amount"
-                        value={bankAmountState}
-                        onChange={handleBankAmountChange}
-                      />
-                    </Grid>
-                  </Grid>
-
-                  <Box pt="15px" display="flex" justifyContent="flex-end" justifyItems="flex-end">
-                    <Button disabled onClick={onClose} variant="contained" size="small">
-                      Proceed
-                    </Button>
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
-          )}
+        <Box px={2} pt={5} display="flex" flexDirection="column" gap={3}>
           <TextField
             multiline
             rows={4}
@@ -433,8 +96,97 @@ const FeeRefundPaymentDialog: React.FC<FeeRefundPaymentDialogProps> = ({
             }}
             size="small"
           />
+          <CustomSelect
+            label="Payment Mode"
+            options={[
+              { value: 'Cash', label: 'Cash' },
+              { value: 'Cheque', label: 'Cheque' },
+            ]}
+            value={formik.values.paymentMode}
+            onChange={(selectedValues) => formik.setFieldValue('paymentMode', selectedValues)}
+            formControlProps={{ sx: { maxWidth: 220 } }}
+          />
+          {formik.values.paymentMode === 'Online' && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="subtitle2">Online Details</Typography>
+                <TextField
+                  name="transactionIdOnline"
+                  label="Transaction ID"
+                  value={formik.values.transactionIdOnline}
+                  onChange={formik.handleChange}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            </Grid>
+          )}
+
+          {formik.values.paymentMode === 'Card' && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  name="transactionId"
+                  label="Transaction ID"
+                  value={formik.values.transactionId}
+                  onChange={formik.handleChange}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormattedAmountInput
+                  label="Card Amount"
+                  value={cardAmountState}
+                  onChange={(formatted, numeric) => setCardAmountState(formatted)}
+                />
+              </Grid>
+            </Grid>
+          )}
+
+          {formik.values.paymentMode === 'Cheque' && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  name="chequeNumber"
+                  label="Cheque Number"
+                  value={formik.values.chequeNumber}
+                  onChange={formik.handleChange}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DatePicker
+                  label="Cheque Date"
+                  value={formik.values.chequeDate}
+                  onChange={(date) => formik.setFieldValue('chequeDate', date)}
+                  slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  name="bankName"
+                  label="Bank Name"
+                  value={formik.values.bankName}
+                  onChange={formik.handleChange}
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <NumericFormatCustom
+                  label="Cheque Amount"
+                  value={chequeAmountState}
+                  onChange={(formatted) => setChequeAmountState(formatted.target.value)}
+                  name="chequeAmount"
+                  size="small"
+                  fullWidth
+                />
+              </Grid>
+            </Grid>
+          )}
         </Box>
-        <Box pb="20px" />
       </form>
     </Box>
   );

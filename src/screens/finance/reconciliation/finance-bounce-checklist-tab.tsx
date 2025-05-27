@@ -162,24 +162,27 @@ const FinanceBounceScreen = () => {
           { id: 'parentsContactNumber', label: 'Contact Number' },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
+
+          { id: 'feeHead', label: 'Fee Head' },
+          { id: 'studentName', label: 'Student Name' },
+          { id: 'bounceDate', label: 'Bounce Date', filterType: 'date' },
+          { id: 'reason', label: 'Reason' },
           {
             id: 'chargesAmount',
             label: 'Charges',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
               );
             },
           },
-          { id: 'feeHead', label: 'Fee Head' },
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'bounceDate', label: 'Bounce Date', filterType: 'date' },
-          { id: 'reason', label: 'Reason' },
           {
             id: 'amount',
             label: 'Amount',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },

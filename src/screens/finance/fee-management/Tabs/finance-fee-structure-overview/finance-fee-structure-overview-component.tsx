@@ -149,16 +149,23 @@ const FinanceFeeStructureOverviewComponent = () => {
           }}
           columns={[
             {
+              id: 'paymentDueDate',
+              label: 'Payment Due Date',
+              filterType: 'date',
+            },
+            {
               id: 'bookRecipt',
               label: 'Receipt Book',
               filterType: 'string',
             },
+
             { id: 'applicableGrade', label: 'Applicable Class', filterType: 'number' },
 
             {
               id: 'grossFee',
               label: 'Gross Fees',
               filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -169,6 +176,7 @@ const FinanceFeeStructureOverviewComponent = () => {
               id: 'totaldiscountAmount',
               label: 'General Discount',
               filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
@@ -179,17 +187,12 @@ const FinanceFeeStructureOverviewComponent = () => {
               id: 'payableFees',
               label: 'Payable Fees',
               filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
                 return (
                   <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
                 );
               },
-            },
-
-            {
-              id: 'paymentDueDate',
-              label: 'Payment Due Date',
-              filterType: 'date',
             },
 
             {

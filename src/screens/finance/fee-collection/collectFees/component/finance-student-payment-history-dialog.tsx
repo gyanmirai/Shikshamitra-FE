@@ -33,7 +33,7 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
 }) => {
   console.log('data table', data);
   return (
-    <CustomDialog maxWidth="md" title="Payment History" open={dialogValue} handleClose={onClose}>
+    <CustomDialog maxWidth="lg" title="Payment History" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
         <CustomizableTable
           noDataText="No payment history found. It looks like no payments have been made yet."
@@ -46,15 +46,17 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
           columns={[
             { id: 'feeHead', label: 'Fee Head' },
             { id: 'paymentId', label: 'Payment Id / Cheque No' },
+
+            { id: 'paymentMode', label: 'Payment Mode' },
             {
               id: 'amount',
               label: 'Amount',
               filterType: 'formattedNumber',
+              align: 'right',
               render(value, row) {
                 return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
               },
             },
-            { id: 'paymentMode', label: 'Payment Mode' },
             {
               id: 'paymentStatus',
               label: 'Status',

@@ -4,6 +4,8 @@ import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
+import data from 'src/json/finance/fee-details-student/fee-breakdown.json';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface PaymentStatus {
@@ -45,36 +47,8 @@ const FeeCard: React.FC<FeeCardProps> = ({ feeHead, paymentTerm, paymentStatus }
 };
 
 const FinanceStudentFeeBreakdownTab = () => {
-  const data = [
-    {
-      id: 1,
-      date: '25-04-2025',
-      type: 'Tuition Fee',
-      discount: '2500',
-      amount: '50000',
-      additionalDiscount: 0,
-      grossFee: 52500,
-    },
-    {
-      id: 2,
-      date: '25-04-2025',
-      discount: '500',
-      type: 'Sports Fee',
-      amount: '5000',
-      additionalDiscount: 0,
-      grossFee: 5500,
-    },
-    {
-      id: 3,
-      date: '25-04-2025',
-      type: 'Library Fee',
-      discount: '0',
-      amount: '2500',
-      additionalDiscount: 0,
-      grossFee: 2500,
-    },
-  ];
-
+  // Calculate total values by reducing over the data array
+  // Sums up grossFee, discount, additionalDiscount and amount fields
   const totals = {
     grossFee: data.reduce((sum, row) => sum + row.grossFee, 0),
     discount: data.reduce((sum, row) => sum + parseFloat(row.discount), 0),
@@ -95,6 +69,7 @@ const FinanceStudentFeeBreakdownTab = () => {
             id: 'grossFee',
             label: 'Gross Fee',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return (
                 <Typography
@@ -112,6 +87,7 @@ const FinanceStudentFeeBreakdownTab = () => {
             id: 'discount',
             label: 'General Discount',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return (
                 <Typography
@@ -129,6 +105,7 @@ const FinanceStudentFeeBreakdownTab = () => {
             id: 'additionalDiscount',
             label: 'Additional Discount',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return (
                 <Typography
@@ -147,6 +124,7 @@ const FinanceStudentFeeBreakdownTab = () => {
             id: 'amount',
             label: 'Payable Fee',
             filterType: 'formattedNumber',
+            align: 'right',
             render(value, row) {
               return (
                 <Typography

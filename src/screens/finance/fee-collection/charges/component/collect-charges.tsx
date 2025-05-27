@@ -108,7 +108,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
               <strong>Name:</strong> Vishal RameshBhai Patel
             </Typography>
             <Typography>
-              <strong>Standard:</strong> 10/B
+              <strong>Standard:</strong> 10-B
             </Typography>
             <Typography>
               <strong>Gr Number:</strong> 89866
