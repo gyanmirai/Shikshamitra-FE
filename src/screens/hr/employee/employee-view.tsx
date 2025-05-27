@@ -39,7 +39,7 @@ export const TABS = [
   },
   {
     value: 'qualificationsCertifications',
-    label: 'Qualifications and Certifications',
+    label: 'Documents',
     icon: <Iconify icon="healthicons:i-exam-qualification" width={20} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <QualificationAndCertification employee={props.employee} />

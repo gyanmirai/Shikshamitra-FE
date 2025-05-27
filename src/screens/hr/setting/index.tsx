@@ -1,11 +1,12 @@
 'use client';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions, createFilterOptions } from '@mui/material';
+import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -24,8 +25,10 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -151,8 +154,6 @@ const HrSetting = () => {
 
 export default HrSetting;
 
-const filter = createFilterOptions<{ title: string; inputValue?: string }>();
-
 const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; editData?: any }) => {
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -163,7 +164,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     currentQueryAndMutation: useUpdateDocumentMutation,
   });
 
-  const { values, setFieldValue, handleSubmit } = useFormik<{
+  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
     title: string;
     documentType: string[];
   }>({
@@ -171,9 +172,12 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
       title: editData?.documentName || '',
       documentType: editData?.documentTypes || [],
     },
-    // validationSchema: Yup.object({
-    //   documentType: Yup.string().required('Document type is required'),
-    // }),
+    validationSchema: Yup.object().shape({
+      title: Yup.string().required('Document name is required'),
+      documentType: Yup.array()
+        .min(1, 'At least one document type must be selected')
+        .required('Document type is required'),
+    }),
     onSubmit: async (formikValues) => {
       if (editData) {
         await updateDocument({
@@ -182,14 +186,16 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
             documentName: formikValues.title,
             documentTypes: formikValues.documentType,
           },
-        });
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Document updated successfully' });
         handleClose?.();
         return;
       }
       await addDocument({
         documentName: formikValues.title,
         documentTypes: formikValues.documentType,
-      });
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Document added successfully' });
       handleClose?.();
     },
   });
@@ -197,24 +203,33 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
   return (
     <form onSubmit={handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Document Name"
-            name="document.title"
-            value={values.title}
-            onChange={(e) => setFieldValue('title', e.target.value)}
-          />
+        <Stack spacing={3}>
+          <ShakingTextField error={touched.title && Boolean(errors.title)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Document Name *"
+              name="document.title"
+              value={values.title}
+              onChange={(e) => setFieldValue('title', e.target.value)}
+              error={touched.title && Boolean(errors.title)}
+              helperText={touched.title && errors.title}
+            />
+          </ShakingTextField>
 
-          <CustomSelect
-            options={DocumentTypeArray}
-            value={values.documentType}
-            multiple
-            label="Select document Type"
-            onChange={(value) => setFieldValue('documentType', value)}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          />
+          <ShakingTextField error={touched.documentType && Boolean(errors.documentType)}>
+            <CustomSelect
+              options={DocumentTypeArray}
+              value={values.documentType}
+              multiple
+              label="Select document Type *"
+              onChange={(value) => setFieldValue('documentType', value)}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              error={touched.documentType && Boolean(errors.documentType)}
+              // @ts-ignore
+              helperText={(touched.documentType && errors.documentType) || ''}
+            />
+          </ShakingTextField>
         </Stack>
       </Scrollbar>
       <DialogActions>

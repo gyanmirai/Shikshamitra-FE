@@ -132,16 +132,8 @@ const HrEmployee = () => {
               { name: 'Employee List', onClick: handleClose },
               { name: editData ? 'Update Employee' : 'Add Employee' },
             ]}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={handleClose}
-              >
-                Back
-              </Button>
-            }
+            isBack
+            onBack={handleClose}
           />
 
           <Card sx={{ height: '100%' }}>
@@ -209,6 +201,7 @@ const HrEmployee = () => {
                   minWidth: '60px',
                   isSort: false,
                   isFilter: false,
+                  sticky: true,
                   label: '',
                   renderColumn() {
                     return (
@@ -243,10 +236,12 @@ const HrEmployee = () => {
                     );
                   },
                 },
-                { id: 'employeeCode', label: 'Employee Code', sticky: true },
+                { id: 'employeeCode', label: 'Employee Code', sticky: true, minWidth: '140px' },
                 {
                   id: 'employeeName',
                   label: 'Full Name',
+                  minWidth: 150,
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Box display="flex" alignItems="center" gap={1}>
@@ -281,8 +276,9 @@ const HrEmployee = () => {
                   label: 'Status',
                   filterType: 'enum',
                   enumOptions: EmployeeStatusTypeOptions,
-                  minWidth: '180px',
+                  minWidth: '90px',
                   align: 'left',
+                  sticky: true,
                   render(value, row) {
                     const color = EmployeeStatusTypeColor[
                       row.employeeStatusType as EmployeeStatusType
@@ -301,13 +297,14 @@ const HrEmployee = () => {
                   render(value, row) {
                     return (
                       <ThreeDotsActions
-                        actions={(props) => actions({ ...props, row })}
+                        // actions={(props) => actions({ ...props, row })}
                         placement="right-top"
                         showViewIcon
                         showEditIcon
                         handleViewClick={() => {
                           setSearchParams({ employee: row?.id });
                         }}
+                        showThreeDots={false}
                         handleEditClick={() => {
                           setEditData(row);
                           setOpen(true);

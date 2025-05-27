@@ -22,6 +22,7 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { UploadAvatar } from 'src/components/upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
@@ -60,14 +61,17 @@ export const personalInformationInitialValues = (editData: any) => ({
   addressLine1: editData ? editData.address1 : '',
   addressLine2: editData ? editData.address2 : '',
   addressLine3: editData ? editData.address3 : '',
-  country: editData
+  country: editData?.country?.name
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-    : undefined,
-  state: editData ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode } : undefined,
-  city: editData ? { name: editData?.city } : undefined,
+    : { name: '', isoCode: '' },
+  state: editData?.state?.name
+    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    : { name: '', isoCode: '' },
+  city: editData?.city ? { name: editData?.city } : { name: '' },
   pincode: editData ? editData?.pinCode : '',
   employeeId: editData ? editData.id : '',
   organization: editData ? editData?.educationMediumStageId : '',
+  shift: editData ? editData?.shift : '',
 });
 
 export const familyInformationInitialValues = (editData: any) => ({
@@ -85,14 +89,14 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.fatherDetails?.countryName,
         isoCode: editData?.fatherDetails?.countryIsoCode,
       }
-    : undefined,
+    : { name: '', isoCode: '' },
   fatherState: editData
     ? {
         name: editData?.fatherDetails?.stateName,
         isoCode: editData?.fatherDetails?.stateIsoCode,
       }
-    : undefined,
-  fatherCity: editData ? { name: editData?.fatherDetails?.city } : undefined,
+    : { name: '', isoCode: '' },
+  fatherCity: editData ? { name: editData?.fatherDetails?.city } : { name: '' },
 
   fatherPinCode: editData ? editData?.fatherDetails?.pinCode : '',
   motherName: editData ? editData.motherDetails.name : '',
@@ -107,14 +111,14 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.motherDetails?.countryName,
         isoCode: editData?.motherDetails?.countryIsoCode,
       }
-    : undefined,
+    : { name: '', isoCode: '' },
   motherState: editData
     ? {
         name: editData?.motherDetails?.stateName,
         isoCode: editData?.motherDetails?.stateIsoCode,
       }
-    : undefined,
-  motherCity: editData ? { name: editData?.motherDetails?.city } : undefined,
+    : { name: '', isoCode: '' },
+  motherCity: editData ? { name: editData?.motherDetails?.city } : { name: '' },
 
   motherPinCode: editData ? editData?.motherDetails?.pinCode : '',
   spouseName: editData ? editData.spouseDetails.name : '',
@@ -130,14 +134,14 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.spouseDetails?.countryName,
         isoCode: editData?.spouseDetails?.countryIsoCode,
       }
-    : undefined,
+    : { name: '', isoCode: '' },
   spouseState: editData
     ? {
         name: editData?.spouseDetails?.stateName,
         isoCode: editData?.spouseDetails?.stateIsoCode,
       }
-    : undefined,
-  spouseCity: editData ? { name: editData?.spouseDetails?.city } : undefined,
+    : { name: '', isoCode: '' },
+  spouseCity: editData ? { name: editData?.spouseDetails?.city } : { name: '' },
 
   spousePinCode: editData ? editData?.spouseDetails?.pinCode : '',
 });
@@ -224,15 +228,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
-  console.log(
-    '🚀 ~ file: employee-form.tsx:165 ~ EmployeeFrom ~ familyInformationInitialValues(editData):',
-    familyInformationInitialValues(editData)
-  );
 
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
-      console.log('values---handleBasicInformation--', values);
-
       if (!values.employeeId) {
         const resp = await addEmployee({
           // userId: res.data.id,
@@ -273,7 +271,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
           pincode: `${values.pincode}`,
           educationMediumStageId: values.organization,
-        });
+          shift: values.shift,
+        }).unwrap();
         formik.setFieldValue('employeeId', resp.data.id);
       }
     },
@@ -330,7 +329,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             pincode: values.spousePinCode,
           },
         },
-      });
+      }).unwrap();
       return res;
     },
     [updateFamilyInfo]
@@ -344,7 +343,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           fromDate: i.fromDate ? i.fromDate.format('YYYY-MM-DD') : null,
           toDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
         })),
-      });
+      }).unwrap();
       return res;
     },
     [updateExperienceInfo]
@@ -360,7 +359,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           accountNumber: values.accountNumber,
           ifscCode: values.ifscCode,
         },
-      });
+      }).unwrap();
       return res;
     },
     [updateBankDetails]
@@ -405,14 +404,19 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             address2: values.addressLine2,
             address3: values.addressLine3,
 
-            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+            country: values?.country?.name
+              ? { name: values?.country?.name, isoCode: values?.country?.isoCode }
+              : undefined,
             city: values?.city?.name,
-            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+            state: values?.state?.name
+              ? { name: values?.state?.name, isoCode: values?.state?.isoCode }
+              : undefined,
 
             pincode: `${values.pincode}`,
             educationMediumStageId: values.organization,
+            shift: values.shift,
           },
-        });
+        }).unwrap();
 
         return res;
       } catch (error) {
@@ -447,18 +451,24 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           setIsLoading(true);
           if (editData && activeStep === 0) {
             await handelUpdateEmployee(values, formik, editData.id);
+            shikshaMitraToast.success({ message: 'Employee updated successfully' });
           } else if (activeStep === 0) {
             if (values.employeeId) {
               await handelUpdateEmployee(values, formik, values.employeeId);
+              shikshaMitraToast.success({ message: 'Employee updated successfully' });
             } else {
               await handleBasicInformation(values, formik);
+              shikshaMitraToast.success({ message: 'Employee added successfully' });
             }
           } else if (activeStep === 1) {
             await handleFamilyInformation(values, formik);
+            shikshaMitraToast.success({ message: 'Family information updated successfully' });
           } else if (activeStep === 3) {
             await handleWorkExperience(values, formik);
+            shikshaMitraToast.success({ message: 'Work experience updated successfully' });
           } else if (activeStep === 4) {
             await handleBankDetailsInformation(values, formik);
+            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           }
           setActiveStep(activeStep + 1);
         } catch (error) {
@@ -483,9 +493,6 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
-  console.log('formik values hiren---', formik.values);
-  console.log('step');
-
   return (
     <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
       {steps.map(
@@ -528,6 +535,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                         xs={[1, 2, 3].includes(step) ? 12 : 4}
                         md={[1, 2, 3].includes(step) ? 12 : 4}
                         key={field.name}
+                        {...field.gridProps}
                       >
                         {field.renderComp ? (
                           field.renderComp({

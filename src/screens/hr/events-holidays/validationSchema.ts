@@ -22,12 +22,12 @@ export const eventAndHolidayValidationSchema = Yup.object().shape({
       const endDate = dayjs(value);
 
       // Validate that end date is after start date
-      if (!endDate.isAfter(fullStartDate)) {
+      if (!endDate.isSameOrAfter(fullStartDate)) {
         return this.createError({ message: 'End date must be after start date' });
       }
 
       return true;
     }),
   // Validate that reason is provided
-  reason: Yup.string().required('Reason is required'),
+  reason: Yup.string().required('Description is required'),
 });

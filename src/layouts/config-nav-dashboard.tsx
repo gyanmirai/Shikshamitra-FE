@@ -510,6 +510,8 @@ const hrModule = {
           _action: 'payroll-management',
           shortcutKey: 'Alt+H+P',
           shortcutKeyName: 'Alt+H+P',
+          disabled: true,
+          caption: 'Coming Soon',
           children: [
             {
               title: 'Dashboard',
@@ -596,26 +598,26 @@ const hrModule = {
         },
         {
           title: 'Events & Holidays',
-          path: '',
           _action: 'events-holidays',
+          path: '/hr/events-holidays',
           shortcutKey: 'Alt+H+V',
           shortcutKeyName: 'Alt+H+V',
-          children: [
-            {
-              title: 'Create Events & Holidays',
-              path: '/hr/events-holidays',
-              _action: 'events-holidays',
-              shortcutKey: 'Alt+H+V+1',
-              shortcutKeyName: 'Alt+H+V+1',
-            },
-            {
-              title: 'Requests',
-              path: '/hr/events-holidays/request',
-              _action: 'events-holidays-request',
-              shortcutKey: 'Alt+H+V+2',
-              shortcutKeyName: 'Alt+H+V+2',
-            },
-          ],
+          // children: [
+          //   {
+          //     title: 'Create Events & Holidays',
+          //     path: '/hr/events-holidays',
+          //     _action: 'events-holidays',
+          //     shortcutKey: 'Alt+H+V+1',
+          //     shortcutKeyName: 'Alt+H+V+1',
+          //   },
+          //   {
+          //     title: 'Requests',
+          //     path: '/hr/events-holidays/request',
+          //     _action: 'events-holidays-request',
+          //     shortcutKey: 'Alt+H+V+2',
+          //     shortcutKeyName: 'Alt+H+V+2',
+          //   },
+          // ],
         },
         {
           title: 'Notification',

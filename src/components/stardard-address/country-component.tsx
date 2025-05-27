@@ -24,7 +24,9 @@ const CountryComponent = ({
         value={value}
         onChange={onChange}
         options={allCountry || []}
-        getOptionLabel={(option: any) => `${option?.isoCode || ''} ${option?.name || ''}`}
+        getOptionLabel={(option: any) =>
+          `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`
+        }
         renderInput={(params) => (
           <TextField
             {...params}

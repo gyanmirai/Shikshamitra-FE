@@ -140,6 +140,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         {steps.map((label: string, index: number) => (
           <Step
             key={label}
+            id={`step-label-${index}`}
             sx={{ cursor: 'pointer' }}
             onClick={() => {
               onStepClick?.(index, label, formik);

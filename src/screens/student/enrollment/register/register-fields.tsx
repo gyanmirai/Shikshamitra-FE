@@ -1238,6 +1238,8 @@ export const generalFormFields: FieldsType[] = [
           onChange={(e, value) => {
             props.formik.setFieldValue('country', value);
           }}
+          error={props.formik.touched.country && Boolean(props.formik.errors.country.name)}
+          helperText={props.formik.touched.country && props.formik.errors.country.name}
         />
       );
     },
@@ -1255,6 +1257,8 @@ export const generalFormFields: FieldsType[] = [
             props.formik.setFieldValue('state', value);
           }}
           countryValue={props.formik.values.country}
+          error={props.formik.touched.state && Boolean(props.formik.errors.state.name)}
+          helperText={props.formik.touched.state && props.formik.errors.state.name}
         />
       );
     },
@@ -1272,6 +1276,8 @@ export const generalFormFields: FieldsType[] = [
             props.formik.setFieldValue('city', value);
           }}
           stateValue={props.formik.values.state}
+          error={props.formik.touched.city && Boolean(props.formik.errors.city.name)}
+          helperText={props.formik.touched.city && props.formik.errors.city.name}
         />
       );
     },

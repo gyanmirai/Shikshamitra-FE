@@ -67,6 +67,43 @@ const LeaveHistory = (props: TabComponentType) => {
           <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
           Review
         </MenuItem>
+        <MenuItem
+          onClick={async () => {
+            // setEditData(row);
+            // if (row.status === EmployeeLeaveStatusType.Reviewed) {
+            await changeStatus({
+              id: row?.id,
+              body: {
+                status: EmployeeLeaveStatusType.Approved,
+                rejectionReason: '',
+              },
+            });
+            // }
+            popover.onClose();
+          }}
+          sx={{ color: 'success.main' }}
+        >
+          <Iconify icon="mdi:approve" sx={{ height: '16px', width: '16px' }} />
+          Approve
+        </MenuItem>
+        <MenuItem
+          onClick={async () => {
+            // setEditData(row);
+            // if (row.status === EmployeeLeaveStatusType.Reviewed) {
+            await changeStatus({
+              id: row?.id,
+              body: {
+                status: EmployeeLeaveStatusType.Rejected,
+                rejectionReason: '',
+              },
+            });
+            // }
+          }}
+          sx={{ color: 'error.main' }}
+        >
+          <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
+          Reject
+        </MenuItem>
       </MenuList>
     ),
     [changeStatus, modal]
@@ -226,7 +263,8 @@ const LeaveHistory = (props: TabComponentType) => {
             id: 'statusValue',
             filterType: 'enum',
             enumOptions: EmployeeLeaveStatusOptions,
-
+            sticky: true,
+            minWidth: '100px',
             render(value, row) {
               const color = EmployeeLeaveStatusTypeColor[
                 value as EmployeeLeaveStatusType
@@ -260,7 +298,7 @@ const LeaveHistory = (props: TabComponentType) => {
         />
       )}
       <CustomDialog
-        maxWidth="md"
+        // maxWidth="lg"
         open={modal.value}
         handleClose={handleClose}
         title={
@@ -278,7 +316,7 @@ const LeaveHistory = (props: TabComponentType) => {
           </Box>
         }
       >
-        <Box p={2}>
+        <Box>
           <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
         </Box>
       </CustomDialog>
