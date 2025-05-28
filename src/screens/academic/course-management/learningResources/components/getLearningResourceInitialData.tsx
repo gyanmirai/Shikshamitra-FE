@@ -8,11 +8,9 @@ export const getLearningResourceInitialData = (
 ) => ({
   id: isEdit && data ? data.id : Date.now().toString(),
   resourceTitle: isEdit && data ? data.resourceTitle : '',
-  typeOfResource: isEdit && data ? data.typeOfResource : '',
+  document: isEdit && data ? data.document : null,
   className: currentClass,
   subject: isEdit && data ? data.subject : currentSubject,
   chapter: isEdit && data ? data.chapter : '',
-  description: isEdit && data ? data.description : '',
   dateUploaded: isEdit && data ? data.dateUploaded : new Date().toLocaleDateString(),
-  status: isEdit && data ? data.status : 'draft',
 });

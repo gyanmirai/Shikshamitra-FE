@@ -1,0 +1,32 @@
+[
+    {
+      "title": "Science Electives",
+      "subjects": [
+        { "name": "Physics" },
+        { "name": "Chemistry" },
+        { "name": "Biology" }
+      ],
+      "subjectColor": "#42a5f5",
+      "createdBy": "admin@school.com"
+    },
+    {
+      "title": "Arts Electives",
+      "subjects": [
+        { "name": "History" },
+        { "name": "Geography" },
+        { "name": "Literature" }
+      ],
+      "subjectColor": "#ef5350",
+      "createdBy": "teacher1@school.com"
+    },
+    {
+      "title": "Technology Electives",
+      "subjects": [
+        { "name": "Computer Science" },
+        { "name": "Electronics" }
+      ],
+      "subjectColor": "#66bb6a",
+      "createdBy": "coordinator@school.com"
+    }
+  ]
+  

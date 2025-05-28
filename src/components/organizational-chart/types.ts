@@ -1,6 +1,19 @@
+import type { SxProps } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import type { TreeProps } from 'react-organizational-chart';
 
 // ----------------------------------------------------------------------
+export type NodeProps = OrgChartBaseNode & {
+  id?: string;
+  name: string;
+  group?: string;
+  role?: string;
+  avatarUrl?: string;
+  children?: any;
+  color?: string;
+  sx?: SxProps<Theme>;
+  type?: 'class' | 'subject';
+};
 
 export type OrgChartProps<T> = Omit<TreeProps, 'label' | 'children'> & {
   data: {

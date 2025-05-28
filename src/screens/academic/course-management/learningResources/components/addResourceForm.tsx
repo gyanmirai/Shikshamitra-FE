@@ -1,28 +1,24 @@
 'use client';
 
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from '../validationSchema';
 import { getLearningResourceInitialData } from './getLearningResourceInitialData';
-import SettingResourceTypeForm from '../../settings/components/learningResourceType/settingResourceTypeForm';
 
 import type { IResourceData, ICreateLearningResourcesProps } from '../type';
 // Component for creating and editing learning resources
@@ -34,15 +30,11 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   currentClass,
   currentSubject,
 }) => {
-  // State for managing messages and draft status
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
-
   // Fetch class data using custom hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const resourceDialog = useBoolean();
 
   // Initialize formik for form handling
   const formik = useFormik<IResourceData>({
@@ -53,13 +45,30 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
     onSubmit: (values) => {
       const updatedValues = {
         ...values,
-        status: isDraft ? 'Unpublish' : 'Publish',
         dateUploaded: isEdit ? values.dateUploaded : new Date().toLocaleDateString(), // Only update if not in edit mode
       };
       onSave(updatedValues);
       onClose(null, true);
     },
   });
+
+  /**
+   * Handles file drop event from the upload component
+   * Takes the first file from accepted files and sets it as the document value
+   * @param acceptedFiles - Array of files dropped by user
+   */
+  const handleDrop = (acceptedFiles: File[]) => {
+    formik.setFieldValue('document', acceptedFiles[0]);
+  };
+
+  /**
+   * Handles file removal from the upload component
+   * Clears the document value in form state
+   * @param fileToRemove - File object or string to be removed (not used but required by Upload component)
+   */
+  const handleRemove = (fileToRemove: string | File) => {
+    formik.setFieldValue('document', null);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -156,156 +165,40 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
-              {/* Resource type selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false}
-                >
-                  <CustomSelect
-                    label="Select Resource Type *"
-                    options={[
-                      { value: 'video', label: 'Video' },
-                      { value: 'audio', label: 'Audio' },
-                      { value: 'document', label: 'Document' },
-                    ]}
-                    value={formik.values.typeOfResource}
-                    onChange={(val) => {
-                      formik.setFieldValue('typeOfResource', val as string);
-                    }}
-                    placeholder="Select Resource Type"
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    error={
-                      !!(formik.touched.typeOfResource && formik.errors.typeOfResource) || false
-                    }
-                    helperText={
-                      (formik.touched.typeOfResource && formik.errors.typeOfResource) || ''
-                    }
-                  />
-                </ShakingTextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    resourceDialog.onTrue();
-                  }}
-                >
-                  Add Resource Type ?
-                </Typography>
-                <CustomDialog
-                  open={resourceDialog.value}
-                  handleClose={() => {
-                    resourceDialog.onFalse();
-                  }}
-                  title="Add Learning Resource"
-                >
-                  <SettingResourceTypeForm
-                    open={resourceDialog}
-                    onClose={resourceDialog.onFalse}
-                    editData={null}
-                  />
-                </CustomDialog>
-              </Grid>
-              {/* Description text area */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                >
-                  <TextField
-                    label="Description *"
-                    size="small"
-                    multiline
-                    rows={4}
-                    name="description"
-                    value={formik.values.description}
-                    onChange={formik.handleChange}
-                    placeholder="Enter Description"
-                    fullWidth
-                    error={!!(formik.touched.description && formik.errors.description) || false}
-                    helperText={(formik.touched.description && formik.errors.description) || ''}
-                  />
-                </ShakingTextField>
-              </Grid>
+
               {/* File upload box */}
               <Grid item xs={12} md={6}>
-                <UploadBox
-                  onDrop={() => {}}
-                  placeholder={
-                    <Box
-                      sx={{
-                        gap: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.disabled',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Upload Material</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
+                <Upload
+                  multiple
+                  value={formik.values.document}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
+                  sx={{}}
                 />
               </Grid>
             </Grid>
           </Scrollbar>
           {/* Action buttons */}
           <DialogActions>
-            {isEdit ? (
-              <>
-                <Button
-                  variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                  onClick={() => {
-                    onClose(null, false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.edit} />}
-                  onClick={() => {
-                    setIsDraft(true);
-                    formik.handleSubmit();
-                  }}
-                >
-                  Update
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-                  onClick={() => {
-                    setIsDraft(true);
-                    formik.handleSubmit();
-                  }}
-                >
-                  Save Draft
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.publish} />}
-                  onClick={() => {
-                    setIsDraft(false);
-                    formik.handleSubmit();
-                  }}
-                >
-                  Publish
-                </Button>
-              </>
-            )}
+            <Button
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => {
+                onClose(null, false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              onClick={() => {
+                formik.handleSubmit();
+              }}
+            >
+              {isEdit ? 'Update' : 'Submit'}
+            </Button>
           </DialogActions>
         </Box>
       </form>

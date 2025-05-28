@@ -1,9 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { Division, Standards, Organization } from 'src/types/school';
 
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
@@ -12,6 +14,7 @@ import {
   Paper,
   Table,
   Button,
+  Tooltip,
   useTheme,
   TableRow,
   MenuList,
@@ -27,8 +30,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   TimetableStatusType,
   TimetableStatusColors,
@@ -52,7 +53,7 @@ import type { TSubjectGroup, TRemainingLectures } from './type';
 export const subjectGroups: TSubjectGroup[] = [
   {
     subjectName: 'Core Subjects',
-    subjectColor: '#f38df3',
+    subjectColor: '#ef5350',
     noOfLecture: 7,
     subjectType: 'core',
     subjects: [
@@ -65,7 +66,7 @@ export const subjectGroups: TSubjectGroup[] = [
   },
   {
     subjectName: 'Language Subjects',
-    subjectColor: '#8dd4f3',
+    subjectColor: '#42a5f5',
     noOfLecture: 7,
     subjectType: 'elective',
     subjects: [
@@ -85,29 +86,47 @@ export const subjectGroups: TSubjectGroup[] = [
 const TimeTableGrid = (props: TabComponentType) => {
   const createSlotsDialog = useBoolean();
 
-  // Query to fetch class data using custom hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  // Query hook to fetch class data from the API
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes, setDivision]);
 
   // State for managing classroom selection
   const [classroom, setClassroom] = useState<string>('');
 
   // State for managing modal/dialog open state
   const [open, setOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
 
   // Props for managing URL search parameters
   const { searchParams, setSearchParams } = props;
-
-  // classes: Stores the selected class ID from the available classes
-  const [classes, setClasses] = useState<string>('');
-
-  // division: Stores the selected division ID for the chosen class
-  const [division, setDivision] = useState<string>('');
-
-  // divisionOptions: Stores array of available divisions for the selected class
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // Theme object from Material-UI
   const theme = useTheme();
@@ -122,36 +141,6 @@ const TimeTableGrid = (props: TabComponentType) => {
       {}
     )
   );
-
-  // Effect hook to handle class and division selection logic
-  useEffect(() => {
-    // Check if class data exists and has items
-    if (classData?.items?.length) {
-      if (classes) {
-        // If a class is selected, find the selected class from the data
-        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
-        // Set division options based on selected class
-        setDivisionOptions(selectedClass?.divisions || []);
-        // If divisions exist, set the first division as default
-        if (selectedClass?.divisions?.length) {
-          setDivision(selectedClass.divisions[0].id);
-        }
-      } else {
-        // If no class is selected, use the first class as default
-        const firstClass = classData.items[0];
-        // Update URL search params with the first class ID
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
-        // Set division options for the first class
-        setDivisionOptions(firstClass?.divisions || []);
-        // If divisions exist, set the first division as default
-        if (firstClass?.divisions?.length) {
-          setDivision(firstClass.divisions[0].id);
-        }
-      }
-    }
-  }, [classData, classes, setSearchParams]);
 
   // Define time slots for the timetable
   const timeSlots = [
@@ -332,6 +321,8 @@ const TimeTableGrid = (props: TabComponentType) => {
           {(row.status === 1 || row.status === 2) && (
             <MenuItem
               onClick={() => {
+                setOpen(true);
+                setIsEdit(true);
                 // TODO: Implement update functionality
               }}
             >
@@ -345,95 +336,179 @@ const TimeTableGrid = (props: TabComponentType) => {
     []
   );
 
-  const links = open
-    ? [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
-        { name: 'New Timetable', href: '/academic/newTimetable' },
-      ]
-    : [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
-      ];
-
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="New Timetable"
-        links={links}
-        description={
-          open
-            ? 'Create new timetable for selected class and division'
-            : 'View and manage division-wise timetables'
-        }
-        sx={{ px: 1, mb: 2 }}
-        action={
-          open && (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="eva:arrow-back-fill" />}
-              onClick={() => {
-                setOpen(false);
-              }}
+      {open ? (
+        <CustomBreadcrumbs
+          heading="Timetable Management"
+          links={[
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
+          ]}
+          description="Create new timetable for selected class and division"
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={() => {
+            setOpen(false);
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="New Timetable"
+          links={[
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
+            { name: 'New Timetable', href: '/academic/newTimetable' },
+          ]}
+          description="Create new timetable for selected class and division"
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            {isEdit ? 'Update Timetable' : 'Create Timetable'}{' '}
+            <Tooltip
+              arrow
+              placement="right"
+              title="Create or update timetable schedules for classes and divisions to organize daily academic activities"
             >
-              Back
-            </Button>
-          )
-        }
-      />
-      {open && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
-              label="Class"
-              options={classData?.items || []}
-              labelKey="name"
-              disabled
-              valueKey="id"
-              onChange={(val) => {
-                const selectedClass: Standards = classData.items.find(
-                  (i: Standards) => i.id === val
-                );
-                setSearchParams?.({
-                  classId: val as string,
-                });
-                setDivisionOptions(selectedClass?.divisions || []);
-              }}
-              value={classes}
-              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              label="Division"
-              disabled={!classes}
-              labelKey="name"
-              valueKey="id"
-              options={divisionOptions}
-              value={division}
-              onChange={(val) => {
-                setDivision(val as string);
-              }}
-              formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            />
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </Tooltip>{' '}
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              variant="outlined"
-              size="small"
+        }
+        handleClose={() => {
+          setOpen(false);
+        }}
+        open={open}
+        fullScreen
+      >
+        <Box p={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 1,
+              mt: 2,
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <CustomSelect
+                options={allClass}
+                label="Class"
+                value={classes}
+                onChange={(val) => setClasses(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+              />
+              <CustomSelect
+                options={allDivision}
+                label="Division"
+                value={division}
+                onChange={(val) => setDivision(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                disabled={!classes}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+                variant="outlined"
+                size="small"
+              >
+                Draft
+              </Button>
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.publish} />}
+                variant="contained"
+                size="small"
+              >
+                Publish
+              </Button>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
+            <Paper
+              elevation={2}
+              sx={{
+                width: 200,
+                height: 'fit-content',
+              }}
             >
-              Draft
-            </Button>
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.publish} />}
-              variant="contained"
-              size="small"
-            >
-              Publish
-            </Button>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="h6">Subjects</Typography>
+              </Box>
+              <Box sx={{ p: 1 }}>
+                <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
+              </Box>
+            </Paper>
+            {timeSlots.length > 0 ? (
+              <Paper elevation={2} sx={{ flexGrow: 1 }}>
+                <TableContainer>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ width: '9%' }}>Time Slot</TableCell>
+                        {weekDays.map((day) => (
+                          <TableCell key={day} align="center">
+                            {day}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {timeSlots.map((timeSlot, timeSlotIndex) => (
+                        <TableRow key={timeSlot}>
+                          <TableCell>{timeSlot}</TableCell>
+                          {weekDays.map((day, dayIndex) => (
+                            <TimeTableCell
+                              key={`${timeSlot}-${day}`}
+                              timeSlot={timeSlot}
+                              day={day}
+                              slotData={timetable[timeSlotIndex][dayIndex]}
+                              isBreak={isBreak(timeSlot)}
+                              onDrop={handleDrop}
+                              selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
+                              onTeacherSelect={handleTeacherSelect}
+                              onRoomSelect={handleRoomSelect}
+                              onDeleteSlot={handleDeleteSlot}
+                            />
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            ) : (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'flex-end',
+                  mt: 2,
+                  mb: 2,
+                }}
+              >
+                <Button
+                  startIcon={<Add />}
+                  size="small"
+                  variant="contained"
+                  onClick={() => {
+                    createSlotsDialog.onTrue();
+                  }}
+                >
+                  Create Slots
+                </Button>
+              </Box>
+            )}
           </Box>
         </Box>
-      )}
+      </CustomDialog>
 
       <CustomDialog
         open={createSlotsDialog.value}
@@ -451,8 +526,7 @@ const TimeTableGrid = (props: TabComponentType) => {
             <CustomSelect
               label="Class"
               name="class"
-              isLoading={isLoading}
-              options={classData?.items || []}
+              options={allClass}
               valueKey="id"
               labelKey="name"
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
@@ -465,8 +539,12 @@ const TimeTableGrid = (props: TabComponentType) => {
           <CustomizableTable
             tableId="timetable-table"
             searchFieldProps={{
-              placeholder: 'Search by Division, Status',
-              label: 'Search by Division, Status',
+              placeholder: 'Search by Division, Status...',
+              label: 'Search by Division, Status...',
+              sx: {
+                maxWidth: '240px',
+                width: '100%',
+              },
             }}
             noDataText="No Time Table Data Found"
             columns={[
@@ -537,84 +615,6 @@ const TimeTableGrid = (props: TabComponentType) => {
             ]}
           />{' '}
         </>
-      )}
-      {open && (
-        <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
-          <Paper
-            elevation={2}
-            sx={{
-              width: 200,
-              height: 'fit-content',
-            }}
-          >
-            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-              <Typography variant="h6">Subjects</Typography>
-            </Box>
-            <Box sx={{ p: 1 }}>
-              <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
-            </Box>
-          </Paper>
-          {timeSlots.length > 0 ? (
-            <Paper elevation={2} sx={{ flexGrow: 1 }}>
-              <TableContainer>
-                <Table stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
-                      {weekDays.map((day) => (
-                        <TableCell key={day} align="center">
-                          {day}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {timeSlots.map((timeSlot, timeSlotIndex) => (
-                      <TableRow key={timeSlot}>
-                        <TableCell>{timeSlot}</TableCell>
-                        {weekDays.map((day, dayIndex) => (
-                          <TimeTableCell
-                            key={`${timeSlot}-${day}`}
-                            timeSlot={timeSlot}
-                            day={day}
-                            slotData={timetable[timeSlotIndex][dayIndex]}
-                            isBreak={isBreak(timeSlot)}
-                            onDrop={handleDrop}
-                            selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
-                            onTeacherSelect={handleTeacherSelect}
-                            onRoomSelect={handleRoomSelect}
-                            onDeleteSlot={handleDeleteSlot}
-                          />
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Paper>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'flex-end',
-                mt: 2,
-                mb: 2,
-              }}
-            >
-              <Button
-                startIcon={<Add />}
-                size="small"
-                variant="contained"
-                onClick={() => {
-                  createSlotsDialog.onTrue();
-                }}
-              >
-                Create Slots
-              </Button>
-            </Box>
-          )}
-        </Box>
       )}
     </Box>
   );

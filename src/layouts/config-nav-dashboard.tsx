@@ -671,6 +671,13 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+1',
             },
             {
+              title: 'Choose Elective Subjects',
+              path: '/academic/choose-elective-subject',
+              _action: 'assign-elective-subject',
+              shortcutKey: 'Alt+A+C+1',
+              shortcutKeyName: 'Alt+A+C+1',
+            },
+            {
               title: 'Teacher-Subject Pairing',
               path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
@@ -714,50 +721,7 @@ const academicModule = {
             },
           ],
         },
-        // {
-        //   title: 'Syllabus',
-        //   path: '/academic/course-management',
-        //   _action: 'course-management',
-        //   shortcutKey: 'Alt+A+S',
-        //   shortcutKeyName: 'Alt+A+S',
-        //   children: [
-        //     {
-        //       title: 'Syllabus Management',
-        //       path: '/academic/courseSubjects',
-        //       _action: 'course-management-subjects',
-        //       shortcutKey: 'Alt+A+S+1',
-        //       shortcutKeyName: 'Alt+A+S+1',
-        //     },
-        //     {
-        //       title: 'Learning Resources',
-        //       path: '/academic/learningResources',
-        //       _action: 'course-management-learningResources',
-        //       shortcutKey: 'Alt+A+S+2',
-        //       shortcutKeyName: 'Alt+A+S+2',
-        //     },
-        //     {
-        //       title: 'Syllabus Progress',
-        //       path: '/academic/courseProgress',
-        //       _action: 'course-management-courseProgress',
-        //       shortcutKey: 'Alt+A+S+3',
-        //       shortcutKeyName: 'Alt+A+S+3',
-        //     },
-        //     {
-        //       title: 'Reports',
-        //       path: '/academic/courseReports',
-        //       _action: 'course-management-reports',
-        //       shortcutKey: 'Alt+A+S+4',
-        //       shortcutKeyName: 'Alt+A+S+4',
-        //     },
-        //     {
-        //       title: 'Setting',
-        //       path: '/academic/courseSettings',
-        //       _action: 'course-management-settings',
-        //       shortcutKey: 'Alt+A+S+5',
-        //       shortcutKeyName: 'Alt+A+S+5',
-        //     },
-        //   ],
-        // },
+
         {
           title: 'Timetable Management',
           path: '',

@@ -176,8 +176,8 @@ const CourseProgress = (props: TabComponentType) => {
           {/* Table showing chapter-wise progress details */}
           <CustomizableTable
             searchFieldProps={{
-              placeholder: 'Search by Chapter Name, Teacher Name, Progress...',
-              label: 'Search by Chapter Name, Teacher Name, Progress...',
+              placeholder: 'Search by Chapter Name, Progress, Deadline...',
+              label: 'Search by Chapter Name, Progress, Deadline...',
               sx: {
                 maxWidth: '450px',
                 width: '100%',
