@@ -31,9 +31,6 @@ const HomeworkDocuments = ({ homework }: { homework: IHomework | null }) => {
                     position: 'relative',
                     '&:hover': {
                       boxShadow: 1,
-                      '& .document-actions': {
-                        opacity: 1,
-                      },
                     },
                   }}
                 >

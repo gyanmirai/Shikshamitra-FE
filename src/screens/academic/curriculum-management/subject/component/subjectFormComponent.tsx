@@ -1,6 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
+
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
 import {
@@ -17,9 +21,6 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -82,7 +83,7 @@ const teacherOptions = [
   { value: 'Priya', label: 'Priya' },
 ];
 
-const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
+const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps) => {
   // State to track if the form is in draft mode - determined by edit status or existing data status
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
   // Flag to check if the subject is already published
@@ -116,10 +117,24 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
   });
 
   // Fetch class data using custom query hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+  }, [medium]);
 
   // Initialize subject option when editing
   useEffect(() => {
@@ -187,7 +202,7 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
         name: subject.name,
         subjectName: subject.name,
         className: formik.values.className || '',
-        subjectCode: subject.code,
+        subjectCode: '',
         primaryTeacher: '',
         secondaryTeacher: [],
         description: '',
@@ -224,12 +239,11 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
                   <CustomSelect
-                    options={classData?.items || []}
+                    options={allClass}
                     label="Class"
-                    isLoading={isLoading}
-                    value={formik.values.className}
+                    value={formik.values.className || selectedClass}
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
@@ -246,7 +260,6 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
                     helperText={(formik.touched.className && formik.errors.className) || ''}
-                    disabled={isPublished}
                   />
                 </ShakingTextField>
               </Grid>
@@ -292,33 +305,31 @@ const SubjectForm = ({ onClose, data, isEdit }: ISubjectFormProps) => {
                     )}
                   />
                 </ShakingTextField>
-                <Box gap={1}>
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    textAlign="right"
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      addSubjectDialog.onTrue();
-                    }}
-                  >
-                    Add Subject ?
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    textAlign="right"
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      addElectiveSubjectDialog.onTrue();
-                    }}
-                  >
-                    Add Elective Subject ?
-                  </Typography>
+                <Box display="flex" justifyContent="space-between">
+                  <Box sx={{ display: 'inline-block' }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={500}
+                      color="primary.main"
+                      fontSize={12}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={addSubjectDialog.onTrue}
+                    >
+                      Add Subject ?
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'inline-block' }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={500}
+                      color="primary.main"
+                      fontSize={12}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={addElectiveSubjectDialog.onTrue}
+                    >
+                      Add Elective Subject ?
+                    </Typography>
+                  </Box>
                 </Box>
 
                 <CustomDialog

@@ -1,4 +1,13 @@
-import { Box, Card, Paper, Divider, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Card,
+  Paper,
+  Accordion,
+  Typography,
+  CardContent,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -64,13 +73,6 @@ const chapters = [
 const SubjectSyllabus = ({ subject }: { subject: ISubject }) => (
   <Card>
     <CardContent sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Chapters
-      </Typography>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Chapters Section */}
       {chapters.length > 0 ? (
         chapters.map((chapter, index) => (
           <Paper key={chapter.id} elevation={1} sx={{ p: 2, mb: 2, bgcolor: 'background.neutral' }}>
@@ -83,10 +85,21 @@ const SubjectSyllabus = ({ subject }: { subject: ISubject }) => (
               {chapter.description || 'No description provided.'}
             </Typography>
 
-            {/* Documents List */}
+            {/* Documents List with Accordion */}
             {chapter.documents?.length > 0 && (
               <Box sx={{ ml: 3 }}>
-                <DocumentList documents={chapter.documents} onDownload={() => {}} />
+                <Accordion>
+                  <AccordionSummary
+                    expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
+                    aria-controls={`documents-${chapter.id}-content`}
+                    id={`documents-${chapter.id}-header`}
+                  >
+                    <Typography>Documents ({chapter.documents.length})</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <DocumentList documents={chapter.documents} onDownload={() => {}} />
+                  </AccordionDetails>
+                </Accordion>
               </Box>
             )}
           </Paper>

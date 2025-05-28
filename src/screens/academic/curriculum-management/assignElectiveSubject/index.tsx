@@ -1,35 +1,58 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Save, RestartAlt } from '@mui/icons-material';
 import { Box, Button, TextField, Autocomplete } from '@mui/material';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const AssignElectiveSubject = () => {
-  // Query hook to fetch class data from the API
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  // State to store the selected division
-  const [division, setDivision] = useState<string>('');
-  const [electiveSubject, setElectiveSubject] = useState<string>('');
-  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
-  // State to store available division options
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-
-  // State to store the selected class
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  // Query hook to fetch class data from the API
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes, setDivision]);
+
+  // State to store the selected elective subject from dropdown
+  const [electiveSubject, setElectiveSubject] = useState<string>('');
+
+  // State to store the selected elective subject for individual students in the table
+  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
+
+  // Available elective subject options that can be assigned to students
   const teacherOptions = [
     { id: '1', name: 'Physics' },
     { id: '2', name: 'Chemistry' },
@@ -40,12 +63,12 @@ const AssignElectiveSubject = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Elective Subject to Students"
+        heading="Allocate Elective Subjects"
         description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
-          { name: 'Assign Elective Subject to Students' },
+          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Allocate Elective Subjects' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -53,33 +76,23 @@ const AssignElectiveSubject = () => {
         {/* Left side - Selects */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <CustomSelect
+            options={allClass}
             label="Class"
-            name="class"
-            options={classData?.items || []}
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             value={classes}
+            onChange={(val) => setClasses(val as string)}
             labelKey="name"
             valueKey="id"
-            onChange={(value) => {
-              const selectedClass: Standards = classData.items.find(
-                (i: Standards) => i.id === value
-              );
-              setClasses(selectedClass?.id);
-              setDivisionOptions(selectedClass?.divisions || []);
-            }}
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
           />
           <CustomSelect
+            options={allDivision}
             label="Division"
-            disabled={!classes}
+            value={division}
+            onChange={(val) => setDivision(val as string)}
             labelKey="name"
             valueKey="id"
-            options={divisionOptions}
-            value={division}
-            onChange={(val) => {
-              const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
-              setDivision(val as string);
-            }}
             formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!classes}
           />
           <CustomSelect
             label="Elective Subject"

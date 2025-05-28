@@ -1,9 +1,10 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
@@ -13,8 +14,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
 
@@ -34,14 +33,29 @@ const Subject = (props: TabComponentType) => {
   // State to manage subject table data and filtered data
   const [subjectTableData, setSubjectTableData] =
     useState<ISubjectFormValues[]>(electiveSubjectData);
-  const [filteredData, setFilteredData] = useState<ISubjectFormValues[]>([]);
 
   // Query hook to fetch class data
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
 
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
   // Dialog control for delete confirmation
@@ -50,13 +64,17 @@ const Subject = (props: TabComponentType) => {
   const confirmPublishDialog = useBoolean();
   // Dialog control for viewing subject details
   const showSubjectDialog = useBoolean();
-  // State to store selected class value
-  const [classes, setClasses] = useState('');
-
   // State for managing selected subject and edit mode
+  // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
+
+  // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
+
+  // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function for triggering actions
   const dispatch = useDispatch();
   // State to track pending status changes for subjects
   const [pendingStatusChange, setPendingStatusChange] = useState<{
@@ -123,54 +141,62 @@ const Subject = (props: TabComponentType) => {
     ? [
         // Links when form is open
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum' },
-        { name: 'Subject' },
+        { name: 'Curriculum Management' },
+        { name: 'Allocate Subject' },
         { name: 'Subject Form' },
       ]
     : [
         // Links when viewing subject list
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum' },
-        { name: 'Subject' },
+        { name: 'Curriculum Management' },
+        { name: 'Allocate Subject' },
       ];
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
-      <CustomBreadcrumbs
-        heading="Subject"
-        description={
-          addSubjectDialog.value
-            ? 'Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries.'
-            : 'Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={addSubjectDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              addSubjectDialog.value
-                ? () => handleClose(null, false)
-                : () => {
-                    addSubjectDialog.onTrue();
-                    setIsEdit(false);
-                    setSelectedSubject(null);
-                  }
-            }
-          >
-            {addSubjectDialog.value ? 'Back' : 'Subject'}
-          </Button>
-        }
-      />
+      {addSubjectDialog.value ? (
+        <CustomBreadcrumbs
+          heading={selectedSubject ? 'Update Subject' : 'Publish Subject'}
+          description="Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries."
+          isBack
+          onBack={() => {
+            handleClose(null, false);
+          }}
+          links={[
+            // Links when viewing subject list
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Curriculum Management' },
+            { name: 'Allocate Subject' },
+
+            { name: selectedSubject ? 'Update Subject' : 'Publish Subject' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Allocate Subject"
+          description="Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed."
+          links={[
+            // Links when form is open
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Curriculum Management' },
+            { name: 'Allocate Subject' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
       {/* Conditional rendering based on form state */}
       {addSubjectDialog.value ? (
         <>
           {/* Subject form card for creating/editing subjects */}
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <SubjectForm onClose={handleClose} data={selectedSubject} isEdit={isEdit} />{' '}
+            <SubjectForm
+              onClose={handleClose}
+              data={selectedSubject}
+              isEdit={isEdit}
+              selectedClass={classes}
+            />{' '}
           </Card>
         </>
       ) : (
@@ -182,16 +208,34 @@ const Subject = (props: TabComponentType) => {
             <CustomSelect
               label="Class"
               name="class"
-              isLoading={isLoading}
-              options={classData?.items || []}
+              options={allClass}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ sx: { maxWidth: '360px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 setClasses(value as string);
               }}
             />
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={
+                addSubjectDialog.value
+                  ? () => handleClose(null, false)
+                  : () => {
+                      addSubjectDialog.onTrue();
+                      setIsEdit(false);
+                      setSelectedSubject(null);
+                    }
+              }
+              sx={{
+                width: '200px',
+              }}
+            >
+              Allocate Subject
+            </Button>
           </Box>
           {/* Subject table displayed when class is selected */}
 
@@ -223,7 +267,7 @@ const Subject = (props: TabComponentType) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Subject ?"
         action={
           <Button
             variant="contained"
@@ -262,7 +306,7 @@ const Subject = (props: TabComponentType) => {
 
       {/* View subject details dialog */}
       <CustomDialog
-        title="Subject Details"
+        title={selectedSubject?.subjectName}
         open={showSubjectDialog.value}
         handleClose={() => {
           showSubjectDialog.onFalse();

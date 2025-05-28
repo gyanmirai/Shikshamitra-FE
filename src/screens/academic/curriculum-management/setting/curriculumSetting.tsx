@@ -22,7 +22,7 @@ const TABS = [
   },
   {
     value: 'electiveSubjectSetting',
-    label: 'Elective Subject Creation',
+    label: 'Elective Group',
     component: (props: TabComponentType) => <ElectiveSubjectSetting {...props} />,
   },
 ];
@@ -42,7 +42,7 @@ const CurriculumSetting = () => {
         description="Setting for creating global subjects, elective subject and notification setting"
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Setting' },
           { name: currentActiveComponent?.label },
         ]}
