@@ -66,7 +66,7 @@ const LectureSlots = () => {
           size="small"
           onClick={createSlotsDialog.onTrue}
         >
-          Create Slots
+          Slots
         </Button>
       </Box>
       <CustomizableTable

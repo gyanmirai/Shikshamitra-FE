@@ -2,11 +2,11 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -19,26 +19,28 @@ const TABS = [
   {
     value: 'weeklyLectures',
     label: 'Weekly Lectures',
-    component: () => <WeeklyLectures />,
+    component: (props?: TabComponentType) => <WeeklyLectures />,
     // component: (props: TabComponentType) => <GradingScale {...props} />,
   },
   {
     value: 'lectureSlots',
     label: 'Lecture Slots',
-    component: () => <LectureSlots />,
+    component: (props?: TabComponentType) => <LectureSlots />,
   },
   {
     value: 'roomDetails',
     label: 'Room Details',
-    component: () => <RoomDetails />,
+    component: (props?: TabComponentType) => <RoomDetails />,
     // component: (props: TabComponentType) => <GradeSubmission {...props} />,
   },
 ];
 
 const TimetableSettingScreen = (props: TabComponentType) => {
-  const tabs = useTabs('weeklyLectures');
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'weeklyLectures' });
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
   return (
     <Box>
       <CustomBreadcrumbs
@@ -46,7 +48,8 @@ const TimetableSettingScreen = (props: TabComponentType) => {
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
           { name: 'Time Table', href: '/academic/timeTableDashboard' },
-          { name: 'Settings' },
+          { name: 'Setting' },
+          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -56,8 +59,8 @@ const TimetableSettingScreen = (props: TabComponentType) => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
           variant="fullWidth"
           slotProps={{ tab: { px: 0 } }}
         >
@@ -67,7 +70,12 @@ const TimetableSettingScreen = (props: TabComponentType) => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {CurrentComponent?.()}
+        {currentActiveComponent?.component && (
+          <currentActiveComponent.component
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+          />
+        )}{' '}
       </Box>
     </Box>
   );

@@ -25,13 +25,16 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
       <Grid item xs={12} md={8}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              <Iconify icon="mdi:information-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+              <Iconify
+                icon="mdi:information-outline"
+                sx={{ mr: 1, height: '22px', width: '22px' }}
+              />
               Basic Information
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
-            <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
+            <DetailRow label="Subject Code" value={subject?.subjectCode} icon="bi:file-code" />
             <DetailRow
               label="Description"
               value={subject?.description}
@@ -49,27 +52,26 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
 
       <Grid item xs={12} md={4}>
         <Card sx={{ height: '100%' }}>
-          <Scrollbar sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                <Iconify icon="mdi:account-group" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Teachers
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          <CardContent sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+              <Iconify icon="mdi:account-group" sx={{ mr: 1, height: '22px', width: '22px' }} />
+              Teachers
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Scrollbar sx={{ height: '270px' }}>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
                   Primary Teacher
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <ListItem
                     disablePadding
                     sx={{
-                      backgroundColor: 'background.paper',
                       borderRadius: '8px',
                       p: 1,
-                      boxShadow: 2,
+                      boxShadow: 3,
                       my: 1,
+                      bgcolor: 'background.neutral',
                     }}
                   >
                     <ListItemAvatar>
@@ -103,15 +105,13 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                       />
                     </ListItemAvatar>
                     <ListItemText
-                      primary={
-                        <Typography variant="subtitle2">{subject?.primaryTeacher}</Typography>
-                      }
+                      primary={<Typography variant="body2">{subject?.primaryTeacher}</Typography>}
                     />
                   </ListItem>
                 </Box>
               </Box>
 
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography variant="subtitle2" gutterBottom>
                 Secondary Teachers
               </Typography>
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
@@ -123,7 +123,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                       backgroundColor: 'background.paper',
                       borderRadius: '8px',
                       p: 1,
-                      boxShadow: 2,
+                      boxShadow: 3,
                       my: 1,
                     }}
                   >
@@ -157,9 +157,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                         }}
                       />
                     </ListItemAvatar>
-                    <ListItemText
-                      primary={<Typography variant="subtitle2">{teacher}</Typography>}
-                    />
+                    <ListItemText primary={<Typography variant="body2">{teacher}</Typography>} />
                   </ListItem>
                 ))
               ) : (
@@ -167,8 +165,8 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                   No secondary teachers assigned
                 </Typography>
               )}
-            </CardContent>
-          </Scrollbar>
+            </Scrollbar>
+          </CardContent>
         </Card>
       </Grid>
     </Grid>

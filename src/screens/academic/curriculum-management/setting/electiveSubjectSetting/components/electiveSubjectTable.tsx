@@ -22,8 +22,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   <CustomizableTable
     tableId="elective-subject-data-table"
     searchFieldProps={{
-      placeholder: 'Search by Elective Subject Title, Subjects...',
-      label: 'Search by Elective Subject Title, Subjects...',
+      placeholder: 'Search by Elective Group, Subjects...',
+      label: 'Search by Elective Group, Subjects...',
       sx: {
         maxWidth: '450px',
         width: '100%',
@@ -47,15 +47,15 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
             },
           }}
         >
-          Add Elective Subject
+          Add Elective Group
         </Box>
       </>
     }
     columns={[
-      { id: 'title', label: 'Elective Subject', align: 'left' },
+      { id: 'title', label: 'Elective Group', align: 'left' },
       {
         id: 'subjects',
-        label: 'List of Subjects',
+        label: 'Subjects List',
         align: 'left',
         render: (value) => (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -84,6 +84,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           );
         },
       },
+      { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
         label: 'Action',

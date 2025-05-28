@@ -21,7 +21,7 @@ export interface IChapter {
     pdfs: number;
   };
   progress: number; // Percentage from 0 to 100
-  documents?: IDocument[];
+  documents?: File[];
 }
 
 export interface IChapterFormValues {
@@ -32,7 +32,7 @@ export interface IChapterFormValues {
   startTime: Dayjs | null;
   endTime: Dayjs | null;
   timeLine: Dayjs | null;
-  documents?: IDocument[];
+  documents?: File[];
 }
 
 // Props interface for AddNewChapter component

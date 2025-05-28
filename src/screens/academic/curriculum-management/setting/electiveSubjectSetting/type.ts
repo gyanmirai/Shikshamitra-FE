@@ -6,6 +6,7 @@ export type IElectiveSubject = {
     name: string;
   }[];
   subjectColor: string;
+  createdBy: string;
 };
 
 export interface IElectiveSubjectFormProps {

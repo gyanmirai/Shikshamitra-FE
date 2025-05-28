@@ -8,7 +8,7 @@ export interface ISubject {
   subjectColor?: string;
   primaryTeacher: string;
   secondaryTeacher: string[] | null;
-  documents?: IDocument[];
+  documents?: File[];
   prerequisites: string;
   learningGoal: string;
   description: string;
@@ -40,6 +40,7 @@ export interface ISubjectFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
   data: ISubjectFormValues | null;
   isEdit: boolean;
+  selectedClass: string;
 }
 
 export interface IViewSubjectProps {

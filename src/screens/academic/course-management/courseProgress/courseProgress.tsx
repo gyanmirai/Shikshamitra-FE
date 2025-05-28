@@ -1,8 +1,8 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -12,11 +12,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
+  Slider,
   MenuList,
   MenuItem,
-  TextField,
   Typography,
   DialogActions,
+  sliderClasses,
   CircularProgress,
 } from '@mui/material';
 
@@ -24,8 +25,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
@@ -34,6 +33,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
+import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -56,41 +56,42 @@ const CourseProgress = (props: TabComponentType) => {
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
   };
+  // Get isChanges state from Redux store to track if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get dispatch function to dispatch Redux actions
   const dispatch = useDispatch();
 
-  // Fetch class data using custom hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  // Query hook to fetch class data from the API
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
-  // States for managing class and division selection
-  const [classes, setClasses] = useState('');
-  const [division, setDivision] = useState('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-
-  // Effect to handle class and division selection logic
+  // Update classes when organization changes
   useEffect(() => {
-    if (classData?.items?.length) {
-      if (classes) {
-        // If a class is selected, find the selected class and update division options
-        const selectedClass = classData.items.find((i: Standards) => i.id === classes);
-        setDivisionOptions(selectedClass?.divisions || []);
-        if (selectedClass?.divisions?.length) {
-          setDivision(selectedClass.divisions[0].id);
-        }
-      } else {
-        // If no class is selected, default to first class and its divisions
-        const firstClass = classData.items[0];
-        setClasses(firstClass.id);
-        setDivisionOptions(firstClass?.divisions || []);
-        if (firstClass?.divisions?.length) {
-          setDivision(firstClass.divisions[0].id);
-        }
-      }
-    }
-  }, [classData, classes]);
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes, setDivision]);
 
   // Callback function to render action menu items
   const actions = useCallback(
@@ -102,12 +103,7 @@ const CourseProgress = (props: TabComponentType) => {
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
-        {/* Mark as complete action item */}
-        <MenuItem onClick={() => {}}>
-          {' '}
-          <Iconify icon="mdi:tick" />
-          Mark As Complete
-        </MenuItem>
+
         {/* Update progress action item */}
         <MenuItem
           onClick={() => {
@@ -141,7 +137,7 @@ const CourseProgress = (props: TabComponentType) => {
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Syllabus', href: '/academic/courseSubjects' },
+          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Syllabus Progress' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -149,29 +145,23 @@ const CourseProgress = (props: TabComponentType) => {
       {/* Class and Division selection filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
         <CustomSelect
+          options={allClass}
           label="Class"
-          name="class"
-          isLoading={isLoading}
-          options={classData?.items || []}
-          valueKey="id"
-          labelKey="name"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           value={classes}
-          onChange={(value) => {
-            setClasses(value as string);
-          }}
+          onChange={(val) => setClasses(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
+          options={allDivision}
           label="Division"
-          disabled={!classes}
+          value={division}
+          onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            setDivision(val as string);
-          }}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!classes}
         />
       </Box>
       {/* Grid of course cards showing progress */}
@@ -197,7 +187,6 @@ const CourseProgress = (props: TabComponentType) => {
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterName', label: 'Chapter Name', align: 'left' },
-              { id: 'teacherName', label: 'Teacher Name', align: 'left' },
               {
                 id: 'progress',
                 label: 'Progress',
@@ -234,7 +223,7 @@ const CourseProgress = (props: TabComponentType) => {
               },
               {
                 id: 'timeLine',
-                label: 'Timeline',
+                label: 'Deadline',
                 align: 'left',
                 filterType: 'date',
                 render: (value, row) => (
@@ -245,7 +234,7 @@ const CourseProgress = (props: TabComponentType) => {
               },
               {
                 id: 'actions',
-                label: 'Actions',
+                label: 'Action',
                 minWidth: 50,
                 align: 'left',
                 sticky: true,
@@ -280,10 +269,17 @@ const CourseProgress = (props: TabComponentType) => {
 
 export default CourseProgress;
 
+const marks = [
+  { value: 0, label: '0' },
+  { value: 20, label: '20' },
+  { value: 37, label: '40' },
+  { value: 100, label: '100' },
+];
+
 const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProgressProps) => {
   const formik = useFormik({
     initialValues: {
-      completePercentage: '', // Adjusted field name to match the input ID
+      completePercentage: 0, // Adjusted field name to match the input ID
     },
     validationSchema: Yup.object({
       completePercentage: Yup.number()
@@ -302,19 +298,19 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
-          <TextField
-            fullWidth
-            id="completePercentage"
-            name="completePercentage"
-            label="Add Approax Percentage"
-            placeholder="Enter Add Approax Percentage"
-            value={formik.values.completePercentage}
-            onChange={formik.handleChange}
-            error={formik.touched.completePercentage && Boolean(formik.errors.completePercentage)}
-            // @ts-ignore
-            helperText={formik.touched.completePercentage && formik.errors.completePercentage}
-            size="small"
-          />
+          <ComponentBlock>
+            <Slider
+              defaultValue={20}
+              onChange={(event, value) => {
+                formik.setFieldValue('completePercentage', value);
+              }}
+              getAriaValueText={(value) => `${value}%`}
+              step={10}
+              valueLabelDisplay="auto"
+              marks={marks}
+              sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
+            />
+          </ComponentBlock>
         </ShakingTextField>
         <DialogActions sx={{ flexShrink: 0, p: 2 }}>
           <CancelButton

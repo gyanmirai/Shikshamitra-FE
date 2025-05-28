@@ -8,10 +8,8 @@ import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments
 
 import { Iconify } from 'src/components/iconify';
 
-import type { IDocument } from '../type';
-
 // Documents panel content
-const ChapterDocuments = ({ documents }: { documents: IDocument[] | undefined }) => {
+const ChapterDocuments = ({ documents }: { documents: File[] | undefined }) => {
   // State to manage subject documents data initialized with mock data from JSON
   const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
 
@@ -79,8 +77,6 @@ const ChapterDocuments = ({ documents }: { documents: IDocument[] | undefined })
                         mt: 'auto',
                         display: 'flex',
                         justifyContent: 'flex-end',
-                        opacity: 0.4,
-                        transition: 'opacity 0.2s ease',
                       }}
                     >
                       <Tooltip title="Preview">

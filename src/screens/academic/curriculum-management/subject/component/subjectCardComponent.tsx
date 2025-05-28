@@ -18,9 +18,9 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
+import { Upload } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { ISubjectCardProps } from './type';
@@ -50,14 +50,29 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   const getError = (field: string) =>
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
+
+  const handleDrop = (acceptedFiles: File[]) => {
+    handleChange('documents', [...(subject.documents || []), ...acceptedFiles]);
+  };
+
+  const handleRemove = (fileToRemove: string | File) => {
+    const updatedDocuments = (subject.documents || []).filter((file) => {
+      if (typeof fileToRemove === 'string') {
+        return file.name !== fileToRemove;
+      }
+      return file !== fileToRemove;
+    });
+    handleChange('documents', updatedDocuments);
+  };
+
   return (
     <Accordion
       expanded={isExpanded}
       onChange={() => setIsExpanded(!isExpanded)}
       sx={{
         border: '1px solid #ccc',
-        borderRadius: 2,
         boxShadow: 'none', // optional, remove default shadow
+        borderRadius: 1, // optional, round corners
         '&:before': {
           display: 'none', // remove default divider line at top
         },
@@ -65,19 +80,21 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box display="flex" gap={1}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {subject.subjectName || 'CHEMISTRY'}
-          </Typography>
+        <Box display="flex" gap={2}>
           <Box
             sx={{
               width: 16,
               height: 16,
-              mt: 0.5,
               borderRadius: '50%',
+              mt: 0.5,
               backgroundColor: subject.subjectColor,
             }}
           />
+
+          <Typography variant="subtitle1" fontWeight={600}>
+            {subject.subjectName || 'CHEMISTRY'}
+          </Typography>
+          {subject.subjectCode && <Label color="secondary">{subject?.subjectCode}</Label>}
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -170,7 +187,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </FormControl>
           </Grid>
           {/* Learning Goal */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} lg={4}>
             <ShakingTextField error={!!getError('learningGoal')}>
               <Editor
                 onChange={(value) => handleChange('learningGoal', value)}
@@ -182,7 +199,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </ShakingTextField>
           </Grid>
           {/* Prerequisites */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} lg={4}>
             <ShakingTextField error={!!getError('prerequisites')}>
               <Editor
                 onChange={(value) => handleChange('prerequisites', value)}
@@ -194,12 +211,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </ShakingTextField>
           </Grid>
           {/* Description */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} lg={4}>
             <ShakingTextField error={!!getError('description')}>
               <TextField
                 fullWidth
                 multiline
-                rows={4}
+                rows={9.5}
                 label="Description"
                 placeholder="Enter Description"
                 size="small"
@@ -212,33 +229,13 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </ShakingTextField>
           </Grid>
           {/* Upload Document */}
-          <Grid item xs={12} md={6}>
-            <UploadBox
-              onDrop={() => {}}
-              placeholder={
-                <Box
-                  sx={{
-                    gap: 0.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'text.disabled',
-                    flexDirection: 'column',
-                    minHeight: 110,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Iconify icon="eva:cloud-upload-fill" width={40} />
-                  <Typography variant="body2">Upload Material</Typography>
-                </Box>
-              }
-              sx={{
-                height: '100%',
-                width: '100%',
-                borderRadius: 1.5,
-                minHeight: 50,
-                bgcolor: 'grey.50',
-              }}
-              disabled={isPublished}
+          <Grid item xs={12}>
+            <Upload
+              multiple
+              value={subject.documents}
+              onDrop={handleDrop}
+              onRemove={handleRemove}
+              sx={{}}
             />
           </Grid>
         </Grid>

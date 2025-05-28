@@ -65,7 +65,8 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
                   <TextField
                     disabled={isEdit}
-                    label="Room Name"
+                    label="Room Name *"
+                    placeholder="Enter Room Name"
                     size="small"
                     name="roomNumber"
                     type="number"
@@ -84,7 +85,8 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                 >
                   <TextField
                     disabled={isEdit}
-                    label="Building Name"
+                    label="Building Name *"
+                    placeholder="Enter Building Name"
                     size="small"
                     name="buildingName"
                     value={formik.values.buildingName}
@@ -101,7 +103,8 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                   <TextField
                     disabled={isEdit}
                     name="floor"
-                    label="Floors"
+                    label="Floor *"
+                    placeholder="Enter Floor"
                     size="small"
                     type="number"
                     value={formik.values.floor}
@@ -117,7 +120,8 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.capacity && formik.errors.capacity)}>
                   <TextField
                     name="capacity"
-                    label="Room Capacity"
+                    label="Room Capacity *"
+                    placeholder="Enter Room Capacity"
                     type="number"
                     size="small"
                     value={formik.values.capacity}
