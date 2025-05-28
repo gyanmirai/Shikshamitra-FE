@@ -24,7 +24,7 @@ const ChapterTable = ({
       placeholder: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
       label: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
       sx: {
-        maxWidth: '500px',
+        maxWidth: '505px',
         width: '100%',
       },
     }}

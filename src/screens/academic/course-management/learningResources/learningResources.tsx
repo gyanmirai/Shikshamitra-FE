@@ -184,13 +184,13 @@ const LearningResources = (props: TabComponentType) => {
     ? [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
         { name: 'Syllabus', href: '/academic/courseSubjects' },
-        { name: 'Learning Resources' },
+        { name: 'Resources' },
         { name: 'Add Learning Resource' },
       ]
     : [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
         { name: 'Syllabus', href: '/academic/courseSubjects' },
-        { name: 'Learning Resources' },
+        { name: 'Resources' },
       ];
 
   return (

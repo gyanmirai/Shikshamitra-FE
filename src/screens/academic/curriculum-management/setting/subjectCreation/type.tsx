@@ -3,6 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface ISubject {
   subjectName: string;
   subjectColor: string;
+  createdBy: string;
 }
 
 export interface ISubjectFormProps {

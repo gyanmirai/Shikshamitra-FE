@@ -57,9 +57,9 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" justifyContent="flex-end" mb={1}>
         <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
-          Elective Subject
+          Elective Group
         </Button>
       </Box>
 
@@ -82,6 +82,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
             title: 'Language Electives',
             subjects: [{ name: 'French' }, { name: 'German' }, { name: 'Spanish' }],
             subjectColor: '#FF5733',
+            createdBy: 'John Smith',
           },
           {
             title: 'Science Electives',
@@ -91,11 +92,13 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
               { name: 'Environmental Science' },
             ],
             subjectColor: '#33FF57',
+            createdBy: 'Sarah Johnson',
           },
           {
             title: 'Arts Electives',
             subjects: [{ name: 'Painting' }, { name: 'Sculpture' }, { name: 'Music' }],
             subjectColor: '#3357FF',
+            createdBy: 'Michael Brown',
           },
         ]}
       />
@@ -106,7 +109,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
           addDialog.onFalse();
           setSelected(null);
         }}
-        title={selected ? 'Edit Elective Subject' : 'Add Elective Subject'}
+        title={selected ? 'Edit Elective Group' : 'Add Elective Group'}
       >
         <SettingElectiveSubjectForm open={addDialog} onClose={handleClose} editData={selected} />
       </CustomDialog>
@@ -118,7 +121,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
           deleteDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to Delete Elective Subject ?"
+        content="Are you sure you want to Delete Elective Subject ?"
         action={
           <Button
             variant="contained"
@@ -126,7 +129,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
             color="error"
             onClick={() => {}}
           >
-            Delete
+            Yes
           </Button>
         }
       />

@@ -42,12 +42,15 @@ const AssignSlots = () => {
           </Grid>
         </Scrollbar>
         <DialogActions>
+          <Button startIcon={<Iconify icon={GlobalIcons.cancel} />} variant="outlined">
+            Cancel
+          </Button>
           <Button
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             type="submit"
             variant="contained"
           >
-            Save
+            Submit
           </Button>
         </DialogActions>
       </form>

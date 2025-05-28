@@ -1,5 +1,6 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
@@ -28,6 +29,11 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  TimetableStatusType,
+  TimetableStatusColors,
+  TimetableStatusOptions,
+} from 'src/enums/timatable-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -46,7 +52,7 @@ import type { TSubjectGroup, TRemainingLectures } from './type';
 export const subjectGroups: TSubjectGroup[] = [
   {
     subjectName: 'Core Subjects',
-    subjectColor: '#FFB74D',
+    subjectColor: '#f38df3',
     noOfLecture: 7,
     subjectType: 'core',
     subjects: [
@@ -59,7 +65,7 @@ export const subjectGroups: TSubjectGroup[] = [
   },
   {
     subjectName: 'Language Subjects',
-    subjectColor: '#64B5F6',
+    subjectColor: '#8dd4f3',
     noOfLecture: 7,
     subjectType: 'elective',
     subjects: [
@@ -312,7 +318,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         {' '}
         <MenuList>
           {/* Show Add Timetable option for Pending status */}
-          {row.status === 'Pending' && (
+          {row.status === 0 && (
             <MenuItem
               onClick={() => {
                 setOpen(true);
@@ -323,13 +329,13 @@ const TimeTableGrid = (props: TabComponentType) => {
             </MenuItem>
           )}
           {/* Show Update option for Draft or Published timetables */}
-          {(row.status === 'Draft' || row.status === 'Publish') && (
+          {(row.status === 1 || row.status === 2) && (
             <MenuItem
               onClick={() => {
                 // TODO: Implement update functionality
               }}
             >
-              <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
               Update
             </MenuItem>
           )}
@@ -342,12 +348,12 @@ const TimeTableGrid = (props: TabComponentType) => {
   const links = open
     ? [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Time Table', href: '/academic/timeTableDashboard' },
+        { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
         { name: 'New Timetable', href: '/academic/newTimetable' },
       ]
     : [
         { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Time Table', href: '/academic/timeTableDashboard' },
+        { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
       ];
 
   return (
@@ -428,22 +434,7 @@ const TimeTableGrid = (props: TabComponentType) => {
           </Box>
         </Box>
       )}
-      {open && (
-        <Box
-          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mt: 2, mb: 2 }}
-        >
-          <Button
-            startIcon={<Add />}
-            size="small"
-            variant="contained"
-            onClick={() => {
-              createSlotsDialog.onTrue();
-            }}
-          >
-            Create Slots
-          </Button>
-        </Box>
-      )}
+
       <CustomDialog
         open={createSlotsDialog.value}
         handleClose={createSlotsDialog.onFalse}
@@ -483,21 +474,13 @@ const TimeTableGrid = (props: TabComponentType) => {
               {
                 id: 'status',
                 label: 'Status',
-                render: (value, row) => (
-                  <Label
-                    color={
-                      value === 'Pending'
-                        ? 'error'
-                        : value === 'Draft'
-                          ? 'warning'
-                          : value === 'Publish'
-                            ? 'primary'
-                            : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                ),
+                filterType: 'enum',
+                enumOptions: TimetableStatusOptions,
+                align: 'left',
+                render(value, row) {
+                  const color = TimetableStatusColors[value as TimetableStatusType] as LabelColor;
+                  return <Label color={color}>{TimetableStatusType[value]}</Label>;
+                },
               },
               {
                 id: 'action',
@@ -519,37 +502,37 @@ const TimeTableGrid = (props: TabComponentType) => {
                 id: 1,
                 className: 'Class 10',
                 division: 'A',
-                status: 'Publish',
+                status: 0,
               },
               {
                 id: 2,
                 className: 'Class 9',
                 division: 'B',
-                status: 'Pending',
+                status: 1,
               },
               {
                 id: 3,
                 className: 'Class 8',
                 division: 'C',
-                status: 'Draft',
+                status: 2,
               },
               {
                 id: 5,
                 className: 'Class 6',
                 division: 'E',
-                status: 'Pending',
+                status: 1,
               },
               {
                 id: 6,
                 className: 'Class 5',
                 division: 'F',
-                status: 'Draft',
+                status: 2,
               },
               {
                 id: 7,
                 className: 'Class 4',
                 division: 'G',
-                status: 'Publish',
+                status: 0,
               },
             ]}
           />{' '}
@@ -571,44 +554,66 @@ const TimeTableGrid = (props: TabComponentType) => {
               <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
             </Box>
           </Paper>
-
-          <Paper elevation={2} sx={{ flexGrow: 1 }}>
-            <TableContainer>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
-                    {weekDays.map((day) => (
-                      <TableCell key={day} align="center">
-                        {day}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {timeSlots.map((timeSlot, timeSlotIndex) => (
-                    <TableRow key={timeSlot}>
-                      <TableCell>{timeSlot}</TableCell>
-                      {weekDays.map((day, dayIndex) => (
-                        <TimeTableCell
-                          key={`${timeSlot}-${day}`}
-                          timeSlot={timeSlot}
-                          day={day}
-                          slotData={timetable[timeSlotIndex][dayIndex]}
-                          isBreak={isBreak(timeSlot)}
-                          onDrop={handleDrop}
-                          selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
-                          onTeacherSelect={handleTeacherSelect}
-                          onRoomSelect={handleRoomSelect}
-                          onDeleteSlot={handleDeleteSlot}
-                        />
+          {timeSlots.length > 0 ? (
+            <Paper elevation={2} sx={{ flexGrow: 1 }}>
+              <TableContainer>
+                <Table stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
+                      {weekDays.map((day) => (
+                        <TableCell key={day} align="center">
+                          {day}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+                  </TableHead>
+                  <TableBody>
+                    {timeSlots.map((timeSlot, timeSlotIndex) => (
+                      <TableRow key={timeSlot}>
+                        <TableCell>{timeSlot}</TableCell>
+                        {weekDays.map((day, dayIndex) => (
+                          <TimeTableCell
+                            key={`${timeSlot}-${day}`}
+                            timeSlot={timeSlot}
+                            day={day}
+                            slotData={timetable[timeSlotIndex][dayIndex]}
+                            isBreak={isBreak(timeSlot)}
+                            onDrop={handleDrop}
+                            selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
+                            onTeacherSelect={handleTeacherSelect}
+                            onRoomSelect={handleRoomSelect}
+                            onDeleteSlot={handleDeleteSlot}
+                          />
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'flex-end',
+                mt: 2,
+                mb: 2,
+              }}
+            >
+              <Button
+                startIcon={<Add />}
+                size="small"
+                variant="contained"
+                onClick={() => {
+                  createSlotsDialog.onTrue();
+                }}
+              >
+                Create Slots
+              </Button>
+            </Box>
+          )}
         </Box>
       )}
     </Box>

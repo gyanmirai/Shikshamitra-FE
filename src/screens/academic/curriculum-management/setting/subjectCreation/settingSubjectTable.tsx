@@ -22,8 +22,8 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
   <CustomizableTable
     tableId="hostel-incident-data-table"
     searchFieldProps={{
-      placeholder: 'Search by Subject Name...',
-      label: 'Search by Subject Name...',
+      placeholder: 'Search by Subject Name, Color...',
+      label: 'Search by Subject Name, Color...',
       sx: {
         maxWidth: '400px',
         width: '100%',
@@ -72,6 +72,7 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
           );
         },
       },
+      { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
         label: 'Action',
