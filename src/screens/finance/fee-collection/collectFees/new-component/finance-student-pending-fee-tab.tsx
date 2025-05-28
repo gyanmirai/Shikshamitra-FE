@@ -27,7 +27,14 @@ const FinanceStudentPendingFeeTab = () => (
       }
       tableId="finance-student-overdue-payment-table"
       isShowedDense={false}
-      isSearch={false}
+      searchFieldProps={{
+        placeholder: 'Search by Due Date, Status...',
+        label: 'Search by Due Date, Status...',
+        sx: {
+          maxWidth: '400px',
+          width: '100%',
+        },
+      }}
       columns={[
         { id: 'dueDate', label: 'Due Date', filterType: 'date' },
         { id: 'feeName', label: 'Fee Name' },

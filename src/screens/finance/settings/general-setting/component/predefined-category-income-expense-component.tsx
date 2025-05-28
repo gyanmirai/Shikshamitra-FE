@@ -1,68 +1,61 @@
 import React, { useState } from 'react';
 
-import { Box, Button, TextField } from '@mui/material';
+import { Box } from '@mui/material';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetbudgetCategoryQuery } from 'src/redux/budgetCategory/budgetCategoryApi';
+import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
+import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const PredefinedCategoryIncomeExpenseComponent = () => {
-  // State to store the selected budget category ID
-  const [selectedBudgetCategory, setSelectedBudgetCategory] = useState<string | undefined>(
-    undefined
-  );
+import AddBudgetSubcategoryDialog from '../dialogs/finance-add-budget-sub-category-dialog';
 
-  // Fetch budget category list using custom hook that combines query and mutation
-  // Returns data object containing budget categories and loading state
-  const { data: budgetCategoryList, isLoading: isGetBudgetCategoryLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetbudgetCategoryQuery,
-  });
+const PredefinedCategoryIncomeExpenseComponent = () => {
+  // Selected budget category ID/value from dropdown
+  const [selectedBudgetCategory, setSelectedBudgetCategory] = useState<string>('');
+  // New sub-category name entered by user
+  const [newSubCategory, setNewSubCategory] = useState('');
+  // Dialog open/close state for edit/add form
+  const editDialog = useBoolean();
+  // Flag to determine if in edit mode vs add mode
+  const [isEdit, setIsEdit] = useState(false);
+
+  // Map categories for CustomSelect options
+  // const categoriesOptions =
+  //   budgetCategoryList?.items?.length > 0
+  //     ? budgetCategoryList.items.map((item: any) => ({
+  //         label: item.budgetCategoryName,
+  //         value: item.id,
+  //       }))
+  //     : [];
 
   return (
     <>
-      <Box display="flex" flex={1} flexDirection="row" gap={3} alignItems="center">
-        {/* Category Selection */}
-
-        <CustomSelect
-          options={
-            budgetCategoryList?.items?.length > 0
-              ? budgetCategoryList.items.map((item: any) => ({
-                  label: item.budgetCategoryName,
-                  value: item.id,
-                }))
-              : []
-          }
-          autoFocus
-          label="Select category"
-          value={selectedBudgetCategory || ''}
-          onChange={(e) => {
-            console.log(e);
-            setSelectedBudgetCategory(e as string);
-          }}
-          formControlProps={{ sx: { minWidth: 275 } }}
-          placeholder="No categories available"
-        />
-
-        {/* Sub-category Input */}
-        <TextField name="Addnewsubcategory" label="Add New Sub-Category" size="small" />
-
-        {/* Button Wrapper for Center Alignment */}
-        <Box display="flex" alignItems="center">
-          <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
-            New Sub-Category
-          </Button>
-        </Box>
-      </Box>
-
-      <Box display="flex" gap={3}>
+      <Box display="flex" gap={3} mt={3}>
         <Box flex={1}>
           <CustomizableTable
-            noDataText={<>No Budget Sub-Category Found </>}
+            noDataText={
+              <>
+                No Budget Sub-Category Found
+                <Box
+                  onClick={() => {
+                    setIsEdit(false);
+                    editDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Budget Sub Category
+                </Box>
+              </>
+            }
             tableId="predefined-category-income-expense"
             isShowedDense={false}
             isPagination={false}
@@ -84,24 +77,39 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
                     <ThreeDotsActions
                       showThreeDots={false}
                       showDeleteIcon
-                      handleDeleteClick={() => {}}
+                      handleDeleteClick={() => {
+                        // Add delete logic here
+                      }}
                     />
                   );
                 },
               },
             ]}
-            data={[
-              { existingcategories: 'Income', subCategories: 'Tuition Fees', action: 'edit' },
-              { existingcategories: 'Expense', subCategories: 'Maintenance', action: 'edit' },
-            ]}
-            // Optional: Adjust table styles for padding and row height
-            // sx={{
-            //     '& .MuiTableCell-root': { padding: '8px' },
-            //     '& .MuiTableRow-root': { height: '40px' },
-            // }}
+            data={[]}
           />
         </Box>
       </Box>
+
+      {/* Dialog to Add Budget Subcategory */}
+      {editDialog.value && (
+        <CustomDialog
+          open={editDialog.value}
+          handleClose={editDialog.onFalse}
+          title="Add Budget Sub Category"
+          maxWidth="md"
+        >
+          <AddBudgetSubcategoryDialog
+            onClose={editDialog.onFalse}
+            isEditMode={false}
+            data={null}
+            onSave={(newData) => {
+              // Handle save logic here, e.g., refresh list or update state
+              editDialog.onFalse();
+            }}
+            categories={[]}
+          />
+        </CustomDialog>
+      )}
     </>
   );
 };

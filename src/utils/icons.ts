@@ -43,6 +43,7 @@ export const GlobalIcons = {
   maintenanceIcon: 'pajamas:issue-type-maintenance',
   approvedIcon: 'hugeicons:tick-01',
   delete: 'solar:trash-bin-trash-bold',
+  receiptIcon: 'tabler:receipt',
 };
 
 export const GlobalIconColors = {

@@ -2,95 +2,142 @@
 
 import React, { useMemo } from 'react';
 
-import { Box, Tab, Card } from '@mui/material';
+import Add from '@mui/icons-material/Add';
+import { Box, Tab, Card, Button } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import SetFeeHeadDialog from './dialogs/set-fee-head-dialog';
 import SetPaymentTerm from './component/setting-up-payment-term';
 import SetPaymentMethodComponent from './component/set-payment-method';
 import SetLateFeeTypeMethod from './component/set-late-fee-type-method';
 import SetDefaultFeeComponent from './component/set-default-fee-component';
+import AddPaymentTermDialog from './dialogs/finance-add-payment-term-dialog';
+import AddPaymentMethodDialog from './dialogs/finance-add-payment-method-dialog';
+import AddPaymentStatusDialog from './dialogs/finance-add-payment-status-dialog';
+import AddBudgetCategoryDialog from './dialogs/finance-add-budget-category-dialog';
+import AddLateFeeTypeDialog from './dialogs/finance-add-late-fee-type-method-dialog';
+import AddBudgetSubcategoryDialog from './dialogs/finance-add-budget-sub-category-dialog';
 import ConfigurePaymentStatusComponent from './component/configure-payment-status-component';
 import PresetCategoryAndDepartmentForBudget from './component/preset-category-and-department-for-budget';
 import PredefinedCategoryIncomeExpenseComponent from './component/predefined-category-income-expense-component';
 
-const TABS = [
-  {
-    value: 'setDefaultFeeComponents',
-    label: 'Set Fee Type',
-    component: () => <SetDefaultFeeComponent />,
-  },
-  {
-    value: 'setPaymentMethodComponents',
-    label: 'Set Payment Method',
-    component: () => <SetPaymentMethodComponent />,
-  },
-  {
-    value: 'lateFeeType',
-    label: 'Set Late Fee Type Method',
-    component: () => <SetLateFeeTypeMethod />,
-  },
-  {
-    value: 'setPaymentTerm',
-    label: 'Set Payment Term',
-    component: () => <SetPaymentTerm />,
-  },
-
-  {
-    value: 'configurePaymentStatusOptions',
-    label: 'Configure Payment Status Options',
-    component: () => <ConfigurePaymentStatusComponent />,
-  },
-  {
-    value: 'presentCategoriesandDepartmentsforBudgeting',
-    label: 'Present Categories and Departments for Budgeting',
-    component: () => <PresetCategoryAndDepartmentForBudget />,
-  },
-  {
-    value: 'predefinedCategoriesForincomeandexpenses',
-    label: 'Predefined Categories For income and expenses',
-    component: () => <PredefinedCategoryIncomeExpenseComponent />,
-  },
-
-  // {
-  //   value: 'budgetThresholdAlerts',
-  //   label: 'Budget Threshold Alerts',
-  //   component: () => <BudgetThresoldAlertComponent />,
-  // },
-  // {
-  //   value: 'bankList',
-  //   label: 'Bank Configuration',
-  //   component: () => <BankConfiguration />,
-  // },
-  // {
-  //   value: 'defineSchoolWideRules',
-  //   label: 'Define School-Wide Rules',
-  //   component: () => <DefinedSchoolWideRulesComponent />,
-  // },
-  // {
-  //   value: 'currencySettingsForDifferentRegions',
-  //   label: 'Currency Settings for Different Regions',
-  //   component: () => <CurrencySettingForDifferentRegionComponent />,
-  // },
-  // {
-  //   value: 'currencyAndTaxSettings',
-  //   label: 'Currency and Tax Settings',
-  //   component: () => <CurrencyAndTaxSavingsComponent />,
-  // },
-];
 const FinanceGeneralSettingTab = () => {
+  // Default tab is set to 'setDefaultFeeComponents'
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'setDefaultFeeComponents' });
 
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+  // Dialog state management using useBoolean hook
+  const setFeeHeadDialog = useBoolean();
+  const setPaymentMethodDialog = useBoolean();
+  const setLateFeeTypeDialog = useBoolean();
+  const setPaymentTermDialog = useBoolean();
+
+  const setPaymentStatusDialog = useBoolean();
+  const presetCategoryAndDepartmentForBudgetDialog = useBoolean();
+  const predefinedCategoryIncomeExpenseDialog = useBoolean();
+
+  // Configuration for all tabs including their values, labels, button text, click handlers and components
+  const TABS = useMemo(
+    () => [
+      {
+        value: 'setDefaultFeeComponents',
+        label: 'Fee Head',
+        buttonText: 'Add Fee Head',
+        onClick: () => {
+          setFeeHeadDialog.onTrue();
+        },
+        component: () => <SetDefaultFeeComponent />,
+      },
+      {
+        value: 'setPaymentMethodComponents',
+        label: 'Payment Method',
+        buttonText: 'Add Payment Method',
+        onClick: () => {
+          setPaymentMethodDialog.onTrue();
+          console.log('Add Payment Method clicked');
+        },
+        component: () => <SetPaymentMethodComponent />,
+      },
+      {
+        value: 'lateFeeType',
+        label: 'Late Fee Type',
+        buttonText: 'Add Late Fee Type',
+        onClick: () => {
+          setLateFeeTypeDialog.onTrue();
+          console.log('Add Late Fee Type clicked');
+        },
+        component: () => <SetLateFeeTypeMethod />,
+      },
+      {
+        value: 'setPaymentTerm',
+        label: 'Payment Term',
+        buttonText: 'Add Payment Term',
+        onClick: () => {
+          setPaymentTermDialog.onTrue();
+          console.log('Add Payment Term clicked');
+        },
+        component: () => <SetPaymentTerm />,
+      },
+      {
+        value: 'configurePaymentStatusOptions',
+        label: 'Payment Status',
+        buttonText: 'Add Payment Status',
+        onClick: () => {
+          setPaymentStatusDialog.onTrue();
+          console.log('Add Payment Status Option clicked');
+        },
+        component: () => <ConfigurePaymentStatusComponent />,
+      },
+      {
+        value: 'presentCategoriesandDepartmentsforBudgeting',
+        label: 'Present Categories and Departments for Budgeting',
+        buttonText: 'Add Budget Category',
+        onClick: () => {
+          presetCategoryAndDepartmentForBudgetDialog.onTrue();
+          console.log('Add Budget Category clicked');
+        },
+        component: () => <PresetCategoryAndDepartmentForBudget />,
+      },
+      {
+        value: 'predefinedCategoriesForincomeandexpenses',
+        label: 'Budget Sub Category',
+        buttonText: 'Add Budget Sub Category',
+        onClick: () => {
+          predefinedCategoryIncomeExpenseDialog.onTrue();
+          console.log('Add Income/Expense Category clicked');
+        },
+        component: () => <PredefinedCategoryIncomeExpenseComponent />,
+      },
+    ],
+    [
+      setFeeHeadDialog,
+      setPaymentMethodDialog,
+      setLateFeeTypeDialog,
+      setPaymentTermDialog,
+      setPaymentStatusDialog,
+      presetCategoryAndDepartmentForBudgetDialog,
+      predefinedCategoryIncomeExpenseDialog,
+    ]
   );
-  // const tabs = useTabs('setDefaultFeeComponents');
-  // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-  const breadcrumbTabName = TABS.find((tab) => tab.value === searchParams?.tab)?.label || '';
+
+  const currentTab = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [TABS, searchParams?.tab]
+  );
+
+  // Handle click event for the add button in header
+  const handleClick = () => {
+    currentTab?.onClick?.(); // Safely call action if it exists
+  };
+
+  // Get the button text for the current active tab
+  const getButtonText = () => currentTab?.buttonText || 'Add';
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -98,11 +145,23 @@ const FinanceGeneralSettingTab = () => {
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'General Settings' },
-          { name: breadcrumbTabName },
+          { name: currentTab?.label || '' },
         ]}
         sx={{ px: 1, mb: 2 }}
         description="This is the General Settings section for the Finance module, where you can manage fee heads, payment status options, and other required fields and details related to financial operations."
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleClick}
+            startIcon={<Add />}
+            sx={{ textTransform: 'capitalize', fontSize: '12px' }}
+          >
+            {getButtonText()}
+          </Button>
+        }
       />
+
       <Card>
         <CustomTabs
           value={searchParams.tab}
@@ -115,31 +174,166 @@ const FinanceGeneralSettingTab = () => {
           ))}
         </CustomTabs>
       </Card>
+
       <Box px={1} pt={2}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-          // searchParams={searchParams}
-          // setSearchParams={setSearchParams}
-          />
-        )}
+        {currentTab?.component && <currentTab.component />}
       </Box>
+
+      {setFeeHeadDialog.value && (
+        <CustomDialog
+          open={setFeeHeadDialog.value}
+          handleClose={() => {
+            setFeeHeadDialog.onFalse();
+          }}
+          title="Add Fee Head"
+          maxWidth="sm"
+        >
+          <SetFeeHeadDialog
+            onClose={() => {
+              setFeeHeadDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              setFeeHeadDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {setPaymentMethodDialog.value && (
+        <CustomDialog
+          open={setPaymentMethodDialog.value}
+          handleClose={() => {
+            setPaymentMethodDialog.onFalse();
+          }}
+          title="Add Payment Method"
+          maxWidth="sm"
+        >
+          <AddPaymentMethodDialog
+            onClose={() => {
+              setPaymentMethodDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              setPaymentMethodDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {setLateFeeTypeDialog.value && (
+        <CustomDialog
+          open={setLateFeeTypeDialog.value}
+          handleClose={() => {
+            setLateFeeTypeDialog.onFalse();
+          }}
+          title="Add Late Fee Type"
+          maxWidth="sm"
+        >
+          <AddLateFeeTypeDialog
+            onClose={() => {
+              setLateFeeTypeDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              setLateFeeTypeDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {setPaymentTermDialog.value && (
+        <CustomDialog
+          open={setPaymentTermDialog.value}
+          handleClose={() => {
+            setPaymentTermDialog.onFalse();
+          }}
+          title="Add Payment Term"
+          maxWidth="sm"
+        >
+          <AddPaymentTermDialog
+            onClose={() => {
+              setPaymentTermDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              setPaymentTermDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {setPaymentStatusDialog.value && (
+        <CustomDialog
+          open={setPaymentStatusDialog.value}
+          handleClose={() => {
+            setPaymentStatusDialog.onFalse();
+          }}
+          title="Add Payment Status"
+          maxWidth="sm"
+        >
+          <AddPaymentStatusDialog
+            onClose={() => {
+              setPaymentStatusDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              setPaymentStatusDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {presetCategoryAndDepartmentForBudgetDialog.value && (
+        <CustomDialog
+          open={presetCategoryAndDepartmentForBudgetDialog.value}
+          handleClose={() => {
+            presetCategoryAndDepartmentForBudgetDialog.onFalse();
+          }}
+          title="Add Budget Category"
+          maxWidth="sm"
+        >
+          <AddBudgetCategoryDialog
+            onClose={() => {
+              presetCategoryAndDepartmentForBudgetDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              presetCategoryAndDepartmentForBudgetDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
+      )}
+
+      {predefinedCategoryIncomeExpenseDialog.value && (
+        <CustomDialog
+          open={predefinedCategoryIncomeExpenseDialog.value}
+          handleClose={() => {
+            predefinedCategoryIncomeExpenseDialog.onFalse();
+          }}
+          title="Add Budget Sub Category"
+          maxWidth="md"
+        >
+          <AddBudgetSubcategoryDialog
+            onClose={() => {
+              predefinedCategoryIncomeExpenseDialog.onFalse();
+            }}
+            isEditMode={false}
+            data={null}
+            onSave={() => {
+              predefinedCategoryIncomeExpenseDialog.onFalse();
+            }}
+            categories={[]}
+          />
+        </CustomDialog>
+      )}
     </Box>
   );
 };
-
 export default FinanceGeneralSettingTab;
-// <Box display="flex" flexDirection="row" gap={10}>
-//   <Grid2 lg={3} md={12} spacing={1}>
-//     <SetDefaultFeeComponent />
-//     <CurrencySettingForDifferentRegionComponent />
-//     <ConfigurePaymentStatusComponent />
-//     <CurrencyAndTaxSavingsComponent />
-//   </Grid2>
-
-//   <Grid2 lg={9} md={12}>
-//     <DefinedSchoolWideRulesComponent />
-//     <PredefinedCategoryIncomeExpenseComponent />
-//     <BudgetThresoldAlertComponent />
-//     <PresetCategoryAndDepartmentForBudget />
-//   </Grid2>
-// </Box>

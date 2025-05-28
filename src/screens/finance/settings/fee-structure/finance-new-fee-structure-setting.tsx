@@ -160,7 +160,7 @@ const FinanceNewFeeStructureSetting = () => {
 
               {
                 id: 'isActive',
-                label: 'InActive/Active',
+                label: 'Not Active/Active',
                 isFilter: false,
                 isSort: false,
                 render(statusToggle) {
@@ -228,7 +228,7 @@ const FinanceNewFeeStructureSetting = () => {
           content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Yes
+              Delete
             </LoadingButton>
           }
         />

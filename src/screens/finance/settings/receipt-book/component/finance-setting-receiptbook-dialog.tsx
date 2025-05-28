@@ -5,16 +5,14 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Card, Grid, Button, TextField, Typography } from '@mui/material';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
-import SubmitButton from 'src/components/submit-button';
+import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { receiptBookValidationSchema } from '../validationSchema';
 
@@ -81,82 +79,64 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Receipt Book"
-          links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Receipt Book' }]}
-          sx={{ px: 1, mb: 2 }}
-        />
-
-        <Button
-          startIcon={<Iconify icon="eva:arrow-back-fill" />}
-          onClick={handleClose}
-          variant="contained"
-          size="small"
-        >
-          Back
-        </Button>
-      </Box>
-
-      <form
-        onSubmit={formik.handleSubmit}
-        style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
-      >
-        <Card sx={{ height: '100%', boxShadow: 4, display: 'flex', flexDirection: 'column' }}>
-          <Box p={2} display="flex" flexDirection="column" gap={3} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <ShakingTextField
-                  error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
-                >
+    <form onSubmit={formik.handleSubmit}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+        <Grid container spacing={2} pb="20px">
+          {/* Receipt Book Name Field */}
+          <Grid item xs={12} sm={12}>
+            {(() => {
+              const field = 'receiptBookName';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
                   <TextField
                     size="small"
                     fullWidth
                     autoFocus
-                    name="receiptBookName"
+                    name={field}
                     label="Receipt Book Name"
-                    value={formik.values.receiptBookName}
-                    onChange={(e) =>
-                      formik.setFieldValue('receiptBookName', capitalizeWords(e.target.value))
-                    }
-                    error={formik.touched.receiptBookName && Boolean(formik.errors.receiptBookName)}
-                    helperText={formik.touched.receiptBookName && formik.errors.receiptBookName}
+                    value={formik.values[field]}
+                    onChange={(e) => formik.setFieldValue(field, capitalizeWords(e.target.value))}
+                    error={error}
+                    helperText={helperText}
                   />
                 </ShakingTextField>
-              </Grid>
+              );
+            })()}
+          </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <ShakingTextField
-                  error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
-                >
+          {/* Receipt Book Code Field */}
+          <Grid item xs={12} sm={12} pb="20px">
+            {(() => {
+              const field = 'receiptBookCode';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
                   <TextField
                     size="small"
                     fullWidth
-                    name="receiptBookCode"
+                    name={field}
                     label="Receipt Book Code"
-                    value={formik.values.receiptBookCode}
+                    value={formik.values[field]}
                     onChange={formik.handleChange}
-                    error={formik.touched.receiptBookCode && Boolean(formik.errors.receiptBookCode)}
-                    helperText={formik.touched.receiptBookCode && formik.errors.receiptBookCode}
+                    error={error}
+                    helperText={helperText}
                   />
                 </ShakingTextField>
-              </Grid>
-            </Grid>
-          </Box>
+              );
+            })()}
+          </Grid>
+        </Grid>
+      </Scrollbar>
 
-          <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
-            <SubmitButton onClick={() => {}} />
-          </Box>
-        </Card>
-      </form>
-
-      {showErrorMessage && (
-        <Typography fontSize={13} color="error">
-          Book Receipt already exists
-        </Typography>
-      )}
-    </Box>
+      <DialogActions>
+        <Button type="submit" variant="contained">
+          Submit
+        </Button>
+      </DialogActions>
+    </form>
   );
 };
 

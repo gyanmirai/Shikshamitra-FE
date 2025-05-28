@@ -186,7 +186,14 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
               tableId="student-refund-table"
               isShowedDense={false}
               isFilter={false}
-              isSearch={false}
+              searchFieldProps={{
+                placeholder: 'Search by Requested On, Status...',
+                label: 'Search by Requested On, Status...',
+                sx: {
+                  maxWidth: '400px',
+                  width: '100%',
+                },
+              }}
               data={[]}
               columns={[
                 {

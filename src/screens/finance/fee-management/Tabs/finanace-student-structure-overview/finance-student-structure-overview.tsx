@@ -389,7 +389,7 @@ const FinanceStudentFeeManagement = () => {
           handleClose={handleClose}
           maxWidth="xl"
         >
-          <Scrollbar sx={{ overflow: 'auto', maxHeight: '550px' }}>
+          <Scrollbar sx={{ overflow: 'auto', height: '600px' }}>
             <FeeDetailsComponent students={selectedStudent} />
           </Scrollbar>
         </CustomDialog>

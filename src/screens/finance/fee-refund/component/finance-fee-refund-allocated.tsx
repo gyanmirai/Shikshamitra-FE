@@ -5,6 +5,7 @@ import { Box, Button, Tooltip, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from 'src/components/iconify';
@@ -24,11 +25,19 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
   selectedData,
   onClose,
 }) => {
+  // Dialog state for payment dialog
   const dialog = useBoolean();
+
+  // State to store selected payment entries
   const [selectedEntry, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
+
+  // State to track edit mode
   const [isEdit, setIsEdit] = useState<boolean>(false);
+
+  // State to store payment history data
   const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
+  // Handler to update refund amount for a specific payment entry
   const handleRefundChange = (index: string, value: string) => {
     const newData = [...paymentHistoryData];
     const existingIndex = newData.findIndex((val) => val.paymentId === index);
@@ -36,47 +45,55 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
     setPaymentHistoryData(newData);
   };
 
+  // Calculate total refund amount from all payment entries
   const totalRefundAmount: number = paymentHistoryData.reduce(
     (total: number, item: StudentPayment) => total + Number(item.refundAmount),
     0
   );
 
+  // Handler for saving refund data
   const handleSave = () => {};
 
+  // Close payment dialog
   const closeDialog = () => {
     dialog.onFalse();
   };
 
+  // Open payment dialog and set edit mode
   const handleDilog = () => {
     setIsEdit(true);
     setSelectedEntry(paymentHistoryData);
-
     dialog.onTrue();
   };
 
+  // States for different fee refund amounts
   const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
   const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
   const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
 
+  // Helper function to parse numeric value from formatted string
   const parseNumericValue = (formattedValue: string) =>
     parseFloat(formattedValue.replace(/,/g, '')) || 0;
 
+  // Calculate total fee refund amount when individual amounts change
   useEffect(() => {
     const a = parseNumericValue(tuitionFeeRefundAmount);
     const b = parseNumericValue(libraryFeeRefundAmount);
     setTotalFeeRefundAmount(a + b);
   }, [tuitionFeeRefundAmount, libraryFeeRefundAmount]);
 
+  // Handler for tuition fee refund amount change
   const handleChangeForTuition = (formattedValue: string, numericValue: number) => {
     setTuitionFeeRefundAmount(formattedValue);
   };
 
+  // Handler for library fee refund amount change
   const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
     setlibraryFeeRefundAmount(formattedValue);
   };
 
+  // Dialog state for fee refund receipt
   const feeRefundReceiptDialog = useBoolean();
-
   return (
     <CustomDialog
       maxWidth="xl"
@@ -215,7 +232,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
         <Button
           type="submit"
           variant="contained"
-          size="small"
+          startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
           onClick={() => {
             feeRefundReceiptDialog.onTrue();
           }}
