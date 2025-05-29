@@ -20,9 +20,15 @@ const data = [
   },
 ];
 
-const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoomSelect }) => {
+const AssignRoom: React.FC<IAssignRoomProps> = ({
+  roomDialog,
+  selectedRoom,
+  slotData,
+  onRoomSelect,
+}) => {
   // State to store the selected room value, initialized with selectedRoom prop or empty string
   const [room, setRoom] = useState<string>(selectedRoom || '');
+  console.log('slotData', slotData);
 
   // State to store and manage the table data, initialized with default subject data
   const [tableData, setTableData] = useState(data);
@@ -50,7 +56,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoom
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+        <Scrollbar sx={{ p: 2, height: '200px' }}>
           <CustomizableTable
             tableId="elective-subject-table"
             isFilter={false}
@@ -103,12 +109,32 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ selectedRoom, slotData, onRoom
                 // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
               },
             ]}
-            data={tableData}
+            data={
+              slotData.subjects.length > 1
+                ? [
+                    {
+                      subjectName: 'English',
+                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
+                    },
+                    {
+                      subjectName: 'Hindi',
+                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
+                    },
+                  ]
+                : [
+                    {
+                      subjectName: 'Math',
+                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
+                    },
+                  ]
+            }
           />
         </Scrollbar>
         <DialogActions>
           <Button
-            onClick={() => {}}
+            onClick={() => {
+              roomDialog.onFalse();
+            }}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
           >

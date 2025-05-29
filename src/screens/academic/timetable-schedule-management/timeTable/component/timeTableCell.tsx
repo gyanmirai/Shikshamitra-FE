@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { Box, Paper, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
+import { Box, alpha, Paper, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -88,7 +88,7 @@ const TimeTableCell = ({
       <TableCell
         sx={{
           bgcolor: 'grey.100',
-          width: '10%',
+          width: '14%',
           textAlign: 'center',
           padding: '4px',
           cursor: 'not-allowed',
@@ -102,8 +102,8 @@ const TimeTableCell = ({
   return (
     <TableCell
       sx={{
-        height: 60,
-        width: '10%',
+        height: 90,
+        width: '14%',
         '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
         padding: '4px',
         cursor: slotData ? 'grab' : 'default',
@@ -120,7 +120,7 @@ const TimeTableCell = ({
             sx={{
               p: 1,
               height: '90%',
-              bgcolor: slotData.subject.subjectColor,
+              bgcolor: alpha(slotData.subject.subjectColor, 0.2),
               position: 'relative',
               '& .action-menu': {
                 opacity: 0,
@@ -202,7 +202,8 @@ const TimeTableCell = ({
               </Box>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              {slotData.room} / {slotData.teacher || '-'}
+              {slotData.room ? slotData.room : 'No Room'} /{' '}
+              {slotData.teacher ? slotData.teacher : 'No Teacher'}
             </Typography>
           </Paper>
 
@@ -213,7 +214,8 @@ const TimeTableCell = ({
             maxWidth="sm"
           >
             <AssignTeacher
-              slotData={slotData.subjects}
+              slotData={slotData.subject}
+              teacherDialog={teacherDialog}
               onTeacherSelect={(value) => {
                 onTeacherSelect(value, timeSlot, day);
                 teacherDialog.onFalse();
@@ -228,7 +230,8 @@ const TimeTableCell = ({
             title="Assign Room"
           >
             <AssignRoom
-              slotData={slotData.subjects}
+              roomDialog={roomDialog}
+              slotData={slotData.subject}
               selectedRoom={selectedRoom}
               onRoomSelect={(value) => {
                 onRoomSelect(value, timeSlot, day);

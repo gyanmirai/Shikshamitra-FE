@@ -1,3 +1,5 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
 export interface ITimeTableCellProps {
   timeSlot: string;
   day: string;
@@ -11,12 +13,14 @@ export interface ITimeTableCellProps {
 }
 
 export interface IAssignRoomProps {
+  roomDialog: UseBooleanReturn;
   selectedRoom: string;
   slotData: any;
   onRoomSelect: (value: string) => void;
 }
 
 export interface IAssignTeacherProps {
+  teacherDialog: UseBooleanReturn;
   slotData: any;
   onTeacherSelect: (value: string) => void;
 }
