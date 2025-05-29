@@ -7,6 +7,7 @@ import {
   Box,
   Tab,
   Tabs,
+  Chip,
   Divider,
   Accordion,
   Typography,
@@ -16,7 +17,6 @@ import {
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -83,9 +83,9 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
     };
 
   return (
-    <Box sx={{ p: 3, height: '100%' }}>
-      <Scrollbar sx={{ height: '700px' }}>
-        <Box sx={{ mb: 3 }}>
+    <Box sx={{ p: 2, height: '100%' }}>
+      <Scrollbar sx={{ height: '600px' }}>
+        <Box sx={{ mb: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -97,14 +97,17 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Box display="flex" flexDirection="column" gap={0.5}>
-                  <Typography variant="h4">{subject?.subjectName}</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Label color="info" sx={{ fontSize: '1rem' }}>
-                      Subject Type : {subject?.subjectType}
-                    </Label>
-                    <Label color="secondary" sx={{ fontSize: '1rem' }}>
-                      Class : {subject?.className}
-                    </Label>{' '}
+                    <Chip
+                      label={`Subject Type : ${subject?.subjectType}`}
+                      variant="outlined"
+                      sx={{ fontSize: '0.9rem' }}
+                    />
+                    <Chip
+                      label={`Class : ${subject?.className}`}
+                      variant="outlined"
+                      sx={{ fontSize: '0.9rem' }}
+                    />
                   </Box>
                 </Box>
               </Box>
@@ -120,18 +123,30 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
               onChange={handleAccordionChange(sub.subjectCode)}
               sx={{
                 border: '1px solid #ccc',
-                borderRadius: 2,
                 boxShadow: 'none', // optional, remove default shadow
                 '&:before': {
                   display: 'none', // remove default divider line at top
                 },
+                borderRadius: 1, // optional, round corners
+
                 mb: 2, // optional margin between accordions
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {sub.subjectName || 'CHEMISTRY'}
-                </Typography>
+                <Box display="flex" gap={2}>
+                  <Box
+                    sx={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      mt: 0.5,
+                      backgroundColor: sub?.subjectColor,
+                    }}
+                  />
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {sub.subjectName || 'CHEMISTRY'}
+                  </Typography>
+                </Box>
               </AccordionSummary>
               <AccordionDetails>
                 <Tabs

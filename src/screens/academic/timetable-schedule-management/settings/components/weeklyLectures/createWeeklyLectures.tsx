@@ -1,14 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
+
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Grid, Chip, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesTableData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -26,11 +28,26 @@ import type { ICreateNoOfLectureProps } from './type';
 import type { TSubject } from '../../../timeTable/type';
 
 const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, disabled }) => {
-  // Fetch class data using custom hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
 
   const formik = useFormik({
     initialValues: getNoOfLectureInitialValues(),
@@ -63,7 +80,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
-                    options={classData?.items || []}
+                    options={allClass}
                     value={formik.values.className}
                     onChange={(val) => {
                       formik.setFieldValue('className', val as string);
@@ -116,6 +133,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                           <TextField
                             type="number"
                             size="small"
+                            label="Weekly Lectures *"
+                            placeholder="Enter weekly lectures"
                             value={value}
                             onChange={(e) => handleInputChange(row.id, e.target.value)}
                             className="w-24"

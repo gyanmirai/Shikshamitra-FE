@@ -152,81 +152,81 @@ const Course = (props: TabComponentType) => {
       (cls: { name: string }) => cls.name === classes
     );
 
-    if (selectedClass) {
-      // Handle document uploads first
-      let newDocuments: IDocument[] = [];
-      if (values.documents) {
-        const filesToUpload = values.documents.filter((doc: any) => doc.file) as IDocument[];
-        if (filesToUpload.length > 0) {
-          const uploadedDocs = await handleDocumentUpload(filesToUpload.map((doc) => doc.file!));
-          newDocuments = [
-            ...values.documents.filter((doc: any) => !doc.file), // Keep existing documents
-            ...uploadedDocs, // Add newly uploaded documents
-          ];
-        } else {
-          newDocuments = values.documents;
-        }
-      }
+    // if (selectedClass) {
+    //   // Handle document uploads first
+    //   let newDocuments: IDocument[] = [];
+    //   if (values.documents) {
+    //     const filesToUpload = values.documents.filter((doc: any) => doc.file) as IDocument[];
+    //     if (filesToUpload.length > 0) {
+    //       const uploadedDocs = await handleDocumentUpload(filesToUpload.map((doc) => doc.file!));
+    //       newDocuments = [
+    //         ...values.documents.filter((doc: any) => !doc.file), // Keep existing documents
+    //         ...uploadedDocs, // Add newly uploaded documents
+    //       ];
+    //     } else {
+    //       newDocuments = values.documents;
+    //     }
+    //   }
 
-      if (isEditMode && selectedChapter) {
-        // Update existing chapter
-        selectedClass.divisions.forEach((div: any) => {
-          const subject = div.subjects.find((sub: any) => sub.name === selectedSubject);
-          if (subject) {
-            const chapterIndex = subject.chapters.findIndex(
-              (ch: any) => ch.id === selectedChapter.id
-            );
-            if (chapterIndex !== -1) {
-              subject.chapters[chapterIndex] = {
-                ...subject.chapters[chapterIndex],
-                chapterName: values.chapterName,
-                assignedTeacher: values.assignedTeacher,
-                content: values.content,
-                timeLine: values.timeLine,
-                documents: newDocuments,
-                progress: subject.chapters[chapterIndex].progress,
-                assignments: subject.chapters[chapterIndex].assignments,
-              };
-            }
-          }
-        });
-      } else {
-        // Create new chapter
-        const newChapter = {
-          id:
-            Math.max(
-              ...selectedClass.divisions.flatMap((div: any) =>
-                div.subjects.flatMap((sub: any) => sub.chapters.map((ch: any) => ch.id))
-              ),
-              0
-            ) + 1,
-          chapterName: values.chapterName,
-          assignedTeacher: values.assignedTeacher,
-          content: values.content,
-          timeLine: values.timeLine,
-          documents: newDocuments,
-          progress: 0,
-          assignments: [],
-        };
+    //   if (isEditMode && selectedChapter) {
+    //     // Update existing chapter
+    //     selectedClass.divisions.forEach((div: any) => {
+    //       const subject = div.subjects.find((sub: any) => sub.name === selectedSubject);
+    //       if (subject) {
+    //         const chapterIndex = subject.chapters.findIndex(
+    //           (ch: any) => ch.id === selectedChapter.id
+    //         );
+    //         if (chapterIndex !== -1) {
+    //           subject.chapters[chapterIndex] = {
+    //             ...subject.chapters[chapterIndex],
+    //             chapterName: values.chapterName,
+    //             assignedTeacher: values.assignedTeacher,
+    //             content: values.content,
+    //             timeLine: values.timeLine,
+    //             documents: newDocuments,
+    //             progress: subject.chapters[chapterIndex].progress,
+    //             assignments: subject.chapters[chapterIndex].assignments,
+    //           };
+    //         }
+    //       }
+    //     });
+    //   } else {
+    //     // Create new chapter
+    //     const newChapter = {
+    //       id:
+    //         Math.max(
+    //           ...selectedClass.divisions.flatMap((div: any) =>
+    //             div.subjects.flatMap((sub: any) => sub.chapters.map((ch: any) => ch.id))
+    //           ),
+    //           0
+    //         ) + 1,
+    //       chapterName: values.chapterName,
+    //       assignedTeacher: values.assignedTeacher,
+    //       content: values.content,
+    //       timeLine: values.timeLine,
+    //       documents: newDocuments,
+    //       progress: 0,
+    //       assignments: [],
+    //     };
 
-        selectedClass.divisions.forEach((div: any) => {
-          const subject = div.subjects.find((sub: any) => sub.name === selectedSubject);
-          if (subject) {
-            subject.chapters.push({ ...newChapter });
-          }
-        });
-      }
+    //     selectedClass.divisions.forEach((div: any) => {
+    //       const subject = div.subjects.find((sub: any) => sub.name === selectedSubject);
+    //       if (subject) {
+    //         subject.chapters.push({ ...newChapter });
+    //       }
+    //     });
+    //   }
 
-      setSubjectData(updatedSubjectData);
-      const updatedDialogData = selectedClass.divisions.map((div: any) => ({
-        divisionName: div.name,
-        chapters: div.subjects
-          .filter((subject: any) => subject.name === selectedSubject)
-          .flatMap((subject: any) => subject.chapters),
-      }));
+    //   setSubjectData(updatedSubjectData);
+    //   const updatedDialogData = selectedClass.divisions.map((div: any) => ({
+    //     divisionName: div.name,
+    //     chapters: div.subjects
+    //       .filter((subject: any) => subject.name === selectedSubject)
+    //       .flatMap((subject: any) => subject.chapters),
+    //   }));
 
-      setDialogData(updatedDialogData);
-    }
+    //   setDialogData(updatedDialogData);
+    // }
     addChapterDialog.onFalse();
   };
 

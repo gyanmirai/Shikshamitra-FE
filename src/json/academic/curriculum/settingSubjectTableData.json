@@ -1,15 +1,18 @@
 [
     {
       "subjectName": "Mathematics",
-      "subjectColor": "#FF5733"
+      "subjectColor": "#FF5733",
+      "createdBy": "Jeena"
     },
     {
       "subjectName": "Science",
-      "subjectColor": "#33C1FF"
+      "subjectColor": "#33C1FF",
+      "createdBy": "Meena"
     },
     {
       "subjectName": "History",
-      "subjectColor": "#75FF33"
+      "subjectColor": "#33C1FF",
+      "createdBy": "Teena"
     }
 ]
   

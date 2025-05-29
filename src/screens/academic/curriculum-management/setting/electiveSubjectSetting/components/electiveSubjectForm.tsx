@@ -78,17 +78,23 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     multiple
                     id="subjects-select"
                     options={[
-                      { label: 'Student 1', value: 'STU001' },
-                      { label: 'Student 2', value: 'STU002' },
-                      { label: 'Student 3', value: 'STU003' },
-                      { label: 'Student 4', value: 'STU004' },
-                      { label: 'Student 5', value: 'STU005' },
-                      { label: 'Student 6', value: 'STU006' },
-                      { label: 'Student 7', value: 'STU007' },
-                      { label: 'Student 8', value: 'STU008' },
-                      { label: 'Student 9', value: 'STU009' },
-                      { label: 'Student 10', value: 'STU010' },
+                      { label: 'Mathematics', value: 'MATH' },
+                      { label: 'Physics', value: 'PHY' },
+                      { label: 'Chemistry', value: 'CHEM' },
+                      { label: 'Biology', value: 'BIO' },
+                      { label: 'Computer Science', value: 'CS' },
+                      { label: 'Economics', value: 'ECO' },
+                      { label: 'History', value: 'HIST' },
+                      { label: 'Geography', value: 'GEO' },
+                      { label: 'Literature', value: 'LIT' },
+                      { label: 'Art', value: 'ART' },
+                      { label: 'Music', value: 'MUS' },
+                      { label: 'Physical Education', value: 'PE' },
                     ]}
+                    onChange={(event, value) => {
+                      const transformed = value.map((item) => ({ name: item.value }));
+                      formik.setFieldValue('subjects', transformed);
+                    }}
                     disableCloseOnSelect
                     getOptionLabel={(option) => option.label}
                     renderOption={(props, option, { selected }) => {

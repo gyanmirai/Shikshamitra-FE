@@ -3,12 +3,13 @@
 // Client-side component declaration
 
 import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
 // Import necessary types
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-// Import external dependencies
-import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+// Import external dependencies
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
@@ -41,8 +42,18 @@ import ChapterDocuments from './components/chapterDocuments';
 import type { IChapter } from './type';
 
 const Subjects = (props: TabComponentType) => {
-  // State for managing selected class
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
   // State for managing selected subject
   const [subject, setSubject] = useState<string>('');
   // State for managing dialog open/close
@@ -147,6 +158,15 @@ const Subjects = (props: TabComponentType) => {
     }
   };
 
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
   const handleDelete = (id: string | undefined) => {
     if (selectedChapter) {
       setChapterData(chapterData.filter((ch) => ch.id !== id));
@@ -158,32 +178,39 @@ const Subjects = (props: TabComponentType) => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
-      <CustomBreadcrumbs
-        heading="Syllabus Management"
-        description={
-          addChapterDialog.value
-            ? 'Create or update chapter details, including the title, content, and associated subject. Manage chapters efficiently by adding new ones or editing existing entries.'
-            : 'Manage and organize chapters for each subject efficiently. View the list of chapters, add new ones, update existing chapters, or remove them as needed.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={addChapterDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              addChapterDialog.value
-                ? handleClose
-                : () => {
-                    addChapterDialog.onTrue();
-                  }
-            }
-          >
-            {addChapterDialog.value ? 'Back' : 'Chapter'}
-          </Button>
-        }
-      />
+      {addChapterDialog.value ? (
+        <CustomBreadcrumbs
+          heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
+          description={
+            selectedChapter
+              ? 'Update existing chapter information including title, content, learning objectives, and associated materials. Make necessary modifications to keep the curriculum current and aligned with educational goals.'
+              : 'Create a new chapter by providing essential details such as title, content outline, and learning objectives. Add educational materials and resources to enhance student learning experience.'
+          }
+          links={[
+            // Links for form view (adding/editing chapter)
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+            { name: 'Syllabus Management' },
+            { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
+          ]}
+          isBack
+          onBack={() => {
+            handleClose(null, false);
+          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Syllabus Management"
+          description="Manage your academic syllabus by organizing chapters and subjects. Create, update and track chapter progress across different classes and divisions. Add learning resources and documents to enhance the learning experience."
+          links={[
+            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+            { name: 'Syllabus Management' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
       {/* Conditional rendering based on form state */}
       {addChapterDialog.value ? (
         // Form view for adding/editing chapters
@@ -199,31 +226,51 @@ const Subjects = (props: TabComponentType) => {
         // Table view for displaying chapters
         <>
           {/* Filter controls for class and subject selection */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
-            <CustomSelect
-              options={classData?.items || []}
-              value={classes}
-              onChange={(val) => {
-                setClasses(val as string);
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              mb: 1,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <CustomSelect
+                label="Class"
+                name="class"
+                options={allClass}
+                valueKey="id"
+                labelKey="name"
+                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                value={classes}
+                onChange={(value) => {
+                  setClasses(value as string);
+                }}
+              />
+              <CustomSelect
+                options={[]}
+                value={subject}
+                disabled={!classes}
+                onChange={(val) => {
+                  // setClasses(val as string);
+                  setSubject(val as string);
+                }}
+                label="Subject"
+                isLoading={isLoading}
+                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+              />
+            </Box>
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => {
+                addChapterDialog.onTrue();
               }}
-              label="Class"
-              isLoading={isLoading}
-              labelKey="name"
-              valueKey="name"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={[]}
-              value={subject}
-              disabled={!classes}
-              onChange={(val) => {
-                // setClasses(val as string);
-                setSubject(val as string);
-              }}
-              label="Subject"
-              isLoading={isLoading}
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
+            >
+              Chapter
+            </Button>
           </Box>
           {/* Table component for displaying chapter data */}
           <ChapterTable
@@ -251,7 +298,7 @@ const Subjects = (props: TabComponentType) => {
           setSelectedChapter(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Chapter ?"
         action={
           <Button
             variant="contained"

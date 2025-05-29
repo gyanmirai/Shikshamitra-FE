@@ -13,7 +13,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IAssignTeacherProps } from './type';
 
-const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelect }) => {
+const AssignTeacher: React.FC<IAssignTeacherProps> = ({
+  teacherDialog,
+  slotData,
+  onTeacherSelect,
+}) => {
   // State to store selected teacher value
   const [teacher, setTeacher] = useState<string>('');
 
@@ -25,7 +29,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelec
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+        <Scrollbar sx={{ p: 2, height: '25s0px' }}>
           <CustomizableTable
             tableId="elective-subject-table"
             isFilter={false}
@@ -78,15 +82,21 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({ slotData, onTeacherSelec
                 // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
               },
             ]}
-            data={[
-              { id: 1, subjectName: 'Mathematics', teacherName: '1' },
-              { id: 2, subjectName: 'English', teacherName: '2' },
-            ]}
+            data={
+              slotData.subjects.length > 1
+                ? [
+                    { id: 1, subjectName: 'English', teacherName: '1' },
+                    { id: 2, subjectName: 'Hindi', teacherName: '2' },
+                  ]
+                : [{ id: 1, subjectName: 'Math', teacherName: '1' }]
+            }
           />{' '}
         </Scrollbar>
         <DialogActions>
           <Button
-            onClick={() => {}}
+            onClick={() => {
+              teacherDialog.onFalse();
+            }}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
           >

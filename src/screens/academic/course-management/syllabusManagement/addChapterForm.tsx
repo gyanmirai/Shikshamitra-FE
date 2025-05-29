@@ -5,24 +5,13 @@ import { useFormik } from 'formik';
 
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  List,
-  Button,
-  ListItem,
-  TextField,
-  IconButton,
-  Typography,
-  ListItemText,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -30,7 +19,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { validationSchema } from './validationSchema';
 import { getChapterInitialValues } from './initialValues';
 
-import type { IDocument, IChapterFormValues, IAddNewChapterProps } from './type';
+import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
 // Component for adding or editing a chapter with form validation and file upload functionality
 export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
@@ -40,7 +29,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   initialValues = null,
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
-  const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
+  // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   // State for managing rich text editor content
@@ -56,26 +45,24 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         startTime: values.startTime,
         endTime: values.endTime,
         timeLine: values.timeLine,
-        documents,
+        // documents,
       });
       onClose(null, true);
     },
   });
 
-  // Handler for file upload
-  const handleFileUpload = (files: File[]) => {
-    const newDocs: IDocument[] = files.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      url: '',
-      file,
-    }));
-    setDocuments((prev) => [...prev, ...newDocs]);
+  const handleDrop = (acceptedFiles: File[]) => {
+    formik.setFieldValue('documents', [...(formik.values.documents || []), ...acceptedFiles]);
   };
 
-  // Handler for removing uploaded documents
-  const handleRemoveDocument = (docId: string) => {
-    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  const handleRemove = (fileToRemove: string | File) => {
+    const updatedDocuments = (formik.values.documents || []).filter((file) => {
+      if (typeof fileToRemove === 'string') {
+        return file.name !== fileToRemove;
+      }
+      return file !== fileToRemove;
+    });
+    formik.setFieldValue('documents', updatedDocuments);
   };
 
   return (
@@ -127,7 +114,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   error={!!(formik.touched.startTime && formik.errors.startTime) || false}
                 >
                   <DatePicker
-                    label="Chapter StartTime *"
+                    label="Chapter Start Date Time *"
                     format="DD/MM/YYYY"
                     value={formik.values.startTime}
                     onChange={(newValue) => {
@@ -153,7 +140,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   error={!!(formik.touched.startTime && formik.errors.startTime) || false}
                 >
                   <DatePicker
-                    label="Chapter EndTime *"
+                    label="Chapter End Date Time *"
                     format="DD/MM/YYYY"
                     value={formik.values.endTime}
                     onChange={(newValue) => {
@@ -180,60 +167,18 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     formik.setFieldValue('content', value);
                   }}
                   placeholder="Chapter Description"
-                  sx={{ width: '100%' }}
+                  sx={{ width: '100%', height: '290px' }}
                 />
               </Grid>
               {/* Document Upload Section */}
               <Grid item xs={12} md={6}>
-                <UploadBox
-                  onDrop={handleFileUpload}
-                  placeholder={
-                    <Box
-                      sx={{
-                        gap: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.disabled',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Upload Material</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: 1.5,
-                  }}
+                <Upload
+                  multiple
+                  value={formik.values.documents}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
                 />
               </Grid>
-              {/* List of Uploaded Documents */}
-              {documents.length > 0 && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Uploaded Documents
-                  </Typography>
-                  <List>
-                    {documents.map((doc, index) => (
-                      <ListItem
-                        key={doc.id}
-                        secondaryAction={
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleRemoveDocument(doc.id as unknown as string)}
-                          >
-                            <Iconify icon="mdi:delete" />
-                          </IconButton>
-                        }
-                      >
-                        <ListItemText primary={doc.name} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              )}
             </Grid>
           </Scrollbar>
           {/* Form Actions */}

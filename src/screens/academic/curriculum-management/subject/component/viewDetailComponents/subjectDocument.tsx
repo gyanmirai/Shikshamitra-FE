@@ -31,9 +31,6 @@ const SubjectDocument = ({ subject }: { subject: ISubject | null }) => {
                     position: 'relative',
                     '&:hover': {
                       boxShadow: 1,
-                      '& .document-actions': {
-                        opacity: 1,
-                      },
                     },
                   }}
                 >
@@ -78,7 +75,6 @@ const SubjectDocument = ({ subject }: { subject: ISubject | null }) => {
                         mt: 'auto',
                         display: 'flex',
                         justifyContent: 'flex-end',
-                        opacity: 0.4,
                         transition: 'opacity 0.2s ease',
                       }}
                     >

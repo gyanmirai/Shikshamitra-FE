@@ -1,8 +1,10 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
 
-import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Save, RestartAlt } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -96,11 +98,27 @@ const Teacher = ({
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
 
-  // State to store available division options
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-
-  // State to store the selected class
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
 
   // Get selected subject from search params, default to 'All' if not present
   const selectedSubject = searchParams?.subject ? searchParams?.subject : 'All';
@@ -139,35 +157,17 @@ const Teacher = ({
   };
 
   const subjectList = ['math', 'english', 'science'];
-
-  /**
-   * Filters the teacher data based on selected class and subject
-   * @returns {Array} Filtered array of teacher data
-   * @description Memoized function that filters teacher data based on:
-   * 1. Matching class name from the selected class ID
-   * 2. Matching subject (if 'All' is selected, includes all subjects)
-   * Dependencies: teacherData, classData, selectedSubject, classes
-   */
-  const filteredData = useMemo(
-    () =>
-      teacherData.filter((item: any) => {
-        const findClass = classData?.items?.find((c: any) => c.id === classes);
-        const matchesClass = item.className === findClass?.name;
-        const matchesSubject = selectedSubject === 'All' || item.subject === selectedSubject;
-        return matchesClass && matchesSubject;
-      }),
-    [teacherData, classData?.items, selectedSubject, classes]
-  );
+  const divisionList = ['A', 'B', 'C'];
 
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Teachers to Subject"
+        heading="Teacher-Subject Pairing"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[
           { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
-          { name: 'Assign Teachers to Subject' },
+          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Teacher-Subject Pairing' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -176,17 +176,13 @@ const Teacher = ({
           <CustomSelect
             label="Class"
             name="class"
-            options={classData?.items || []}
+            options={allClass}
+            valueKey="id"
+            labelKey="name"
             formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             value={classes}
-            labelKey="name"
-            valueKey="id"
             onChange={(value) => {
-              const selectedClass: Standards = classData.items.find(
-                (i: Standards) => i.id === value
-              );
-              setClasses(selectedClass?.id);
-              setDivisionOptions(selectedClass?.divisions || []);
+              setClasses(value as string);
             }}
           />
         </Box>
@@ -200,60 +196,65 @@ const Teacher = ({
         </Box>
       </Box>
       <CustomizableTable
-        // onSendNotification={handlerSendNotification}
-        // showCheckbox={selectedTeacher.length !== 0}
         tableId="teacher-table"
         noDataText={<>No Teachers Data Found Select Class and Division</>}
-        searchFieldProps={{
-          placeholder: 'Search by Subject, Assigned Teacher...',
-          label: 'Search by Subject, Assigned Teacher...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
+        isSearch={false}
+        isFilter={false}
         columns={[
           {
-            id: 'division',
-            label: 'Division',
+            id: 'subject',
+            label: 'Subject',
             filterType: 'string',
-            minWidth: 90,
             align: 'left',
           },
-          ...subjectList.map((subject) => ({
-            id: subject,
-            label: subject.charAt(0).toUpperCase() + subject.slice(1), // Fixed capitalization
+          ...divisionList.map((div) => ({
+            id: div,
+            label: `Division ${div}`,
             isFilter: false,
             isSort: false,
             render: (value: any, row: any) => (
               <Autocomplete
                 multiple
                 options={teacherOptions}
-                disableCloseOnSelect
                 getOptionLabel={(option) => option.name}
-                value={teacherOptions.filter((opt) => division.includes(opt.id))}
-                onChange={(_, newValue) => {}}
+                value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.id)) : []}
+                onChange={(_, newValue) => {
+                  const updatedData = [...tableData];
+                  const subjectIndex = subjectList.indexOf(row.subject.toLowerCase());
+                  if (subjectIndex !== -1) {
+                    updatedData[subjectIndex] = {
+                      ...updatedData[subjectIndex],
+                      [div]: newValue.map((teacher) => teacher.id),
+                    };
+                    setTableData(updatedData);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField label="Assign Teachers" {...params} variant="outlined" size="small" />
+                )}
                 renderOption={(props, option, { selected }) => (
                   <li {...props}>
                     <Checkbox
-                      icon={<CheckBoxOutlineBlankIcon />}
-                      checkedIcon={<CheckBoxIcon />}
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
                       style={{ marginRight: 8 }}
                       checked={selected}
                     />
                     {option.name}
                   </li>
                 )}
-                renderInput={(params) => (
-                  <TextField {...params} label="Assign Teacher" variant="outlined" size="small" />
-                )}
-                sx={{ minWidth: '200px', width: '100%' }}
+                sx={{ width: '100%' }}
               />
             ),
           })),
         ]}
-        data={tableData}
-      />{' '}
+        data={subjectList.map((subject) => ({
+          subject: subject.charAt(0).toUpperCase() + subject.slice(1),
+          A: '',
+          B: '',
+          C: '',
+        }))}
+      />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}

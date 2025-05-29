@@ -21,17 +21,31 @@ import CreateNoOfLecture from './createWeeklyLectures';
 const WeeklyLectures = () => {
   // Dialog state to control the visibility of create lecture number dialog
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
+  // Custom boolean hook to control create lecture number dialog visibility
   const createLectureNumberDialog = useBoolean();
+
+  // State to control form field disabled status
   const [disabled, setDisabled] = React.useState(false);
+
+  // Custom boolean hook to control view weekly lectures dialog visibility
   const viewWeeklyLecturesDialog = useBoolean();
+
+  /**
+   * Handles closing of the create lecture dialog
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    // Close dialog if form submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       createLectureNumberDialog.onFalse();
-
       dispatch(setIsChanges(false));
-    } else if (!isChanges) {
+    }
+    // Close dialog if no unsaved changes
+    else if (!isChanges) {
       createLectureNumberDialog.onFalse();
     }
   };
@@ -45,7 +59,7 @@ const WeeklyLectures = () => {
           size="small"
           onClick={createLectureNumberDialog.onTrue}
         >
-          Create Number Of Lectures
+          Weekly Lectures
         </Button>
       </Box>
       <CustomizableTable
@@ -75,7 +89,7 @@ const WeeklyLectures = () => {
                 },
               }}
             >
-              Create Number Of Lectures
+              Create Weekly Lectures
             </Box>
           </>
         }
@@ -157,6 +171,7 @@ const WeeklyLectures = () => {
       >
         <CreateNoOfLecture
           disabled={disabled}
+          onClose={viewWeeklyLecturesDialog.onFalse}
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}

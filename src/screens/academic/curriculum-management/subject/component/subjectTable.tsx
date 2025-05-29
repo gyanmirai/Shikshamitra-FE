@@ -38,6 +38,7 @@ const SubjectTable = ({
             subjectColor: subject.subjectColor || '#1976d2',
             status: formData.status,
             secondaryTeacher: subject.secondaryTeacher || [],
+            subjectType: formData.subjectType,
           });
         });
       } else if (formData.subjectType === 'elective') {
@@ -55,9 +56,12 @@ const SubjectTable = ({
           status: formData.status,
           description: (formData.subjects || []).map((s) => s.description),
           isSubjectOpen: false,
+          subjectType: formData.subjectType,
         });
       }
     }
+    console.log('rows---', rows);
+
     return rows;
   }
 
@@ -65,10 +69,10 @@ const SubjectTable = ({
     <CustomizableTable
       tableId="subject-table"
       searchFieldProps={{
-        placeholder: 'Search by Subject Code, Type, Name...',
-        label: 'Search by Subject Code, Type, Name...',
+        placeholder: 'Search by Subject Name, Code, Type...',
+        label: 'Search by Subject Name, Code, Type...',
         sx: {
-          maxWidth: '500px',
+          maxWidth: '350px',
           width: '100%',
         },
       }}
@@ -96,6 +100,42 @@ const SubjectTable = ({
       }
       columns={[
         {
+          id: 'subjectName',
+          label: 'Subject Name',
+          align: 'left',
+          render: (value, row) => (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {row.subjectType === 'core' ? (
+                <Chip
+                  key={value}
+                  label={value}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
+                />
+              ) : Array.isArray(value) ? (
+                value.map((subjectCode: string) => (
+                  <Chip
+                    key={subjectCode}
+                    label={subjectCode}
+                    size="small"
+                    variant="outlined"
+                    sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
+                  />
+                ))
+              ) : (
+                <Chip
+                  key={value}
+                  label={value}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
+                />
+              )}
+            </Box>
+          ),
+        },
+        {
           id: 'subjectCode',
           label: 'Subject Code',
           align: 'left',
@@ -118,23 +158,7 @@ const SubjectTable = ({
           label: 'Subject Type',
           align: 'left',
         },
-        {
-          id: 'subjectName',
-          label: 'Subject Name',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {row.subjectType === 'core' ? (
-                <Chip key={value} label={value} size="small" variant="outlined" />
-              ) : (
-                Array.isArray(value) &&
-                value.map((name: string) => (
-                  <Chip key={name} label={name} size="small" variant="outlined" />
-                ))
-              )}
-            </Box>
-          ),
-        },
+
         // {
         //   id: 'primaryTeacher',
         //   label: 'Primary Teacher',

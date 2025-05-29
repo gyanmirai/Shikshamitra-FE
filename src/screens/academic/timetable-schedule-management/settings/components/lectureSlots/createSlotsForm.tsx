@@ -1,18 +1,18 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -28,11 +28,26 @@ import { validationSchema } from './validationSchema';
 import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
 const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disabled }) => {
-  // Fetch class data using custom query hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
 
   const formik = useFormik({
     initialValues,
@@ -130,7 +145,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
-                    options={classData?.items || []}
+                    options={allClass}
                     value={formik.values.className}
                     onChange={(val) => formik.setFieldValue('className', val as string)}
                     label="Class"
@@ -161,7 +176,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
                     helperText={formik.touched.schoolHours && formik.errors.schoolHours}
                     size="small"
-                    disabled={disabled}
+                    disabled
                   />
                 </ShakingTextField>
               </Grid>
@@ -171,7 +186,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                   error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
                 >
                   <CustomSelect
-                    options={classData?.items || []}
+                    options={allClass}
                     value={formik.values.previousClassSlots}
                     onChange={(val) => formik.setFieldValue('previousClassSlots', val as string)}
                     label="Previous Class Slots"
@@ -196,7 +211,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                 <ShakingTextField error={!!(formik.touched.totalSlots && formik.errors.totalSlots)}>
                   <TextField
                     fullWidth
-                    label="Total Slots"
+                    label="Total Slots *"
+                    placeholder="Enter Total Slots"
                     name="totalSlots"
                     type="number"
                     value={formik.values.totalSlots}

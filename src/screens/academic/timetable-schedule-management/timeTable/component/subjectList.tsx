@@ -2,6 +2,7 @@
 
 import React from 'react';
 
+import { alpha } from '@mui/system';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -29,15 +30,18 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
           sx={{
             p: 1,
             cursor: 'move',
-            backgroundColor: subject.subjectColor,
+            bgcolor: alpha(subject.subjectColor, 0.2),
+            color: subject.subjectColor,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             {subject.subjects.map((sub) => (
-              <Typography variant="body2">{sub.name}</Typography>
+              <Typography variant="body2" fontWeight="bold">
+                {sub.name}
+              </Typography>
             ))}
 
-            <Typography variant="body2">
+            <Typography variant="body2" fontWeight="bold">
               ({remainingLectures[subject.id]} / {subject.noOfLecture})
             </Typography>
           </Box>

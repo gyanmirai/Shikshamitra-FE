@@ -12,17 +12,11 @@
         "subjectCode": "PHY-10",
         "primaryTeacher": "teacher_1",
         "secondaryTeacher": ["teacher_2", "teacher_3"],
-        "documents": [
-          {
-            "id": "doc1",
-            "name": "Syllabus.pdf",
-            "url": "https://example.com/syllabus.pdf"
-          }
-        ],
         "prerequisites": "Basic understanding of Mathematics",
         "learningGoal": "Learn the fundamentals of Physics.",
         "description": "This subject covers classical mechanics, thermodynamics, and electromagnetism.",
-        "isSubjectOpen": true
+        "isSubjectOpen": true,
+        "subjectColor": "#4287f5"
       },
       {
         "id": 102,
@@ -34,7 +28,9 @@
         "prerequisites": "None",
         "learningGoal": "Understand the basics of Chemistry.",
         "description": "Introduction to chemical reactions, periodic table, and lab safety.",
-        "isSubjectOpen": false
+        "isSubjectOpen": false,
+        "subjectColor": "#ff5733"
+
       }
     ]
   },
@@ -51,17 +47,11 @@
         "subjectCode": "MATH-10",
         "primaryTeacher": "teacher_5",
         "secondaryTeacher": ["teacher_6"],
-        "documents": [
-          {
-            "id": "doc2",
-            "name": "Math_Syllabus.pdf",
-            "url": "https://example.com/math_syllabus.pdf"
-          }
-        ],
         "prerequisites": "Basic Arithmetic",
         "learningGoal": "Understand algebra, geometry, and basic trigonometry.",
         "description": "This subject covers algebraic equations, geometry concepts, and introductory trigonometry.",
-        "isSubjectOpen": true
+        "isSubjectOpen": true,
+        "subjectColor": "#987654"
       }
     ]
   }
