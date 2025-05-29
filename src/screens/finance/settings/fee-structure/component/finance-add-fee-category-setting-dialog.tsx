@@ -20,6 +20,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { feeStructurevalidationSchema } from '../validationSchema';
@@ -159,24 +160,28 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   return (
     <>
       <form onSubmit={formik.handleSubmit}>
-        <Box display="flex" justifyContent="flex-end">
-          <Box display="flex" gap={2}>
-            <Button
-              startIcon={<Iconify icon="bx:arrow-back" />}
-              variant="contained"
-              size="small"
-              onClick={handleCloseDialog}
-            >
-              Back
-            </Button>
-            <Button
-              startIcon={<Iconify icon="si:add-duotone" />}
-              type="submit"
-              variant="contained"
-              size="small"
-            >
+        <CustomBreadcrumbs
+          heading="Create Fee Structure"
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Settings', href: '/finance/settings/create-fee-structure/' },
+            { name: 'Create Fee Structure' },
+            { name: 'Fee Structure From' },
+          ]}
+          description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={onClose}
+          action={
+            <Button startIcon={<Iconify icon="si:add-duotone" />} type="submit" variant="contained">
               Add
             </Button>
+          }
+        />
+        {/* <Box display="flex" justifyContent="flex-end">
+          <Box display="flex" gap={2}>
+            
+           
             <Button
               startIcon={<Iconify icon="si:add-duotone" />}
               variant="contained"
@@ -185,9 +190,9 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
               disabled={feeHeadListForFeeStructure.length === 0}
             >
               Add For Other Class
-            </Button>
+            </Button> 
           </Box>
-        </Box>
+        </Box> */}
 
         <Grid container spacing={3} py="30px">
           <Grid item xs={12} md={6}>
@@ -225,7 +230,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
               error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
             >
               <CustomSelect
-                label="Applicable Class"
+                label="Class"
                 options={[
                   { value: '1', label: '1' },
                   { value: '2', label: '2' },

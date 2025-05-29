@@ -65,42 +65,25 @@ const FinanceExpenseTrackingScreen = () => {
         />
       ) : (
         <>
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <CustomBreadcrumbs
-              heading="Expense Tracking"
-              links={[
-                { name: 'Finance', href: '/finance/dashboard' },
-                { name: 'Expense Tracking' },
-              ]}
-              sx={{ px: 1, mb: 2 }}
-              description="The Expense Tracking screen provides a detailed overview of all recorded expenses. You can track expense categories, view transaction details, and monitor financial records efficiently."
-            />
-
-            {/* button for adding a new expense */}
-            <Box
-              sx={{ mr: '15px', mb: '20px' }}
-              gap={3}
-              display="flex"
-              flexDirection="row"
-              justifyContent="flex-end"
-            >
+          <CustomBreadcrumbs
+            heading="Expense Tracking"
+            links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Expense Tracking' }]}
+            sx={{ px: 1, mb: 2 }}
+            description="The Expense Tracking screen provides a detailed overview of all recorded expenses. You can track expense categories, view transaction details, and monitor financial records efficiently."
+            action={
               <Button
+                variant="contained"
+                size="small"
                 startIcon={<Iconify icon="ic:outline-plus" />}
                 onClick={() => {
                   setOpen(true);
                 }}
-                variant="contained"
-                size="small"
               >
-                New Expense
+                Expense
               </Button>
-            </Box>
-          </Box>
+            }
+          />
+
           <CustomizableTable
             searchFieldProps={{
               placeholder: 'Search by Expense Category...',

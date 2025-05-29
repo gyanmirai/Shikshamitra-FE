@@ -1,11 +1,8 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
 import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
@@ -17,7 +14,6 @@ import feeStructureData from 'src/json/finance/fee-management/feeStructureData.j
 import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structure/component/read-only-fee-structure-table';
 
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -34,42 +30,6 @@ const FinanceFeeStructureOverviewComponent = () => {
   // State to store the selected fee structure items when a row is clicked/selected
   const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
 
-  // States for managing organization/stage selection
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const [organization, setOrganization] = useState<string>('');
-
-  // States for managing class/standard selection
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
-
-  // States for managing division selection
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
-
-  // Effect to update organizations when medium changes
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
-
-  // Effect to update classes when organization changes
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setClass(
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
-  }, [organization, allOrganization]);
-
-  // Effect to update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
   return (
     <>
       <CustomBreadcrumbs
@@ -77,43 +37,12 @@ const FinanceFeeStructureOverviewComponent = () => {
         heading="Fee Structure Overview"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Fee Management' },
+          { name: 'Fee Management', href: '/finance/fee-management/fee-structure-overview/' },
           { name: 'Fee Structure Overview' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!medium}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!organization}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!classes}
-        />
-      </Box>
+
       <Box pb="10px">
         <CustomizableTable
           noDataText={
@@ -140,8 +69,8 @@ const FinanceFeeStructureOverviewComponent = () => {
           }
           tableId="fee-structure-overview"
           searchFieldProps={{
-            placeholder: 'Search by Receipt Book, Applicable Class..',
-            label: 'Search by Receipt Book, Applicable Class..',
+            placeholder: 'Search by Receipt Book, Class..',
+            label: 'Search by Receipt Book, Class..',
             sx: {
               maxWidth: '400px',
               width: '100%',
@@ -159,7 +88,7 @@ const FinanceFeeStructureOverviewComponent = () => {
               filterType: 'string',
             },
 
-            { id: 'applicableGrade', label: 'Applicable Class', filterType: 'number' },
+            { id: 'applicableGrade', label: 'Class', filterType: 'number' },
 
             {
               id: 'grossFee',
@@ -239,7 +168,7 @@ const FinanceFeeStructureOverviewComponent = () => {
           detaiFeeStructure.onFalse();
         }}
       >
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '600px' }}>
+        <Scrollbar sx={{ p: 2, height: '600px' }}>
           <ReadOnlyFeeStructureTable data={selectedFeeStructure || []} />
         </Scrollbar>
       </CustomDialog>

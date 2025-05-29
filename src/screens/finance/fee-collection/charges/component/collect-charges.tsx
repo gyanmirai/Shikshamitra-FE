@@ -126,15 +126,24 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
             <Grid item xs={12} md={12}>
               <CustomizableTable
                 tableId="charges-table"
-                isShowedDense={false}
-                isFilter={false}
-                isSearch={false}
+                noDataText="No Charges Found"
+                searchFieldProps={{
+                  placeholder: 'Search by Fee Head, Due date, Cheque Date, etc....',
+                  label: 'Search by Fee Head, Due date, Cheque Date, etc....',
+                  sx: {
+                    maxWidth: '400px',
+                    width: '100%',
+                  },
+                }}
                 columns={[
                   {
                     id: 'chargesHeadId',
-                    label: 'Select',
+                    label: '',
                     isFilter: false,
                     isSort: false,
+                    renderColumn() {
+                      return <Checkbox checked={false} onChange={(e) => {}} />;
+                    },
 
                     render: (value, row) => (
                       <Checkbox
@@ -145,10 +154,25 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                   },
 
                   { id: 'dueDate', label: 'Due Date', filterType: 'date' },
+                  { id: 'feeHead', label: 'Fee Head' },
+
+                  { id: 'checkDate', label: 'Cheque Date', filterType: 'date' },
+                  { id: 'receivedCheckDate', label: 'Received Check Date', filterType: 'date' },
+                  { id: 'chequeAmount', label: 'Cheque Amount', filterType: 'number' },
+                  // { id: "charges", label: "Charges" },
+                  { id: 'bankName', label: 'Bank Name' },
+                  {
+                    id: 'noOfDay',
+                    label: 'No Of Day',
+                    filterType: 'number',
+                    minWidth: 100,
+                    align: 'right',
+                  },
                   {
                     id: 'chargesPerDay',
-                    label: 'ChargesPerDay',
+                    label: 'Charges Per Day',
                     filterType: 'formattedNumber',
+                    align: 'right',
                     render(value, row) {
                       if (row.chargesPerDay !== null) {
                         return (
@@ -159,24 +183,15 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                     },
                   },
                   {
-                    id: 'noOfDay',
-                    label: 'No Of Day',
-                    filterType: 'number',
-                  },
-                  {
                     id: 'totalCharges',
                     label: 'Total Charges',
                     filterType: 'formattedNumber',
+                    align: 'right',
+
                     render(value, row) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
                   },
-                  { id: 'feeHead', label: 'Fee Head' },
-                  { id: 'checkDate', label: 'Date on Check', filterType: 'date' },
-                  { id: 'receivedCheckDate', label: 'Received Check Date', filterType: 'date' },
-                  { id: 'chequeAmount', label: 'Cheque Amount', filterType: 'number' },
-                  // { id: "charges", label: "Charges" },
-                  { id: 'bankName', label: 'Bank Name' },
                 ]}
                 data={filteredDetails}
               />

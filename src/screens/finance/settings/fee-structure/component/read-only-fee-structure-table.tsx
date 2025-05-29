@@ -4,7 +4,7 @@ import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React from 'react';
 
-import { Switch, Tooltip, Typography } from '@mui/material';
+import { Tooltip, Typography } from '@mui/material';
 
 import { formatNumber } from 'src/utils/formate_number';
 
@@ -16,11 +16,15 @@ import type { IReadOnlyFeeStructureTableProps } from '../fee-structure-interface
 
 const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ data }) => {
   const column = [
-    { id: 'feeHead', label: 'Fee Head' },
+    {
+      id: 'feeHead',
+      label: 'Fee Head',
+      isFilter: false,
+    },
     {
       id: 'grossFee',
       label: 'Gross Fee',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -30,7 +34,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'generalDiscount',
       label: 'General Discount',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -40,7 +44,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'payableFee',
       label: 'Payable Fee',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -50,7 +54,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'monthly',
       label: 'Monthly Payable Fee',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -62,7 +66,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'quartly',
       label: 'Quarterly Payable Fee',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -74,7 +78,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'bi-annual',
       label: 'Bi-Annually Payable Fee',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -86,6 +90,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'paymentMethod',
       label: 'Payment Method',
+      isFilter: false,
       render(value: any, row: any) {
         if (row.paymentMethod.length > 2) {
           return (
@@ -115,7 +120,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'lateFeeCharges',
       label: 'Late Fee Charges',
-      filterType: 'formattedNumber',
+      isFilter: false,
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -127,7 +132,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'lateFeeChargesType',
       label: 'Late Fee Charges Type',
-      filterType: 'string',
+      isFilter: false,
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -139,7 +144,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'discountReason',
       label: 'Discount Reason',
-      filterType: 'string',
+      isFilter: false,
       render(value: any, row: any) {
         const fullText = row.discountReason || '';
         const wordLimit = 15;
@@ -165,16 +170,16 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
         );
       },
     },
-    {
-      id: 'active',
-      label: 'Active/Not Active',
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      render(value: any, row: any) {
-        return <Switch name="creditcard" checked={row.isActive} onChange={() => {}} />;
-      },
-    },
+    // {
+    //   id: 'active',
+    //   label: 'Active/Not Active',
+    //   isSort: false,
+    //   isFilter: false,
+    //   sticky: true,
+    //   render(value: any, row: any) {
+    //     return <Switch name="creditcard" checked={row.isActive} onChange={() => { }} />;
+    //   },
+    // },
   ];
 
   return (

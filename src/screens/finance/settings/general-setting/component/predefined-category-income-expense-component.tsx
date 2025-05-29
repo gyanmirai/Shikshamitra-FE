@@ -62,7 +62,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
             isFilter={false}
             isSearch={false}
             columns={[
-              { id: 'existingcategories', label: 'Existing Categories' },
+              { id: 'existingcategories', label: 'Categories' },
               { id: 'subCategories', label: 'Sub-Categories' },
               {
                 id: 'action',
@@ -96,7 +96,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
           open={editDialog.value}
           handleClose={editDialog.onFalse}
           title="Add Budget Sub Category"
-          maxWidth="md"
+          maxWidth="sm"
         >
           <AddBudgetSubcategoryDialog
             onClose={editDialog.onFalse}

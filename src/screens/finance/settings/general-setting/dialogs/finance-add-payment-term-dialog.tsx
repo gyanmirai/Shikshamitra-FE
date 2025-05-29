@@ -55,7 +55,7 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -66,7 +66,7 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
                 size="small"
                 fullWidth
                 name="paymentTermName"
-                label="Payment Term Name"
+                label="Payment Term Name *"
                 value={values.paymentTermName}
                 onChange={handleChange}
                 onBlur={handleBlur}

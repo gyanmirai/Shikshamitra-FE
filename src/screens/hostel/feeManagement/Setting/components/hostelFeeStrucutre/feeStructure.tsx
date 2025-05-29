@@ -252,7 +252,7 @@ const HostelFeeStructure = (props: TabComponentType) => {
                 id: 'bookRecipt',
                 label: 'Receipt Book',
               },
-              { id: 'applicableGrade', label: 'Applicable Class' },
+              { id: 'applicableGrade', label: 'Class' },
 
               {
                 id: 'grossFee',
@@ -301,7 +301,7 @@ const HostelFeeStructure = (props: TabComponentType) => {
               },
               {
                 id: 'statustoggle',
-                label: 'InActive/Active',
+                label: 'Active',
                 render(statusToggle) {
                   return <Switch value={statusToggle} />;
                 },

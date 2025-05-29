@@ -1,14 +1,9 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
-
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add, Send } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Button,
@@ -29,7 +24,6 @@ import bounceChequeData from 'src/json/finance/reconicilation/bounceChequeData.j
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -61,43 +55,6 @@ const FinanceBounceScreen = () => {
     setOpenDialog(false);
   };
 
-  // States for managing organization/stage selection
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const [organization, setOrganization] = useState<string>('');
-
-  // States for managing class/standard selection
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
-
-  // States for managing division selection
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
-
-  // Effect to update organizations when medium changes
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
-
-  // Effect to update classes when organization changes
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setClass(
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
-  }, [organization, allOrganization]);
-
-  // Effect to update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
-
   return (
     <>
       <CustomBreadcrumbs
@@ -105,43 +62,12 @@ const FinanceBounceScreen = () => {
         description="The bounce cheque screen displays all payments made by cheque which are marked as bounced"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Reconciliation' },
+          { name: 'Reconciliation', href: '/finance/reconciliation/bounce-cheque/' },
           { name: 'Bounced Cheque' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!medium}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!organization}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!classes}
-        />
-      </Box>
+
       <CustomizableTable
         noDataText={
           <>There are no Bounce cheque recorded for the selected class and division at this time.</>
@@ -159,12 +85,15 @@ const FinanceBounceScreen = () => {
           //  {id:"srNo", label:"SR No"},
 
           { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
+          { id: 'studentName', label: 'Student Name' },
+          { id: 'class', label: 'Class' },
+          { id: 'division', label: 'Division' },
           { id: 'parentsContactNumber', label: 'Contact Number' },
           { id: 'chequeNumber', label: 'Cheque Number' },
           { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
 
           { id: 'feeHead', label: 'Fee Head' },
-          { id: 'studentName', label: 'Student Name' },
+
           { id: 'bounceDate', label: 'Bounce Date', filterType: 'date' },
           { id: 'reason', label: 'Reason' },
           {
@@ -189,10 +118,11 @@ const FinanceBounceScreen = () => {
           },
           {
             id: 'conversation',
-            label: 'Conversation',
+            label: 'Follow up',
             isSort: false,
             align: 'center',
             isFilter: false,
+            sticky: true,
             render(value, row) {
               return (
                 <IconButton
@@ -272,23 +202,6 @@ export const CommunicationForm = ({ handleCloseDialog }: any) => (
               </InputAdornment>
             ),
           }}
-        />
-        <DatePicker
-          label="Due Date"
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
-        <CustomSelect
-          options={
-            [
-              // { label: 'Interested', value: 'interested' },
-              // { label: 'Not Interested', value: 'notInterested' },
-              // { label: 'Pending', value: 'pending' },
-            ]
-          }
-          value=""
-          onChange={() => {}}
-          label="Change Status"
-          formControlProps={{ sx: { maxWidth: 'unset' }, fullWidth: true }}
         />
       </Box>
     </Scrollbar>

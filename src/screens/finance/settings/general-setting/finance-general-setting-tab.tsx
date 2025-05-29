@@ -47,7 +47,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'setDefaultFeeComponents',
         label: 'Fee Head',
-        buttonText: 'Add Fee Head',
+        buttonText: 'Fee Head',
         onClick: () => {
           setFeeHeadDialog.onTrue();
         },
@@ -56,7 +56,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'setPaymentMethodComponents',
         label: 'Payment Method',
-        buttonText: 'Add Payment Method',
+        buttonText: 'Payment Method',
         onClick: () => {
           setPaymentMethodDialog.onTrue();
           console.log('Add Payment Method clicked');
@@ -66,7 +66,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'lateFeeType',
         label: 'Late Fee Type',
-        buttonText: 'Add Late Fee Type',
+        buttonText: 'Late Fee Type',
         onClick: () => {
           setLateFeeTypeDialog.onTrue();
           console.log('Add Late Fee Type clicked');
@@ -76,7 +76,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'setPaymentTerm',
         label: 'Payment Term',
-        buttonText: 'Add Payment Term',
+        buttonText: 'Payment Term',
         onClick: () => {
           setPaymentTermDialog.onTrue();
           console.log('Add Payment Term clicked');
@@ -86,7 +86,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'configurePaymentStatusOptions',
         label: 'Payment Status',
-        buttonText: 'Add Payment Status',
+        buttonText: 'Payment Status',
         onClick: () => {
           setPaymentStatusDialog.onTrue();
           console.log('Add Payment Status Option clicked');
@@ -95,8 +95,8 @@ const FinanceGeneralSettingTab = () => {
       },
       {
         value: 'presentCategoriesandDepartmentsforBudgeting',
-        label: 'Present Categories and Departments for Budgeting',
-        buttonText: 'Add Budget Category',
+        label: 'Budget Category',
+        buttonText: 'Budget Category',
         onClick: () => {
           presetCategoryAndDepartmentForBudgetDialog.onTrue();
           console.log('Add Budget Category clicked');
@@ -106,7 +106,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'predefinedCategoriesForincomeandexpenses',
         label: 'Budget Sub Category',
-        buttonText: 'Add Budget Sub Category',
+        buttonText: 'Budget Sub Category',
         onClick: () => {
           predefinedCategoryIncomeExpenseDialog.onTrue();
           console.log('Add Income/Expense Category clicked');

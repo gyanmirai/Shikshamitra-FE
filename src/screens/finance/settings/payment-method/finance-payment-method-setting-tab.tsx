@@ -167,7 +167,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
               },
               {
                 id: 'toggle',
-                label: 'InActive/Active',
+                label: 'Active',
                 render() {
                   return <Switch />;
                 },
