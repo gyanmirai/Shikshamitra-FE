@@ -100,7 +100,7 @@ const ConfigurePaymentStatusComponent = () => {
             editDialog.onFalse();
           }}
           title={isEdit ? 'Edit Payment Status' : 'Add Payment Status'}
-          maxWidth="md"
+          maxWidth="sm"
         >
           <AddPaymentStatusDialog
             onClose={() => {

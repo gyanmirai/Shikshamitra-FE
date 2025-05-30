@@ -19,6 +19,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -158,42 +159,32 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   const feeHeadDialog = useBoolean();
   const paymentMethodDialog = useBoolean();
   return (
-    <>
-      <form onSubmit={formik.handleSubmit}>
-        <CustomBreadcrumbs
-          heading="Create Fee Structure"
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Settings', href: '/finance/settings/create-fee-structure/' },
-            { name: 'Create Fee Structure' },
-            { name: 'Fee Structure From' },
-          ]}
-          description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
-          sx={{ px: 1, mb: 2 }}
-          isBack
-          onBack={onClose}
-          action={
-            <Button startIcon={<Iconify icon="si:add-duotone" />} type="submit" variant="contained">
-              Add
-            </Button>
-          }
-        />
-        {/* <Box display="flex" justifyContent="flex-end">
-          <Box display="flex" gap={2}>
-            
-           
-            <Button
-              startIcon={<Iconify icon="si:add-duotone" />}
-              variant="contained"
-              size="small"
-              onClick={handleClear}
-              disabled={feeHeadListForFeeStructure.length === 0}
-            >
-              Add For Other Class
-            </Button> 
-          </Box>
-        </Box> */}
+    <form onSubmit={formik.handleSubmit}>
+      <CustomBreadcrumbs
+        heading="Create Fee Structure"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Settings', href: '/finance/settings/create-fee-structure/' },
+          { name: 'Create Fee Structure' },
+          { name: 'Fee Structure From' },
+        ]}
+        description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
+        sx={{ px: 1, mb: 2 }}
+        isBack
+        onBack={onClose}
+        action={
+          <Button
+            size="small"
+            startIcon={<Iconify icon="si:add-duotone" />}
+            type="submit"
+            variant="contained"
+          >
+            Add
+          </Button>
+        }
+      />
 
+      <Scrollbar sx={{ height: 'calc(100vh - 260px)' }}>
         <Grid container spacing={3} py="30px">
           <Grid item xs={12} md={6}>
             <ShakingTextField
@@ -442,15 +433,14 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
             />
           </Grid>
         </Grid>
-      </form>
 
-      {/* We can create multiple fee heads for a single fee structure. Previous entries are listed below in a table, similar to a to-do list, for easy tracking and management. */}
-      <FinanceAddedFeeHeadForFeeStructure
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-        data={feeHeadListForFeeStructure}
-      />
-
+        {/* We can create multiple fee heads for a single fee structure. Previous entries are listed below in a table, similar to a to-do list, for easy tracking and management. */}
+        <FinanceAddedFeeHeadForFeeStructure
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          data={feeHeadListForFeeStructure}
+        />
+      </Scrollbar>
       <Box display="flex" justifyContent="flex-end" p={2}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.submit} />}
@@ -460,7 +450,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
           Submit
         </Button>
       </Box>
-    </>
+    </form>
   );
 };
 

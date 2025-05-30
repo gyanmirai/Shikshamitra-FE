@@ -152,9 +152,9 @@ const FinanceGeneralSettingTab = () => {
         action={
           <Button
             variant="contained"
-            size="small"
             onClick={handleClick}
             startIcon={<Add />}
+            size="small"
             sx={{ textTransform: 'capitalize' }}
           >
             {getButtonText()}

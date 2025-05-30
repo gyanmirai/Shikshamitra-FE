@@ -18,6 +18,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -267,6 +268,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
           </Box>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+            <CancelButton onClick={onClose} />
             <SubmitButton onClick={() => {}} />
           </Box>
         </Card>

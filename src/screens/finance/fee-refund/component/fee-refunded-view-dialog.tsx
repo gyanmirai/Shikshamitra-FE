@@ -90,7 +90,7 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
       open={dialogValue}
       handleClose={onClose}
     >
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+      <Scrollbar sx={{ p: 2, height: '500px' }}>
         <Box display="flex" gap={3} alignItems="center">
           <Typography fontSize="14px">
             <strong>Name:</strong> John Doe

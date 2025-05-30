@@ -142,6 +142,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
             action={
               !open && (
                 <Button
+                  size="small"
                   startIcon={<Add />}
                   variant="contained"
                   onClick={() => {
@@ -683,7 +684,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
           content="Are you sure want to delete?"
           action={
             <Button variant="contained" color="error" onClick={async () => {}}>
-              Delete
+              Yes
             </Button>
           }
         />

@@ -110,7 +110,7 @@ const SetLateFeeTypeMethod = () => {
             editDialog.onFalse();
           }}
           title={`${isEdit ? 'Edit' : 'Add'} Late Fee Type`}
-          maxWidth="md"
+          maxWidth="sm"
         >
           <AddLateFeeTypeDialog
             onClose={() => {
@@ -134,7 +134,7 @@ const SetLateFeeTypeMethod = () => {
           content="Are you sure want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

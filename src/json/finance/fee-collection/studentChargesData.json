@@ -1,93 +1,22 @@
 [
-    {
-      "srNo": 1,
-      "chargeHead": "Late Fee",
-      "chargeId": "674773",
-      "chargeType": "Late Fee",
-      "appliedDate": "15-08-2024",
-      "overdueDate": "20-08-2024",
-      "amount": "₹ 300",
-      "status": "Pending",
-      "description": "Late fee for overdue payment of Tuition Fee.",
-      "details": [
-        {
-          "dueDate": "01-01-2025",
-          "chargesPerDay": "5",
-          "totalCharges": "150",
-          "status": "Paid",
-          "noOfDay": 30
-        },
-        {
-          "dueDate": "01-02-2025",
-          "chargesPerDay": "5",
-          "totalCharges": "150",
-          "status": "Pending",
-          "noOfDay": 60
-        },
-        {
-          "dueDate": "01-03-2025",
-          "chargesPerDay": "5",
-          "totalCharges": "150",
-          "status": "Pending",
-          "noOfDay": 120
-        }
-      ]
-    },
-    {
-      "srNo": 2,
-      "chargeHead": "Late Fee",
-      "chargeId": "874912",
-      "chargeType": "Sports Fee",
-      "appliedDate": "10-09-2024",
-      "overdueDate": "15-09-2024",
-      "amount": "₹ 500",
-      "status": "Pending",
-      "description": "Late fee for overdue payment of Sports Fee.",
-      "details": [
-        {
-          "dueDate": "01-04-2025",
-          "chargesPerDay": "10",
-          "totalCharges": "300",
-          "status": "Paid",
-          "noOfDay": 60
-        },
-        {
-          "dueDate": "01-05-2025",
-          "chargesPerDay": "10",
-          "totalCharges": "300",
-          "status": "Pending",
-          "noOfDay": 60
-        },
-        {
-          "dueDate": "01-06-2025",
-          "chargesPerDay": "10",
-          "totalCharges": "300",
-          "status": "Pending",
-          "noOfDay": 60
-        }
-      ]
-    },
-    {
-      "srNo": 3,
-      "chargeHead": "Check Bounce",
-      "chargeId": "874912",
-      "chargeType": "bounceCheck",
-      "appliedDate": "10-09-2024",
-      "overdueDate": "15-09-2024",
-      "amount": "₹ 500",
-      "status": "Pending",
-      "description": "Bounce check for the payment of the sports fee of ₹ 5,000.",
-      "details": [
-        {
-          "feeHead": "Tuition",
-          "checkDate": "15-10-2024",
-          "receivedCheckDate": "15-10-2024",
-          "chequeAmount": 5000,
-          "charges": "₹ 500 ",
-          "bankName": "Sbi",
-          "status": "Pending"
-        }
-      ]
-    }
-  ]
-  
+  {
+    "srNo": 1,
+    "feeHead": "Tuition",
+    "chargeType": "Late Fee",
+    "status": "Pending",
+    "dueDate": "01-03-2025",
+    "chargesPerDay": "5",
+    "totalCharges": "600",
+    "dayOverView": 120
+  },
+  {
+    "srNo": 2,
+    "feeHead": "Sports",
+    "chargeType": "Late Fee",
+    "status": "Paid",
+    "dueDate": "01-04-2025",
+    "chargesPerDay": "10",
+    "totalCharges": "600",
+    "dayOverView": 60
+  }
+]

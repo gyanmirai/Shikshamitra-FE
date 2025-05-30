@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Typography } from '@mui/material';
 
@@ -11,7 +12,6 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import incomeTrackingData from 'src/json/finance/income/incomeTrackingData.json';
 
-import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -73,10 +73,10 @@ const FinanceIncomeTrackingScreen = () => {
             sx={{ px: 1, mb: 2 }}
             action={
               <Button
-                startIcon={<Iconify icon="ic:outline-plus" />}
+                size="small"
+                startIcon={<Add />}
                 onClick={() => setOpen(true)}
                 variant="contained"
-                size="small"
               >
                 Income
               </Button>

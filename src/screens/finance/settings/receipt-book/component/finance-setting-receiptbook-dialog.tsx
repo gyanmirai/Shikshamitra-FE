@@ -5,13 +5,15 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Grid, TextField, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Scrollbar } from 'src/components/scrollbar';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { receiptBookValidationSchema } from '../validationSchema';
@@ -81,7 +83,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   return (
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, height: '100%' }}>
-        <Grid container spacing={2} pb="20px">
+        <Grid container spacing={2}>
           {/* Receipt Book Name Field */}
           <Grid item xs={12} sm={12}>
             {(() => {
@@ -132,9 +134,8 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       </Scrollbar>
 
       <DialogActions>
-        <Button type="submit" variant="contained">
-          Submit
-        </Button>
+        <CancelButton onClick={onClose} />
+        <SubmitButton />
       </DialogActions>
     </form>
   );
