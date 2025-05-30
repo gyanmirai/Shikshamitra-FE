@@ -225,12 +225,16 @@ const InquiryScreen = () => {
   const issueRegistrationFormDialog = useBoolean();
   const links = inquiryDialog.value
     ? [
-        { name: 'Student' },
-        { name: 'Student Enrollment' },
-        { name: 'Inquiry' },
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
+        { name: 'Inquiry', href: '/student/enrollment/inquiry' },
         { name: 'Inquiry Form' },
       ]
-    : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
+    : [
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
+        { name: 'Inquiry' },
+      ];
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {

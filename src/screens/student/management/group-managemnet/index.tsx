@@ -19,6 +19,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { StudentApi } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -121,7 +123,7 @@ const GroupManagement = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
           House
         </Button>
       </Box>
@@ -709,7 +711,12 @@ const GroupManagementForm = ({
           }}
         />
         <DialogActions sx={{ p: 0 }}>
-          <Button size="small" variant="outlined" onClick={handleClose}>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            size="small"
+            variant="outlined"
+            onClick={handleClose}
+          >
             Cancel
           </Button>
           <LoadingButton
@@ -717,6 +724,7 @@ const GroupManagementForm = ({
             type="submit"
             variant="contained"
             loading={isLoading || isUpdateLoading}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             {editData ? 'Update' : 'Add'}
           </LoadingButton>

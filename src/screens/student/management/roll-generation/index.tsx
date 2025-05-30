@@ -184,6 +184,7 @@ const RollNoGenerationScreen = ({
                 variant="outlined"
                 onClick={handleSave}
                 disabled={isSaving || !tableData.some((item) => item.rollNo)}
+                size="small"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -192,10 +193,16 @@ const RollNoGenerationScreen = ({
                 startIcon={<Grading />}
                 variant="outlined"
                 onClick={() => setIsManual(!isManual)}
+                size="small"
               >
                 Manual Generation
               </Button>
-              <Button startIcon={<Refresh />} variant="contained" onClick={handleAutoGenerate}>
+              <Button
+                size="small"
+                startIcon={<Refresh />}
+                variant="contained"
+                onClick={handleAutoGenerate}
+              >
                 Auto Generate
               </Button>
             </Box>

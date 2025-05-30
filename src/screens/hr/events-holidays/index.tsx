@@ -143,7 +143,7 @@ const HrEventsAndHolidaysScreen = () => {
     <>
       <CustomBreadcrumbs
         heading="Events & Holidays"
-        links={[{ name: 'HR' }, { name: 'Events & Holidays' }]}
+        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button
@@ -165,7 +165,7 @@ const HrEventsAndHolidaysScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Events & Holidays"
-        links={[{ name: 'HR' }, { name: 'Events & Holidays' }]}
+        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">

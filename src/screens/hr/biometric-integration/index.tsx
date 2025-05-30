@@ -17,8 +17,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const BiometricIntegrationScreen = () => (
   <Box>
     <CustomBreadcrumbs
-      heading="Biometric Integration"
-      links={[{ name: 'HR' }, { name: 'Attendance & Leave' }, { name: 'Biometric Integration' }]}
+      heading="Import Attendance"
+      links={[
+        { name: 'HR', href: '/hr/dashboard/' },
+        { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
+        { name: 'Import Attendance' },
+      ]}
       action={
         <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
           <Button variant="outlined" size="small" startIcon={<Iconify icon="eva:download-fill" />}>

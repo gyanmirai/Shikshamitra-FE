@@ -572,7 +572,11 @@ const AdmissionScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Admission"
-        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Admission' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
+          { name: 'Admission' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         description="Manage student admissions: Approve or reject applications here."
       />
@@ -1393,6 +1397,7 @@ const AssignDivisionForm = ({
           loading={isLoading}
           type="submit"
           variant="contained"
+          size="small"
         >
           Assign
         </LoadingButton>

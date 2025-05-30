@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Stack,
@@ -105,11 +104,6 @@ const StudentDocumentType = () => {
           </LoadingButton>
         }
       />
-      <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Document
-        </Button>
-      </Box>
       <CustomizableTable
         tableId="student-document-type"
         noDataText={
@@ -299,6 +293,7 @@ export const DocumentForm = ({
         </Scrollbar>
         <DialogActions>
           <Button
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
             onClick={() => {

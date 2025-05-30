@@ -45,8 +45,8 @@ const StudentCertificatesScreen = () => {
       <CustomBreadcrumbs
         heading="Certificates"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard' },
-          { name: 'Student Records' },
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Records', href: '/student/overview/' },
           { name: 'Certificates' },
         ]}
         sx={{ px: 1, mb: 2 }}

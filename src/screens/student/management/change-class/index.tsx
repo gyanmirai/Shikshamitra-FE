@@ -93,6 +93,7 @@ const ChangeClassScreen = ({
             startIcon={<Save />}
             variant="outlined"
             onClick={handleSave}
+            size="small"
           >
             Save
           </LoadingButton>

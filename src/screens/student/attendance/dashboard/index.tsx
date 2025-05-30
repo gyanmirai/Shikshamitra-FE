@@ -302,7 +302,11 @@ const StudentAttendanceDashboardScreen = () => {
         <>
           <CustomBreadcrumbs
             heading="Dashboard"
-            links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
+            links={[
+              { name: 'Student', href: '/student/enrollment/dashboard/' },
+              { name: 'Attendance', href: '/student/attendance/dashboard/' },
+              { name: 'Dashboard' },
+            ]}
             sx={{ px: 1, mb: 2 }}
             description="This dashboard shows daily attendance stats, overall attendance rates"
           />

@@ -111,7 +111,11 @@ const LeaveAndAbsentScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Leave and Absent"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Leave and Absent' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Leave and Absent' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" size="small" onClick={dialog.onTrue}>
@@ -679,9 +683,8 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     type="submit"
                     variant="contained"
                     size="small"
-                    color="primary"
                   >
-                    RequestSubmit Leave
+                    Request Submit Leave
                   </Button>
                 </Grid>
               </Grid>

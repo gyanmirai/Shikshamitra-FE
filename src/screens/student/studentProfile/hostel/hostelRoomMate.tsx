@@ -33,6 +33,7 @@ const HostelRoomMate = (props: StudentTabsComponentType) => {
           startIcon={<Iconify icon={GlobalIcons.eye} />}
           variant="contained"
           onClick={viewRuleDialog.onTrue}
+          size="small"
         >
           View Hostel Rules
         </Button>

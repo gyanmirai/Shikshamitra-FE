@@ -45,7 +45,7 @@ const ReportsScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[{ name: 'HR' }, { name: 'Reports' }]}
+        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <CustomTabs

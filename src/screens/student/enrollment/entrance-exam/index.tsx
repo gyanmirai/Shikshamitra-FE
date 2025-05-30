@@ -249,7 +249,11 @@ const EntranceExamScreen = () => {
       <CustomBreadcrumbs
         description="Manage students for the entrance exam as part of admission process."
         heading="Entrance Exam"
-        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Entrance Exam' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/enrollment/entrance-exam/?view=calender' },
+          { name: 'Entrance Exam' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Upload />} variant="contained" size="small">
@@ -767,6 +771,7 @@ export const ExamForm = ({
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           style={{ marginTop: '1rem' }}
+          size="small"
         >
           Submit
         </LoadingButton>
@@ -891,14 +896,21 @@ const ResultForm = ({
         </BackPopUpChecked>
       </Scrollbar>
       <DialogActions sx={{ flexShrink: 0 }}>
-        <Button onClick={() => handleClose(null, false)} style={{ marginTop: '1rem' }}>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={() => handleClose(null, false)}
+          style={{ marginTop: '1rem' }}
+        >
           Cancel
         </Button>
         <LoadingButton
+          size="small"
           loading={isLoading}
           type="submit"
           variant="contained"
-          color="primary"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           style={{ marginTop: '1rem' }}
         >
           Submit

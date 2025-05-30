@@ -153,7 +153,11 @@ const TakeAttendanceScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Mark Attendance"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Mark Attendance' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Mark Attendance' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />

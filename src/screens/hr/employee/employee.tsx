@@ -128,7 +128,7 @@ const HrEmployee = () => {
           <CustomBreadcrumbs
             heading={editData ? 'Update Employee' : 'Add Employee'}
             links={[
-              { name: 'HR' },
+              { name: 'HR', href: '/hr/dashboard/' },
               { name: 'Employee List', onClick: handleClose },
               { name: editData ? 'Update Employee' : 'Add Employee' },
             ]}
@@ -145,7 +145,11 @@ const HrEmployee = () => {
           {' '}
           <CustomBreadcrumbs
             heading="Employee"
-            links={[{ name: 'HR' }, { name: 'Employee' }]}
+            links={[
+              { name: 'HR', href: '/hr/dashboard/' },
+              { name: 'Employee' },
+              { name: 'Employee List', href: '/hr/employee/' },
+            ]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button

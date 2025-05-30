@@ -318,14 +318,16 @@ export const CommunicationForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleCloseDialog}
           variant="outlined"
+          size="small"
         >
-          Close
+          Cancel
         </Button>
         <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isAddLoading}
           type="submit"
           variant="contained"
+          size="small"
         >
           Submit
         </LoadingButton>
