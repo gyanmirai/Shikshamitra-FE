@@ -113,8 +113,8 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                       variant="outlined"
                       sx={{
                         fontSize: '0.9rem',
-                        color: subject?.status === 'Unpublish' ? '#B71C1C' : '#2E7D32',
-                        borderColor: subject?.status === 'Unpublish' ? '#B71C1C' : '#2E7D32',
+                        color: subject?.status === 'Draft' ? '#B71C1C' : '#2E7D32',
+                        borderColor: subject?.status === 'Draft' ? '#B71C1C' : '#2E7D32',
                       }}
                     />
                   </Box>

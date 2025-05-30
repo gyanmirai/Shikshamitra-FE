@@ -187,10 +187,10 @@ const Teacher = ({
           />
         </Box>
         <Box display="flex" gap={2} justifyContent="flex-end">
-          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
             Reset
           </Button>
-          <Button startIcon={<Save />} variant="contained">
+          <Button startIcon={<Save />} variant="contained" size="small">
             Save
           </Button>
         </Box>

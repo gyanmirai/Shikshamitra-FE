@@ -12,7 +12,8 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
-import ExamAssessmentType from './settings/examAssessmentTypeSetting.tsx/examType';
+import ExamTypeSettings from './settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeSetting';
+import AssessmentTypeSettings from './settings/examAssessmentTypeSetting.tsx/assessmentTypeSetting/assessmentTypeSetting';
 
 const TABS = [
   // {
@@ -28,10 +29,16 @@ const TABS = [
     component: () => <GradeScaling />,
   },
   {
-    value: 'examAssessmentType',
-    label: 'Exam & Assessment Type',
-    description: 'Configure exam and assessment types.',
-    component: () => <ExamAssessmentType />,
+    value: 'examType',
+    label: 'Exam Type',
+    description: 'Configure exam types.',
+    component: () => <ExamTypeSettings />,
+  },
+  {
+    value: 'assessmentType',
+    label: 'Assessment Type',
+    description: 'Configure assessment types.',
+    component: () => <AssessmentTypeSettings />,
   },
   //   {
   //     value: 'eventType',
@@ -52,13 +59,12 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading={currentTab?.label}
         description={currentTab?.description}
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Setting' },
-          { name: currentTab?.label || '' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

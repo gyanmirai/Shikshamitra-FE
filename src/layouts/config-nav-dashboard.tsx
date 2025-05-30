@@ -648,6 +648,8 @@ const academicModule = {
           _action: 'dashboard',
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
+          disabled: true,
+          caption: 'Coming Soon',
         },
         {
           title: 'Curriculum Management',

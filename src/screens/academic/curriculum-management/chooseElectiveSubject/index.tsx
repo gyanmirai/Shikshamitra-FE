@@ -51,12 +51,13 @@ const ChooseElectiveSubject = () => {
       />
 
       <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
-        <Button variant="outlined" startIcon={<RestartAlt />} onClick={handleReset}>
+        <Button variant="outlined" startIcon={<RestartAlt />} onClick={handleReset} size="small">
           Reset
         </Button>
         <Button
           startIcon={<Save />}
           variant="contained"
+          size="small"
           onClick={() => console.log('Selected subjects:', selectedSubjects)}
         >
           Save

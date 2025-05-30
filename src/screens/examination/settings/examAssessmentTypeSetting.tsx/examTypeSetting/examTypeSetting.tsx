@@ -3,7 +3,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -114,14 +114,16 @@ const ExamTypeSettings = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Exam Type</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           size="small"
           onClick={() => {
             dialog.onTrue();
+          }}
+          sx={{
+            width: '150px',
           }}
         >
           Exam Type

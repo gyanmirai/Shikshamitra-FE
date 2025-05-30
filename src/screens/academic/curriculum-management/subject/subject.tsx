@@ -128,7 +128,7 @@ const Subject = (props: TabComponentType) => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedSubject ? 'Update Subject' : 'Allocate Subject Form'}
+          heading={selectedSubject ? 'Update Subject Form' : 'Allocate Subject Form'}
           description="Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries."
           isBack
           onBack={() => {
@@ -139,8 +139,7 @@ const Subject = (props: TabComponentType) => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management' },
             { name: 'Allocate Subject' },
-
-            { name: selectedSubject ? 'Update Subject' : 'Allocate Subject Form' },
+            { name: selectedSubject ? 'Update Subject Form' : 'Allocate Subject Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -261,7 +260,11 @@ const Subject = (props: TabComponentType) => {
           setSelectedSubject(null);
         }}
         title={selectedSubject?.status === 'Published' ? 'Draft' : 'Publish'}
-        content={`Are you sure want to ${selectedSubject?.status} Subject ?`}
+        content={
+          selectedSubject?.status === 'Published'
+            ? 'Are you sure you want to Draft this subject?'
+            : 'Are you sure you want to Publish this subject?'
+        }
         action={
           <Button
             variant="contained"

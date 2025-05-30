@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "status": "Unpublish",
+    "status": "Draft",
     "className": "10th Grade",
     "subjectName": "Science",
     "subjectType": "elective",

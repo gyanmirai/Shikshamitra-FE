@@ -17,7 +17,7 @@ import MyAssignmentSubmission from './myAssignmentSubmission';
 const TABS = [
   {
     value: 'Homeworks',
-    label: 'HomeworkSubmission',
+    label: 'Homework Submission',
     component: (props: TabComponentType) => <MyHomeworkSubmission {...props} />,
   },
   {
@@ -38,7 +38,7 @@ const MySubmission = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="My Submission"
+        heading={currentActiveComponent?.label}
         description={
           currentActiveComponent?.value === 'Homeworks'
             ? 'View and manage your homework submissions'
@@ -46,9 +46,8 @@ const MySubmission = () => {
         }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
+          { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
           { name: 'My Submission' },
-          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />{' '}

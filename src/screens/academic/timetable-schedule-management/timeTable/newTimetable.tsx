@@ -40,6 +40,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -84,8 +85,10 @@ export const subjectGroups: TSubjectGroup[] = [
 ];
 
 const TimeTableGrid = (props: TabComponentType) => {
+  // Dialog state for creating time slots modal
   const createSlotsDialog = useBoolean();
-
+  // Dialog state for publishing marks modal (currently unused)
+  const publishTimetableDialog = useBoolean();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -423,6 +426,9 @@ const TimeTableGrid = (props: TabComponentType) => {
                 startIcon={<Iconify icon={GlobalIcons.publish} />}
                 variant="contained"
                 size="small"
+                onClick={() => {
+                  publishTimetableDialog.onTrue();
+                }}
               >
                 Publish
               </Button>
@@ -526,7 +532,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               options={allClass}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ sx: { maxWidth: '260px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 setClasses(value as string);
@@ -613,6 +619,27 @@ const TimeTableGrid = (props: TabComponentType) => {
           />{' '}
         </>
       )}
+
+      <ConfirmDialog
+        open={publishTimetableDialog.value}
+        onClose={() => {
+          publishTimetableDialog.onFalse();
+          // setSelectedExam(null);
+        }}
+        title="Publish"
+        content="Are you sure you want to Publish Timetable ?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              // handleDelete(selectedExam?.id);
+            }}
+          >
+            Publish
+          </Button>
+        }
+      />
     </Box>
   );
 };

@@ -24,14 +24,25 @@ import GradeForm from './gradeScaleForm';
 import type { IGrade } from './type';
 
 const GradingScale = () => {
+  // State for tracking edit mode
   const [isEdit, setIsEdit] = useState(false);
+  // State for storing currently selected grade
   const [selectedGrade, setSelectedGrade] = useState<IGrade | null>(null);
+  // Dialog control for main grade form
   const dialog = useBoolean();
+  // Dialog control for viewing grade details
+  const viewDialog = useBoolean();
+  // Dialog control for delete confirmation
   const deleteConfirmDialog = useBoolean();
+  // State for storing all grades data
   const [grades, setGrades] = useState<IGrade[]>(gradeScalingData);
+  // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
+  /**
+   * Handles closing of all dialogs and resetting related states
+   */
   const handleCloseDialog = () => {
     setSelectedGrade(null);
     setIsEdit(false);
@@ -39,6 +50,10 @@ const GradingScale = () => {
     deleteConfirmDialog.onFalse();
   };
 
+  /**
+   * Handles deletion of a grade
+   * @param gradeData - Grade object to be deleted
+   */
   const handleDelete = (gradeData: IGrade) => {
     if (selectedGrade) {
       setGrades(grades.filter((grade) => grade.id !== gradeData.id));
@@ -47,17 +62,28 @@ const GradingScale = () => {
     }
   };
 
+  /**
+   * Handles closing of grade form dialog
+   * @param _e - Event object
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      viewDialog.onFalse();
       dialog.onFalse();
       dispatch(setIsChanges(false));
       setSelectedGrade(null);
     } else if (!isChanges) {
+      viewDialog.onFalse();
       dialog.onFalse();
       setSelectedGrade(null);
     }
   };
 
+  /**
+   * Handles form submission
+   * @param values - Form values to be processed
+   */
   const handleSubmit = (values: any) => {};
 
   return (
@@ -70,6 +96,9 @@ const GradingScale = () => {
           }}
           size="small"
           variant="contained"
+          sx={{
+            width: '150px',
+          }}
         >
           Grade Scale
         </Button>
@@ -118,7 +147,10 @@ const GradingScale = () => {
                   showThreeDots={false}
                   placement="right-top"
                   showViewIcon
-                  handleViewClick={() => {}}
+                  handleViewClick={() => {
+                    viewDialog.onTrue();
+                    setSelectedGrade(row as any);
+                  }}
                   showEditIcon
                   showDeleteIcon
                   handleDeleteClick={() => {
@@ -140,14 +172,35 @@ const GradingScale = () => {
 
       <CustomDialog
         open={dialog.value}
-        handleClose={handleCloseDialog}
-        title={isEdit ? 'Update Grade' : 'Add Grade'}
+        handleClose={() => {
+          dialog.onFalse();
+          setSelectedGrade(null);
+        }}
+        title={selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
       >
         <GradeForm
           onSubmit={handleSubmit}
           onClose={handleClose}
           data={selectedGrade}
           isEdit={isEdit}
+          disabled={false}
+        />{' '}
+      </CustomDialog>
+
+      <CustomDialog
+        open={viewDialog.value}
+        handleClose={() => {
+          viewDialog.onFalse();
+          setSelectedGrade(null);
+        }}
+        title="View Grade Scale"
+      >
+        <GradeForm
+          onSubmit={handleSubmit}
+          onClose={handleClose}
+          data={selectedGrade}
+          isEdit={isEdit}
+          disabled
         />{' '}
       </CustomDialog>
 

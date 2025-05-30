@@ -462,7 +462,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                         </TableCell>
                         <TableCell>
                           <IconButton size="small" onClick={() => onEditQuestion(index)}>
-                            <Iconify icon="mdi:pencil" />
+                            <Iconify icon={GlobalIcons.edit} />
                           </IconButton>
                         </TableCell>
                         <TableCell>
@@ -471,7 +471,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             size="small"
                             onClick={() => onDeleteQuestion(index)}
                           >
-                            <Iconify icon="mdi:delete" />
+                            <Iconify icon={GlobalIcons.delete} />
                           </IconButton>
                         </TableCell>
                       </TableRow>

@@ -18,6 +18,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignGrade from './components/assignGradeForm';
@@ -378,6 +379,27 @@ const GradeEntry = (props: TabComponentType) => {
       >
         <AssignGrade />
       </CustomDialog>
+
+      <ConfirmDialog
+        open={publishMarksDialog.value}
+        onClose={() => {
+          publishMarksDialog.onFalse();
+          // setSelectedExam(null);
+        }}
+        title="Publish"
+        content="Are you sure you want to Publish Marks ?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              // handleDelete(selectedExam?.id);
+            }}
+          >
+            Publish
+          </Button>
+        }
+      />
     </Box>
   );
 };
