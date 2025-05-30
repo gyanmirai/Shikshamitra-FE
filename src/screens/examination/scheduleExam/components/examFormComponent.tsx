@@ -28,7 +28,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         subjects: [],
         description: '',
       }}
-      steps={['Select Exam Type', 'Exam Details', 'Evaluation Criteria']}
+      steps={['Exam', 'Exam Details', 'Evaluation Criteria']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);

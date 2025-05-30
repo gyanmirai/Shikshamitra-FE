@@ -181,6 +181,7 @@ export const StudentSubmissions = () => {
               id: 'status',
               label: 'Status',
               filterType: 'enum',
+              sticky: true,
               enumOptions: QuizStatusOptions,
               align: 'left',
               render: (value, row) => {
@@ -272,7 +273,7 @@ export const StudentSubmissions = () => {
         <CustomDialog
           open={viewAnsweresDialog.value}
           handleClose={handleCloseDialog}
-          title=""
+          title="Answer Review"
           maxWidth="md"
         >
           <ViewAnswers />

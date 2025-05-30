@@ -9,6 +9,7 @@ export interface IStudentExamGradeEntry {
   feedback: string;
   weightedAverage: string;
   status: number;
+  GrNo: string;
 }
 
 /**
@@ -18,6 +19,7 @@ export interface IStudentExamGradeEntry {
  */
 export interface IAssignGradeProps {
   data?: IStudentExamGradeEntry | null;
+  onClose?: (e: any, isSubmit: boolean) => void;
 }
 
 export interface IGradeEntryTableProps {

@@ -165,7 +165,7 @@ const Teacher = ({
         heading="Teacher-Subject Pairing"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Teacher-Subject Pairing' },
         ]}

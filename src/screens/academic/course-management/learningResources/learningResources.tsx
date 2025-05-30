@@ -8,17 +8,16 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -51,7 +50,6 @@ const LearningResources = (props: TabComponentType) => {
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
   // State to store selected class, initialized from URL parameter
-  const [classes, setClasses] = useState<string>(classFromUrl);
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -59,8 +57,7 @@ const LearningResources = (props: TabComponentType) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium, setClasses]);
+  }, [medium]);
 
   // State to store currently selected resource entry for editing
   const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
@@ -79,11 +76,6 @@ const LearningResources = (props: TabComponentType) => {
 
   // Dialog state specifically for delete confirmations
   const deleteDialog = useBoolean();
-  // Fetch class data using custom query hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
 
   // State to store selected subject, initialized from URL parameter
   const [subject, setSubject] = useState(subjectFromUrl);
@@ -111,13 +103,13 @@ const LearningResources = (props: TabComponentType) => {
   // Define breadcrumb navigation links based on form state
   const links = addLearningResourceDialog.value
     ? [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Syllabus', href: '/academic/courseSubjects' },
         { name: 'Resources' },
         { name: 'Add Learning Resource' },
       ]
     : [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Syllabus', href: '/academic/courseSubjects' },
         { name: 'Resources' },
       ];
@@ -155,20 +147,25 @@ const LearningResources = (props: TabComponentType) => {
       />
 
       {/* Conditional rendering of Create/Edit form or Resource list */}
-      {addLearningResourceDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <CreateNewResource
-            onSave={() => {}}
-            onClose={handleClose}
-            data={selectedEntry}
-            isEdit={isEdit}
-            currentClass={classes}
-            currentSubject={subject}
-          />
-        </Card>
-      ) : (
-        <HierarchyTree />
-      )}
+
+      <CustomDialog
+        title={selectedEntry ? 'Update Learning Resource' : 'Add Learning Resource'}
+        open={addLearningResourceDialog.value}
+        maxWidth="sm"
+        handleClose={() => {
+          addLearningResourceDialog.onFalse();
+          setSelectedEntry(null);
+        }}
+      >
+        <CreateNewResource
+          onSave={() => {}}
+          onClose={handleClose}
+          data={selectedEntry}
+          isEdit={isEdit}
+        />
+      </CustomDialog>
+
+      <HierarchyTree />
 
       {/* Delete confirmation dialog */}
       <ConfirmDialog

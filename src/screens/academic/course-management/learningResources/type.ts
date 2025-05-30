@@ -23,8 +23,6 @@ export interface ICreateLearningResourcesProps {
   onClose: (e: any, isSubmit: boolean) => void;
   data: IResourceData | null;
   isEdit: boolean;
-  currentClass: string;
-  currentSubject: string;
 }
 
 // Interface defining the props for the LearningResourceCard component

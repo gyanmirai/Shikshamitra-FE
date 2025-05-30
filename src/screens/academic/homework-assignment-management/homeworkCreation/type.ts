@@ -18,7 +18,7 @@ export interface IHomework {
   homeworkType: string;
   submissionType: string;
   dueDate: Dayjs | null | string;
-  attachments?: UploadedFile[];
+  attachments?: File[];
   createdBy: string;
   status: number;
   isDailyTask: boolean;

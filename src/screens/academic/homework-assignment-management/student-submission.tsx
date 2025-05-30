@@ -82,7 +82,7 @@ const StudentSubmission = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Student Submission"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Homework And Assignment' },
           { name: 'Student Submission' },
         ]}

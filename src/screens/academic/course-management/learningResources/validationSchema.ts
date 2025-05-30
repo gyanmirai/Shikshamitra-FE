@@ -5,10 +5,7 @@ export const validationSchema = Yup.object({
   resourceTitle: Yup.string()
     .required('Resource Title is required')
     .max(100, 'Title cannot exceed 100 characters'),
-  typeOfResource: Yup.string().required('Please select a resource type'),
   className: Yup.string().required('Class name is required'),
   subject: Yup.string().required('Subject is required'),
-  description: Yup.string().required('Description is required'),
   dateUploaded: Yup.string().required('Date uploaded is required'),
-  status: Yup.string().oneOf(['draft', 'Publish', 'Unpublish'], 'Invalid status'),
 });

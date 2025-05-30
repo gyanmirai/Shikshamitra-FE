@@ -15,6 +15,7 @@ import {
   Slider,
   MenuList,
   MenuItem,
+  TextField,
   Typography,
   DialogActions,
   sliderClasses,
@@ -41,8 +42,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import CourseCardsGrid from './components/courseCardsGrid';
+import ViewChapterLogs from './components/viewChapterLogs';
 
-import type { ICourse, IUpdateProgressProps } from './type';
+import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
   const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
@@ -56,6 +58,7 @@ const CourseProgress = (props: TabComponentType) => {
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
   };
+  const [selectedChapter, setSelectedChapter] = useState<ICourseDetail | null>(null);
   // Get isChanges state from Redux store to track if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Get dispatch function to dispatch Redux actions
@@ -69,6 +72,7 @@ const CourseProgress = (props: TabComponentType) => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
+  const viewLogsDialog = useBoolean();
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
   const {
@@ -103,6 +107,17 @@ const CourseProgress = (props: TabComponentType) => {
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            viewLogsDialog.onTrue();
+            setSelectedChapter(row);
+            pop.onClose();
+          }}
+        >
+          {' '}
+          <Iconify icon={GlobalIcons.eye} />
+          View Logs
+        </MenuItem>
 
         {/* Update progress action item */}
         <MenuItem
@@ -117,7 +132,7 @@ const CourseProgress = (props: TabComponentType) => {
         </MenuItem>
       </MenuList>
     ),
-    [updateProgressDialog]
+    [updateProgressDialog, viewLogsDialog]
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -133,12 +148,12 @@ const CourseProgress = (props: TabComponentType) => {
     <Box>
       {/* Custom breadcrumbs navigation component */}
       <CustomBreadcrumbs
-        heading="Syllabus Progress"
+        heading="Chapter Progress"
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-          { name: 'Syllabus Progress' },
+          { name: 'Chapter Progress' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -263,6 +278,17 @@ const CourseProgress = (props: TabComponentType) => {
       >
         <UpdateProgress onClose={handleClose} />
       </CustomDialog>
+
+      <CustomDialog
+        open={viewLogsDialog.value}
+        handleClose={() => {
+          viewLogsDialog.onFalse();
+        }}
+        maxWidth="sm"
+        title={`${selectedChapter?.chapterName} Logs`}
+      >
+        <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
+      </CustomDialog>
     </Box>
   );
 };
@@ -280,6 +306,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
   const formik = useFormik({
     initialValues: {
       completePercentage: 0, // Adjusted field name to match the input ID
+      description: '',
     },
     validationSchema: Yup.object({
       completePercentage: Yup.number()
@@ -294,7 +321,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
@@ -312,6 +339,21 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
             />
           </ComponentBlock>
         </ShakingTextField>
+
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          name="description"
+          label="Description"
+          placeholder="Enter description"
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={!!(formik.touched.description && formik.errors.description)}
+          helperText={formik.touched.description && formik.errors.description}
+        />
+
         <DialogActions sx={{ flexShrink: 0, p: 2 }}>
           <CancelButton
             onClick={() => {

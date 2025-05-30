@@ -164,7 +164,7 @@ const AllResources = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="All Resources"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Resource Content Library' },
           { name: 'All Resources' },
         ]}

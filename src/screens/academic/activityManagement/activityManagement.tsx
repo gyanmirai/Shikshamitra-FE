@@ -206,11 +206,7 @@ const ActivityManagement = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Activity Management"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Activity' },
-          { name: 'Activity Management' },
-        ]}
+        links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Activity Management' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button

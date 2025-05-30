@@ -61,7 +61,7 @@ const ResourceTypeCreation = () => {
         heading="Setting"
         description="Setting for learning resource type and notification setting"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Setting' },
         ]}

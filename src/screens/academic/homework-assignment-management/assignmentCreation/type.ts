@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import type { UploadedFile, TStudentGrade } from '../homeworkCreation/type';
+import type { TStudentGrade } from '../homeworkCreation/type';
 
 export interface IAssignment {
   title: string;
@@ -11,7 +11,7 @@ export interface IAssignment {
   subjects: string;
   submissionType: string;
   dueDate: Dayjs | null | string;
-  attachments: UploadedFile[];
+  attachments: File[];
   createdBy: string;
   status: number;
   assignmentType: string;
@@ -19,7 +19,7 @@ export interface IAssignment {
   scheduleDate: Dayjs | null | string;
   todaysDate: Dayjs | string;
   content?: string;
-  rubric: UploadedFile[];
+  rubric: File | null;
   submission?: string;
 }
 

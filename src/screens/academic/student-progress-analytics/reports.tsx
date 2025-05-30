@@ -48,11 +48,7 @@ const Reports = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Student Progress Analytics' },
-          { name: 'Reports' },
-        ]}
+        links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Formik

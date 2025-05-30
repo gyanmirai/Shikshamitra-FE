@@ -327,7 +327,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       sx={{ cursor: 'pointer' }}
                       onClick={addElectiveSubjectDialog.onTrue}
                     >
-                      Add Elective Subject ?
+                      Add Elective Group ?
                     </Typography>
                   </Box>
                 </Box>
@@ -348,7 +348,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 <CustomDialog
                   open={addElectiveSubjectDialog.value}
                   handleClose={addElectiveSubjectDialog.onFalse}
-                  title="Add Elective Subject"
+                  title="Add Elective Group"
                 >
                   <SettingElectiveSubjectForm
                     open={addElectiveSubjectDialog}

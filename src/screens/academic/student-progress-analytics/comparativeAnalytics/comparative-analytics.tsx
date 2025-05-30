@@ -58,7 +58,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Comparative Analytics"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Student Progress Analytics' },
           { name: 'Comparative Analytics' },
         ]}

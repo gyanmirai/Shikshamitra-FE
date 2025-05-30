@@ -1,6 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
-import { Checkbox, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 
 import {
   ExamGradeStatusType,
@@ -23,24 +23,32 @@ const GradeEntryTable = ({
   <CustomizableTable
     tableId="grade-entry-table"
     noDataText={<>No Student Found For Grading</>}
-    columns={[
-      {
-        id: 'select',
-        label: 'Select',
-        minWidth: 60,
-        sticky: true,
-        isFilter: false,
-        isSort: false,
-        render: (value, row) => (
-          <Checkbox
-            checked={selectedStudents.includes(row.id)}
-            onChange={() => handleSelectStudent(row.id)}
-          />
-        ),
+    searchFieldProps={{
+      placeholder: 'Search by Gr No, Student Name, Marks...',
+      label: 'Search by Gr No, Student Name, Marks...',
+      sx: {
+        maxWidth: '500px',
+        width: '100%',
       },
-      { id: 'Gr No', label: 'Gr No', minWidth: 80 },
-      { id: 'studentName', label: 'Student Name', minWidth: 150 },
-      { id: 'marks', label: 'Marks', minWidth: 80, filterType: 'number' },
+    }}
+    columns={[
+      // {
+      //   id: 'select',
+      //   label: 'Select',
+      //   minWidth: 60,
+      //   sticky: true,
+      //   isFilter: false,
+      //   isSort: false,
+      //   render: (value, row) => (
+      //     <Checkbox
+      //       checked={selectedStudents.includes(row.id)}
+      //       onChange={() => handleSelectStudent(row.id)}
+      //     />
+      //   ),
+      // },
+      { id: 'GrNo', label: 'Gr No', sticky: true },
+      { id: 'studentName', label: 'Student Name' },
+      { id: 'marks', label: 'Marks', filterType: 'number' },
       {
         id: 'grade',
         label: 'Grade',
@@ -72,8 +80,8 @@ const GradeEntryTable = ({
       {
         id: 'status',
         label: 'Status',
-        minWidth: '200px',
         align: 'left',
+        sticky: true,
         filterType: 'enum',
         enumOptions: ExamGradeStatusOptions,
         render(value: ExamGradeStatusType, row: any) {

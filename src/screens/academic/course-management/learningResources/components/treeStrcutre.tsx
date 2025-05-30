@@ -51,18 +51,12 @@ const HierarchyTree: React.FC = () => {
       <TreeItem
         key={`${parentId}-doc-${idx}`}
         itemId={`${parentId}-doc-${idx}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedDocument(doc);
+        }}
         label={
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            width="100%"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedDocument(doc);
-              setSelectedClassId(null);
-            }}
-          >
+          <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
             <Box display="flex" alignItems="center" gap={1}>
               <FileThumbnail file={doc} sx={{ height: '18px' }} />
               <Typography variant="body2">{doc.name}</Typography>
@@ -164,10 +158,9 @@ const HierarchyTree: React.FC = () => {
       {/* Right Content Card */}
       <Card sx={{ width: '70%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Scrollbar sx={{ flex: 1, p: 2 }}>
-          <Typography variant="h6">Hi 👋</Typography>
           {selectedDocument ? (
-            <Box>
-              <PDFViewer width="100%" height="600">
+            <Box height="100%">
+              <PDFViewer width="100%" height="100%">
                 <CertificateDocument />
               </PDFViewer>
             </Box>
