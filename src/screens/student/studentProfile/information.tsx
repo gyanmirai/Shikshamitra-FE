@@ -1,12 +1,8 @@
 // import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
-import type { FormikProps } from 'formik';
-import type { RootState } from 'src/redux/store';
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Tab, Box, Grid, Card, Stack, Button, TextField, CardContent } from '@mui/material';
@@ -17,14 +13,16 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { generalFormFields } from '../enrollment/register/GeneralFormFields';
 import {
   familyFields,
   medicalFields,
   bankDetailsFields,
-  generalFormFields,
   communicationFields,
   previousSchoolFields,
   additionalDetailsFields,
+} from '../enrollment/register/register-fields';
+import {
   bankDetailsInitialValues,
   familyFieldsInitialValues,
   generalFieldsInitialValues,
@@ -32,10 +30,10 @@ import {
   additionalDetailsInitialValues,
   CommunicationFieldsInitialValues,
   previousSchoolFieldsInitialValues,
-} from '../enrollment/register/register-fields';
+} from '../enrollment/register/initialvalues';
 
 import type { StudentTabsComponentType } from '.';
-import type { FieldsType } from '../enrollment/register/register-fields';
+import type { FieldsType } from '../enrollment/register/type';
 
 export const fields = [
   generalFormFields,
@@ -60,10 +58,9 @@ const TABS = [
 export function StudentInformation(props: StudentTabsComponentType) {
   const { student } = props;
   const [isEdit, setIsEdit] = useState(false);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
+  // const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // const dispatch = useDispatch();
   const onSubmit = (_val: any) => {};
-  console.log('isChanges-----', isChanges);
   const initialValues = useMemo(
     () => ({
       ...generalFieldsInitialValues(student),
@@ -175,7 +172,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
                       {...(field.gridProps || {})}
                     >
                       {field.renderComp ? (
-                        field.renderComp({ formik, field, isEdit: !isEdit })
+                        field.renderComp({ formik, field, isEdit })
                       ) : field.type === 'date' ? (
                         <DatePicker
                           label={field.label}
@@ -225,15 +222,4 @@ export function StudentInformation(props: StudentTabsComponentType) {
       </BackPopUpChecked>
     </Box>
   );
-}
-
-interface Fieldtypes {
-  sectionName: string;
-  fields: {
-    name: string;
-    label: string;
-    onChange: (e: any, formik: FormikProps<any>) => void;
-    otherProps: Record<string, any>;
-    type?: undefined | string;
-  }[];
 }

@@ -1,12 +1,16 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import React, { useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Box, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,6 +29,7 @@ import type { TabComponentType } from '../../hr/leave-request';
 const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '1',
+    GrNo: '2024001',
     studentName: 'Aarav Sharma',
     assignments: 'Assignment 1, Assignment 2',
     subject: 'Mathematics',
@@ -37,6 +42,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   },
   {
     id: '2',
+    GrNo: '2024002',
     studentName: 'Kiara Mehta',
     assignments: 'Assignment 1, Quiz 1',
     subject: 'Science',
@@ -49,6 +55,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   },
   {
     id: '3',
+    GrNo: '2024003',
     studentName: 'Dev Patel',
     assignments: 'Assignment 1',
     subject: 'English',
@@ -61,6 +68,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   },
   {
     id: '4',
+    GrNo: '2024004',
     studentName: 'Ishita Reddy',
     assignments: 'Project, Assignment 2',
     subject: 'Social Studies',
@@ -73,6 +81,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   },
   {
     id: '5',
+    GrNo: '2024005',
     studentName: 'Rohan Gupta',
     assignments: 'Assignment 3, Quiz 2',
     subject: 'Computer Science',
@@ -90,13 +99,7 @@ const GradeEntry = (props: TabComponentType) => {
   const dialog = useBoolean();
   // Search parameters from URL and function to update them
   const { searchParams, setSearchParams } = props;
-  // Selected class ID from search params
-  const [classes, setClasses] = useState('');
 
-  // Selected division/section ID
-  const [division, setDivision] = useState('');
-  // Available divisions/sections for selected class
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   // Selected subject for grade entry
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
   // Type of assignment (quiz, test, homework etc)
@@ -112,6 +115,38 @@ const GradeEntry = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
+
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClass] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClass(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
 
   // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<IStudentExamGradeEntry | null>(null);
@@ -137,6 +172,12 @@ const GradeEntry = (props: TabComponentType) => {
       return [...prev, studentId];
     });
   };
+
+  // Get the changes status from the confirm popup redux state
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function for triggering actions
+  const dispatch = useDispatch();
 
   /**
    * Assigns the same grade to multiple selected students
@@ -164,17 +205,23 @@ const GradeEntry = (props: TabComponentType) => {
           : student
       )
     );
-    handleCloseDialog();
   };
 
   /**
    * Closes all dialogs and resets selected student state
    */
-  const handleCloseDialog = () => {
-    setSelectedStudent(null);
-    viewSubmissionDialog.onFalse();
-    dialog.onFalse();
-    bulkGradeDialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      setSelectedStudent(null);
+      viewSubmissionDialog.onFalse();
+      dialog.onFalse();
+      bulkGradeDialog.onFalse();
+    } else if (!isChanges) {
+      setSelectedStudent(null);
+      viewSubmissionDialog.onFalse();
+      dialog.onFalse();
+      bulkGradeDialog.onFalse();
+    }
   };
 
   const actions = useCallback(
@@ -186,13 +233,12 @@ const GradeEntry = (props: TabComponentType) => {
             <MenuItem
               onClick={() => {
                 viewSubmissionDialog.onTrue();
-                setSelectedStudent(row);
                 popover.onClose();
               }}
             >
               {' '}
               <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
-              Assign Grade
+              Assign Marks
             </MenuItem>
           )}
 
@@ -200,13 +246,13 @@ const GradeEntry = (props: TabComponentType) => {
             <MenuItem
               onClick={() => {
                 popover.onClose();
-                //   viewSubmissionDialog.onTrue();
-                //   setSelectedStudent(row);
+                viewSubmissionDialog.onTrue();
+                setSelectedStudent(row);
               }}
             >
               {' '}
-              <Iconify icon="mdi:pen" sx={{ height: '16px', width: '16px' }} />
-              Edit Grade
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+              Update Marks
             </MenuItem>
           )}
         </MenuList>
@@ -218,64 +264,43 @@ const GradeEntry = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Grade Entry"
+        heading="Record Marks"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
-          { name: 'Grade Entry' },
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Examination', href: '/academic/scheduleExam' },
+          { name: 'Record Marks' },
         ]}
         sx={{ px: 1, mb: 2 }}
         action={
-          <>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="mdi:edit" />}
-              disabled={selectedStudents.length === 0}
-              onClick={bulkGradeDialog.onTrue}
-              sx={{ mr: 1 }}
-            >
-              Bulk Grade ({selectedStudents.length} selected)
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="material-symbols:upload" />}
-              onClick={() => {}}
-            >
-              Publish Marks
-            </Button>
-          </>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="material-symbols:upload" />}
+            onClick={() => {}}
+          >
+            Publish Marks
+          </Button>
         }
       />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect
+          options={allClass}
           label="Class"
-          options={classData?.items || []}
+          value={classes}
+          onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
-          onChange={(val) => {
-            const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            // formik.setFieldValue('class', selectedClass?.name || '');
-            setClasses(selectedClass.id);
-            setDivisionOptions(selectedClass?.divisions || []);
-          }}
-          value={classes}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <CustomSelect
+          options={allDivision}
           label="Division"
-          disabled={!classes}
+          value={division}
+          onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          options={divisionOptions}
-          value={division}
-          onChange={(val) => {
-            // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-            // formik.setFieldValue('division', selectedDivision?.name || '');
-            setDivision(val as string);
-          }}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          disabled={!classes}
         />
         <CustomSelect
           label="Subject"
@@ -333,10 +358,13 @@ const GradeEntry = (props: TabComponentType) => {
 
       <CustomDialog
         open={viewSubmissionDialog.value}
-        handleClose={handleCloseDialog}
-        title="Assign Grade"
+        handleClose={() => {
+          viewSubmissionDialog.onFalse();
+          setSelectedStudent(null);
+        }}
+        title="Assign Marks"
       >
-        <AssignGrade data={selectedStudent} />
+        <AssignGrade data={selectedStudent} onClose={handleClose} />
       </CustomDialog>
 
       <CustomDialog

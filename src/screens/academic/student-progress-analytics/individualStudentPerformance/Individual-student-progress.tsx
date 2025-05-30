@@ -91,7 +91,7 @@ const IndividualStudentProgress = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Individual Student Progress"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Student Progress Analytics' },
           { name: 'Individual Student Progress' },
         ]}

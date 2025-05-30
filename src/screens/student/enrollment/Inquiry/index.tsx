@@ -232,7 +232,7 @@ const InquiryScreen = () => {
       ]
     : [{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Inquiry' }];
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e?: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
 
@@ -252,15 +252,19 @@ const InquiryScreen = () => {
         description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
         links={links}
         sx={{ px: 1, mb: 2 }}
+        isBack={inquiryDialog.value}
+        onBack={() => handleClose()}
         action={
-          <Button
-            size="small"
-            startIcon={inquiryDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={inquiryDialog.value ? handleClose : inquiryDialog.onTrue}
-          >
-            {inquiryDialog.value ? 'Back' : 'Inquiry'}
-          </Button>
+          !inquiryDialog.value && (
+            <Button
+              size="small"
+              startIcon={inquiryDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+              variant="contained"
+              onClick={inquiryDialog.onTrue}
+            >
+              Inquiry
+            </Button>
+          )
         }
       />
 

@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { Standards, Organization } from 'src/types/school';
 
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -29,9 +32,6 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -46,11 +46,27 @@ import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
 
 const QuizInformation = ({ formik }: any) => {
-  // Fetch class data using custom hook for API query
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
 
   // Define available division options for the quiz
   const divisionOption = [
@@ -191,13 +207,12 @@ const QuizInformation = ({ formik }: any) => {
             error={!!(formik.touched.className && formik.errors.className) || false}
           >
             <CustomSelect
-              options={classData?.items || []}
+              options={allClass || []}
               value={formik.values.className}
               onChange={(val) => {
                 formik.setFieldValue('className', val);
               }}
               label="Class"
-              isLoading={isLoading}
               labelKey="name"
               valueKey="name"
               error={!!(formik.touched.className && formik.errors.className) || false}
@@ -322,7 +337,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
-              label="Duration (Minute)"
+              label="Duration (In Minutes)"
               name="quizDuration"
               value={formik.values.quizDuration}
               onChange={formik.handleChange}
@@ -353,7 +368,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
         }}
       >
         <Typography color="text.secondary">
-          No questions added yet. Click Add Question to begin creating your survey.
+          No questions added. Click &apos;Add Question&apos; to get started.{' '}
         </Typography>
       </Box>
     );
@@ -1007,7 +1022,7 @@ const AddNewQuiz = ({
   return (
     <CustomStepperWithFormik
       initialValues={getInitialValues()}
-      steps={['Quiz Information', 'Quiz Builder']}
+      steps={['Quiz', 'Quiz Builder']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);

@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -12,10 +14,16 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
+import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -247,6 +255,7 @@ const RegistrationTable = ({
             id: 'percentage',
             label: 'Progress',
             align: 'left',
+            sticky: true,
             filterType: 'number',
             render(value, row) {
               return (
@@ -270,6 +279,20 @@ const RegistrationTable = ({
                   </Box>
                 </Box>
               );
+            },
+          },
+          {
+            id: 'followUpStatusType',
+            label: 'Follow up Status',
+            filterType: 'enum',
+            enumOptions: FollowUpStatusTypeOptions,
+            minWidth: '180px',
+            align: 'left',
+            sticky: true,
+            render(value, row) {
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
             },
           },
           {

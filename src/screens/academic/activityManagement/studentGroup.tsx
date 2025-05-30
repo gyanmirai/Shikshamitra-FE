@@ -91,7 +91,7 @@ const StudentGroup = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Student Group"
           links={[
-            { name: 'Academic and Assignment' },
+            { name: 'Academics' },
             { name: 'Activity' },
             { name: 'Student Group' },
             { name: 'Add Student Group' },
@@ -111,11 +111,7 @@ const StudentGroup = (props: TabComponentType) => {
       ) : (
         <CustomBreadcrumbs
           heading="Student Group"
-          links={[
-            { name: 'Academic and Assignment' },
-            { name: 'Activity' },
-            { name: 'Student Group' },
-          ]}
+          links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Student Group' }]}
           sx={{ px: 1, mb: 2 }}
           action={
             <Button

@@ -74,9 +74,6 @@ export const ViewAnswers = () => {
   return (
     <Box p={2}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" gutterBottom>
-          Answer Review
-        </Typography>
         <Chip
           label={`Total Score: ${totalScore}/${totalPossible}`}
           color="primary"

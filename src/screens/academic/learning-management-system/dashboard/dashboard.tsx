@@ -18,11 +18,7 @@ const Dashboard = (props: TabComponentType) => (
   <Box sx={{ flexGrow: 1 }}>
     <CustomBreadcrumbs
       heading="Dashboard"
-      links={[
-        { name: 'Academic and Assignment' },
-        { name: 'Learning Management System' },
-        { name: 'Dashboard' },
-      ]}
+      links={[{ name: 'Academics' }, { name: 'Learning Management System' }, { name: 'Dashboard' }]}
       sx={{ px: 1, mb: 2 }}
     />
     <LmsDashboardCards />

@@ -157,8 +157,8 @@ const TakeAttendanceScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Take Attendance"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Take Attendance' }]}
+        heading="Mark Attendance"
+        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Mark Attendance' }]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap">

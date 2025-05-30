@@ -35,7 +35,7 @@ const SharedWithMe = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Shared With Me"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Resource Content Library' },
           { name: 'Shared With Me' },
         ]}

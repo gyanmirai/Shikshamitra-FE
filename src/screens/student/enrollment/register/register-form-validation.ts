@@ -61,12 +61,12 @@ const generalFieldValidation = Yup.object({
     .shape({ name: Yup.string().required('State is required') })
     .default(() => ({ name: '' }))
     .required('State is required'),
-  temporaryGr: Yup.string().required('Temporary GR is required'),
+  temporaryGr: Yup.string(),
 });
 
 const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
-  fatherDob: Yup.string().required('Father DOB is required'),
+  fatherDob: Yup.string().nullable(),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
   fatherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -83,7 +83,7 @@ const familyFieldsValidation = Yup.object({
   fatherAddress: Yup.string(),
 
   motherName: Yup.string().required('Mother name is required'),
-  motherDob: Yup.string().required('Mother DOB is required'),
+  motherDob: Yup.string().nullable(),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
   motherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -100,7 +100,7 @@ const familyFieldsValidation = Yup.object({
   motherAddress: Yup.string(),
 
   guardianName: Yup.string(),
-  guardianDob: Yup.string(),
+  guardianDob: Yup.string().nullable(),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>

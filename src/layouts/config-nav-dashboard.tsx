@@ -104,7 +104,7 @@ const studentModule = {
               shortcutKeyName: 'Alt+S+2',
             },
             {
-              title: 'Issued Registration Form',
+              title: 'Registration Form Issued',
               path: '/student/enrollment/registration-form',
               _action: 'student-enrollment-registration-form',
               permission: 'Permission:StudentEnrollment.RegistrationForm',
@@ -130,15 +130,15 @@ const studentModule = {
               shortcutKey: 'Alt+S+5',
               shortcutKeyName: 'Alt+S+5',
             },
-            {
-              title: 'Follow-up',
-              path: '/student/enrollment/follow-up',
-              _action: 'student-enrollment-follow-up',
-              permission: 'Permission:StudentEnrollment.FollowUp',
-              permissionName: 'Student.Enrollment.FollowUp',
-              shortcutKey: 'Alt+S+6',
-              shortcutKeyName: 'Alt+S+6',
-            },
+            // {
+            //   title: 'Follow-up',
+            //   path: '/student/enrollment/follow-up',
+            //   _action: 'student-enrollment-follow-up',
+            //   permission: 'Permission:StudentEnrollment.FollowUp',
+            //   permissionName: 'Student.Enrollment.FollowUp',
+            //   shortcutKey: 'Alt+S+6',
+            //   shortcutKeyName: 'Alt+S+6',
+            // },
             {
               title: 'Admission',
               path: '/student/enrollment/admission',
@@ -234,7 +234,7 @@ const studentModule = {
               shortcutKeyName: 'Alt+S+A+1',
             },
             {
-              title: 'Take Attendance',
+              title: 'Mark Attendance',
               path: '/student/attendance/take-attendance',
               _action: 'student-attendance-take-attendance',
               shortcutKey: 'Alt+S+A+2',
@@ -544,7 +544,7 @@ const hrModule = {
           ],
         },
         {
-          title: 'Attendance and Leave Management',
+          title: 'Attendance & Leave',
           path: '',
           _action: 'attendance-and-leave-management',
           shortcutKey: 'Alt+H+A',
@@ -558,7 +558,7 @@ const hrModule = {
               shortcutKeyName: 'Alt+H+A+1',
             },
             {
-              title: 'Leave Requests and Approvals',
+              title: 'Leave Management',
               path: '/hr/leave-requests',
               _action: 'leave-requests-and-approvals',
               shortcutKey: 'Alt+H+A+2',
@@ -685,7 +685,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+2',
             },
             {
-              title: 'Syllabus Management',
+              title: 'Manage Chapter',
               path: '/academic/courseSubjects',
               _action: 'course-management-subjects',
               shortcutKey: 'Alt+A+S+1',
@@ -699,7 +699,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+S+2',
             },
             {
-              title: 'Syllabus Progress',
+              title: 'Chapter Progress',
               path: '/academic/courseProgress',
               _action: 'course-management-courseProgress',
               shortcutKey: 'Alt+A+S+3',
@@ -850,14 +850,14 @@ const academicModule = {
           shortcutKeyName: 'Alt+A+H',
           children: [
             {
-              title: 'Add Homework/Assignment',
+              title: 'Set Coursework',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
             },
             {
-              title: 'Add Marks/Feedback',
+              title: 'Marks & Feedback',
               path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',
@@ -901,7 +901,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+2',
             },
             {
-              title: 'Grade Entry',
+              title: 'Record Marks',
               path: '/academic/gradeEntry',
               _action: 'academic-gradeEntry',
               shortcutKey: 'Alt+E+1+3',
@@ -915,7 +915,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+5',
             },
             {
-              title: 'Settings',
+              title: 'Setting',
               path: '/academic/settings',
               _action: 'academic-settings',
               shortcutKey: 'Alt+E+1+7',
@@ -1990,7 +1990,7 @@ export const navData = (isDdvs: boolean) => [
         submodule: studentModule[studentPath].flatMap((list) => list.items),
       },
       {
-        title: 'Academic & Assignment',
+        title: 'Academics',
         path: '/academic/dashboard',
         icon: ICONS.academic,
         _action: 'academic',

@@ -48,7 +48,7 @@ const QuizManagement = (props: TabComponentType) => {
         heading="Quiz Management"
         description={currentTab?.description}
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Quiz Management' },
           { name: currentTab?.label || '' },

@@ -41,7 +41,7 @@ const CurriculumSetting = () => {
         heading="Setting"
         description="Setting for creating global subjects, elective subject and notification setting"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Setting' },
           { name: currentActiveComponent?.label },

@@ -233,9 +233,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     async (values: any, formik: any) => {
       if (!values.employeeId) {
         const resp = await addEmployee({
-          // userId: res.data.id,
           profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          // employeeCode: values.code,
           lastName: values.lastName,
           firstName: values.firstName,
           middleName: values.middleName,
@@ -271,7 +269,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
           pincode: `${values.pincode}`,
           educationMediumStageId: values.organization,
-          shift: values.shift,
+          shiftId: values.shift,
         }).unwrap();
         formik.setFieldValue('employeeId', resp.data.id);
       }

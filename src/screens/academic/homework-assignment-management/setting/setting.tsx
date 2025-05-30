@@ -29,7 +29,7 @@ const Setting = (props: TabComponentType) => (
     <CustomBreadcrumbs
       heading="Settings"
       links={[
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
         { name: 'Settings' },
       ]}

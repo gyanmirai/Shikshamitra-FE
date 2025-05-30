@@ -79,7 +79,7 @@ const Dashboard = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Dashboard"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Dashboard' },
         ]}

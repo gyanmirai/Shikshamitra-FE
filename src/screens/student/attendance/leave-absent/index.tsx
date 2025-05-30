@@ -115,7 +115,7 @@ const LeaveAndAbsentScreen = () => {
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" size="small" onClick={dialog.onTrue}>
-            Add Leave Request
+            Leave Request
           </Button>
         }
         description="Submit a new leave request by clicking 'add leave request', manage requests in 'Actions'."

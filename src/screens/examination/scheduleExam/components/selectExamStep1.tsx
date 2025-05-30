@@ -1,12 +1,13 @@
 import type { FormikProps } from 'formik';
-import type { Standards } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 
 import { Box, Grid, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -22,11 +23,27 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
   // Formik form instance passed down as props
   const formik = props;
-  // Fetch class data using custom hook and handle loading state
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -44,7 +61,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 formik.setFieldValue('examType', val);
               }}
               label="Exam Type *"
-              isLoading={isLoading}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.examType && formik.errors.examType)}
               helperText={
@@ -63,7 +79,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               sx={{ cursor: 'pointer' }}
               onClick={() => examTypeDialog.onTrue()}
             >
-              Add Exam Type
+              Add Exam Type ?
             </Typography>
           </Box>
           <CustomDialog
@@ -100,12 +116,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             error={!!(formik.touched.className && formik.errors.className) || false}
           >
             <CustomSelect
-              options={classData?.items}
+              options={allClass}
               onChange={(val) => {
                 formik.setFieldValue('className', val as string);
               }}
               label="Class"
-              isLoading={isLoading}
               labelKey="name"
               valueKey="id"
               value={formik.values.className}
@@ -130,8 +145,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               multiple
               disabled={!formik.values.className}
               options={
-                classData?.items.find((i: Standards) => i.id === formik.values.className)
-                  ?.divisions || []
+                allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions || []
               }
               value={formik.values.divisions}
               onChange={(val) => {
@@ -174,7 +188,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               multiple
               disabled={formik.values.divisions.length === 0}
               label="Subjects"
-              isLoading={isLoading}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={

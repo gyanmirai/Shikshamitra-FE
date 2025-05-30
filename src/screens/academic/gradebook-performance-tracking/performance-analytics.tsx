@@ -44,7 +44,7 @@ const PerformanceAnalytics = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Performace Analytics"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Performace Analytics' },
         ]}

@@ -2,7 +2,8 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo } from 'react';
 
-import { Box, Tab, Chip, Tabs } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Tab, Chip, Tabs, Button } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -72,7 +73,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
           }}
@@ -97,6 +97,19 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             />
           ))}
         </Tabs>
+        <Button
+          size="small"
+          startIcon={<Add />}
+          variant="contained"
+          onClick={() => {
+            setOpenDialog(true);
+          }}
+          sx={{
+            mt: 0.5,
+          }}
+        >
+          Schedule Exam
+        </Button>
       </Box>
       <CustomizableTable
         tableId="schedule-exam-table"
@@ -182,6 +195,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     onDelete(row as IExamFormValues);
                   }}
                   handleEditClick={() => {
+                    setEditData(row as IExamFormValues);
                     setOpenDialog(true);
                   }}
                   handleViewClick={() => {

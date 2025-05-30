@@ -56,7 +56,7 @@ const Reports = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Reports"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Reports' },
         ]}

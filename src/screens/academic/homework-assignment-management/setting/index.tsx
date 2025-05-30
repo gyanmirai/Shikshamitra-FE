@@ -45,7 +45,7 @@ const HomeworkSetting = () => {
             : 'Create and manage assignment types for evaluations'
         }
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework And Assignment' },
           { name: 'Setting' },
           { name: currentActiveComponent?.label },

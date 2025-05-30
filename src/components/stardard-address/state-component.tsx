@@ -12,11 +12,14 @@ const StateComponent = ({
   helperText,
   value,
   countryValue,
+  textFieldProps = {},
   ...filedProps
 }: Partial<
   AutocompleteProps<Partial<IState>, false, false, false> &
     Omit<TextFieldProps, 'onChange'> & {
       countryValue?: Partial<ICountry>;
+    } & {
+      textFieldProps?: Partial<TextFieldProps>;
     }
 >) => {
   const allState = useMemo(
@@ -42,6 +45,7 @@ const StateComponent = ({
           placeholder="Search  State"
           error={error}
           helperText={helperText}
+          {...textFieldProps}
         />
       )}
       renderOption={(props, option: any) => (
@@ -50,6 +54,7 @@ const StateComponent = ({
         </li>
       )}
       disabled={!countryValue}
+      label="State"
       {...filedProps}
     />
   );

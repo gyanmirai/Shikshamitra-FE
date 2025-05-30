@@ -1,14 +1,15 @@
 'use client';
 
-import React from 'react';
+import type { RootState } from 'src/redux/store';
+import type { Standards, Organization } from 'src/types/school';
+
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
@@ -27,19 +28,29 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   onClose,
   onSave,
   isEdit,
-  currentClass,
-  currentSubject,
 }) => {
-  // Fetch class data using custom hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+  }, [medium]);
 
   // Initialize formik for form handling
   const formik = useFormik<IResourceData>({
     // Set initial form values based on edit mode and existing data
-    initialValues: getLearningResourceInitialData(isEdit, currentClass, currentSubject, data),
+    initialValues: getLearningResourceInitialData(isEdit, data),
     validationSchema,
     // Handle form submission
     onSubmit: (values) => {
@@ -78,17 +89,15 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Class selection dropdown */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
                   <CustomSelect
-                    options={classData?.items || []}
+                    options={allClass}
                     value={formik.values.className}
                     onChange={(val) => formik.setFieldValue('className', val as string)}
                     label="Class *"
-                    isLoading={isLoading}
-                    disabled={!!currentClass}
                     labelKey="name"
                     valueKey="name"
                     placeholder="Class"
@@ -99,7 +108,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
               {/* Subject selection dropdown */}
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.subject && formik.errors.subject) || false}
                 >
@@ -110,7 +119,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                       { value: 'English', label: 'English' },
                       { value: 'Science', label: 'Science' },
                     ]}
-                    disabled={!!currentSubject}
                     name="subject"
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val as string)}
@@ -122,9 +130,9 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.subject && formik.errors.subject) || false}
+                  error={!!(formik.touched.chapter && formik.errors.chapter) || false}
                 >
                   <CustomSelect
                     label="Chapter"
@@ -135,7 +143,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                       { value: 'chapter4', label: 'Chapter 4' },
                       { value: 'chapter5', label: 'Chapter 5' },
                     ]}
-                    disabled={!formik.values.subject}
+                    disabled={!formik.values.chapter}
                     name="chapter"
                     value={formik.values.chapter || ''}
                     onChange={(val) => formik.setFieldValue('chapter', val as string)}
@@ -167,9 +175,10 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               </Grid>
 
               {/* File upload box */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <Upload
-                  multiple
+                  multiple={false}
+                  thumbnail
                   value={formik.values.document}
                   onDrop={handleDrop}
                   onRemove={handleRemove}

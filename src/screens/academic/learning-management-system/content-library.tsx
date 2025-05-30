@@ -19,7 +19,7 @@ const ContentLibrary = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Content Library"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Learning Management System' },
           { name: 'Content Library' },
         ]}

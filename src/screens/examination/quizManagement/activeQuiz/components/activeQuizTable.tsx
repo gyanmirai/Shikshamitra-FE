@@ -3,7 +3,8 @@ import type { IQuizData } from 'src/screens/examination/quiz/type';
 
 import React, { useMemo } from 'react';
 
-import { Box, Tab, Chip, Tabs, MenuList, MenuItem } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Tab, Chip, Tabs, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -32,6 +33,8 @@ const QuizTable = ({
   onDelete,
   onQuizResult,
   onEdit,
+  openDialog,
+  setOpenDialog,
 }: any) => {
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
@@ -119,29 +122,43 @@ const QuizTable = ({
   return (
     <Box>
       {/* Tabs Section */}
-      <Tabs
-        value={tabs.value}
-        onChange={handleTabChange}
-        sx={{
-          mb: 2,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
-        }}
-      >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            label={
-              <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                {tab.label}{' '}
-                <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-              </Box>
-            }
-            value={tab.value}
-          />
-        ))}
-      </Tabs>
+      <Box display="flex" gap={1} alignItems="flex-start">
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                </Box>
+              }
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
+        <Button
+          size="small"
+          startIcon={<Add />}
+          variant="contained"
+          onClick={() => {
+            setOpenDialog(true);
+          }}
+          sx={{
+            mt: 0.5,
+          }}
+        >
+          Quiz
+        </Button>
+      </Box>
 
       <CustomizableTable
         tableId="quiz-table"
@@ -360,6 +377,7 @@ const QuizTable = ({
                   id: 'marksStatus',
                   label: 'Marks Status',
                   filterType: 'enum',
+                  sticky: true,
                   enumOptions: ScheduleExamStatusOptions,
                   align: 'left',
                   render(value, row) {

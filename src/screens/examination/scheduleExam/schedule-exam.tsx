@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -44,13 +43,13 @@ const ScheduleExam = (props: TabComponentType) => {
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
   const links = open
     ? [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Schedule Exam' },
         { name: 'Exam Form' },
       ]
     : [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Schedule Exam' },
       ];
@@ -83,32 +82,38 @@ const ScheduleExam = (props: TabComponentType) => {
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <CustomBreadcrumbs
-        heading="Schedule Exam"
-        description={
-          open
-            ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
-            : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              open
-                ? () => handleClose(null, false)
-                : () => {
-                    setOpen(true);
-                  }
-            }
-          >
-            {open ? 'Back' : 'Schedule Exam'}
-          </Button>
-        }
-      />
+      {open ? (
+        <CustomBreadcrumbs
+          heading={selectedExam?.examName ? `Update Exam` : 'Add Exam'}
+          description={
+            selectedExam?.examName
+              ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'
+              : 'Create new exam by entering exam title, date, duration and assigning subjects. Set up the complete exam schedule.'
+          }
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Examination', href: '/academic/examinationDashboard' },
+            { name: 'Schedule Exam' },
+            { name: selectedExam?.examName ? `Update Exam` : 'Add Exam' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={() => {
+            handleClose(null, false);
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Schedule Exam"
+          description="View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Examination', href: '/academic/examinationDashboard' },
+            { name: 'Schedule Exam' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <NewExamForm
@@ -152,7 +157,7 @@ const ScheduleExam = (props: TabComponentType) => {
               handleDelete(selectedExam?.id);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

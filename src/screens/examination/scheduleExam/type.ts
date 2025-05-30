@@ -6,8 +6,8 @@ export interface IScheduledExam {
   subjectName: string;
   examType: string;
   examName: string;
-  examDate: string;
-  examTime: string;
+  examStartDateTime: string;
+  examEndDateTime: string;
   examDuration: string;
   totalMarks: number;
   status: number;
@@ -16,13 +16,11 @@ export interface IScheduledExam {
 export interface ISubjectDetail {
   id: number;
   subjectName: string;
-  examDate: Dayjs | null | string;
-  examTime: Dayjs | null | string;
-  examDuration: Dayjs | null | string;
+  examStartDateTime: Dayjs | null | string;
+  examEndDateTime: Dayjs | null | string;
   totalMarks: number;
   passingMarks: number;
-  invigilationTeacher: string;
-  teacher: string;
+  rubric: File[];
 }
 
 export interface IExamFormValues {

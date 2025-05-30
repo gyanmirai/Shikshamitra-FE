@@ -45,7 +45,7 @@ const MySubmission = () => {
             : 'View and manage your assignment submissions'
         }
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
           { name: 'My Submission' },
           { name: currentActiveComponent?.label },

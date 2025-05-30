@@ -6,7 +6,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Card, Divider, useTheme } from '@mui/material';
+import { Tab, Box, Card, Divider, useTheme } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
@@ -14,15 +14,13 @@ import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
-import TabsComponent from 'src/components/custom-tabs/New-tab';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ChangeClassScreen from './change-class';
 import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
-import BulkStudentAddScreen from './bulk-student-add';
-import BulkDataUpdateScreen from './bulk-data-update';
 import RollNoGenerationScreen from './roll-generation';
 
 import type { IInquiryData } from '../enrollment/Inquiry';
@@ -68,8 +66,8 @@ const TABS = [
       classes: string;
     }) => <ChangeClassScreen {...props} />,
   },
-  { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
-  { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
+  // { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
+  // { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
   {
     value: 'groupManageMent',
     label: 'House Management',
@@ -256,7 +254,16 @@ const StudentManagementScreen = () => {
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        <TabsComponent tabs={TABS} value={searchParams.tab} onChange={handleChange} />
+        <CustomTabs
+          value={searchParams.tab}
+          onChange={(_, val) => setSearchParams({ tab: val })}
+          variant="fullWidth"
+          slotProps={{ tab: { px: 1 } }}
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </CustomTabs>
         <Divider sx={{ my: 2 }} />
         <Box px={1} pt={2}>
           {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
