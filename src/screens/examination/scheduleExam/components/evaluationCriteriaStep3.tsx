@@ -6,8 +6,8 @@ import { Box, Grid } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Upload } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
-import UploadDocument from 'src/components/upload-document/uploadDocument';
 
 import RubricCreationForm from '../../settings/rubricManagement/rubricCreationForm';
 
@@ -19,6 +19,7 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
 
   /** Formik instance for form handling */
   const formik = props;
+  const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
 
   /**
    * State to manage rubric selection type
@@ -26,16 +27,36 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
    */
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
 
+  const handleDrop = (acceptedFiles: File[]) => {
+    const updatedSubjects = formik.values.subjects.map((subject) => ({
+      ...subject,
+      rubric: [...(subject.rubric || []), ...acceptedFiles],
+    }));
+    formik.setFieldValue('subjects', updatedSubjects);
+  };
+
+  const handleRemove = (fileToRemove: string | File) => {
+    const updatedSubjects = formik.values.subjects.map((subject) => ({
+      ...subject,
+      rubric: (subject.rubric || []).filter((file) => {
+        if (typeof fileToRemove === 'string') {
+          return file.name !== fileToRemove;
+        }
+        return file !== fileToRemove;
+      }),
+    }));
+    formik.setFieldValue('subjects', updatedSubjects);
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          {/* Document upload component for rubric files */}
-          <UploadDocument
-            formik={formik}
-            name="rubric"
-            title="Upload Rubric"
-            accept={{ 'application/pdf': [] }}
+          <Upload
+            multiple
+            value={formik.values.subjects[0]?.rubric}
+            onDrop={handleDrop}
+            onRemove={handleRemove}
           />
         </Grid>
         {/* Commented out rubric selection UI */}

@@ -12,16 +12,13 @@ import { Create } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Card,
   Grid,
   Radio,
   Button,
   Switch,
   TextField,
-  CardHeader,
   RadioGroup,
   Typography,
-  CardContent,
   FormControl,
   DialogActions,
   FormControlLabel,
@@ -35,19 +32,20 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import UploadDocument from 'src/components/upload-document/uploadDocument';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getAssignmentInitialValues } from './assignmentInitialValues';
 import { assignmentValidationSchema } from './assignmentValidationSchema';
+import { SectionCard } from '../../homeworkCreation/component/homeworkForm';
 import AssignmentTypeForm from '../../setting/assignmentType/assignmentTypeForm';
 
-import type { IAssignment, IAssignmentFormProps } from '../type';
+import type { IAssignmentFormProps } from '../type';
 
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editData, onClose }) => {
   // State to control assignment type dialog visibility
@@ -91,6 +89,20 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     },
   });
 
+  const handleDrop = (acceptedFiles: File[]) => {
+    formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
+  };
+
+  const handleRemove = (fileToRemove: string | File) => {
+    const updatedDocuments = (formik.values.attachments || []).filter((file) => {
+      if (typeof fileToRemove === 'string') {
+        return file.name !== fileToRemove;
+      }
+      return file !== fileToRemove;
+    });
+    formik.setFieldValue('attachments', updatedDocuments);
+  };
+
   // Configuration for file upload component
   const uploadProps = {
     multiple: true,
@@ -98,24 +110,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   };
 
   // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback(
-    (
-      inputFile: File | string,
-      values: IAssignment,
-      setFieldValue: (field: string, value: any) => void
-    ) => {
-      setFieldValue('rubric', '');
-    },
-    []
-  );
+  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('rubric', '');
+  }, []);
 
   // Handler to remove all file attachments
-  const handleRemoveAllFiles = useCallback(
-    (values: IAssignment, setFieldValue: (field: string, value: any) => void) => {
-      setFieldValue('docs', '');
-    },
-    []
-  );
+  const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('rubric', '');
+  }, []);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -197,10 +199,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
-                <UploadDocument formik={formik} name="attachments" title="Upload Attachment" />
-              </Grid>
-
               {/* Assignment Title */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
@@ -242,19 +240,18 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     }
                   />
                 </ShakingTextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    assignmentTypeDialog.onTrue();
-                  }}
-                >
-                  Add Assignment Type ?
-                </Typography>
+                <Box mt={1} display="flex" justifyContent="flex-end">
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => assignmentTypeDialog.onTrue()}
+                  >
+                    Add Assignment Type ?
+                  </Typography>
+                </Box>
 
                 <CustomDialog
                   open={assignmentTypeDialog.value}
@@ -312,96 +309,121 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
               {/* File Upload */}
               <Grid item xs={12}>
-                <UploadDocument
-                  formik={formik}
-                  name="rubric"
-                  title="Upload Rubric"
-                  accept={{ 'application/pdf': [] }}
+                <Upload
+                  multiple
+                  value={formik.values.attachments || []}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
                 />
               </Grid>
 
+              {/* <Grid item xs={12}>
+                <Upload
+                  {...uploadProps}
+                  thumbnail
+                  value={formik.values.rubric}
+                  onDrop={(acceptedFiles) => {
+                    const file = acceptedFiles[0];
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                      const base64String = reader.result;
+                      formik.setFieldValue('rubric', reader);
+                    };
+                  }}
+                  multiple={false}
+                  onDelete={() => handleRemoveFile(formik.setFieldValue)}
+                  onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
+                />
+              </Grid> */}
+
               {/* Schedule Assignment */}
               <Grid item xs={12}>
-                <Card sx={{ boxShadow: 3 }}>
-                  <CardHeader title="Schedule Assignment" />
-                  <CardContent>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={formik.values.isScheduled}
-                              onChange={(e) =>
-                                formik.setFieldValue('isScheduled', e.target.checked)
-                              }
-                            />
-                          }
-                          label="Enable Schedule"
-                        />
-                      </Grid>
-
-                      {/* Conditional Schedule Date field */}
-                      {formik.values.isScheduled && (
-                        <Grid item xs={12} md={6}>
-                          <ShakingTextField
-                            error={
-                              !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
-                            }
-                          >
-                            <DateTimePicker
-                              label="Schedule Date"
-                              value={dayjs(formik.values.scheduleDate)}
-                              format="DD/MM/YYYY hh:mm"
-                              onChange={(date) => formik.setFieldValue('scheduleDate', date)}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  fullWidth: true,
-                                  error:
-                                    formik.touched.scheduleDate &&
-                                    Boolean(formik.errors.scheduleDate),
-                                  helperText:
-                                    formik.touched.scheduleDate &&
-                                    typeof formik.errors.scheduleDate === 'string'
-                                      ? formik.errors.scheduleDate
-                                      : undefined,
-                                },
-                              }}
-                            />
-                          </ShakingTextField>
-                        </Grid>
-                      )}
+                <SectionCard title="Assignment Schedule Settings">
+                  <Grid container spacing={2} p={2}>
+                    <Grid item xs={12} md={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={formik.values.isScheduled}
+                            onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
+                          />
+                        }
+                        label="Enable Schedule"
+                      />
                     </Grid>
-                  </CardContent>
-                </Card>
+
+                    {/* Conditional Schedule Date field */}
+                    {formik.values.isScheduled && (
+                      <Grid item xs={12} md={6}>
+                        <ShakingTextField
+                          error={
+                            !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
+                          }
+                        >
+                          <DateTimePicker
+                            label="Schedule Date"
+                            value={dayjs(formik.values.scheduleDate)}
+                            format="DD/MM/YYYY hh:mm"
+                            onChange={(date) => formik.setFieldValue('scheduleDate', date)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error:
+                                  formik.touched.scheduleDate &&
+                                  Boolean(formik.errors.scheduleDate),
+                                helperText:
+                                  formik.touched.scheduleDate &&
+                                  typeof formik.errors.scheduleDate === 'string'
+                                    ? formik.errors.scheduleDate
+                                    : undefined,
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    )}
+                  </Grid>
+                </SectionCard>
               </Grid>
 
               <Grid item xs={12}>
-                <FormControl
-                  component="fieldset"
-                  error={!!(formik.touched.submissionType && formik.errors.submissionType)}
-                >
-                  <Typography variant="subtitle2">Submission Type</Typography>
-                  <RadioGroup
-                    row
-                    name="submissionType"
-                    value={formik.values.submissionType}
-                    onChange={formik.handleChange}
+                <SectionCard title="Submission Type">
+                  <FormControl
+                    component="fieldset"
+                    error={!!(formik.touched.submissionType && formik.errors.submissionType)}
+                    sx={{ p: 2 }}
                   >
-                    <FormControlLabel value="online_text" control={<Radio />} label="Online Text" />
-                    <FormControlLabel value="file_upload" control={<Radio />} label="File Upload" />
-                    <FormControlLabel
-                      value="in_person"
-                      control={<Radio />}
-                      label="In-Person Submission"
-                    />
-                  </RadioGroup>
-                  {formik.touched.submissionType && formik.errors.submissionType && (
-                    <Typography variant="caption" color="error">
-                      {formik.errors.submissionType}
-                    </Typography>
-                  )}
-                </FormControl>
+                    <RadioGroup
+                      row
+                      name="submissionType"
+                      value={formik.values.submissionType}
+                      onChange={formik.handleChange}
+                    >
+                      <FormControlLabel
+                        value="online_text"
+                        control={<Radio />}
+                        label="Online Text"
+                      />
+                      <FormControlLabel
+                        value="file_upload"
+                        control={<Radio />}
+                        label="File Upload"
+                      />
+                      <FormControlLabel
+                        value="in_person"
+                        control={<Radio />}
+                        label="In-Person Submission"
+                      />
+                    </RadioGroup>
+                    {formik.touched.submissionType && formik.errors.submissionType && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.submissionType}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </SectionCard>
               </Grid>
             </Grid>
           </Scrollbar>

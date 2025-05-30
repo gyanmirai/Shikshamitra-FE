@@ -685,7 +685,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+C+2',
             },
             {
-              title: 'Syllabus Management',
+              title: 'Manage Chapter',
               path: '/academic/courseSubjects',
               _action: 'course-management-subjects',
               shortcutKey: 'Alt+A+S+1',
@@ -699,7 +699,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+S+2',
             },
             {
-              title: 'Syllabus Progress',
+              title: 'Chapter Progress',
               path: '/academic/courseProgress',
               _action: 'course-management-courseProgress',
               shortcutKey: 'Alt+A+S+3',
@@ -850,14 +850,14 @@ const academicModule = {
           shortcutKeyName: 'Alt+A+H',
           children: [
             {
-              title: 'Add Homework/Assignment',
+              title: 'Set Coursework',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
             },
             {
-              title: 'Add Marks/Feedback',
+              title: 'Marks & Feedback',
               path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',
@@ -901,7 +901,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+2',
             },
             {
-              title: 'Grade Entry',
+              title: 'Record Marks',
               path: '/academic/gradeEntry',
               _action: 'academic-gradeEntry',
               shortcutKey: 'Alt+E+1+3',
@@ -915,7 +915,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+E+1+5',
             },
             {
-              title: 'Settings',
+              title: 'Setting',
               path: '/academic/settings',
               _action: 'academic-settings',
               shortcutKey: 'Alt+E+1+7',
@@ -1990,7 +1990,7 @@ export const navData = (isDdvs: boolean) => [
         submodule: studentModule[studentPath].flatMap((list) => list.items),
       },
       {
-        title: 'Academic & Assignment',
+        title: 'Academics',
         path: '/academic/dashboard',
         icon: ICONS.academic,
         _action: 'academic',

@@ -12,9 +12,9 @@ import { Create } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
-  Card,
   Grid,
   Radio,
+  Paper,
   Button,
   Switch,
   Divider,
@@ -22,8 +22,6 @@ import {
   TextField,
   RadioGroup,
   Typography,
-  CardHeader,
-  CardContent,
   FormControl,
   DialogActions,
   FormControlLabel,
@@ -37,12 +35,12 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import UploadDocument from 'src/components/upload-document/uploadDocument';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
@@ -105,6 +103,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     validationSchema: homeworkValidationSchema,
     onSubmit: (values) => {},
   });
+
+  const handleDrop = (acceptedFiles: File[]) => {
+    formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
+  };
+
+  const handleRemove = (fileToRemove: string | File) => {
+    const updatedDocuments = (formik.values.attachments || []).filter((file) => {
+      if (typeof fileToRemove === 'string') {
+        return file.name !== fileToRemove;
+      }
+      return file !== fileToRemove;
+    });
+    formik.setFieldValue('attachments', updatedDocuments);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -257,19 +269,18 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
                   />
                 </ShakingTextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    homeworkTypeDialog.onTrue();
-                  }}
-                >
-                  Add Homework Type ?
-                </Typography>
+                <Box mt={1} display="flex" justifyContent="flex-end">
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => homeworkTypeDialog.onTrue()}
+                  >
+                    Add Homework Type ?
+                  </Typography>
+                </Box>
 
                 <CustomDialog
                   open={homeworkTypeDialog.value}
@@ -305,162 +316,167 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <Divider />
               </Grid>
               <Grid item xs={12}>
-                <UploadDocument formik={formik} name="attachments" title="Upload Attachment" />
+                <Upload
+                  multiple
+                  value={formik.values.attachments || []}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
+                />
               </Grid>
 
               <Grid item xs={12}>
-                <Card sx={{ boxShadow: 3 }}>
-                  <CardHeader title="Homework Schedule Settings" />
-                  <CardContent>
-                    <Grid container spacing={2}>
-                      {/* Daily Task Checkbox */}
-                      <Grid item xs={12} md={6}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={formik.values.isDailyTask}
-                              onChange={(e) =>
-                                formik.setFieldValue('isDailyTask', e.target.checked)
-                              }
-                            />
-                          }
-                          label="Daily Task"
-                        />
-                      </Grid>
-
-                      {/* Conditional fields for Daily Task */}
-                      {formik.values.isDailyTask && (
-                        <Grid item xs={12} md={6}>
-                          <ShakingTextField
-                            error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                          >
-                            <DateTimePicker
-                              name="endDate"
-                              label="Select End Date"
-                              format="DD/MM/YYYY hh:mm "
-                              value={dayjs(formik.values.endDate)}
-                              onChange={(date) => formik.setFieldValue('endDate', date)}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  fullWidth: true,
-                                  error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                                  helperText: formik.touched.endDate && formik.errors.endDate,
-                                },
-                              }}
-                            />
-                          </ShakingTextField>
-                        </Grid>
-                      )}
-
-                      {/* Due Date and Time (for non-daily tasks) */}
-                      {!formik.values.isDailyTask && (
-                        <Grid item xs={12} md={6}>
-                          <ShakingTextField
-                            error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
-                          >
-                            <DateTimePicker
-                              label="Due Date Time"
-                              value={dayjs(formik.values.dueDate)}
-                              format="DD/MM/YYYY hh:mm"
-                              onChange={(date) => formik.setFieldValue('dueDate', date)}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  fullWidth: true,
-                                  error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
-                                  helperText: formik.touched.dueDate && formik.errors.dueDate,
-                                },
-                              }}
-                            />
-                          </ShakingTextField>
-                        </Grid>
-                      )}
+                <SectionCard title="Homework Schedule Settings">
+                  <Grid container spacing={2} p={2}>
+                    {/* Daily Task Checkbox */}
+                    <Grid item xs={12} md={6}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formik.values.isDailyTask}
+                            onChange={(e) => formik.setFieldValue('isDailyTask', e.target.checked)}
+                          />
+                        }
+                        label="Daily Task"
+                      />
                     </Grid>
-                  </CardContent>
-                </Card>
+
+                    {/* Conditional fields for Daily Task */}
+                    {formik.values.isDailyTask && (
+                      <Grid item xs={12} md={6}>
+                        <ShakingTextField
+                          error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                        >
+                          <DateTimePicker
+                            name="endDate"
+                            label="Select End Date"
+                            format="DD/MM/YYYY hh:mm "
+                            value={dayjs(formik.values.endDate)}
+                            onChange={(date) => formik.setFieldValue('endDate', date)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                                helperText: formik.touched.endDate && formik.errors.endDate,
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    )}
+
+                    {/* Due Date and Time (for non-daily tasks) */}
+                    {!formik.values.isDailyTask && (
+                      <Grid item xs={12} md={6}>
+                        <ShakingTextField
+                          error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
+                        >
+                          <DateTimePicker
+                            label="Due Date Time"
+                            value={dayjs(formik.values.dueDate)}
+                            format="DD/MM/YYYY hh:mm"
+                            onChange={(date) => formik.setFieldValue('dueDate', date)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
+                                helperText: formik.touched.dueDate && formik.errors.dueDate,
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    )}
+                  </Grid>
+                </SectionCard>
               </Grid>
 
               {/* Schedule Homework Switch */}
               <Grid item xs={12}>
-                <Card sx={{ boxShadow: 3 }}>
-                  <CardHeader title="Schedule Homework" />
-                  <CardContent>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={formik.values.isScheduled}
-                              onChange={(e) =>
-                                formik.setFieldValue('isScheduled', e.target.checked)
-                              }
-                            />
-                          }
-                          label="Enable Schedule"
-                        />
-                      </Grid>
-
-                      {/* Conditional Schedule Date field */}
-                      {formik.values.isScheduled && (
-                        <Grid item xs={12} md={6}>
-                          <ShakingTextField
-                            error={
-                              !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
-                            }
-                          >
-                            <DateTimePicker
-                              label="Schedule Date"
-                              value={dayjs(formik.values.scheduleDate)}
-                              format="DD/MM/YYYY hh:mm"
-                              onChange={(date) => formik.setFieldValue('scheduleDate', date)}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  fullWidth: true,
-                                  error:
-                                    formik.touched.scheduleDate &&
-                                    Boolean(formik.errors.scheduleDate),
-                                  helperText:
-                                    formik.touched.scheduleDate && formik.errors.scheduleDate,
-                                },
-                              }}
-                            />
-                          </ShakingTextField>
-                        </Grid>
-                      )}
+                <SectionCard title="Schedule Homework">
+                  <Grid container spacing={2} p={2}>
+                    <Grid item xs={12} md={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={formik.values.isScheduled}
+                            onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
+                          />
+                        }
+                        label="Enable Schedule"
+                      />
                     </Grid>
-                  </CardContent>
-                </Card>
+
+                    {/* Conditional Schedule Date field */}
+                    {formik.values.isScheduled && (
+                      <Grid item xs={12} md={6}>
+                        <ShakingTextField
+                          error={
+                            !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
+                          }
+                        >
+                          <DateTimePicker
+                            label="Schedule Date"
+                            value={dayjs(formik.values.scheduleDate)}
+                            format="DD/MM/YYYY hh:mm"
+                            onChange={(date) => formik.setFieldValue('scheduleDate', date)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error:
+                                  formik.touched.scheduleDate &&
+                                  Boolean(formik.errors.scheduleDate),
+                                helperText:
+                                  formik.touched.scheduleDate && formik.errors.scheduleDate,
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    )}
+                  </Grid>
+                </SectionCard>
               </Grid>
 
               {/* Submission Type Radio Group */}
               <Grid item xs={12}>
-                <FormControl
-                  component="fieldset"
-                  error={!!(formik.touched.submissionType && formik.errors.submissionType)}
-                >
-                  <Typography variant="subtitle2">Submission Type</Typography>
-                  <RadioGroup
-                    row
-                    name="submissionType"
-                    value={formik.values.submissionType}
-                    onChange={formik.handleChange}
+                <SectionCard title="Submission Type">
+                  <FormControl
+                    component="fieldset"
+                    error={!!(formik.touched.submissionType && formik.errors.submissionType)}
+                    sx={{ p: 2 }}
                   >
-                    <FormControlLabel value="online_text" control={<Radio />} label="Online Text" />
-                    <FormControlLabel value="file_upload" control={<Radio />} label="File Upload" />
-                    <FormControlLabel
-                      value="in_person"
-                      control={<Radio />}
-                      label="In-Person Submission"
-                    />
-                  </RadioGroup>
-                  {formik.touched.submissionType && formik.errors.submissionType && (
-                    <Typography variant="caption" color="error">
-                      {formik.errors.submissionType}
-                    </Typography>
-                  )}
-                </FormControl>
+                    <RadioGroup
+                      row
+                      name="submissionType"
+                      value={formik.values.submissionType}
+                      onChange={formik.handleChange}
+                    >
+                      <FormControlLabel
+                        value="online_text"
+                        control={<Radio />}
+                        label="Online Text"
+                      />
+                      <FormControlLabel
+                        value="file_upload"
+                        control={<Radio />}
+                        label="File Upload"
+                      />
+                      <FormControlLabel
+                        value="in_person"
+                        control={<Radio />}
+                        label="In-Person Submission"
+                      />
+                    </RadioGroup>
+                    {formik.touched.submissionType && formik.errors.submissionType && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.submissionType}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </SectionCard>
               </Grid>
             </Grid>
           </Scrollbar>
@@ -505,3 +521,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 };
 
 export default HomeworkForm;
+
+export const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Paper sx={{ p: 3 }} elevation={6}>
+    <Typography variant="h6" sx={{ mb: 2 }} color="primary.main">
+      {title}
+    </Typography>
+    <Grid container spacing={2}>
+      {children}
+    </Grid>
+  </Paper>
+);

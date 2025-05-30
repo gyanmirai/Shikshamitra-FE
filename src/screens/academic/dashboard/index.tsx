@@ -41,7 +41,7 @@ const AcademicDashboardScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Dashboard"
-        links={[{ name: 'Academic and Assignment' }, { name: 'Dashboard' }]}
+        links={[{ name: 'Academics' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <DashBoardQuickAction

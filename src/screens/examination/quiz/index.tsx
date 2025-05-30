@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -52,13 +51,13 @@ const QuizManagement = (props: TabComponentType) => {
   // Dynamic breadcrumb navigation links based on current view (form or list)
   const links = open
     ? [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Quiz Management' },
         { name: 'Quiz Form' },
       ]
     : [
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Examination', href: '/academic/examinationDashboard' },
         { name: 'Quiz Management' },
       ];
@@ -112,34 +111,40 @@ const QuizManagement = (props: TabComponentType) => {
     </>
   ) : (
     <Box height="100%" display="flex" flexDirection="column">
-      <CustomBreadcrumbs
-        heading="Quiz Management"
-        description={
-          open
-            ? 'Create or update quiz details, including the quiz title, date, duration, and questions. Easily manage quiz schedules and make adjustments as needed.'
-            : 'View and manage all quizzes, including quiz details, questions, and timings. Add new quizzes, update existing ones, or remove them as necessary.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={addNewQuiz.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              addNewQuiz.value
-                ? () => handleClose(null, false)
-                : () => {
-                    addNewQuiz.onTrue();
-                  }
-            }
-          >
-            {addNewQuiz.value ? 'Back' : 'Quiz'}
-          </Button>
-        }
-      />
+      {open ? (
+        <CustomBreadcrumbs
+          heading={selectedQuiz ? 'Update Quiz' : 'Add Quiz'}
+          description={
+            selectedQuiz
+              ? 'Update existing quiz information including title, questions, duration, and schedule. Make necessary modifications to keep assessments current and aligned with learning objectives.'
+              : 'Create a new quiz by providing essential details such as title, questions, duration and schedule. Add various question types to effectively assess student understanding.'
+          }
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Examination', href: '/academic/scheduleExam' },
+            { name: 'Quiz Management' },
+            { name: selectedQuiz ? 'Update Quiz' : 'Add Quiz' },
+          ]}
+          isBack
+          onBack={() => {
+            handleClose(null, false);
+          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Quiz Management"
+          description="Manage your examination system by organizing quizzes and assessments. Create, update and track quiz progress across different subjects. Add various question types and set schedules to facilitate effective assessment."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Examination', href: '/academic/scheduleExam' },
+            { name: 'Quiz Management' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
 
-      {addNewQuiz.value ? (
+      {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewQuiz
             dialog={addNewQuiz}
@@ -169,7 +174,7 @@ const QuizManagement = (props: TabComponentType) => {
           }}
           onEdit={(data: IQuizData) => {
             setSelectedQuiz(data);
-            addNewQuiz.onTrue();
+            setOpen(true);
           }}
           onQuizResult={(data: IQuizData) => {
             viewResultDialog.onTrue();
@@ -195,7 +200,7 @@ const QuizManagement = (props: TabComponentType) => {
               handleDelete(selectedQuiz?.id);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

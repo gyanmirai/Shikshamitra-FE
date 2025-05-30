@@ -124,11 +124,7 @@ const DynamicGroupManagement = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Dynamic Group"
-        links={[
-          { name: 'Academic and Assignment' },
-          { name: 'Activity' },
-          { name: 'Dynamic Group' },
-        ]}
+        links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Dynamic Group' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button

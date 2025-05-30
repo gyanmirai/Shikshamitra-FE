@@ -133,16 +133,16 @@ const Subjects = (props: TabComponentType) => {
   const links = addChapterDialog.value
     ? [
         // Links for form view (adding/editing chapter)
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Syllabus' },
-        { name: 'Syllabus Management' },
+        { name: 'Manage Chapter' },
         { name: 'Add Chapter' },
       ]
     : [
         // Links for list view (showing chapters)
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
+        { name: 'Academics', href: '/academic/dashboard' },
         { name: 'Syllabus' },
-        { name: 'Syllabus Management' },
+        { name: 'Manage Chapter' },
       ];
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -188,9 +188,9 @@ const Subjects = (props: TabComponentType) => {
           }
           links={[
             // Links for form view (adding/editing chapter)
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Syllabus Management' },
+            { name: 'Manage Chapter' },
             { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
           ]}
           isBack
@@ -201,12 +201,12 @@ const Subjects = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Syllabus Management"
+          heading="Manage Chapter"
           description="Manage your academic syllabus by organizing chapters and subjects. Create, update and track chapter progress across different classes and divisions. Add learning resources and documents to enhance the learning experience."
           links={[
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Syllabus Management' },
+            { name: 'Manage Chapter' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />

@@ -60,7 +60,7 @@ const Reports = (props: TabComponentType) => {
         heading="Reports"
         description="Generate reports for timetable schedules, conflicts, and statistics"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Time Table', href: '/academic/timeTableDashboard' },
           { name: 'Reports' },
         ]}

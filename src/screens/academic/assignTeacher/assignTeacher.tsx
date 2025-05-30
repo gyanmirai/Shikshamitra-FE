@@ -103,7 +103,7 @@ const AssignTeacher = () => {
       <CustomBreadcrumbs
         heading="Assign Teacher"
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Assign Teacher', href: 'academic/assignTeacher' },
         ]}
         sx={{ px: 1, mb: 2 }}

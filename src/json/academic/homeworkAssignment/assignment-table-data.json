@@ -11,14 +11,7 @@
     "createdBy": "teacher01",
     "status": 0,
     "assignmentType": "Worksheet",
-    "rubric": [
-      {
-        "name": "trigonometry-rubric.pdf",
-        "size": 234567,
-        "type": "application/pdf",
-        "base64": "data:application/pdf;base64,JVBERi0xLjQKJc..."
-      }
-    ],
+    "rubric": null,
     "isScheduled": true,
     "scheduleDate": "2025-05-30T00:00:00.000Z",
     "todaysDate": "2025-05-22T00:00:00.000Z"
@@ -35,14 +28,7 @@
     "createdBy": "teacher02",
     "status": 1,
     "assignmentType": "Presentation",
-    "rubric": [
-      {
-        "name": "history-assignment-guidelines.docx",
-        "size": 154321,
-        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "base64": "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,UEsDBBQABg..."
-      }
-    ],
+    "rubric": null,
     "isScheduled": false,
     "scheduleDate": null,
     "todaysDate": "2025-05-22T00:00:00.000Z"
@@ -59,14 +45,7 @@
     "createdBy": "teacher03",
     "status": 0,
     "assignmentType": "Project",
-    "rubric": [
-      {
-        "name": "electricity-model-rubric.pdf",
-        "size": 198765,
-        "type": "application/pdf",
-        "base64": "data:application/pdf;base64,UEsDBBQAAAAIA..."
-      }
-    ],
+    "rubric": null,
     "isScheduled": true,
     "scheduleDate": "2025-06-01T00:00:00.000Z",
     "todaysDate": "2025-05-22T00:00:00.000Z"

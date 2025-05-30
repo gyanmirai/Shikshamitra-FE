@@ -38,16 +38,16 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Add Marks/Feedback"
+        heading="Marks & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
             ? 'Add and manage marks/feedback for homework assignments'
             : 'Add and manage marks/feedback for academic assignments'
         }
         links={[
-          { name: 'Academic and Assignment', href: '/academic/dashboard' },
+          { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
-          { name: 'Add Marks/Feedback' },
+          { name: 'Marks & Feedback' },
           { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}

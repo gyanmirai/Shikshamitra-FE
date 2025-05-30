@@ -342,7 +342,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Timetable Management"
           links={[
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
           ]}
           description="Create new timetable for selected class and division"
@@ -356,7 +356,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="New Timetable"
           links={[
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
             { name: 'New Timetable', href: '/academic/newTimetable' },
           ]}

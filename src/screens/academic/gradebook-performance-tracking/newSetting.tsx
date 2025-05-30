@@ -58,7 +58,7 @@ const SettingScreen = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Settings"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Settings' },
         ]}

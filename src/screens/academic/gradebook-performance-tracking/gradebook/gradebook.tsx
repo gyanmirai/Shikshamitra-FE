@@ -280,7 +280,7 @@ const Gradebook = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Gradebook"
         links={[
-          { name: 'Academic and Assignment' },
+          { name: 'Academics' },
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Gradebook' },
         ]}

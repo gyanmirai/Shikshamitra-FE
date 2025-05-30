@@ -136,21 +136,6 @@ const Subject = (props: TabComponentType) => {
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
   };
-  // Define breadcrumb navigation links based on whether form is active
-  const links = addSubjectDialog.value
-    ? [
-        // Links when form is open
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum Management' },
-        { name: 'Allocate Subject' },
-        { name: 'Subject Form' },
-      ]
-    : [
-        // Links when viewing subject list
-        { name: 'Academic and Assignment', href: '/academic/dashboard' },
-        { name: 'Curriculum Management' },
-        { name: 'Allocate Subject' },
-      ];
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -165,7 +150,7 @@ const Subject = (props: TabComponentType) => {
           }}
           links={[
             // Links when viewing subject list
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management' },
             { name: 'Allocate Subject' },
 
@@ -179,7 +164,7 @@ const Subject = (props: TabComponentType) => {
           description="Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed."
           links={[
             // Links when form is open
-            { name: 'Academic and Assignment', href: '/academic/dashboard' },
+            { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management' },
             { name: 'Allocate Subject' },
           ]}
@@ -230,9 +215,6 @@ const Subject = (props: TabComponentType) => {
                       setSelectedSubject(null);
                     }
               }
-              sx={{
-                width: '200px',
-              }}
             >
               Allocate Subject
             </Button>

@@ -204,7 +204,7 @@ const CurriculumOverview = (props: TabComponentType) => {
           <CustomBreadcrumbs
             heading="Curriculum Overview"
             links={[
-              { name: 'Academic and Assignment' },
+              { name: 'Academics' },
               { name: 'Curriculum' },
               { name: 'Curriculum Overview' },
               { name: 'Curriculum Form' },
@@ -235,11 +235,7 @@ const CurriculumOverview = (props: TabComponentType) => {
         <>
           <CustomBreadcrumbs
             heading="Curriculum Overview"
-            links={[
-              { name: 'Academic and Assignment' },
-              { name: 'Curriculum' },
-              { name: 'Curriculum Overview' },
-            ]}
+            links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Curriculum Overview' }]}
             sx={{ px: 1, mb: 2 }}
             action={
               <Button

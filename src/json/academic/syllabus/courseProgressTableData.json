@@ -26,7 +26,7 @@
     {
       "id": 2,
       "name": "Science Course",
-      "progress": 86.6,
+      "progress": 86,
       "completedChapter": 10,
       "totalChapter": 20,
       "color": "#006BA6",
@@ -74,7 +74,7 @@
     {
       "id": 4,
       "name": "Gujarati Course",
-      "progress": 86.6,
+      "progress": 88,
       "completedChapter": 10,
       "totalChapter": 20,
       "color": "#D35400",
