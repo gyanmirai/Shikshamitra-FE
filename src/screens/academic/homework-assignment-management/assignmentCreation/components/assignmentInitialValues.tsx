@@ -8,10 +8,12 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
   class: editData?.class || classes || '',
   division: editData?.division || [],
   subjects: editData?.subjects || '',
-  rubric: [],
+  rubric: '',
   submissionType: editData?.submissionType || 'online_text',
-  dueDate: dayjs(editData?.dueDate) || null,
+  // dueDate: dayjs(editData?.dueDate) || null,
   attachments: editData?.attachments || [],
+  startDate: dayjs(editData?.startDate) || null,
+  endDate: dayjs(editData?.endDate) || null,
   createdBy: editData?.createdBy || '',
   status: editData?.status || 0,
 
@@ -19,9 +21,9 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
   assignmentType: editData?.assignmentType || '',
 
   // Scheduling
-  isScheduled: editData?.isScheduled || false,
-  scheduleDate: dayjs(editData?.scheduleDate) || null,
+  // isScheduled: editData?.isScheduled || false,
+  // scheduleDate: dayjs(editData?.scheduleDate) || null,
 
   // System fields
-  todaysDate: dayjs(editData?.todaysDate) || dayjs(dayjs().format('DD-MM-YYYY')),
+  // todaysDate: dayjs(editData?.todaysDate) || dayjs(dayjs().format('DD-MM-YYYY')),
 });

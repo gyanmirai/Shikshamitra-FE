@@ -16,9 +16,7 @@ import {
   Radio,
   Paper,
   Button,
-  Switch,
   Divider,
-  Checkbox,
   TextField,
   RadioGroup,
   Typography,
@@ -155,7 +153,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <CustomSelect
                     label="Division *"
                     labelKey="name"
-                    valueKey="id"
+                    valueKey="name"
                     multiple
                     options={allDivision}
                     value={formik.values.division}
@@ -184,18 +182,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <CustomSelect
                     label="Subject *"
                     options={[
-                      { id: '1', name: 'Mathematics' },
-                      { id: '2', name: 'Science' },
-                      { id: '3', name: 'English' },
-                      { id: '4', name: 'History' },
-                      { id: '5', name: 'Geography' },
-                      { id: '6', name: 'Physics' },
-                      { id: '7', name: 'Chemistry' },
-                      { id: '8', name: 'Biology' },
+                      { name: 'Mathematics', label: 'Mathematics' },
+                      { name: 'Science', label: 'Science' },
+                      { name: 'English', label: 'English' },
+                      { name: 'History', label: 'History' },
+                      { name: 'Geography', label: 'Geography' },
+                      { name: 'Physics', label: 'Physics' },
+                      { name: 'Chemistry', label: 'Chemistry' },
+                      { name: 'Biology', label: 'Biology' },
                     ]}
-                    labelKey="name"
                     disabled={!(formik.values.division.length > 0)}
-                    valueKey="id"
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val)}
                     formControlProps={{ fullWidth: true }}
@@ -316,18 +312,23 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <Divider />
               </Grid>
               <Grid item xs={12}>
-                <Upload
-                  multiple
-                  value={formik.values.attachments || []}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                />
+                <SectionCard title="Homework Attachments">
+                  <Upload
+                    multiple
+                    value={formik.values.attachments || []}
+                    onDrop={handleDrop}
+                    onRemove={handleRemove}
+                    sx={{
+                      p: 2,
+                    }}
+                  />
+                </SectionCard>
               </Grid>
 
-              <Grid item xs={12}>
+              {/* <Grid item xs={12}>
                 <SectionCard title="Homework Schedule Settings">
                   <Grid container spacing={2} p={2}>
-                    {/* Daily Task Checkbox */}
+             
                     <Grid item xs={12} md={6}>
                       <FormControlLabel
                         control={
@@ -340,7 +341,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       />
                     </Grid>
 
-                    {/* Conditional fields for Daily Task */}
                     {formik.values.isDailyTask && (
                       <Grid item xs={12} md={6}>
                         <ShakingTextField
@@ -365,7 +365,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       </Grid>
                     )}
 
-                    {/* Due Date and Time (for non-daily tasks) */}
                     {!formik.values.isDailyTask && (
                       <Grid item xs={12} md={6}>
                         <ShakingTextField
@@ -390,52 +389,53 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     )}
                   </Grid>
                 </SectionCard>
-              </Grid>
+              </Grid> */}
 
               {/* Schedule Homework Switch */}
               <Grid item xs={12}>
                 <SectionCard title="Schedule Homework">
                   <Grid container spacing={2} p={2}>
                     <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={formik.values.isScheduled}
-                            onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
-                          />
-                        }
-                        label="Enable Schedule"
-                      />
+                      <ShakingTextField
+                        error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                      >
+                        <DateTimePicker
+                          label="Start Date Time *"
+                          value={dayjs(formik.values.startDate)}
+                          format="DD/MM/YYYY hh:mm"
+                          onChange={(date) => formik.setFieldValue('startDate', date)}
+                          slotProps={{
+                            textField: {
+                              size: 'small',
+                              fullWidth: true,
+                              error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                              helperText: formik.touched.startDate && formik.errors.startDate,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
                     </Grid>
-
                     {/* Conditional Schedule Date field */}
-                    {formik.values.isScheduled && (
-                      <Grid item xs={12} md={6}>
-                        <ShakingTextField
-                          error={
-                            !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
-                          }
-                        >
-                          <DateTimePicker
-                            label="Schedule Date"
-                            value={dayjs(formik.values.scheduleDate)}
-                            format="DD/MM/YYYY hh:mm"
-                            onChange={(date) => formik.setFieldValue('scheduleDate', date)}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error:
-                                  formik.touched.scheduleDate &&
-                                  Boolean(formik.errors.scheduleDate),
-                                helperText:
-                                  formik.touched.scheduleDate && formik.errors.scheduleDate,
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    )}
+                    <Grid item xs={12} md={6}>
+                      <ShakingTextField
+                        error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                      >
+                        <DateTimePicker
+                          label="End Date Time *"
+                          value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
+                          format="DD/MM/YYYY hh:mm"
+                          onChange={(date) => formik.setFieldValue('endDate', date)}
+                          slotProps={{
+                            textField: {
+                              size: 'small',
+                              fullWidth: true,
+                              error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                              helperText: formik.touched.endDate && formik.errors.endDate,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    </Grid>
                   </Grid>
                 </SectionCard>
               </Grid>

@@ -23,7 +23,8 @@
       "endDate": "03-06-2025",
       "status": 0,
       "homeworkType": "Regular",
-      "class": "10th Grade"
+      "class": "10th Grade",
+      "feedback": "Good work on this assignment"
     },
     {
       "id": "3",
@@ -36,7 +37,8 @@
       "endDate": "30-05-2025",
       "status": 0,
       "homeworkType": "Regular",
-      "class": "10th Grade"
+      "class": "10th Grade",
+      "feedback": "Good work on this assignment"
     },
     {
       "id": "4",

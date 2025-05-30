@@ -8,9 +8,12 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -154,11 +157,12 @@ const GradingScale = () => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to Delete Grade Scaling?"
         action={
           <Button
             variant="contained"
             color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               if (selectedGrade) {
                 handleDelete(selectedGrade);

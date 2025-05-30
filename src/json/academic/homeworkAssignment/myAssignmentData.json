@@ -1,7 +1,7 @@
 [
     {
       "id": "a1",
-      "subject": "Mathematics",
+      "subjects": "Mathematics",
       "title": "Algebraic Expressions",
       "submissionType": "file_upload",
       "submissionStatus": 0,
@@ -9,7 +9,7 @@
       "subjects": "History",
       "endDate": "2025-06-05",
       "createdBy": "Ms. Radhika",
-      "marks": null,
+      "marks": 20,
       "totalMarks": 20,
       "feedback": "",
       "status": 1,
@@ -27,7 +27,7 @@
       "marks": 18,
       "totalMarks": 20,
       "feedback": "Excellent understanding of the photosynthesis process. Well-structured content with clear explanations.",
-            "status": 1,
+      "status": 1,
       "assignmentType": "Presentation"
     },
     {
@@ -42,7 +42,7 @@
       "marks": null,
       "totalMarks": 25,
       "feedback": "",
-            "status": 1,
+      "status": 1,
       "assignmentType": "Presentation"
     },
     {
@@ -56,8 +56,8 @@
       "createdBy": "Mr. Rajiv",
       "marks": 23,
       "totalMarks": 25,
-      "feedback": "Outstanding research on ancient civilizations. Great use of historical references and chronological presentation.",
-            "status": 1,
+      "feedback": "Outstanding research on ancient civilizations. Great use of historical references and chronological presentation",
+      "status": 1,
       "assignmentType": "Presentation"
     },
     {

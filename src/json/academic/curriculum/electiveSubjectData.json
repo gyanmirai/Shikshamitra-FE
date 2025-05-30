@@ -36,7 +36,7 @@
   },
   {
     "id": 2,
-    "status": "Unpublish",
+    "status": "Published",
     "className": "10th Grade",
     "subjectName": "Mathematics",
     "subjectType": "core",

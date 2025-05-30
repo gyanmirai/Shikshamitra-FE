@@ -5,7 +5,7 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
@@ -63,23 +63,15 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
     },
   });
 
-  /**
-   * Handles file drop event from the upload component
-   * Takes the first file from accepted files and sets it as the document value
-   * @param acceptedFiles - Array of files dropped by user
-   */
-  const handleDrop = (acceptedFiles: File[]) => {
-    formik.setFieldValue('document', acceptedFiles[0]);
-  };
+  // Handler to remove a single file attachment
+  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('rubric', '');
+  }, []);
 
-  /**
-   * Handles file removal from the upload component
-   * Clears the document value in form state
-   * @param fileToRemove - File object or string to be removed (not used but required by Upload component)
-   */
-  const handleRemove = (fileToRemove: string | File) => {
-    formik.setFieldValue('document', null);
-  };
+  // Handler to remove all file attachments
+  const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('rubric', '');
+  }, []);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -177,12 +169,18 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               {/* File upload box */}
               <Grid item xs={12}>
                 <Upload
-                  multiple={false}
+                  // {...uploadProps}
                   thumbnail
                   value={formik.values.document}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                  sx={{}}
+                  onDrop={(acceptedFiles) => {
+                    const file = acceptedFiles[0];
+                    if (!file) return;
+
+                    formik.setFieldValue('document', file);
+                  }}
+                  multiple={false}
+                  onDelete={() => handleRemoveFile(formik.setFieldValue)}
+                  onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
                 />
               </Grid>
             </Grid>

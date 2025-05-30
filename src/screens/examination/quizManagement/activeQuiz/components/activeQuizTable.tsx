@@ -166,7 +166,7 @@ const QuizTable = ({
           placeholder: 'Search by Class, Division, Subject...',
           label: 'Search by Class, Division, Subject...',
           sx: {
-            maxWidth: '500px',
+            maxWidth: '400px',
             width: '100%',
           },
         }}

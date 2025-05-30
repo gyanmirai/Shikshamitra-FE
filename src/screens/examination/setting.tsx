@@ -12,16 +12,15 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
-import RubricManagement from './settings/rubricManagement/rubricManagement';
 import ExamAssessmentType from './settings/examAssessmentTypeSetting.tsx/examType';
 
 const TABS = [
-  {
-    value: 'rubricManagement',
-    label: 'Rubric Management',
-    description: 'Manage rubrics for assessments and grading.',
-    component: () => <RubricManagement />,
-  },
+  // {
+  //   value: 'rubricManagement',
+  //   label: 'Rubric Management',
+  //   description: 'Manage rubrics for assessments and grading.',
+  //   component: () => <RubricManagement />,
+  // },
   {
     value: 'gradeScaling',
     label: 'Grade Scaling',
@@ -43,7 +42,7 @@ const TABS = [
 
 const Setting = (props: TabComponentType) => {
   // Initialize tabs with 'rubricManagement' as default value using custom hook
-  const tabs = useTabs('rubricManagement');
+  const tabs = useTabs('gradeScaling');
 
   // Find the current tab object based on selected tab value
   const currentTab = TABS.find((tab) => tab.value === tabs.value);

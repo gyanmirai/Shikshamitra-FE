@@ -1,12 +1,19 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
 
-import { Box, Switch, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -25,25 +32,37 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem
-          onClick={() => {
-            onViewSubmission(row as IAssignment);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon={GlobalIcons.eye} />
-          View Submission
-        </MenuItem>
+        {row.status === 1 ? (
+          <MenuItem
+            onClick={() => {
+              onSwitchToggle(row as IAssignment);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.publish} />
+            Publish
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              onViewSubmission(row as IAssignment);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.eye} />
+            View Submission
+          </MenuItem>
+        )}
       </MenuList>
     ),
-    [onViewSubmission]
+    [onSwitchToggle, onViewSubmission]
   );
   return (
     <CustomizableTable
       tableId="assignment-management"
       searchFieldProps={{
-        placeholder: 'Search by Assignment Title, Type, Creation Date...',
-        label: 'Search by Assignment Title, Type, Creation Date...',
+        placeholder: 'Search by Assignment Title, Type, Start Date Time...',
+        label: 'Search by Assignment Title, Type, Start Date Time...',
         sx: { maxWidth: 500, width: '100%' },
       }}
       noDataText={
@@ -79,24 +98,24 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           filterType: 'string',
         },
         {
-          id: 'todaysDate',
-          label: 'Creation Date',
+          id: 'startDate',
+          label: 'Start Date Time',
           align: 'left',
           filterType: 'date',
           render: (value: string | Date | undefined) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
             </Typography>
           ),
         },
         {
-          id: 'dueDate',
-          label: 'Due Date Time',
+          id: 'endDate',
+          label: 'End Date Time',
           align: 'left',
           filterType: 'date',
           render: (value: string | Date | undefined) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
             </Typography>
           ),
         },
@@ -108,21 +127,19 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
         },
         {
           id: 'status',
-          label: 'Publish',
+          label: 'Status',
           align: 'left',
           filterType: 'enum',
           isFilter: false,
+          sticky: true,
           isSort: false,
           enumOptions: PublishUnpublishStatusOptions,
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Switch
-                size="small"
-                checked={value === 'Publish'}
-                onChange={() => onSwitchToggle(row as IAssignment)}
-              />
-            </Box>
-          ),
+          render(value, row) {
+            const color = PublishUnpublishStatusTypeColors[
+              value as PublishUnpublishStatusType
+            ] as LabelColor;
+            return <Label color={color}>{PublishUnpublishStatusType[value]}</Label>;
+          },
         },
         {
           id: 'action',

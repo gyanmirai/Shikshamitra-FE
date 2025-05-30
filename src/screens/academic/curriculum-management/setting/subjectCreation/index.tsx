@@ -58,6 +58,9 @@ const SubjectCreation = (props: TabComponentType) => {
           onClick={addSubjectDialog.onTrue}
           startIcon={<Add />}
           size="small"
+          sx={{
+            width: '130px',
+          }}
         >
           Subject
         </Button>
@@ -86,7 +89,7 @@ const SubjectCreation = (props: TabComponentType) => {
           addSubjectDialog.onFalse();
           setSelectedSubject(null);
         }}
-        title={selectedSubject ? 'Edit Subject' : 'Add Subject'}
+        title={selectedSubject ? 'Update Subject' : 'Add Subject'}
       >
         <SettingSubjectForm
           open={addSubjectDialog}

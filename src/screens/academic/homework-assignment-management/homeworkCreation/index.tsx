@@ -26,7 +26,7 @@ const TABS = [
     component: (props: TabComponentType) => <AssignmentCreation {...props} />,
   },
 ];
-const HomeworkAssignment = () => {
+const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // Initialize search params with default tab 'subjectSetting'
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkCreation' });
 

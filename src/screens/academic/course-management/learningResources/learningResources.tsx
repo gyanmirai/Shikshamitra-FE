@@ -104,13 +104,13 @@ const LearningResources = (props: TabComponentType) => {
   const links = addLearningResourceDialog.value
     ? [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
         { name: 'Resources' },
         { name: 'Add Learning Resource' },
       ]
     : [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Syllabus', href: '/academic/courseSubjects' },
+        { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
         { name: 'Resources' },
       ];
 
@@ -118,31 +118,27 @@ const LearningResources = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* CustomBreadcrumbs component for navigation and page header */}
       <CustomBreadcrumbs
-        heading="Learning Resources"
+        heading="Resources"
         description={
           addLearningResourceDialog.value
-            ? 'Create or update learning resource details, including the title, content, and associated subject. Manage resources efficiently by adding new ones or editing existing entries.'
+            ? 'Create learning resource details, including the title, content, and associated subject. Manage resources efficiently by adding new ones or editing existing entries.'
             : 'Manage and organize learning resources for each subject efficiently. View the list of resources, add new ones, update existing resources, or remove them as needed.'
         }
         links={links}
         sx={{ px: 1, mb: 2 }}
         action={
-          <Button
-            size="small"
-            startIcon={
-              addLearningResourceDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />
-            }
-            variant="contained"
-            onClick={
-              addLearningResourceDialog.value
-                ? () => handleClose(null, false)
-                : () => {
-                    addLearningResourceDialog.onTrue();
-                  }
-            }
-          >
-            {addLearningResourceDialog.value ? 'Back' : 'Learning Resource'}
-          </Button>
+          !addLearningResourceDialog.value && (
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => {
+                addLearningResourceDialog.onTrue();
+              }}
+            >
+              Resource
+            </Button>
+          )
         }
       />
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { CalendarView } from 'src/sections/calendar/view';
+import TimeTableView from 'src/screens/mainDashboard/component/time-table-view';
 
-const AcademicTimetable = () => <CalendarView />;
+const AcademicTimetable = () => <TimeTableView />;
 
 export default AcademicTimetable;

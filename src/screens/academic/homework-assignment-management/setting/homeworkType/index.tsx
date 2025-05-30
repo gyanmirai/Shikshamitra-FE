@@ -23,7 +23,7 @@ import HomeworkTypeTable from './homeworkTypeTable';
 import type { IHomeworkType } from './type';
 
 const HomeworkTypeCreation = (props: TabComponentType) => {
-  // Dialog control for add/edit homework type
+  // Dialog control for add/Update Homework Type
   const addDialog = useBoolean();
 
   // Dialog control for delete confirmation
@@ -87,7 +87,7 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
           addDialog.onFalse();
           setSelectedData(null);
         }}
-        title={selectedData ? 'Edit Homework Type' : 'Add Homework Type'}
+        title={selectedData ? 'Update Homework Type' : 'Add Homework Type'}
       >
         <HomeworkTypeForm
           open={addDialog}
@@ -111,7 +111,7 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
             color="error"
             onClick={() => {}}
           >
-            Delete
+            Yes
           </Button>
         }
       />

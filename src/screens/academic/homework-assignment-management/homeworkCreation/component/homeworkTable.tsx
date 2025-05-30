@@ -1,15 +1,19 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
 
-import { Box, Switch, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
+  PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -48,26 +52,38 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem
-          onClick={() => {
-            onViewSubmission(row as IHomework);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon={GlobalIcons.eye} />
-          View Submission
-        </MenuItem>
+        {row.status === 1 ? (
+          <MenuItem
+            onClick={() => {
+              handleSwitchChange(row as IHomework);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.publish} />
+            Publish
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              onViewSubmission(row as IHomework);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.eye} />
+            View Submission
+          </MenuItem>
+        )}
       </MenuList>
     ),
-    [onViewSubmission]
+    [handleSwitchChange, onViewSubmission]
   );
 
   return (
     <CustomizableTable
       tableId="homework-assignment-management"
       searchFieldProps={{
-        placeholder: 'Search by Homework Title, Type , Creation Date...',
-        label: 'Search by Homework Title, Type, Creation Date...',
+        placeholder: 'Search by Homework Title, Type , Start Date Time...',
+        label: 'Search by Homework Title, Type, Start Date Time...',
         sx: {
           maxWidth: '500px',
           width: '100%',
@@ -110,34 +126,27 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           filterType: 'string',
         },
         {
-          id: 'submissionType',
-          label: 'Submission Type',
-          align: 'left',
-          filterType: 'string',
-        },
-        {
-          id: 'todaysDate',
-          label: 'Creation Date',
+          id: 'startDate',
+          label: 'Start Date Time',
           align: 'left',
           filterType: 'date',
           render: (value) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
             </Typography>
           ),
         },
         {
-          id: 'dueDate',
-          label: 'Due Date Time',
+          id: 'endDate',
+          label: 'End Date Time',
           align: 'left',
           filterType: 'date',
           render: (value) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
             </Typography>
           ),
         },
-
         {
           id: 'submissionType',
           label: 'Submission Type',
@@ -145,21 +154,19 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         },
         {
           id: 'status',
-          label: 'Publish',
+          label: 'Status',
           align: 'left',
           isFilter: false,
+          sticky: true,
           isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
-          render: (value: PublishUnpublishStatusType, row: any) => (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Switch
-                size="small"
-                checked={value === PublishUnpublishStatusType.Publish}
-                onChange={() => handleSwitchChange(row)}
-              />
-            </Box>
-          ),
+          render(value, row) {
+            const color = PublishUnpublishStatusTypeColors[
+              value as PublishUnpublishStatusType
+            ] as LabelColor;
+            return <Label color={color}>{PublishUnpublishStatusType[value]}</Label>;
+          },
         },
         {
           id: 'action',

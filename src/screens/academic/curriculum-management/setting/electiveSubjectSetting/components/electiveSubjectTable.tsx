@@ -67,8 +67,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       },
       {
         id: 'subjectColor',
-        label: 'Elective Subject Color',
-        align: 'left',
+        label: 'Elective Group Color',
+        align: 'center',
         isFilter: false,
         isSort: false,
         render(value, row) {

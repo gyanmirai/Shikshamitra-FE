@@ -15,6 +15,7 @@ const CHAPTER_PROGRESS_TIMELINE: TimelineType[] = [
     time: '2025-05-25 09:00 AM',
     color: 'success',
     progress: 0,
+    teacher: 'Mr. Smith',
   },
   {
     key: 2,
@@ -23,6 +24,7 @@ const CHAPTER_PROGRESS_TIMELINE: TimelineType[] = [
     time: '2025-05-26 10:30 AM',
     color: 'success',
     progress: 10,
+    teacher: 'Ms. Johnson',
   },
   {
     key: 3,
@@ -31,6 +33,7 @@ const CHAPTER_PROGRESS_TIMELINE: TimelineType[] = [
     time: '2025-05-27 11:00 AM',
     color: 'success',
     progress: 50,
+    teacher: 'Mr. Smith',
   },
   {
     key: 4,
@@ -39,6 +42,7 @@ const CHAPTER_PROGRESS_TIMELINE: TimelineType[] = [
     time: '2025-05-28 12:15 PM',
     color: 'success',
     progress: 80,
+    teacher: 'Ms. Lee',
   },
   {
     key: 5,
@@ -47,6 +51,7 @@ const CHAPTER_PROGRESS_TIMELINE: TimelineType[] = [
     time: '2025-05-29 02:00 PM',
     color: 'success',
     progress: 100,
+    teacher: 'Mr. Smith',
   },
 ];
 

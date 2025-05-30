@@ -150,7 +150,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     onChange={(val) => formik.setFieldValue('className', val as string)}
                     label="Class"
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
                     helperText={

@@ -116,7 +116,15 @@ const HierarchyTree: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: 1 }}>
       {/* Left Tree Card */}
-      <Card sx={{ width: '30%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Card
+        sx={{
+          width: '30%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '3px',
+        }}
+      >
         <Scrollbar sx={{ flex: 1 }}>
           <SimpleTreeView
             defaultExpandedItems={[dummyData[0].id]}

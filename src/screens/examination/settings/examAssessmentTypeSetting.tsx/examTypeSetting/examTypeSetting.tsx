@@ -165,6 +165,9 @@ const ExamTypeSettings = () => {
             id: 'actions',
             label: 'Action',
             isSort: false,
+            isFilter: false,
+            minWidth: 90,
+            sticky: true,
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -191,7 +194,7 @@ const ExamTypeSettings = () => {
       />
 
       <CustomDialog
-        title={isEdit ? 'Edit Exam Type' : 'Create Exam Type'}
+        title={isEdit ? 'Update Exam Type' : 'Create Exam Type'}
         open={dialog.value}
         handleClose={dialog.onFalse}
       >
@@ -220,7 +223,7 @@ const ExamTypeSettings = () => {
               handleDelete(selectedExamType);
             }}
           >
-            Delete
+            Yes
           </Button>
         }
       />

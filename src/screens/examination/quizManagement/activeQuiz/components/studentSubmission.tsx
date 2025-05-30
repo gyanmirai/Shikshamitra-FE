@@ -20,6 +20,7 @@ import { ViewAnswers } from './viewStudentAnswer';
 const studentTableInitialData = [
   {
     id: 1,
+    GrNo: '12345',
     studentName: 'John Doe',
     subject: 'Mathematics',
     totalMarks: 100,
@@ -29,6 +30,7 @@ const studentTableInitialData = [
   },
   {
     id: 2,
+    GrNo: '12345',
     studentName: 'Jane Smith',
     subject: 'Science',
     totalMarks: 100,
@@ -38,6 +40,7 @@ const studentTableInitialData = [
   },
   {
     id: 3,
+    GrNo: '12345',
     studentName: 'Alice Johnson',
     subject: 'History',
     totalMarks: 100,
@@ -47,6 +50,7 @@ const studentTableInitialData = [
   },
   {
     id: 4,
+    GrNo: '12345',
     studentName: 'Bob Brown',
     subject: 'Geography',
     totalMarks: 100,
@@ -56,6 +60,7 @@ const studentTableInitialData = [
   },
   {
     id: 5,
+    GrNo: '12345',
     studentName: 'Eve Davis',
     subject: 'English',
     totalMarks: 100,
@@ -65,6 +70,7 @@ const studentTableInitialData = [
   },
   {
     id: 6,
+    GrNo: '12345',
     studentName: 'Chris Wilson',
     subject: 'Biology',
     totalMarks: 100,
@@ -74,6 +80,7 @@ const studentTableInitialData = [
   },
   {
     id: 7,
+    GrNo: '12345',
     studentName: 'Laura Adams',
     subject: 'Chemistry',
     totalMarks: 100,
@@ -155,6 +162,11 @@ export const StudentSubmissions = () => {
         <CustomizableTable
           tableId="student-table"
           columns={[
+            {
+              id: 'GrNO',
+              label: 'Gr No',
+              align: 'left',
+            },
             {
               id: 'studentName',
               label: 'Student Name',

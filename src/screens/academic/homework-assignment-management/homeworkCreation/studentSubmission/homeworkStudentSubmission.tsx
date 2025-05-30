@@ -92,8 +92,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               }}
             >
               {' '}
-              <Iconify icon="mdi:arrow" sx={{ height: '16px', width: '16px' }} />
-              Assign Feedback
+              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              Give Feedback
             </MenuItem>
           )}
           {row.marksStatus === 1 && row.submissionStatus === 1 && (
@@ -199,6 +199,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'marksStatus',
             label: 'Marks Status',
+            sticky: true,
             filterType: 'enum',
             enumOptions: ScheduleExamStatusOptions,
             align: 'left',
@@ -211,6 +212,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             id: 'submissionStatus',
             label: 'Submission Status',
             filterType: 'enum',
+            sticky: true,
             enumOptions: ScheduleExamStatusOptions,
             align: 'left',
             render(value, row) {

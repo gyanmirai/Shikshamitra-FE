@@ -53,7 +53,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
+      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={1}>
         <CustomSelect
           options={allClass}
           label="Class"

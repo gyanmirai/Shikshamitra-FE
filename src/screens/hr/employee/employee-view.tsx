@@ -2,7 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useEffect } from 'react';
 
-import { Tab, Box, Card, Tabs, Paper, Avatar, Button } from '@mui/material';
+import { Tab, Box, Card, Tabs, Paper, Avatar } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -17,6 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
+import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
@@ -64,6 +65,14 @@ export const TABS = [
     label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
     component: (props: { tabs: UseTabsReturn }) => <></>,
+  },
+  {
+    value: 'academic',
+    label: 'Academic',
+    icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeAcademic employee={props.employee} />
+    ),
   },
   {
     value: 'communications',
@@ -160,9 +169,9 @@ export function EmployeeCard({ employee }: any) {
             </Label>
           </Box>
           <Box display="flex" gap={2} alignItems="center">
-            <Button size="small" variant="outlined">
+            {/* <Button size="small" variant="outlined">
               View I-card
-            </Button>
+            </Button> */}
             {/* <CustomTooltip
          arrow
          title={

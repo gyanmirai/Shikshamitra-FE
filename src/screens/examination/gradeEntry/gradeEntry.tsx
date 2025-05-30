@@ -59,10 +59,10 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
     studentName: 'Dev Patel',
     assignments: 'Assignment 1',
     subject: 'English',
-    marks: 65,
+    marks: 0,
     totalMarks: 100,
-    grade: 'C+',
-    feedback: 'Needs to improve vocabulary and grammar.',
+    grade: '',
+    feedback: '',
     weightedAverage: '65%',
     status: 0, // e.g., 0 = Not Submitted / Pending
   },
@@ -157,6 +157,8 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Dialog control for viewing student submission
   const viewSubmissionDialog = useBoolean();
+  // Dialog control for viewing student submission
+  const publishMarksDialog = useBoolean();
   // Dialog control for bulk grade assignment
   const bulkGradeDialog = useBoolean();
 
@@ -276,7 +278,9 @@ const GradeEntry = (props: TabComponentType) => {
             variant="contained"
             size="small"
             startIcon={<Iconify icon="material-symbols:upload" />}
-            onClick={() => {}}
+            onClick={() => {
+              publishMarksDialog.onTrue();
+            }}
           >
             Publish Marks
           </Button>

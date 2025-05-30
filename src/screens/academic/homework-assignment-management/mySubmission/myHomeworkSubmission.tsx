@@ -164,7 +164,6 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
           }}
@@ -217,7 +216,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
                   filterType: 'string',
                 },
                 {
-                  id: 'submissionType',
+                  id: 'homeworkType',
                   label: 'Homework Type',
                   align: 'left',
                   filterType: 'string',
@@ -275,7 +274,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
                   filterType: 'string',
                 },
                 {
-                  id: 'submissionType',
+                  id: 'homeworkType',
                   label: 'Homework Type',
                   align: 'left',
                   filterType: 'string',
@@ -308,6 +307,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
                   id: 'marksStatus',
                   label: 'Marks Status',
                   filterType: 'enum',
+                  sticky: true,
                   enumOptions: ScheduleExamStatusOptions,
                   align: 'left',
                   render(value, row) {

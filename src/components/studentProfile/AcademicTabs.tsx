@@ -10,6 +10,7 @@ import AcademicTimetable from './academicTimetable';
 import SubjectPerformance from './subjectPerformance';
 // import HomeworkAssignment from './homeworkAssignment';
 import ProfileExamination from './profileExamination';
+import MyProfileSubmission from './studentProfileHomeworkAssignment';
 
 const TABS = [
   { value: 'timetable', label: 'Timetable' },
@@ -36,7 +37,7 @@ const AcademicTabs = () => {
         <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
           {tabs.value === 'timetable' && <AcademicTimetable />}
           {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
-          {/* {tabs.value === 'homework/assignments' && <HomeworkAssignment />} */}
+          {tabs.value === 'homework/assignments' && <MyProfileSubmission />}
           {tabs.value === 'examination' && <ProfileExamination />}
         </Box>
       </Scrollbar>

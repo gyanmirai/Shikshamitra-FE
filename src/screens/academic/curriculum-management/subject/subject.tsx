@@ -84,7 +84,7 @@ const Subject = (props: TabComponentType) => {
 
   // Handle subject status toggle between Publish/Unpublish
   const handleStatusChange = (id: number, value: string) => {
-    setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
+    setPendingStatusChange({ id, newValue: value === 'Published' ? 'Unpublish' : 'Published' });
     confirmPublishDialog.onTrue();
   };
 
@@ -123,26 +123,12 @@ const Subject = (props: TabComponentType) => {
     }
   };
 
-  // Confirm and apply status change for subject
-  const confirmStatusChange = () => {
-    if (pendingStatusChange) {
-      const { id, newValue } = pendingStatusChange;
-      setSubjectTableData((prevSubject) =>
-        prevSubject.map((subject) =>
-          subject.id === id ? { ...subject, status: newValue } : subject
-        )
-      );
-    }
-    confirmPublishDialog.onFalse();
-    setPendingStatusChange(null);
-  };
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedSubject ? 'Update Subject' : 'Publish Subject'}
+          heading={selectedSubject ? 'Update Subject' : 'Allocate Subject Form'}
           description="Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries."
           isBack
           onBack={() => {
@@ -154,7 +140,7 @@ const Subject = (props: TabComponentType) => {
             { name: 'Curriculum Management' },
             { name: 'Allocate Subject' },
 
-            { name: selectedSubject ? 'Update Subject' : 'Publish Subject' },
+            { name: selectedSubject ? 'Update Subject' : 'Allocate Subject Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -237,7 +223,10 @@ const Subject = (props: TabComponentType) => {
               setSelectedSubject(row);
               deleteConfirmDialog.onTrue();
             }}
-            onToggleStatus={handleStatusChange}
+            onToggleStatus={(row: ISubjectFormValues) => {
+              setSelectedSubject(row);
+              confirmPublishDialog.onTrue();
+            }}
           />
         </>
       )}
@@ -271,17 +260,15 @@ const Subject = (props: TabComponentType) => {
           confirmPublishDialog.onFalse();
           setSelectedSubject(null);
         }}
-        title="Publish"
-        content="Are you sure want to Publish Subject ?"
+        title={selectedSubject?.status === 'Published' ? 'Draft' : 'Publish'}
+        content={`Are you sure want to ${selectedSubject?.status} Subject ?`}
         action={
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              confirmStatusChange();
-            }}
+            onClick={() => {}}
           >
-            Publish
+            {selectedSubject?.status === 'Published' ? 'Draft' : 'Publish'}
           </Button>
         }
       />

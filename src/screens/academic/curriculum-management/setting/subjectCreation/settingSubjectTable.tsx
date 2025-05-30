@@ -56,7 +56,6 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
       {
         id: 'subjectColor',
         label: 'Subject Color',
-        align: 'left',
         isFilter: false,
         isSort: false,
         render(value, row) {

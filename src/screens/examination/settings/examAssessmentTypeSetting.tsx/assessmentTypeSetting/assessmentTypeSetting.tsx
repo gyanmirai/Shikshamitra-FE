@@ -175,7 +175,10 @@ const AssessmentTypeSettings = () => {
           { id: 'description', label: 'Description' },
           {
             id: 'actions',
-            label: 'Actions',
+            label: 'Action',
+            isFilter: false,
+            sticky: true,
+            minWidth: 90,
             isSort: false,
             render(value, row) {
               return (
@@ -203,7 +206,7 @@ const AssessmentTypeSettings = () => {
       />
 
       <CustomDialog
-        title={isEdit ? 'Edit Assessment Type' : 'Create Assessment Type'}
+        title={selectedAssessmentType ? 'Update Assessment Type' : 'Create Assessment Type'}
         open={dialog.value}
         handleClose={dialog.onFalse}
       >

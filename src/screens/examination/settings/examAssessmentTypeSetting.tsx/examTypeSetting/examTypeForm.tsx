@@ -86,6 +86,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={(e) => onClose(e, false)}
+              variant="outlined"
             >
               Cancel
             </Button>
@@ -94,8 +95,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
               variant="contained"
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={(e) => {
-                formik.handleSubmit();
-                onClose(e, true);
+                // formik.handleSubmit();
               }}
             >
               {isEdit ? 'Update' : 'Submit'}

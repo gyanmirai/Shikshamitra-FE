@@ -38,7 +38,7 @@ export const dummyData: IClassData[] = [
     subjects: [
       {
         id: 'math',
-        name: 'Mathematics',
+        name: 'Math',
         documents: [createDummyFile('Algebra.pdf'), createDummyFile('Geometry')],
         subjectColor: '#ef5350',
       },

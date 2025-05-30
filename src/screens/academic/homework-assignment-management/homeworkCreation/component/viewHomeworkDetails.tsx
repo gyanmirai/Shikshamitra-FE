@@ -1,6 +1,5 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
-import type { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 
 import React, { useMemo, useState } from 'react';
 
@@ -19,9 +18,11 @@ import {
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { PublishUnpublishStatusTypeColors } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -95,7 +96,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
                   sx={{ fontSize: '0.9rem' }}
                 />
                 <Chip
-                  label="Status : Published"
+                  label={`Status : ${PublishUnpublishStatusType[homework?.status as PublishUnpublishStatusType]}`}
                   variant="outlined"
                   color={
                     PublishUnpublishStatusTypeColors[
@@ -106,11 +107,11 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
                     fontSize: '0.9rem',
                   }}
                 />
-                {homework?.isDailyTask && (
+                {/* {homework?.isDailyTask && (
                   <Label color="warning" sx={{ fontSize: '0.875rem' }}>
                     Daily Task
                   </Label>
-                )}
+                )} */}
               </Box>
             </Box>
           </Box>

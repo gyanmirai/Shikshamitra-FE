@@ -109,7 +109,7 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
           addDialog.onFalse();
           setSelected(null);
         }}
-        title={selected ? 'Edit Elective Group' : 'Add Elective Group'}
+        title={selected ? 'Update Elective Group' : 'Add Elective Group'}
       >
         <SettingElectiveSubjectForm open={addDialog} onClose={handleClose} editData={selected} />
       </CustomDialog>

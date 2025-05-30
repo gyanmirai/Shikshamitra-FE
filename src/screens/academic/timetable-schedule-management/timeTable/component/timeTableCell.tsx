@@ -2,7 +2,16 @@
 
 import React from 'react';
 
-import { Box, alpha, Paper, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
+import {
+  Box,
+  alpha,
+  Paper,
+  Button,
+  MenuList,
+  MenuItem,
+  TableCell,
+  Typography,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -10,6 +19,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import AssignRoom from './assignRoomDialog';
@@ -34,12 +44,14 @@ const TimeTableCell = ({
    */
   const teacherDialog = useBoolean();
   const roomDialog = useBoolean();
+  const deleteDialog = useBoolean();
 
   /**
    * Unique key for identifying the time slot based on time and day
    * @type {string}
    */
   const slotKey = `${timeSlot}-${day}`;
+
   /**
    * Handles the drag over event for the timetable cell
    * Prevents default behavior to allow dropping only if the cell is empty and not a break slot
@@ -76,6 +88,14 @@ const TimeTableCell = ({
       e.dataTransfer.setData('sourceTimeSlot', timeSlot);
       e.dataTransfer.setData('sourceDay', day);
     }
+  };
+
+  /**
+   * Handles the delete confirmation and calls onDeleteSlot if confirmed
+   */
+  const handleDelete = () => {
+    onDeleteSlot(timeSlot, day);
+    deleteDialog.onFalse();
   };
 
   /**
@@ -130,7 +150,6 @@ const TimeTableCell = ({
                 opacity: 1,
               },
             }}
-            // onClick={teacherDialog.onTrue}
           >
             <Box
               sx={{
@@ -185,7 +204,7 @@ const TimeTableCell = ({
                       <MenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteSlot(timeSlot, day);
+                          deleteDialog.onTrue();
                           popover.onClose();
                         }}
                       >
@@ -239,6 +258,25 @@ const TimeTableCell = ({
               }}
             />
           </CustomDialog>
+
+          <ConfirmDialog
+            open={deleteDialog.value}
+            onClose={() => {
+              deleteDialog.onFalse();
+            }}
+            title="Delete"
+            content="Are you sure you want to Delete Slot ?"
+            action={
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => {}}
+                startIcon={<Iconify icon={GlobalIcons.delete} />}
+              >
+                Yes
+              </Button>
+            }
+          />
         </>
       )}
     </TableCell>

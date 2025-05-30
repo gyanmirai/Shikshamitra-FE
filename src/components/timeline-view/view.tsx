@@ -28,6 +28,7 @@ export type TimelineType = {
   color?: 'primary' | 'info' | 'success' | 'warning' | 'error' | 'inherit' | 'grey' | 'secondary';
   icon?: React.ReactElement;
   variant?: '';
+  teacher?: string;
 };
 
 const TIMELINES: TimelineType[] = [
@@ -276,14 +277,12 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {item.des}
               </Typography>
-              {item.progress !== undefined && (
-                <Typography
-                  variant="caption"
-                  sx={{ color: 'text.disabled', mt: 1, display: 'block' }}
-                >
-                  Progress: {item.progress}%
-                </Typography>
-              )}
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.disabled', mt: 1, display: 'block' }}
+              >
+                By : {item.teacher}
+              </Typography>
             </Paper>
           </TimelineContent>
         </TimelineItem>

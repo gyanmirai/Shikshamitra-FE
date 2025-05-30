@@ -254,7 +254,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         }));
       }
 
-      // Create new timetable with the slot cleared
+      // Create Manage Timetable with the slot cleared
       const newTimetable = prev.map((row) => [...row]);
       newTimetable[timeSlotIndex][dayIndex] = null;
       return newTimetable;
@@ -340,12 +340,9 @@ const TimeTableGrid = (props: TabComponentType) => {
     <Box>
       {open ? (
         <CustomBreadcrumbs
-          heading="Timetable Management"
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
-          ]}
-          description="Create new timetable for selected class and division"
+          heading="Timetable"
+          links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
+          description="Create Manage Timetable for selected class and division"
           sx={{ px: 1, mb: 2 }}
           isBack
           onBack={() => {
@@ -354,13 +351,13 @@ const TimeTableGrid = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="New Timetable"
+          heading="Manage Timetable"
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Timetable Management', href: '/academic/timeTableDashboard' },
-            { name: 'New Timetable', href: '/academic/newTimetable' },
+            { name: 'Timetable' },
+            { name: 'Manage Timetable' },
           ]}
-          description="Create new timetable for selected class and division"
+          description="Create Manage Timetable for selected class and division"
           sx={{ px: 1, mb: 2 }}
         />
       )}
@@ -542,7 +539,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               placeholder: 'Search by Division, Status...',
               label: 'Search by Division, Status...',
               sx: {
-                maxWidth: '240px',
+                maxWidth: '250px',
                 width: '100%',
               },
             }}

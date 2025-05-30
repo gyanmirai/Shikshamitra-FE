@@ -2,23 +2,8 @@ import type { CardProps } from '@mui/material';
 
 import { useState, useCallback } from 'react';
 
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Alert,
-  alpha,
-  Divider,
-  useTheme,
-  CardHeader,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Grid, Alert, useTheme, CardHeader, Typography } from '@mui/material';
 
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-
-import { Iconify } from '../iconify';
-import CustomSelect from '../custom-select';
 import CustomizableTable from '../customizabaleTable';
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 
@@ -42,7 +27,7 @@ const ProfileExamination = () => {
         You need to increase your performance in Mathematics. Focus on improving your scores in this
         subject.
       </Alert>
-      <Card sx={{ py: 3, textAlign: 'center', typography: 'h4' }}>
+      {/* <Card sx={{ py: 3, textAlign: 'center', typography: 'h4' }}>
         <Stack
           direction="row"
           divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
@@ -195,8 +180,109 @@ const ProfileExamination = () => {
             />
           </Card>
         </Grid>
-      </Grid>
+      </Grid> */}
       <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography variant="h6">Upcoming Exams</Typography>
+              <Typography variant="h6">Exam Name : ABC Exam</Typography>
+            </Box>
+            <CustomizableTable
+              tableId="subjects-table"
+              isPagination={false}
+              isFilter={false}
+              isSearch={false}
+              isShowedDense={false}
+              columns={[
+                {
+                  id: 'subjectName',
+                  label: 'Subject Name',
+                  align: 'left',
+                  isFilter: true,
+                  isSort: true,
+                },
+                {
+                  id: 'examDate',
+                  label: 'Date',
+                  align: 'left',
+                  isFilter: true,
+                  isSort: true,
+                },
+                {
+                  id: 'startTime',
+                  label: 'Start Time',
+                  align: 'left',
+                  isFilter: true,
+                  isSort: true,
+                },
+                {
+                  id: 'endTime',
+                  label: 'End Time',
+                  align: 'left',
+                  isFilter: true,
+                  isSort: true,
+                },
+                {
+                  id: 'totalMarks',
+                  label: 'Total Marks',
+                  isFilter: true,
+                  isSort: true,
+                  align: 'left',
+                },
+                {
+                  id: 'passingMarks',
+                  label: 'Passing Marks',
+                  align: 'left',
+                  isFilter: true,
+                  isSort: true,
+                },
+              ]}
+              data={[
+                {
+                  subjectName: 'Mathematics',
+                  examDate: '2024-03-15',
+                  startTime: '09:00 AM',
+                  endTime: '12:00 PM',
+                  totalMarks: 100,
+                  passingMarks: 35,
+                },
+                {
+                  subjectName: 'Science',
+                  examDate: '2024-03-18',
+                  startTime: '09:00 AM',
+                  endTime: '12:00 PM',
+                  totalMarks: 100,
+                  passingMarks: 35,
+                },
+                {
+                  subjectName: 'English',
+                  examDate: '2024-03-20',
+                  startTime: '09:00 AM',
+                  endTime: '12:00 PM',
+                  totalMarks: 100,
+                  passingMarks: 35,
+                },
+                {
+                  subjectName: 'History',
+                  examDate: '2024-03-22',
+                  startTime: '09:00 AM',
+                  endTime: '12:00 PM',
+                  totalMarks: 100,
+                  passingMarks: 35,
+                },
+                {
+                  subjectName: 'Geography',
+                  examDate: '2024-03-25',
+                  startTime: '09:00 AM',
+                  endTime: '12:00 PM',
+                  totalMarks: 100,
+                  passingMarks: 35,
+                },
+              ]}
+            />
+          </Card>
+        </Grid>
         <Grid item xs={12}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Previous Exams</Typography>
@@ -211,11 +297,11 @@ const ProfileExamination = () => {
                 },
               }}
               columns={[
-                { id: 'examName', label: 'Exam Name', minWidth: '160px', align: 'left' },
+                { id: 'examName', label: 'Exam Name', align: 'left' },
                 {
                   id: 'marks',
                   label: 'Subjects',
-                  minWidth: '200px',
+                  align: 'left',
                   render: (val, row) => (
                     <>
                       {Object.entries(row.marks).map(([key, value]: any) => (
@@ -229,13 +315,11 @@ const ProfileExamination = () => {
                 {
                   id: 'percentage',
                   label: 'Percentage',
-                  minWidth: '120px',
                   filterType: 'number',
                 },
                 {
                   id: 'remarks',
-                  label: 'Remarks',
-                  minWidth: '160px',
+                  label: 'Feedback',
                 },
               ]}
               data={[
@@ -262,97 +346,6 @@ const ProfileExamination = () => {
                   marks: { english: 70, math: 75, science: 72, history: 78 },
                   percentage: '74%',
                   remarks: 'Satisfactory',
-                },
-              ]}
-            />{' '}
-          </Card>
-        </Grid>
-        <Grid item xs={12}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Typography variant="h6">Upcoming Exams</Typography>
-              <Typography variant="h6">Exam Name : ABC Exam</Typography>
-            </Box>
-            <CustomizableTable
-              isFilter={false}
-              isPagination={false}
-              isScrollbar={false}
-              isShowedDense={false}
-              isSearch={false}
-              tableId="upcoming-exams-table"
-              searchFieldProps={{
-                placeholder: 'Search by Subject Name, Exam Date, Exam Time...',
-                label: 'Search by Subject Name, Exam Date, Exam Time...',
-                sx: {
-                  maxWidth: '400px',
-                  width: '100%',
-                },
-              }}
-              columns={[
-                { id: 'subjectName', label: 'Subject Name', minWidth: '160px', align: 'left' },
-                {
-                  id: 'examDate',
-                  label: 'Exam Date',
-                },
-                {
-                  id: 'examTime',
-                  label: 'Exam Time',
-                },
-                {
-                  id: 'examDuration',
-                  label: 'Exam Duration',
-                },
-                {
-                  id: 'totalMarks',
-                  label: 'Total Marks',
-                  filterType: 'number',
-                },
-                {
-                  id: 'passingMarks',
-                  label: 'Passing Marks',
-                  filterType: 'number',
-                },
-              ]}
-              data={[
-                {
-                  subjectName: 'Mathematics',
-                  examDate: '2025-03-15',
-                  examTime: '10:00 AM',
-                  examDuration: '2 Hours',
-                  totalMarks: 100,
-                  passingMarks: 35,
-                },
-                {
-                  subjectName: 'Science',
-                  examDate: '2025-03-17',
-                  examTime: '11:00 AM',
-                  examDuration: '2.5 Hours',
-                  totalMarks: 80,
-                  passingMarks: 30,
-                },
-                {
-                  subjectName: 'English',
-                  examDate: '2025-03-19',
-                  examTime: '09:30 AM',
-                  examDuration: '2 Hours',
-                  totalMarks: 100,
-                  passingMarks: 40,
-                },
-                {
-                  subjectName: 'Social Studies',
-                  examDate: '2025-03-21',
-                  examTime: '12:00 PM',
-                  examDuration: '3 Hours',
-                  totalMarks: 90,
-                  passingMarks: 35,
-                },
-                {
-                  subjectName: 'Computer Science',
-                  examDate: '2025-03-23',
-                  examTime: '02:00 PM',
-                  examDuration: '1.5 Hours',
-                  totalMarks: 70,
-                  passingMarks: 25,
                 },
               ]}
             />{' '}

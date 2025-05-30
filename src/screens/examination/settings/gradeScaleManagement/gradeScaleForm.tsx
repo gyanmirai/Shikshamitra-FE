@@ -165,7 +165,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                           updatedGradingScale.splice(index, 1); // Remove row
                           formik.setFieldValue('gradingScale', updatedGradingScale); // Update state
                         }}
-                        sx={{ cursor: 'pointer', mt: 1, color: 'error' }}
+                        sx={{ cursor: 'pointer', mt: 1, color: 'error.main' }}
                       />
                     </Grid>
                   </Grid>
@@ -184,13 +184,13 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
               Cancel
             </Button>
             <Button
-              startIcon={<Create />}
+              startIcon={data ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
               variant="contained"
               onClick={() => {
                 formik.handleSubmit();
               }}
             >
-              {isEdit ? 'Update' : 'Create'}
+              {data ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>
