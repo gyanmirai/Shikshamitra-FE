@@ -48,7 +48,13 @@ export const ResultForm = () => (
       </Box>
     </Scrollbar>
     <DialogActions sx={{ flexShrink: 0 }}>
-      <Button type="submit" variant="contained" color="primary" style={{ marginTop: '1rem' }}>
+      <Button
+        size="small"
+        type="submit"
+        variant="contained"
+        color="primary"
+        style={{ marginTop: '1rem' }}
+      >
         Submit
       </Button>
     </DialogActions>

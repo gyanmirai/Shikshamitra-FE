@@ -8,11 +8,13 @@ import { Form, Formik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Box, Card, Grid, Button, TextField, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inquiry-api';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import type { IInquiryData } from '../Inquiry';
@@ -117,8 +119,19 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
               </Grid>
             </Scrollbar>
             <DialogActions sx={{ flexShrink: 0, p: 2 }}>
-              <Button onClick={handleClose}>Cancel</Button>
-              <LoadingButton loading={isUpdateLoading} type="submit" variant="contained">
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                variant="outlined"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
+                loading={isUpdateLoading}
+                type="submit"
+                variant="contained"
+              >
                 Submit
               </LoadingButton>
             </DialogActions>

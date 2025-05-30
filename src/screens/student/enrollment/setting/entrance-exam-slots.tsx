@@ -4,7 +4,6 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
 import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -88,11 +87,7 @@ const EntranceExamSlots = () => {
           </LoadingButton>
         }
       />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-        <Button variant="contained" startIcon={<Add />} onClick={dialog.onTrue} size="small">
-          Slot
-        </Button>
-      </Box>
+
       <CustomizableTable
         isLoading={isLoading}
         tableId="entrance-exam-slots"
@@ -355,6 +350,7 @@ export const SlotsForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
           onClick={handleClose}
+          size="small"
         >
           Cancel
         </Button>

@@ -40,12 +40,16 @@ const RegisterScreen = () => {
   // Dynamic breadcrumb links based on form dialog state
   const links = formDialog.value
     ? [
-        { name: 'Student' },
-        { name: 'Student Enroll' },
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/registration/' },
         { name: 'Registration' },
         { name: 'Registration Form' },
       ]
-    : [{ name: 'Student' }, { name: 'Student Enroll' }, { name: 'Registration' }];
+    : [
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/registration/' },
+        { name: 'Registration' },
+      ];
 
   // Handler for closing the form dialog
   // Checks for unsaved changes and prompts user confirmation if needed

@@ -46,7 +46,11 @@ const AttendanceReportScreen = () => (
   <Box>
     <CustomBreadcrumbs
       heading="Reports"
-      links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Reports' }]}
+      links={[
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Attendance', href: '/student/attendance/dashboard/' },
+        { name: 'Reports' },
+      ]}
       sx={{ px: 1, mb: 2 }}
     />
     <AbsentStudentReport />

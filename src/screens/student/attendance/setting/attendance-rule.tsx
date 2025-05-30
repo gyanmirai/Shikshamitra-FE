@@ -2,11 +2,9 @@ import { useFormik } from 'formik';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
-  Button,
   Tooltip,
   MenuItem,
   MenuList,
@@ -112,12 +110,6 @@ const AttendanceRule = () => {
   );
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button startIcon={<Add />} size="small" variant="contained" onClick={dialog.onTrue}>
-          Add Rule
-        </Button>
-      </Box>
-
       <CustomizableTable
         tableId="attendance-rule-table"
         noDataText={
@@ -242,7 +234,7 @@ const AttendanceRule = () => {
 
 export default AttendanceRule;
 
-const AttendanceRuleForm = ({ handleClose, editData }: any) => {
+export const AttendanceRuleForm = ({ handleClose, editData }: any) => {
   // Hook for adding a new attendance rule
   // Returns the mutation function and loading state
   const [addRule, { isLoading }] = useQueryAndMutation({

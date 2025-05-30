@@ -28,8 +28,8 @@ const EnrollmentDashboardScreen = () => {
     <Box>
       <CustomBreadcrumbs
         description="Get a quick overview of student admissions, withdrawals, and enrollment trends — all in one place."
-        heading="Student Enrollment Dashboard"
-        links={[{ name: 'Student' }, { name: 'Student Enrollment Dashboard' }]}
+        heading="Dashboard"
+        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <DashBoardQuickAction

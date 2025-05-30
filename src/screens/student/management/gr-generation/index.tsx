@@ -139,13 +139,27 @@ const GrNoGenerationScreen = ({
             variant="outlined"
             onClick={handleSave}
             disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
+            size="small"
+            sx={{ width: '180px' }}
           >
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
-          <Button startIcon={<Grading />} variant="outlined" onClick={handleManualToggle}>
+          <Button
+            size="small"
+            startIcon={<Grading />}
+            variant="outlined"
+            onClick={handleManualToggle}
+            sx={{ width: '180px' }}
+          >
             Manual Generation
           </Button>
-          <Button startIcon={<Refresh />} variant="contained" onClick={handleAutoGenerate}>
+          <Button
+            size="small"
+            startIcon={<Refresh />}
+            variant="contained"
+            onClick={handleAutoGenerate}
+            sx={{ width: '180px' }}
+          >
             {isStudentGrNumberLoading ? 'Loading...' : 'Auto Generate'}
           </Button>
         </Box>

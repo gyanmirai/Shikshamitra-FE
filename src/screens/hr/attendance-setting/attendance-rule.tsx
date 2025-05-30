@@ -86,7 +86,13 @@ const AttendanceRule = () => {
   return (
     <>
       <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          onClick={dialog.onTrue}
+          size="small"
+        >
           Attendance Rule
         </Button>
       </Box>

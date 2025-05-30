@@ -23,6 +23,7 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             sx={{
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              height: '100%',
               '&:hover': {
                 boxShadow: 'var(--shadows-8)',
                 scale: 1.03,
@@ -36,11 +37,40 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
           <AppWidgetSummary
             title="Current Academic Percentage"
             icon={<Iconify icon="solar:square-academic-cap-bold" />}
-            total="89%"
             color="error.main"
+            total={
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                {/* First Row: Current Percentage and Change */}
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography
+                    component="span"
+                    fontSize="24px"
+                    fontWeight={700}
+                    color="text.primary"
+                  >
+                    89%
+                  </Typography>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Iconify icon="mdi:arrow-up-bold" color="#4CAF50" width={18} height={18} />
+                  </Box>
+                </Box>
+
+                {/* Second Row: Description */}
+
+                <Typography
+                  component="span"
+                  fontSize="14px"
+                  fontWeight={500}
+                  color="text.secondary"
+                >
+                  +2% Higher than previous term
+                </Typography>
+              </Box>
+            }
             sx={{
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              height: '100%',
               '&:hover': {
                 boxShadow: 'var(--shadows-8)',
                 scale: 1.03,
@@ -52,11 +82,12 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
 
         <Grid xs={12} md={4}>
           <AppWidgetSummary
-            title="Fee status"
+            title="Fee Status"
             icon={<Iconify icon="solar:dollar-bold" />}
             sx={{
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              height: '100%',
               '&:hover': {
                 boxShadow: 'var(--shadows-8)',
                 scale: 1.03,
@@ -65,37 +96,72 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
             color="secondary.main"
             onClick={() => tabs?.setValue('finance')}
             total={
-              <Box display="flex" flexDirection="row" gap={1} alignItems="baseline">
-                <Typography
-                  component="span"
-                  fontSize="inherit"
-                  fontWeight="inherit"
-                  fontFamily="inherit"
-                  color="primary.main"
-                >
-                  Paid
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                {/* Total in First Row */}
+                <Typography component="span" fontSize="24px" fontWeight={700}>
+                  Total: ₹ 30,000
                 </Typography>
-                <Typography component="span" fontSize="14px" color="primary.main" display="inline">
-                  last Payment: ₹25,000 on 15 Dec 2023
-                </Typography>
+
+                {/* Paid and Pending in Second Row */}
+                <Box display="flex" flexDirection="row" gap={1}>
+                  <Typography
+                    component="span"
+                    fontSize="15px"
+                    fontWeight={600}
+                    color="success.main"
+                  >
+                    Paid: ₹ 25,000
+                  </Typography>
+                  <Typography component="span" fontSize="15px" fontWeight={600} color="error.main">
+                    Pending: ₹ 5,000
+                  </Typography>
+                </Box>
               </Box>
             }
           />
         </Grid>
         <Grid xs={12} md={4}>
           <AppWidgetSummary
-            title="Total documents"
+            title="Documents"
             icon={<Iconify icon="solar:document-bold" />}
-            total="08"
             sx={{
               cursor: 'pointer',
               transition: 'all 0.3s ease',
+              height: '100%',
               '&:hover': {
                 boxShadow: 'var(--shadows-8)',
                 scale: 1.03,
               },
             }}
             onClick={() => tabs?.setValue('documents')}
+            total={
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                {/* First Row: Total */}
+                <Typography component="span" fontSize="16px" fontWeight={600}>
+                  Total: 08
+                </Typography>
+
+                {/* Second Row: Uploaded and Pending side-by-side */}
+                <Box display="flex" flexDirection="row" gap={2}>
+                  <Typography
+                    component="span"
+                    fontSize="16px"
+                    fontWeight={600}
+                    color="success.main"
+                  >
+                    Uploaded: 06
+                  </Typography>
+                  <Typography
+                    component="span"
+                    fontSize="16px"
+                    fontWeight={600}
+                    color="warning.main"
+                  >
+                    Pending: 02
+                  </Typography>
+                </Box>
+              </Box>
+            }
           />
         </Grid>
       </Grid>

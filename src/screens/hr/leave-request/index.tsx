@@ -46,11 +46,14 @@ const LeaveRequest = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Leave Management"
         links={[
-          { name: 'HR' },
-          { name: 'Attendance & Leave' },
-          { name: currentActiveComponent?.label },
+          { name: 'HR', href: '/hr/dashboard/' },
+          {
+            name: 'Attendance & Leave',
+            href: `/hr/leave-requests/?tab=${currentActiveComponent?.value}`,
+          },
+          { name: 'Leave Management' },
         ]}
         sx={{ px: 1, mb: 2 }}
         description={

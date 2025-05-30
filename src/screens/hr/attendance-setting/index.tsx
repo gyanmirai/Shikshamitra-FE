@@ -64,8 +64,8 @@ const HrAttendanceSettingScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
-        links={[{ name: 'HR' }, { name: 'Setting' }]}
+        heading="Setting"
+        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
         description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
       />

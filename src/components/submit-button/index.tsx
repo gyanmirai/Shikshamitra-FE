@@ -23,6 +23,7 @@ const SubmitButton: React.FC<SubmitButtonProps> = ({
     onClick={onClick}
     startIcon={startIcon}
     disabled={disabled}
+    size="small"
   >
     {buttonText}
   </LoadingButton>

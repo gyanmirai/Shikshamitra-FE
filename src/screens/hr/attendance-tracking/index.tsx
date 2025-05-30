@@ -62,7 +62,11 @@ const AttendanceTrackingScreen = () => {
     <Paper sx={{ p: 1 }}>
       <CustomBreadcrumbs
         heading="Attendance Tracking"
-        links={[{ name: 'HR' }, { name: 'Attendance Tracking' }]}
+        links={[
+          { name: 'HR', href: '/hr/dashboard/' },
+          { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
+          { name: 'Attendance Tracking' },
+        ]}
         sx={{ px: 1, mb: 3 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
       />

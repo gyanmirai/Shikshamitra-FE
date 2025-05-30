@@ -3,7 +3,6 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -74,11 +73,6 @@ const InquiryPreference = () => {
           </LoadingButton>
         }
       />
-      <Box display="flex" justifyContent="flex-end">
-        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Inquiry Preference
-        </Button>
-      </Box>
       <CustomizableTable
         tableId="inquiry-preference"
         noDataText={
@@ -226,6 +220,7 @@ export const InquiryPreferenceForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
           onClick={handleClose}
+          size="small"
         >
           Cancel
         </Button>

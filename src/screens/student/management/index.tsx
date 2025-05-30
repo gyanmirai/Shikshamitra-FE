@@ -211,7 +211,11 @@ const StudentManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Student Management"
-        links={[{ name: 'Student' }, { name: 'Student Management' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Records', href: '/student/overview/' },
+          { name: 'Student Management' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>

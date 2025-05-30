@@ -25,6 +25,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import calculateAge from 'src/utils/calculate-age';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -742,11 +743,18 @@ const InquiryForm = ({
                   </Grid> */}
               </Scrollbar>
               <DialogActions sx={{ flexShrink: 0, p: 2 }}>
-                <Button onClick={handleClose}>Cancel</Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
                 <LoadingButton
                   loading={isAddLoading || isUpdateLoading}
                   type="submit"
                   variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.submit} />}
                 >
                   Submit
                 </LoadingButton>

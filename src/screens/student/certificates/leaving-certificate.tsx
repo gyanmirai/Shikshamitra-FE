@@ -33,7 +33,13 @@ const LeavingCertificate = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" mb={2}>
-        <Button startIcon={<Create />} size="small" variant="contained" onClick={dialog.onTrue}>
+        <Button
+          sx={{ width: '180px' }}
+          startIcon={<Create />}
+          size="small"
+          variant="contained"
+          onClick={dialog.onTrue}
+        >
           Create Leaving
         </Button>
       </Box>

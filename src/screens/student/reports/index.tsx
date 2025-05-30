@@ -95,7 +95,11 @@ const StudentReportsScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
-        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Reports' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Records', href: '/student/overview/' },
+          { name: 'Reports' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Card>
