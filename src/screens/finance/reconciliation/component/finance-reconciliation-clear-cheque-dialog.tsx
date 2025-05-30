@@ -70,7 +70,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
     >
       <Box>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               <Grid2 container spacing={2}>
                 <Grid2 xs={6}>

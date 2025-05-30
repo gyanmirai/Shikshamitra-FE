@@ -76,7 +76,6 @@ const FinanceIncomeTrackingScreen = () => {
                 startIcon={<Iconify icon="ic:outline-plus" />}
                 onClick={() => setOpen(true)}
                 variant="contained"
-                size="small"
               >
                 Income
               </Button>

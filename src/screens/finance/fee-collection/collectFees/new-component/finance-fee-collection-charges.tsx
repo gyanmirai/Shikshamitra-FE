@@ -6,6 +6,8 @@ import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { formatNumber } from 'src/utils/formate_number';
+
 import studentChargesData from 'src/json/finance/fee-collection/studentChargesData.json';
 import {
   FinancePaymentHistoryStatusType,
@@ -57,18 +59,36 @@ const FinanceFeeCollectionCharges = () => {
         }}
         columns={[
           { id: 'dueDate', label: 'Due Date', filterType: 'date' },
+          { id: 'chargeType', label: 'Charge Type' }, // was incorrectly 'Due Date'
           {
-            id: 'chargeHead',
+            id: 'feeHead',
             label: 'Charge Head',
           },
-
           {
-            id: 'amount',
-            label: 'Tota Charges Amount',
+            id: 'dayOverView',
+            label: 'Days Overview', // changed to meaningful label
             filterType: 'number',
             align: 'right',
             render(value, row) {
-              return <Typography fontSize="12px">{row.amount}</Typography>;
+              return <Typography fontSize="12px">{value}</Typography>; // fixed to render value
+            },
+          },
+          {
+            id: 'chargesPerDay',
+            label: 'Charges Per Day', // fixed label
+            filterType: 'formattedNumber',
+            align: 'right',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
+            },
+          },
+          {
+            id: 'totalCharges',
+            label: 'Total Charges Amount', // fixed label
+            filterType: 'formattedNumber',
+            align: 'right',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
             },
           },
 

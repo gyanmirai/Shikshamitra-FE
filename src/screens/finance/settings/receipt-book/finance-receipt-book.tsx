@@ -59,23 +59,15 @@ const FinanceReceiptBookSetting = () => {
   return (
     <>
       <>
-        <Box
-          pb="20px"
-          display="flex"
-          flexDirection="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <CustomBreadcrumbs
-            heading="Receipt Book"
-            links={[
-              { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Settings', href: '/finance/settings/receipt-book/' },
-              { name: 'Receipt Book' },
-            ]}
-            sx={{ px: 1, mb: 2 }}
-          />
-          <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+        <CustomBreadcrumbs
+          heading="Receipt Book"
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Settings', href: '/finance/settings/receipt-book/' },
+            { name: 'Receipt Book' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
             <Button
               startIcon={<Iconify icon="ic:outline-plus" />}
               onClick={() => {
@@ -84,12 +76,11 @@ const FinanceReceiptBookSetting = () => {
                 receiptBookDialog.onTrue();
               }}
               variant="contained"
-              size="small"
             >
               New Receipt Book
             </Button>
-          </Box>
-        </Box>
+          }
+        />
 
         <CustomizableTable
           noDataText={
@@ -174,7 +165,7 @@ const FinanceReceiptBookSetting = () => {
           content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

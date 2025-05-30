@@ -137,7 +137,7 @@ const SetPaymentMethodComponent = () => {
             onClose={() => {
               editDialog.onFalse();
             }}
-            isEditMode={false}
+            isEditMode={isEdit}
             data={null}
             onSave={() => {
               editDialog.onFalse();
@@ -162,7 +162,7 @@ const SetPaymentMethodComponent = () => {
               color="error"
               onClick={handleDelete}
             >
-              Delete
+              Yes
             </LoadingButton>
           }
         />

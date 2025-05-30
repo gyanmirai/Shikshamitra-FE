@@ -22,6 +22,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
   return (
     <>
       <CustomizableTable
+        noDataText="No Fee Head Added"
         isFilter={false}
         isShowedDense={false}
         isSearch={false}
@@ -199,7 +200,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           content="Are you sure you want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

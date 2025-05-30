@@ -104,7 +104,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
             content="Are you sure you want to delete?"
             action={
               <LoadingButton variant="contained" color="error" onClick={() => {}}>
-                Delete
+                Yes
               </LoadingButton>
             }
           />
@@ -117,7 +117,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
               editDialog.onFalse();
             }}
             title={`${isEdit ? 'Edit' : 'Add'} Budget Category`}
-            maxWidth="md"
+            maxWidth="sm"
           >
             <AddBudgetCategoryDialog
               onClose={() => {

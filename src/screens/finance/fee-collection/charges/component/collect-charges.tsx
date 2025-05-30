@@ -103,7 +103,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
       handleClose={onClose}
     >
       <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '800px' }}>
+        <Scrollbar sx={{ p: 2, height: '800px' }}>
           <Box display="flex" flexDirection="row" gap={2} py="12px" pb="20px">
             <Typography>
               <strong>Name:</strong> Vishal RameshBhai Patel
@@ -163,7 +163,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                   { id: 'bankName', label: 'Bank Name' },
                   {
                     id: 'noOfDay',
-                    label: 'No Of Day',
+                    label: 'Days Overview',
                     filterType: 'number',
                     minWidth: 100,
                     align: 'right',

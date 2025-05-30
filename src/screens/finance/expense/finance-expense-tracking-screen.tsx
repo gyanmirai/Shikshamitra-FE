@@ -73,7 +73,6 @@ const FinanceExpenseTrackingScreen = () => {
             action={
               <Button
                 variant="contained"
-                size="small"
                 startIcon={<Iconify icon="ic:outline-plus" />}
                 onClick={() => {
                   setOpen(true);

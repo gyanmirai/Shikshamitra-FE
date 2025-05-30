@@ -105,7 +105,7 @@ const SetPaymentTerm = () => {
             editDialog.onFalse();
           }}
           title={`${isEdit ? 'Edit' : 'Add'} Payment Term`}
-          maxWidth="md"
+          maxWidth="sm"
         >
           <AddPaymentTermDialog
             onClose={() => {
@@ -129,7 +129,7 @@ const SetPaymentTerm = () => {
           content="Are you sure want to delete?"
           action={
             <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Delete
+              Yes
             </LoadingButton>
           }
         />

@@ -135,7 +135,7 @@ const SetDefaultFeeComponent = () => {
             setSelectedFeeHead(null);
           }}
           title="Edit Fee Head"
-          maxWidth="md"
+          maxWidth="sm"
         >
           <SetFeeHeadDialog
             onClose={() => {
@@ -167,7 +167,7 @@ const SetDefaultFeeComponent = () => {
               color="error"
               onClick={handleDeleteFeeHead}
             >
-              Delete
+              Yes
             </LoadingButton>
           }
         />

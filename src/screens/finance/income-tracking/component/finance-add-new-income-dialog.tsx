@@ -18,6 +18,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
@@ -241,21 +242,6 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   />
                 </Grid>
 
-                {/* <Grid item xs={6}>
-                  <CustomSelect
-                    label="Payment Status"
-                    options={[{ label: 'Paid', value: 'Paid' }]}
-                    value={formik.values.paymentStatus}
-                    onChange={(value) => formik.setFieldValue('paymentStatus', value)}
-                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                    disabled={isEdit}
-                    error={formik.touched.paymentStatus && Boolean(formik.errors.paymentStatus)}
-                    helperText={
-                      formik.touched.paymentStatus ? formik.errors.paymentStatus || '' : ''
-                    }
-                  />
-                </Grid> */}
-
                 <Grid item xs={12}>
                   <TextField
                     multiline
@@ -278,6 +264,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
             {/* CTA Section */}
           </Box>
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
+            <CancelButton onClick={onClose} />
             <SubmitButton onClick={() => {}} />
           </Box>
         </Card>

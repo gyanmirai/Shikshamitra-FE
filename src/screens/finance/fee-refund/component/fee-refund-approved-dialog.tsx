@@ -134,7 +134,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
       open={dialogValue}
       handleClose={onClose}
     >
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
+      <Scrollbar sx={{ p: 2, height: '100%' }}>
         <Box display="flex" flexDirection="row" gap={2} py="12px">
           <Typography>
             <strong>Name:</strong> Vishal RameshBhai Patel

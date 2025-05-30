@@ -66,11 +66,10 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                         { label: '11', value: '10C' },
                       ]}
                       autoFocus
-                      label="Class"
+                      label="Class *"
                       name="class"
                       value={formik.values.class}
                       onChange={(e) => formik.setFieldValue('class', e)}
-                      onBlur={formik.handleBlur}
                       fullWidth
                       error={formik.touched.class && Boolean(formik.errors.class)}
                       helperText={(formik.touched.class && formik.errors.class) || ''}
@@ -89,7 +88,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                         { label: 'B', value: 'B' },
                         { label: 'C', value: 'C' },
                       ]}
-                      label="Division"
+                      label="Division *"
                       name="division"
                       value={formik.values.division}
                       onChange={(e) => formik.setFieldValue('division', e)}
@@ -115,7 +114,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Student Name"
+                          label="Student Name *"
                           placeholder="Search Student Name"
                           size="small"
                           fullWidth
@@ -142,7 +141,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="GR No"
+                          label="GR No *"
                           placeholder="Search GR No"
                           size="small"
                           fullWidth
@@ -173,7 +172,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Fee Type"
+                          label="Fee Type *"
                           placeholder="Select Fee Type"
                           size="small"
                           fullWidth
@@ -207,7 +206,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Paid Terms"
+                          label="Paid Terms *"
                           placeholder="Select Paid Terms"
                           size="small"
                           fullWidth
@@ -252,7 +251,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                   >
                     <NumericFormatCustom
                       size="small"
-                      label="Refund Amount"
+                      label="Refund Amount *"
                       name="askForRefund"
                       value={formik.values.askForRefund}
                       onChange={formik.handleChange}
@@ -267,7 +266,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 <Grid item xs={12}>
                   <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                     <TextField
-                      label="Reason"
+                      label="Reason *"
                       name="reason"
                       multiline
                       rows={3}
