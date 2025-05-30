@@ -77,8 +77,8 @@ const RegistrationFormScreen = () => {
         heading="Registration Form Issued"
         description="An Registration Form Issued in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
         links={[
-          { name: 'Student' },
-          { name: 'Student Enroll' },
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
           { name: 'Registration Form Issued' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -205,7 +205,7 @@ const RegistrationFormScreen = () => {
           setEditData(null);
           registerFormDialog.onFalse();
         }}
-        title="Move to Admission"
+        title="Move to Registration"
       >
         <RegisterForm
           editData={editData}

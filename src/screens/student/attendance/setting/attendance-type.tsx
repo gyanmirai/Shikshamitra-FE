@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { MuiColorInput } from 'mui-color-input';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -54,11 +53,6 @@ const AttendanceType = () => {
   };
   return (
     <Box>
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
-        <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained" size="small">
-          Leave Type
-        </Button>
-      </Box>
       <CustomizableTable
         tableId="attendance-type"
         noDataText={
@@ -164,11 +158,11 @@ const AttendanceType = () => {
         handleClose={handleClose}
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-            <Typography variant="h5">Attendance Type</Typography>
+            <Typography variant="h5">Leave Type</Typography>
             <Tooltip
               arrow
               placement="right"
-              title="Define attendance types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
+              title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </Tooltip>

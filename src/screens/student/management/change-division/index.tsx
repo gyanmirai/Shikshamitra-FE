@@ -91,6 +91,8 @@ const ChangeDivisionScreen = ({
             startIcon={<Save />}
             variant="outlined"
             onClick={handelSave}
+            size="small"
+            sx={{ width: '180px' }}
           >
             Save
           </LoadingButton>

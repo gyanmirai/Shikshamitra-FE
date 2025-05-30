@@ -50,7 +50,13 @@ const AttendanceType = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button startIcon={<Add />} onClick={dialog.onTrue} variant="contained" size="small">
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={dialog.onTrue}
+          variant="contained"
+          size="small"
+        >
           Attendance Type
         </Button>
       </Box>

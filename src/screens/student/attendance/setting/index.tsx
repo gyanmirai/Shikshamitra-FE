@@ -2,66 +2,88 @@
 
 import React, { useMemo } from 'react';
 
-import { Tab, Box } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import { Tab, Box, Button, Tooltip, Typography } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import Notification from './notification';
-import AttendanceRule from './attendance-rule';
-import AttendanceType from './attendance-type';
-import NotificationMethod from './notification-method';
-
-const TABS = [
-  {
-    value: 'notification',
-    label: 'Notification',
-    icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-    component: () => <Notification />,
-  },
-  {
-    value: 'method',
-    label: 'Notification Method',
-    icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
-    component: () => <NotificationMethod />,
-  },
-  {
-    value: 'rule',
-    label: 'Attendance Rule',
-    icon: <Iconify icon="carbon:rule-draft" width={20} />,
-    component: () => <AttendanceRule />,
-  },
-
-  {
-    value: 'leaveType',
-    label: 'Leave Type',
-    icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
-    component: () => <AttendanceType />,
-  },
-];
+import AttendanceRule, { AttendanceRuleForm } from './attendance-rule';
+import AttendanceType, { AttendanceTypeForm } from './attendance-type';
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'notification' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
+
+  const attendanceRuleDialog = useBoolean();
+  const leaveTypeDialog = useBoolean();
+
+  const TABS = useMemo(
+    () => [
+      {
+        value: 'rule',
+        label: 'Attendance Rule',
+        icon: <Iconify icon="carbon:rule-draft" width={20} />,
+        buttonText: 'Attendance Rule',
+        onClick: () => {
+          attendanceRuleDialog.onTrue();
+        },
+        component: () => <AttendanceRule />,
+      },
+
+      {
+        value: 'leaveType',
+        label: 'Leave Type',
+        icon: <Iconify icon="fluent-mdl2:date-time-mirrored" width={20} />,
+        buttonText: 'Leave Type',
+        onClick: () => {
+          leaveTypeDialog.onTrue();
+        },
+        component: () => <AttendanceType />,
+      },
+    ],
+    [attendanceRuleDialog, leaveTypeDialog]
+  );
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+    [TABS, searchParams.tab]
   );
 
-  // const handleClose = () => {
-  //   setEditData(null);
-  //   dialog.onFalse();
-  // };
+  // Handle click event for the add button in header
+  const handleClick = () => {
+    currentActiveComponent?.onClick?.(); // Safely call action if it exists
+  };
+
+  // Get the button text for the current active tab
+  const getButtonText = () => currentActiveComponent?.buttonText || 'Add';
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading={currentActiveComponent?.label}
-        links={[{ name: 'HR' }, { name: 'Setting' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Setting' },
+        ]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handleClick}
+            startIcon={<AddIcon />}
+            sx={{ textTransform: 'capitalize', width: '160px' }}
+          >
+            {getButtonText()}
+          </Button>
+        }
       />
       <CustomTabs
         value={searchParams.tab}
@@ -88,8 +110,63 @@ const HrAttendanceSettingScreen = () => {
           />
         )}
       </Scrollbar>
+
+      {attendanceRuleDialog.value && (
+        <CustomDialog
+          title={
+            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+              <Typography variant="h5">Add Rule</Typography>
+              <Tooltip
+                arrow
+                placement="right"
+                title="Define the criteria for half-day and late attendance by creating rules here."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </Tooltip>
+            </Box>
+          }
+          open={attendanceRuleDialog.value}
+          handleClose={() => {
+            attendanceRuleDialog.onFalse();
+          }}
+        >
+          <AttendanceRuleForm
+            handleClose={() => {
+              attendanceRuleDialog.onFalse();
+            }}
+            editData={null}
+          />
+        </CustomDialog>
+      )}
+
+      {leaveTypeDialog.value && (
+        <CustomDialog
+          open={leaveTypeDialog.value}
+          handleClose={() => {
+            leaveTypeDialog.onFalse();
+          }}
+          title={
+            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+              <Typography variant="h5">Leave Type</Typography>
+              <Tooltip
+                arrow
+                placement="right"
+                title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </Tooltip>
+            </Box>
+          }
+        >
+          <AttendanceTypeForm
+            handleClose={() => {
+              leaveTypeDialog.onFalse();
+            }}
+            editData={null}
+          />
+        </CustomDialog>
+      )}
     </Box>
   );
 };
-
 export default HrAttendanceSettingScreen;

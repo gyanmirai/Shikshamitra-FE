@@ -60,8 +60,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Total Fees
-                <Label variant="soft" color="success" fontSize="12px" display="inline-block">
+                Total Fees:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="success"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 60,000
                 </Label>
               </Box>
@@ -85,8 +91,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Paid Fees
-                <Label variant="soft" color="success" fontSize="12px" display="inline-block">
+                Paid Fees:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="success"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 40,000
                 </Label>
               </Box>
@@ -109,8 +121,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Pending Fees
-                <Label variant="soft" color="warning" fontSize="12px" display="inline-block">
+                Pending Fees:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="warning"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 20,000
                 </Label>
               </Box>
@@ -133,8 +151,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Overdue Fees
-                <Label variant="soft" color="error" fontSize="12px" display="inline-block">
+                Overdue Fees:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="error"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 20,000
                 </Label>
               </Box>
@@ -157,8 +181,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Pending Refund
-                <Label variant="soft" color="error" fontSize="12px" display="inline-block">
+                Pending Refund:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="error"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 0
                 </Label>
               </Box>
@@ -181,8 +211,14 @@ const Finance = (props: StudentTabsComponentType) => {
           >
             <Stack width={1}>
               <Box fontSize="14px">
-                Pending Charges
-                <Label variant="soft" color="error" fontSize="12px" display="inline-block">
+                Pending Charges:
+                <Label
+                  sx={{ ml: '10px' }}
+                  variant="soft"
+                  color="error"
+                  fontSize="12px"
+                  display="inline-block"
+                >
                   ₹ 500
                 </Label>
               </Box>

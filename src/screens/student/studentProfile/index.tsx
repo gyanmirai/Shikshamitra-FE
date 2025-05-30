@@ -41,7 +41,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
-import Records from './records';
 import Finance from './finance';
 import Library from './libraray';
 import Academic from './academic';
@@ -90,12 +89,12 @@ const TABS = [
     icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Academic {...props} />,
   },
-  {
-    value: 'records',
-    label: 'Records',
-    icon: <Iconify icon="vaadin:records" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Records {...props} />,
-  },
+  // {
+  //   value: 'records',
+  //   label: 'Records',
+  //   icon: <Iconify icon="vaadin:records" width={20} />,
+  //   component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Records {...props} />,
+  // },
   {
     value: 'finance',
     label: 'Finance',
@@ -245,7 +244,7 @@ export function StudentProfile() {
         heading="Student List"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard' },
-          { name: 'Student Records' },
+          { name: 'Student Records', href: '/student/overview/' },
           { name: 'Student List' },
         ]}
         sx={{ px: 1, mb: 2 }}

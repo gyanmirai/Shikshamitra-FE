@@ -69,7 +69,11 @@ const HrSetting = () => {
       />
       <CustomBreadcrumbs
         heading="Setting"
-        links={[{ name: 'HR' }, { name: 'Setting' }]}
+        links={[
+          { name: 'HR', href: '/hr/dashboard/' },
+          { name: 'Attendance & Leave' },
+          { name: 'Setting' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Box display="flex" justifyContent="flex-end">

@@ -65,7 +65,11 @@ const StudentReportsScreen = () => {
       <CustomBreadcrumbs
         heading="Reports"
         description="Manage admissions with reports that provide detailed statistics, trend analysis, and registration data on student enrollment."
-        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Reports' }]}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/enrollment/reports/' },
+          { name: 'Reports' },
+        ]}
         sx={{ px: 1, mb: 2 }}
       />
       <Formik
