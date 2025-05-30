@@ -49,7 +49,7 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -60,7 +60,7 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
                 size="small"
                 fullWidth
                 name="paymentMethodName"
-                label="Payment Method Name"
+                label="Payment Method Name *"
                 value={values.paymentMethodName}
                 onChange={handleChange}
                 onBlur={handleBlur}

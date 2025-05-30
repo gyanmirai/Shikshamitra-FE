@@ -180,7 +180,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                 {!fromClearCheck && (
                   <Grid2 xs={6}>
                     <DatePicker
-                      label="Cheque Bounce Date"
+                      label="Cheque Bounce Date *"
                       value={formik.values.checkBounceDate}
                       onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
                       format="DD-MM-YYYY"
@@ -200,7 +200,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     <NumericFormatCustom
                       size="small"
                       name="checkBounceCharges"
-                      label="Bounce Charges"
+                      label="Bounce Charges *"
                       value={formik.values.checkBounceCharges}
                       onChange={formik.handleChange}
                       fullWidth
@@ -227,13 +227,12 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     >
                       <TextField
                         size="small"
-                        label="Check Bounce Reason"
+                        label="Check Bounce Reason *"
                         name="checkBounceReason"
                         multiline
                         rows={2}
                         value={formik.values.checkBounceReason}
                         onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
                         autoFocus
                         fullWidth
                         error={

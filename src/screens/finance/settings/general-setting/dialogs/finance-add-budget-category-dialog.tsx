@@ -56,7 +56,7 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -67,7 +67,7 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
                 size="small"
                 fullWidth
                 name="budgetCategoryName"
-                label="Budget Category Name"
+                label="Budget Category Name *"
                 value={values.budgetCategoryName}
                 onChange={handleChange}
                 onBlur={handleBlur}

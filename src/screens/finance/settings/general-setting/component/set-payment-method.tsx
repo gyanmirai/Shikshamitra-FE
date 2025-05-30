@@ -80,7 +80,7 @@ const SetPaymentMethodComponent = () => {
             columns={[
               {
                 id: 'paymentMethodName',
-                label: 'Existing Payment Method',
+                label: 'Payment Method',
                 render(value) {
                   return (
                     <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>

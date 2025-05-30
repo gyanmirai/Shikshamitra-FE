@@ -58,7 +58,7 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -66,7 +66,7 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
           <Grid item xs={12} pb="10px">
             <ShakingTextField error={touched.budgetCategoryId && Boolean(errors.budgetCategoryId)}>
               <CustomSelect
-                label="Budget Category"
+                label="Budget Category *"
                 options={
                   categories.length > 0
                     ? categories.map((category) => ({
@@ -92,7 +92,7 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
                 size="small"
                 fullWidth
                 name="budgetSubcategoryName"
-                label="Budget Subcategory Name"
+                label="Budget Subcategory Name *"
                 value={values.budgetSubcategoryName}
                 onChange={handleChange}
                 onBlur={handleBlur}

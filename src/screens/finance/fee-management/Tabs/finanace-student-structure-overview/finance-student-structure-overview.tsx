@@ -105,17 +105,17 @@ const FinanceStudentFeeManagement = () => {
         />
       ),
     },
-    {
-      id: 'grNo',
-      label: 'Gr No',
-      filterType: 'number',
-      minWidth: '30px',
-      render: (value: string) => (
-        <Typography minWidth="120px" fontSize="12px">
-          {value}
-        </Typography>
-      ),
-    },
+    // {
+    //   id: 'grNo',
+    //   label: 'Gr No',
+    //   filterType: 'number',
+    //   minWidth: '30px',
+    //   render: (value: string) => (
+    //     <Typography minWidth="120px" fontSize="12px">
+    //       {value}
+    //     </Typography>
+    //   ),
+    // },
     {
       id: 'rollNo',
       label: 'Roll No',
@@ -304,7 +304,7 @@ const FinanceStudentFeeManagement = () => {
         heading="Student Fee Structure"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Fee Management' },
+          { name: 'Fee Management', href: '/finance/fee-management/student-fee-structure/' },
           { name: 'Student Fee Structure' },
         ]}
         sx={{ px: 1, mb: 2 }}

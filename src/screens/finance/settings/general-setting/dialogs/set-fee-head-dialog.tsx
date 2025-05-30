@@ -93,7 +93,7 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -104,7 +104,7 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
                 size="small"
                 fullWidth
                 name="feeHeadName"
-                label="Fee Head Name"
+                label="Fee Head Name *"
                 value={values.feeHeadName}
                 onChange={handleChange}
                 onBlur={handleBlur}

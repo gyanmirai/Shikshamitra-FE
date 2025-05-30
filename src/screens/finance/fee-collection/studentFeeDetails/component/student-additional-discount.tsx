@@ -12,241 +12,222 @@ import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
-import { additionalDiscountData } from '../student-fee-data/student-additional-discount-data';
+import type { IAdditionalDiscount } from '../studen-fee-data-interface';
 
-import type { AdditionalDiscount } from '../student-fee-data/student-additional-discount-data';
-import type { IFinanceStudentAdditionalDiscountDialogProps } from './student-additional-discount-interface';
+interface Props {
+  dialogValue: boolean;
+  onClose: () => void;
+  studentData: IAdditionalDiscount;
+}
 
-const FinanceStudentAdditionalDiscountDialog: React.FC<
-  IFinanceStudentAdditionalDiscountDialogProps
-> = ({ dialogValue, selectedData, onClose }) => {
-  // State to store payment history data from additionalDiscountData
-  const [paymentHistoryData] = useState<AdditionalDiscount[]>(additionalDiscountData);
-
-  // State to store discount values for each fee head as key-value pairs
+const AdditionalDiscountDialog: React.FC<Props> = ({ dialogValue, onClose, studentData }) => {
   const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
-
-  // State to store remarks/comments for each fee head
   const [remarkValues, setRemarkValues] = useState<{ [key: string]: string }>({});
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+  const [discountErrors, setDiscountErrors] = useState<{ [key: string]: boolean }>({});
 
-  // State to control whether save button should be enabled based on discount values
-  const [isSaveEnabled, setIsSaveEnabled] = useState<boolean>(false);
+  const { studentDetails, data: feeHeads } = studentData;
 
-  // Handler to update discount values when user enters amount
-  // Removes any non-numeric characters except decimal point
-  const handleDiscountChange = (feeHead: string, value: string) => {
-    setDiscountValues((prev) => {
-      const updatedValues = {
-        ...prev,
-        [feeHead]: value.replace(/[^0-9.]/g, ''),
-      };
-
-      return updatedValues;
-    });
-  };
-  // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
   useEffect(() => {
-    const canSave = Object.values(discountValues).some((val) => Number(val) > 0);
-    const totalDiscount = calculateTotalDiscount();
+    const hasValidDiscount = Object.values(discountValues).some((val) => Number(val) > 0);
+    const hasErrors = Object.values(discountErrors).some((error) => error);
+    setIsSaveEnabled(hasValidDiscount && !hasErrors);
+  }, [discountValues, discountErrors]);
 
-    setIsSaveEnabled(canSave);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discountValues]); // Depend on discountValues, so it updates correctly
+  const handleDiscountChange = (feeHead: string, value: string) => {
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    const entered = Number(sanitized);
 
-  const calculateTotalDiscount = () => {
-    const totalDiscount = Object.values(discountValues).reduce(
-      (sum, value) => sum + (Number(value) || 0),
-      0
-    );
+    const feeRow = feeHeads.find((f) => f.feeHead === feeHead);
+    if (!feeRow) return;
 
-    return totalDiscount;
-  };
-
-  // Handle Remark Change
-  const handleRemarkChange = (feeHead: string, value: string) => {
-    setRemarkValues((prev) => ({
+    setDiscountValues((prev) => ({
       ...prev,
-      [feeHead]: capitalizeWords(value), // Store remark per feeHead dynamically
+      [feeHead]: sanitized,
+    }));
+
+    setDiscountErrors((prev) => ({
+      ...prev,
+      [feeHead]: entered > feeRow.payableFee,
     }));
   };
 
-  const calculateTotal = (key: keyof (typeof paymentHistoryData)[0]) =>
-    paymentHistoryData.reduce((total, item) => {
-      const value = Number(item[key]) || 0;
-      return total + value;
-    }, 0);
+  const handleRemarkChange = (feeHead: string, value: string) => {
+    setRemarkValues((prev) => ({
+      ...prev,
+      [feeHead]: capitalizeWords(value),
+    }));
+  };
 
-  const totalRow = useMemo(() => {
-    const totalDiscount = Object.values(discountValues).reduce(
-      (acc, value) => acc + Number(value || 0),
-      0
-    );
-    return {
-      paymentId: '',
+  const totalDiscount = useMemo(
+    () => Object.values(discountValues).reduce((acc, val) => acc + Number(val || 0), 0),
+    [discountValues]
+  );
+
+  const totalRow = useMemo(
+    () => ({
       feeHead: 'Total',
-      paidAmount: calculateTotal('paidAmount'),
-      generalDiscount: calculateTotal('generalDiscount'),
-      payableFee: calculateTotal('payableFee'),
-      refundAmount: totalDiscount,
-      paidDate: '',
-      status: '',
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentHistoryData, discountValues]); // ✅ Ensure dependencies are tracked correctly
+      grossFee: feeHeads.reduce((acc, f) => acc + f.grossFee, 0),
+      generalDiscount: feeHeads.reduce((acc, f) => acc + f.generalDiscount, 0),
+      payableFee: feeHeads.reduce((acc, f) => acc + f.payableFee, 0),
+      additionalDiscount: totalDiscount,
+    }),
+    [feeHeads, totalDiscount]
+  );
+
+  const handleSubmit = () => {
+    const updatedData = feeHeads.map((f) => ({
+      ...f,
+      additionalDiscount: Number(discountValues[f.feeHead] || 0),
+      remark: remarkValues[f.feeHead] || '',
+    }));
+
+    console.log({
+      studentDetails,
+      updatedFeeHeads: updatedData,
+    });
+
+    // Trigger your onSave / API function here
+  };
 
   return (
     <CustomDialog
-      maxWidth="xl"
+      open={dialogValue}
+      handleClose={onClose}
       title={
-        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+        <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h5">Additional Discount</Typography>
-          <Tooltip
-            arrow
-            placement="right"
-            title="This is the Additional Discount dialog, where the discount is applied only to this specific student and is applicable to the payable fee."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          <Tooltip title="Set student-specific additional discount per fee head.">
+            <Iconify icon="lucide:info" color="info.main" />
           </Tooltip>
         </Box>
       }
-      open={dialogValue}
-      handleClose={onClose}
+      maxWidth="xl"
     >
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box display="flex" flexDirection="row" gap={2} py="12px">
+      <Scrollbar sx={{ maxHeight: 500, p: 2 }}>
+        <Box display="flex" gap={3} flexWrap="wrap" py={1}>
           <Typography>
-            <strong>Name:</strong> Vishal RameshBhai Patel
+            <strong>Name:</strong> {studentDetails.name}
           </Typography>
           <Typography>
-            <strong>Standard:</strong> 10-B
+            <strong>Standard:</strong> {studentDetails.standard}-{studentDetails.division}
           </Typography>
           <Typography>
-            <strong>Gr Number:</strong> 89866
+            <strong>GR Number:</strong> {studentDetails.grNumber}
           </Typography>
           <Typography>
-            <strong>Roll Number:</strong> 1
+            <strong>Roll Number:</strong> {studentDetails.rollNumber}
           </Typography>
         </Box>
 
         <CustomizableTable
-          tableId="student-fee-details-table"
+          tableId="additional-discount-table"
           isFilter={false}
-          isShowedDense={false}
           isPagination={false}
-          isScrollbar={false}
           isSearch={false}
           columns={[
-            { id: 'feeHead', label: 'Fee Head', isSort: false },
+            { id: 'feeHead', label: 'Fee Head', isFilter: false },
             {
-              id: 'paidAmount',
+              id: 'grossFee',
               label: 'Gross Fee',
-              isFilter: false,
-              isSort: false,
               align: 'right',
-              render(value, row) {
-                if (row.paidAmount === 'Total') {
-                  return (
-                    <Typography fontSize="12px" fontWeight="bold">
-                      Total
-                    </Typography>
-                  );
-                }
-                return (
-                  <Typography fontSize="12px">{formatNumber(row.paidAmount, 'INR')}</Typography>
-                );
-              },
+              isFilter: false,
+              render: (val: number) => (
+                <Typography sx={{ fontSize: '12px' }}>{formatNumber(val, 'INR')}</Typography>
+              ),
             },
             {
               id: 'generalDiscount',
               label: 'General Discount',
-              isFilter: false,
-              isSort: false,
               align: 'right',
-              render(value, row) {
-                return (
-                  <Typography fontSize="12px">
-                    {formatNumber(row.generalDiscount, 'INR')}
-                  </Typography>
-                );
-              },
+              isFilter: false,
+              render: (val: number) => (
+                <Typography sx={{ fontSize: '12px' }}>{formatNumber(val, 'INR')}</Typography>
+              ),
             },
             {
               id: 'payableFee',
               label: 'Payable Fee',
-              isFilter: false,
-              isSort: false,
               align: 'right',
-              render(value, row) {
+              isFilter: false,
+              render: (val: number) => (
+                <Typography sx={{ fontSize: '12px' }}>{formatNumber(val, 'INR')}</Typography>
+              ),
+            },
+            {
+              id: 'additionalDiscount',
+              label: 'Additional Discount',
+              align: 'right',
+              isFilter: false,
+
+              render: (_: any, row: any) => {
+                const isTotalRow = row.feeHead === 'Total';
+
+                if (isTotalRow) {
+                  return (
+                    <Typography sx={{ fontWeight: 600 }}>
+                      {formatNumber(row.additionalDiscount, 'INR')}
+                    </Typography>
+                  );
+                }
+
+                const feeHeadKey = row.feeHead;
+                const rawValue = discountValues[feeHeadKey] || '';
+                const numericValue = Number(rawValue);
+                const exceeds = discountErrors[feeHeadKey];
+
                 return (
-                  <Typography fontSize="12px">{formatNumber(row.payableFee, 'INR')}</Typography>
+                  <NumericFormatCustom
+                    size="small"
+                    label={`${feeHeadKey} Discount`}
+                    value={rawValue}
+                    onChange={(e) => handleDiscountChange(feeHeadKey, e.target.value)}
+                    error={exceeds}
+                    helperText={
+                      exceeds ? `Discount should not exceed ₹ ${formatNumber(row.payableFee)}` : ''
+                    }
+                    fullWidth
+                    onBlur={() => {
+                      if (exceeds) {
+                        handleDiscountChange(feeHeadKey, row.payableFee.toString());
+                      }
+                    }}
+                    sx={{ mb: 2 }}
+                  />
                 );
               },
             },
             {
-              id: 'refundAmount',
-              label: 'Discount Amount',
-
-              isSort: false,
-              isFilter: false,
-
-              render: (value: any, row: any) =>
-                row.feeHead === paymentHistoryData[0].feeHead ? (
-                  <NumericFormatCustom
-                    size="small"
-                    autoFocus
-                    label={`${row.feeHead} Discount`}
-                    name={`${row.feeHead.toLowerCase()}Discount`}
-                    value={discountValues[row.feeHead] || ''}
-                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
-                  />
-                ) : (
-                  <NumericFormatCustom
-                    size="small"
-                    label={`${row.feeHead} Discount`}
-                    name={`${row.feeHead.toLowerCase()}Discount`}
-                    value={discountValues[row.feeHead] || ''}
-                    onChange={(e) => handleDiscountChange(row.feeHead, e.target.value)}
-                  />
-                ),
-            },
-            {
               id: 'remark',
               label: 'Remark',
-              isSort: false,
               isFilter: false,
-              render: (value: any, row: any) => {
-                if (row.feeHead === 'Total') {
-                  return <Box />; // Return an empty Box for "Total" row
+              render: (_: any, row: any) => {
+                const isTotalRow = row.feeHead === 'Total';
+
+                if (isTotalRow) {
+                  return null;
                 }
+
                 return (
                   <TextField
                     size="small"
-                    label={`${row.feeHead} Remark`}
+                    label="Remark"
+                    fullWidth
                     value={remarkValues[row.feeHead] || ''}
                     onChange={(e) => handleRemarkChange(row.feeHead, e.target.value)}
-                    sx={{ width: '100%' }}
                   />
                 );
               },
             },
           ]}
-          data={[...paymentHistoryData, totalRow]}
+          data={[...feeHeads, totalRow]}
         />
       </Scrollbar>
       <DialogActions>
-        <SubmitButton onClick={() => {}} />
-        {/* <Button
-          disabled={!isSaveEnabled}
-          onClick={() => {}}
-          type="submit"
-          variant="contained"
-          size="small"
-        >
-          Save
-        </Button> */}
+        <SubmitButton onClick={handleSubmit} disabled={!isSaveEnabled} />
       </DialogActions>
     </CustomDialog>
   );
 };
 
-export default FinanceStudentAdditionalDiscountDialog;
+export default AdditionalDiscountDialog;

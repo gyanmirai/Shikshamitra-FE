@@ -35,7 +35,7 @@ const HostelFeeHeadForFeeStructure: React.FC<IHostelFeeHeadForFeeStructureProps>
       },
       {
         id: 'applicableGrade',
-        label: 'Applicable Class',
+        label: 'Class',
         isFilter: false,
         isSort: false,
         render(value, row) {

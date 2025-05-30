@@ -80,7 +80,7 @@ const SetDefaultFeeComponent = () => {
               columns={[
                 {
                   id: 'feeHeadName',
-                  label: 'Existing Fee Head',
+                  label: 'Fee Head',
                   render(value) {
                     return (
                       <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>

@@ -7,13 +7,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { CONFIG } from 'src/config-global';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 
 import { students } from '../student-fee-data/student-fee-data';
-import FinanceCollectCharges from '../../charges/component/collect-charges';
-import FinanceStudentAdditionalDiscountDialog from './student-additional-discount';
-import FeeCollectionTable from '../../new-collect-fee/component/new-fee-collection-tableview';
-import FinanceFeeRefundAllocationDialog from '../../../fee-refund/component/finance-fee-refund-allocated';
 
 import type { Student } from '../student-fee-data/student-fee-data';
 
@@ -250,11 +245,11 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
         </Box>
       </Card>
 
-      {financeStudentAdditionalDiscountDialog.value && (
+      {/* {financeStudentAdditionalDiscountDialog.value && (
         <FinanceStudentAdditionalDiscountDialog
           dialogValue={financeStudentAdditionalDiscountDialog.value}
           onClose={additionalDiscountCloseDialog}
-          selectedData={selectedStudent}
+          studentData={selectedStudent}
         />
       )}
       {dialog.value && (
@@ -286,7 +281,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           onClose={feeRefundCloseDialog}
           selectedData={selectedStudent}
         />
-      )}
+      )} */}
     </>
   );
 };

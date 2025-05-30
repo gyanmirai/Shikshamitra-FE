@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, Button, TextField } from '@mui/material';
+import { Box, Card, Grid, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -18,7 +18,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
-import { Iconify } from 'src/components/iconify/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
@@ -113,24 +112,19 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
   return (
     <Box display="flex" flexDirection="column" gap={2} height="100%">
       {/* Header Section */}
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Income Tracking"
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Income Tracking' }]}
-          sx={{ px: 1, mb: 2 }}
-          description="The Income Tracking allows you to add and manage income records. Enter the income source, amount, date, and relevant details to keep the system updated with accurate financial data"
-        />
-        <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
-          <Button
-            startIcon={<Iconify icon="eva:arrow-back-fill" />}
-            onClick={handleCloseDialog}
-            variant="contained"
-            size="small"
-          >
-            Back
-          </Button>
-        </Box>
-      </Box>
+
+      <CustomBreadcrumbs
+        heading="Income Tracking"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Income Tracking' },
+          { name: 'Income Tracking Form' },
+        ]}
+        sx={{ px: 1, mb: 2 }}
+        description="The Income Tracking allows you to add and manage income records. Enter the income source, amount, date, and relevant details to keep the system updated with accurate financial data"
+        isBack
+        onBack={handleCloseDialog}
+      />
 
       {/* Form Card */}
       <form
@@ -153,7 +147,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                     error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
                   >
                     <CustomSelect
-                      label="Income Category"
+                      label="Income Category *"
                       options={[
                         { label: 'Donation', value: 'Donation' },
                         { label: 'Fees', value: 'Fees' },
@@ -173,7 +167,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   </ShakingTextField>
                   {budgetCategoryDialog.value && (
                     <CustomDialog
-                      title="Add Budget Category"
+                      title="Add Budget Category "
                       open={budgetCategoryDialog.value}
                       handleClose={budgetCategoryDialog.onFalse}
                     >
@@ -187,7 +181,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   >
                     <TextField
                       name="incomeName"
-                      label="Income Name"
+                      label="Income Name *"
                       value={formik.values.incomeName}
                       onChange={(e) =>
                         formik.setFieldValue('incomeName', capitalizeWords(e.target.value))
@@ -205,7 +199,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   >
                     <NumericFormatCustom
                       size="small"
-                      label="Income Amount"
+                      label="Income Amount *"
                       name="incomeAmount"
                       value={formik.values.incomeAmount}
                       onChange={formik.handleChange}
@@ -220,7 +214,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                     error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                   >
                     <CustomSelect
-                      label="Payment Method"
+                      label="Payment Method *"
                       options={[{ label: 'Online', value: 'Online' }]}
                       value={formik.values.paymentMethod}
                       onChange={(value) => formik.setFieldValue('paymentMethod', value)}
@@ -236,7 +230,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
 
                 <Grid item xs={6}>
                   <DatePicker
-                    label="Date"
+                    label="Date *"
                     value={formik.values.date}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
                     format="DD-MM-YYYY"

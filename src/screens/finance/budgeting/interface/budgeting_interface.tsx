@@ -4,6 +4,7 @@ export interface IFinanceNewBudgetCreateDialogProps {
   onSave: (values: any) => void;
   onClose: () => void;
   edit: boolean;
+  activeTab?: string;
 }
 
 export interface IIncomeCategory {

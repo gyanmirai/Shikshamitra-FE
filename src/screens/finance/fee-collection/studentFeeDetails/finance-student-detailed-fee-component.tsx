@@ -7,6 +7,8 @@ import { Box, Tab, Card, Button, Typography } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import data from 'src/json/finance/fee-collection/student-additional-discount.json';
+
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -89,7 +91,7 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
     financeStudentAdditionalDiscountDialog.onFalse();
   };
   return (
-    <Box pt="15px">
+    <Box py="25px">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} px={2}>
         <Typography variant="h6">Detailed Fee View</Typography>
 
@@ -103,7 +105,6 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
             }}
             startIcon={<Iconify icon="iconamoon:discount-thin" />}
             variant="outlined"
-            size="large"
             sx={{ backgroundColor: 'transparent', color: '#1a91bc' }}
           >
             Additional Discount
@@ -118,7 +119,6 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
             }}
             startIcon={<Iconify icon="game-icons:receive-money" />}
             variant="outlined"
-            size="large"
             color="primary"
           >
             Collect Fees
@@ -133,7 +133,6 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
             }}
             startIcon={<Iconify icon="fa6-solid:piggy-bank" />}
             variant="outlined"
-            size="large"
             color="secondary"
           >
             Collect Charges
@@ -158,7 +157,6 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
               />
             }
             variant="outlined"
-            size="large"
             sx={{ backgroundColor: 'transparent', color: '#ad7c00' }}
           >
             Process For Refund
@@ -181,7 +179,7 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
         <FinanceStudentAdditionalDiscountDialog
           dialogValue={financeStudentAdditionalDiscountDialog.value}
           onClose={additionalDiscountCloseDialog}
-          selectedData={selectedStudent}
+          studentData={data}
         />
       )}
       {dialog.value && (

@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, Button, TextField } from '@mui/material';
+import { Box, Card, Grid, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -15,7 +15,6 @@ import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -113,24 +112,10 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
           heading="Expense Tracking"
           links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
           sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={handleCloseDialog}
           description="The Expense Tracking dialog allows you to add and manage expense records. Enter the expense category, amount, date, and relevant details to ensure accurate financial tracking."
         />
-        <Box
-          sx={{ mr: '15px', mb: '20px' }}
-          gap={3}
-          display="flex"
-          flexDirection="row"
-          justifyContent="flex-end"
-        >
-          <Button
-            startIcon={<Iconify icon="eva:arrow-back-fill" />}
-            onClick={handleCloseDialog}
-            variant="contained"
-            size="small"
-          >
-            Back
-          </Button>
-        </Box>
       </Box>
       {/* <Box px="20px">
         {showExistingEntryMessage ? (
@@ -160,7 +145,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                   error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
                 >
                   <CustomSelect
-                    label="Expense Category"
+                    label="Expense Category *"
                     options={[]}
                     value={formik.values.expenseCategory}
                     onChange={(value) => formik.setFieldValue('expenseCategory', value)}
@@ -191,7 +176,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                 >
                   <TextField
                     name="expenseName"
-                    label="Expense Name"
+                    label="Expense Name *"
                     value={formik.values.expenseName}
                     onChange={(e) => {
                       formik.setFieldValue('expenseName', capitalizeWords(e.target.value));
@@ -209,7 +194,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                 >
                   <NumericFormatCustom
                     size="small"
-                    label="Expense Amount"
+                    label="Expense Amount *"
                     name="expenseAmount"
                     value={formik.values.expenseAmount}
                     onChange={formik.handleChange}
@@ -224,7 +209,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                 >
                   <CustomSelect
-                    label="Payment Method"
+                    label="Payment Method *"
                     options={[]}
                     value={formik.values.paymentMethod}
                     onChange={(value) => formik.setFieldValue('paymentMethod', value)}
@@ -240,7 +225,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
 
               <Grid item xs={6}>
                 <DatePicker
-                  label="Date"
+                  label="Date *"
                   value={formik.values.date}
                   onChange={(newValue) => formik.setFieldValue('date', newValue)}
                   format="DD-MM-YYYY"

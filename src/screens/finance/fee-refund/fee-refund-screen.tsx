@@ -61,11 +61,14 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   const links = open
     ? [
         { name: 'Finance', href: '/finance/dashboard' },
-        { name: 'Fee Refund' },
+        { name: 'Fee Refund', href: '/finance/fee-refund' },
 
         { name: 'Refund Request Form' },
       ]
-    : [{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Refund' }];
+    : [
+        { name: 'Finance', href: '/finance/dashboard' },
+        { name: 'Fee Refund', href: '/finance/fee-refund' },
+      ];
 
   const closeDialog = () => {
     setOpen(false);
@@ -129,23 +132,25 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
             heading="Fee Refund"
             links={links}
             sx={{ px: 1, mb: 2 }}
+            isBack={open}
+            onBack={() => {
+              setOpen(false);
+              setIsEdit(false);
+              setSelectedRefundRequest(null);
+              setEditData(null);
+            }}
             action={
-              <Button
-                size="small"
-                startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-                variant="contained"
-                onClick={
-                  open
-                    ? () => setOpen(false)
-                    : () => {
-                        // setSelectedVisitor(null);
-                        // setEdit(false);
-                        setOpen(true);
-                      }
-                }
-              >
-                {open ? 'Back' : ' Create Request'}
-              </Button>
+              !open && (
+                <Button
+                  startIcon={<Add />}
+                  variant="contained"
+                  onClick={() => {
+                    setOpen(true);
+                  }}
+                >
+                  Create Request
+                </Button>
+              )
             }
           />
         )}
@@ -267,6 +272,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   enumOptions: FinancePaymentHistoryStatusOptions,
 
                   isSort: false,
+                  sticky: true,
                   render(value, row) {
                     const color = FinancePaymentHistoryStatusTypeColors[
                       value as FinancePaymentHistoryStatusType
@@ -550,9 +556,10 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                     label: 'Status',
                     filterType: 'enum',
                     enumOptions: RequestStatusTypeOptions,
-                    minWidth: '180px',
+                    minWidth: '100px',
                     align: 'left',
                     isSort: false,
+                    sticky: true,
                     render(value, row) {
                       const color = RequestStatusTypeColors[
                         value as RequestStatusType

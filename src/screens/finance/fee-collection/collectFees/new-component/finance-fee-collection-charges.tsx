@@ -14,11 +14,7 @@ import {
 } from 'src/enums/finance-payment-history';
 
 import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-
-import ChargesViewDetails from '../../charges/component/charges-view-details';
-import FinanceChequeBounceChargeCollectDialog from '../../charges/component/finance-cheque-bounce-charge-collect';
 
 const FinanceFeeCollectionCharges = () => {
   // Dialog state for charge collection modal
@@ -60,12 +56,12 @@ const FinanceFeeCollectionCharges = () => {
           },
         }}
         columns={[
+          { id: 'dueDate', label: 'Due Date', filterType: 'date' },
           {
             id: 'chargeHead',
             label: 'Charge Head',
           },
 
-          { id: 'description', label: 'Description' },
           {
             id: 'amount',
             label: 'Tota Charges Amount',
@@ -81,9 +77,10 @@ const FinanceFeeCollectionCharges = () => {
             label: 'Status',
             filterType: 'enum',
             enumOptions: FinancePaymentHistoryStatusOptions,
-            minWidth: '180px',
+            minWidth: '100px',
             align: 'left',
             isSort: false,
+            sticky: true,
             render(value, row) {
               const color = FinancePaymentHistoryStatusTypeColors[
                 value as FinancePaymentHistoryStatusType
@@ -96,48 +93,10 @@ const FinanceFeeCollectionCharges = () => {
               );
             },
           },
-          {
-            id: 'action',
-            label: 'Action',
-            isFilter: false,
-            isSort: false,
-            align: 'right',
-            sticky: true,
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedEntry(row);
-                    dialogForViewCharges.onTrue();
-                  }}
-                />
-              );
-            },
-          },
         ]}
         data={studentChargesData}
       />
       <Box pb="20px" />
-
-      {dialog.value && (
-        <FinanceChequeBounceChargeCollectDialog
-          onSave={handleSave}
-          dialogValue={dialog.value}
-          onClose={closeDialog}
-          data={selectedEntry}
-        />
-      )}
-      {dialogForViewCharges.value && (
-        <ChargesViewDetails
-          dialogValue={dialogForViewCharges.value}
-          onClose={() => {
-            dialogForViewCharges.onFalse();
-          }}
-          data={selectedEntry}
-        />
-      )}
     </>
   );
 };

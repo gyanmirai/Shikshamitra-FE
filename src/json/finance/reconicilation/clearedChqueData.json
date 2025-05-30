@@ -7,7 +7,8 @@
         "amount": "5000",
         "status": "cleared",
         "studentName": "Ishita Desai",
-       
+        "class": "1",
+        "division": "A",
         "feeHead": "Library",
         "grNumber": 89554,
         "parentsContactNumber": 9843539133
@@ -20,7 +21,8 @@
         "amount": "25000",
         "status": "cleared",
         "studentName": "Ishita Desai",
-        
+        "class": "3",
+        "division": "D",
         "feeHead": "Library",
         "grNumber": 89554,
         "parentsContactNumber": 9843539133

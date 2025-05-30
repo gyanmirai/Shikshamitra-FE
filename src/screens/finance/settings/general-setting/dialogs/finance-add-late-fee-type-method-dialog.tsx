@@ -53,7 +53,7 @@ const AddLateFeeTypeDialog: React.FC<IFinanceAddLateFeeTypeDialogProps> = ({
       <Scrollbar
         sx={{
           p: 2,
-          bgcolor: 'background.neutral',
+
           height: '100%',
         }}
       >
@@ -64,7 +64,7 @@ const AddLateFeeTypeDialog: React.FC<IFinanceAddLateFeeTypeDialogProps> = ({
                 size="small"
                 fullWidth
                 name="lateFeeTypeName"
-                label="Late Fee Type Name"
+                label="Late Fee Type Name *"
                 value={values.lateFeeTypeName}
                 onChange={handleChange}
                 onBlur={handleBlur}

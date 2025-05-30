@@ -42,7 +42,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           },
           {
             id: 'applicableGrade',
-            label: 'Applicable Class',
+            label: 'Class',
             isFilter: false,
             isSort: false,
             render(value, row) {

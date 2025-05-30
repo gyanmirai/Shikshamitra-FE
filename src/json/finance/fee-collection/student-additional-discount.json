@@ -1,0 +1,44 @@
+{
+    "studentFeeData": {
+        "grossFee": 7500,
+        "payableFee": 6700,
+        "totalPaidFee": 5000,
+        "totalPendingFee": 1700,
+        "totalGeneralDiscount": 800,
+        "totalAdditionalDiscount": 600,
+        "totalDiscount": 1400
+    },
+    "studentDetails": {
+        "name": "Vishal RameshBhai Patel",
+        "rollNumber": "1",
+        "standard": "10",
+        "division": "B",
+        "grNumber": "89866"
+    },
+    "data": [
+        {
+            "feeHead": "Tuition Fee",
+            "grossFee": 5000,
+            "generalDiscount": 500,
+            "payableFee": 4500,
+            "additionalDiscount": null,
+            "remark": "Financial hardship"
+        },
+        {
+            "feeHead": "Library Fee",
+            "grossFee": 1000,
+            "generalDiscount": 100,
+            "payableFee": 900,
+            "additionalDiscount": null,
+            "remark": "Sibling studying"
+        },
+        {
+            "feeHead": "Lab Fee",
+            "grossFee": 1500,
+            "generalDiscount": 200,
+            "payableFee": 1300,
+            "additionalDiscount": null,
+            "remark": "Special consideration"
+        }
+    ]
+}

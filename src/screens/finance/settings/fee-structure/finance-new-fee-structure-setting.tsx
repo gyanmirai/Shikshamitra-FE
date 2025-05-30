@@ -59,34 +59,28 @@ const FinanceNewFeeStructureSetting = () => {
         />
       ) : (
         <>
-          <Box
-            pb="20px"
-            display="flex"
-            flexDirection="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <CustomBreadcrumbs
-              heading="Create Fee Structure"
-              links={[
-                { name: 'Finance', href: '/finance/dashboard' },
-                { name: 'Settings' },
-                { name: 'Fee Structure' },
-              ]}
-              description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
-              sx={{ px: 1, mb: 2 }}
-            />
-            <Box display="flex" flexDirection="row" justifyContent="flex-end">
+          <CustomBreadcrumbs
+            heading="Create Fee Structure"
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Settings', href: '/finance/settings/create-fee-structure/' },
+              { name: 'Create Fee Structure' },
+            ]}
+            description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
+            sx={{ px: 1, mb: 2 }}
+            action={
               <Button
-                startIcon={<Iconify icon="ic:outline-plus" />}
-                onClick={newEntryHandler}
                 variant="contained"
-                size="small"
+                startIcon={<Iconify icon="ic:outline-plus" />}
+                onClick={() => {
+                  setIsEdit(false);
+                  setOpen(true);
+                }}
               >
                 New Fee Structure
               </Button>
-            </Box>
-          </Box>
+            }
+          />
 
           <CustomizableTable
             noDataText={
@@ -125,7 +119,7 @@ const FinanceNewFeeStructureSetting = () => {
                 id: 'bookRecipt',
                 label: 'Receipt Book',
               },
-              { id: 'applicableGrade', label: 'Applicable Class', filterType: 'number' },
+              { id: 'applicableGrade', label: 'Class', filterType: 'number' },
 
               {
                 id: 'grossFee',
@@ -160,7 +154,7 @@ const FinanceNewFeeStructureSetting = () => {
 
               {
                 id: 'isActive',
-                label: 'Not Active/Active',
+                label: 'Active',
                 isFilter: false,
                 isSort: false,
                 render(statusToggle) {

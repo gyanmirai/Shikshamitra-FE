@@ -80,7 +80,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
+      <Scrollbar sx={{ p: 2, height: '100%' }}>
         <Grid container spacing={2} pb="20px">
           {/* Receipt Book Name Field */}
           <Grid item xs={12} sm={12}>

@@ -70,7 +70,7 @@ const FinanceReceiptBookSetting = () => {
             heading="Receipt Book"
             links={[
               { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Settings' },
+              { name: 'Settings', href: '/finance/settings/receipt-book/' },
               { name: 'Receipt Book' },
             ]}
             sx={{ px: 1, mb: 2 }}
@@ -126,7 +126,7 @@ const FinanceReceiptBookSetting = () => {
 
             {
               id: 'toggle',
-              label: 'Not Active/Active',
+              label: 'Active',
               isFilter: false,
               isSort: false,
               render() {
@@ -182,7 +182,7 @@ const FinanceReceiptBookSetting = () => {
 
       {receiptBookDialog.value && (
         <CustomDialog
-          maxWidth="md"
+          maxWidth="sm"
           handleClose={() => {
             receiptBookDialog.onFalse();
           }}
