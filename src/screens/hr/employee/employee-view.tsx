@@ -249,19 +249,21 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
       <CustomBreadcrumbs
         heading="Employee"
         links={[{ name: 'HR' }, { name: 'Employee Profile' }, { name: 'Employee' }]}
+        isBack
+        onBack={() => setSearchParams({ employee: '' })}
         sx={{ px: 1, pb: 1 }}
-        action={
-          searchParams?.employee && (
-            <Button
-              size="small"
-              variant="soft"
-              onClick={() => setSearchParams({ employee: '' })}
-              startIcon={<Iconify icon="mingcute:back-2-fill" />}
-            >
-              Back To Employee list
-            </Button>
-          )
-        }
+        // action={
+        //   searchParams?.employee && (
+        //     <Button
+        //       size="small"
+        //       variant="soft"
+        //       onClick={() => setSearchParams({ employee: '' })}
+        //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
+        //     >
+        //       Back To Employee list
+        //     </Button>
+        //   )
+        // }
       />
       <EmployeeCard employee={employee} />
       {/* </Scrollbar> */}
