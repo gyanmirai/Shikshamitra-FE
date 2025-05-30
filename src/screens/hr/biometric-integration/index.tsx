@@ -18,11 +18,7 @@ const BiometricIntegrationScreen = () => (
   <Box>
     <CustomBreadcrumbs
       heading="Biometric Integration"
-      links={[
-        { name: 'HR' },
-        { name: 'Attendance And Leave Management' },
-        { name: 'Biometric Integration' },
-      ]}
+      links={[{ name: 'HR' }, { name: 'Attendance & Leave' }, { name: 'Biometric Integration' }]}
       action={
         <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
           <Button variant="outlined" size="small" startIcon={<Iconify icon="eva:download-fill" />}>

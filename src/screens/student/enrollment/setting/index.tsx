@@ -9,7 +9,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ExamType from './exam-type';
 import StudentDocumentType from './document-type';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
@@ -35,11 +34,11 @@ const TABS = [
     label: 'Entrance Exam Slots',
     component: () => <EntranceExamSlots />,
   },
-  {
-    value: 'examType',
-    label: 'Exam Type',
-    component: () => <ExamType />,
-  },
+  // {
+  //   value: 'examType',
+  //   label: 'Exam Type',
+  //   component: () => <ExamType />,
+  // },
 ];
 
 const StudentEnrollmentSettingScreen = () => {

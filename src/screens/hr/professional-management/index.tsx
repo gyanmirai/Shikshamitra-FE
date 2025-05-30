@@ -49,7 +49,7 @@ const ProfessionalManagementScreen = () => {
         heading={currentActiveComponent?.label}
         links={[
           { name: 'HR' },
-          { name: 'Attendance and Leave Management' },
+          { name: 'Attendance & Leave' },
           { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}

@@ -35,6 +35,7 @@ import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
 import {
   useAddStudentInquiryMutation,
@@ -260,7 +261,7 @@ const InquiryForm = ({
                   height: '100%',
                 }}
               >
-                <Grid container spacing={3}>
+                <SectionCard title="Basic Details">
                   <Grid item xs={12} md={4}>
                     <ShakingTextField
                       error={!!(touched.academicYear && errors.academicYear) || false}
@@ -332,26 +333,22 @@ const InquiryForm = ({
                       />
                     </ShakingTextField>
                   </Grid>
-
-                  <Grid item xs={4}>
-                    <ShakingTextField error={!!(touched.lastName && errors.lastName) || false}>
-                      <FastField name="lastName">
-                        {({ field, form, meta }: FastFieldProps) => (
-                          <TextField
-                            fullWidth
-                            size="small"
-                            name="lastName"
-                            label="Last Name *"
-                            error={meta.touched && Boolean(meta.error)}
-                            helperText={meta.touched && meta.error}
-                            value={field.value}
-                            onChange={(e) => {
-                              const value = capitalize(e.target.value);
-                              form.setFieldValue('lastName', value);
-                            }}
-                          />
-                        )}
-                      </FastField>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                      <CustomSelect
+                        name="class"
+                        label="Class"
+                        disabled={!values.medium}
+                        isLoading={classLoading}
+                        labelKey="name"
+                        valueKey="id"
+                        options={classes || []}
+                        value={values.class}
+                        onChange={(value) => setFieldValue('class', value)}
+                        error={!!(touched.class && errors.class) || false}
+                        helperText={(touched.class && errors.class) || ''}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                      />
                     </ShakingTextField>
                   </Grid>
                   <Grid item xs={4}>
@@ -388,37 +385,25 @@ const InquiryForm = ({
                       />
                     </ShakingTextField>
                   </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ShakingTextField error={!!(touched.class && errors.class) || false}>
-                      <CustomSelect
-                        name="class"
-                        label="Class"
-                        disabled={!values.medium}
-                        isLoading={classLoading}
-                        labelKey="name"
-                        valueKey="id"
-                        options={classes || []}
-                        value={values.class}
-                        onChange={(value) => setFieldValue('class', value)}
-                        error={!!(touched.class && errors.class) || false}
-                        helperText={(touched.class && errors.class) || ''}
-                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ShakingTextField
-                      error={!!(touched.previousSchool && errors.previousSchool) || false}
-                    >
-                      <Field
-                        as={TextField}
-                        fullWidth
-                        size="small"
-                        name="previousSchool"
-                        label="Previous School"
-                        error={touched.previousSchool && errors.previousSchool}
-                        helperText={touched.previousSchool && errors.previousSchool}
-                      />
+                  <Grid item xs={4}>
+                    <ShakingTextField error={!!(touched.lastName && errors.lastName) || false}>
+                      <FastField name="lastName">
+                        {({ field, form, meta }: FastFieldProps) => (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            name="lastName"
+                            label="Last Name *"
+                            error={meta.touched && Boolean(meta.error)}
+                            helperText={meta.touched && meta.error}
+                            value={field.value}
+                            onChange={(e) => {
+                              const value = capitalize(e.target.value);
+                              form.setFieldValue('lastName', value);
+                            }}
+                          />
+                        )}
+                      </FastField>
                     </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
@@ -451,39 +436,6 @@ const InquiryForm = ({
                     </ShakingTextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <ShakingTextField>
-                      <TextField
-                        value={values.age}
-                        fullWidth
-                        size="small"
-                        name="age"
-                        label="Age"
-                        disabled
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ShakingTextField
-                      error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}
-                    >
-                      <DatePicker
-                        label="Date of Inquiry"
-                        name="dateOfInquiry"
-                        value={values.dateOfInquiry}
-                        format="DD/MM/YYYY"
-                        onChange={(newValue) => setFieldValue('dateOfInquiry', newValue)}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            fullWidth: true,
-                            helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
-                            error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
                     <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
                       <FormControl fullWidth>
                         <InputLabel id="dropdown-label" size="small">
@@ -507,6 +459,81 @@ const InquiryForm = ({
                       </FormControl>
                     </ShakingTextField>
                   </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
+                      error={!!(touched.previousSchool && errors.previousSchool) || false}
+                    >
+                      <Field
+                        as={TextField}
+                        fullWidth
+                        size="small"
+                        name="previousSchool"
+                        label="Previous School"
+                        error={touched.previousSchool && errors.previousSchool}
+                        helperText={touched.previousSchool && errors.previousSchool}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+
+                <SectionCard title="Inquiry Details">
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField
+                      error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}
+                    >
+                      <DatePicker
+                        label="Date of Inquiry"
+                        name="dateOfInquiry"
+                        value={values.dateOfInquiry}
+                        format="DD/MM/YYYY"
+                        onChange={(newValue) => setFieldValue('dateOfInquiry', newValue)}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
+                            error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <ShakingTextField>
+                      <CustomSelect
+                        label="Inquiry Type"
+                        name="inquiryPreferences"
+                        isLoading={inquiryPrefrenceLoading}
+                        options={inquiryPreference?.items || []}
+                        value={values.inquiryPreferences}
+                        labelKey="preferenceName"
+                        valueKey="id"
+                        onChange={(value) => setFieldValue('inquiryPreferences', value)}
+                        formControlProps={{
+                          fullWidth: true,
+                          sx: {
+                            maxWidth: 'unset',
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                    <Typography
+                      variant="body2"
+                      fontWeight={500}
+                      textAlign="right"
+                      color="primary.main"
+                      fontSize={12}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        dialog.onTrue();
+                      }}
+                    >
+                      add Inquiry Type
+                    </Typography>
+                  </Grid>
+                </SectionCard>
+
+                <SectionCard title="Contact Information">
                   <Grid item xs={12} md={4}>
                     <ShakingTextField error={!!(touched.email && errors.email) || false}>
                       <TextField
@@ -575,39 +602,8 @@ const InquiryForm = ({
                       />
                     </ShakingTextField>
                   </Grid>
-                  <Grid item xs={12} md={4}>
-                    <ShakingTextField>
-                      <CustomSelect
-                        label="Inquiry Type"
-                        name="inquiryPreferences"
-                        isLoading={inquiryPrefrenceLoading}
-                        options={inquiryPreference?.items || []}
-                        value={values.inquiryPreferences}
-                        labelKey="preferenceName"
-                        valueKey="id"
-                        onChange={(value) => setFieldValue('inquiryPreferences', value)}
-                        formControlProps={{
-                          fullWidth: true,
-                          sx: {
-                            maxWidth: 'unset',
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                    <Typography
-                      variant="body2"
-                      fontWeight={500}
-                      textAlign="right"
-                      color="primary.main"
-                      fontSize={12}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        dialog.onTrue();
-                      }}
-                    >
-                      add Inquiry Type
-                    </Typography>
-                  </Grid>
+                </SectionCard>
+                <SectionCard title="Address">
                   <Grid item xs={12} md={4}>
                     <ShakingTextField
                       error={!!(touched.addressLine1 && errors.addressLine1) || false}
@@ -730,7 +726,20 @@ const InquiryForm = ({
                       />
                     </ShakingTextField>
                   </Grid>
-                </Grid>
+                </SectionCard>
+
+                {/* <Grid item xs={12} md={4}>
+                    <ShakingTextField>
+                      <TextField
+                        value={values.age}
+                        fullWidth
+                        size="small"
+                        name="age"
+                        label="Age"
+                        disabled
+                      />
+                    </ShakingTextField>
+                  </Grid> */}
               </Scrollbar>
               <DialogActions sx={{ flexShrink: 0, p: 2 }}>
                 <Button onClick={handleClose}>Cancel</Button>

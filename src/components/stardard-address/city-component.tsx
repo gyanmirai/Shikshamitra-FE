@@ -12,11 +12,14 @@ const CityComponent = ({
   helperText,
   value,
   stateValue,
+  textFieldProps,
   ...filedProps
 }: Partial<
   AutocompleteProps<Partial<ICity>, false, false, false> &
     Omit<TextFieldProps, 'onChange'> & {
       stateValue?: Partial<IState>;
+    } & {
+      textFieldProps?: Partial<TextFieldProps>;
     }
 >) => {
   const allCities = useMemo(
@@ -49,8 +52,10 @@ const CityComponent = ({
           placeholder="Search  City"
           error={error}
           helperText={helperText}
+          {...textFieldProps}
         />
       )}
+      label="City"
       {...filedProps}
     />
   );

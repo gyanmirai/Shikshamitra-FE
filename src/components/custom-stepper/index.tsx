@@ -101,7 +101,7 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
 }));
 
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
-  scrollbarHeight = '40vh',
+  scrollbarHeight = 'auto',
   activeStep,
   initialValues,
   steps,
@@ -170,6 +170,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         <Scrollbar
           sx={{
             flex: 1,
+            height: scrollbarHeight,
             overflow: 'auto',
             '& .simplebar-content': {
               height: '100%',

@@ -129,7 +129,7 @@ const InquiryTable = ({
         },
         {
           id: 'followUpStatusType',
-          label: 'Status',
+          label: 'Follow up Status',
           filterType: 'enum',
           enumOptions: FollowUpStatusTypeOptions,
           minWidth: '180px',

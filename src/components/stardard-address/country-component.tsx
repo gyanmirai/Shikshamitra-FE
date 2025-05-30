@@ -11,9 +11,13 @@ const CountryComponent = ({
   error,
   helperText,
   value,
+  textFieldProps,
   ...filedProp
 }: Partial<
-  AutocompleteProps<Partial<ICountry>, false, false, false> & Omit<TextFieldProps, 'onChange'>
+  AutocompleteProps<Partial<ICountry>, false, false, false> &
+    Omit<TextFieldProps, 'onChange'> & {
+      textFieldProps?: Partial<TextFieldProps>;
+    }
 >) => {
   const allCountry = useMemo(() => Country.getAllCountries(), []);
   return (
@@ -32,10 +36,10 @@ const CountryComponent = ({
             {...params}
             fullWidth
             size="small"
-            label="Country"
             placeholder="Search  Country"
             error={error}
             helperText={helperText}
+            {...textFieldProps}
           />
         )}
         renderOption={(props, option: any) => (
@@ -43,6 +47,7 @@ const CountryComponent = ({
             {`${option?.isoCode} ${option?.name}`}
           </li>
         )}
+        label="Country"
         {...filedProp}
       />
     </ShakingTextField>

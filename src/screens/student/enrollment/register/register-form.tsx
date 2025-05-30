@@ -2,9 +2,8 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Slide, TextField } from '@mui/material';
+import { Box, Grid, Paper, Slide, TextField } from '@mui/material';
 
-import { fileToBase64 } from 'src/utils/file-to-base64';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -22,14 +21,13 @@ import {
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
 
-import { UploadAvatar } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { allFields } from './register-fields';
 import { validationSchemas } from './register-form-validation';
 import {
-  allFields,
   bankDetailsInitialValues,
   familyFieldsInitialValues,
   generalFieldsInitialValues,
@@ -38,10 +36,10 @@ import {
   additionalDetailsInitialValues,
   CommunicationFieldsInitialValues,
   previousSchoolFieldsInitialValues,
-} from './register-fields';
+} from './initialvalues';
 
+import type { FieldsType } from './type';
 import type { IInquiryData } from '../Inquiry';
-import type { FieldsType } from './register-fields';
 
 const steps = [
   'General',
@@ -413,7 +411,7 @@ const RegisterForm = ({
           setActiveStep(index);
         }
       }}
-      scrollbarHeight="55vh"
+      scrollbarHeight="70vh"
       initialValues={{
         ...generalFieldsInitialValues(editData),
         ...documentFieldsInitialValues(editData),
@@ -462,21 +460,7 @@ const RegisterForm = ({
       renderItem={({ activeStep: step, formik, isBackClick }: any) => (
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-            <Box display="flex" gap={2}>
-              {step === 0 && (
-                <Box flexGrow={1} display="flex" alignItems="center">
-                  <UploadAvatar
-                    maxSize={3145728}
-                    onDrop={async (acceptedFiles: File[]) => {
-                      const value = acceptedFiles[0];
-                      const base64 = await fileToBase64(value);
-                      formik.setFieldValue('photo', base64);
-                    }}
-                    value={formik.values.photo}
-                    error={formik.touched.photo && Boolean(formik.errors.photo)}
-                  />
-                </Box>
-              )}
+            <Paper sx={{ p: 3, mb: 3, display: 'flex', gap: 2 }} elevation={4}>
               <Grid container spacing={2.5}>
                 {allFields[step].map((field: FieldsType) => (
                   <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
@@ -530,7 +514,7 @@ const RegisterForm = ({
                   </Grid>
                 ))}
               </Grid>
-            </Box>
+            </Paper>
           </FormSlider>
         </BackPopUpChecked>
       )}

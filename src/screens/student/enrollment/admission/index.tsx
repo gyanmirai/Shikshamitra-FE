@@ -840,7 +840,7 @@ const AdmissionScreen = () => {
           setEditData(null);
           setOpen(false);
         }}
-        title="Edit Admission"
+        title="Edit Details"
       >
         <RegisterForm
           editData={editData}

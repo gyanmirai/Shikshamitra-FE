@@ -12,7 +12,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -50,7 +49,7 @@ const RegisterScreen = () => {
 
   // Handler for closing the form dialog
   // Checks for unsaved changes and prompts user confirmation if needed
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e?: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       formDialog.onFalse();
       dispatch(setIsChanges(false));
@@ -66,15 +65,19 @@ const RegisterScreen = () => {
         heading="Registration"
         links={links}
         // sx={{ px: 1, mb: 2 }}
+        isBack={formDialog.value}
+        onBack={handleClose}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={formDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            onClick={formDialog.value ? handleClose : formDialog.onTrue}
-          >
-            {formDialog.value ? 'Back' : 'Registration'}
-          </Button>
+          !formDialog.value && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={formDialog.onTrue}
+            >
+              Registration
+            </Button>
+          )
         }
       />
       {formDialog.value ? (
