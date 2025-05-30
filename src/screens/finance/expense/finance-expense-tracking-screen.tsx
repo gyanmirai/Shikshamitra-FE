@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Typography } from '@mui/material';
 
@@ -11,7 +12,6 @@ import { formatNumber } from 'src/utils/formate_number';
 
 import expenseData from 'src/json/finance/expense/expenseTrackingData.json';
 
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -73,7 +73,8 @@ const FinanceExpenseTrackingScreen = () => {
             action={
               <Button
                 variant="contained"
-                startIcon={<Iconify icon="ic:outline-plus" />}
+                size="small"
+                startIcon={<Add />}
                 onClick={() => {
                   setOpen(true);
                 }}

@@ -173,7 +173,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
         isBack
         onBack={onClose}
         action={
-          <Button startIcon={<Iconify icon="si:add-duotone" />} type="submit" variant="contained">
+          <Button
+            size="small"
+            startIcon={<Iconify icon="si:add-duotone" />}
+            type="submit"
+            variant="contained"
+          >
             Add
           </Button>
         }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Switch } from '@mui/material';
 
@@ -9,7 +10,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -69,7 +69,8 @@ const FinanceReceiptBookSetting = () => {
           sx={{ px: 1, mb: 2 }}
           action={
             <Button
-              startIcon={<Iconify icon="ic:outline-plus" />}
+              size="small"
+              startIcon={<Add />}
               onClick={() => {
                 setIsEdit(false);
                 // setOpen(true);

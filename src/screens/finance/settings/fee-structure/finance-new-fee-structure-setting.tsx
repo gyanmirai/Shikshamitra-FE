@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Box, Button, Switch, Tooltip, Typography } from '@mui/material';
 
@@ -70,8 +71,9 @@ const FinanceNewFeeStructureSetting = () => {
             sx={{ px: 1, mb: 2 }}
             action={
               <Button
+                size="small"
                 variant="contained"
-                startIcon={<Iconify icon="ic:outline-plus" />}
+                startIcon={<Add />}
                 onClick={() => {
                   setIsEdit(false);
                   setOpen(true);
