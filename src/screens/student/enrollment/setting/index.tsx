@@ -80,7 +80,7 @@ const StudentEnrollmentSettingScreen = () => {
             size="small"
             onClick={handleClick}
             startIcon={<AddIcon />}
-            sx={{ textTransform: 'capitalize' }}
+            sx={{ textTransform: 'capitalize', width: '180px' }}
           >
             {getButtonText()}
           </Button>

@@ -185,6 +185,7 @@ const RollNoGenerationScreen = ({
                 onClick={handleSave}
                 disabled={isSaving || !tableData.some((item) => item.rollNo)}
                 size="small"
+                sx={{ width: '180px' }}
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -194,6 +195,7 @@ const RollNoGenerationScreen = ({
                 variant="outlined"
                 onClick={() => setIsManual(!isManual)}
                 size="small"
+                sx={{ width: '180px' }}
               >
                 Manual Generation
               </Button>
@@ -202,6 +204,7 @@ const RollNoGenerationScreen = ({
                 startIcon={<Refresh />}
                 variant="contained"
                 onClick={handleAutoGenerate}
+                sx={{ width: '180px' }}
               >
                 Auto Generate
               </Button>

@@ -299,6 +299,7 @@ export const DocumentForm = ({
             onClick={() => {
               handleClose?.(null, false);
             }}
+            sx={{ width: '200px' }}
           >
             Cancel
           </Button>

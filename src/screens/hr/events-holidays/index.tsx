@@ -145,16 +145,8 @@ const HrEventsAndHolidaysScreen = () => {
         heading="Events & Holidays"
         links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
         sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            onClick={handleClose}
-            startIcon={<Iconify icon="eva:arrow-back-fill" />}
-            variant="contained"
-            size="small"
-          >
-            Back
-          </Button>
-        }
+        isBack
+        onBack={() => handleClose(undefined, false)}
         description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
       <Card>
@@ -503,6 +495,7 @@ export const HrEventsAndHolidaysForm = ({
         </Scrollbar>
         <DialogActions>
           <Button
+            size="small"
             onClick={handleClose}
             variant="outlined"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -511,6 +504,7 @@ export const HrEventsAndHolidaysForm = ({
           </Button>
 
           <LoadingButton
+            size="small"
             disabled={isCalenderPreview}
             loading={isUpdatePFLoading || isLoading}
             variant="contained"

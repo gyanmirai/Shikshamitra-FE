@@ -123,7 +123,13 @@ const GroupManagement = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+        <Button
+          sx={{ width: '180px' }}
+          size="small"
+          startIcon={<Add />}
+          variant="contained"
+          onClick={dialog.onTrue}
+        >
           House
         </Button>
       </Box>
