@@ -363,6 +363,7 @@ const EntranceExamScreen = () => {
               filterType: 'enum',
               enumOptions: EntranceExamStatusOptions,
               align: 'left',
+              sticky: true,
               render(value, row) {
                 const color = EntranceExamStatusTypeColors[
                   value as EntranceExamStatusType
@@ -467,6 +468,7 @@ export const ExamForm = ({
           return value == null || (totalMarks != null && value < totalMarks);
         }
       ),
+    examType: Yup.string().required('Exam type is required'),
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
@@ -492,7 +494,7 @@ export const ExamForm = ({
   });
 
   // Query hook to get student count for slots
-  const [getStudentCountByDate] = useQueryAndMutation({
+  const [getStudentCountByDate, { isLoading: isStudentCountLoading }] = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useLazyGetStudentForSlotByDateQuery,
   });
@@ -513,7 +515,7 @@ export const ExamForm = ({
 
   // Formik instance for form handling
   const formik = useFormik({
-    enableReinitialize: true,
+    // enableReinitialize: true,
     initialValues: {
       examDate: null,
       examType: '',
@@ -543,26 +545,36 @@ export const ExamForm = ({
       console.log(values);
     },
   });
+  console.log('🚀 ~ formik:', formik.values);
 
-  // Effect to update slots when exam date changes
-  useEffect(() => {
-    if (slots?.items?.length && formik.values.examDate) {
-      (async () => {
-        const getAllSlot = await Promise.all(
-          slots?.items?.map(async (slot: any) => ({
-            ...slot,
-            label: `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`,
-            value: slot.id,
-            studentCount: await getStudentCount(
-              slot.id,
-              dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true)
-            ),
-          }))
+  const handleGetAllStudentCount = useCallback(
+    async (date: string) => {
+      if (!slots?.items?.length) return;
+
+      try {
+        const formattedDate = dateConvertor(dayjs(date).format(dateFormat), true);
+
+        const updatedSlots = await Promise.all(
+          slots.items.map(async (slot: any) => {
+            const label = `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`;
+            const studentCount = await getStudentCount(slot.id, formattedDate);
+
+            return {
+              ...slot,
+              label,
+              value: slot.id,
+              studentCount,
+            };
+          })
         );
-        setAllSlots(getAllSlot);
-      })();
-    }
-  }, [formik.values.examDate, getStudentCount, slots?.items]);
+
+        setAllSlots(updatedSlots);
+      } catch (error) {
+        console.error('Failed to fetch student counts:', error);
+      }
+    },
+    [getStudentCount, slots?.items]
+  );
 
   // Effect to update form slots when allSlots changes
   useEffect(() => {
@@ -602,7 +614,10 @@ export const ExamForm = ({
             <Paper>
               <DateCalendar
                 value={formik.values.examDate}
-                onChange={(value) => formik.setFieldValue('examDate', value)}
+                onChange={(value) => {
+                  formik.setFieldValue('examDate', value);
+                  handleGetAllStudentCount(value);
+                }}
                 disablePast
                 slots={{
                   day: (props: any) => {
@@ -628,40 +643,16 @@ export const ExamForm = ({
             <Paper sx={{ p: 1, height: '100%' }}>
               <Grid container spacing={2}>
                 <Grid xs={4}>
-                  <Autocomplete
-                    options={[
-                      { id: 1, examType: 'abc' },
-                      { id: 2, examType: 'xyz' },
-                    ]}
-                    autoFocus
-                    getOptionLabel={(option) => option.examType}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Exam Type"
-                        placeholder="Search Exam Type"
-                        size="small"
-                        fullWidth
-                        sx={{ width: '100%', minWidth: '200px' }}
-                      />
-                    )}
-                    onChange={(e, value) => {
-                      formik.setFieldValue('examType', value?.examType);
-                    }}
+                  <TextField
+                    name="examType"
+                    value={formik.values.examType}
+                    onChange={formik.handleChange}
+                    error={formik.touched.examType && Boolean(formik.errors.examType)}
+                    helperText={formik.touched.examType && formik.errors.examType}
+                    label="Exam Type"
+                    size="small"
+                    fullWidth
                   />
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    textAlign="right"
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      addExamTypeDialog.onTrue();
-                    }}
-                  >
-                    Add Exam Type
-                  </Typography>
                 </Grid>
                 <Grid xs={4}>
                   <TextField
@@ -670,6 +661,8 @@ export const ExamForm = ({
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}
                     label="Total Marks"
+                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
                     size="small"
                     fullWidth
                   />
@@ -689,7 +682,7 @@ export const ExamForm = ({
                       />
                     )}
                     onChange={(e, value) => {
-                      formik.setFieldValue('examType', value?.id);
+                      formik.setFieldValue('scheduleType', value?.id);
                     }}
                   />
                 </Grid>
@@ -700,6 +693,8 @@ export const ExamForm = ({
                     value={formik.values.passingMarks}
                     onChange={formik.handleChange}
                     label="Passing Marks"
+                    error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+                    helperText={formik.touched.passingMarks && formik.errors.passingMarks}
                     size="small"
                     fullWidth
                   />
@@ -725,29 +720,33 @@ export const ExamForm = ({
                     </Box>
 
                     <Grid container spacing={2}>
-                      {formik.values.slots.map((slot: any, index: number) => (
-                        <Grid xs={6} key={index}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={slot.value === formik.values.slot}
-                                size="small"
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    formik.setFieldValue('slot', slot.value);
-                                  } else {
-                                    formik.setFieldValue('slot', '');
-                                  }
-                                }}
-                              />
-                            }
-                            label={slot.label}
-                          />
-                          <Label variant="soft" color="success">
-                            {slot.studentCount} / {slot.studentLimit}
-                          </Label>
-                        </Grid>
-                      ))}
+                      {isStudentCountLoading ? (
+                        <Box className="loading" />
+                      ) : (
+                        formik.values.slots.map((slot: any, index: number) => (
+                          <Grid xs={6} key={index}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={slot.value === formik.values.slot}
+                                  size="small"
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      formik.setFieldValue('slot', slot.value);
+                                    } else {
+                                      formik.setFieldValue('slot', '');
+                                    }
+                                  }}
+                                />
+                              }
+                              label={slot.label}
+                            />
+                            <Label variant="soft" color="success">
+                              {slot.studentCount} / {slot.studentLimit}
+                            </Label>
+                          </Grid>
+                        ))
+                      )}
                     </Grid>
                     {formik.touched.slot && formik.errors.slot && (
                       <Typography variant="caption" color="error">

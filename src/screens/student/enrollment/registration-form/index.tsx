@@ -1,5 +1,7 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 
@@ -13,7 +15,13 @@ import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
 import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registration-form/registration-form-api';
+import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -66,18 +74,18 @@ const RegistrationFormScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Issued Registration Form"
-        description="An Issued Registration Form in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
+        heading="Registration Form Issued"
+        description="An Registration Form Issued in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
         links={[
           { name: 'Student' },
           { name: 'Student Enroll' },
-          { name: 'Issued Registration Form' },
+          { name: 'Registration Form Issued' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
       <CustomizableTable
         isLoading={isLoading}
-        noDataText={<>No Issued Registration Form Data Found </>}
+        noDataText={<>No Registration Form Issued Data Found </>}
         tableId="student-registration-form-table"
         searchFieldProps={{
           placeholder: 'Search by Inquiry number, Student name, Class..',
@@ -130,6 +138,20 @@ const RegistrationFormScreen = () => {
             label: 'Inquiry Type',
             minWidth: '200px',
             align: 'left',
+          },
+          {
+            id: 'followUpStatusType',
+            label: 'Follow up Status',
+            filterType: 'enum',
+            enumOptions: FollowUpStatusTypeOptions,
+            minWidth: '220px',
+            align: 'left',
+            sticky: true,
+            render(value, row) {
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+            },
           },
           {
             id: 'actions',

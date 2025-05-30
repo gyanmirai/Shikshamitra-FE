@@ -39,7 +39,7 @@ export const SectionCard = ({ title, children }: { title: string; children: Reac
     <Typography variant="h6" sx={{ mb: 2 }} color="primary.main">
       {title}
     </Typography>
-    <Grid container spacing={2}>
+    <Grid container spacing={3}>
       {children}
     </Grid>
   </Paper>
@@ -538,7 +538,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
       </Grid>
     </SectionCard>
 
-    <SectionCard title="Medical Info">
+    <SectionCard title="Medical Information">
       <Grid item xs={12} md={4}>
         <ShakingTextField error={formik.touched.bloodGroup && Boolean(formik.errors.bloodGroup)}>
           <TextField

@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Search, RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -27,7 +27,6 @@ import {
   Typography,
   IconButton,
   ButtonGroup,
-  InputAdornment,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -131,7 +130,7 @@ const TakeAttendanceScreen = () => {
     },
   });
 
-  const [studentData, setStudentData] = useState([]);
+  const [studentData, setStudentData] = useState<any>([]);
 
   useEffect(() => {
     if (data?.items) {
@@ -153,8 +152,8 @@ const TakeAttendanceScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Take Attendance"
-        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Take Attendance' }]}
+        heading="Mark Attendance"
+        links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Mark Attendance' }]}
         sx={{ px: 1, mb: 2 }}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />
@@ -223,21 +222,29 @@ const TakeAttendanceScreen = () => {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="contained"
-              onClick={() => {}}
+              onClick={() => {
+                setStudentData((pre: any) =>
+                  pre.map((item: any) => ({ ...item, isPresent: true }))
+                );
+              }}
               size="small"
               color="success"
               startIcon={<CheckCircleOutlined />}
             >
-              All Present
+              Mark as All Present
             </Button>
             <Button
               variant="contained"
-              onClick={() => {}}
+              onClick={() => {
+                setStudentData((pre: any) =>
+                  pre.map((item: any) => ({ ...item, isPresent: false }))
+                );
+              }}
               size="small"
               color="error"
               startIcon={<CancelOutlined />}
             >
-              All Absent
+              Mark as All Absent
             </Button>
           </Box>
         </Box>
@@ -270,20 +277,6 @@ const TakeAttendanceScreen = () => {
             Save
           </Button>
         </Box>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <TextField
-          placeholder="Search by name, roll no, gr no"
-          size="small"
-          sx={{ flexGrow: 1 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
       </Box>
 
       <Box
@@ -460,7 +453,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         showCheckbox={selectedStudent.length !== 0}
         tableId="student-attendance-list"
         noDataText="No Students Found"
-        isSearch={false}
         isLoading={isLoading}
         rowProps={(tableData: any) => ({
           sx: {
@@ -558,6 +550,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'isPresent',
             label: 'Attendance',
             minWidth: '130px',
+            align: 'left',
             isSort: false,
             render(value, row) {
               return isSaved.value ? (

@@ -1,3 +1,5 @@
+'use client';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
@@ -84,7 +86,10 @@ export function CustomBreadcrumbs({
   );
 
   return (
-    <Stack spacing={2} sx={sx}>
+    <Stack
+      spacing={2}
+      sx={{ pl: 0, pb: 2, borderBottom: (theme) => `1px dashed ${theme.palette.grey[400]}`, ...sx }}
+    >
       <Stack direction="row" alignItems="center">
         <Box sx={{ flexGrow: 1 }}>
           {heading && renderHeading}

@@ -104,7 +104,7 @@ const studentModule = {
               shortcutKeyName: 'Alt+S+2',
             },
             {
-              title: 'Issued Registration Form',
+              title: 'Registration Form Issued',
               path: '/student/enrollment/registration-form',
               _action: 'student-enrollment-registration-form',
               permission: 'Permission:StudentEnrollment.RegistrationForm',
@@ -130,15 +130,15 @@ const studentModule = {
               shortcutKey: 'Alt+S+5',
               shortcutKeyName: 'Alt+S+5',
             },
-            {
-              title: 'Follow-up',
-              path: '/student/enrollment/follow-up',
-              _action: 'student-enrollment-follow-up',
-              permission: 'Permission:StudentEnrollment.FollowUp',
-              permissionName: 'Student.Enrollment.FollowUp',
-              shortcutKey: 'Alt+S+6',
-              shortcutKeyName: 'Alt+S+6',
-            },
+            // {
+            //   title: 'Follow-up',
+            //   path: '/student/enrollment/follow-up',
+            //   _action: 'student-enrollment-follow-up',
+            //   permission: 'Permission:StudentEnrollment.FollowUp',
+            //   permissionName: 'Student.Enrollment.FollowUp',
+            //   shortcutKey: 'Alt+S+6',
+            //   shortcutKeyName: 'Alt+S+6',
+            // },
             {
               title: 'Admission',
               path: '/student/enrollment/admission',
@@ -234,7 +234,7 @@ const studentModule = {
               shortcutKeyName: 'Alt+S+A+1',
             },
             {
-              title: 'Take Attendance',
+              title: 'Mark Attendance',
               path: '/student/attendance/take-attendance',
               _action: 'student-attendance-take-attendance',
               shortcutKey: 'Alt+S+A+2',
@@ -544,7 +544,7 @@ const hrModule = {
           ],
         },
         {
-          title: 'Attendance and Leave Management',
+          title: 'Attendance & Leave',
           path: '',
           _action: 'attendance-and-leave-management',
           shortcutKey: 'Alt+H+A',
@@ -558,7 +558,7 @@ const hrModule = {
               shortcutKeyName: 'Alt+H+A+1',
             },
             {
-              title: 'Leave Requests and Approvals',
+              title: 'Leave Management',
               path: '/hr/leave-requests',
               _action: 'leave-requests-and-approvals',
               shortcutKey: 'Alt+H+A+2',
