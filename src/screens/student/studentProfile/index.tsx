@@ -248,19 +248,21 @@ export function StudentProfile() {
           { name: 'Student List' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        isBack
+        onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
         description="Find and view detailed information for each student by clicking their name in the list below."
-        action={
-          currentStudent && (
-            <Button
-              size="small"
-              variant="soft"
-              onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
-              startIcon={<Iconify icon="mingcute:back-2-fill" />}
-            >
-              Back To Student list
-            </Button>
-          )
-        }
+        // action={
+        //   currentStudent && (
+        //     <Button
+        //       size="small"
+        //       variant="soft"
+        //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+        //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
+        //     >
+        //       Back To Student list
+        //     </Button>
+        //   )
+        // }
       />
 
       {!currentStudent && (

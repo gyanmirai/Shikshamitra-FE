@@ -69,18 +69,15 @@ const HrSetting = () => {
       />
       <CustomBreadcrumbs
         heading="Setting"
-        links={[
-          { name: 'HR', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave' },
-          { name: 'Setting' },
-        ]}
+        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
+        action={
+          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
+            Document
+          </Button>
+        }
       />
-      <Box display="flex" justifyContent="flex-end">
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
-          Document
-        </Button>
-      </Box>
+
       <CustomizableTable
         noDataText={
           <>
