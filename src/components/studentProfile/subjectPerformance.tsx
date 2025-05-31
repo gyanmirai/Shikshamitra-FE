@@ -1,7 +1,12 @@
+import type { ICourse } from 'src/screens/academic/course-management/courseProgress/type';
+
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { Box, Card, Stack, Divider, Typography, CircularProgress } from '@mui/material';
+
+import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
+import CourseCardsGrid from 'src/screens/academic/course-management/courseProgress/components/courseCardsGrid';
 
 import CustomizableTable from '../customizabaleTable';
 
@@ -22,120 +27,87 @@ const subjectsProgress: ISubject[] = [
 
 const SubjectPerformance = () => {
   // State to track the currently selected subject and its details
-  const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
+  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
+  const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
+
+  // Handler for when a course card is selected
+  const handleCardDetails = (course: ICourse) => {
+    setSelectedCourse(course);
+  };
   return (
     <Box>
       <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-        {subjectsProgress.map((subject, index) => (
-          <SubjectCard
-            selectedSubject={selectedSubject}
-            subjectId={subject.id}
-            subjectName={subject.subjectName}
-            progress={subject.progress}
-          />
-        ))}
+        <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
       </Box>
-      <Typography variant="h6" mt={4} mb={2}>
-        Mathematics Progress
-      </Typography>
-      <CustomizableTable
-        tableId="course-progress-table"
-        searchFieldProps={{
-          placeholder: 'Search by Chapter Name, Teacher Name...',
-          label: 'Search by Chapter Name, Teacher Name...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
-        columns={[
-          { id: 'chapterName', label: 'Chapter Name', minWidth: '200px', align: 'left' },
-          { id: 'teacherName', label: 'Teacher Name', minWidth: '200px', align: 'left' },
-          {
-            id: 'progress',
-            label: 'Progress',
-            align: 'left',
-            minWidth: '200px',
-            filterType: 'number',
-            render(value, row) {
-              return (
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={value}
-                    color={value < 30 ? 'error' : value < 50 ? 'warning' : 'success'}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography variant="caption" component="div">
-                      {value}%
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'timeLine',
-            label: 'Timeline',
-            align: 'left',
-            minWidth: '200px',
-            filterType: 'date',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-        ]}
-        data={[
-          {
-            id: 1,
-            chapterName: 'Introduction to React',
-            teacherName: 'John Doe',
-            progress: 25,
-            timeLine: '2025-03-08',
-          },
-          {
-            id: 2,
-            chapterName: 'State Management with Redux',
-            teacherName: 'Jane Smith',
-            progress: 50,
-            timeLine: '2025-03-15',
-          },
-          {
-            id: 3,
-            chapterName: 'Advanced JavaScript',
-            teacherName: 'Alice Johnson',
-            progress: 40,
-            timeLine: '2025-03-20',
-          },
-          {
-            id: 4,
-            chapterName: 'Backend Integration with NestJS',
-            teacherName: 'Robert Brown',
-            progress: 30,
-            timeLine: '2025-04-05',
-          },
-          {
-            id: 5,
-            chapterName: 'MongoDB and Data Persistence',
-            teacherName: 'Michael Lee',
-            progress: 60,
-            timeLine: '2025-04-15',
-          },
-        ]}
-      />{' '}
+      {selectedCourse && (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            {selectedCourse.name} Details
+          </Typography>
+          {/* Table showing chapter-wise progress details */}
+          <CustomizableTable
+            searchFieldProps={{
+              placeholder: 'Search by Chapter Name, Progress, Deadline...',
+              label: 'Search by Chapter Name, Progress, Deadline...',
+              sx: {
+                maxWidth: '450px',
+                width: '100%',
+              },
+            }}
+            tableId="course-progress-table"
+            noDataText={<>No Chapters Found For This Course Found </>}
+            columns={[
+              { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+              {
+                id: 'progress',
+                label: 'Progress',
+                align: 'center',
+                filterType: 'number',
+                render(value, row) {
+                  return (
+                    // Circular progress indicator with percentage
+                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                      <CircularProgress variant="determinate" value={value} />
+                      <Box
+                        sx={{
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          right: 0,
+                          position: 'absolute',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          component="div"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          {value}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                },
+              },
+              {
+                id: 'timeLine',
+                label: 'Deadline',
+                align: 'left',
+                filterType: 'date',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD-MM-YYYY')}
+                  </Typography>
+                ),
+              },
+            ]}
+            data={selectedCourse.details}
+          />{' '}
+        </Box>
+      )}
     </Box>
   );
 };

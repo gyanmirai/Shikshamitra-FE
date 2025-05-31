@@ -137,7 +137,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <ShakingTextField
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >

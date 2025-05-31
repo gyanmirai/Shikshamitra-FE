@@ -14,7 +14,7 @@ export interface IResourceData {
   className: string; // Class/grade the resource is intended for
   subject: string; // Subject area of the resource
   dateUploaded: string; // Date when the resource was uploaded
-  document: File | null; // File object representing the uploaded document;
+  document: File | string; // File object representing the uploaded document;
 }
 
 // Interface for props used in CreateLearningResources component

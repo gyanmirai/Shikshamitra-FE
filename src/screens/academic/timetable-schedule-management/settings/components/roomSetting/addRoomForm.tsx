@@ -3,7 +3,7 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { Close, Create } from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -65,8 +65,8 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
                   <TextField
                     disabled={isEdit}
-                    label="Room Name *"
-                    placeholder="Enter Room Name"
+                    label="Room Number *"
+                    placeholder="Enter Room Number"
                     size="small"
                     name="roomNumber"
                     type="number"
@@ -145,7 +145,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               Cancel
             </Button>
             <Button
-              startIcon={isEdit ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               type="submit"
               variant="contained"
             >

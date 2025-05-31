@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Box, Button } from '@mui/material';
@@ -23,7 +23,7 @@ const WeeklyLectures = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
-
+  const [isEdit, setIsEdit] = useState(false);
   // Custom boolean hook to control create lecture number dialog visibility
   const createLectureNumberDialog = useBoolean();
 
@@ -115,6 +115,7 @@ const WeeklyLectures = () => {
                   showEditIcon
                   showThreeDots={false}
                   handleEditClick={() => {
+                    setIsEdit(true);
                     createLectureNumberDialog.onTrue();
                   }}
                   placement="right-top"
@@ -148,7 +149,7 @@ const WeeklyLectures = () => {
       />
 
       <CustomDialog
-        title="Number of Lectures"
+        title={isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
         open={createLectureNumberDialog.value}
         handleClose={createLectureNumberDialog.onFalse}
         maxWidth="md"

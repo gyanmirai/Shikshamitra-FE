@@ -25,6 +25,7 @@ const LectureSlots = () => {
   const [disabled, setDisabled] = useState(false);
   // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
+  const [isEdit, setIsEdit] = useState(false);
   const viewSlotsDialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -65,6 +66,9 @@ const LectureSlots = () => {
           variant="contained"
           size="small"
           onClick={createSlotsDialog.onTrue}
+          sx={{
+            width: '145px',
+          }}
         >
           Slots
         </Button>
@@ -122,6 +126,7 @@ const LectureSlots = () => {
                     setDisabled(true);
                   }}
                   handleEditClick={() => {
+                    setIsEdit(true);
                     createSlotsDialog.onTrue();
                   }}
                   placement="right-top"
@@ -152,7 +157,7 @@ const LectureSlots = () => {
         ]}
       />
       <CustomDialog
-        title="Lecture Slots"
+        title={isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots'}
         open={createSlotsDialog.value}
         handleClose={createSlotsDialog.onFalse}
         maxWidth="md"

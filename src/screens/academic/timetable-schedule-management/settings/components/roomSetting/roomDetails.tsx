@@ -124,6 +124,9 @@ const RoomDetails = () => {
           size="small"
           variant="contained"
           onClick={dialog.onTrue}
+          sx={{
+            width: '145px',
+          }}
         >
           Room
         </Button>
@@ -131,8 +134,12 @@ const RoomDetails = () => {
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
-          placeholder: 'Search by Room Number, Building Name, Floor, Capacity',
-          label: 'Search by Room Number, Building Name, Floor, Capacity',
+          placeholder: 'Search by Room Number, Building Name, Floor...',
+          label: 'Search by Room Number, Building Name, Floor...',
+          sx: {
+            width: '100%',
+            maxWidth: '400px',
+          },
         }}
         noDataText={
           <>

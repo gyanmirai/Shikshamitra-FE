@@ -30,7 +30,7 @@ const Setting = (props: TabComponentType) => (
       heading="Settings"
       links={[
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Homework And Assignment', href: 'academic/homeworkDashboard' },
+        { name: 'Homework & Assignment', href: 'academic/homeworkDashboard' },
         { name: 'Settings' },
       ]}
       sx={{ px: 1, mb: 2 }}

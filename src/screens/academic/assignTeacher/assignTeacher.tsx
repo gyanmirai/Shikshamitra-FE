@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState, useEffect } from 'react';
 
-import { Box, Checkbox } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -101,10 +101,10 @@ const AssignTeacher = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Teacher"
+        heading="Assign Class Teacher"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Assign Teacher', href: 'academic/assignTeacher' },
+          { name: 'Assign Class Teacher', href: 'academic/assignTeacher' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -120,7 +120,7 @@ const AssignTeacher = () => {
         onChange={(val) => {
           // formik.setFieldValue('organization', val);
         }}
-        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+        formControlProps={{ sx: { maxWidth: '460px', width: '100%' } }}
       />
 
       <CustomizableTable
@@ -130,45 +130,49 @@ const AssignTeacher = () => {
         searchFieldProps={{
           placeholder: 'Search by Class, Division, Assigned Teacher...',
           label: 'Search by Class, Division, Assigned Teacher...',
+          sx: {
+            maxWidth: '450px',
+            width: '100%',
+          },
         }}
         noDataText={<>No Division Data Found Search By Organization and Class</>}
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '60px',
+          //   isSort: false,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(tableData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'className',
             label: 'Class',
@@ -193,7 +197,7 @@ const AssignTeacher = () => {
                   onChange={(val) => {
                     // formik.setFieldValue('organization', val);
                   }}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                 />
               );
             },

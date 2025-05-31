@@ -88,19 +88,20 @@ const AssessmentTypeForm: React.FC<IAssessmentTypeFormProps> = ({
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={(e) => onClose(e, false)}
+              variant="outlined"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={(e) => {
                 formik.handleSubmit();
                 onClose(e, true);
               }}
             >
-              {isEdit ? 'Update' : 'Submit'}
+              {data ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>

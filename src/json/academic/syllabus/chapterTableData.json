@@ -7,7 +7,8 @@
     "endDate": "01-04-2025",
     "assignedTeacher": ["Mr. Rajesh Sharma", "Ms. Neha Verma"],
     "viewMaterial": { "videos": 5, "pdfs": 3 },
-    "progress": 75
+    "progress": 75,
+    "description": "This chapter covers the basics of algebra."
   },
   {
     "id": "2",
@@ -17,7 +18,8 @@
     "endDate": "20-03-2025",
     "assignedTeacher": ["Ms. Priya Mehta"],
     "viewMaterial": { "videos": 8, "pdfs": 4 },
-    "progress": 60
+    "progress": 60,
+    "description": "This chapter covers the fundamental concepts of biology."
   },
   {
     "id": "3",
@@ -27,7 +29,8 @@
     "endDate": "05-02-2025",
     "assignedTeacher": ["Mrs. Kavita Shah", "Mr. Ankit Tiwari"],
     "viewMaterial": { "videos": 6, "pdfs": 2 },
-    "progress": 90
+    "progress": 90,
+    "description": "This chapter explores the literary works of Shakespeare."
   },
   {
     "id": "4",
@@ -37,7 +40,8 @@
     "endDate": "15-05-2025",
     "assignedTeacher": ["Mr. Arvind Joshi"],
     "viewMaterial": { "videos": 4, "pdfs": 1 },
-    "progress": 50
+    "progress": 50,
+    "description": "This chapter provides an overview of the world wars."
   },
   {
     "id": "5",
@@ -47,6 +51,7 @@
     "endDate": "10-07-2025",
     "assignedTeacher": ["Mr. Vikas Nair", "Ms. Divya Reddy"],
     "viewMaterial": { "videos": 10, "pdfs": 5 },
-    "progress": 85
+    "progress": 85,
+    "description": "This chapter covers essential data structures and algorithms."
   }
 ]

@@ -26,7 +26,7 @@ const TABS = [
     component: (props: TabComponentType) => <AssignmentCreation {...props} />,
   },
 ];
-const HomeworkAssignment = () => {
+const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // Initialize search params with default tab 'subjectSetting'
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkCreation' });
 
@@ -38,7 +38,7 @@ const HomeworkAssignment = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Set Coursework"
+        heading={currentActiveComponent?.label}
         description={
           currentActiveComponent?.value === 'homeworkCreation'
             ? 'Create and manage homework assignments for students'
@@ -46,9 +46,8 @@ const HomeworkAssignment = () => {
         }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment' },
+          { name: 'Homework & Assignment' },
           { name: 'Set Coursework' },
-          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

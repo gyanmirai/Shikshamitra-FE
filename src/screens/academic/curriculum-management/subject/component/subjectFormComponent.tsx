@@ -297,7 +297,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Subject Name/Group"
+                        label="Subject Name"
                         name="subjectName"
                         error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                         helperText={formik.touched.subjectName && formik.errors.subjectName}

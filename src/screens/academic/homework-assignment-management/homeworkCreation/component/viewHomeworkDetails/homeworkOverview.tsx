@@ -1,5 +1,4 @@
 import type { LabelColor } from 'src/components/label';
-import type { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 
 import dayjs from 'dayjs';
 
@@ -18,7 +17,10 @@ import {
 } from '@mui/material';
 
 import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
-import { PublishUnpublishStatusTypeColors } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -119,12 +121,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                     ] as LabelColor
                   }
                 >
-                  Published
+                  {PublishUnpublishStatusType[homework?.status as PublishUnpublishStatusType]}
                 </Label>
               </Box>
             </Box>
 
-            {homework?.isDailyTask && (
+            {/* {homework?.isDailyTask && (
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Iconify icon="mdi:calendar-today" sx={{ mr: 2, color: 'text.secondary' }} />
                 <Typography variant="body2" sx={{ minWidth: 120, fontWeight: 500 }}>
@@ -132,7 +134,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                 </Typography>
                 <Chip label="Yes" size="small" color="warning" variant="outlined" />
               </Box>
-            )}
+            )} */}
 
             {/* {homework?.dayOfSubmission && (
               <DetailRow
@@ -158,12 +160,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
               {/* Due Date */}
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Due Date
+                  Start Date Time
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Iconify icon="mdi:calendar-alert" color="error.main" />
                   <Typography variant="body1" fontWeight={500}>
-                    {dayjs(homework?.dueDate).format('DD MMM YYYY')}
+                    {dayjs(homework?.startDate).format('DD MMM YYYY hh:mm')}
                   </Typography>
                 </Box>
               </Box>
@@ -172,7 +174,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
               {homework?.endDate && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    End Date
+                    End Date Time
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="mdi:calendar-end" color="warning.main" />
@@ -184,7 +186,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
               )}
 
               {/* Schedule Date */}
-              {homework?.isScheduled && homework?.scheduleDate && (
+              {/* {homework?.isScheduled && homework?.scheduleDate && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     Scheduled Date
@@ -196,7 +198,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                     </Typography>
                   </Box>
                 </Box>
-              )}
+              )} */}
 
               <Divider sx={{ my: 2 }} />
 

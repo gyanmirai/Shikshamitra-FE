@@ -14,19 +14,20 @@ export const getHomeworkInitialValues = (
   chapters: editData?.chapters || [],
   homeworkType: editData?.homeworkType || '',
   submissionType: editData?.submissionType || 'online_text',
-  dueDate: dayjs(editData?.dueDate) || null,
+  // dueDate: dayjs(editData?.dueDate) || null,
   attachments: editData?.attachments ?? [],
   createdBy: editData?.createdBy || '',
   status: editData?.status || 0,
 
   // Homework specific fields
-  isDailyTask: editData?.isDailyTask || false,
+  // isDailyTask: editData?.isDailyTask || false,\
+  startDate: dayjs(editData?.startDate) || null,
   endDate: dayjs(editData?.endDate) || null,
 
-  // Scheduling
-  isScheduled: editData?.isScheduled || false,
-  scheduleDate: dayjs(editData?.scheduleDate) || null,
+  // // Scheduling
+  // isScheduled: editData?.isScheduled || false,
+  // scheduleDate: dayjs(editData?.scheduleDate) || null,
 
   // System fields
-  todaysDate: dayjs(editData?.todaysDate) || dayjs(dayjs().format('DD-MM-YYYY')),
+  // todaysDate: dayjs(editData?.todaysDate) || dayjs(dayjs().format('DD-MM-YYYY')),
 });

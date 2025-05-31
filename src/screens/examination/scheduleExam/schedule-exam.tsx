@@ -24,9 +24,8 @@ import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
 
 import type { IExamFormValues } from './type';
-import type { TabComponentType } from '../../hr/leave-request';
 
-const ScheduleExam = (props: TabComponentType) => {
+const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control exam form visibility
   const [open, setOpen] = useState(false);
   // State to store currently selected exam for editing
@@ -41,18 +40,6 @@ const ScheduleExam = (props: TabComponentType) => {
   const dispatch = useDispatch();
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
-  const links = open
-    ? [
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
-        { name: 'Schedule Exam' },
-        { name: 'Exam Form' },
-      ]
-    : [
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
-        { name: 'Schedule Exam' },
-      ];
 
   /**
    * Handles the deletion of an exam from the exam data
@@ -82,38 +69,39 @@ const ScheduleExam = (props: TabComponentType) => {
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {open ? (
-        <CustomBreadcrumbs
-          heading={selectedExam?.examName ? `Update Exam` : 'Add Exam'}
-          description={
-            selectedExam?.examName
-              ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'
-              : 'Create new exam by entering exam title, date, duration and assigning subjects. Set up the complete exam schedule.'
-          }
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Examination', href: '/academic/examinationDashboard' },
-            { name: 'Schedule Exam' },
-            { name: selectedExam?.examName ? `Update Exam` : 'Add Exam' },
-          ]}
-          sx={{ px: 1, mb: 2 }}
-          isBack
-          onBack={() => {
-            handleClose(null, false);
-          }}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Schedule Exam"
-          description="View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary."
-          links={[
-            { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Examination', href: '/academic/examinationDashboard' },
-            { name: 'Schedule Exam' },
-          ]}
-          sx={{ px: 1, mb: 2 }}
-        />
-      )}
+      {showBreadCumb &&
+        (open ? (
+          <CustomBreadcrumbs
+            heading={selectedExam?.examName ? `Update Exam` : 'Add Exam'}
+            description={
+              selectedExam?.examName
+                ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'
+                : 'Create new exam by entering exam title, date, duration and assigning subjects. Set up the complete exam schedule.'
+            }
+            links={[
+              { name: 'Academics', href: '/academic/dashboard' },
+              { name: 'Examination', href: '/academic/examinationDashboard' },
+              { name: 'Schedule Exam' },
+              { name: selectedExam?.examName ? `Update Exam` : 'Add Exam' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+            isBack
+            onBack={() => {
+              handleClose(null, false);
+            }}
+          />
+        ) : (
+          <CustomBreadcrumbs
+            heading="Schedule Exam"
+            description="View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary."
+            links={[
+              { name: 'Academics', href: '/academic/dashboard' },
+              { name: 'Examination', href: '/academic/examinationDashboard' },
+              { name: 'Schedule Exam' },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+          />
+        ))}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <NewExamForm

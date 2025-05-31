@@ -83,7 +83,7 @@ const StudentSubmission = (props: TabComponentType) => {
         heading="Student Submission"
         links={[
           { name: 'Academics' },
-          { name: 'Homework And Assignment' },
+          { name: 'Homework & Assignment' },
           { name: 'Student Submission' },
         ]}
         sx={{ px: 1, mb: 2 }}

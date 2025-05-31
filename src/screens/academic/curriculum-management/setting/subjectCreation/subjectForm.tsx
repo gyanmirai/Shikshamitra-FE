@@ -93,11 +93,11 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              startIcon={<Iconify icon={editData ? GlobalIcons.edit : GlobalIcons.submit} />}
               type="submit"
               variant="contained"
             >
-              Submit
+              {editData ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

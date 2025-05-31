@@ -85,7 +85,7 @@ const AssignmentTypeCreation = (props: TabComponentType) => {
           addDialog.onFalse();
           setSelectedData(null);
         }}
-        title={selectedData ? 'Edit Assignment Type' : 'Add Assignment Type'}
+        title={selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
       >
         <AssignmentTypeForm
           open={addDialog}
@@ -109,7 +109,7 @@ const AssignmentTypeCreation = (props: TabComponentType) => {
             color="error"
             onClick={() => {}}
           >
-            Delete
+            Yes
           </Button>
         }
       />

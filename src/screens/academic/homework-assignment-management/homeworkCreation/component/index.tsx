@@ -106,7 +106,7 @@ const HomeworkCreation = (props: TabComponentType) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} justifyContent="space-between" mb={2}>
+      <Box display="flex" gap={2} justifyContent="space-between" mb={1}>
         <Box display="flex" gap={2}>
           <CustomSelect
             options={allClass}
@@ -234,7 +234,7 @@ const HomeworkCreation = (props: TabComponentType) => {
             color="error"
             onClick={() => {}}
           >
-            Delete
+            Yes
           </Button>
         }
       />

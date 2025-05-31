@@ -32,9 +32,11 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -153,20 +155,6 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Switch
-              checked={formik.values.randomOrder}
-              onChange={() => {
-                formik.setFieldValue('randomOrder', !formik.values.randomOrder);
-              }}
-              inputProps={{ 'aria-label': 'controlled' }}
-            />
-            <Typography sx={{ mr: 2 }} variant="body2">
-              Random Questions
-            </Typography>
-          </Box>
-        </Grid>
         <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType) || false}
@@ -347,6 +335,21 @@ const QuizInformation = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Switch
+              checked={formik.values.randomOrder}
+              onChange={() => {
+                formik.setFieldValue('randomOrder', !formik.values.randomOrder);
+              }}
+              inputProps={{ 'aria-label': 'controlled' }}
+            />
+            <Typography sx={{ mr: 2 }} variant="body2">
+              Random Questions
+            </Typography>
+          </Box>
+        </Grid>
       </Grid>
     </Box>
   );
@@ -459,7 +462,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                         </TableCell>
                         <TableCell>
                           <IconButton size="small" onClick={() => onEditQuestion(index)}>
-                            <Iconify icon="mdi:pencil" />
+                            <Iconify icon={GlobalIcons.edit} />
                           </IconButton>
                         </TableCell>
                         <TableCell>
@@ -468,7 +471,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             size="small"
                             onClick={() => onDeleteQuestion(index)}
                           >
-                            <Iconify icon="mdi:delete" />
+                            <Iconify icon={GlobalIcons.delete} />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -862,12 +865,20 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
           />
           <Stack direction="row" spacing={2}>
             {onCancel && (
-              <Button variant="outlined" onClick={onCancel}>
+              <Button
+                variant="outlined"
+                onClick={onCancel}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              >
                 Cancel
               </Button>
             )}
-            <Button variant="contained" onClick={handleSaveQuestion}>
-              {isEditMode ? 'Save Changes' : 'Save Question'}
+            <Button
+              variant="contained"
+              onClick={handleSaveQuestion}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Submit
             </Button>
           </Stack>
         </Box>
@@ -984,23 +995,24 @@ const QuizBuilder = ({ formik }: any) => {
           onEditQuestion={handleEditQuestion}
         />
       ) : (
-        <UploadBox
-          onDrop={() => {}}
-          placeholder={
-            <Box
-              sx={{
-                gap: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                color: 'text.disabled',
-                flexDirection: 'column',
-              }}
-            >
-              <Iconify icon="eva:cloud-upload-fill" width={40} />
-              <Typography variant="body2">Upload Document</Typography>
-            </Box>
-          }
-          sx={{ py: 1.4, width: '100%', borderRadius: 1.5 }}
+        <Upload
+          // {...uploadProps}
+          thumbnail
+          value={formik.values.rubric}
+          onDrop={(acceptedFiles) => {
+            const file = acceptedFiles[0];
+            console.log('file', file);
+
+            if (!file) return;
+
+            formik.setFieldValue('rubric', file);
+          }}
+          multiple={false}
+          onDelete={() => {}}
+          onRemoveAll={() => {}}
+          sx={{
+            p: 2,
+          }}
         />
       )}
     </Box>

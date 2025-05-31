@@ -15,7 +15,6 @@ import {
   Grid,
   Radio,
   Button,
-  Switch,
   TextField,
   RadioGroup,
   Typography,
@@ -155,7 +154,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <CustomSelect
                     label="Division *"
                     labelKey="name"
-                    valueKey="id"
+                    valueKey="name"
                     multiple
                     options={allDivision}
                     value={formik.values.division}
@@ -185,10 +184,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     label="Subject *"
                     disabled={!formik.values.division || formik.values.division.length === 0}
                     options={[
-                      { value: 'math', label: 'Mathematics' },
-                      { value: 'science', label: 'Science' },
-                      { value: 'history', label: 'History' },
-                      { value: 'english', label: 'English' },
+                      { value: 'Mathematics', label: 'Mathematics' },
+                      { value: 'Science', label: 'Science' },
+                      { value: 'History', label: 'History' },
+                      { value: 'English', label: 'English' },
                     ]}
                     value={formik.values.subjects}
                     onChange={(val) => formik.setFieldValue('subjects', val)}
@@ -267,7 +266,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               </Grid>
 
               {/* Due Date */}
-              <Grid item xs={12} md={6}>
+              {/* <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
                 >
@@ -289,7 +288,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     }}
                   />
                 </ShakingTextField>
-              </Grid>
+              </Grid> */}
 
               {/* Description */}
               <Grid item xs={12}>
@@ -309,81 +308,94 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
               {/* File Upload */}
               <Grid item xs={12}>
-                <Upload
-                  multiple
-                  value={formik.values.attachments || []}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                />
+                <SectionCard title="Assignment Attachments">
+                  <Upload
+                    multiple
+                    value={formik.values.attachments || []}
+                    onDrop={handleDrop}
+                    onRemove={handleRemove}
+                    sx={{
+                      p: 2,
+                    }}
+                  />
+                </SectionCard>
               </Grid>
 
-              {/* <Grid item xs={12}>
-                <Upload
-                  {...uploadProps}
-                  thumbnail
-                  value={formik.values.rubric}
-                  onDrop={(acceptedFiles) => {
-                    const file = acceptedFiles[0];
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                      const base64String = reader.result;
-                      formik.setFieldValue('rubric', reader);
-                    };
-                  }}
-                  multiple={false}
-                  onDelete={() => handleRemoveFile(formik.setFieldValue)}
-                  onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
-                />
-              </Grid> */}
+              <Grid item xs={12}>
+                <SectionCard title="Assignment Rubric">
+                  <Upload
+                    // {...uploadProps}
+                    thumbnail
+                    value={formik.values.rubric}
+                    onDrop={(acceptedFiles) => {
+                      const file = acceptedFiles[0];
+                      console.log('file', file);
+
+                      if (!file) return;
+
+                      formik.setFieldValue('rubric', file);
+                    }}
+                    multiple={false}
+                    onDelete={() => handleRemoveFile(formik.setFieldValue)}
+                    onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
+                    sx={{
+                      p: 2,
+                    }}
+                  />
+                </SectionCard>
+              </Grid>
 
               {/* Schedule Assignment */}
               <Grid item xs={12}>
-                <SectionCard title="Assignment Schedule Settings">
+                <SectionCard title="Schedule Assignment">
                   <Grid container spacing={2} p={2}>
                     <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={formik.values.isScheduled}
-                            onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
-                          />
-                        }
-                        label="Enable Schedule"
-                      />
+                      <ShakingTextField
+                        error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                      >
+                        <DateTimePicker
+                          label="Start Date Time"
+                          value={dayjs(formik.values.startDate)}
+                          format="DD/MM/YYYY hh:mm"
+                          onChange={(date) => formik.setFieldValue('startDate', date)}
+                          slotProps={{
+                            textField: {
+                              size: 'small',
+                              fullWidth: true,
+                              error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                              helperText:
+                                formik.touched.startDate &&
+                                typeof formik.errors.startDate === 'string'
+                                  ? formik.errors.startDate
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
                     </Grid>
-
-                    {/* Conditional Schedule Date field */}
-                    {formik.values.isScheduled && (
-                      <Grid item xs={12} md={6}>
-                        <ShakingTextField
-                          error={
-                            !!(formik.touched.scheduleDate && formik.errors.scheduleDate) || false
-                          }
-                        >
-                          <DateTimePicker
-                            label="Schedule Date"
-                            value={dayjs(formik.values.scheduleDate)}
-                            format="DD/MM/YYYY hh:mm"
-                            onChange={(date) => formik.setFieldValue('scheduleDate', date)}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error:
-                                  formik.touched.scheduleDate &&
-                                  Boolean(formik.errors.scheduleDate),
-                                helperText:
-                                  formik.touched.scheduleDate &&
-                                  typeof formik.errors.scheduleDate === 'string'
-                                    ? formik.errors.scheduleDate
-                                    : undefined,
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    )}
+                    <Grid item xs={12} md={6}>
+                      <ShakingTextField
+                        error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                      >
+                        <DateTimePicker
+                          label="End Date Time"
+                          value={dayjs(formik.values.endDate)}
+                          format="DD/MM/YYYY hh:mm"
+                          onChange={(date) => formik.setFieldValue('endDate', date)}
+                          slotProps={{
+                            textField: {
+                              size: 'small',
+                              fullWidth: true,
+                              error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                              helperText:
+                                formik.touched.endDate && typeof formik.errors.endDate === 'string'
+                                  ? formik.errors.endDate
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    </Grid>
                   </Grid>
                 </SectionCard>
               </Grid>

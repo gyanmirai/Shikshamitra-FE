@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import { TextField } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -34,20 +34,19 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         },
         {
           id: 'examDate',
-          label: 'Exam Start Date Time',
+          label: 'Exam Date',
           isFilter: false,
           isSort: false,
           render(value, row) {
             return (
-              <DateTimePicker
+              <DatePicker
                 value={value ? dayjs(value) : null}
-                format="DD/MM/YYYY hh:mm"
+                format="DD/MM/YYYY"
                 onChange={(newTime) => {
                   const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].examStartDateTime = newTime;
+                  updatedSchedules[row.id].examDate = newTime;
                   setExamSchedules(updatedSchedules);
                 }}
-                minDateTime={dayjs()} // Prevents selecting past dates and times
                 slotProps={{ textField: { size: 'small' } }}
                 sx={{ minWidth: '250px', width: '100%' }}
               />
@@ -55,21 +54,41 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           },
         },
         {
-          id: 'examTime',
-          label: 'Exam End Date Time',
+          id: 'startTime',
+          label: 'Start Time',
           isFilter: false,
           isSort: false,
           render(value, row) {
             return (
-              <DateTimePicker
-                format="DD/MM/YYYY hh:mm"
+              <TimePicker
+                format="hh:mm"
                 value={value ? dayjs(value) : null}
                 onChange={(newTime) => {
                   const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].examEndDateTime = newTime;
+                  updatedSchedules[row.id].startTime = newTime;
                   setExamSchedules(updatedSchedules);
                 }}
-                minDateTime={dayjs()}
+                slotProps={{ textField: { size: 'small' } }}
+                sx={{ minWidth: '250px', width: '100%' }}
+              />
+            );
+          },
+        },
+        {
+          id: 'endTime',
+          label: 'End Time',
+          isFilter: false,
+          isSort: false,
+          render(value, row) {
+            return (
+              <TimePicker
+                format="hh:mm"
+                value={value ? dayjs(value) : null}
+                onChange={(newTime) => {
+                  const updatedSchedules = [...examSchedules];
+                  updatedSchedules[row.id].startTime = newTime;
+                  setExamSchedules(updatedSchedules);
+                }}
                 slotProps={{ textField: { size: 'small' } }}
                 sx={{ minWidth: '250px', width: '100%' }}
               />

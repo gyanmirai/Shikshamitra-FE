@@ -17,7 +17,7 @@ import { validationSchema } from './validationSchema';
 
 import type { IGradingScale, IGradeFormProps } from './type';
 
-const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
+const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit, disabled }) => {
   const formik = useFormik({
     initialValues: getInitialValues(data),
     validationSchema,
@@ -47,6 +47,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                     label="Title *"
                     name="name"
                     size="small"
+                    disabled={disabled}
                     placeholder="Enter Title"
                     value={formik.values.name}
                     onChange={formik.handleChange}
@@ -67,6 +68,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                     fullWidth
                     label="Total Marks *"
                     name="totalMarks"
+                    disabled={disabled}
                     size="small"
                     placeholder="Enter Total Marks"
                     value={formik.values.totalMarks}
@@ -101,6 +103,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                         fullWidth
                         label="Min Marks *"
                         name={`gradingScale.${index}.minMarks`}
+                        disabled={disabled}
                         size="small"
                         placeholder="Enter Min Marks"
                         value={scale.minMarks}
@@ -116,6 +119,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                         fullWidth
                         label="Max Marks *"
                         name={`gradingScale.${index}.maxMarks`}
+                        disabled={disabled}
                         size="small"
                         placeholder="Enter Max Marks"
                         value={scale.maxMarks}
@@ -147,6 +151,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                         ]}
                         name={`gradingScale.${index}.grade`}
                         size="small"
+                        disabled={disabled}
                         value={scale.grade}
                         onChange={(val) => {
                           formik.setFieldValue(`gradingScale.${index}.grade`, val);
@@ -165,7 +170,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
                           updatedGradingScale.splice(index, 1); // Remove row
                           formik.setFieldValue('gradingScale', updatedGradingScale); // Update state
                         }}
-                        sx={{ cursor: 'pointer', mt: 1, color: 'error' }}
+                        sx={{ cursor: 'pointer', mt: 1, color: 'error.main' }}
                       />
                     </Grid>
                   </Grid>
@@ -184,13 +189,13 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit 
               Cancel
             </Button>
             <Button
-              startIcon={<Create />}
+              startIcon={data ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
               variant="contained"
               onClick={() => {
                 formik.handleSubmit();
               }}
             >
-              {isEdit ? 'Update' : 'Create'}
+              {data ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>

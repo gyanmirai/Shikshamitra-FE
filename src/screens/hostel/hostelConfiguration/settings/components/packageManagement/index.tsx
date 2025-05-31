@@ -157,7 +157,7 @@ const PackageManagement = (props: TabComponentType) => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   size="small"
-                  checked={value === PublishUnpublishStatusType.Publish}
+                  checked={value === PublishUnpublishStatusType.Published}
                   onChange={() => {
                     setSelectedEntry(row as IHostelPackageType);
                     publishDialog.onTrue();

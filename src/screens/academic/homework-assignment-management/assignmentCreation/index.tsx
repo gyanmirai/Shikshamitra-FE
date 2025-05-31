@@ -68,7 +68,6 @@ const AssignmentCreation = (props: TabComponentType) => {
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
-  console.log('medium ----', medium);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -104,7 +103,7 @@ const AssignmentCreation = (props: TabComponentType) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} justifyContent="space-between" mb={2}>
+      <Box display="flex" gap={2} justifyContent="space-between" mb={1}>
         <Box display="flex" gap={2}>
           <CustomSelect
             options={allClass}
@@ -228,7 +227,7 @@ const AssignmentCreation = (props: TabComponentType) => {
             color="error"
             onClick={() => {}}
           >
-            Delete
+            Yes
           </Button>
         }
       />

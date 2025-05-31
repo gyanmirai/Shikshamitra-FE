@@ -169,7 +169,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     key={subject.id}
                     label={subject.subjectName}
                     size="small"
-                    color="primary"
                     variant="outlined"
                   />
                 ))}

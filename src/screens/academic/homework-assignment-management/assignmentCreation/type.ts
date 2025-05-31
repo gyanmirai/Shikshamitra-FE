@@ -10,16 +10,18 @@ export interface IAssignment {
   division: string[];
   subjects: string;
   submissionType: string;
-  dueDate: Dayjs | null | string;
+  // dueDate: Dayjs | null | string;
+  startDate: Dayjs | null | string;
+  endDate: Dayjs | null | string;
   attachments: File[];
   createdBy: string;
   status: number;
   assignmentType: string;
-  isScheduled: boolean;
-  scheduleDate: Dayjs | null | string;
-  todaysDate: Dayjs | string;
+  // isScheduled: boolean;
+  // scheduleDate: Dayjs | null | string;
+  // todaysDate: Dayjs | string;
   content?: string;
-  rubric: File | null;
+  rubric: File | string;
   submission?: string;
 }
 

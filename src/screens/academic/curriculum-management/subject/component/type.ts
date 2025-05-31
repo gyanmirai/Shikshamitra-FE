@@ -17,7 +17,7 @@ export interface ISubject {
 
 export interface ISubjectFormValues {
   id?: number;
-  status?: string;
+  status: string;
   className: string;
   subjectName: string;
   subjects?: ISubject[];
@@ -33,7 +33,7 @@ export interface ISubjectTableProps {
   onView: (subject: ISubjectFormValues) => void;
   onEdit: (subject: ISubjectFormValues) => void;
   onDelete: (subject: ISubjectFormValues) => void;
-  onToggleStatus: (id: number, value: string) => void;
+  onToggleStatus: (subject: ISubjectFormValues) => void;
 }
 
 export interface ISubjectFormProps {

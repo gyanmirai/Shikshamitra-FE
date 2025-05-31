@@ -166,7 +166,6 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
           }}
@@ -201,7 +200,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
           tabs.value === ScheduleExamStatus.Pending
             ? [
                 {
-                  id: 'subject',
+                  id: 'subjects',
                   label: 'Subject',
                   align: 'left',
                   filterType: 'string',
@@ -213,7 +212,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
                   filterType: 'string',
                 },
                 {
-                  id: 'submissionType',
+                  id: 'assignmentType',
                   label: 'Assignment Type',
                   align: 'left',
                   filterType: 'string',
@@ -259,7 +258,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
               ]
             : [
                 {
-                  id: 'subject',
+                  id: 'subjects',
                   label: 'Subject',
                   align: 'left',
                   filterType: 'string',
@@ -271,7 +270,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
                   filterType: 'string',
                 },
                 {
-                  id: 'submissionType',
+                  id: 'assignmentType',
                   label: 'Assignment Type',
                   align: 'left',
                   filterType: 'string',
@@ -296,7 +295,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
                 },
                 {
                   id: 'marks',
-                  label: 'Feedback',
+                  label: 'Marks',
                   align: 'left',
                   filterType: 'number',
                 },
@@ -309,6 +308,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
                 {
                   id: 'marksStatus',
                   label: 'Marks Status',
+                  sticky: true,
                   filterType: 'enum',
                   enumOptions: ScheduleExamStatusOptions,
                   align: 'left',

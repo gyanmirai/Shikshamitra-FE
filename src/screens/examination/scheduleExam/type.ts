@@ -6,8 +6,9 @@ export interface IScheduledExam {
   subjectName: string;
   examType: string;
   examName: string;
-  examStartDateTime: string;
-  examEndDateTime: string;
+  examDate: string | Dayjs | null;
+  startTime: string | Dayjs | null;
+  endTime: string | Dayjs | null;
   examDuration: string;
   totalMarks: number;
   status: number;
@@ -16,8 +17,9 @@ export interface IScheduledExam {
 export interface ISubjectDetail {
   id: number;
   subjectName: string;
-  examStartDateTime: Dayjs | null | string;
-  examEndDateTime: Dayjs | null | string;
+  examDate: string | Dayjs | null;
+  startTime: string | Dayjs | null;
+  endTime: string | Dayjs | null;
   totalMarks: number;
   passingMarks: number;
   rubric: File[];

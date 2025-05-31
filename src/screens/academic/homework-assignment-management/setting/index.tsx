@@ -38,7 +38,7 @@ const HomeworkSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading={currentActiveComponent?.label}
         description={
           currentActiveComponent?.value === 'homeworkType'
             ? 'Create and manage homework types for assignments'
@@ -46,9 +46,8 @@ const HomeworkSetting = () => {
         }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment' },
+          { name: 'Homework & Assignment' },
           { name: 'Setting' },
-          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

@@ -116,13 +116,14 @@ const AssignElectiveSubject = () => {
 
         {/* Right side - Save Button */}
         <Box display="flex" gap={2} justifyContent="flex-end">
-          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}}>
+          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
             Reset
           </Button>
           <Button
             startIcon={<Save />}
             variant="contained"
             disabled={!classes || !division || !electiveSubject}
+            size="small"
           >
             Save
           </Button>
@@ -133,8 +134,8 @@ const AssignElectiveSubject = () => {
         tableId="elective-subject-table"
         noDataText={<>No Bulk Update Data Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Sr. No, GR No, Name...',
-          label: 'Search by Sr. No, GR No, Name...',
+          placeholder: 'Search by Sr. No, GR No, Student Name...',
+          label: 'Search by Sr. No, GR No, Student Name...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -143,7 +144,7 @@ const AssignElectiveSubject = () => {
         columns={[
           { id: 'srNo', label: 'Sr. No.', minWidth: '150px', align: 'left' },
           { id: 'grNo', label: 'GR No.', minWidth: '200px', align: 'left' },
-          { id: 'name', label: 'Name', minWidth: '200px', align: 'left' },
+          { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left' },
           {
             id: 'electiveSubject',
             label: 'Elective Subject',

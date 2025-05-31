@@ -20,7 +20,6 @@ import {
   Dialog,
   Checkbox,
   Typography,
-  IconButton,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
@@ -36,7 +35,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -444,7 +442,7 @@ export function StudentProfile() {
                   {currentStudent?.educationMedium?.name || '-'}
                 </Label>
               </Box>
-              <Box display="flex" gap={2} alignItems="center">
+              {/* <Box display="flex" gap={2} alignItems="center">
                 <Button
                   startIcon={<Iconify icon="lineicons:id-card" />}
                   size="small"
@@ -479,7 +477,7 @@ export function StudentProfile() {
                     />
                   </IconButton>
                 </CustomTooltip>
-              </Box>
+              </Box> */}
             </Paper>
             <Tabs
               value={tabs.value}

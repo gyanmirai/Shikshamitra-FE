@@ -33,7 +33,7 @@ const TABS = [
   {
     value: 'scheduleExam',
     label: 'Schedule Exam',
-    component: (props: TabComponentType) => <ScheduleExam {...props} />,
+    component: (props?: any) => <ScheduleExam {...props} />,
   },
   {
     value: 'gradeEntry',

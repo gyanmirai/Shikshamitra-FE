@@ -12,16 +12,16 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
-import RubricManagement from './settings/rubricManagement/rubricManagement';
-import ExamAssessmentType from './settings/examAssessmentTypeSetting.tsx/examType';
+import ExamTypeSettings from './settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeSetting';
+import AssessmentTypeSettings from './settings/examAssessmentTypeSetting.tsx/assessmentTypeSetting/assessmentTypeSetting';
 
 const TABS = [
-  {
-    value: 'rubricManagement',
-    label: 'Rubric Management',
-    description: 'Manage rubrics for assessments and grading.',
-    component: () => <RubricManagement />,
-  },
+  // {
+  //   value: 'rubricManagement',
+  //   label: 'Rubric Management',
+  //   description: 'Manage rubrics for assessments and grading.',
+  //   component: () => <RubricManagement />,
+  // },
   {
     value: 'gradeScaling',
     label: 'Grade Scaling',
@@ -29,10 +29,16 @@ const TABS = [
     component: () => <GradeScaling />,
   },
   {
-    value: 'examAssessmentType',
-    label: 'Exam & Assessment Type',
-    description: 'Configure exam and assessment types.',
-    component: () => <ExamAssessmentType />,
+    value: 'examType',
+    label: 'Exam Type',
+    description: 'Configure exam types.',
+    component: () => <ExamTypeSettings />,
+  },
+  {
+    value: 'assessmentType',
+    label: 'Assessment Type',
+    description: 'Configure assessment types.',
+    component: () => <AssessmentTypeSettings />,
   },
   //   {
   //     value: 'eventType',
@@ -43,7 +49,7 @@ const TABS = [
 
 const Setting = (props: TabComponentType) => {
   // Initialize tabs with 'rubricManagement' as default value using custom hook
-  const tabs = useTabs('rubricManagement');
+  const tabs = useTabs('gradeScaling');
 
   // Find the current tab object based on selected tab value
   const currentTab = TABS.find((tab) => tab.value === tabs.value);
@@ -53,13 +59,12 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading={currentTab?.label}
         description={currentTab?.description}
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Examination', href: '/academic/examinationDashboard' },
           { name: 'Setting' },
-          { name: currentTab?.label || '' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

@@ -1,12 +1,12 @@
 // SubjectTable.tsx
 
-import { Box, Chip, Switch } from '@mui/material';
+import { Box, Chip, IconButton } from '@mui/material';
 
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusOptions,
-} from 'src/enums/publishUnpublish-status';
+import { GlobalIcons } from 'src/utils/icons';
 
+import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -108,16 +108,16 @@ const SubjectTable = ({
               {row.subjectType === 'core' ? (
                 <Chip
                   key={value}
-                  label={value}
+                  label={`${value} (${row.subjectCode})`}
                   size="small"
                   variant="outlined"
                   sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
                 />
               ) : Array.isArray(value) ? (
-                value.map((subjectCode: string) => (
+                value.map((subjectName: string, index: number) => (
                   <Chip
-                    key={subjectCode}
-                    label={subjectCode}
+                    key={subjectName}
+                    label={`${subjectName} (${Array.isArray(row.subjectCode) ? row.subjectCode[index] : row.subjectCode})`}
                     size="small"
                     variant="outlined"
                     sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
@@ -126,29 +126,11 @@ const SubjectTable = ({
               ) : (
                 <Chip
                   key={value}
-                  label={value}
+                  label={`${value} (${row.subjectCode})`}
                   size="small"
                   variant="outlined"
                   sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
                 />
-              )}
-            </Box>
-          ),
-        },
-        {
-          id: 'subjectCode',
-          label: 'Subject Code',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {row.subjectType === 'core' ? (
-                <Chip key={value} label={value} size="small" variant="outlined" />
-              ) : Array.isArray(value) ? (
-                value.map((subjectCode: string) => (
-                  <Chip key={subjectCode} label={subjectCode} size="small" variant="outlined" />
-                ))
-              ) : (
-                <Chip key={value} label={value} size="small" variant="outlined" />
               )}
             </Box>
           ),
@@ -194,20 +176,34 @@ const SubjectTable = ({
         // },
         {
           id: 'status',
-          label: 'Publish',
-          align: 'left',
+          label: 'Publish/Draft',
+          align: 'center',
+          minWidth: 100,
           isFilter: false,
+          sticky: true,
           isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
           render: (value, row) => (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Switch
-                size="small"
-                checked={value === PublishUnpublishStatusType.Publish}
-                onChange={() => onToggleStatus(row.id, value)}
+            <IconButton
+              onClick={() => onToggleStatus(row as ISubjectFormValues)}
+              sx={{
+                boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.15)',
+                '&:hover': {
+                  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+                },
+              }}
+            >
+              <Iconify
+                icon={GlobalIcons.tick}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  cursor: 'pointer',
+                  color: value === 'Published' ? 'green' : 'gray',
+                }}
               />
-            </Box>
+            </IconButton>
           ),
         },
         {

@@ -17,17 +17,17 @@ export interface IHomework {
   chapters: string[];
   homeworkType: string;
   submissionType: string;
-  dueDate: Dayjs | null | string;
   attachments?: File[];
   createdBy: string;
   status: number;
-  isDailyTask: boolean;
+  // isDailyTask: boolean;
+  startDate: Dayjs | null | string;
   endDate: Dayjs | null | string;
-  content?: string;
-  submission?: string;
-  isScheduled: boolean;
-  scheduleDate: Dayjs | null | string;
-  todaysDate: Dayjs | string;
+  content?: string | null;
+  submission?: string | null;
+  // isScheduled: boolean;
+  // scheduleDate: Dayjs | null | string;
+  // todaysDate: Dayjs | string;
 }
 
 export interface IStudentSubmissionsProps {

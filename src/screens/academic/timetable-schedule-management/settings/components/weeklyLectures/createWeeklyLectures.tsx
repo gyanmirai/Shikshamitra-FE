@@ -81,14 +81,14 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     options={allClass}
-                    value={formik.values.className}
+                    value={formik.values.className || classes}
                     onChange={(val) => {
                       formik.setFieldValue('className', val as string);
                     }}
                     label="Class"
                     // isLoading={isLoading}
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
                     helperText={

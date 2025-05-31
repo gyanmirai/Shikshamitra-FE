@@ -1,7 +1,4 @@
 import type { LabelColor } from 'src/components/label';
-import type { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
-
-import dayjs from 'dayjs';
 
 import {
   Box,
@@ -18,7 +15,10 @@ import {
 } from '@mui/material';
 
 import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
-import { PublishUnpublishStatusTypeColors } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -100,12 +100,12 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                     ] as LabelColor
                   }
                 >
-                  Published
+                  {PublishUnpublishStatusType[assignment?.status as PublishUnpublishStatusType]}
                 </Label>
               </Box>
             </Box>
 
-            {assignment?.isScheduled && (
+            {/* {assignment?.isScheduled && (
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Iconify icon="mdi:calendar-clock" />
@@ -117,7 +117,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                   <Chip label="Yes" size="small" color="info" variant="outlined" />
                 </Box>
               </Box>
-            )}
+            )} */}
           </CardContent>
         </Card>
       </Grid>
@@ -132,8 +132,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
-              {/* Due Date */}
-              <Box sx={{ mb: 2 }}>
+              {/* <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Due Date
                 </Typography>
@@ -145,7 +144,6 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                 </Box>
               </Box>
 
-              {/* Schedule Date */}
               {assignment?.isScheduled && assignment?.scheduleDate && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -160,7 +158,6 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                 </Box>
               )}
 
-              {/* Today's Date */}
               {assignment?.todaysDate && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -173,7 +170,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                     </Typography>
                   </Box>
                 </Box>
-              )}
+              )} */}
 
               <Divider sx={{ my: 2 }} />
 

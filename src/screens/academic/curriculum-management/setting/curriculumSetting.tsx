@@ -22,7 +22,7 @@ const TABS = [
   },
   {
     value: 'electiveSubjectSetting',
-    label: 'Elective Group',
+    label: 'Elective Group Creation',
     component: (props: TabComponentType) => <ElectiveSubjectSetting {...props} />,
   },
 ];
@@ -38,13 +38,12 @@ const CurriculumSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading={currentActiveComponent?.label}
         description="Setting for creating global subjects, elective subject and notification setting"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Setting' },
-          { name: currentActiveComponent?.label },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

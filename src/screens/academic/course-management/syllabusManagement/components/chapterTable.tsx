@@ -76,6 +76,12 @@ const ChapterTable = ({
         filterType: 'date',
       },
       {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+        filterType: 'string',
+      },
+      {
         id: 'viewMaterial',
         label: 'View Material',
         isFilter: false,
