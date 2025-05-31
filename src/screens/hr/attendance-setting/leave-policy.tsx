@@ -6,7 +6,6 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
@@ -53,8 +52,8 @@ interface ILeavePolicy {
   color: string;
 }
 
-const LeavePolicy = () => {
-  const dialog = useBoolean(false);
+const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
+  // const dialog = useBoolean(false);
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const dispatch = useDispatch();
@@ -115,7 +114,7 @@ const LeavePolicy = () => {
           </LoadingButton>
         }
       />
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
+      {/* <Box display="flex" justifyContent="flex-end" alignItems="center">
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
@@ -125,7 +124,7 @@ const LeavePolicy = () => {
         >
           Leave Policy
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         noDataText={
           <>

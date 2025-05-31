@@ -2,8 +2,10 @@
 
 import React, { useMemo } from 'react';
 
-import { Tab, Box } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Tab, Box, Button } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { Iconify } from 'src/components/iconify';
@@ -31,13 +33,13 @@ const TABS = [
     value: 'rule',
     label: 'Attendance Rule',
     icon: <Iconify icon="carbon:rule-draft" width={20} />,
-    component: () => <AttendanceRule />,
+    component: (props: any) => <AttendanceRule {...props} />,
   },
   {
     value: 'leavePolicy',
     label: 'Leave Policy',
     icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
-    component: () => <LeavePolicy />,
+    component: (props: any) => <LeavePolicy {...props} />,
   },
   // {
   //   value: 'lateArrivalPolicy',
@@ -48,8 +50,37 @@ const TABS = [
 ];
 
 const HrAttendanceSettingScreen = () => {
+  const attendanceRuleDialog = useBoolean(false);
+  const leavePolicyDialog = useBoolean(false);
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
-  console.log('🚀 ~ file: index.tsx:54 ~ HrAttendanceSettingScreen ~ searchParams:', searchParams);
+
+  const renderButton = useMemo(
+    () => ({
+      rule: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          onClick={attendanceRuleDialog.onTrue}
+          size="small"
+        >
+          Attendance Rule
+        </Button>
+      ),
+      leavePolicy: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={leavePolicyDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Leave Policy
+        </Button>
+      ),
+    }),
+    [attendanceRuleDialog.onTrue, leavePolicyDialog.onTrue]
+  );
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -67,6 +98,7 @@ const HrAttendanceSettingScreen = () => {
         heading="Setting"
         links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
+        action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
       />
       <CustomTabs
@@ -89,8 +121,10 @@ const HrAttendanceSettingScreen = () => {
       <Scrollbar sx={{ p: 1 }}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
-          // searchParams={searchParams}
-          // setSearchParams={setSearchParams}
+            attendanceRuleDialog={attendanceRuleDialog}
+            leavePolicyDialog={leavePolicyDialog}
+            // searchParams={searchParams}
+            // setSearchParams={setSearchParams}
           />
         )}
       </Scrollbar>

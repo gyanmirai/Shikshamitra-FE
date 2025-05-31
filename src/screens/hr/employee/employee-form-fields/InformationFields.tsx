@@ -16,6 +16,8 @@ import {
   FormHelperText,
 } from '@mui/material';
 
+import { fileToBase64 } from 'src/utils/file-to-base64';
+
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
@@ -23,6 +25,7 @@ import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-s
 
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
+import { UploadAvatar } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -48,77 +51,97 @@ export const SectionCard = ({ title, children }: { title: string; children: Reac
 const InformationAllFields = ({ formik, disabled }: any) => (
   <Box>
     <SectionCard title="Basic Details">
-      <Grid item xs={12} md={3}>
-        <ShakingTextField error={formik.touched.firstName && Boolean(formik.errors.firstName)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="First Name *"
-            placeholder="Enter First Name *"
-            {...formik.getFieldProps('firstName')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('firstName', newName);
-            }}
-            error={formik.touched.firstName && Boolean(formik.errors.firstName)}
-            helperText={formik.touched.firstName && formik.errors.firstName}
-            disabled={disabled}
-          />
-        </ShakingTextField>
+      <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <UploadAvatar
+          maxSize={3145728}
+          onDrop={async (acceptedFiles: File[]) => {
+            const value = acceptedFiles[0];
+            const base64 = await fileToBase64(value);
+            formik.setFieldValue('photo', base64);
+          }}
+          value={formik.values.photo}
+          error={formik.touched.photo && Boolean(formik.errors.photo)}
+          sx={{ m: 'initial' }}
+          disabled={disabled}
+        />
       </Grid>
-      <Grid item xs={12} md={3}>
-        <ShakingTextField error={formik.touched.middleName && Boolean(formik.errors.middleName)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Middle Name *"
-            placeholder="Enter Middle Name *"
-            {...formik.getFieldProps('middleName')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('middleName', newName);
-            }}
-            error={formik.touched.middleName && Boolean(formik.errors.middleName)}
-            helperText={formik.touched.middleName && formik.errors.middleName}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Last Name *"
-            placeholder="Enter Last Name *"
-            {...formik.getFieldProps('lastName')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('lastName', newName);
-            }}
-            error={formik.touched.lastName && Boolean(formik.errors.lastName)}
-            helperText={formik.touched.lastName && formik.errors.lastName}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <ShakingTextField error={formik.touched.shortName && Boolean(formik.errors.shortName)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Short Name"
-            placeholder="Enter Short Name"
-            {...formik.getFieldProps('shortName')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('shortName', newName);
-            }}
-            error={formik.touched.shortName && Boolean(formik.errors.shortName)}
-            helperText={formik.touched.shortName && formik.errors.shortName}
-            disabled={disabled}
-          />
-        </ShakingTextField>
+      <Grid item xs={12} md={10}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={3}>
+            <ShakingTextField error={formik.touched.firstName && Boolean(formik.errors.firstName)}>
+              <TextField
+                fullWidth
+                size="small"
+                label="First Name *"
+                placeholder="Enter First Name *"
+                {...formik.getFieldProps('firstName')}
+                onChange={(e) => {
+                  const newName = capitalize(e.target.value);
+                  formik.setFieldValue('firstName', newName);
+                }}
+                error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                helperText={formik.touched.firstName && formik.errors.firstName}
+                disabled={disabled}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <ShakingTextField
+              error={formik.touched.middleName && Boolean(formik.errors.middleName)}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                label="Middle Name *"
+                placeholder="Enter Middle Name *"
+                {...formik.getFieldProps('middleName')}
+                onChange={(e) => {
+                  const newName = capitalize(e.target.value);
+                  formik.setFieldValue('middleName', newName);
+                }}
+                error={formik.touched.middleName && Boolean(formik.errors.middleName)}
+                helperText={formik.touched.middleName && formik.errors.middleName}
+                disabled={disabled}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Last Name *"
+                placeholder="Enter Last Name *"
+                {...formik.getFieldProps('lastName')}
+                onChange={(e) => {
+                  const newName = capitalize(e.target.value);
+                  formik.setFieldValue('lastName', newName);
+                }}
+                error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                helperText={formik.touched.lastName && formik.errors.lastName}
+                disabled={disabled}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <ShakingTextField error={formik.touched.shortName && Boolean(formik.errors.shortName)}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Short Name"
+                placeholder="Enter Short Name"
+                {...formik.getFieldProps('shortName')}
+                onChange={(e) => {
+                  const newName = capitalize(e.target.value);
+                  formik.setFieldValue('shortName', newName);
+                }}
+                error={formik.touched.shortName && Boolean(formik.errors.shortName)}
+                helperText={formik.touched.shortName && formik.errors.shortName}
+                disabled={disabled}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
       </Grid>
     </SectionCard>
 

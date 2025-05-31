@@ -6,7 +6,6 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Slide, TextField } from '@mui/material';
 
-import { fileToBase64 } from 'src/utils/file-to-base64';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { useAddUserMutation } from 'src/redux/user/userApi';
@@ -21,7 +20,6 @@ import {
   useUpdateExperienceInformationMutation,
 } from 'src/redux/employee/employeeApi';
 
-import { UploadAvatar } from 'src/components/upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -502,8 +500,8 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
               direction="left"
               key={index}
             >
-              <Box display="flex" gap={2}>
-                {step === 0 && (
+              <Box display="flex">
+                {/* {step === 0 && (
                   <Box display="flex">
                     <UploadAvatar
                       maxSize={3145728}
@@ -517,7 +515,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                       sx={{ m: 'initial' }}
                     />
                   </Box>
-                )}
+                )} */}
                 <Box
                   p={2}
                   display={step === 2 || step === 1 ? 'block' : 'flex'}

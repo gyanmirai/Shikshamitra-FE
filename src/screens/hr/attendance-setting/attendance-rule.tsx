@@ -7,7 +7,6 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Grid,
@@ -43,9 +42,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const AttendanceRule = () => {
+const AttendanceRule = ({ attendanceRuleDialog }: any) => {
   const confirm = useBoolean();
-  const dialog = useBoolean(false);
+  // const dialog = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
   const dispatch = useDispatch();
@@ -64,10 +63,10 @@ const AttendanceRule = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
-      dialog.onFalse();
+      attendanceRuleDialog.onFalse();
       setEditData(null);
     } else if (!isChanges) {
-      dialog.onFalse();
+      attendanceRuleDialog.onFalse();
       setEditData(null);
     }
   };
@@ -85,24 +84,24 @@ const AttendanceRule = () => {
   );
   return (
     <>
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
+      {/* <Box display="flex" justifyContent="flex-end" alignItems="center">
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
           variant="contained"
-          onClick={dialog.onTrue}
+          onClick={attendanceRuleDialog.onTrue}
           size="small"
         >
           Attendance Rule
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         noDataText={
           <>
             No Attendance Rule Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                attendanceRuleDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -153,7 +152,7 @@ const AttendanceRule = () => {
                   }}
                   handleEditClick={() => {
                     setEditData(row);
-                    dialog.onTrue();
+                    attendanceRuleDialog.onTrue();
                   }}
                   showThreeDots={false}
                 />
@@ -196,9 +195,9 @@ const AttendanceRule = () => {
             </Tooltip>
           </Box>
         }
-        open={dialog.value}
+        open={attendanceRuleDialog.value}
         handleClose={() => {
-          dialog.onFalse();
+          attendanceRuleDialog.onFalse();
           setEditData(null);
         }}
       >
