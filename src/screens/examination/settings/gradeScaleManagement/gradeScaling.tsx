@@ -106,8 +106,12 @@ const GradingScale = () => {
       <CustomizableTable
         tableId="gradesTable"
         searchFieldProps={{
-          placeholder: 'Search by Total Marks...',
-          label: 'Search by Total Marks...',
+          placeholder: 'Search by Grade Scale Title, Total Marks...',
+          label: 'Search by Grade Scale Title, Total Marks...',
+          sx: {
+            width: '100%',
+            maxWidth: '400px',
+          },
         }}
         noDataText={
           <>
@@ -131,7 +135,7 @@ const GradingScale = () => {
           </>
         }
         columns={[
-          { id: 'name', label: 'Name' },
+          { id: 'name', label: 'Grade Scale Title' },
           { id: 'totalMarks', label: 'Total Marks', filterType: 'number' },
           {
             id: 'actions',

@@ -44,7 +44,7 @@ const TimetableSettingScreen = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Setting"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Timetable', href: '/academic/newTimetable' },

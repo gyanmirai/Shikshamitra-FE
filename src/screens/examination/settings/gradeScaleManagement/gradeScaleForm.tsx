@@ -38,17 +38,17 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
-            <Grid container spacing={2}>
+          <Scrollbar sx={{ p: 2, height: '400px' }}>
+            <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
                   <TextField
                     fullWidth
-                    label="Title *"
+                    label="Grade Scale Title *"
                     name="name"
                     size="small"
                     disabled={disabled}
-                    placeholder="Enter Title"
+                    placeholder="Enter Grade Scale Title"
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     error={formik.touched.name && Boolean(formik.errors.name)}
@@ -191,6 +191,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
             <Button
               startIcon={data ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
               variant="contained"
+              type="submit"
               onClick={() => {
                 formik.handleSubmit();
               }}

@@ -64,7 +64,15 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <Box display="flex" justifyContent="flex-end">
-        <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
+        <Button
+          variant="contained"
+          onClick={addDialog.onTrue}
+          startIcon={<Add />}
+          size="small"
+          sx={{
+            width: '147px',
+          }}
+        >
           Homework Type
         </Button>
       </Box>

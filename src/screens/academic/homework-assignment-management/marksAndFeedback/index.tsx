@@ -38,7 +38,7 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Marks & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
             ? 'Add and manage marks/feedback for homework assignments'

@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
 export const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Grading Scale Title is Required'),
   totalMarks: Yup.string().required('TotalMarks is Required'),
   gradingScale: Yup.array().of(
     Yup.object().shape({

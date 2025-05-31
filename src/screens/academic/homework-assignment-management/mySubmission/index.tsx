@@ -38,7 +38,7 @@ const MySubmission = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="My Submission"
         description={
           currentActiveComponent?.value === 'Homeworks'
             ? 'View and manage your homework submissions'
