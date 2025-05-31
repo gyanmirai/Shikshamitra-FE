@@ -154,7 +154,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <CustomSelect
                     label="Division *"
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     multiple
                     options={allDivision}
                     value={formik.values.division}
