@@ -41,6 +41,8 @@ export interface IAddNewChapterProps {
   onClose: (e: any, isSubmit: boolean) => void;
   isEdit?: boolean;
   initialValues?: IChapter | null;
+  className?: string;
+  subject?: string;
 }
 
 export interface IChapterTableProps {
