@@ -181,6 +181,8 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   multiple={false}
                   onDelete={() => handleRemoveFile(formik.setFieldValue)}
                   onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
+                  error={!!(formik.touched.document && formik.errors.document) || false}
+                  helperText={(formik.touched.document && formik.errors.document) || ''}
                 />
               </Grid>
             </Grid>
@@ -199,12 +201,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
             <Button
               type="submit"
               variant="contained"
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={() => {
                 formik.handleSubmit();
               }}
             >
-              {isEdit ? 'Update' : 'Submit'}
+              {data ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

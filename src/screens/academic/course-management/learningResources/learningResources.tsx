@@ -24,8 +24,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import HierarchyTree from './components/treeStrcutre';
 import CreateNewResource from './components/addResourceForm';
 
-import type { IResourceData } from './type';
-
 // Initial sample data for learning resources
 
 const LearningResources = (props: TabComponentType) => {
@@ -60,7 +58,7 @@ const LearningResources = (props: TabComponentType) => {
   }, [medium]);
 
   // State to store currently selected resource entry for editing
-  const [selectedEntry, setSelectedEntry] = useState<IResourceData | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<any>();
 
   // Boolean state to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
@@ -85,16 +83,19 @@ const LearningResources = (props: TabComponentType) => {
     newStatus: string;
   } | null>(null);
 
+  const editResourceDialog = useBoolean();
+
   // Function to close the dialog and reset form state
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       dispatch(setIsChanges(false));
-
+      editResourceDialog.onFalse();
       setIsEdit(false);
       setSelectedEntry(null);
       addLearningResourceDialog.onFalse();
     } else if (!isChanges) {
       setIsEdit(false);
+      editResourceDialog.onFalse();
       setSelectedEntry(null);
       addLearningResourceDialog.onFalse();
     }
@@ -161,7 +162,29 @@ const LearningResources = (props: TabComponentType) => {
         />
       </CustomDialog>
 
-      <HierarchyTree />
+      <HierarchyTree
+        onEdit={(doc) => {
+          setSelectedEntry(doc);
+          editResourceDialog.onTrue();
+        }}
+      />
+
+      <CustomDialog
+        title="Update Learning Resource"
+        open={editResourceDialog.value}
+        maxWidth="sm"
+        handleClose={() => {
+          editResourceDialog.onFalse();
+          setSelectedEntry(null);
+        }}
+      >
+        <CreateNewResource
+          onSave={() => {}}
+          onClose={handleClose}
+          data={selectedEntry}
+          isEdit={isEdit}
+        />
+      </CustomDialog>
 
       {/* Delete confirmation dialog */}
       <ConfirmDialog

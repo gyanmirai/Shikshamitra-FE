@@ -1,12 +1,10 @@
-import type { NodeProps } from 'src/components/organizational-chart';
-
 import { Icon } from '@iconify/react';
 import React, { useEffect } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { Box, Card, Stack, Button, IconButton, Typography } from '@mui/material';
+import { Box, Card, Button, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -18,17 +16,18 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { GroupNode } from 'src/components/organizational-chart/groupNode';
-import { OrganizationalChart } from 'src/components/organizational-chart';
 
 import { dummyData } from './treeData';
-import { ORGANIZED_CLASS_TREES } from './transformClassData';
 
 import type { IChapter, ISubject } from '../type';
 
 // Dummy File object creation utility
 
-const HierarchyTree: React.FC = () => {
+interface HierarchyTreeProps {
+  onEdit: (doc: File) => void;
+}
+
+const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
   // Boolean state to control document deletion dialog visibility
   const deleteDocumentDialog = useBoolean();
   // State to track the currently selected class ID in the tree structure
@@ -61,19 +60,31 @@ const HierarchyTree: React.FC = () => {
               <FileThumbnail file={doc} sx={{ height: '18px' }} />
               <Typography variant="body2">{doc.name}</Typography>
             </Box>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent parent tree item selection
-                deleteDocumentDialog.onTrue();
-              }}
-            >
-              <Iconify
-                icon={GlobalIcons.delete}
-                width={18}
-                sx={{ color: 'red', cursor: 'pointer' }}
-              />
-            </IconButton>
+            <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent parent tree item selection
+                  onEdit(doc);
+                }}
+              >
+                <Iconify icon={GlobalIcons.edit} width={18} sx={{ cursor: 'pointer' }} />
+              </IconButton>
+
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent parent tree item selection
+                  deleteDocumentDialog.onTrue();
+                }}
+              >
+                <Iconify
+                  icon={GlobalIcons.delete}
+                  width={18}
+                  sx={{ color: 'red', cursor: 'pointer' }}
+                />
+              </IconButton>
+            </Box>
           </Box>
         }
       />
@@ -106,6 +117,12 @@ const HierarchyTree: React.FC = () => {
             <Typography variant="body2">{subject.name}</Typography>
           </Box>
         }
+        onClick={(e) => {
+          // Only update if it's a top-level class node
+
+          // setSelectedClassId(itemId);
+          setSelectedDocument(null);
+        }}
       >
         {subject.chapters && renderChapters(subject.chapters, `${classId}-subject-${subject.id}`)}
         {subject.documents &&
@@ -130,10 +147,9 @@ const HierarchyTree: React.FC = () => {
             defaultExpandedItems={[dummyData[0].id]}
             onItemClick={(event, itemId) => {
               // Only update if it's a top-level class node
-              if (dummyData.some((cls) => cls.id === itemId)) {
-                setSelectedClassId(itemId);
-                setSelectedDocument(null);
-              }
+
+              // setSelectedClassId(itemId);
+              setSelectedDocument(null);
             }}
             slots={{
               collapseIcon: () => <Icon icon="mdi:chevron-down" width={20} />,
@@ -173,20 +189,28 @@ const HierarchyTree: React.FC = () => {
               </PDFViewer>
             </Box>
           ) : (
-            <Stack spacing={5}>
-              {ORGANIZED_CLASS_TREES.filter(
-                (tree) => tree.name === dummyData.find((cls) => cls.id === selectedClassId)?.name
-              ).map((tree, idx) => (
-                <OrganizationalChart
-                  key={idx}
-                  lineHeight="56px"
-                  data={tree}
-                  nodeItem={(props: NodeProps) => (
-                    <GroupNode {...props} type={props.type as 'class' | 'subject'} />
-                  )}
-                />
-              ))}
-            </Stack>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              height="100%"
+              sx={{
+                backgroundColor: (theme) => theme.palette.background.neutral,
+                borderRadius: 1,
+              }}
+            >
+              <Typography
+                variant="h3"
+                sx={{
+                  color: (theme) => theme.palette.text.secondary,
+                  fontWeight: 'light',
+                  textAlign: 'center',
+                  opacity: 0.6,
+                }}
+              >
+                No Preview Available
+              </Typography>
+            </Box>
           )}
         </Scrollbar>
       </Card>
