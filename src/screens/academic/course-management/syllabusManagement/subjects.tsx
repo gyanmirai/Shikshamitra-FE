@@ -249,14 +249,21 @@ const Subjects = (props: TabComponentType) => {
                 }}
               />
               <CustomSelect
-                options={[]}
+                options={[
+                  { value: 'math', label: 'Mathematics' },
+                  { value: 'science', label: 'Science' },
+                  { value: 'english', label: 'English' },
+                  { value: 'history', label: 'History' },
+                  { value: 'geography', label: 'Geography' },
+                ]}
                 value={subject}
                 disabled={!classes}
                 onChange={(val) => {
-                  // setClasses(val as string);
                   setSubject(val as string);
                 }}
                 label="Subject"
+                valueKey="value"
+                labelKey="label"
                 isLoading={isLoading}
                 formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
               />
@@ -268,6 +275,7 @@ const Subjects = (props: TabComponentType) => {
               onClick={() => {
                 addChapterDialog.onTrue();
               }}
+              disabled={!classes || !subject}
             >
               Chapter
             </Button>

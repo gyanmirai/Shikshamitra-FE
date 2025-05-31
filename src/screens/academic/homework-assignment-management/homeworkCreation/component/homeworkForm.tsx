@@ -153,7 +153,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <CustomSelect
                     label="Division *"
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     multiple
                     options={allDivision}
                     value={formik.values.division}
@@ -181,17 +181,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 >
                   <CustomSelect
                     label="Subject *"
+                    disabled={!formik.values.division || formik.values.division.length === 0}
                     options={[
-                      { name: 'Mathematics', label: 'Mathematics' },
-                      { name: 'Science', label: 'Science' },
-                      { name: 'English', label: 'English' },
-                      { name: 'History', label: 'History' },
-                      { name: 'Geography', label: 'Geography' },
-                      { name: 'Physics', label: 'Physics' },
-                      { name: 'Chemistry', label: 'Chemistry' },
-                      { name: 'Biology', label: 'Biology' },
+                      { value: 'Mathematics', label: 'Mathematics' },
+                      { value: 'Science', label: 'Science' },
+                      { value: 'History', label: 'History' },
+                      { value: 'English', label: 'English' },
                     ]}
-                    disabled={!(formik.values.division.length > 0)}
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val)}
                     formControlProps={{ fullWidth: true }}
