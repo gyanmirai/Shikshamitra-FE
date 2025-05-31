@@ -53,8 +53,8 @@ interface ILeavePolicy {
   color: string;
 }
 
-const LeavePolicy = () => {
-  const dialog = useBoolean(false);
+const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
+  // const dialog = useBoolean(false);
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const dispatch = useDispatch();

@@ -29,7 +29,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
-import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -39,6 +38,7 @@ import {
   useLazyGetEventHolidayByDateQuery,
 } from 'src/redux/eventHoliday/eventHolidayApi';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -239,6 +239,15 @@ const HrEventsAndHolidaysScreen = () => {
             { id: 'eDate', label: 'End Date', filterType: 'date' },
             { id: 'reason', label: 'Description' },
             {
+              id: 'title',
+              label: 'Type',
+              render: (value) => (
+                <Label variant="filled" color={value === 'Holiday' ? 'error' : 'success'}>
+                  {value}
+                </Label>
+              ),
+            },
+            {
               id: 'actions',
               label: 'Actions',
               isFilter: false,
@@ -269,16 +278,17 @@ const HrEventsAndHolidaysScreen = () => {
               ...item,
               sDate: dayjs(item.startDate).format('DD-MM-YYYY'),
               eDate: dayjs(item.endDate).format('DD-MM-YYYY'),
+              title: item.isHoliday ? 'Holiday' : 'Event',
             })) || []
           }
-          rowProps={(row) => ({
-            sx: {
-              borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
-              background: row.isHoliday
-                ? varAlpha(theme.palette.error.mainChannel, 0.2)
-                : varAlpha(theme.palette.success.mainChannel, 0.2),
-            },
-          })}
+          // rowProps={(row) => ({
+          //   sx: {
+          //     borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
+          //     background: row.isHoliday
+          //       ? varAlpha(theme.palette.error.mainChannel, 0.2)
+          //       : varAlpha(theme.palette.success.mainChannel, 0.2),
+          //   },
+          // })}
         />
       ) : (
         <Box sx={{ p: 2 }}>
