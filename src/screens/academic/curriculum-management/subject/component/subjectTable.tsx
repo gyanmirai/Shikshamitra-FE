@@ -4,6 +4,7 @@ import { Box, Chip, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { SubjectTypeOptions } from 'src/enums/subject-type';
 import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
@@ -49,7 +50,7 @@ const SubjectTable = ({
           subjectCode: (formData.subjects || []).map((s) => s.subjectCode),
           primaryTeacher: (formData.subjects || []).map((s) => s.primaryTeacher),
           secondaryTeacher: (formData.subjects || []).flatMap((s) => s.secondaryTeacher || []),
-          subjectColor: '#1976d2',
+          subjectColor: (formData.subjects || []).map((s) => s.subjectColor),
           scheduleDate: new Date().toISOString(),
           prerequisites: (formData.subjects || []).map((s) => s.prerequisites),
           learningGoal: (formData.subjects || []).map((s) => s.learningGoal),
@@ -120,7 +121,14 @@ const SubjectTable = ({
                     label={`${subjectName} (${Array.isArray(row.subjectCode) ? row.subjectCode[index] : row.subjectCode})`}
                     size="small"
                     variant="outlined"
-                    sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
+                    sx={{
+                      borderColor: Array.isArray(row.subjectColor)
+                        ? row.subjectColor[index]
+                        : row.subjectColor,
+                      color: Array.isArray(row.subjectColor)
+                        ? row.subjectColor[index]
+                        : row.subjectColor,
+                    }}
                   />
                 ))
               ) : (
@@ -139,6 +147,8 @@ const SubjectTable = ({
           id: 'subjectType',
           label: 'Subject Type',
           align: 'left',
+          filterType: 'enum',
+          enumOptions: SubjectTypeOptions,
         },
 
         // {
@@ -208,7 +218,7 @@ const SubjectTable = ({
         },
         {
           id: 'action',
-          label: 'Actions',
+          label: 'Action',
           minWidth: 100,
           sticky: true,
           isFilter: false,

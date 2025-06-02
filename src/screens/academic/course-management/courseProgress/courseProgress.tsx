@@ -205,7 +205,6 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'progress',
                 label: 'Progress',
-                align: 'center',
                 filterType: 'number',
                 render(value, row) {
                   return (

@@ -1,11 +1,14 @@
 import type { ISubjectFormValues } from './type';
 
-export const getSubjectInitialValues = (editData: ISubjectFormValues | null) => {
+export const getSubjectInitialValues = (
+  editData: ISubjectFormValues | null,
+  selectedClass: string
+) => {
   // Base initial values with empty fields
   const initialValues = {
     subjectName: '',
-    className: '',
-    status: 'Unpublish',
+    className: selectedClass,
+    status: 'Draft',
     subjects: [],
     subjectType: 'core',
   };
@@ -23,7 +26,7 @@ export const getSubjectInitialValues = (editData: ISubjectFormValues | null) => 
     return {
       subjectName: editData.subjectName || '',
       className: editData.className || '',
-      status: editData.status || 'Unpublish',
+      status: editData.status || 'Draft',
       subjectType: 'core',
       // For core, we typically don't use the subjects array
       subjects: editData.subjects || [],
@@ -35,7 +38,7 @@ export const getSubjectInitialValues = (editData: ISubjectFormValues | null) => 
     className: editData.className || '',
     subjectName: editData.subjectName || '',
     // Preserve status
-    status: editData.status || 'Unpublish',
+    status: editData.status || 'Draft',
     // Mark as elective type
     subjectType: 'elective',
     // For electives, subjects array contains all the detailed information

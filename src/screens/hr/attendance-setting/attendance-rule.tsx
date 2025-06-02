@@ -22,6 +22,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { TimeUnitType } from 'src/enums/time-units';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -377,9 +379,20 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
             </Grid>
           </Scrollbar>
           <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              variant="outlined"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
 
-            <LoadingButton loading={isLoading} type="submit" variant="contained">
+            <LoadingButton
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              loading={isLoading}
+              type="submit"
+              variant="contained"
+            >
               Submit
             </LoadingButton>
           </DialogActions>

@@ -89,11 +89,11 @@ const Teacher = ({
 
   // Array of available teachers with their IDs and names for selection
   const teacherOptions = [
-    { id: '1', name: 'Teacher 1' },
-    { id: '2', name: 'Teacher 2' },
-    { id: '3', name: 'Teacher 3' },
-    { id: '4', name: 'Teacher 4' },
-    { id: '5', name: 'Teacher 5' },
+    { id: '1', name: 'Prerna' },
+    { id: '2', name: 'Sweta' },
+    { id: '3', name: 'Punam' },
+    { id: '4', name: 'Parth' },
+    { id: '5', name: 'Dharmik' },
   ];
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
@@ -120,9 +120,6 @@ const Teacher = ({
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Get selected subject from search params, default to 'All' if not present
-  const selectedSubject = searchParams?.subject ? searchParams?.subject : 'All';
-
   // State to store the selected teacher for reassignment
   const [selectedTeacher, setSelectedTeacher] = useState<any | null>([]);
 
@@ -131,9 +128,6 @@ const Teacher = ({
 
   // Boolean state to control dialog visibility
   const dialog = useBoolean();
-
-  // State to track which teacher entry is being edited
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -156,7 +150,17 @@ const Teacher = ({
     }
   };
 
-  const subjectList = ['math', 'english', 'science'];
+  const subjectList = [
+    'math',
+    'english',
+    'science',
+    'history',
+    'geography',
+    'computer',
+    'physics',
+    'chemistry',
+    'biology',
+  ];
   const divisionList = ['A', 'B', 'C'];
 
   return (

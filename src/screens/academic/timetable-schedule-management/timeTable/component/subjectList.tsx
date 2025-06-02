@@ -34,13 +34,21 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
             color: subject.subjectColor,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {subject.subjects.map((sub) => (
-              <Typography variant="body2" fontWeight="bold">
-                {sub.name}
-              </Typography>
-            ))}
-
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {subject.subjects.map((sub) => (
+                <Typography variant="body2" fontWeight="bold">
+                  {sub.name}
+                </Typography>
+              ))}
+            </Box>
             <Typography variant="body2" fontWeight="bold">
               ({remainingLectures[subject.id]} / {subject.noOfLecture})
             </Typography>

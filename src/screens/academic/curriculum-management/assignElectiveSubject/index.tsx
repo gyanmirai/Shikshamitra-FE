@@ -122,7 +122,7 @@ const AssignElectiveSubject = () => {
           <Button
             startIcon={<Save />}
             variant="contained"
-            disabled={!classes || !division || !electiveSubject}
+            disabled={!classes || !division || !electiveSubject || selectedElectiveSubject === ''}
             size="small"
           >
             Save
@@ -201,6 +201,66 @@ const AssignElectiveSubject = () => {
             srNo: 5,
             grNo: 'GR005',
             name: 'Ishaan Joshi',
+            electiveSubject: '5', // Economics
+          },
+          {
+            srNo: 6,
+            grNo: 'GR006',
+            name: 'Zara Khan',
+            electiveSubject: '1', // Physics
+          },
+          {
+            srNo: 7,
+            grNo: 'GR007',
+            name: 'Arjun Singh',
+            electiveSubject: '2', // Chemistry
+          },
+          {
+            srNo: 8,
+            grNo: 'GR008',
+            name: 'Priya Gupta',
+            electiveSubject: '3', // Biology
+          },
+          {
+            srNo: 9,
+            grNo: 'GR009',
+            name: 'Rohan Verma',
+            electiveSubject: '4', // Computer Science
+          },
+          {
+            srNo: 10,
+            grNo: 'GR010',
+            name: 'Ananya Shah',
+            electiveSubject: '5', // Economics
+          },
+          {
+            srNo: 11,
+            grNo: 'GR011',
+            name: 'Vihaan Kumar',
+            electiveSubject: '1', // Physics
+          },
+          {
+            srNo: 12,
+            grNo: 'GR012',
+            name: 'Aisha Patel',
+            electiveSubject: '2', // Chemistry
+          },
+          {
+            srNo: 13,
+            grNo: 'GR013',
+            name: 'Reyansh Malhotra',
+            electiveSubject: '3', // Biology
+          },
+          {
+            srNo: 14,
+            grNo: 'GR014',
+            name: 'Saanvi Reddy',
+            electiveSubject: '4', // Computer Science
+          },
+          {
+            srNo: 15,
+            grNo: 'GR015',
+            name: 'Advait Menon',
             electiveSubject: '5', // Economics
           },
         ]}

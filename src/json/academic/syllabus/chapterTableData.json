@@ -53,5 +53,60 @@
     "viewMaterial": { "videos": 10, "pdfs": 5 },
     "progress": 85,
     "description": "This chapter covers essential data structures and algorithms."
+  },
+  {
+    "id": "6",
+    "chapterNo": 6,
+    "chapterName": "Chemical Bonding",
+    "startDate": "15-07-2025",
+    "endDate": "30-08-2025",
+    "assignedTeacher": ["Dr. Suresh Kumar"],
+    "viewMaterial": { "videos": 7, "pdfs": 4 },
+    "progress": 40,
+    "description": "This chapter explains different types of chemical bonds and their properties."
+  },
+  {
+    "id": "7",
+    "chapterNo": 7,
+    "chapterName": "Modern Physics",
+    "startDate": "01-09-2025",
+    "endDate": "15-10-2025",
+    "assignedTeacher": ["Dr. Amit Singh", "Ms. Riya Patel"],
+    "viewMaterial": { "videos": 12, "pdfs": 6 },
+    "progress": 30,
+    "description": "This chapter covers quantum mechanics and relativity theory."
+  },
+  {
+    "id": "8",
+    "chapterNo": 8,
+    "chapterName": "Environmental Science",
+    "startDate": "20-10-2025",
+    "endDate": "30-11-2025",
+    "assignedTeacher": ["Ms. Sneha Gupta"],
+    "viewMaterial": { "videos": 9, "pdfs": 5 },
+    "progress": 20,
+    "description": "This chapter focuses on environmental conservation and sustainability."
+  },
+  {
+    "id": "9",
+    "chapterNo": 9,
+    "chapterName": "Ancient Civilizations",
+    "startDate": "01-12-2025",
+    "endDate": "15-01-2026",
+    "assignedTeacher": ["Mr. Rahul Desai", "Mrs. Meera Iyer"],
+    "viewMaterial": { "videos": 8, "pdfs": 4 },
+    "progress": 15,
+    "description": "This chapter explores major ancient civilizations and their contributions."
+  },
+  {
+    "id": "10",
+    "chapterNo": 10,
+    "chapterName": "Advanced Calculus",
+    "startDate": "20-01-2026",
+    "endDate": "28-02-2026",
+    "assignedTeacher": ["Dr. Prakash Rao"],
+    "viewMaterial": { "videos": 15, "pdfs": 8 },
+    "progress": 0,
+    "description": "This chapter covers differential equations and multivariable calculus."
   }
 ]

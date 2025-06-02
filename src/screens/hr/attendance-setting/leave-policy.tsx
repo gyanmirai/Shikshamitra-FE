@@ -20,6 +20,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { AccurateRateType, AccurateRateTypeArray } from 'src/enums/accurate-rate';
@@ -693,10 +695,19 @@ export const LeavePolicyForm = ({
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <Button onClick={handleClose} variant="outlined">
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={handleClose}
+            variant="outlined"
+          >
             Cancel
           </Button>
-          <LoadingButton loading={isUpdateLoading || isLoading} type="submit" variant="contained">
+          <LoadingButton
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            loading={isUpdateLoading || isLoading}
+            type="submit"
+            variant="contained"
+          >
             Save
           </LoadingButton>
         </DialogActions>

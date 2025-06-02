@@ -58,6 +58,7 @@ const ChooseElectiveSubject = () => {
           startIcon={<Save />}
           variant="contained"
           size="small"
+          disabled={Object.values(selectedSubjects).length === 0}
           onClick={() => console.log('Selected subjects:', selectedSubjects)}
         >
           Save
