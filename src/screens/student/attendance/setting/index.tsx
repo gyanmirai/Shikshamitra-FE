@@ -66,7 +66,7 @@ const HrAttendanceSettingScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Setting"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
