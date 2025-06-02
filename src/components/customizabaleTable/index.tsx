@@ -125,8 +125,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
     columns.forEach((col, idx) => {
       if (col.sticky) {
-        const indexInSticky = stickyCols.findIndex((sc) => sc.id === col.id);
-        if (indexInSticky < half) {
+        if (idx < half) {
           leftSticky.push({ col, idx });
         } else {
           rightSticky.push({ col, idx });

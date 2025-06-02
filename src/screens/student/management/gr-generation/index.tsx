@@ -12,6 +12,7 @@ import { Box, Button, Checkbox, TextField } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { StudentApi } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
@@ -54,7 +55,10 @@ const GrNoGenerationScreen = ({
   // API hooks for fetching and updating student GR numbers
   const [fetchStudents, { isLoading: isStudentGrNumberLoading }] =
     useLazyGetStudentForGrNumberQuery();
-  const [updateStudentGrNumbers, { isLoading: isSaving }] = useUpdateStudentGrNumberMutation();
+  const [updateStudentGrNumbers, { isLoading: isSaving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStudentGrNumberMutation,
+  });
 
   // Handle automatic GR number generation
   const handleAutoGenerate = async () => {
@@ -74,11 +78,16 @@ const GrNoGenerationScreen = ({
 
       if (typeof result === 'number') {
         setStartGrNo(result);
-
+        let lastNum = result;
         setTableData((prevData) =>
           prevData.map((item, index) => ({
             ...item,
-            grNoRecord: result + index,
+            grNoRecord:
+              item.grNoRecord ??
+              (() => {
+                lastNum += 1;
+                return lastNum;
+              })(),
           }))
         );
       }

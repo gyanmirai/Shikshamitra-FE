@@ -200,23 +200,25 @@ const ChangeClassScreen = ({
               },
               render(value, row) {
                 return (
-                  <TableClassDropDown
-                    allClass={allClass}
-                    classes={value}
-                    onChange={(val) => {
-                      const newData = tableData.map((item) => {
-                        if (item.id === row.id) {
-                          return {
-                            ...item,
-                            standardId: val as string,
-                          };
-                        }
-                        return item;
-                      });
+                  <Box display="flex">
+                    <TableClassDropDown
+                      allClass={allClass}
+                      classes={value}
+                      onChange={(val) => {
+                        const newData = tableData.map((item) => {
+                          if (item.id === row.id) {
+                            return {
+                              ...item,
+                              standardId: val as string,
+                            };
+                          }
+                          return item;
+                        });
 
-                      setTableData(newData);
-                    }}
-                  />
+                        setTableData(newData);
+                      }}
+                    />
+                  </Box>
                 );
               },
             },
@@ -246,7 +248,7 @@ const TableClassDropDown = ({ allClass, classes, onChange }: ITableClassDropDown
     onChange={onChange}
     labelKey="name"
     valueKey="id"
-    formControlProps={{ sx: { width: '100%', minWidth: '220px', textAlign: 'left' } }}
+    formControlProps={{ sx: { width: '220px', textAlign: 'left' } }}
     onClick={(e) => e.stopPropagation()}
   />
 );
