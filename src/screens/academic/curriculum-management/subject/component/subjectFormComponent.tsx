@@ -99,7 +99,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
 
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getSubjectInitialValues(data),
+    initialValues: getSubjectInitialValues(data, selectedClass),
     validationSchema,
     // Handle form submission
     onSubmit: (values) => {

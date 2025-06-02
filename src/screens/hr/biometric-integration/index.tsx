@@ -40,8 +40,8 @@ const BiometricIntegrationScreen = () => (
       // isLoading={isLoading}
       noDataText={<>No Biometric Integration Data Found </>}
       searchFieldProps={{
-        placeholder: 'Search by Name, Status..',
-        label: 'Search by Name, Status...',
+        placeholder: 'Search by Name, Hours Worked, In-time..',
+        label: 'Search by Name, Hours Worked, In-time...',
         sx: {
           maxWidth: '400px',
           width: '100%',

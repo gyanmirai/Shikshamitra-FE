@@ -478,6 +478,8 @@ const hrModule = {
           _action: 'dashboard',
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
+          disabled: true,
+          caption: 'Coming Soon',
         },
         {
           title: 'Employee',
@@ -595,6 +597,8 @@ const hrModule = {
           _action: 'reports',
           shortcutKey: 'Alt+H+R',
           shortcutKeyName: 'Alt+H+R',
+          disabled: true,
+          caption: 'Coming Soon',
         },
         {
           title: 'Events & Holidays',
@@ -623,8 +627,9 @@ const hrModule = {
           title: 'Notification',
           path: '/hr/hr-notification',
           _action: 'hr-notification',
+          disabled: true,
+          caption: 'Coming Soon',
         },
-
         {
           title: 'Setting',
           path: '/hr/setting',

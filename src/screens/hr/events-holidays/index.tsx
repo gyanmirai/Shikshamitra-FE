@@ -91,6 +91,8 @@ const HrEventsAndHolidaysScreen = () => {
     currentQueryAndMutation: useLazyGetEventHolidayByDateQuery,
   });
 
+  console.log('eventHolidayData', eventHolidayData);
+
   // Mutation for deleting events/holidays
   const [deleteEventHoliday, { isLoading: isEventHolidayDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -181,25 +183,6 @@ const HrEventsAndHolidaysScreen = () => {
             },
           }}
         />
-
-        {/* <Box display="flex" alignItems="center" gap={1}>
-          <ButtonGroup>
-            <Button
-              variant={view === 'list' ? 'outlined' : 'contained'}
-              color="inherit"
-              onClick={() => setView('calender')}
-            >
-              <Iconify icon="uis:calender" />
-            </Button>
-            <Button
-              color="inherit"
-              variant={view === 'list' ? 'contained' : 'outlined'}
-              onClick={() => setView('list')}
-            >
-              <Iconify icon="lucide:layout-list" />
-            </Button>
-          </ButtonGroup>
-        </Box> */}
       </Box>
       {view === 'list' ? (
         <CustomizableTable
@@ -220,7 +203,7 @@ const HrEventsAndHolidaysScreen = () => {
                   },
                 }}
               >
-                Leave Request
+                Event & Holidayss
               </Box>
             </>
           }
@@ -474,6 +457,7 @@ export const HrEventsAndHolidaysForm = ({
               <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                 <TextField
                   label="Description *"
+                  placeholder="Enter Description"
                   value={formik.values.reason}
                   size="small"
                   name="reason"

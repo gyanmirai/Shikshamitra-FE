@@ -129,22 +129,6 @@ const Subjects = (props: TabComponentType) => {
     []
   );
 
-  // Define navigation breadcrumb links based on form state
-  const links = addChapterDialog.value
-    ? [
-        // Links for form view (adding/editing chapter)
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Syllabus' },
-        { name: 'Manage Chapter' },
-        { name: 'Add Chapter' },
-      ]
-    : [
-        // Links for list view (showing chapters)
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Syllabus' },
-        { name: 'Manage Chapter' },
-      ];
-
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addChapterDialog.onFalse();

@@ -53,8 +53,9 @@ const ChapterTable = ({
     columns={[
       {
         id: 'chapterNo',
-        label: 'Chapter No',
-        align: 'left',
+        label: 'Chapter No.',
+        align: 'center',
+        minWidth: 120,
         filterType: 'number',
       },
       {
@@ -83,10 +84,9 @@ const ChapterTable = ({
       },
       {
         id: 'viewMaterial',
-        label: 'View Material',
+        label: 'Material',
         isFilter: false,
         isSort: false,
-        align: 'center',
         render(value, row) {
           return (
             <IconButton
@@ -102,11 +102,10 @@ const ChapterTable = ({
       {
         id: 'progress',
         label: 'Progress',
-        align: 'left',
         filterType: 'number',
         render(value) {
           return (
-            <Box sx={{ position: 'relative', display: 'inline-flex', ml: 7 }}>
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress variant="determinate" value={value} />
               <Box
                 sx={{

@@ -16,27 +16,37 @@
         "learningGoal": "Learn the fundamentals of Physics.",
         "description": "This subject covers classical mechanics, thermodynamics, and electromagnetism.",
         "isSubjectOpen": true,
-        "subjectColor": "#4287f5"
+        "subjectColor": "#1E90FF"
       },
       {
         "id": 102,
         "subjectName": "Chemistry",
         "subjectCode": "CHEM-10",
         "primaryTeacher": "teacher_4",
-        "secondaryTeacher": null,
-        "documents": [],
-        "prerequisites": "None",
-        "learningGoal": "Understand the basics of Chemistry.",
-        "description": "Introduction to chemical reactions, periodic table, and lab safety.",
-        "isSubjectOpen": false,
-        "subjectColor": "#ff5733"
-
+        "secondaryTeacher": ["teacher_2", "teacher_3"],
+        "prerequisites": "Basic Science knowledge",
+        "learningGoal": "Master fundamental chemical concepts",
+        "description": "Study of atomic structure, chemical bonding, and basic reactions",
+        "isSubjectOpen": true,
+        "subjectColor": "#32CD32"
+      },
+      {
+        "id": 103,
+        "subjectName": "Biology",
+        "subjectCode": "BIO-10",
+        "primaryTeacher": "teacher_7",
+        "secondaryTeacher": ["teacher_8"],
+        "prerequisites": "Basic Science knowledge",
+        "learningGoal": "Understand living systems and organisms",
+        "description": "Study of cells, genetics, and human anatomy",
+        "isSubjectOpen": true,
+        "subjectColor": "#FF7F50"
       }
     ]
   },
   {
     "id": 2,
-    "status": "Published",
+    "status": "Published", 
     "className": "10th Grade",
     "subjectName": "Mathematics",
     "subjectType": "core",
@@ -51,7 +61,205 @@
         "learningGoal": "Understand algebra, geometry, and basic trigonometry.",
         "description": "This subject covers algebraic equations, geometry concepts, and introductory trigonometry.",
         "isSubjectOpen": true,
-        "subjectColor": "#987654"
+        "subjectColor": "#DEB887"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "status": "Draft",
+    "className": "11th Grade", 
+    "subjectName": "Languages",
+    "subjectType": "elective",
+    "subjects": [
+      {
+        "id": 301,
+        "subjectName": "French",
+        "subjectCode": "FRE-11",
+        "primaryTeacher": "teacher_10",
+        "secondaryTeacher": ["teacher_11"],
+        "prerequisites": "None",
+        "learningGoal": "Achieve basic French language proficiency.",
+        "description": "Introduction to French vocabulary, grammar, and conversation.",
+        "isSubjectOpen": true,
+        "subjectColor": "#DC143C"
+      },
+      {
+        "id": 302,
+        "subjectName": "Spanish",
+        "subjectCode": "SPA-11",
+        "primaryTeacher": "teacher_12",
+        "secondaryTeacher": ["teacher_13"],
+        "prerequisites": "None",
+        "learningGoal": "Develop Spanish language skills",
+        "description": "Introduction to Spanish grammar, vocabulary, and culture",
+        "isSubjectOpen": true,
+        "subjectColor": "#FF8C00"
+      },
+      {
+        "id": 303,
+        "subjectName": "German",
+        "subjectCode": "GER-11",
+        "primaryTeacher": "teacher_14",
+        "secondaryTeacher": ["teacher_15"],
+        "prerequisites": "None",
+        "learningGoal": "Learn basic German communication",
+        "description": "Study of German language fundamentals and culture",
+        "isSubjectOpen": true,
+        "subjectColor": "#4682B4"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "status": "Published",
+    "className": "11th Grade",
+    "subjectName": "Arts",
+    "subjectType": "elective",
+    "subjects": [
+      {
+        "id": 401,
+        "subjectName": "Fine Arts",
+        "subjectCode": "ART-11",
+        "primaryTeacher": "teacher_14",
+        "secondaryTeacher": ["teacher_15"],
+        "prerequisites": "None",
+        "learningGoal": "Develop artistic skills and creativity.",
+        "description": "Exploration of various art mediums, techniques, and art history.",
+        "isSubjectOpen": true,
+        "subjectColor": "#8A2BE2"
+      },
+      {
+        "id": 402,
+        "subjectName": "Sculpture",
+        "subjectCode": "SCUL-11",
+        "primaryTeacher": "teacher_16",
+        "secondaryTeacher": ["teacher_17"],
+        "prerequisites": "Basic art skills",
+        "learningGoal": "Master 3D art techniques",
+        "description": "Creating art through various sculpting methods and materials",
+        "isSubjectOpen": true,
+        "subjectColor": "#BA55D3"
+      },
+      {
+        "id": 403,
+        "subjectName": "Digital Arts",
+        "subjectCode": "DART-11",
+        "primaryTeacher": "teacher_18",
+        "secondaryTeacher": ["teacher_19"],
+        "prerequisites": "Basic computer skills",
+        "learningGoal": "Learn digital art creation",
+        "description": "Digital illustration, animation, and graphic design",
+        "isSubjectOpen": true,
+        "subjectColor": "#9932CC"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "status": "Draft",
+    "className": "12th Grade",
+    "subjectName": "Computer Science",
+    "subjectType": "elective",
+    "subjects": [
+      {
+        "id": 501,
+        "subjectName": "Programming",
+        "subjectCode": "CS-12",
+        "primaryTeacher": "teacher_16",
+        "secondaryTeacher": ["teacher_17"],
+        "prerequisites": "Basic computer knowledge",
+        "learningGoal": "Learn programming fundamentals.",
+        "description": "Introduction to programming concepts and algorithms.",
+        "isSubjectOpen": true,
+        "subjectColor": "#4169E1"
+      },
+      {
+        "id": 502,
+        "subjectName": "Web Development",
+        "subjectCode": "WEB-12",
+        "primaryTeacher": "teacher_18",
+        "secondaryTeacher": ["teacher_19"],
+        "prerequisites": "Basic programming knowledge",
+        "learningGoal": "Master web development basics",
+        "description": "HTML, CSS, JavaScript, and responsive design",
+        "isSubjectOpen": true,
+        "subjectColor": "#1E90FF"
+      },
+      {
+        "id": 503,
+        "subjectName": "Database Management",
+        "subjectCode": "DB-12",
+        "primaryTeacher": "teacher_20",
+        "secondaryTeacher": ["teacher_21"],
+        "prerequisites": "Basic SQL knowledge",
+        "learningGoal": "Learn database design and management",
+        "description": "SQL, database design, and data modeling",
+        "isSubjectOpen": true,
+        "subjectColor": "#00BFFF"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "status": "Published",
+    "className": "12th Grade",
+    "subjectName": "Business Studies",
+    "subjectType": "core",
+    "subjects": [
+      {
+        "id": 601,
+        "subjectName": "Economics",
+        "subjectCode": "ECO-12",
+        "primaryTeacher": "teacher_18",
+        "secondaryTeacher": ["teacher_19"],
+        "prerequisites": "None",
+        "learningGoal": "Understand basic economic principles.",
+        "description": "Study of micro and macroeconomics concepts.",
+        "isSubjectOpen": true,
+        "subjectColor": "#20B2AA"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "status": "Draft",
+    "className": "12th Grade",
+    "subjectName": "Physical Education",
+    "subjectType": "core",
+    "subjects": [
+      {
+        "id": 701,
+        "subjectName": "Sports Science",
+        "subjectCode": "PE-12",
+        "primaryTeacher": "teacher_20",
+        "secondaryTeacher": ["teacher_21"],
+        "prerequisites": "Good physical fitness",
+        "learningGoal": "Learn about sports and fitness.",
+        "description": "Study of physical fitness, sports theory, and nutrition.",
+        "isSubjectOpen": true,
+        "subjectColor": "#FF69B4"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "status": "Published",
+    "className": "12th Grade",
+    "subjectName": "Music",
+    "subjectType": "core",
+    "subjects": [
+      {
+        "id": 801,
+        "subjectName": "Music Theory",
+        "subjectCode": "MUS-12",
+        "primaryTeacher": "teacher_22",
+        "secondaryTeacher": ["teacher_23"],
+        "prerequisites": "Basic music knowledge",
+        "learningGoal": "Develop musical understanding and skills.",
+        "description": "Study of music theory, composition, and performance.",
+        "isSubjectOpen": true,
+        "subjectColor": "#9370DB"
       }
     ]
   }
