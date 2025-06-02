@@ -98,7 +98,6 @@ const AssessmentTypeForm: React.FC<IAssessmentTypeFormProps> = ({
               startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={(e) => {
                 formik.handleSubmit();
-                onClose(e, true);
               }}
             >
               {data ? 'Update' : 'Submit'}

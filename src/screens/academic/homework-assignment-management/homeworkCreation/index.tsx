@@ -38,7 +38,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Set Coursework"
         description={
           currentActiveComponent?.value === 'homeworkCreation'
             ? 'Create and manage homework assignments for students'

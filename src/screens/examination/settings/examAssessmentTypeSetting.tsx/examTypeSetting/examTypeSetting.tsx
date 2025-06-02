@@ -196,7 +196,7 @@ const ExamTypeSettings = () => {
       />
 
       <CustomDialog
-        title={isEdit ? 'Update Exam Type' : 'Create Exam Type'}
+        title={isEdit ? 'Update Exam Type' : 'Add Exam Type'}
         open={dialog.value}
         handleClose={dialog.onFalse}
       >

@@ -1,6 +1,6 @@
 // SubjectTable.tsx
 
-import { Box, Chip, IconButton } from '@mui/material';
+import { Box, Chip, Tooltip, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -185,25 +185,19 @@ const SubjectTable = ({
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
           render: (value, row) => (
-            <IconButton
-              onClick={() => onToggleStatus(row as ISubjectFormValues)}
-              sx={{
-                boxShadow: '0px 3px 8px rgba(0, 0, 0, 0.15)',
-                '&:hover': {
-                  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
-                },
-              }}
-            >
-              <Iconify
-                icon={GlobalIcons.tick}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  cursor: 'pointer',
-                  color: value === 'Published' ? 'green' : 'gray',
-                }}
-              />
-            </IconButton>
+            <Tooltip title={value === 'Published' ? 'Publish' : 'Draft'}>
+              <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
+                <Iconify
+                  icon={GlobalIcons.tick}
+                  sx={{
+                    width: 25,
+                    height: 25,
+                    cursor: 'pointer',
+                    color: value === 'Published' ? 'green' : 'gray',
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
           ),
         },
         {

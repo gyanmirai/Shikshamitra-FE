@@ -38,7 +38,7 @@ const CurriculumSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentActiveComponent?.label}
+        heading="Setting"
         description="Setting for creating global subjects, elective subject and notification setting"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },

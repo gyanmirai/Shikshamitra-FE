@@ -220,6 +220,8 @@ const Subjects = (props: TabComponentType) => {
             onSubmit={() => {}}
             initialValues={selectedChapter}
             isEdit={isEditMode}
+            className={classes}
+            subject={subject}
           />
         </Card>
       ) : (
@@ -240,7 +242,7 @@ const Subjects = (props: TabComponentType) => {
                 label="Class"
                 name="class"
                 options={allClass}
-                valueKey="id"
+                valueKey="name"
                 labelKey="name"
                 formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
                 value={classes}

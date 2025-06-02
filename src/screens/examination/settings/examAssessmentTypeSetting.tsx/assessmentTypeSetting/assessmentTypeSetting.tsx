@@ -204,7 +204,7 @@ const AssessmentTypeSettings = () => {
       />
 
       <CustomDialog
-        title={selectedAssessmentType ? 'Update Assessment Type' : 'Create Assessment Type'}
+        title={selectedAssessmentType ? 'Update Assessment Type' : 'Add Assessment Type'}
         open={dialog.value}
         handleClose={dialog.onFalse}
       >

@@ -59,7 +59,7 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading={currentTab?.label}
+        heading="Setting"
         description={currentTab?.description}
         links={[
           { name: 'Academics', href: '/academic/dashboard' },

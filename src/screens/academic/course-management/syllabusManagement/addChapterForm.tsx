@@ -27,6 +27,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   onSubmit,
   isEdit = false,
   initialValues = null,
+  className,
+  subject,
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
@@ -72,6 +74,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Chapter Number Input */}
+              <Grid item xs={12} md={6}>
+                <TextField fullWidth disabled size="small" label="Class" value={className} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField fullWidth disabled size="small" label="Subject" value={subject} />
+              </Grid>
               <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}

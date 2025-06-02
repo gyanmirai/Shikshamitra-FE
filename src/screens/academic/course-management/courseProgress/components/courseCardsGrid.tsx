@@ -22,7 +22,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
                 display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
-                transform: isSelected ? 'scale(1.09)' : 'scale(1)',
+                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                 boxShadow: isSelected
                   ? `0 8px 25px ${alpha(course.color, 0.4)}`
                   : '0 1px 6px rgba(0,0,0,0.05)',
