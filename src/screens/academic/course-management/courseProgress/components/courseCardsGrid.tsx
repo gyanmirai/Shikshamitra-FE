@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Box, Grid, Card, alpha, useTheme, Typography } from '@mui/material';
 
@@ -9,6 +9,14 @@ import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
 export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseCardsGridProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+
+  // Select first course by default
+  useEffect(() => {
+    if (courses.length > 0 && selectedCourseId === null) {
+      setSelectedCourseId(courses[0].id);
+      handleCardDetails(courses[0]);
+    }
+  }, [courses, selectedCourseId, handleCardDetails]);
 
   return (
     <Grid container spacing={2} marginTop={2} marginBottom={4} gap={1}>
@@ -155,7 +163,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
           variant="h6"
           sx={{
             fontWeight: 'bold',
-            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+            // fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
             color,
           }}
         >
@@ -163,11 +171,11 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
         </Typography>
 
         <Typography
-          variant="subtitle2"
+          variant="subtitle1"
           sx={{
-            fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' },
-            color: alpha(color, 0.7),
-            fontWeight: 500,
+            fontSize: { xs: '0.85rem', sm: '1rem', md: '1.1rem' }, // increased font sizes
+            color: alpha(color, 0.8),
+            fontWeight: 600,
           }}
         >
           {title}

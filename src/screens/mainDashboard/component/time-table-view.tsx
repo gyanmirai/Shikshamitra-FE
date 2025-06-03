@@ -21,32 +21,36 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimeTableCell from 'src/screens/academic/timetable-schedule-management/timeTable/component/timeTableCell';
 
-export const subjects = [
+const dummySubjects: any[] = [
   {
     id: 1,
-    name: 'Math',
-    color: '#FFE0E0',
-    teachers: ['Mr. Smith', 'Mrs. Johnson'],
-    room: '101',
-    noOfLeacture: 5,
+    subjectColor: '#FF6B6B', // Red
+    subjects: [{ id: 1, name: 'Math' }],
   },
   {
     id: 2,
-    name: 'Science',
-    color: '#E0FFE0',
-    teachers: ['Mrs. Johnson', 'Mr. Davis'],
-    room: '102',
-    noOfLeacture: 7,
+    subjectColor: '#4ECDC4', // Teal
+    subjects: [{ id: 2, name: 'Science' }],
   },
   {
     id: 3,
-    name: 'English',
-    color: '#E0E0FF',
-    teachers: ['Ms. Wilson', 'Mr. Brown'],
-    room: '103',
-    noOfLeacture: 6,
+    subjectColor: '#45B7D1', // Blue
+    subjects: [{ id: 3, name: 'English' }],
+  },
+  {
+    id: 4,
+    subjectColor: '#96CEB4', // Green
+    subjects: [{ id: 4, name: 'History' }],
+  },
+  {
+    id: 5,
+    subjectColor: '#FECA57', // Yellow
+    subjects: [{ id: 5, name: 'Geography' }],
   },
 ];
+
+const dummyRooms = ['101', '102', '103', '104', '105'];
+const singleTeacher = 'Mr. Smith';
 
 const TimeTableView = (props: TabComponentType) => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -61,32 +65,34 @@ const TimeTableView = (props: TabComponentType) => {
 
   const theme = useTheme();
 
-  const [remainingLectures, setRemainingLectures] = useState<any>(() =>
-    subjects.reduce(
-      (acc, subject) => ({
-        ...acc,
-        [subject.id]: subject.noOfLeacture,
-      }),
-      {}
-    )
-  );
+  // const [remainingLectures, setRemainingLectures] = useState<any>(() =>
+  //   subjects.reduce(
+  //     (acc, subject) => ({
+  //       ...acc,
+  //       [subject.id]: subject.noOfLeacture,
+  //     }),
+  //     {}
+  //   )
+  // );
 
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
-        setDivisionOptions(selectedClass?.divisions || []);
-        if (selectedClass?.divisions?.length) {
-          setDivision(selectedClass.divisions[0].id);
+        const divisions = selectedClass?.divisions || [];
+        setDivisionOptions(divisions);
+        if (divisions.length > 0) {
+          setDivision(divisions[0].id);
         }
       } else {
         const firstClass = classData.items[0];
         setSearchParams?.({
           classId: firstClass.id,
         });
-        setDivisionOptions(firstClass?.divisions || []);
-        if (firstClass?.divisions?.length) {
-          setDivision(firstClass.divisions[0].id);
+        const divisions = firstClass?.divisions || [];
+        setDivisionOptions(divisions);
+        if (divisions.length > 0) {
+          setDivision(divisions[0].id);
         }
       }
     }
@@ -101,6 +107,8 @@ const TimeTableView = (props: TabComponentType) => {
     '11:15 - 12:00',
   ];
 
+  const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
+
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Initialize timetable as an array of arrays
@@ -108,93 +116,109 @@ const TimeTableView = (props: TabComponentType) => {
     Array<
       Array<{
         subject?: any;
-        teacher?: any;
+        teacher?: string;
         room?: string;
       } | null>
     >
   >(() =>
-    Array(timeSlots.length)
+    Array(timeSlots.length) // Use timeSlots.length instead of hardcoded 5
       .fill(null)
-      .map(() => Array(weekDays.length).fill(null))
+      .map((_, rowIndex) =>
+        Array(weekDays.length) // Also use weekDays.length for consistency
+          .fill(null)
+          .map((unused, colIndex) => {
+            // Don't populate break slots with data
+            const currentTimeSlot = timeSlots[rowIndex];
+            if (isBreak(currentTimeSlot)) {
+              return null; // Break slots should be null
+            }
+
+            return {
+              subject: dummySubjects[(rowIndex + colIndex) % dummySubjects.length],
+              teacher: singleTeacher,
+              room: dummyRooms[(rowIndex + colIndex) % dummyRooms.length],
+            };
+          })
+      )
   );
 
   const handleDragStart = (e: any, subject: any) => {
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };
 
-  const handleDrop = (e: any, timeSlot: string, day: string) => {
-    e.preventDefault();
-    const subject = JSON.parse(e.dataTransfer.getData('subject'));
-    const sourceTimeSlot = e.dataTransfer.getData('sourceTimeSlot');
-    const sourceDay = e.dataTransfer.getData('sourceDay');
+  // const handleDrop = (e: any, timeSlot: string, day: string) => {
+  //   e.preventDefault();
+  //   const subject = JSON.parse(e.dataTransfer.getData('subject'));
+  //   const sourceTimeSlot = e.dataTransfer.getData('sourceTimeSlot');
+  //   const sourceDay = e.dataTransfer.getData('sourceDay');
 
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  //   const timeSlotIndex = timeSlots.indexOf(timeSlot);
+  //   const dayIndex = weekDays.indexOf(day);
 
-    // Check if target slot is empty
-    if (timetable[timeSlotIndex][dayIndex] !== null) {
-      return;
-    }
+  //   // Check if target slot is empty
+  //   if (timetable[timeSlotIndex][dayIndex] !== null) {
+  //     return;
+  //   }
 
-    // If it's a new drag (not moving an existing slot)
-    if (!sourceTimeSlot && !sourceDay) {
-      // Check if there are remaining lectures
-      if (remainingLectures[subject.id] <= 0) {
-        return;
-      }
+  //   // If it's a new drag (not moving an existing slot)
+  //   if (!sourceTimeSlot && !sourceDay) {
+  //     // Check if there are remaining lectures
+  //     if (remainingLectures[subject.id] <= 0) {
+  //       return;
+  //     }
 
-      // Decrease remaining lectures
-      setRemainingLectures((prev: any) => ({
-        ...prev,
-        [subject.id]: prev[subject.id] - 1,
-      }));
-    }
+  //     // Decrease remaining lectures
+  //     setRemainingLectures((prev: any) => ({
+  //       ...prev,
+  //       [subject.id]: prev[subject.id] - 1,
+  //     }));
+  //   }
 
-    setTimetable((prev) => {
-      const newTimetable = prev.map((row) => [...row]);
+  //   setTimetable((prev) => {
+  //     const newTimetable = prev.map((row) => [...row]);
 
-      if (sourceTimeSlot && sourceDay) {
-        const sourceTimeSlotIndex = timeSlots.indexOf(sourceTimeSlot);
-        const sourceDayIndex = weekDays.indexOf(sourceDay);
-        const sourceSlotData = newTimetable[sourceTimeSlotIndex][sourceDayIndex];
-        newTimetable[sourceTimeSlotIndex][sourceDayIndex] = null;
-        newTimetable[timeSlotIndex][dayIndex] = {
-          subject,
-          teacher: sourceSlotData?.teacher || null,
-          room: sourceSlotData?.room || subject.room,
-        };
-      } else {
-        newTimetable[timeSlotIndex][dayIndex] = {
-          subject,
-          teacher: null,
-          room: subject.room,
-        };
-      }
+  //     if (sourceTimeSlot && sourceDay) {
+  //       const sourceTimeSlotIndex = timeSlots.indexOf(sourceTimeSlot);
+  //       const sourceDayIndex = weekDays.indexOf(sourceDay);
+  //       const sourceSlotData = newTimetable[sourceTimeSlotIndex][sourceDayIndex];
+  //       newTimetable[sourceTimeSlotIndex][sourceDayIndex] = null;
+  //       newTimetable[timeSlotIndex][dayIndex] = {
+  //         subject,
+  //         teacher: sourceSlotData?.teacher || null,
+  //         room: sourceSlotData?.room || subject.room,
+  //       };
+  //     } else {
+  //       newTimetable[timeSlotIndex][dayIndex] = {
+  //         subject,
+  //         teacher: null,
+  //         room: subject.room,
+  //       };
+  //     }
 
-      return newTimetable;
-    });
-  };
+  //     return newTimetable;
+  //   });
+  // };
 
-  // Modified handleDeleteSlot to increase remaining lectures
-  const handleDeleteSlot = (timeSlot: string, day: string) => {
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  // // Modified handleDeleteSlot to increase remaining lectures
+  // const handleDeleteSlot = (timeSlot: string, day: string) => {
+  //   const timeSlotIndex = timeSlots.indexOf(timeSlot);
+  //   const dayIndex = weekDays.indexOf(day);
 
-    setTimetable((prev) => {
-      const deletedSubject = prev[timeSlotIndex][dayIndex]?.subject;
-      if (deletedSubject) {
-        // Increase remaining lectures when deleting
-        setRemainingLectures((pre: any) => ({
-          ...pre,
-          [deletedSubject.id]: pre[deletedSubject.id] + 1,
-        }));
-      }
+  //   setTimetable((prev) => {
+  //     const deletedSubject = prev[timeSlotIndex][dayIndex]?.subject;
+  //     if (deletedSubject) {
+  //       // Increase remaining lectures when deleting
+  //       setRemainingLectures((pre: any) => ({
+  //         ...pre,
+  //         [deletedSubject.id]: pre[deletedSubject.id] + 1,
+  //       }));
+  //     }
 
-      const newTimetable = prev.map((row) => [...row]);
-      newTimetable[timeSlotIndex][dayIndex] = null;
-      return newTimetable;
-    });
-  };
+  //     const newTimetable = prev.map((row) => [...row]);
+  //     newTimetable[timeSlotIndex][dayIndex] = null;
+  //     return newTimetable;
+  //   });
+  // };
 
   const handleTeacherSelect = (teacher: string, timeSlot: string, day: string) => {
     const timeSlotIndex = timeSlots.indexOf(timeSlot);
@@ -228,8 +252,6 @@ const TimeTableView = (props: TabComponentType) => {
     });
   };
 
-  const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
-
   const [isVisibleGrid, setIsVisibleGrid] = useState(true);
 
   return (
@@ -257,12 +279,13 @@ const TimeTableView = (props: TabComponentType) => {
                         key={`${timeSlot}-${day}`}
                         timeSlot={timeSlot}
                         day={day}
+                        isThreeDots={false}
                         slotData={timetable[timeSlotIndex][dayIndex]}
                         isBreak={isBreak(timeSlot)}
-                        onDrop={handleDrop}
+                        onDrop={() => {}}
                         onTeacherSelect={handleTeacherSelect}
                         onRoomSelect={handleRoomSelect}
-                        onDeleteSlot={handleDeleteSlot}
+                        onDeleteSlot={() => {}}
                         selectedRoom="101"
                       />
                     ))}

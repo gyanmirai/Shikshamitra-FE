@@ -4,13 +4,17 @@ import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Radio,
   Select,
   Divider,
   MenuItem,
   TextField,
+  FormLabel,
   InputLabel,
+  RadioGroup,
   FormControl,
   FormHelperText,
+  FormControlLabel,
 } from '@mui/material';
 
 import calculateAge from 'src/utils/calculate-age';
@@ -120,7 +124,7 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="firstName"
                       size="small"
-                      label="First Name *"
+                      label="Enter First Name *"
                       name="firstName"
                       placeholder="First Name *"
                       value={formik.values.firstName}
@@ -143,7 +147,7 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="middleName"
                       size="small"
-                      label="Middle Name *"
+                      label="Enter Middle Name *"
                       name="middleName"
                       placeholder="Middle Name *"
                       value={formik.values.middleName}
@@ -166,7 +170,7 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="lastName"
                       size="small"
-                      label="Last Name *"
+                      label="Enter Last Name *"
                       name="lastName"
                       placeholder="Last Name *"
                       value={formik.values.lastName}
@@ -189,31 +193,30 @@ export const generalFormFields: FieldsType[] = [
                       error={formik.touched.gender && Boolean(formik.errors.gender)}
                       disabled={!disabled}
                     >
-                      <InputLabel
-                        id="dropdown-label"
-                        size="small"
+                      <FormLabel
+                        id="gender-radio-group"
                         error={formik.touched.gender && Boolean(formik.errors.gender)}
                       >
                         Gender
-                      </InputLabel>
-                      <Select
-                        labelId="dropdown-label"
-                        id="dropdown"
+                      </FormLabel>
+                      <RadioGroup
+                        row
+                        aria-labelledby="gender-radio-group"
+                        name="gender"
                         value={formik.values.gender}
                         onChange={formik.handleChange}
-                        size="small"
-                        label="Gender"
-                        name="gender"
-                        error={formik.touched.gender && Boolean(formik.errors.gender)}
-                        disabled={!disabled}
                       >
                         {GenderTypeArray.map((i, index) => (
-                          <MenuItem key={i} value={index}>
-                            {GenderType[index]}
-                          </MenuItem>
+                          <FormControlLabel
+                            key={i}
+                            value={index}
+                            control={<Radio size="small" />}
+                            label={GenderType[index]}
+                            disabled={!disabled}
+                          />
                         ))}
-                      </Select>
-                      <FormHelperText>
+                      </RadioGroup>
+                      <FormHelperText error>
                         {formik.touched.gender && formik.errors.gender}
                       </FormHelperText>
                     </FormControl>
@@ -262,8 +265,8 @@ export const generalFormFields: FieldsType[] = [
                   onChange={(value) => {
                     formik.setFieldValue('mobileNo', value);
                   }}
-                  placeholder="Contact No. *"
-                  label="Contact Number *"
+                  placeholder="Enter Primary Contact No."
+                  label="Primary Contact No *"
                   error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
                   helperText={formik.touched.mobileNo && formik.errors.mobileNo}
                   variant="outlined"
@@ -285,8 +288,8 @@ export const generalFormFields: FieldsType[] = [
                   onChange={(value) => {
                     formik.setFieldValue('alternativeContactNumber', value);
                   }}
-                  placeholder="Alternative Contact Number"
-                  label="Alternative Contact Number"
+                  placeholder="Enter Secondary Contact No."
+                  label="Secondary Contact No."
                   error={
                     formik.touched.alternativeContactNumber &&
                     Boolean(formik.errors.alternativeContactNumber)
@@ -305,9 +308,9 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="email"
                   size="small"
-                  label="Email *"
+                  label="Email"
                   name="email"
-                  placeholder="Email *"
+                  placeholder="Enter Email"
                   value={formik.values.email}
                   onBlur={formik.handleBlur}
                   error={formik.touched.email && Boolean(formik.errors.email)}
@@ -337,10 +340,10 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="adharNo"
                   size="small"
-                  label="Aadhar No *"
+                  label="Aadhar No"
                   name="adharNo"
                   type="number"
-                  placeholder="Aadhar No *"
+                  placeholder="Enter Aadhar No"
                   value={formik.values.adharNo}
                   onBlur={formik.handleBlur}
                   error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
@@ -358,7 +361,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Appar Id"
                   name="apparId"
-                  placeholder="Appar Id"
+                  placeholder="Enter Appar Id"
                   value={formik.values.apparId}
                   onBlur={formik.handleBlur}
                   error={formik.touched.apparId && Boolean(formik.errors.apparId)}
@@ -376,7 +379,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Pan No"
                   name="panNo"
-                  placeholder="Pan No"
+                  placeholder="Enter Pan No"
                   value={formik.values.panNo}
                   onBlur={formik.handleBlur}
                   error={formik.touched.panNo && Boolean(formik.errors.panNo)}
@@ -401,7 +404,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Religion"
                   name="religion"
-                  placeholder="Religion"
+                  placeholder="Enter Religion"
                   value={formik.values.religion}
                   onBlur={formik.handleBlur}
                   error={formik.touched.religion && Boolean(formik.errors.religion)}
@@ -424,7 +427,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Family Cast"
                   name="familyCast"
-                  placeholder="Religion"
+                  placeholder="Enter Family Cast"
                   value={formik.values.familyCast}
                   onBlur={formik.handleBlur}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
@@ -493,7 +496,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Nationality"
                   name="nationality"
-                  placeholder="Nationality"
+                  placeholder="Enter Nationality"
                   value={formik.values.nationality}
                   onBlur={formik.handleBlur}
                   error={formik.touched.nationality && Boolean(formik.errors.nationality)}
@@ -516,7 +519,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Birth Place"
                   name="birthPlace"
-                  placeholder="Birth Place"
+                  placeholder="Enter Birth Place"
                   value={formik.values.birthPlace}
                   onBlur={formik.handleBlur}
                   error={formik.touched.birthPlace && Boolean(formik.errors.birthPlace)}
@@ -534,43 +537,31 @@ export const generalFormFields: FieldsType[] = [
               <ShakingTextField
                 error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
               >
-                <TextField
-                  key="motherTongue"
+                <FormControl
+                  fullWidth
                   size="small"
-                  label="Mother Tongue"
-                  name="motherTongue"
-                  placeholder="Mother Tongue"
-                  value={formik.values.motherTongue}
-                  onBlur={formik.handleBlur}
                   error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
-                  helperText={formik.touched.motherTongue && formik.errors.motherTongue}
-                  fullWidth
-                  onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('motherTongue', newName);
-                  }}
                   disabled={!disabled}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <ShakingTextField
-                error={formik.touched.temporaryGr && Boolean(formik.errors.temporaryGr)}
-              >
-                <TextField
-                  key="temporaryGr"
-                  size="small"
-                  label="Temporary Gr *"
-                  name="temporaryGr"
-                  placeholder="Temporary Gr *"
-                  value={formik.values.temporaryGr}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.temporaryGr && Boolean(formik.errors.temporaryGr)}
-                  helperText={formik.touched.temporaryGr && formik.errors.temporaryGr}
-                  fullWidth
-                  onChange={formik.handleChange}
-                  disabled={!disabled}
-                />
+                >
+                  <InputLabel id="mother-tongue-label">Mother Tongue</InputLabel>
+                  <Select
+                    labelId="mother-tongue-label"
+                    id="motherTongue"
+                    name="motherTongue"
+                    value={formik.values.motherTongue}
+                    label="Mother Tongue"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <MenuItem value="English">English</MenuItem>
+                    <MenuItem value="Gujarati">Gujarati</MenuItem>
+                    <MenuItem value="Marathi">Marathi</MenuItem>
+                    <MenuItem value="Hindi">Hindi</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {formik.touched.motherTongue && formik.errors.motherTongue}
+                  </FormHelperText>
+                </FormControl>
               </ShakingTextField>
             </Grid>
           </SectionCard>
@@ -583,9 +574,9 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine1"
                   size="small"
-                  label="Address Line1"
+                  label="Building / Flat / House No"
                   name="addressLine1"
-                  placeholder="Address Line1"
+                  placeholder="Enter Building / Flat / House No"
                   value={formik.values.addressLine1}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
@@ -603,9 +594,9 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine2"
                   size="small"
-                  label="Address Line2"
+                  label="Street / Road Name"
                   name="addressLine2"
-                  placeholder="Address Line2"
+                  placeholder="Enter Street / Road Name"
                   value={formik.values.addressLine2}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
@@ -623,9 +614,9 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine3"
                   size="small"
-                  label="Address Line3"
+                  label="Area / Locality / Landmark"
                   name="addressLine3"
-                  placeholder="Address Line3"
+                  placeholder="Enter Area / Locality / Landmark"
                   value={formik.values.addressLine3}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
@@ -692,31 +683,13 @@ export const generalFormFields: FieldsType[] = [
               </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={3}>
-              <ShakingTextField error={formik.touched.village && Boolean(formik.errors.village)}>
-                <TextField
-                  key="village"
-                  size="small"
-                  label="village"
-                  name="village"
-                  placeholder="village"
-                  value={formik.values.village}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.village && Boolean(formik.errors.village)}
-                  helperText={formik.touched.village && formik.errors.village}
-                  fullWidth
-                  onChange={formik.handleChange}
-                  disabled={!disabled}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.pinCode && Boolean(formik.errors.pinCode)}>
                 <TextField
                   key="pinCode"
                   size="small"
-                  label="Town/District"
+                  label="Pin Code"
                   name="pinCode"
-                  placeholder="Town/District"
+                  placeholder="Enter Pin Code"
                   value={formik.values.pinCode}
                   onBlur={formik.handleBlur}
                   error={formik.touched.pinCode && Boolean(formik.errors.pinCode)}
@@ -739,7 +712,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Previous School"
                   name="previousSchool"
-                  placeholder="Previous School"
+                  placeholder="Enter Previous School"
                   value={formik.values.previousSchool}
                   onBlur={formik.handleBlur}
                   error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}

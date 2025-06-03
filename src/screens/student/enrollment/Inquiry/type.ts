@@ -15,8 +15,8 @@ export interface IInquiryFormValues {
   dateOfInquiry: Dayjs | null;
   gender: GenderType;
   address: string;
-  parentsContactNo: string;
-  alternateContactDetails: string;
+  primaryContactNumber: string;
+  secondaryContactNumber: string;
   previousSchool: string;
   inquiryPreferences: string;
   country: { name: ICountry['name']; isoCode: ICountry['isoCode'] };
@@ -30,5 +30,5 @@ export interface IInquiryFormValues {
   addressLine2: string;
   addressLine3: string;
   email: string;
-  village: string;
+  // village: string;
 }

@@ -55,12 +55,14 @@ const RegisterScreen = () => {
   // Checks for unsaved changes and prompts user confirmation if needed
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      setEditData(null);
+      dialog.onFalse();
       formDialog.onFalse();
       dispatch(setIsChanges(false));
-      setEditData(null);
     } else {
       formDialog.onFalse();
       setEditData(null);
+      dialog.onFalse();
     }
   };
   return (
@@ -110,10 +112,7 @@ const RegisterScreen = () => {
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
           studentName={`${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''} ${(editData as IInquiryData)?.lastName || ''}`.trim()}
           standardName={(editData as IInquiryData)?.standard.name || ''}
-          handleClose={() => {
-            setEditData(null);
-            dialog.onFalse();
-          }}
+          handleClose={handleClose}
         />{' '}
       </CustomDialog>
 

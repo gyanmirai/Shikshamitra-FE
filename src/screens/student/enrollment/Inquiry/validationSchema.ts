@@ -12,13 +12,13 @@ export const inquiryValidationSchema = Yup.object().shape({
   dateOfBirth: Yup.date().required('Date of birth is required'),
   age: Yup.string().required('Age is required'),
   dateOfInquiry: Yup.date().required('Date of inquiry is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
+  email: Yup.string().email('Invalid email'),
   gender: Yup.string()
     // .oneOf(['male', 'female', 'other'], 'Invalid gender')
     .required('Gender is required'),
   address: Yup.string(),
-  parentsContactNo: Yup.string()
-    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
+  primaryContactNumber: Yup.string()
+    .test('Mobile NO', 'Primary ContactNo is not valid', (value) =>
       matchIsValidTel((value || '') as string)
     )
     .required('Parents contact number is required'),
@@ -30,14 +30,16 @@ export const inquiryValidationSchema = Yup.object().shape({
       'unique',
       'Alternate contact number cannot be same as parents contact number',
       function (value) {
-        return !value || value !== this.parent.parentsContactNo;
+        return !value || value !== this.parent.primaryContactNumber;
       }
     ),
   previousSchool: Yup.string(),
   inquiryPreferences: Yup.string(),
-  pinCode: Yup.number()
-    .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
-    .required('Pin code is required'),
+  pinCode: Yup.number().test(
+    'picode',
+    'Must be exactly 6 numbers',
+    (value) => !!`${value}`.match(/\b\d{6}\b/)
+  ),
 
   board: Yup.string().required('Board is required'),
   medium: Yup.string().required('Medium is required'),

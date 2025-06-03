@@ -43,13 +43,13 @@ export interface IInquiryData {
   dateOfBirth: string;
   dateOfInquiry: string;
   genderType: GenderType;
-  parentContactNumber: string;
-  alternativeContactNumber: string;
+  primaryContactNumber: string;
+  secondaryContactNumber: string;
   dueDate?: string;
   country: ICountry;
   city: string;
   state: IState;
-  village: string;
+  // village: string;
   tempGrNo: number;
   grNoRecord: number;
   rollNo: number;
@@ -217,18 +217,50 @@ export interface StudentAdditionalDetails {
   sponsorName?: string; // Add any additional fields as required
 }
 const InquiryScreen = () => {
+  // Dialog state for inquiry form modal
   const inquiryDialog = useBoolean();
+
+  // State to store inquiry data being edited
   const [editData, setEditData] = useState<null | IInquiryData>(null);
+
+  // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // Dialog states for follow-up and registration form modals
   const followUpDialog = useBoolean();
   const issueRegistrationFormDialog = useBoolean();
+
+  /**
+   * Handles closing the inquiry dialog
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   *
+   * If isSubmit is true or user confirms leaving with unsaved changes:
+   * - Resets the changes flag in Redux
+   * - Closes the inquiry dialog
+   * - Clears the edit data
+   *
+   * If no unsaved changes:
+   * - Simply closes dialog and clears edit data
+   */
+  const handleClose = (_e?: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dispatch(setIsChanges(false));
+      inquiryDialog.onFalse();
+      setEditData(null);
+    } else if (!isChanges) {
+      inquiryDialog.onFalse();
+      setEditData(null);
+    }
+  };
+
   const links = inquiryDialog.value
     ? [
         { name: 'Student', href: '/student/enrollment/dashboard/' },
         { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
         { name: 'Inquiry', href: '/student/enrollment/inquiry' },
-        { name: 'Inquiry Form' },
+        { name: editData ? 'Update Inquiry' : 'Add Inquiry' },
       ]
     : [
         { name: 'Student', href: '/student/enrollment/dashboard/' },
@@ -236,23 +268,16 @@ const InquiryScreen = () => {
         { name: 'Inquiry' },
       ];
 
-  const handleClose = (_e?: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-
-      inquiryDialog.onFalse();
-
-      setEditData(null);
-    } else if (!isChanges) {
-      inquiryDialog.onFalse();
-
-      setEditData(null);
-    }
-  };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Inquiry"
+        heading={
+          inquiryDialog.value && editData
+            ? 'Update Inquiry'
+            : inquiryDialog.value
+              ? 'Add Inquiry'
+              : 'Inquiry'
+        }
         description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
         links={links}
         sx={{ px: 1, mb: 2 }}

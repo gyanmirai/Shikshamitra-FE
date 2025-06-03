@@ -10,6 +10,7 @@ export interface ITimeTableCellProps {
   onTeacherSelect: (teacher: string, timeSlot: string, day: string) => void;
   onRoomSelect: (room: string, timeSlot: string, day: string) => void;
   onDeleteSlot: (timeSlot: string, day: string) => void;
+  isThreeDots?: boolean;
 }
 
 export interface IAssignRoomProps {
