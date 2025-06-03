@@ -53,6 +53,9 @@ const InquiryTable = ({
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
+        address: [item.addressLine1, item.addressLine2, item.addressLine3]
+          .filter(Boolean)
+          .join(', '),
       })),
     [inquiryData?.items]
   );
@@ -84,8 +87,8 @@ const InquiryTable = ({
         </>
       }
       searchFieldProps={{
-        placeholder: 'Search by Inquiry number, Student name, Class..',
-        label: 'Search by Inquiry number, Student name, Class...',
+        placeholder: 'Search by Inquiry number, Class, Student Name...',
+        label: 'Search by Inquiry number, Class, Student Name...',
         sx: {
           maxWidth: '400px',
           width: '100%',
@@ -94,13 +97,14 @@ const InquiryTable = ({
       columns={[
         {
           id: 'inquiryNumber',
-          label: 'Inquiry Number',
+          label: 'Inquiry No.',
           sticky: true,
-          minWidth: '162px',
+          minWidth: '110px',
           filterType: 'string',
+          align: 'left',
         },
-        { id: 'standard.name', label: 'Class' },
-        { id: 'studentName', label: 'Student Name', minWidth: '150px' },
+        { id: 'standard.name', label: 'Class', align: 'left' },
+        { id: 'studentName', label: 'Student Name', minWidth: '150px', align: 'left' },
         {
           id: 'dobValue',
           label: 'DOB',
@@ -108,36 +112,61 @@ const InquiryTable = ({
           align: 'left',
           filterType: 'date',
         },
-        { id: 'ageValue', label: 'Age' },
+        { id: 'ageValue', label: 'Age', align: 'left' },
         {
           id: 'doiValue',
-          label: 'DOI',
+          label: 'Inquiry Date',
           filterType: 'date',
           minWidth: '120px',
           align: 'left',
           isDateRangeFilter: true,
         },
-        { id: 'genderValue', label: 'Gender' },
-        { id: 'address', label: 'Address', minWidth: '120px' },
-        { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '145px' },
-        { id: 'alternativeContactNumber', label: 'Alternate Contact No.', minWidth: '222px' },
-        { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px' },
+        { id: 'genderValue', label: 'Gender', align: 'left' },
+        {
+          id: 'address',
+          label: 'Address',
+          minWidth: '120px',
+          align: 'left',
+          render(value, row) {
+            return value || '-';
+          },
+        },
+        {
+          id: 'primaryContactNumber',
+          label: 'Primary Contact No.',
+          minWidth: '180px',
+          align: 'left',
+        },
+        {
+          id: 'secondaryContactNumber',
+          label: 'Secondary Contact No.',
+          minWidth: '200px',
+          align: 'left',
+        },
+        { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
         {
           id: 'inquiryPreference.preferenceName',
           label: 'Inquiry Type',
+          minWidth: '130px',
+          align: 'left',
+        },
+        {
+          id: 'lastFollowUpDate',
+          label: 'Last Follow Up Date',
           minWidth: '180px',
+          align: 'left',
+          filterType: 'date',
         },
         {
           id: 'followUpStatusType',
-          label: 'Follow up Status',
+          label: 'Follow Up Status',
           filterType: 'enum',
           enumOptions: FollowUpStatusTypeOptions,
-          minWidth: '180px',
+          minWidth: '160px',
           align: 'left',
           sticky: true,
           render(value, row) {
             const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-
             return <Label color={color}>{FollowUpStatusType[value]}</Label>;
           },
         },
@@ -147,7 +176,6 @@ const InquiryTable = ({
           isFilter: false,
           isSort: false,
           sticky: true,
-
           render(value, row) {
             return (
               <ThreeDotsActions

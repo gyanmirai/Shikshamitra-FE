@@ -34,12 +34,25 @@ import RegisterForm from '../register/register-form';
 import type { IInquiryData } from '../Inquiry';
 
 const RegistrationFormScreen = () => {
+  // Dialog control for registration form
   const registerFormDialog = useBoolean();
+
+  // State to store inquiry data for editing
   const [editData, setEditData] = useState<IInquiryData | null>(null);
+
+  // State to store ID of student being moved to registration
   const [moveId, setMoveId] = useState<string | null>(null);
+
+  // State to store dates (currently unused)
   const [dates, setDates] = useState([]);
+
+  // Dialog control for follow-up form
   const followUpDialog = useBoolean();
+
+  // Dialog control for move confirmation popup
   const confirmMovePopup = useBoolean();
+
+  // Query hook to fetch registration form data
   const {
     data: inquiryFormData,
     isLoading,
@@ -49,6 +62,7 @@ const RegistrationFormScreen = () => {
     currentQueryAndMutation: useGetStudentRegistrationFormQuery,
   });
 
+  // Mutation hook to move student to registration status
   const [moveToRegistration] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToRegistrationMutation,
@@ -58,6 +72,11 @@ const RegistrationFormScreen = () => {
     },
   });
 
+  // Transform inquiry form data into table-friendly format
+  // - Formats dates (DOB and DOI) into DD-MM-YYYY
+  // - Calculates age from DOB
+  // - Combines first, middle and last names
+  // - Maps gender type enum to display value
   const tableData = useMemo(
     () =>
       inquiryFormData?.items.map((item: IInquiryData) => ({
@@ -67,146 +86,45 @@ const RegistrationFormScreen = () => {
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
+        address: [item.addressLine1, item.addressLine2, item.addressLine3]
+          .filter(Boolean)
+          .join(', '),
       })),
     [inquiryFormData?.items]
   );
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Registration Form Issued"
-        description="An Registration Form Issued in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
-        links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
-          { name: 'Registration Form Issued' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      <CustomizableTable
-        isLoading={isLoading}
-        noDataText={<>No Registration Form Issued Data Found </>}
-        tableId="student-registration-form-table"
-        searchFieldProps={{
-          placeholder: 'Search by Inquiry number, Student name, Class..',
-          label: 'Search by Inquiry number, Student name, Class..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
-        columns={[
-          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
-          {
-            id: 'inquiryNumber',
-            label: 'Inquiry Number',
-            align: 'left',
-            minWidth: '162px',
-            isFilter: true,
-            filterType: 'string',
-          },
-          { id: 'standard.name', label: 'Class', align: 'left' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
-          {
-            id: 'dobValue',
-            label: 'DOB',
-            minWidth: '120px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'date',
-          },
-          { id: 'ageValue', label: 'Age', align: 'left' },
-          {
-            id: 'doiValue',
-            label: 'DOI',
-            minWidth: '120px',
-            align: 'left',
-            isDateRangeFilter: true,
-          },
-          { id: 'genderValue', label: 'Gender', align: 'left' },
-          { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px', align: 'left' },
-          {
-            id: 'alternativeContactNumber',
-            label: 'Alternate Contact No.',
-            minWidth: '232px',
-            align: 'left',
-          },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
-          {
-            id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Type',
-            minWidth: '200px',
-            align: 'left',
-          },
-          {
-            id: 'followUpStatusType',
-            label: 'Follow up Status',
-            filterType: 'enum',
-            enumOptions: FollowUpStatusTypeOptions,
-            minWidth: '220px',
-            align: 'left',
-            sticky: true,
-            render(value, row) {
-              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-
-              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-            },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            minWidth: 40,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={async (e) => {
-                          // dialog.onTrue();
-                          // setMoveId(row.id);
-                          registerFormDialog.onTrue();
-                          setEditData(row as IInquiryData);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-                        Move to Registration
-                      </MenuItem>
-                      <MenuItem
-                        onClick={(e) => {
-                          setEditData(row as IInquiryData);
-                          followUpDialog.onTrue();
-                          e.stopPropagation();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                        Follow Up
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData || []}
-      />{' '}
-      <CustomDialog
-        maxWidth="xl"
-        open={registerFormDialog.value}
-        handleClose={() => {
-          setEditData(null);
-          registerFormDialog.onFalse();
-        }}
-        title="Move to Registration"
-      >
+      {registerFormDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Move to Registration"
+          description="Move student from registration form issued to registration status. This step allows you to proceed with the formal registration process after initial inquiry."
+          links={[
+            { name: 'Student', href: '/student/enrollment/dashboard/' },
+            { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
+            { name: 'Registration Form Issued' },
+            { name: 'Move to Registration' },
+          ]}
+          isBack
+          onBack={() => {
+            setEditData(null);
+            registerFormDialog.onFalse();
+          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Registration Form Issued"
+          description="An Registration Form Issued in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
+          links={[
+            { name: 'Student', href: '/student/enrollment/dashboard/' },
+            { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
+            { name: 'Registration Form Issued' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
+      {registerFormDialog.value ? (
         <RegisterForm
           editData={editData}
           handleClose={() => {
@@ -215,7 +133,141 @@ const RegistrationFormScreen = () => {
           }}
           isComeFromIssueForm
         />
-      </CustomDialog>
+      ) : (
+        <CustomizableTable
+          isLoading={isLoading}
+          noDataText={<>No Registration Form Issued Data Found </>}
+          tableId="student-registration-form-table"
+          searchFieldProps={{
+            placeholder: 'Search by Form No, Inquiry number, Class, Student name...',
+            label: 'Search by Form No, Inquiry number, Class, Student name...',
+            sx: {
+              maxWidth: '470px',
+              width: '100%',
+            },
+          }}
+          columns={[
+            { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left' },
+            {
+              id: 'inquiryNumber',
+              label: 'Inquiry No.',
+              align: 'left',
+              minWidth: '110px',
+              isFilter: true,
+              filterType: 'string',
+            },
+            { id: 'standard.name', label: 'Class', align: 'left' },
+            { id: 'studentName', label: 'Student Name', minWidth: '140px', align: 'left' },
+            {
+              id: 'dobValue',
+              label: 'DOB',
+              minWidth: '100px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'date',
+            },
+            { id: 'ageValue', label: 'Age', align: 'left' },
+            {
+              id: 'doiValue',
+              label: 'Inquiry Date',
+              minWidth: '120px',
+              align: 'left',
+              isDateRangeFilter: true,
+            },
+            { id: 'genderValue', label: 'Gender', align: 'left' },
+            {
+              id: 'address',
+              label: 'Address',
+              minWidth: '120px',
+              align: 'left',
+              render(value, row) {
+                return value || '-';
+              },
+            },
+            {
+              id: 'primaryContactNumber',
+              label: 'Primary Co. No.',
+              minWidth: '150px',
+              align: 'left',
+            },
+            {
+              id: 'secondaryContactNumber',
+              label: 'Secondary Contact No.',
+              minWidth: '200px',
+              align: 'left',
+            },
+            {
+              id: 'previousSchoolName',
+              label: 'Previous School',
+              minWidth: '170px',
+              align: 'left',
+            },
+            {
+              id: 'inquiryPreference.preferenceName',
+              label: 'Inquiry Type',
+              minWidth: '130px',
+              align: 'left',
+            },
+            {
+              id: 'followUpStatusType',
+              label: 'Follow Up Status',
+              filterType: 'enum',
+              enumOptions: FollowUpStatusTypeOptions,
+              minWidth: '170px',
+              align: 'left',
+              sticky: true,
+              render(value, row) {
+                const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+                return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+              },
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              minWidth: 40,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={({ popover }) => (
+                      <MenuList>
+                        <MenuItem
+                          onClick={async (e) => {
+                            // dialog.onTrue();
+                            // setMoveId(row.id);
+                            registerFormDialog.onTrue();
+                            setEditData(row as IInquiryData);
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                          Move to Registration
+                        </MenuItem>
+                        <MenuItem
+                          onClick={(e) => {
+                            setEditData(row as IInquiryData);
+                            followUpDialog.onTrue();
+                            e.stopPropagation();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
+                          Follow Up
+                        </MenuItem>
+                      </MenuList>
+                    )}
+                    placement="right-top"
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData || []}
+        />
+      )}
+
       <CustomDialog
         open={followUpDialog.value}
         handleClose={() => {

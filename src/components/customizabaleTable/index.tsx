@@ -566,6 +566,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   startIcon={<Iconify icon="prime:send" />}
                   onClick={onSendNotification}
                   sx={{ mr: 2 }}
+                  disabled
                 >
                   Send Notification
                 </Button>

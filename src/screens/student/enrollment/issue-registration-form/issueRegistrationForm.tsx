@@ -16,6 +16,7 @@ import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inqui
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -27,6 +28,7 @@ interface IssueRegistrationFormProps {
 const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClose, editData }) => {
   const initialValues = {
     formNumber: '',
+    amount: 0,
   };
 
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -40,6 +42,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
         initialValues={initialValues}
         validationSchema={Yup.object({
           formNumber: Yup.string().required('Form Number is required'),
+          amount: Yup.number().required('Amount is required'),
         })}
         onSubmit={async (
           values: FormikValues,
@@ -61,8 +64,8 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                   dateOfInquiry:
                     dateConvertor(dayjs(editData.dateOfInquiry)?.format(dateFormat) || '') || '',
                   genderType: editData.genderType,
-                  parentContactNumber: editData.parentContactNumber,
-                  alternativeContactNumber: editData.alternativeContactNumber,
+                  primaryContactNumber: editData.primaryContactNumber,
+                  secondaryContactNumber: editData.secondaryContactNumber,
                   city: editData.city,
                   state: editData.state,
                   pinCode: editData.pinCode,
@@ -105,16 +108,33 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
             >
               <Grid container spacing={3}>
                 <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    name="formNumber"
-                    label="Form Number"
-                    error={touched.formNumber && Boolean(errors.formNumber)}
-                    helperText={touched.formNumber && errors.formNumber}
-                    value={values.formNumber}
-                    onChange={handleChange}
-                  />
+                  <ShakingTextField error={!!(touched.formNumber && errors.formNumber) || false}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="formNumber"
+                      label="Form Number"
+                      placeholder="Enter Form Number"
+                      error={touched.formNumber && Boolean(errors.formNumber)}
+                      helperText={touched.formNumber && errors.formNumber}
+                      value={values.formNumber}
+                      onChange={handleChange}
+                    />
+                  </ShakingTextField>
+                </Grid>
+                <Grid item xs={12}>
+                  <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="amount"
+                      label="Amount"
+                      error={touched.amount && Boolean(errors.amount)}
+                      helperText={touched.amount && errors.amount}
+                      value={values.amount}
+                      onChange={handleChange}
+                    />
+                  </ShakingTextField>
                 </Grid>
               </Grid>
             </Scrollbar>

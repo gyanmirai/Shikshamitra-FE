@@ -121,8 +121,8 @@ const RegisterForm = ({
 
               dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
               genderType: values.gender,
-              parentContactNumber: values.mobileNo,
-              alternativeContactNumber: values.alternativeContactNumber,
+              primaryContactNumber: values.mobileNo,
+              secondaryContactNumber: values.alternativeContactNumber,
 
               academicYearId: values.academicYear,
               educationBoardId: values.board,
@@ -169,8 +169,8 @@ const RegisterForm = ({
 
             dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
             genderType: values.gender,
-            parentContactNumber: values.mobileNo,
-            alternativeContactNumber: values.alternativeContactNumber,
+            primaryContactNumber: values.mobileNo,
+            secondaryContactNumber: values.alternativeContactNumber,
 
             academicYearId: values.academicYear,
             educationBoardId: values.board,

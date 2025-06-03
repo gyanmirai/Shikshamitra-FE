@@ -505,7 +505,7 @@ export function StudentProfile() {
                 rollNo: currentStudent?.rollNo || '-',
                 class: `${currentStudent?.standard?.name}-${currentStudent?.division?.name}`,
                 // division: 'Higher Secondary',
-                contactNo: currentStudent?.parentContactNumber || '-',
+                contactNo: currentStudent?.primaryContactNumber || '-',
                 email: currentStudent?.email || '-',
                 address: currentStudent?.addressLine1 || '-',
                 dob: dayjs(currentStudent?.dateOfBirth).format('DD/MM/YYYY') || '-',

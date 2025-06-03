@@ -27,8 +27,8 @@ export const inquiryInitialValues: (editData: IInquiryData | null) => IInquiryFo
   dateOfInquiry: editData?.dateOfInquiry ? dayjs(editData?.dateOfInquiry) : dayjs(new Date()),
   gender: editData?.genderType || GenderType.Male,
   address: editData?.address || '',
-  parentsContactNo: editData?.parentContactNumber || '',
-  alternateContactDetails: editData?.alternativeContactNumber || '',
+  primaryContactNumber: editData?.primaryContactNumber || '',
+  secondaryContactNumber: editData?.secondaryContactNumber || '',
   previousSchool: editData?.previousSchoolName || '',
   inquiryPreferences: editData?.inquiryPreferenceId || '',
   board: editData?.educationBoardId || '',
@@ -40,6 +40,6 @@ export const inquiryInitialValues: (editData: IInquiryData | null) => IInquiryFo
   addressLine2: editData?.addressLine2 || '',
   addressLine3: editData?.addressLine3 || '',
   email: editData?.email || '',
-  village: editData?.village || '',
+  // village: editData?.village || '',
   // organization: editData?. || '',
 });

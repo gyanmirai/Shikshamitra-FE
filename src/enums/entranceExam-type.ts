@@ -1,7 +1,7 @@
 export enum EntranceExamStatusType {
-  'Pending' = 'Pending',
-  'Pass' = 'Pass',
-  'Fail' = 'Fail',
+  Pending,
+  Pass,
+  Fail,
 }
 
 export const EntranceExamStatusOptions = [

@@ -13,9 +13,7 @@ const generalFieldValidation = Yup.object({
   dob: Yup.date().required('Date of Birth is required'),
   age: Yup.string(),
   gender: Yup.string().required('Gender is required'),
-  adharNo: Yup.string()
-    .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
-    .required('Aadhar No is required'),
+  adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   religion: Yup.string(),
   familyCast: Yup.string(),
   castCategory: Yup.string()
@@ -41,7 +39,7 @@ const generalFieldValidation = Yup.object({
     .test('unique', 'Alternate contact number cannot be same as contact number', function (value) {
       return !value || value !== this.parent.mobileNo;
     }),
-  email: Yup.string().email('Invalid email format').required('Email is required'),
+  email: Yup.string().email('Invalid email format'),
   medium: Yup.string().required('Medium is required'),
   board: Yup.string().required('Board is required'),
   academicYear: Yup.string().required('Academic Year is required'),
@@ -61,7 +59,6 @@ const generalFieldValidation = Yup.object({
     .shape({ name: Yup.string().required('State is required') })
     .default(() => ({ name: '' }))
     .required('State is required'),
-  temporaryGr: Yup.string(),
 });
 
 const familyFieldsValidation = Yup.object({

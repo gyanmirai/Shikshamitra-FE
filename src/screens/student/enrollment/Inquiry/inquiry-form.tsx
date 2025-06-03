@@ -12,15 +12,16 @@ import {
   Box,
   Grid,
   Card,
+  Radio,
   Button,
-  Select,
   Divider,
-  MenuItem,
+  FormLabel,
   TextField,
-  InputLabel,
   Typography,
+  RadioGroup,
   FormControl,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -31,7 +32,6 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -176,8 +176,8 @@ const InquiryForm = ({
             // age: values.age,
             dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
             genderType: values.gender,
-            parentContactNumber: values.parentsContactNo,
-            alternativeContactNumber: values.alternateContactDetails,
+            primaryContactNumber: values.primaryContactNumber,
+            secondaryContactNumber: values.secondaryContactNumber,
             city: values?.city?.name,
             state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
             country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
@@ -192,7 +192,7 @@ const InquiryForm = ({
             inquiryPreferenceId: values.inquiryPreferences,
             email: values.email,
             educationBoardId: values.board,
-            village: values.village,
+            // village: values.village,
           },
         }).unwrap();
         shikshaMitraToast.success({ message: 'Inquiry updated successfully' });
@@ -207,8 +207,8 @@ const InquiryForm = ({
           // age: values.age,
           dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
           genderType: values.gender,
-          parentContactNumber: values.parentsContactNo,
-          alternativeContactNumber: values.alternateContactDetails,
+          primaryContactNumber: values.primaryContactNumber,
+          secondaryContactNumber: values.secondaryContactNumber,
           city: values?.city?.name,
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
           country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
@@ -223,7 +223,7 @@ const InquiryForm = ({
           inquiryPreferenceId: values.inquiryPreferences,
           educationBoardId: values.board,
           email: values.email,
-          village: values.village,
+          // village: values.village,
         }).unwrap();
         shikshaMitraToast.success({ message: 'Inquiry added successfully' });
       }
@@ -271,7 +271,7 @@ const InquiryForm = ({
                         name="academicYear"
                         label="Academic Year *"
                         isLoading={yearLoading}
-                        options={academicYear?.items || []}
+                        options={academicYear.items || []}
                         value={values.academicYear}
                         labelKey="name"
                         valueKey="id"
@@ -338,7 +338,7 @@ const InquiryForm = ({
                     <ShakingTextField error={!!(touched.class && errors.class) || false}>
                       <CustomSelect
                         name="class"
-                        label="Class"
+                        label="Class *"
                         disabled={!values.medium}
                         isLoading={classLoading}
                         labelKey="name"
@@ -359,6 +359,7 @@ const InquiryForm = ({
                         size="small"
                         name="firstName"
                         label="First Name *"
+                        placeholder="Enter First Name"
                         error={touched.firstName && Boolean(errors.firstName)}
                         helperText={touched.firstName && errors.firstName}
                         value={values.firstName}
@@ -376,6 +377,7 @@ const InquiryForm = ({
                         size="small"
                         name="middleName"
                         label="Middle Name *"
+                        placeholder="Enter Middle Name"
                         error={touched.middleName && Boolean(errors.middleName)}
                         helperText={touched.middleName && errors.middleName}
                         value={values.middleName}
@@ -395,6 +397,7 @@ const InquiryForm = ({
                             size="small"
                             name="lastName"
                             label="Last Name *"
+                            placeholder="Enter Last Name"
                             error={meta.touched && Boolean(meta.error)}
                             helperText={meta.touched && meta.error}
                             value={field.value}
@@ -439,24 +442,25 @@ const InquiryForm = ({
                   <Grid item xs={12} md={4}>
                     <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
                       <FormControl fullWidth>
-                        <InputLabel id="dropdown-label" size="small">
-                          Gender
-                        </InputLabel>
-                        <Select
-                          labelId="dropdown-label"
-                          id="dropdown"
+                        <FormLabel id="gender-radio-group">Gender</FormLabel>
+                        <RadioGroup
+                          row
+                          aria-labelledby="gender-radio-group"
+                          name="gender"
                           value={values.gender}
                           onChange={handleChange}
-                          size="small"
-                          label="Gender"
-                          name="gender"
                         >
-                          {GenderTypeArray.map((i, index) => (
-                            <MenuItem key={i} value={index}>
-                              {GenderType[index]}
-                            </MenuItem>
-                          ))}
-                        </Select>
+                          <FormControlLabel
+                            value={0}
+                            control={<Radio size="small" />}
+                            label="Male"
+                          />
+                          <FormControlLabel
+                            value={1}
+                            control={<Radio size="small" />}
+                            label="Female"
+                          />
+                        </RadioGroup>
                       </FormControl>
                     </ShakingTextField>
                   </Grid>
@@ -470,6 +474,7 @@ const InquiryForm = ({
                         size="small"
                         name="previousSchool"
                         label="Previous School"
+                        placeholder="Enter Previous School"
                         error={touched.previousSchool && errors.previousSchool}
                         helperText={touched.previousSchool && errors.previousSchool}
                       />
@@ -542,9 +547,9 @@ const InquiryForm = ({
                         fullWidth
                         size="small"
                         name="email"
-                        label="Email *"
+                        label="Email"
                         onChange={handleChange}
-                        placeholder="Email"
+                        placeholder="Enter Email"
                         error={touched.email && Boolean(errors.email)}
                         helperText={touched.email && errors.email}
                         InputProps={{
@@ -560,19 +565,21 @@ const InquiryForm = ({
                   </Grid>
                   <Grid item xs={12} md={4}>
                     <ShakingTextField
-                      error={!!(touched.parentsContactNo && errors.parentsContactNo) || false}
+                      error={
+                        !!(touched.primaryContactNumber && errors.primaryContactNumber) || false
+                      }
                     >
                       <PhoneInput
-                        name="parentsContactNo"
-                        value={values.parentsContactNo}
+                        name="primaryContactNumber"
+                        value={values.primaryContactNumber}
                         onChange={(value) => {
-                          setFieldValue('parentsContactNo', value);
+                          setFieldValue('primaryContactNumber', value);
                         }}
-                        placeholder="Parents Contact No."
-                        error={touched.parentsContactNo && Boolean(errors.parentsContactNo)}
-                        helperText={touched.parentsContactNo && errors.parentsContactNo}
+                        placeholder="Primary Contact No."
+                        error={touched.primaryContactNumber && Boolean(errors.primaryContactNumber)}
+                        helperText={touched.primaryContactNumber && errors.primaryContactNumber}
                         variant="outlined"
-                        label="Parents Contact No. *"
+                        label="Enter Primary Contact No. *"
                         size="small"
                       />
                     </ShakingTextField>
@@ -580,25 +587,22 @@ const InquiryForm = ({
                   <Grid item xs={12} md={4}>
                     <ShakingTextField
                       error={
-                        !!(touched.alternateContactDetails && errors.alternateContactDetails) ||
-                        false
+                        !!(touched.secondaryContactNumber && errors.secondaryContactNumber) || false
                       }
                     >
                       <PhoneInput
-                        name="alternateContactDetails"
-                        value={values.alternateContactDetails}
+                        name="secondaryContactNumber"
+                        value={values.secondaryContactNumber}
                         onChange={(value) => {
-                          setFieldValue('alternateContactDetails', value);
+                          setFieldValue('secondaryContactNumber', value);
                         }}
-                        placeholder="Alternate Contact No."
+                        placeholder="Enter Secondary Contact No."
                         error={
-                          touched.alternateContactDetails && Boolean(errors.alternateContactDetails)
+                          touched.secondaryContactNumber && Boolean(errors.secondaryContactNumber)
                         }
-                        helperText={
-                          touched.alternateContactDetails && errors.alternateContactDetails
-                        }
+                        helperText={touched.secondaryContactNumber && errors.secondaryContactNumber}
                         variant="outlined"
-                        label="Alternate Contact No."
+                        label="Secondary Contact No."
                         onBlur={handleBlur}
                       />
                     </ShakingTextField>
@@ -611,13 +615,13 @@ const InquiryForm = ({
                     >
                       <TextField
                         name="addressLine1"
-                        label="Address Line 1"
+                        label="Building / Flat / House No"
                         value={values.addressLine1}
                         onChange={handleChange}
                         error={touched.addressLine1 && Boolean(errors.addressLine1)}
                         helperText={touched.addressLine1 && errors.addressLine1}
                         fullWidth
-                        placeholder="Address Line 1"
+                        placeholder="Enter Building / Flat / House No"
                         size="small"
                       />
                     </ShakingTextField>
@@ -628,13 +632,13 @@ const InquiryForm = ({
                     >
                       <TextField
                         name="addressLine2"
-                        label="Address Line 2"
+                        label="Street / Road Name"
                         value={values.addressLine2}
                         onChange={handleChange}
                         error={touched.addressLine2 && Boolean(errors.addressLine2)}
                         helperText={(touched.addressLine2 && errors.addressLine2) || ''}
                         fullWidth
-                        placeholder="Address Line 2"
+                        placeholder="Enter Street / Road Name"
                         size="small"
                       />
                     </ShakingTextField>
@@ -645,13 +649,13 @@ const InquiryForm = ({
                     >
                       <TextField
                         name="addressLine3"
-                        label="Address Line 3"
+                        label="Area / Locality / Landmark"
                         value={values.addressLine3}
                         onChange={handleChange}
                         error={touched.addressLine3 && Boolean(errors.addressLine3)}
                         helperText={(touched.addressLine3 && errors.addressLine3) || ''}
                         fullWidth
-                        placeholder="Address Line 3"
+                        placeholder="Enter Area / Locality / Landmark"
                         size="small"
                       />
                     </ShakingTextField>
@@ -697,7 +701,7 @@ const InquiryForm = ({
                       />
                     </ShakingTextField>
                   </Grid>
-                  <Grid item xs={4}>
+                  {/* <Grid item xs={4}>
                     <ShakingTextField error={!!(touched.village && errors.village) || false}>
                       <TextField
                         name="village"
@@ -711,7 +715,7 @@ const InquiryForm = ({
                         label="Town/District"
                       />
                     </ShakingTextField>
-                  </Grid>
+                  </Grid> */}
                   <Grid item xs={4}>
                     <ShakingTextField error={!!(touched.pinCode && errors.pinCode) || false}>
                       <TextField
@@ -721,7 +725,7 @@ const InquiryForm = ({
                         error={touched.pinCode && Boolean(errors.pinCode)}
                         helperText={touched.pinCode && errors.pinCode}
                         fullWidth
-                        placeholder="Pincode *"
+                        placeholder="Enter Pincode *"
                         size="small"
                         label="Pincode *"
                       />

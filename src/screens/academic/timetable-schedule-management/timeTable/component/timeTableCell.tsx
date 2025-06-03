@@ -38,6 +38,7 @@ const TimeTableCell = ({
   onTeacherSelect,
   onRoomSelect,
   onDeleteSlot,
+  isThreeDots = true,
 }: ITimeTableCellProps) => {
   /**
    * Dialog state hooks for managing teacher and room assignment dialogs
@@ -140,7 +141,7 @@ const TimeTableCell = ({
             sx={{
               p: 1,
               height: '90%',
-              bgcolor: alpha(slotData.subject.subjectColor, 0.2),
+              bgcolor: alpha(slotData?.subject.subjectColor, 0.2),
               position: 'relative',
               '& .action-menu': {
                 opacity: 0,
@@ -163,61 +164,63 @@ const TimeTableCell = ({
                 {slotData.subject.subjects.map((sub: TSubject) => sub.name).join(', ')}
               </Typography>
               <Box className="action-menu">
-                <ThreeDotsActions
-                  placement="bottom-center"
-                  onClickThreeDots={(e) => {
-                    e.stopPropagation();
-                  }}
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    '& .MuiIconButton-root': {
-                      padding: '4px',
-                    },
-                  }}
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          teacherDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:teacher" sx={{ height: '18px', width: '18px' }} />
-                        Teacher
-                      </MenuItem>
-                      <MenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          roomDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify
-                          icon="mdi:google-classroom"
-                          sx={{ height: '18px', width: '18px' }}
-                        />
-                        Room
-                      </MenuItem>
-                      <MenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify
-                          icon={GlobalIcons.delete}
-                          sx={{ height: '18px', width: '18px' }}
-                          color="red"
-                        />
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
+                {isThreeDots && (
+                  <ThreeDotsActions
+                    placement="bottom-center"
+                    onClickThreeDots={(e) => {
+                      e.stopPropagation();
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      '& .MuiIconButton-root': {
+                        padding: '4px',
+                      },
+                    }}
+                    actions={({ popover }) => (
+                      <MenuList>
+                        <MenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            teacherDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="mdi:teacher" sx={{ height: '18px', width: '18px' }} />
+                          Teacher
+                        </MenuItem>
+                        <MenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            roomDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:google-classroom"
+                            sx={{ height: '18px', width: '18px' }}
+                          />
+                          Room
+                        </MenuItem>
+                        <MenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify
+                            icon={GlobalIcons.delete}
+                            sx={{ height: '18px', width: '18px' }}
+                            color="red"
+                          />
+                          Delete
+                        </MenuItem>
+                      </MenuList>
+                    )}
+                  />
+                )}
               </Box>
             </Box>
             <Typography variant="caption" color="text.secondary">

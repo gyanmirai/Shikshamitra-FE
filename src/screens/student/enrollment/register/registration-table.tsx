@@ -22,6 +22,11 @@ import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
+import {
+  EntranceExamStatusType,
+  EntranceExamStatusOptions,
+  EntranceExamStatusTypeColors,
+} from 'src/enums/entranceExam-type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -61,9 +66,8 @@ const RegistrationTable = ({
           <MenuItem
             onClick={async () => {
               if (row.percentage < 50) {
-                toast.error('Please Complete Registration Form First');
+                toast.error('Please Complete Required Registration Form First');
                 pop.onClose();
-
                 return;
               }
               confirmMovePopup.onTrue();
@@ -118,6 +122,9 @@ const RegistrationTable = ({
         studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
         percentage: (item.onboardingProgressState / 8) * 100,
+        address: [item.addressLine1, item.addressLine2, item.addressLine3]
+          .filter(Boolean)
+          .join(', '),
       })) || [],
     [registrationData?.items]
   );
@@ -160,8 +167,8 @@ const RegistrationTable = ({
         }
         isLoading={isLoading}
         searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry number, Student name..',
-          label: 'Search by  Form No, Inquiry number, Student name..',
+          placeholder: 'Search by Form No, Inquiry number, Class..',
+          label: 'Search by  Form No, Inquiry number, Class..',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -205,11 +212,11 @@ const RegistrationTable = ({
               );
             },
           },
-          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
+          { id: 'formNumber', label: 'Form No.', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
-            label: 'Inquiry Number',
-            minWidth: '162px',
+            label: 'Inquiry No.',
+            minWidth: '120px',
             isFilter: true,
             filterType: 'string',
             align: 'left',
@@ -227,7 +234,7 @@ const RegistrationTable = ({
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'DOI',
+            label: 'Inquiry Date',
             minWidth: '120px',
             align: 'left',
             filterType: 'date',
@@ -235,22 +242,45 @@ const RegistrationTable = ({
           },
           { id: 'genderValue', label: 'Gender', align: 'left' },
           { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '160px', align: 'left' },
           {
-            id: 'alternativeContactNumber',
-            label: 'Alternate Contact No.',
-            minWidth: '232px',
+            id: 'primaryContactNumber',
+            label: 'Primary Contact No.',
+            minWidth: '180px',
             align: 'left',
           },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
-            id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Type',
+            id: 'secondaryContactNumber',
+            label: 'Secondary Contact No.',
             minWidth: '200px',
             align: 'left',
           },
-
-          { id: 'educationMedium.name', label: 'Organization', align: 'left' },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
+          {
+            id: 'inquiryPreference.preferenceName',
+            label: 'Inquiry Type',
+            minWidth: '130px',
+            align: 'left',
+          },
+          {
+            id: 'status',
+            label: 'Entrance Exam Result',
+            filterType: 'enum',
+            enumOptions: EntranceExamStatusOptions,
+            align: 'left',
+            minWidth: '190px',
+            sticky: true,
+            render(value, row) {
+              const color = EntranceExamStatusTypeColors[
+                value as EntranceExamStatusType
+              ] as LabelColor;
+              return (
+                <Label color={color}>
+                  {EntranceExamStatusType[value as EntranceExamStatusType]}
+                </Label>
+              );
+            },
+          },
+          // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
           {
             id: 'percentage',
             label: 'Progress',
@@ -283,10 +313,10 @@ const RegistrationTable = ({
           },
           {
             id: 'followUpStatusType',
-            label: 'Follow up Status',
+            label: 'Follow Up Status',
             filterType: 'enum',
             enumOptions: FollowUpStatusTypeOptions,
-            minWidth: '180px',
+            minWidth: '160px',
             align: 'left',
             sticky: true,
             render(value, row) {
