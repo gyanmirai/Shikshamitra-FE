@@ -175,9 +175,9 @@ export interface ParentDetails {
   address1: string;
   address2: string;
   address3: string;
-  officeAddressLine1: string;
-  officeAddressLine2: string;
-  officeAddressLine3: string;
+  officeAddress1: string;
+  officeAddress2: string;
+  officeAddress3: string;
 }
 
 export interface StudentCommunicationDetails {
