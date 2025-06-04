@@ -113,8 +113,8 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       fullWidth
                       size="small"
                       name="formNumber"
-                      label="Form Number"
-                      placeholder="Enter Form Number"
+                      label="Form Number *"
+                      placeholder="Enter Form Number *"
                       error={touched.formNumber && Boolean(errors.formNumber)}
                       helperText={touched.formNumber && errors.formNumber}
                       value={values.formNumber}

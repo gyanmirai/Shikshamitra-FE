@@ -46,7 +46,7 @@ const RenderPermanentAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="permanentAddressLine1"
-              label="Address Line 1"
+              label="Building / Flat / House No"
               value={formik.values.permanentAddressLine1}
               onChange={formik.handleChange}
               error={
@@ -56,7 +56,7 @@ const RenderPermanentAddressFields = (props: any) => {
                 formik.touched.permanentAddressLine1 && formik.errors.permanentAddressLine1
               }
               fullWidth
-              placeholder="Address Line 1"
+              placeholder="Enter Building / Flat / House No"
               size="small"
             />
           </Grid>
@@ -64,7 +64,7 @@ const RenderPermanentAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="permanentAddressLine2"
-              label="Address Line 2"
+              label="Street / Road Name"
               value={formik.values.permanentAddressLine2}
               onChange={formik.handleChange}
               error={
@@ -74,7 +74,7 @@ const RenderPermanentAddressFields = (props: any) => {
                 formik.touched.permanentAddressLine2 && formik.errors.permanentAddressLine2
               }
               fullWidth
-              placeholder="Address Line 2"
+              placeholder="Enter Street / Road Name"
               size="small"
             />
           </Grid>
@@ -82,7 +82,7 @@ const RenderPermanentAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="permanentAddressLine3"
-              label="Address Line 3"
+              label="Area / Locality / Landmark"
               value={formik.values.permanentAddressLine3}
               onChange={formik.handleChange}
               error={
@@ -92,7 +92,7 @@ const RenderPermanentAddressFields = (props: any) => {
                 formik.touched.permanentAddressLine3 && formik.errors.permanentAddressLine3
               }
               fullWidth
-              placeholder="Address Line 3"
+              placeholder="Enter Area / Locality / Landmark"
               size="small"
             />
           </Grid>

@@ -18,7 +18,7 @@ export const inquiryInitialValues: (editData: IInquiryData | null) => IInquiryFo
   state: editData
     ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
     : { name: '', isoCode: '' },
-  pinCode: editData?.pinCode || 0,
+  pinCode: editData?.pinCode || null,
   firstName: editData?.firstName || '',
   middleName: editData?.middleName || '',
   dateOfBirth: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,

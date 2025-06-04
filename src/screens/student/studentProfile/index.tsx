@@ -9,18 +9,7 @@ import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import {
-  Box,
-  Tab,
-  Card,
-  Tabs,
-  Paper,
-  Button,
-  Avatar,
-  Dialog,
-  Checkbox,
-  Typography,
-} from '@mui/material';
+import { Box, Tab, Card, Tabs, Paper, Button, Avatar, Dialog, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -238,30 +227,55 @@ export function StudentProfile() {
 
   return (
     <>
-      <CustomBreadcrumbs
-        heading="Student List"
-        links={[
-          { name: 'Student', href: '/student/enrollment/dashboard' },
-          { name: 'Student Records', href: '/student/overview/' },
-          { name: 'Student List' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        isBack
-        onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
-        description="Find and view detailed information for each student by clicking their name in the list below."
-        // action={
-        //   currentStudent && (
-        //     <Button
-        //       size="small"
-        //       variant="soft"
-        //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
-        //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
-        //     >
-        //       Back To Student list
-        //     </Button>
-        //   )
-        // }
-      />
+      {currentStudent ? (
+        <CustomBreadcrumbs
+          heading="Student Profile"
+          links={[
+            { name: 'Student', href: '/student/enrollment/dashboard' },
+            { name: 'Student Records', href: '/student/overview/' },
+            { name: 'Student List' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+          description="View and manage comprehensive student information including academics, attendance, finance and more."
+          // action={
+          //   currentStudent && (
+          //     <Button
+          //       size="small"
+          //       variant="soft"
+          //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+          //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
+          //     >
+          //       Back To Student list
+          //     </Button>
+          //   )
+          // }
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Student List"
+          links={[
+            { name: 'Student', href: '/student/enrollment/dashboard' },
+            { name: 'Student Records', href: '/student/overview/' },
+            { name: 'Student List' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
+          // action={
+          //   currentStudent && (
+          //     <Button
+          //       size="small"
+          //       variant="soft"
+          //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+          //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
+          //     >
+          //       Back To Student list
+          //     </Button>
+          //   )
+          // }
+        />
+      )}
 
       {!currentStudent && (
         <>
@@ -304,47 +318,57 @@ export function StudentProfile() {
             noDataText={<>No Student Data Found </>}
             data={tableData}
             isLoading={isLoading}
-            columns={[
-              {
-                id: 'checkBox',
-                align: 'left',
-                minWidth: '60px',
-                sticky: true,
-                isSort: false,
-                isFilter: false,
-                label: '',
-                renderColumn() {
-                  return (
-                    <Checkbox
-                      checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents(tableData || []);
-                        } else {
-                          setSelectedStudents([]);
-                        }
-                      }}
-                    />
-                  );
-                },
-                render(value, row) {
-                  return (
-                    <Checkbox
-                      checked={selectedStudents.some((i: any) => i.id === row.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents([...selectedStudents, row]);
-                        } else {
-                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                        }
-                      }}
-                    />
-                  );
-                },
+            searchFieldProps={{
+              placeholder: 'Search by Student Name, Roll No...',
+              label: 'Search by Student Name, Roll No...',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
               },
+            }}
+            columns={[
+              // {
+              //   id: 'checkBox',
+              //   align: 'left',
+              //   minWidth: '60px',
+              //   sticky: true,
+              //   isSort: false,
+              //   isFilter: false,
+              //   label: '',
+              //   renderColumn() {
+              //     return (
+              //       <Checkbox
+              //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents(tableData || []);
+              //           } else {
+              //             setSelectedStudents([]);
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              //   render(value, row) {
+              //     return (
+              //       <Checkbox
+              //         checked={selectedStudents.some((i: any) => i.id === row.id)}
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents([...selectedStudents, row]);
+              //           } else {
+              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              // },
+              { id: 'rollNo', label: 'Roll No', render: (value, row) => value || '-' },
+              { id: 'grNoRecord', label: 'Gr No', render: (value, row) => value || '-' },
               {
                 id: 'name',
-                label: 'Name',
+                label: 'Student Name',
                 render: (value, row) => (
                   <Box style={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar
@@ -358,8 +382,7 @@ export function StudentProfile() {
                   </Box>
                 ),
               },
-              { id: 'rollNo', label: 'Roll No' },
-              { id: 'grNoRecord', label: 'Gr No' },
+
               // { id: 'organization', label: 'Organization' },
               // { id: 'class', label: 'Class' },
               // { id: 'division', label: 'Division' },

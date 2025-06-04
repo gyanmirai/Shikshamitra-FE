@@ -189,10 +189,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             mt: 2,
             position: 'sticky',
             bottom: 0,
-            backgroundColor: 'transparent',
+            backgroundColor: 'background.paper',
             p: 2,
-            borderTop: '1px solid',
-            borderColor: 'divider',
+            // borderTop: '1px solid',
+            // borderColor: 'divider',
           }}
         >
           <Button

@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
@@ -10,6 +13,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetInquiryPreferenceQuery,
   useAddInquiryPreferenceMutation,
@@ -23,14 +27,21 @@ import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IInquiryPreference } from './type';
 
 const InquiryPreference = () => {
+  // Dialog state for add/edit inquiry preference form
   const dialog = useBoolean();
+  // Dialog state for delete confirmation
   const confirm = useBoolean();
-
+  // Get the isChanges state from the Redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get the dispatch function from the Redux store
+  const dispatch = useDispatch();
   const [editData, setEditData] = useState<null | IInquiryPreference>(null);
 
   const { data: inquiryPreference, isLoading } = useQueryAndMutation({
@@ -43,9 +54,16 @@ const InquiryPreference = () => {
     currentQueryAndMutation: useDeleteInquiryPreferenceMutation,
   });
 
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
+  // Reset form and close dialog
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dialog.onFalse();
+      setEditData(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setEditData(null);
+    }
   };
 
   return (
@@ -97,8 +115,8 @@ const InquiryPreference = () => {
           </>
         }
         searchFieldProps={{
-          placeholder: 'Search by preference name',
-          label: 'Search by preference name',
+          placeholder: 'Search by Preference Name',
+          label: 'Search by Preference Name',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -106,7 +124,7 @@ const InquiryPreference = () => {
         }}
         isLoading={isLoading}
         columns={[
-          { id: 'preferenceName', label: 'Name' },
+          { id: 'preferenceName', label: 'Preference Name' },
           {
             id: 'action',
             label: 'Action',
@@ -137,7 +155,10 @@ const InquiryPreference = () => {
       />{' '}
       <CustomDialog
         open={dialog.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          dialog.onFalse();
+          setEditData(null);
+        }}
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
             <Typography variant="h5">Inquiry Preference</Typography>
@@ -160,7 +181,7 @@ export const InquiryPreferenceForm = ({
   handleClose,
 }: {
   editData: null | IInquiryPreference;
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -171,7 +192,7 @@ export const InquiryPreferenceForm = ({
     currentQueryAndMutation: useUpdateInquiryPreferenceMutation,
   });
 
-  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
+  const { initialValues, values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
     fieldName: string;
   }>({
     initialValues: {
@@ -189,44 +210,51 @@ export const InquiryPreferenceForm = ({
             preferenceName: formikValues.fieldName,
           },
         });
-        handleClose?.();
+        handleClose?.(null, false);
         return;
       }
       await addDocument({
         preferenceName: formikValues.fieldName,
       });
-      handleClose?.();
+      handleClose?.(null, true);
     },
   });
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField
-            fullWidth
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+      <form onSubmit={handleSubmit}>
+        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+          <Stack spacing={2}>
+            <ShakingTextField error={!!(touched.fieldName && errors.fieldName) || false}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Preference Name *"
+                placeholder="Enter preference name"
+                name="fieldName"
+                value={values.fieldName}
+                onChange={(e) => setFieldValue('fieldName', e.target.value)}
+                error={Boolean(errors.fieldName && touched.fieldName)}
+                helperText={(touched.fieldName && errors.fieldName) || ''}
+              />
+            </ShakingTextField>
+          </Stack>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+            onClick={() => {
+              handleClose?.(null, false);
+            }}
             size="small"
-            label="Name"
-            name="fieldName"
-            value={values.fieldName}
-            onChange={(e) => setFieldValue('fieldName', e.target.value)}
-            error={Boolean(errors.fieldName && touched.fieldName)}
-            helperText={(touched.fieldName && errors.fieldName) || ''}
-          />
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          variant="outlined"
-          onClick={handleClose}
-          size="small"
-        >
-          Cancel
-        </Button>
+          >
+            Cancel
+          </Button>
 
-        <SubmitButton loading={isUpdateLoading || isLoading} />
-      </DialogActions>
-    </form>
+          <SubmitButton loading={isUpdateLoading || isLoading} />
+        </DialogActions>
+      </form>
+    </BackPopUpChecked>
   );
 };

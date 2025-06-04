@@ -47,7 +47,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="emergencyAddressLine1"
-              label="Address Line 1"
+              label="Building / Flat / House No"
               value={formik.values.emergencyAddressLine1}
               onChange={formik.handleChange}
               error={
@@ -57,7 +57,7 @@ const RenderEmergencyAddressFields = (props: any) => {
                 formik.touched.emergencyAddressLine1 && formik.errors.emergencyAddressLine1
               }
               fullWidth
-              placeholder="Address Line 1"
+              placeholder="Enter Building / Flat / House No"
               size="small"
             />
           </Grid>
@@ -65,7 +65,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="emergencyAddressLine2"
-              label="Address Line 2"
+              label="Street / Road Name"
               value={formik.values.emergencyAddressLine2}
               onChange={formik.handleChange}
               error={
@@ -75,7 +75,7 @@ const RenderEmergencyAddressFields = (props: any) => {
                 formik.touched.emergencyAddressLine2 && formik.errors.emergencyAddressLine2
               }
               fullWidth
-              placeholder="Address Line 2"
+              placeholder="Enter Street / Road Name"
               size="small"
             />
           </Grid>
@@ -83,7 +83,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="emergencyAddressLine3"
-              label="Address Line 3"
+              label="Area / Locality / Landmark"
               value={formik.values.emergencyAddressLine3}
               onChange={formik.handleChange}
               error={
@@ -93,7 +93,7 @@ const RenderEmergencyAddressFields = (props: any) => {
                 formik.touched.emergencyAddressLine3 && formik.errors.emergencyAddressLine3
               }
               fullWidth
-              placeholder="Address Line 3"
+              placeholder="Enter Area / Locality / Landmark"
               size="small"
             />
           </Grid>

@@ -35,11 +35,11 @@ export const inquiryValidationSchema = Yup.object().shape({
     ),
   previousSchool: Yup.string(),
   inquiryPreferences: Yup.string(),
-  pinCode: Yup.number().test(
-    'picode',
-    'Must be exactly 6 numbers',
-    (value) => !!`${value}`.match(/\b\d{6}\b/)
-  ),
+  pinCode: Yup.number()
+    .test('picode', 'Must be exactly 6 numbers', (value) =>
+      value ? !!`${value}`.match(/\b\d{6}\b/) : true
+    )
+    .nullable(),
 
   board: Yup.string().required('Board is required'),
   medium: Yup.string().required('Medium is required'),

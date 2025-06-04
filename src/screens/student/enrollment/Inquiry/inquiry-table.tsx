@@ -51,7 +51,7 @@ const InquiryTable = ({
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)

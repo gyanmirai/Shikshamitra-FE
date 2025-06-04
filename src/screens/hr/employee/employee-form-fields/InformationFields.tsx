@@ -452,8 +452,8 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Address Line 1"
-            placeholder="Enter Address Line 1"
+            label="Building / Flat / House No"
+            placeholder="Enter Building / Flat / House No"
             {...formik.getFieldProps('addressLine1')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -472,8 +472,8 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Address Line 2"
-            placeholder="Enter Address Line 2"
+            label="Street / Road Name"
+            placeholder="Enter Street / Road Name"
             {...formik.getFieldProps('addressLine2')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -492,8 +492,8 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Address Line 3"
-            placeholder="Enter Address Line 3"
+            label="Area / Locality / Landmark"
+            placeholder="Enter Area / Locality / Landmark"
             {...formik.getFieldProps('addressLine3')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);

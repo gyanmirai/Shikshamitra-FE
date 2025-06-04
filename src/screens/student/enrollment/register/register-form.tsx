@@ -157,7 +157,7 @@ const RegisterForm = ({
           }).unwrap();
           if (isComeFromIssueForm) {
             await moveToRegistration(editData?.id);
-            router.push('/student/enrollment/registration');
+            // router.push('/student/enrollment/registration');
           }
         } else {
           const resp = await addRegistration({
@@ -166,12 +166,10 @@ const RegisterForm = ({
             middleName: values.middleName,
             lastName: values.lastName,
             previousSchoolName: values.previousSchool,
-
             dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
             genderType: values.gender,
-            primaryContactNumber: values.mobileNo,
-            secondaryContactNumber: values.alternativeContactNumber,
-
+            primaryContactNumber: values.primaryContactNumber,
+            secondaryContactNumber: values.secondaryContactNumber,
             academicYearId: values.academicYear,
             educationBoardId: values.board,
             educationMediumId: values.medium,
@@ -207,7 +205,7 @@ const RegisterForm = ({
         throw new Error(error);
       }
     },
-    [addRegistration, editData, isComeFromIssueForm, moveToRegistration, router, updateBasicDetails]
+    [addRegistration, editData, isComeFromIssueForm, moveToRegistration, updateBasicDetails]
   );
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {
@@ -224,12 +222,16 @@ const RegisterForm = ({
               email: values.fatherEmail,
               passOutYear: +values.fatherPassOutYear,
               officeNo: values.fatherOfficeNo,
-              officeAddress: values.fatherOfficeAddress,
+              officeAddress1: values.fatherOfficeAddress1,
+              officeAddress2: values.fatherOfficeAddress2,
+              officeAddress3: values.fatherOfficeAddress3,
               designation: values.fatherDesignation,
               organisation: values.fatherOrganization,
               aadhaarNo: String(values.fatherAadharNo),
               remarks: values.fatherRemarks,
-              address: values.fatherAddress,
+              address1: values.fatherAddress1,
+              address2: values.fatherAddress2,
+              address3: values.fatherAddress3,
             },
             motherDetails: {
               name: values.motherName,
@@ -240,7 +242,9 @@ const RegisterForm = ({
               email: values.motherEmail,
               passOutYear: +values.motherPassOutYear,
               officeNo: values.motherOfficeNo,
-              officeAddress: values.motherOfficeAddress,
+              officeAddress1: values.motherOfficeAddress1,
+              officeAddress2: values.motherOfficeAddress2,
+              officeAddress3: values.motherOfficeAddress3,
               designation: values.motherDesignation,
               organisation: values.motherOrganization,
               aadhaarNo: String(values.motherAadharNo),
@@ -256,12 +260,16 @@ const RegisterForm = ({
               email: values.guardianEmail,
               passOutYear: +values.guardianPassOutYear,
               officeNo: values.guardianOfficeNo,
-              officeAddress: values.guardianOfficeAddress,
+              officeAddress1: values.guardianOfficeAddress1,
+              officeAddress2: values.guardianOfficeAddress2,
+              officeAddress3: values.guardianOfficeAddress3,
               designation: values.guardianDesignation,
               organisation: values.guardianOrganization,
               aadhaarNo: String(values.guardianAadharNo),
               remarks: values.guardianRemarks,
-              address: values.guardianAddress,
+              address1: values.guardianAddress1,
+              address2: values.guardianAddress2,
+              address3: values.guardianAddress3,
             },
           },
         }).unwrap();

@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
@@ -12,10 +13,11 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add, Upload } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
+import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
+  Radio,
   Button,
   MenuItem,
   Checkbox,
@@ -74,7 +76,11 @@ const EntranceExamScreen = () => {
   const [editData, setEditData] = useState(null);
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
+  // State for managing the start date filter for entrance exams
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
 
+  // State for managing the end date filter for entrance exams
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // useDispatch hook for dispatching Redux actions
@@ -115,15 +121,10 @@ const EntranceExamScreen = () => {
         examTime: `${dayjs(item.entranceExamSlot.startDate).format('hh:mm A')} to ${dayjs(
           item.entranceExamSlot.endDate
         ).format('hh:mm A')}`,
-        name: `${item.studentEnrollment.firstName} ${item.studentEnrollment.lastName}`,
+        name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
         medium: item.studentEnrollment.educationMedium.name,
         class: item.studentEnrollment.standard.name,
-        status:
-          item.marksObtained === null
-            ? 'Pending'
-            : item.marksObtained >= item.passingMark
-              ? 'Pass'
-              : 'Fail',
+        status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
         percentage:
           item.marksObtained === null
             ? 0
@@ -252,12 +253,40 @@ const EntranceExamScreen = () => {
           { name: 'Entrance Exam' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        action={
-          <Button startIcon={<Upload />} variant="contained" size="small">
-            Upload Results
-          </Button>
-        }
       />
+      <Box display="flex" gap={2} justifyContent="space-between" alignItems="center">
+        <Box display="flex" gap={2}>
+          <DatePicker
+            label="Start Date"
+            format="DD/MM/YYYY"
+            slotProps={{
+              textField: {
+                sx: { width: '100%', maxWidth: '200px' },
+                size: 'small',
+              },
+            }}
+            onChange={(value) => {
+              setStartDate(value);
+            }}
+          />
+          <DatePicker
+            label="End Date"
+            format="DD/MM/YYYY"
+            slotProps={{
+              textField: {
+                sx: { width: '100%', maxWidth: '200px' },
+                size: 'small',
+              },
+            }}
+            onChange={(value) => {
+              setEndDate(value);
+            }}
+          />
+        </Box>
+        <Button startIcon={<Upload />} variant="contained" size="small">
+          Upload Results
+        </Button>
+      </Box>
       <Box mt={2}>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
@@ -274,58 +303,60 @@ const EntranceExamScreen = () => {
           }}
           isLoading={isLoading}
           columns={[
-            {
-              id: 'checkBox',
-              align: 'left',
-              minWidth: '60px',
-              isSort: false,
-              sticky: true,
-              isFilter: false,
-              label: '',
-              renderColumn() {
-                return (
-                  <Checkbox
-                    checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents(tableData || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                  />
-                );
-              },
-              render(value, row) {
-                return (
-                  <Checkbox
-                    checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                      }
-                    }}
-                  />
-                );
-              },
-            },
-            { id: 'date', label: 'Date', filterType: 'date' },
-            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
+            // {
+            //   id: 'checkBox',
+            //   align: 'left',
+            //   minWidth: '60px',
+            //   isSort: false,
+            //   sticky: true,
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(tableData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            //   render(value, row) {
+            //     return (
+            //       <Checkbox
+            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
             {
               id: 'name',
-              label: 'Student',
+              label: 'Student Name',
               align: 'left',
-            },
-            {
-              id: 'medium',
-              label: 'Medium',
-              align: 'left',
+              sticky: true,
+              minWidth: 180,
             },
             {
               id: 'class',
               label: 'Class',
+              align: 'left',
+            },
+            { id: 'date', label: 'Date', filterType: 'date' },
+            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
+            {
+              id: 'medium',
+              label: 'Medium',
               align: 'left',
             },
             {
@@ -594,67 +625,64 @@ export const ExamForm = ({
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}>
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Grid container spacing={2}>
-            <Grid xs={6}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Student Name :
-                </Typography>
-                <Typography variant="subtitle2">{studentName}</Typography>
-              </Box>
-            </Grid>
-            <Grid xs={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Class :{' '}
-                </Typography>
-                <Typography variant="subtitle2">{standardName}</Typography>
-              </Box>
-            </Grid>
+      {/* <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}> */}
+      <Paper sx={{ p: 2 }}>
+        <Box display="flex" gap={4}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Student Name :
+            </Typography>
+            <Typography variant="subtitle2">{studentName}</Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Class :
+            </Typography>
+            <Typography variant="subtitle2"> {standardName}</Typography>
+          </Box>
+        </Box>
+      </Paper>
+      <Scrollbar
+        sx={{
+          p: 2,
+          bgcolor: 'background.neutral',
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid xs={5}>
+            <Paper>
+              <DateCalendar
+                value={formik.values.examDate}
+                onChange={(value) => {
+                  formik.setFieldValue('examDate', value);
+                  handleGetAllStudentCount(value);
+                }}
+                disablePast
+                slots={{
+                  day: (props: any) => {
+                    const { day } = props;
+                    const absent = day.format('DD-MM-YYYY') === '11-09-2024';
+                    return (
+                      <PickersDay
+                        {...props}
+                        sx={absent ? { bgcolor: 'error.main', color: 'white' } : {}}
+                      />
+                    );
+                  },
+                }}
+              />
+            </Paper>
+            {formik.touched.examDate && formik.errors.examDate && (
+              <Typography variant="caption" color="error">
+                {formik.errors.examDate}
+              </Typography>
+            )}
           </Grid>
-        </Paper>
-        <Scrollbar
-          sx={{
-            p: 3,
-            bgcolor: 'background.neutral',
-          }}
-        >
-          <Grid container spacing={2}>
-            <Grid xs={5}>
-              <Paper>
-                <DateCalendar
-                  value={formik.values.examDate}
-                  onChange={(value) => {
-                    formik.setFieldValue('examDate', value);
-                    handleGetAllStudentCount(value);
-                  }}
-                  disablePast
-                  slots={{
-                    day: (props: any) => {
-                      const { day } = props;
-                      const absent = day.format('DD-MM-YYYY') === '11-09-2024';
-                      return (
-                        <PickersDay
-                          {...props}
-                          sx={absent ? { bgcolor: 'error.main', color: 'white' } : {}}
-                        />
-                      );
-                    },
-                  }}
-                />
-              </Paper>
-              {formik.touched.examDate && formik.errors.examDate && (
-                <Typography variant="caption" color="error">
-                  {formik.errors.examDate}
-                </Typography>
-              )}
-            </Grid>
-            <Grid xs={7}>
-              <Paper sx={{ p: 1, height: '100%' }}>
-                <Grid container spacing={2}>
-                  {/* <Grid xs={4}>
+          <Grid xs={7}>
+            <Paper sx={{ p: 1, height: '100%' }}>
+              <Grid container spacing={2}>
+                {/* <Grid xs={4}>
                   <TextField
                     name="examType"
                     value={formik.values.examType}
@@ -679,7 +707,7 @@ export const ExamForm = ({
                     fullWidth
                   />
                 </Grid> */}
-                  {/* <Grid xs={4}>
+                {/* <Grid xs={4}>
                   <Autocomplete
                     options={scheduleTypeOptions || []}
                     getOptionLabel={(option) => option.name}
@@ -698,7 +726,7 @@ export const ExamForm = ({
                     }}
                   />
                 </Grid> */}
-                  {/* <Grid xs={4}>
+                {/* <Grid xs={4}>
                   <TextField
                     name="passingMarks"
                     type="number"
@@ -714,102 +742,102 @@ export const ExamForm = ({
                     {formik.errors.passingMarks}
                   </Typography>
                 </Grid> */}
-                  {/* <Grid xs={12}>
+                {/* <Grid xs={12}>
                   <Divider sx={{ my: 0.5 }} />
                 </Grid> */}
-                  <Grid xs={12}>
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle1">Slots</Typography>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<Add />}
-                          onClick={dialog.onTrue}
-                        >
-                          Slot
-                        </Button>
-                      </Box>
-
-                      <Grid container spacing={2}>
-                        {isStudentCountLoading ? (
-                          <Box className="loading" />
-                        ) : (
-                          formik.values.slots.map((slot: any, index: number) => (
-                            <Grid xs={6} key={index}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    checked={slot.value === formik.values.slot}
-                                    size="small"
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        formik.setFieldValue('slot', slot.value);
-                                      } else {
-                                        formik.setFieldValue('slot', '');
-                                      }
-                                    }}
-                                  />
-                                }
-                                label={slot.label}
-                              />
-                              <Label variant="soft" color="success">
-                                {slot.studentCount} / {slot.studentLimit}
-                              </Label>
-                            </Grid>
-                          ))
-                        )}
-                      </Grid>
-                      {formik.touched.slot && formik.errors.slot && (
-                        <Typography variant="caption" color="error">
-                          {formik.errors.slot}
-                        </Typography>
-                      )}
+                <Grid xs={12}>
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle1">Slots</Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Add />}
+                        onClick={dialog.onTrue}
+                      >
+                        Slot
+                      </Button>
                     </Box>
-                  </Grid>
+
+                    <Grid container spacing={2}>
+                      {isStudentCountLoading ? (
+                        <Box className="loading" />
+                      ) : (
+                        formik.values.slots.map((slot: any, index: number) => (
+                          <Grid xs={6} key={index}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={slot.value === formik.values.slot}
+                                  size="small"
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      formik.setFieldValue('slot', slot.value);
+                                    } else {
+                                      formik.setFieldValue('slot', '');
+                                    }
+                                  }}
+                                />
+                              }
+                              label={slot.label}
+                            />
+                            <Label variant="soft" color="success">
+                              {slot.studentCount} / {slot.studentLimit}
+                            </Label>
+                          </Grid>
+                        ))
+                      )}
+                    </Grid>
+                    {formik.touched.slot && formik.errors.slot && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.slot}
+                      </Typography>
+                    )}
+                  </Box>
                 </Grid>
-              </Paper>
-            </Grid>
+              </Grid>
+            </Paper>
           </Grid>
-        </Scrollbar>
-        <DialogActions sx={{ flexShrink: 0 }}>
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => {
-              handleClose(null, false);
-            }}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isAddLoading}
-            type="submit"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            size="small"
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-        <CustomDialog title="Slots" open={dialog.value} handleClose={dialog.onFalse}>
-          <SlotsForm handleClose={dialog.onFalse} editData={null} />
-        </CustomDialog>
-        <CustomDialog
-          open={addExamTypeDialog.value}
-          handleClose={() => {
-            addExamTypeDialog.onFalse();
+        </Grid>
+      </Scrollbar>
+      <DialogActions sx={{ flexShrink: 0 }}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            handleClose(null, false);
           }}
-          title="Exam Type"
         >
-          <ExamTypeForm
-            handleClose={() => {
-              handleCloseExamType(null, false);
-            }}
-            editData={null}
-          />
-        </CustomDialog>
-      </BackPopUpChecked>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isAddLoading}
+          type="submit"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          size="small"
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+      <CustomDialog title="Slots" open={dialog.value} handleClose={dialog.onFalse}>
+        <SlotsForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
+      <CustomDialog
+        open={addExamTypeDialog.value}
+        handleClose={() => {
+          addExamTypeDialog.onFalse();
+        }}
+        title="Exam Type"
+      >
+        <ExamTypeForm
+          handleClose={() => {
+            handleCloseExamType(null, false);
+          }}
+          editData={null}
+        />
+      </CustomDialog>
+      {/* </BackPopUpChecked> */}
     </form>
   );
 };
@@ -833,6 +861,7 @@ const ResultForm = ({
     initialValues: {
       obtainedMarks: editData?.marksObtained ?? null,
       totalMarks: editData?.totalMarks,
+      status: editData?.status,
     },
     validationSchema: Yup.object({
       obtainedMarks: Yup.string().test(
@@ -888,6 +917,14 @@ const ResultForm = ({
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Box display="flex" flexDirection="column" gap={2}>
             <TextField
+              label="Total Marks"
+              size="small"
+              fullWidth
+              name="totalMarks"
+              value={formik.values.totalMarks}
+              onChange={formik.handleChange}
+            />
+            <TextField
               label="Obtained Marks"
               size="small"
               fullWidth
@@ -895,20 +932,32 @@ const ResultForm = ({
               value={formik.values.obtainedMarks}
               onChange={formik.handleChange}
               error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
-              // helperText={formik.touched.obtainedMarks && formik.errors.obtainedMarks}
+              helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
             />
-            <Typography variant="caption" color="error">
+            {/* <Typography variant="caption" color="error">
               {formik.errors.obtainedMarks as string}
-            </Typography>
-            <TextField
-              label="Total Marks"
-              disabled
-              size="small"
-              fullWidth
-              name="totalMarks"
-              value={formik.values.totalMarks}
-              onChange={formik.handleChange}
-            />
+            </Typography> */}
+
+            <Box>
+              <FormControlLabel
+                control={
+                  <Radio
+                    checked={formik.values.status === 1}
+                    onChange={() => formik.setFieldValue('status', 1)}
+                  />
+                }
+                label="Pass"
+              />
+              <FormControlLabel
+                control={
+                  <Radio
+                    checked={formik.values.status === 2}
+                    onChange={() => formik.setFieldValue('status', 2)}
+                  />
+                }
+                label="Fail"
+              />
+            </Box>
           </Box>
         </BackPopUpChecked>
       </Scrollbar>
