@@ -2,14 +2,13 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useEffect } from 'react';
 
-import { Tab, Box, Card, Tabs, Paper, Avatar } from '@mui/material';
+import { Tab, Box, Card, Tabs, Paper, Avatar, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -131,73 +130,30 @@ export function EmployeeCard({ employee }: any) {
                 height: 64,
               }}
             />
-            <Label
-              variant="filled"
-              color="primary"
-              sx={{
-                fontSize: '12px',
-              }}
-            >
-              {employee?.employeeName}
-            </Label>
-            <Label
-              variant="filled"
-              color="info"
-              sx={{
-                fontSize: '12px',
-              }}
-            >
-              {employee?.employeeCode}
-            </Label>
-            <Label
-              variant="filled"
-              color="secondary"
-              sx={{
-                fontSize: '12px',
-              }}
-            >
-              {employee?.role?.name}
-            </Label>
-            <Label
-              variant="filled"
-              color="warning"
-              sx={{
-                fontSize: '12px',
-              }}
-            >
-              Primary
-            </Label>
-          </Box>
-          <Box display="flex" gap={2} alignItems="center">
-            {/* <Button size="small" variant="outlined">
-              View I-card
-            </Button> */}
-            {/* <CustomTooltip
-         arrow
-         title={
-           <Box p={1}>
-             <Label variant="soft" color="success">
-               Volunteer
-             </Label>
-             <Label variant="soft" color="warning" sx={{ ml: 1 }}>
-               New
-             </Label>
-             <Label variant="soft" color="info" sx={{ ml: 1 }}>
-               VIP
-             </Label>
-             <Label variant="soft" color="error" sx={{ ml: 1 }}>
-               Good Listener
-             </Label>
-           </Box>
-         }
-        >
-         <IconButton sx={{ color: 'primary.main' }}>
-           <Iconify
-             icon="iconamoon:certificate-badge-fill"
-             sx={{ height: '24px', width: '24px' }}
-           />
-         </IconButton>
-        </CustomTooltip> */}
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Name
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {employee?.employeeName}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Employee Code
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {employee?.employeeCode}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Role
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {employee?.role?.name}
+              </Typography>
+            </Box>
           </Box>
         </Paper>
         <Tabs

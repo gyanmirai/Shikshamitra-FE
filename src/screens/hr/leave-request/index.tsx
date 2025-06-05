@@ -4,9 +4,11 @@ import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
 
 import React, { useMemo } from 'react';
 
-import { Box, Tab } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Tab, Button } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -19,6 +21,7 @@ import LeaveCalender from './leave-calender';
 export interface TabComponentType {
   searchParams?: useSearchParamReturnType[0];
   setSearchParams?: useSearchParamReturnType[1];
+  modal?: UseBooleanReturn;
 }
 
 const TABS = [
@@ -38,7 +41,8 @@ const TABS = [
 
 const LeaveRequest = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'leaveCalender' });
-
+  const modal = useBoolean();
+  // Memoize the current active component based on searchParams.tab
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
@@ -60,6 +64,20 @@ const LeaveRequest = () => {
           currentActiveComponent?.value === 'leaveRequest'
             ? 'On this screen, you can create new leave requests for employees. The screen also displays a list of all previously created requests, where you can approve or reject them as needed.'
             : 'The Leave Calendar provides a visual overview of all employee leave requests. You can view the leave status for each employee on specific dates and track approved, pending, or rejected leaves.'
+        }
+        action={
+          searchParams?.tab === 'leaveRequest' && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={() => {
+                modal?.onTrue?.();
+              }}
+            >
+              Leave Request
+            </Button>
+          )
         }
       />
       <CustomTabs
@@ -84,6 +102,7 @@ const LeaveRequest = () => {
           <currentActiveComponent.component
             searchParams={searchParams}
             setSearchParams={setSearchParams}
+            modal={modal}
           />
         )}
       </Scrollbar>

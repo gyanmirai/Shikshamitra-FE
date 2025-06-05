@@ -12,7 +12,6 @@ import { Logo } from 'src/components/logo';
 import { HeaderSection } from './header-section';
 import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
-import GlobalSearch from '../components/global-search';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
@@ -147,7 +146,7 @@ export function HeaderBase({
         rightArea: (
           <>
             {slots?.rightAreaStart}
-            {searchbar && <GlobalSearch />}
+            {/* {searchbar && <GlobalSearch />} */}
             <Box
               data-area="right"
               sx={{

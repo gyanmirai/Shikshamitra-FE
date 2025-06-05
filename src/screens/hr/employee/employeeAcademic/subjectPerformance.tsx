@@ -41,7 +41,6 @@ import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { ComponentBlock } from 'src/components/component-block';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -234,22 +233,22 @@ const CourseProgress = () => {
                   </Typography>
                 ),
               },
-              {
-                id: 'actions',
-                label: 'Action',
-                minWidth: 50,
-                align: 'left',
-                sticky: true,
-                isFilter: false,
-                render(value: any, row: any) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                    />
-                  );
-                },
-              },
+              // {
+              //   id: 'actions',
+              //   label: 'Action',
+              //   minWidth: 50,
+              //   align: 'left',
+              //   sticky: true,
+              //   isFilter: false,
+              //   render(value: any, row: any) {
+              //     return (
+              //       <ThreeDotsActions
+              //         actions={(prop) => actions({ ...prop, row })}
+              //         placement="right-top"
+              //       />
+              //     );
+              //   },
+              // },
             ]}
             data={selectedCourse.details}
           />{' '}

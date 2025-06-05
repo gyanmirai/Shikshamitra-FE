@@ -4,10 +4,7 @@ import React from 'react';
 
 import { Box, Button } from '@mui/material';
 
-import {
-  EmployeeAttendanceStatus,
-  EmployeeAttendanceStatusOptions,
-} from 'src/enums/employee-attendance-status';
+import { EmployeeAttendanceStatusOptions } from 'src/enums/employee-attendance-status';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -49,35 +46,109 @@ const BiometricIntegrationScreen = () => (
       }}
       tableId="biometric-integration-table"
       columns={[
-        { id: 'employeeName', label: 'Name' },
-
-        { id: 'hoursWorked', label: 'Hours Worked' },
-        { id: 'timeIn', label: 'In-time' },
-        { id: 'timeOut', label: 'Out-time' },
+        { id: 'employeeName', label: 'Name', minWidth: '8vw', align: 'left', sticky: true },
+        { id: 'hoursWorked', label: 'Hours Worked', minWidth: '8vw', align: 'left' },
+        { id: 'timeIn', label: 'In-time', minWidth: '8vw', align: 'left' },
+        { id: 'timeOut', label: 'Out-time', minWidth: '8vw', align: 'left' },
         {
           id: 'status',
           label: 'Status',
           filterType: 'enum',
-
+          sticky: true,
+          // minWidth: '8vw',
           enumOptions: EmployeeAttendanceStatusOptions,
           render(value, row) {
             return (
               <Label
-                color={
-                  value === EmployeeAttendanceStatus.Present
-                    ? 'success'
-                    : value === EmployeeAttendanceStatus.FullDayLeave
-                      ? 'error'
-                      : 'warning'
-                }
+                color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
               >
                 {value}
               </Label>
             );
           },
         },
+        // {
+        //   id: 'empty',
+        //   label: ' ',
+        //   isFilter: false,
+        //   align: 'left',
+        //   render(value, row) {
+        //     return ' ';
+        //   },
+        // },
       ]}
-      data={[]}
+      data={[
+        {
+          employeeName: 'Rajesh Kumar',
+          hoursWorked: '8.5',
+          timeIn: '09:00 AM',
+          timeOut: '05:30 PM',
+          status: 'Present',
+        },
+        {
+          employeeName: 'Priya Sharma',
+          hoursWorked: '7.5',
+          timeIn: '09:30 AM',
+          timeOut: '05:00 PM',
+          status: 'Present',
+        },
+        {
+          employeeName: 'Amit Patel',
+          hoursWorked: '0',
+          timeIn: '-',
+          timeOut: '-',
+          status: 'Leave',
+        },
+        {
+          employeeName: 'Neha Gupta',
+          hoursWorked: '4',
+          timeIn: '09:00 AM',
+          timeOut: '01:00 PM',
+          status: 'Half Day',
+        },
+        {
+          employeeName: 'Suresh Verma',
+          hoursWorked: '8',
+          timeIn: '09:15 AM',
+          timeOut: '05:15 PM',
+          status: 'Present',
+        },
+        {
+          employeeName: 'Anita Singh',
+          hoursWorked: '8.25',
+          timeIn: '09:00 AM',
+          timeOut: '05:15 PM',
+          status: 'Present',
+        },
+        {
+          employeeName: 'Deepak Mishra',
+          hoursWorked: '0',
+          timeIn: '-',
+          timeOut: '-',
+          status: 'Leave',
+        },
+        {
+          employeeName: 'Meera Reddy',
+          hoursWorked: '4.5',
+          timeIn: '09:00 AM',
+          timeOut: '01:30 PM',
+          status: 'Half Day',
+        },
+        {
+          employeeName: 'Vikram Malhotra',
+          hoursWorked: '8.5',
+          timeIn: '09:00 AM',
+          timeOut: '05:30 PM',
+          status: 'Present',
+        },
+        {
+          employeeName: 'Pooja Iyer',
+          hoursWorked: '8',
+          timeIn: '09:30 AM',
+          timeOut: '05:30 PM',
+          status: 'Present',
+        },
+      ]}
     />
   </Box>
 );

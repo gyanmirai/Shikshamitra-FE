@@ -30,11 +30,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
-import {
-  EmployeeAttendanceStatus,
-  EmployeeAttendanceStatusColor,
-  EmployeeAttendanceStatusOptions,
-} from 'src/enums/employee-attendance-status';
+import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import {
   useGetEmployeeQuery,
   useLazyGetAttendanceByEmployeeIdQuery,
@@ -308,27 +304,40 @@ const DateWise = ({
               );
             },
           },
-          { id: 'employeeName', label: 'Name' },
-
-          { id: 'hoursWorked', label: 'Hours Worked' },
-          { id: 'timeIn', label: 'In-time' },
-          { id: 'timeOut', label: 'Out-time' },
+          { id: 'employeeName', label: 'Name', minWidth: '8vw', align: 'left', sticky: true },
+          { id: 'timeIn', label: 'In-time', align: 'left' },
+          { id: 'timeOut', label: 'Out-time', align: 'left' },
+          { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
+          // {
+          //   id: 'status',
+          //   label: 'Status',
+          //   filterType: 'enum',
+          //   sticky: true,
+          //   enumOptions: EmployeeAttendanceStatusOptions,
+          //   render(value, row) {
+          //     return (
+          //       <Label
+          //         color={
+          //           value === EmployeeAttendanceStatus.Present
+          //             ? 'success'
+          //             : value === EmployeeAttendanceStatus.FullDayLeave
+          //               ? 'error'
+          //               : 'warning'
+          //         }
+          //       >
+          //         {value}
+          //       </Label>
+          //     );
+          //   },
+          // },
           {
             id: 'status',
             label: 'Status',
-            filterType: 'enum',
             sticky: true,
-            enumOptions: EmployeeAttendanceStatusOptions,
             render(value, row) {
               return (
                 <Label
-                  color={
-                    value === EmployeeAttendanceStatus.Present
-                      ? 'success'
-                      : value === EmployeeAttendanceStatus.FullDayLeave
-                        ? 'error'
-                        : 'warning'
-                  }
+                  color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
                 >
                   {value}
                 </Label>
@@ -336,7 +345,98 @@ const DateWise = ({
             },
           },
         ]}
-        data={tableData}
+        data={[
+          {
+            id: 1,
+            attendanceDate: '2024-03-01',
+            timeIn: '09:00 AM',
+            timeOut: '06:00 PM',
+            totalHoursWorked: '9 hrs',
+            status: 'Present',
+            employeeName: 'Rajesh Kumar',
+          },
+          {
+            id: 2,
+            attendanceDate: '2024-03-02',
+            timeIn: '09:30 AM',
+            timeOut: '05:30 PM',
+            totalHoursWorked: '8 hrs',
+            status: 'Present',
+            employeeName: 'Priya Sharma',
+          },
+          {
+            id: 3,
+            attendanceDate: '2024-03-03',
+            timeIn: '-',
+            timeOut: '-',
+            totalHoursWorked: '0 hrs',
+            status: 'Leave',
+            employeeName: 'Amit Patel',
+          },
+          {
+            id: 4,
+            attendanceDate: '2024-03-04',
+            timeIn: '09:15 AM',
+            timeOut: '02:15 PM',
+            totalHoursWorked: '5 hrs',
+            status: 'Half day',
+            employeeName: 'Sneha Gupta',
+          },
+          {
+            id: 5,
+            attendanceDate: '2024-03-05',
+            timeIn: '09:00 AM',
+            timeOut: '06:00 PM',
+            totalHoursWorked: '9 hrs',
+            status: 'Present',
+            employeeName: 'Vikram Singh',
+          },
+          {
+            id: 6,
+            attendanceDate: '2024-03-06',
+            timeIn: '09:45 AM',
+            timeOut: '06:45 PM',
+            totalHoursWorked: '9 hrs',
+            status: 'Present',
+            employeeName: 'Neha Verma',
+          },
+          {
+            id: 7,
+            attendanceDate: '2024-03-07',
+            timeIn: '-',
+            timeOut: '-',
+            totalHoursWorked: '0 hrs',
+            status: 'Leave',
+            employeeName: 'Arun Joshi',
+          },
+          {
+            id: 8,
+            attendanceDate: '2024-03-08',
+            timeIn: '09:00 AM',
+            timeOut: '06:00 PM',
+            totalHoursWorked: '9 hrs',
+            status: 'Present',
+            employeeName: 'Meera Reddy',
+          },
+          {
+            id: 9,
+            attendanceDate: '2024-03-09',
+            timeIn: '09:30 AM',
+            timeOut: '02:30 PM',
+            totalHoursWorked: '5 hrs',
+            status: 'Half day',
+            employeeName: 'Rahul Malhotra',
+          },
+          {
+            id: 10,
+            attendanceDate: '2024-03-10',
+            timeIn: '09:00 AM',
+            timeOut: '06:00 PM',
+            totalHoursWorked: '9 hrs',
+            status: 'Present',
+            employeeName: 'Anita Desai',
+          },
+        ]}
       />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -485,7 +585,7 @@ const EmployeeWise = ({
             <Box>
               <Typography variant="subtitle1">Total Present Days</Typography>
 
-              <Typography variant="h3">{data?.[0]?.presentDays || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.presentDays || 10}</Typography>
             </Box>
 
             <Iconify icon="fluent:person-available-16-regular" width={32} />
@@ -505,7 +605,7 @@ const EmployeeWise = ({
             <Box>
               <Typography variant="subtitle1">Full Day Leave</Typography>
 
-              <Typography variant="h3">{data?.[0]?.leaveDays || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.leaveDays || 2}</Typography>
             </Box>
             <Iconify icon="fluent-mdl2:leave-user" width={32} />
           </Card>
@@ -524,7 +624,7 @@ const EmployeeWise = ({
             <Box>
               <Typography variant="subtitle1">Half Day Leave</Typography>
 
-              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 0}</Typography>
+              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 3}</Typography>
             </Box>
             <Iconify icon="mdi:fraction-one-half" width={32} />
           </Card>
@@ -590,48 +690,126 @@ const EmployeeWise = ({
               id: 'status',
               label: 'Status',
               sticky: true,
-              render(value: number, row) {
-                const status = EmployeeAttendanceStatus[row.statusType];
+              render(value, row) {
                 return (
                   <Label
-                    variant="soft"
                     color={
-                      EmployeeAttendanceStatusColor[
-                        status as keyof typeof EmployeeAttendanceStatusColor
-                      ]
+                      value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'
                     }
                   >
-                    {status}
+                    {value}
                   </Label>
                 );
               },
+              // render(value: number, row) {
+              //   const status = EmployeeAttendanceStatus[row.statusType];
+              //   return (
+              //     <Label
+              //       variant="soft"
+              //       color={
+              //         EmployeeAttendanceStatusColor[
+              //           status as keyof typeof EmployeeAttendanceStatusColor
+              //         ]
+              //       }
+              //     >
+              //       {status}
+              //     </Label>
+              //   );
+              // },
             },
-            // {
-            //   id: 'action',
-            //   label: 'Action',
-            //   render(value, row) {
-            //     return (
-            //       <ThreeDotsActions
-            //         actions={(props: any) => {
-            //           const { popover }: any = props;
-            //           return (
-            //             <MenuList>
-            //               <MenuItem
-            //                 onClick={() => {
-            //                   popover?.close?.();
-            //                 }}
-            //               >
-            //                 <Iconify icon="carbon:view" /> View
-            //               </MenuItem>
-            //             </MenuList>
-            //           );
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
           ]}
-          data={tableData}
+          data={[
+            {
+              id: 1,
+              attendanceDate: '2024-03-01',
+              timeIn: '09:00 AM',
+              timeOut: '06:00 PM',
+              totalHoursWorked: '9 hrs',
+              status: 'Present',
+              employeeName: 'Rajesh Kumar',
+            },
+            {
+              id: 2,
+              attendanceDate: '2024-03-02',
+              timeIn: '09:30 AM',
+              timeOut: '05:30 PM',
+              totalHoursWorked: '8 hrs',
+              status: 'Present',
+              employeeName: 'Priya Sharma',
+            },
+            {
+              id: 3,
+              attendanceDate: '2024-03-03',
+              timeIn: '-',
+              timeOut: '-',
+              totalHoursWorked: '0 hrs',
+              status: 'Leave',
+              employeeName: 'Amit Patel',
+            },
+            {
+              id: 4,
+              attendanceDate: '2024-03-04',
+              timeIn: '09:15 AM',
+              timeOut: '02:15 PM',
+              totalHoursWorked: '5 hrs',
+              status: 'Half day',
+              employeeName: 'Sneha Gupta',
+            },
+            {
+              id: 5,
+              attendanceDate: '2024-03-05',
+              timeIn: '09:00 AM',
+              timeOut: '06:00 PM',
+              totalHoursWorked: '9 hrs',
+              status: 'Present',
+              employeeName: 'Vikram Singh',
+            },
+            {
+              id: 6,
+              attendanceDate: '2024-03-06',
+              timeIn: '09:45 AM',
+              timeOut: '06:45 PM',
+              totalHoursWorked: '9 hrs',
+              status: 'Present',
+              employeeName: 'Neha Verma',
+            },
+            {
+              id: 7,
+              attendanceDate: '2024-03-07',
+              timeIn: '-',
+              timeOut: '-',
+              totalHoursWorked: '0 hrs',
+              status: 'Leave',
+              employeeName: 'Arun Joshi',
+            },
+            {
+              id: 8,
+              attendanceDate: '2024-03-08',
+              timeIn: '09:00 AM',
+              timeOut: '06:00 PM',
+              totalHoursWorked: '9 hrs',
+              status: 'Present',
+              employeeName: 'Meera Reddy',
+            },
+            {
+              id: 9,
+              attendanceDate: '2024-03-09',
+              timeIn: '09:30 AM',
+              timeOut: '02:30 PM',
+              totalHoursWorked: '5 hrs',
+              status: 'Half day',
+              employeeName: 'Rahul Malhotra',
+            },
+            {
+              id: 10,
+              attendanceDate: '2024-03-10',
+              timeIn: '09:00 AM',
+              timeOut: '06:00 PM',
+              totalHoursWorked: '9 hrs',
+              status: 'Present',
+              employeeName: 'Anita Desai',
+            },
+          ]}
         />
       )}
       {sendInstantNotificationDialogValue.value && (

@@ -58,7 +58,7 @@ const HrEmployee = () => {
       <>
         {' '}
         <MenuList>
-          <MenuItem
+          {/* <MenuItem
             onClick={() => {
               payrollDialog.onTrue();
               setEditData(row);
@@ -70,7 +70,7 @@ const HrEmployee = () => {
               sx={{ height: '16px', width: '16px' }}
             />
             Payroll Structure
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem
             onClick={() => {
               pop.onClose();
@@ -84,26 +84,30 @@ const HrEmployee = () => {
         </MenuList>
       </>
     ),
-    [payrollDialog, statusDialog]
+    [statusDialog]
   );
-
+  const {
+    data: employee,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeQuery,
+  });
   const handleClose = () => {
     setOpen(false);
     setEditData(null);
   };
-  const handleCloseStatus = () => {
+  const handleCloseStatus = (): void => {
     statusDialog.onFalse();
     setEditData(null);
+    refetch();
   };
   const handleClosePayroll = () => {
     payrollDialog.onFalse();
     setEditData(null);
+    refetch();
   };
-
-  const { data: employee, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
-  });
 
   const tableData = employee?.items?.map((item: any) => ({
     ...item,
@@ -301,14 +305,14 @@ const HrEmployee = () => {
                   render(value, row) {
                     return (
                       <ThreeDotsActions
-                        // actions={(props) => actions({ ...props, row })}
+                        actions={(props) => actions({ ...props, row })}
                         placement="right-top"
                         showViewIcon
                         showEditIcon
                         handleViewClick={() => {
                           setSearchParams({ employee: row?.id });
                         }}
-                        showThreeDots={false}
+                        // showThreeDots={false}
                         handleEditClick={() => {
                           setEditData(row);
                           setOpen(true);

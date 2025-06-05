@@ -8,6 +8,8 @@ import { Tab, Box, Card, Grid, Stack, Button, TextField, CardContent } from '@mu
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useUpdateEmployeeMutation,
@@ -284,6 +286,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
           <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
             <Button
+              variant="outlined"
+              size="small"
               startIcon={
                 <Iconify
                   icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
@@ -310,12 +314,15 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
               }}
             >
               {isEdit ? 'Save' : 'Edit'}
-            </Button>
+            </Button>{' '}
+            &nbsp;
             {isEdit && (
               <Button
+                variant="outlined"
+                size="small"
                 startIcon={
                   <Iconify
-                    icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
+                    icon={isEdit ? GlobalIcons.submit : 'solar:pen-bold'}
                     sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
                   />
                 }
@@ -341,14 +348,14 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
               sx={{
                 width: '100%',
                 p: 2,
-                '& .Mui-disabled': {
-                  // color: (theme) => `${theme.palette.text.primary} !important`,
-                  '-webkit-text-fill-color': 'unset',
-                  cursor: 'no-drop',
-                },
-                '& .MuiInputLabel-shrink.Mui-disabled': {
-                  // color: (theme) => `${theme.palette.text.disabled} !important`,
-                },
+                // '& .Mui-disabled': {
+                //   // color: (theme) => `${theme.palette.text.primary} !important`,
+                //   '-webkit-text-fill-color': 'unset',
+                //   cursor: 'no-drop',
+                // },
+                // '& .MuiInputLabel-shrink.Mui-disabled': {
+                //   // color: (theme) => `${theme.palette.text.disabled} !important`,
+                // },
               }}
             >
               <Grid container spacing={2}>

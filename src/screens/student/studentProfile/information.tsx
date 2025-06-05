@@ -153,12 +153,12 @@ export function StudentInformation(props: StudentTabsComponentType) {
                 sx={{
                   width: '100%',
                   p: 0,
-                  '& .Mui-disabled': {
-                    cursor: 'no-drop',
-                  },
-                  '& .MuiInputLabel-shrink.Mui-disabled': {
-                    color: (theme) => `${theme.palette.text.disabled} !important`,
-                  },
+                  // '& .Mui-disabled': {
+                  //   cursor: 'no-drop',
+                  // },
+                  // '& .MuiInputLabel-shrink.Mui-disabled': {
+                  //   color: (theme) => `${theme.palette.text.disabled} !important`,
+                  // },
                 }}
               >
                 {/* <Scrollbar sx={{ width: '100%' }}> */}

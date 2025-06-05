@@ -1,5 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useMemo, useState } from 'react';
@@ -38,6 +39,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -218,7 +220,6 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
       />
 
       <CustomDialog
-        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
             <Typography variant="h5">Leave Policy</Typography>
@@ -286,6 +287,13 @@ export const LeavePolicyForm = ({
       accrualRate: editData?.accrualRate ?? AccurateRateType.Monthly,
       color: editData?.color || 'white',
     },
+    validationSchema: Yup.object().shape({
+      leaveType: Yup.string().required('Leave type is required'),
+      leaveDays: Yup.number()
+        .required('Leave days is required')
+        .min(1, 'Leave days must be greater than 0'),
+      color: Yup.string().required('Color is required'),
+    }),
     onSubmit: async (values) => {
       try {
         if (editData) {
@@ -360,38 +368,70 @@ export const LeavePolicyForm = ({
           }}
         >
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="leaveType"
-                label="Leave Type Name"
-                value={formik.values.leaveType}
-                onChange={formik.handleChange}
-                size="small"
-                fullWidth
-              />
+            <Grid item xs={12}>
+              <ShakingTextField
+                error={formik.touched.leaveType && Boolean(formik.errors.leaveType)}
+              >
+                <TextField
+                  name="leaveType"
+                  label="Leave Type *"
+                  value={formik.values.leaveType}
+                  onChange={formik.handleChange}
+                  size="small"
+                  fullWidth
+                  error={formik.touched.leaveType && Boolean(formik.errors.leaveType)}
+                  helperText={(formik.touched.leaveType && formik.errors.leaveType) as string}
+                />
+              </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="leaveDays"
-                label="LeaveDays"
-                value={formik.values.leaveDays}
-                onChange={formik.handleChange}
-                size="small"
-                type="number"
-                fullWidth
-              />
+            <Grid item xs={12}>
+              <ShakingTextField
+                error={formik.touched.leaveDays && Boolean(formik.errors.leaveDays)}
+              >
+                <TextField
+                  name="leaveDays"
+                  label="Leave Days *"
+                  value={formik.values.leaveDays}
+                  onChange={formik.handleChange}
+                  size="small"
+                  type="number"
+                  fullWidth
+                  error={formik.touched.leaveDays && Boolean(formik.errors.leaveDays)}
+                  helperText={(formik.touched.leaveDays && formik.errors.leaveDays) as string}
+                />
+              </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomSelect
-                options={AccurateRateTypeArray}
-                label="Accrual Rate"
-                fullWidth
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                value={formik.values.accrualRate}
-                onChange={(val) => formik.setFieldValue('accrualRate', val)}
-              />
+            <Grid item xs={12}>
+              <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
+                <CustomSelect
+                  options={AccurateRateTypeArray}
+                  label="Accrual Rate *"
+                  fullWidth
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  value={formik.values.accrualRate}
+                  onChange={(val) => formik.setFieldValue('accrualRate', val)}
+                  error={formik.touched.accrualRate && Boolean(formik.errors.accrualRate)}
+                  helperText={(formik.touched.accrualRate && formik.errors.accrualRate) as string}
+                />
+              </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid item xs={12}>
+              <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
+                <MuiColorInput
+                  format="hex"
+                  value={formik.values.color}
+                  onChange={(color) => formik.setFieldValue('color', color)}
+                  fullWidth
+                  placeholder="Color *"
+                  label="Color *"
+                  size="small"
+                  error={formik.touched.color && Boolean(formik.errors.color)}
+                  helperText={(formik.touched.color && formik.errors.color) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -401,17 +441,6 @@ export const LeavePolicyForm = ({
                   />
                 }
                 label="Enable Carry Forward"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <MuiColorInput
-                format="hex"
-                value={formik.values.color}
-                onChange={(color) => formik.setFieldValue('color', color)}
-                fullWidth
-                placeholder="color"
-                label="Color"
-                size="small"
               />
             </Grid>
             {/* <Grid item xs={12} md={6}>

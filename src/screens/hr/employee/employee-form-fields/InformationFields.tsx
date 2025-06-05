@@ -42,7 +42,7 @@ export const SectionCard = ({ title, children }: { title: string; children: Reac
     <Typography variant="h6" sx={{ mb: 2 }} color="primary.main">
       {title}
     </Typography>
-    <Grid container spacing={3}>
+    <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
       {children}
     </Grid>
   </Paper>
@@ -515,6 +515,10 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             }}
             error={formik.touched.country && Boolean(formik.errors.country?.name)}
             helperText={formik.touched.country && formik.errors.country?.name}
+            textFieldProps={{
+              label: 'Country ',
+            }}
+            disabled={disabled}
           />
         </ShakingTextField>
       </Grid>
@@ -529,6 +533,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             }}
             error={formik.touched.state && Boolean(formik.errors?.state?.name)}
             helperText={formik.touched.state && formik.errors?.state?.name}
+            disabled={disabled}
           />
         </ShakingTextField>
       </Grid>
@@ -542,6 +547,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             stateValue={formik.values.state}
             error={formik.touched.city && Boolean(formik.errors.city?.name)}
             helperText={formik.touched.city && formik.errors.city?.name}
+            disabled={disabled}
           />
         </ShakingTextField>
       </Grid>
