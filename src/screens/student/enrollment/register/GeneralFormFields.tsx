@@ -52,7 +52,7 @@ export const generalFormFields: FieldsType[] = [
       return (
         <Box>
           <SectionCard title="Inquiry & Admission Details">
-            <Grid item xs={12} md={3}>
+            {/* <Grid item xs={12} md={3}>
               <ShakingTextField
                 error={formik.touched.inquiryNo && Boolean(formik.errors.inquiryNo)}
               >
@@ -71,7 +71,7 @@ export const generalFormFields: FieldsType[] = [
                   disabled
                 />
               </ShakingTextField>
-            </Grid>
+            </Grid> */}
             <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.formNo && Boolean(formik.errors.formNo)}>
                 <TextField
@@ -124,9 +124,9 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="firstName"
                       size="small"
-                      label="Enter First Name *"
+                      placeholder="Enter First Name *"
                       name="firstName"
-                      placeholder="First Name *"
+                      label="First Name *"
                       value={formik.values.firstName}
                       onBlur={formik.handleBlur}
                       error={formik.touched.firstName && Boolean(formik.errors.firstName)}
@@ -147,9 +147,9 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="middleName"
                       size="small"
-                      label="Enter Middle Name *"
+                      label="Middle Name *"
                       name="middleName"
-                      placeholder="Middle Name *"
+                      placeholder="Enter Middle Name *"
                       value={formik.values.middleName}
                       onBlur={formik.handleBlur}
                       error={formik.touched.middleName && Boolean(formik.errors.middleName)}
@@ -170,9 +170,9 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="lastName"
                       size="small"
-                      label="Enter Last Name *"
+                      label="Last Name *"
                       name="lastName"
-                      placeholder="Last Name *"
+                      placeholder="Enter Last Name *"
                       value={formik.values.lastName}
                       onBlur={formik.handleBlur}
                       error={formik.touched.lastName && Boolean(formik.errors.lastName)}
@@ -184,42 +184,6 @@ export const generalFormFields: FieldsType[] = [
                       }}
                       disabled={!disabled}
                     />
-                  </ShakingTextField>
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-                    <FormControl
-                      fullWidth
-                      error={formik.touched.gender && Boolean(formik.errors.gender)}
-                      disabled={!disabled}
-                    >
-                      <FormLabel
-                        id="gender-radio-group"
-                        error={formik.touched.gender && Boolean(formik.errors.gender)}
-                      >
-                        Gender
-                      </FormLabel>
-                      <RadioGroup
-                        row
-                        aria-labelledby="gender-radio-group"
-                        name="gender"
-                        value={formik.values.gender}
-                        onChange={formik.handleChange}
-                      >
-                        {GenderTypeArray.map((i, index) => (
-                          <FormControlLabel
-                            key={i}
-                            value={index}
-                            control={<Radio size="small" />}
-                            label={GenderType[index]}
-                            disabled={!disabled}
-                          />
-                        ))}
-                      </RadioGroup>
-                      <FormHelperText error>
-                        {formik.touched.gender && formik.errors.gender}
-                      </FormHelperText>
-                    </FormControl>
                   </ShakingTextField>
                 </Grid>
                 <Grid item xs={12} md={3}>
@@ -251,12 +215,48 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
+                <Grid item xs={12} md={3}>
+                  <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
+                    <FormControl
+                      fullWidth
+                      error={formik.touched.gender && Boolean(formik.errors.gender)}
+                      disabled={!disabled}
+                    >
+                      <FormLabel
+                        id="gender-radio-group"
+                        error={formik.touched.gender && Boolean(formik.errors.gender)}
+                      >
+                        Gender *
+                      </FormLabel>
+                      <RadioGroup
+                        row
+                        aria-labelledby="gender-radio-group"
+                        name="gender"
+                        value={formik.values.gender}
+                        onChange={formik.handleChange}
+                      >
+                        {GenderTypeArray.map((i, index) => (
+                          <FormControlLabel
+                            key={i}
+                            value={index}
+                            control={<Radio size="small" />}
+                            label={GenderType[index]}
+                            disabled={!disabled}
+                          />
+                        ))}
+                      </RadioGroup>
+                      <FormHelperText error>
+                        {formik.touched.gender && formik.errors.gender}
+                      </FormHelperText>
+                    </FormControl>
+                  </ShakingTextField>
+                </Grid>
               </Grid>
             </Grid>
           </SectionCard>
 
           <SectionCard title="Contact Details">
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
               <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
                 <PhoneInput
                   name="mobileNo"
@@ -274,7 +274,7 @@ export const generalFormFields: FieldsType[] = [
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
               <ShakingTextField
                 error={
                   formik.touched.alternativeContactNumber &&
@@ -303,7 +303,7 @@ export const generalFormFields: FieldsType[] = [
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
               <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
                 <TextField
                   key="email"
@@ -459,7 +459,7 @@ export const generalFormFields: FieldsType[] = [
                       props.formik.touched.castCategory && Boolean(props.formik.errors.castCategory)
                     }
                   >
-                    Cast Category
+                    Cast Category *
                   </InputLabel>
                   <Select
                     labelId="dropdown-label"

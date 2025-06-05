@@ -63,7 +63,7 @@ const generalFieldValidation = Yup.object({
 
 const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
-  fatherDob: Yup.string().nullable(),
+  fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
   fatherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -72,15 +72,18 @@ const familyFieldsValidation = Yup.object({
   fatherEmail: Yup.string().email('Invalid email format'),
   fatherPassOutYear: Yup.string(),
   fatherOfficeNo: Yup.string(),
-  fatherOfficeAddress: Yup.string(),
+  fatherOfficeAddress1: Yup.string(),
+  fatherOfficeAddress2: Yup.string(),
+  fatherOfficeAddress3: Yup.string(),
   fatherDesignation: Yup.string(),
   fatherOrganization: Yup.string(),
   fatherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   fatherRemarks: Yup.string(),
-  fatherAddress: Yup.string(),
-
+  fatherAddress1: Yup.string(),
+  fatherAddress2: Yup.string(),
+  fatherAddress3: Yup.string(),
   motherName: Yup.string().required('Mother name is required'),
-  motherDob: Yup.string().nullable(),
+  motherDob: Yup.string().required('Mother DOB is Required').nullable(),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
   motherContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -89,15 +92,18 @@ const familyFieldsValidation = Yup.object({
   motherEmail: Yup.string().email('Invalid email format'),
   motherPassOutYear: Yup.string(),
   motherOfficeNo: Yup.string(),
-  motherOfficeAddress: Yup.string(),
+  motherOfficeAddress1: Yup.string(),
+  motherOfficeAddress2: Yup.string(),
+  motherOfficeAddress3: Yup.string(),
   motherDesignation: Yup.string(),
   motherOrganization: Yup.string(),
   motherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   motherRemarks: Yup.string(),
-  motherAddress: Yup.string(),
-
+  motherAddress1: Yup.string(),
+  motherAddress2: Yup.string(),
+  motherAddress3: Yup.string(),
   guardianName: Yup.string(),
-  guardianDob: Yup.string().nullable(),
+  guardianDob: Yup.string().required('Guardian DOB is Required').nullable(),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
@@ -106,12 +112,16 @@ const familyFieldsValidation = Yup.object({
   guardianEmail: Yup.string().email('Invalid email format'),
   guardianPassOutYear: Yup.string(),
   guardianOfficeNo: Yup.string(),
-  guardianOfficeAddress: Yup.string(),
+  guardianOfficeAddress1: Yup.string(),
+  guardianOfficeAddress2: Yup.string(),
+  guardianOfficeAddress3: Yup.string(),
   guardianDesignation: Yup.string(),
   guardianOrganization: Yup.string(),
   guardianAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   guardianRemarks: Yup.string(),
-  guardianAddress: Yup.string(),
+  guardianAddress1: Yup.string(),
+  guardianAddress2: Yup.string(),
+  guardianAddress3: Yup.string(),
 });
 
 const communicationFieldsValidation = Yup.object({

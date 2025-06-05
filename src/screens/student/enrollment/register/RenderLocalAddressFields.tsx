@@ -26,14 +26,14 @@ const RenderLocalAddressFields = (props: any) => {
           <Grid item xs={12} md={4}>
             <TextField
               name="localAddressLine1"
-              label="Address Line 1"
+              label="Building / Flat / House No"
               disabled={!isEdit}
               value={formik.values.localAddressLine1}
               onChange={formik.handleChange}
               error={formik.touched.localAddressLine1 && Boolean(formik.errors.localAddressLine1)}
               helperText={formik.touched.localAddressLine1 && formik.errors.localAddressLine1}
               fullWidth
-              placeholder="Address Line 1"
+              placeholder="Enter Building / Flat / House No"
               size="small"
             />
           </Grid>
@@ -41,13 +41,13 @@ const RenderLocalAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="localAddressLine2"
-              label="Address Line 2"
+              label="Street / Road Name"
               value={formik.values.localAddressLine2}
               onChange={formik.handleChange}
               error={formik.touched.localAddressLine2 && Boolean(formik.errors.localAddressLine2)}
               helperText={formik.touched.localAddressLine2 && formik.errors.localAddressLine2}
               fullWidth
-              placeholder="Address Line 2"
+              placeholder="Enter Street / Road Name"
               size="small"
             />
           </Grid>
@@ -55,13 +55,13 @@ const RenderLocalAddressFields = (props: any) => {
             <TextField
               disabled={!isEdit}
               name="localAddressLine3"
-              label="Address Line 3"
+              label="Area / Locality / Landmark"
               value={formik.values.localAddressLine3}
               onChange={formik.handleChange}
               error={formik.touched.localAddressLine3 && Boolean(formik.errors.localAddressLine3)}
               helperText={formik.touched.localAddressLine3 && formik.errors.localAddressLine3}
               fullWidth
-              placeholder="Address Line 3"
+              placeholder="Enter Area / Locality / Landmark"
               size="small"
             />
           </Grid>

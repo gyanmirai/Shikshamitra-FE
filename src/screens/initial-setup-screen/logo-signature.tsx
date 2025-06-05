@@ -70,7 +70,7 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     fullWidth
                     size="small"
                     name="addressLine1"
-                    label="Address Line 1"
+                    label="Building / Flat / House No"
                     value={values.addressLine1}
                     onChange={(e) => {
                       const newValue = capitalize(e.target.value);
@@ -85,7 +85,7 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     fullWidth
                     size="small"
                     name="addressLine2"
-                    label="Address Line 2"
+                    label="Street / Road Name"
                     value={values.addressLine2}
                     onChange={(e) => {
                       const newValue = capitalize(e.target.value);
@@ -100,7 +100,7 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     fullWidth
                     size="small"
                     name="addressLine3"
-                    label="Address Line 3"
+                    label="Area / Locality / Landmark"
                     value={values.addressLine3}
                     onChange={(e) => {
                       const newValue = capitalize(e.target.value);

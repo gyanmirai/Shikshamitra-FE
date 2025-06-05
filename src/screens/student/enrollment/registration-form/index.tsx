@@ -1,8 +1,7 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
+import { useDispatch } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 
 import { Box, MenuItem, MenuList } from '@mui/material';
@@ -14,14 +13,11 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
-import { useGetStudentRegistrationFormQuery } from 'src/redux/student/registration-form/registration-form-api';
 import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
+  StudentRegistrationFormApi,
+  useGetStudentRegistrationFormQuery,
+} from 'src/redux/student/registration-form/registration-form-api';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -36,7 +32,7 @@ import type { IInquiryData } from '../Inquiry';
 const RegistrationFormScreen = () => {
   // Dialog control for registration form
   const registerFormDialog = useBoolean();
-
+  const dispatch = useDispatch();
   // State to store inquiry data for editing
   const [editData, setEditData] = useState<IInquiryData | null>(null);
 
@@ -84,7 +80,7 @@ const RegistrationFormScreen = () => {
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
@@ -109,6 +105,7 @@ const RegistrationFormScreen = () => {
           onBack={() => {
             setEditData(null);
             registerFormDialog.onFalse();
+            dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
           }}
           sx={{ px: 1, mb: 2 }}
         />
@@ -130,6 +127,7 @@ const RegistrationFormScreen = () => {
           handleClose={() => {
             setEditData(null);
             registerFormDialog.onFalse();
+            dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
           }}
           isComeFromIssueForm
         />
@@ -147,6 +145,13 @@ const RegistrationFormScreen = () => {
             },
           }}
           columns={[
+            {
+              id: 'studentName',
+              label: 'Student Name',
+              minWidth: '180px',
+              align: 'left',
+              sticky: true,
+            },
             { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left' },
             {
               id: 'inquiryNumber',
@@ -157,7 +162,6 @@ const RegistrationFormScreen = () => {
               filterType: 'string',
             },
             { id: 'standard.name', label: 'Class', align: 'left' },
-            { id: 'studentName', label: 'Student Name', minWidth: '140px', align: 'left' },
             {
               id: 'dobValue',
               label: 'DOB',
@@ -186,8 +190,8 @@ const RegistrationFormScreen = () => {
             },
             {
               id: 'primaryContactNumber',
-              label: 'Primary Co. No.',
-              minWidth: '150px',
+              label: 'Primary Contact No.',
+              minWidth: '180px',
               align: 'left',
             },
             {
@@ -208,19 +212,19 @@ const RegistrationFormScreen = () => {
               minWidth: '130px',
               align: 'left',
             },
-            {
-              id: 'followUpStatusType',
-              label: 'Follow Up Status',
-              filterType: 'enum',
-              enumOptions: FollowUpStatusTypeOptions,
-              minWidth: '170px',
-              align: 'left',
-              sticky: true,
-              render(value, row) {
-                const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-                return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-              },
-            },
+            // {
+            //   id: 'followUpStatusType',
+            //   label: 'Follow Up Status',
+            //   filterType: 'enum',
+            //   enumOptions: FollowUpStatusTypeOptions,
+            //   minWidth: '170px',
+            //   align: 'left',
+            //   sticky: true,
+            //   render(value, row) {
+            //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+            //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+            //   },
+            // },
             {
               id: 'actions',
               label: 'Actions',

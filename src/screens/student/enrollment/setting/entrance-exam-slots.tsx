@@ -26,6 +26,7 @@ import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { ISlot } from './type';
@@ -254,95 +255,114 @@ export const SlotsForm = ({
       }
     },
   });
-  console.log(formik);
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField
-            name="slotName"
-            label="Slot Name"
-            value={formik.values.slotName}
-            onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
-            onBlur={formik.handleBlur}
-            size="small"
-            fullWidth
-            error={formik.touched.slotName && Boolean(formik.errors.slotName)}
-            helperText={
-              formik.touched.slotName && formik.errors.slotName
-                ? String(formik.errors.slotName)
-                : ''
-            }
-          />
-          <MobileTimePicker
-            label="Start Time"
-            value={formik.values.startTime}
-            format="hh:mm A"
-            onChange={(date) => formik.setFieldValue('startTime', date)}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                name: 'startTime',
+        <Stack spacing={3}>
+          <ShakingTextField error={!!(formik.touched.slotName && formik.errors.slotName) || false}>
+            <TextField
+              name="slotName"
+              label="Slot Name *"
+              placeholder="Enter slot name"
+              value={formik.values.slotName}
+              onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
+              onBlur={formik.handleBlur}
+              size="small"
+              fullWidth
+              error={formik.touched.slotName && Boolean(formik.errors.slotName)}
+              helperText={
+                formik.touched.slotName && formik.errors.slotName
+                  ? String(formik.errors.slotName)
+                  : ''
+              }
+            />
+          </ShakingTextField>
 
-                helperText:
-                  formik.touched.startTime && formik.errors.startTime
-                    ? String(formik.errors.startTime)
-                    : undefined,
-                error: !!formik.errors.startTime && formik.touched.startTime,
-              },
-            }}
-          />
-          <MobileTimePicker
-            label="End Time"
-            format="hh:mm A"
-            value={formik.values.endTime}
-            onChange={(date) => formik.setFieldValue('endTime', date)}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                name: 'endTime',
+          <ShakingTextField
+            error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+          >
+            <MobileTimePicker
+              label="Start Time *"
+              value={formik.values.startTime}
+              format="hh:mm A"
+              onChange={(date) => formik.setFieldValue('startTime', date)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  name: 'startTime',
+                  placeholder: 'Enter start time',
+                  helperText:
+                    formik.touched.startTime && formik.errors.startTime
+                      ? String(formik.errors.startTime)
+                      : undefined,
+                  error: !!formik.errors.startTime && formik.touched.startTime,
+                },
+              }}
+            />
+          </ShakingTextField>
 
-                helperText:
-                  formik.touched.endTime && formik.errors.endTime
-                    ? String(formik.errors.endTime)
-                    : undefined,
-                error: !!formik.errors.endTime && formik.touched.endTime,
-              },
-            }}
-          />
+          <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
+            <MobileTimePicker
+              label="End Time *"
+              format="hh:mm A"
+              value={formik.values.endTime}
+              onChange={(date) => formik.setFieldValue('endTime', date)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  name: 'endTime',
+                  placeholder: 'Enter end time',
+                  helperText:
+                    formik.touched.endTime && formik.errors.endTime
+                      ? String(formik.errors.endTime)
+                      : undefined,
+                  error: !!formik.errors.endTime && formik.touched.endTime,
+                },
+              }}
+            />
+          </ShakingTextField>
 
-          <TextField
-            name="studentLimit"
-            label="Student Limit"
-            type="number"
-            value={formik.values.studentLimit}
-            onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
-            onBlur={formik.handleBlur}
-            size="small"
-            fullWidth
-            helperText={
-              formik.touched.studentLimit && formik.errors.studentLimit
-                ? String(formik.errors.studentLimit)
-                : ''
-            }
-            error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
-          />
-          <TextField
-            name="roomNo"
-            label="Room No"
-            type="number"
-            onBlur={formik.handleBlur}
-            value={formik.values.roomNo}
-            onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
-            size="small"
-            fullWidth
-            helperText={
-              formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
-            }
-            error={formik.touched.roomNo && !!formik.errors.roomNo}
-          />
+          <ShakingTextField
+            error={!!(formik.touched.studentLimit && formik.errors.studentLimit) || false}
+          >
+            <TextField
+              name="studentLimit"
+              label="Student Limit *"
+              placeholder="Enter student limit"
+              type="number"
+              value={formik.values.studentLimit}
+              onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
+              onBlur={formik.handleBlur}
+              size="small"
+              fullWidth
+              helperText={
+                formik.touched.studentLimit && formik.errors.studentLimit
+                  ? String(formik.errors.studentLimit)
+                  : ''
+              }
+              error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
+            />
+          </ShakingTextField>
+
+          <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
+            <TextField
+              name="roomNo"
+              label="Room No *"
+              placeholder="Enter room number"
+              type="number"
+              onBlur={formik.handleBlur}
+              value={formik.values.roomNo}
+              onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
+              size="small"
+              fullWidth
+              helperText={
+                formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
+              }
+              error={formik.touched.roomNo && !!formik.errors.roomNo}
+            />
+          </ShakingTextField>
         </Stack>
       </Scrollbar>
       <DialogActions>

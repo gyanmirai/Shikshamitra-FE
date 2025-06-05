@@ -26,7 +26,6 @@ import {
   MenuList,
   MenuItem,
   Skeleton,
-  Checkbox,
   TextField,
   IconButton,
   Typography,
@@ -68,7 +67,6 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -554,6 +552,7 @@ const AdmissionScreen = () => {
         })) || [],
     [admissionData?.items, tabs.value]
   );
+  console.log('tableData', tableData);
 
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -616,6 +615,7 @@ const AdmissionScreen = () => {
           size="small"
           disabled={!selectedStudents.length}
           onClick={statusDialog.onTrue}
+          startIcon={<Iconify icon="mdi:exchange" />}
         >
           Change Status
         </Button>
@@ -626,8 +626,8 @@ const AdmissionScreen = () => {
         tableId="student-enrollment-admission-table"
         noDataText={<>No Admission Data Found</>}
         searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry number, Student names..',
-          label: 'Search by  Form No, Inquiry number, Student name..',
+          placeholder: 'Search by Form No, Inquiry No, Class, Division..',
+          label: 'Search by  Form No, Inquiry No, Class, Division..',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -635,49 +635,48 @@ const AdmissionScreen = () => {
         }}
         isLoading={isLoading}
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '60px',
+          //   isSort: false,
+          //   sticky: true,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(tableData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={selectedStudents.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
-            label: 'Inquiry Number',
-
-            minWidth: '162px',
+            label: 'Inquiry No.',
+            minWidth: '120px',
             isFilter: true,
             filterType: 'string',
             align: 'left',
@@ -696,18 +695,23 @@ const AdmissionScreen = () => {
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'DOI',
-            minWidth: '100px',
+            label: 'Inquiry Date',
+            minWidth: '140px',
             align: 'left',
             isDateRangeFilter: true,
             filterType: 'date',
           },
           { id: 'genderValue', label: 'Gender', align: 'left' },
           { id: 'address', label: 'Address', minWidth: '100px', align: 'left' },
-          { id: 'parentContactNumber', label: 'Parents Co. No.', minWidth: '150px', align: 'left' },
           {
-            id: 'alternativeContactNumber',
-            label: 'Alternate Contact No.',
+            id: 'primaryContactNumber',
+            label: 'Primary Contact No.',
+            minWidth: '150px',
+            align: 'left',
+          },
+          {
+            id: 'secondaryContactNumber',
+            label: 'Secondary Contact No.',
             minWidth: '220px',
             align: 'left',
           },
@@ -720,15 +724,12 @@ const AdmissionScreen = () => {
           },
 
           { id: 'educationMedium.name', label: 'Medium', align: 'left' },
-
-          { id: 'inquiryNo', align: 'left', label: 'Inquiry No', minWidth: '104px' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
           // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
-          { id: 'Name', label: 'Name', align: 'left' },
+          // { id: 'Name', label: 'Name', align: 'left' },
           { id: 'Code', label: 'Code', align: 'left' },
-          { id: 'class', label: 'Class', align: 'left' },
+          // { id: 'class', label: 'Class', align: 'left' },
           // { id: 'Organization', label: 'Organization' },
-          { id: 'parentContactNo', label: 'Parent Contact No', minWidth: '170px', align: 'left' },
           {
             id: 'totalAmount',
             label: 'Total Amount',
@@ -748,6 +749,7 @@ const AdmissionScreen = () => {
             label: 'Payment Status',
             minWidth: '150px',
             filterType: 'enum',
+            sticky: true,
             enumOptions: AdmissionPaymentStatusOptions,
             align: 'left',
             render(value, row) {
@@ -952,30 +954,21 @@ const AdmissionScreen = () => {
             zIndex: 9999,
             height: '100%',
             textAlign: 'left',
+            boxShadow: 0,
             // transition: 'all 0.3s ease',
             // transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
           }}
 
           // ref={ref}
         >
-          <Scrollbar sx={{ height: '100%', p: 2 }}>
-            <Iconify
-              icon="zondicons:close-outline"
-              onClick={() => {
-                setEditData(null);
-                openDetails.onFalse();
-              }}
-              sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
-            />
-            <StudentDetails
-              tabValue={tabs.value}
-              editData={editData}
-              onClose={() => {
-                setEditData(null);
-                openDetails.onFalse();
-              }}
-            />
-          </Scrollbar>
+          <StudentDetails
+            tabValue={tabs.value}
+            editData={editData}
+            onClose={() => {
+              setEditData(null);
+              openDetails.onFalse();
+            }}
+          />
         </Paper>
       </Drawer>
     </Box>
@@ -991,7 +984,14 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
   });
 
   return (
-    <Box>
+    <Box sx={{ p: 2 }}>
+      <Iconify
+        icon="zondicons:close-outline"
+        onClick={() => {
+          onClose();
+        }}
+        sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
+      />
       <Typography variant="h6" mb={2}>
         Student Details
       </Typography>
@@ -1117,10 +1117,24 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
           </Button>
         </>
       )}
-      {/* <Button fullWidth variant="soft" sx={{ mt: 2 }}>
-      Schedule Interview
-    </Button> */}
+
       <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
+
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={<Iconify icon={GlobalIcons.submit} />}
+        sx={{ position: 'sticky', bottom: 0 }}
+        onClick={async () => {
+          // await changeStatus({
+          //   approvalStatus: RegistrationStatusType.Rejected,
+          //   body: [editData.id],
+          // }).unwrap();
+          onClose();
+        }}
+      >
+        Save
+      </Button>
     </Box>
   );
 };

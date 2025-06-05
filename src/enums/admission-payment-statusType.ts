@@ -1,7 +1,7 @@
 export enum AdmissionPaymentStatusType {
-  Paid = 1,
-  Unpaid = 2,
-  Partial = 3,
+  Paid,
+  Unpaid,
+  Partial,
 }
 
 export const AdmissionPaymentStatusOptions = [

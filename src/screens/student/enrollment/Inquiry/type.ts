@@ -22,7 +22,7 @@ export interface IInquiryFormValues {
   country: { name: ICountry['name']; isoCode: ICountry['isoCode'] };
   city: { name: ICity['name'] };
   state: { name: IState['name']; isoCode: IState['isoCode'] };
-  pinCode: number;
+  pinCode: number | null;
   medium: string;
   formNo: string | undefined;
   board: string;

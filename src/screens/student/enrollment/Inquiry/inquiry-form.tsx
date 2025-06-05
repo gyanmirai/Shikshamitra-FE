@@ -575,11 +575,11 @@ const InquiryForm = ({
                         onChange={(value) => {
                           setFieldValue('primaryContactNumber', value);
                         }}
-                        placeholder="Primary Contact No."
+                        placeholder="Enter Primary Contact No."
                         error={touched.primaryContactNumber && Boolean(errors.primaryContactNumber)}
                         helperText={touched.primaryContactNumber && errors.primaryContactNumber}
                         variant="outlined"
-                        label="Enter Primary Contact No. *"
+                        label="Primary Contact No. *"
                         size="small"
                       />
                     </ShakingTextField>
@@ -670,7 +670,9 @@ const InquiryForm = ({
                         }}
                         error={touched.country && Boolean(errors?.country?.name)}
                         helperText={(touched.country && errors?.country?.name) || ''}
-                        label="Country *"
+                        textFieldProps={{
+                          label: 'Country *',
+                        }}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -685,7 +687,9 @@ const InquiryForm = ({
                         error={touched.state && Boolean(errors?.state?.name)}
                         helperText={touched.state && errors?.state?.name}
                         countryValue={values.country}
-                        label="State *"
+                        textFieldProps={{
+                          label: 'State *',
+                        }}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -697,7 +701,9 @@ const InquiryForm = ({
                         error={touched.city && Boolean(errors?.city?.name)}
                         helperText={touched.city && errors?.city?.name}
                         stateValue={values.state}
-                        label="City *"
+                        textFieldProps={{
+                          label: 'City *',
+                        }}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -725,9 +731,9 @@ const InquiryForm = ({
                         error={touched.pinCode && Boolean(errors.pinCode)}
                         helperText={touched.pinCode && errors.pinCode}
                         fullWidth
-                        placeholder="Enter Pincode *"
+                        placeholder="Enter Pincode"
                         size="small"
-                        label="Pincode *"
+                        label="Pincode"
                       />
                     </ShakingTextField>
                   </Grid>

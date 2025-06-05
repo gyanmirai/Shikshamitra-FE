@@ -1,5 +1,3 @@
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -14,21 +12,10 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
-import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
-import {
-  EntranceExamStatusType,
-  EntranceExamStatusOptions,
-  EntranceExamStatusTypeColors,
-} from 'src/enums/entranceExam-type';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -66,7 +53,7 @@ const RegistrationTable = ({
           <MenuItem
             onClick={async () => {
               if (row.percentage < 50) {
-                toast.error('Please Complete Required Registration Form First');
+                toast.error('Please Complete Required Fields of Registration Form');
                 pop.onClose();
                 return;
               }
@@ -119,7 +106,7 @@ const RegistrationTable = ({
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
         percentage: (item.onboardingProgressState / 8) * 100,
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
@@ -261,25 +248,25 @@ const RegistrationTable = ({
             minWidth: '130px',
             align: 'left',
           },
-          {
-            id: 'status',
-            label: 'Entrance Exam Result',
-            filterType: 'enum',
-            enumOptions: EntranceExamStatusOptions,
-            align: 'left',
-            minWidth: '190px',
-            sticky: true,
-            render(value, row) {
-              const color = EntranceExamStatusTypeColors[
-                value as EntranceExamStatusType
-              ] as LabelColor;
-              return (
-                <Label color={color}>
-                  {EntranceExamStatusType[value as EntranceExamStatusType]}
-                </Label>
-              );
-            },
-          },
+          // {
+          //   id: 'status',
+          //   label: 'Entrance Exam',
+          //   filterType: 'enum',
+          //   enumOptions: EntranceExamStatusOptions,
+          //   align: 'left',
+          //   minWidth: '150px',
+          //   sticky: true,
+          //   render(value, row) {
+          //     const color = EntranceExamStatusTypeColors[
+          //       value as EntranceExamStatusType
+          //     ] as LabelColor;
+          //     return (
+          //       <Label color={color}>
+          //         {EntranceExamStatusType[value as EntranceExamStatusType]}
+          //       </Label>
+          //     );
+          //   },
+          // },
           // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
           {
             id: 'percentage',
@@ -303,7 +290,12 @@ const RegistrationTable = ({
                       justifyContent: 'center',
                     }}
                   >
-                    <Typography variant="body2" component="small" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      component="small"
+                      color="text.secondary"
+                      sx={{ fontSize: '12px' }}
+                    >
                       {value}%
                     </Typography>
                   </Box>
@@ -311,20 +303,20 @@ const RegistrationTable = ({
               );
             },
           },
-          {
-            id: 'followUpStatusType',
-            label: 'Follow Up Status',
-            filterType: 'enum',
-            enumOptions: FollowUpStatusTypeOptions,
-            minWidth: '160px',
-            align: 'left',
-            sticky: true,
-            render(value, row) {
-              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+          // {
+          //   id: 'followUpStatusType',
+          //   label: 'Follow Up Status',
+          //   filterType: 'enum',
+          //   enumOptions: FollowUpStatusTypeOptions,
+          //   minWidth: '160px',
+          //   align: 'left',
+          //   sticky: true,
+          //   render(value, row) {
+          //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
 
-              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-            },
-          },
+          //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+          //   },
+          // },
           {
             id: 'actions',
             label: 'Actions',

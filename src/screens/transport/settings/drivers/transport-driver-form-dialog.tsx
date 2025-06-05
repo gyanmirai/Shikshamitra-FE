@@ -147,7 +147,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 <TextField
                   size="small"
                   fullWidth
-                  label="Address Line 1"
+                  label="Building / Flat / House No"
                   // name="address"
                   // value={formik.values.address}
                   // onChange={formik.handleChange}
@@ -161,7 +161,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 <TextField
                   size="small"
                   fullWidth
-                  label="Address Line 2"
+                  label="Street / Road Name"
                   // name="address"
                   // value={formik.values.address}
                   // onChange={formik.handleChange}

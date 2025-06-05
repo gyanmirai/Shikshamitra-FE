@@ -36,9 +36,9 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -69,7 +69,7 @@ const StudentDocumentType = () => {
 
   // Reset form and close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dialog.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
@@ -128,8 +128,8 @@ const StudentDocumentType = () => {
           </>
         }
         searchFieldProps={{
-          placeholder: 'Search by document name, type...',
-          label: 'Search by document name, type...',
+          placeholder: 'Search by Document name, Type...',
+          label: 'Search by Document name, Type...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -207,6 +207,9 @@ export const DocumentForm = ({
   editData: null | IStudentDocument;
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
+  const dispatch = useDispatch();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentDocumentTypeMutation,
@@ -216,7 +219,7 @@ export const DocumentForm = ({
     currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
   });
 
-  const { initialValues, values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
+  const formik = useFormik<{
     title: string;
     documentType: DocumentType[];
     isRequired: boolean;
@@ -230,55 +233,137 @@ export const DocumentForm = ({
       title: Yup.string().required('Document name is required'),
       documentType: Yup.array().min(1, 'At least one document type is required'),
     }),
-    onSubmit: async (formikValues) => {
-      console.log(formikValues);
-      if (editData) {
-        await updateDocument({
-          id: editData.id,
-          body: {
-            documentName: formikValues.title,
-            documentTypes: formikValues.documentType,
-            isRequired: formikValues.isRequired,
-          },
+    onSubmit: async (formikValues, { resetForm, setSubmitting }) => {
+      try {
+        setSubmitting(true);
+
+        if (editData) {
+          // Update existing document and close popup
+          await updateDocument({
+            id: editData.id,
+            body: {
+              documentName: formikValues.title,
+              documentTypes: formikValues.documentType,
+              isRequired: formikValues.isRequired,
+            },
+          });
+          handleClose?.(null, true);
+          return;
+        }
+
+        // Add new document - DON'T close dialog
+        await addDocument({
+          documentName: formikValues.title,
+          documentTypes: formikValues.documentType,
+          isRequired: formikValues.isRequired,
         });
-        handleClose?.(null, true);
-        return;
+
+        // Show success message
+        setShowSuccessMessage(true);
+
+        // Reset form for next entry
+        resetForm();
+
+        // Reset the changes state so dialog doesn't prompt for confirmation
+        dispatch(setIsChanges(false));
+
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
+      } catch (error) {
+        console.error('Error saving document:', error);
+      } finally {
+        setSubmitting(false);
       }
-      await addDocument({
-        documentName: formikValues.title,
-        documentTypes: formikValues.documentType,
-        isRequired: formikValues.isRequired,
-      });
-      handleClose?.(null, true);
     },
   });
 
+  const { values, setFieldValue, handleSubmit, errors, touched } = formik;
+
+  // Function to handle "Add Another" button
+  const handleAddAnother = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit();
+  };
+
+  // Function to handle "Save & Close" button
+  const handleSaveAndClose = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editData) {
+      handleSubmit();
+      return;
+    }
+    handleSubmit();
+    handleClose?.(null, true);
+  };
+
   return (
-    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>
       <form onSubmit={handleSubmit}>
         <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
           <Stack spacing={2}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Document Name"
-              name="document.title"
-              value={values.title}
-              onChange={(e) => setFieldValue('title', e.target.value)}
-              error={Boolean(errors.title && touched.title)}
-              helperText={(touched.title && errors.title) || ''}
-            />
+            {!editData && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="eva:plus-fill" />}
+                  onClick={handleAddAnother}
+                  disabled={isLoading || isUpdateLoading}
+                >
+                  {isLoading ? 'Adding...' : 'Add Another'}
+                </Button>
+              </Box>
+            )}
+            {/* Success Message */}
+            {showSuccessMessage && (
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'success.lighter',
+                  border: '1px solid',
+                  borderColor: 'success.main',
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Iconify icon="eva:checkmark-circle-2-fill" color="success.main" />
+                <Typography variant="body2" color="success.dark">
+                  Document added successfully! You can add another document.
+                </Typography>
+              </Box>
+            )}
 
-            <CustomSelect
-              options={DocumentTypeArray}
-              value={values.documentType}
-              multiple
-              label="Select document Type"
-              onChange={(value) => setFieldValue('documentType', value)}
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              error={Boolean(errors.documentType && touched.documentType)}
-              helperText={(touched.documentType && errors.documentType) as string}
-            />
+            <ShakingTextField error={!!(touched.title && errors.title) || false}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Document Name *"
+                placeholder="Enter Document Name"
+                name="title"
+                value={values.title}
+                onChange={(e) => setFieldValue('title', e.target.value)}
+                error={Boolean(errors.title && touched.title)}
+                helperText={(touched.title && errors.title) || ''}
+              />
+            </ShakingTextField>
+
+            <ShakingTextField error={!!(touched.documentType && errors.documentType) || false}>
+              <CustomSelect
+                options={DocumentTypeArray}
+                value={values.documentType}
+                multiple
+                label="Select document Type *"
+                onChange={(value) => setFieldValue('documentType', value)}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                error={Boolean(errors.documentType && touched.documentType)}
+                helperText={(touched.documentType && errors.documentType) as string}
+              />
+            </ShakingTextField>
 
             <FormControlLabel
               control={
@@ -291,7 +376,8 @@ export const DocumentForm = ({
             />
           </Stack>
         </Scrollbar>
-        <DialogActions>
+
+        <DialogActions sx={{ px: 2 }}>
           <Button
             size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -299,12 +385,18 @@ export const DocumentForm = ({
             onClick={() => {
               handleClose?.(null, false);
             }}
-            sx={{ width: '200px' }}
           >
             Cancel
           </Button>
-
-          <SubmitButton loading={isUpdateLoading || isLoading} />
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={isUpdateLoading || isLoading}
+            startIcon={<Iconify icon="eva:save-fill" />}
+            onClick={handleSaveAndClose}
+          >
+            {editData ? 'Update' : 'Save & Close'}
+          </LoadingButton>
         </DialogActions>
       </form>
     </BackPopUpChecked>

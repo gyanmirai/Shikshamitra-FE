@@ -53,11 +53,17 @@ export interface IInquiryData {
   tempGrNo: number;
   grNoRecord: number;
   rollNo: number;
-  pinCode: number;
+  pinCode: number | null;
   address: string;
   addressLine1: string;
   addressLine2: string;
   addressLine3: string;
+  fatherAddress1: string;
+  fatherAddress2: string;
+  fatherAddress3: string;
+  fatherOfficeAddress1: string;
+  fatherOfficeAddress2: string;
+  fatherOfficeAddress3: string;
   inquiryStatusType: number;
   educationMediumId: string;
   educationMedium: Medium;
@@ -162,12 +168,16 @@ export interface ParentDetails {
   email: string;
   passOutYear: number;
   officeNo: string;
-  officeAddress: string;
   designation: string;
   organisation: string;
   aadhaarNo: string;
   remarks: string;
-  address: string;
+  address1: string;
+  address2: string;
+  address3: string;
+  officeAddress1: string;
+  officeAddress2: string;
+  officeAddress3: string;
 }
 
 export interface StudentCommunicationDetails {
