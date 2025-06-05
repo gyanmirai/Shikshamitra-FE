@@ -45,6 +45,7 @@ export const GlobalIcons = {
   delete: 'solar:trash-bin-trash-bold',
   receiptIcon: 'tabler:receipt',
   tick: 'mdi:tick-circle-outline',
+  reject: 'fluent:text-change-reject-24-filled',
 };
 
 export const GlobalIconColors = {

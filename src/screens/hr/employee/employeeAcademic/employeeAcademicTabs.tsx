@@ -14,7 +14,7 @@ import HomeworkAssignment from './homeworkAssignment';
 
 const TABS = [
   { value: 'timetable', label: 'Timetable' },
-  { value: 'subjectPerformace', label: 'Subject Performace' },
+  { value: 'subjectPerformace', label: 'Subject Progress' },
   { value: 'homework/assignments', label: 'Homework/Assignments' },
   { value: 'examination', label: 'Examination' },
 ];

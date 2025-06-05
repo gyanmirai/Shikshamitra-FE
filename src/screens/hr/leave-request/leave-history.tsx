@@ -2,12 +2,23 @@ import type { LabelColor } from 'src/components/label';
 import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Add } from '@mui/icons-material';
-import { Box, Button, Tooltip, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import {
+  Box,
+  Button,
+  Tooltip,
+  Checkbox,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -23,16 +34,16 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddLeaveRequest from './leave-requst';
 
-import type { TabComponentType } from '.';
 import type { LeaveRequestType } from './type';
 
-const LeaveHistory = (props: TabComponentType) => {
+const LeaveHistory = (props: any) => {
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -42,10 +53,13 @@ const LeaveHistory = (props: TabComponentType) => {
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
 
-  const modal = useBoolean();
+  const { modal } = props;
+
+  const approveConfirmation = useBoolean();
+  const rejectConfirmation = useBoolean();
+
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
     ({ popover }: { popover: UsePopoverReturn }, row: any) => (
       <MenuList>
         <MenuItem
@@ -60,7 +74,7 @@ const LeaveHistory = (props: TabComponentType) => {
                 },
               });
             }
-            modal.onTrue();
+            modal?.onTrue?.();
             popover.onClose();
           }}
         >
@@ -69,16 +83,9 @@ const LeaveHistory = (props: TabComponentType) => {
         </MenuItem>
         <MenuItem
           onClick={async () => {
-            // setEditData(row);
-            // if (row.status === EmployeeLeaveStatusType.Reviewed) {
-            await changeStatus({
-              id: row?.id,
-              body: {
-                status: EmployeeLeaveStatusType.Approved,
-                rejectionReason: '',
-              },
-            });
-            // }
+            setEditData(row);
+            approveConfirmation.onTrue();
+
             popover.onClose();
           }}
           sx={{ color: 'success.main' }}
@@ -88,16 +95,10 @@ const LeaveHistory = (props: TabComponentType) => {
         </MenuItem>
         <MenuItem
           onClick={async () => {
-            // setEditData(row);
-            // if (row.status === EmployeeLeaveStatusType.Reviewed) {
-            await changeStatus({
-              id: row?.id,
-              body: {
-                status: EmployeeLeaveStatusType.Rejected,
-                rejectionReason: '',
-              },
-            });
-            // }
+            setEditData(row);
+            rejectConfirmation.onTrue();
+
+            popover.onClose();
           }}
           sx={{ color: 'error.main' }}
         >
@@ -106,8 +107,9 @@ const LeaveHistory = (props: TabComponentType) => {
         </MenuItem>
       </MenuList>
     ),
-    [changeStatus, modal]
+    [approveConfirmation, changeStatus, modal, rejectConfirmation]
   );
+
   const tableData = useMemo(
     () =>
       data?.items?.map((item: LeaveRequestType) => ({
@@ -122,7 +124,8 @@ const LeaveHistory = (props: TabComponentType) => {
 
   const handleClose = () => {
     setEditData(null);
-    modal.onFalse();
+    modal?.onFalse?.();
+    setRejectionReason('');
   };
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -133,27 +136,22 @@ const LeaveHistory = (props: TabComponentType) => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  useEffect(() => {
+    setRejectionReason(editData?.rejectionReason || '');
+  }, [editData?.rejectionReason]);
+
   return (
     <>
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Add />}
-          onClick={() => {
-            modal.onTrue();
-          }}
-        >
-          Leave Request
-        </Button>
-      </Box>
       <CustomizableTable
         noDataText={
           <>
             No Leave Request Found{' '}
             <Box
               onClick={() => {
-                modal.onTrue();
+                modal?.onTrue?.();
               }}
               color="primary.main"
               fontWeight={600}
@@ -221,6 +219,7 @@ const LeaveHistory = (props: TabComponentType) => {
           },
           {
             label: 'Name',
+            sticky: true,
             id: 'employee.firstName',
             render(value, row) {
               return `${value} ${row.employee.lastName}`;
@@ -279,7 +278,6 @@ const LeaveHistory = (props: TabComponentType) => {
             isFilter: false,
             sticky: true,
             isSort: false,
-
             render(value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
@@ -288,6 +286,35 @@ const LeaveHistory = (props: TabComponentType) => {
           },
         ]}
         data={tableData}
+      />
+      <ConfirmDialog
+        open={approveConfirmation.value}
+        onClose={() => {
+          setEditData(null);
+          approveConfirmation.onFalse();
+        }}
+        title="Approve"
+        content="Are you sure you want to Approve?"
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={isChangeStatusLoading}
+            onClick={async () => {
+              await changeStatus({
+                id: editData?.id,
+                body: {
+                  status: EmployeeLeaveStatusType.Approved,
+                  rejectionReason: '',
+                },
+              });
+
+              approveConfirmation.onFalse();
+              setEditData(null);
+            }}
+          >
+            Approve
+          </LoadingButton>
+        }
       />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -298,8 +325,7 @@ const LeaveHistory = (props: TabComponentType) => {
         />
       )}
       <CustomDialog
-        // maxWidth="lg"
-        open={modal.value}
+        open={modal?.value}
         handleClose={handleClose}
         title={
           <Box display="flex" flexDirection="row" gap={2} alignItems="center">
@@ -318,6 +344,57 @@ const LeaveHistory = (props: TabComponentType) => {
       >
         <Box>
           <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
+        </Box>
+      </CustomDialog>
+      <CustomDialog
+        open={rejectConfirmation?.value}
+        handleClose={() => {
+          rejectConfirmation?.onFalse();
+          setRejectionReason('');
+          setEditData(null);
+        }}
+        title="Reject Leave Request"
+      >
+        <Box sx={{ p: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            placeholder="Enter rejection reason"
+            onChange={(e) => {
+              setRejectionReason(e.target.value);
+            }}
+            value={rejectionReason}
+            sx={{ mb: 2 }}
+          />
+          <Box display="flex" justifyContent="flex-end" gap={2}>
+            <Button
+              variant="outlined"
+              onClick={handleClose}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="contained"
+              loading={isChangeStatusLoading}
+              startIcon={<Iconify icon={GlobalIcons.reject} />}
+              onClick={async () => {
+                await changeStatus({
+                  id: editData?.id,
+                  body: {
+                    status: EmployeeLeaveStatusType.Rejected,
+                    rejectionReason,
+                  },
+                });
+                rejectConfirmation?.onFalse();
+                setRejectionReason('');
+                setEditData(null);
+              }}
+            >
+              Reject
+            </LoadingButton>
+          </Box>
         </Box>
       </CustomDialog>
     </>

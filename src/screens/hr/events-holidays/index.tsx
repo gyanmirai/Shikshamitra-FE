@@ -15,7 +15,6 @@ import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
-  Card,
   Switch,
   Button,
   useTheme,
@@ -91,8 +90,6 @@ const HrEventsAndHolidaysScreen = () => {
     currentQueryAndMutation: useLazyGetEventHolidayByDateQuery,
   });
 
-  console.log('eventHolidayData', eventHolidayData);
-
   // Mutation for deleting events/holidays
   const [deleteEventHoliday, { isLoading: isEventHolidayDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -107,7 +104,7 @@ const HrEventsAndHolidaysScreen = () => {
   }, [date, fetchEvent]);
 
   // Handle form close with unsaved changes check
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e: any, isSubmit?: boolean): void => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       dispatch(setIsChanges(false));
       dialog.onFalse();
@@ -141,21 +138,7 @@ const HrEventsAndHolidaysScreen = () => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-  return dialog.value ? (
-    <>
-      <CustomBreadcrumbs
-        heading="Events & Holidays"
-        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
-        sx={{ px: 1, mb: 2 }}
-        isBack
-        onBack={() => handleClose(undefined, false)}
-        description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
-      />
-      <Card>
-        <HrEventsAndHolidaysForm handleClose={handleClose} editData={editData} />
-      </Card>
-    </>
-  ) : (
+  return (
     <Box>
       <CustomBreadcrumbs
         heading="Events & Holidays"
@@ -323,6 +306,13 @@ const HrEventsAndHolidaysScreen = () => {
           isCalenderPreview
         />
       </CustomDialog>
+      <CustomDialog
+        open={dialog.value}
+        handleClose={(e) => handleClose(e)}
+        title={editData ? 'Update Event or Holiday' : 'Create Event or Holiday'}
+      >
+        <HrEventsAndHolidaysForm handleClose={handleClose} editData={editData} />
+      </CustomDialog>
     </Box>
   );
 };
@@ -413,7 +403,7 @@ export const HrEventsAndHolidaysForm = ({
       <Box component="form" onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2 }}>
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <ShakingTextField
                 error={formik.touched.startDate && Boolean(formik.errors.startDate)}
               >
@@ -434,7 +424,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <DatePicker
                   format="DD-MM-YYYY"

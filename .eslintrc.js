@@ -28,6 +28,7 @@ module.exports = {
     // general
     'import/no-cycle': 'off',
     'no-alert': 0,
+    'react/prop-types': 'off',
     camelcase: 0,
     'no-console': 0,
     'no-unused-vars': 0,

@@ -519,7 +519,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'name',
             label: 'Name',
             align: 'left',
-            minWidth: '100px',
+            minWidth: '300px',
             render(value, row) {
               return (
                 <Box display="flex" alignItems="center" gap={1}>

@@ -40,6 +40,7 @@ import {
   Button,
   Switch,
   Popover,
+  useTheme,
   MenuItem,
   TableRow,
   Checkbox,
@@ -99,6 +100,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [columns]
   );
 
+  const theme = useTheme();
+
   // const totalRows = data.length; // Get total number of rows
 
   // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
@@ -155,7 +158,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const getStickyStyle = (col: IColumn): React.CSSProperties => {
     const base: React.CSSProperties = {
       position: col.sticky ? 'sticky' : 'static',
-      background: col.sticky ? '#fff' : undefined,
+      background: col.sticky ? theme.palette.background.paper : undefined,
     };
 
     const colId = col.id as string;
@@ -737,8 +740,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             opacity: 1,
                           },
                           '&::after': {
-                            borderRight: (theme) =>
-                              !column.sticky ? `1px solid ${theme.palette.grey[400]}` : 'none',
+                            borderRight: !column.sticky
+                              ? `1px solid ${theme.palette.grey[400]}`
+                              : 'none',
                             content: '""',
                             position: 'absolute',
                             right: '0',

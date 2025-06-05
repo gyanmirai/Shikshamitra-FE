@@ -684,7 +684,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     variant="contained"
                     size="small"
                   >
-                    Request Submit Leave
+                    Submit
                   </Button>
                 </Grid>
               </Grid>

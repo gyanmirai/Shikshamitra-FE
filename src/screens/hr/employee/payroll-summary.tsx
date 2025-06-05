@@ -10,8 +10,6 @@ import { Box, Card, Grid, Alert, Button, CardHeader, Typography, CardContent } f
 
 import { formatCurrency } from 'src/utils/cureencyFormater';
 
-import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -40,13 +38,13 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
           }}
         >
           <CardHeader
             title={
               <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="pepicons-pop:dollar-circle-filled" /> Total Earning
+                <Iconify icon="pepicons-pop:dollar-circle-filled" /> Total Salary
               </Box>
             }
             sx={{ color: 'success.main' }}
@@ -58,7 +56,7 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -76,7 +74,7 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -93,63 +91,19 @@ const PayrollSummary = ({ employee }: any) => {
         </Card>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
-        <Button
-          startIcon={<Iconify icon="ion:email" />}
-          variant="contained"
-          color="warning"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            color: 'warning.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button startIcon={<Iconify icon="ion:email" />} variant="outlined">
           Preview Payslip
         </Button>
 
-        <Button
-          startIcon={<Iconify icon="ion:download" />}
-          variant="contained"
-          color="primary"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-            color: 'primary.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button startIcon={<Iconify icon="ion:download" />} variant="outlined">
           Download PDF
         </Button>
 
-        <Button
-          startIcon={<Iconify icon="ion:print" />}
-          variant="contained"
-          color="secondary"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
-            color: 'secondary.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button startIcon={<Iconify icon="ion:print" />} variant="outlined">
           Print Payslip
         </Button>
 
-        <Button
-          startIcon={<Iconify icon="ion:email" />}
-          variant="contained"
-          color="warning"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            color: 'warning.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button startIcon={<Iconify icon="ion:email" />} variant="outlined">
           Email Payslip
         </Button>
       </Box>

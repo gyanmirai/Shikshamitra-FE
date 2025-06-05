@@ -146,7 +146,11 @@ const HrSetting = () => {
         ]}
         data={documents?.items || []}
       />
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Add Document">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        title={editData ? 'Update Document' : 'Add Document'}
+      >
         <DocumentForm handleClose={dialog.onFalse} editData={editData} />
       </CustomDialog>
     </Box>

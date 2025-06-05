@@ -14,7 +14,6 @@ import {
   Grid,
   Tooltip,
   Checkbox,
-  TextField,
   Typography,
   DialogActions,
   FormControlLabel,
@@ -450,7 +449,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     </>
                   )}
                 </Grid> */}
-                {values.status === EmployeeLeaveStatusType.Rejected && (
+                {/* {values.status === EmployeeLeaveStatusType.Rejected && (
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -465,7 +464,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       sx={{ my: 1 }}
                     />
                   </Grid>
-                )}
+                )} */}
               </Grid>
             </Scrollbar>
             <DialogActions sx={{ flexShrink: 0, p: 2 }}>

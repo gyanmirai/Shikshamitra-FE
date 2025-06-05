@@ -129,8 +129,10 @@ const GlobalAcademicSearch = () => {
     <Autocomplete
       options={getDivisionOptions()}
       getOptionLabel={(option) => option.label}
-      value={selectedDivision}
+      value={selectedDivision || undefined}
       loading={isYearLoading || isBoardLoading}
+      clearIcon={false}
+      disableClearable
       onChange={(event, newValue) => {
         dispatch(setCurrentYear(newValue?.academicYear));
         dispatch(setCurrentBoard(newValue?.board));
@@ -140,7 +142,7 @@ const GlobalAcademicSearch = () => {
       renderInput={(params) => (
         <TextField
           {...params}
-          variant="standard"
+          variant="filled"
           size="small"
           label="Academic Year, Board and Medium"
           placeholder="Select a academic year, board and medium"
