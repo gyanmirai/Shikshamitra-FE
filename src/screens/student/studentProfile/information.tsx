@@ -47,12 +47,12 @@ export const fields = [
 
 const TABS = [
   { value: 'general', label: 'General' },
-  { value: 'admission', label: 'Family Information' },
+  { value: 'admission', label: 'Family' },
   { value: 'communication', label: 'Communication' },
   { value: 'additionalDetails', label: 'Additional Details' },
   { value: 'medicalRecords', label: 'Medical Records' },
-  { value: 'previousSchool', label: 'Previous School Details' },
-  { value: 'bankDetails', label: 'Parents Bank Details' },
+  { value: 'previousSchool', label: 'Prev. School Details' },
+  { value: 'bankDetails', label: 'Bank Details' },
 ];
 
 export function StudentInformation(props: StudentTabsComponentType) {

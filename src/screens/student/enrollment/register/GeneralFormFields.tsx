@@ -702,7 +702,7 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
           </SectionCard>
 
-          <SectionCard title="Previous Schooling">
+          <SectionCard title="Previous School">
             <Grid item xs={12} md={3}>
               <ShakingTextField
                 error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}

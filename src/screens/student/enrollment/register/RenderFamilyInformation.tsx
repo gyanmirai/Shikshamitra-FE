@@ -23,7 +23,7 @@ function MotherOfficeAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2} p={3}>
+    <Grid container spacing={3} p={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -115,7 +115,7 @@ function GuardianOfficeAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2} p={3}>
+    <Grid container spacing={3} p={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -228,7 +228,7 @@ function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2} p={3}>
+    <Grid container spacing={3} p={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -314,7 +314,7 @@ function GuardianAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2} p={3}>
+    <Grid container spacing={3} p={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -410,6 +410,7 @@ function RenderFamilyInformation(props: any) {
               label=" Father full name *"
               value={formik.values.fatherName}
               autoFocus
+              placeholder="Enter Father full name"
               onChange={(e) => {
                 const value = capitalize(e.target.value);
                 formik.setFieldValue('fatherName', value);
@@ -449,6 +450,7 @@ function RenderFamilyInformation(props: any) {
             name="fatherOccupation"
             label="Father Occupation"
             value={formik.values.fatherOccupation}
+            placeholder="Enter Father Occupation"
             onChange={(e) => {
               const value = capitalize(e.target.value);
               formik.setFieldValue('fatherOccupation', value);
@@ -487,6 +489,7 @@ function RenderFamilyInformation(props: any) {
             name="fatherPassOutYear"
             label="Father's Year of Passing"
             type="number"
+            placeholder="Enter Fathers Year of Passing"
             value={formik.values.fatherPassOutYear}
             onChange={formik.handleChange}
             error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
@@ -501,6 +504,7 @@ function RenderFamilyInformation(props: any) {
             name="fatherQualification"
             label="Father Qualification"
             value={formik.values.fatherQualification}
+            placeholder="Enter Father Qualification"
             onChange={(e) => {
               const value = capitalize(e.target.value);
               formik.setFieldValue('fatherQualification', value);
@@ -533,17 +537,17 @@ function RenderFamilyInformation(props: any) {
             onChange={(value) => {
               formik.setFieldValue('fatherOfficeNo', value);
             }}
+            placeholder="Enter Father Contact No."
             label="Father Office No."
-            placeholder="Enter Father Office No."
             error={formik.touched.fatherOfficeNo && Boolean(formik.errors.fatherOfficeNo)}
             disabled={!isEdit}
           />
         </Grid>
-
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="fatherDesignation"
             label="Father Designation"
+            placeholder="Enter Father Designation"
             value={formik.values.fatherDesignation}
             onChange={(e) => {
               const value = capitalize(e.target.value);
@@ -560,6 +564,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherOrganization"
             label="Father Organization"
+            placeholder="Enter Father Organization"
             disabled={!isEdit}
             value={formik.values.fatherOrganization}
             onChange={(e) => {
@@ -576,6 +581,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherAadharNo"
             label="Father Aadhar No."
+            placeholder="Enter Father Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.fatherAadharNo}
@@ -590,6 +596,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherRemarks"
             label="Remarks"
+            placeholder="Enter Remarks"
             disabled={!isEdit}
             multiline
             rows={3}
@@ -740,6 +747,7 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="motherName"
               label="Mother full name *"
+              placeholder="Enter Mother full name"
               disabled={!isEdit}
               value={formik.values.motherName}
               onChange={(e) => {
@@ -779,6 +787,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherOccupation"
             label="Mother Occupation"
+            placeholder="Enter Mother Occupation"
             disabled={!isEdit}
             value={formik.values.motherOccupation}
             onChange={(e) => {
@@ -817,6 +826,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherPassOutYear"
             label="Mother's Year of Passing"
+            placeholder="Enter Mother's Year of Passing"
             type="number"
             disabled={!isEdit}
             value={formik.values.motherPassOutYear}
@@ -831,6 +841,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherQualification"
             label="Mother Qualification"
+            placeholder="Enter Mother Qualification"
             disabled={!isEdit}
             value={formik.values.motherQualification}
             onChange={(e) => {
@@ -870,11 +881,11 @@ function RenderFamilyInformation(props: any) {
             error={formik.touched.motherOfficeNo && Boolean(formik.errors.motherOfficeNo)}
           />
         </Grid>
-
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="motherDesignation"
             label="Mother Designation"
+            placeholder="Enter Mother Designation"
             disabled={!isEdit}
             value={formik.values.motherDesignation}
             onChange={(e) => {
@@ -891,6 +902,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherOrganization"
             label="Mother Organization"
+            placeholder="Enter Mother Organization"
             disabled={!isEdit}
             value={formik.values.motherOrganization}
             onChange={(e) => {
@@ -907,6 +919,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherAadharNo"
             label="Mother Aadhar No."
+            placeholder="Enter Mother Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.motherAadharNo}
@@ -921,6 +934,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherRemarks"
             label="Remarks"
+            placeholder="Enter Remarks"
             disabled={!isEdit}
             multiline
             rows={3}
@@ -945,6 +959,7 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="guardianName"
               label="Guardian Full Name"
+              placeholder="Enter Guardian Full Name"
               disabled={!isEdit}
               value={formik.values.guardianName}
               onChange={(e) => {
@@ -986,6 +1001,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianOccupation"
             label="Guardian Occupation"
+            placeholder="Enter Guardian Occupation"
             disabled={!isEdit}
             value={formik.values.guardianOccupation}
             onChange={(e) => {
@@ -1024,6 +1040,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianPassOutYear"
             label="Guardian's Year of Passing"
+            placeholder="Enter Guardian's Year of Passing"
             type="number"
             disabled={!isEdit}
             value={formik.values.guardianPassOutYear}
@@ -1038,6 +1055,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianQualification"
             label="Guardian Qualification"
+            placeholder="Enter Guardian Qualification"
             disabled={!isEdit}
             value={formik.values.guardianQualification}
             onChange={(e) => {
@@ -1079,11 +1097,11 @@ function RenderFamilyInformation(props: any) {
             error={formik.touched.guardianOfficeNo && Boolean(formik.errors.guardianOfficeNo)}
           />
         </Grid>
-
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="guardianDesignation"
             label="Guardian Designation"
+            placeholder="Enter Guardian Designation"
             disabled={!isEdit}
             value={formik.values.guardianDesignation}
             onChange={(e) => {
@@ -1100,6 +1118,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianOrganization"
             label="Guardian Organization"
+            placeholder="Enter Guardian Organization"
             disabled={!isEdit}
             value={formik.values.guardianOrganization}
             onChange={(e) => {
@@ -1118,6 +1137,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianAadharNo"
             label="Guardian Aadhar No."
+            placeholder="Enter Guardian Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.guardianAadharNo}
@@ -1132,6 +1152,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianRemarks"
             label="Remarks"
+            placeholder="Enter Remarks"
             disabled={!isEdit}
             multiline
             rows={3}

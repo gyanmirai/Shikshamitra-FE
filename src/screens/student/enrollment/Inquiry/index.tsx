@@ -222,6 +222,8 @@ export interface StudentAdditionalDetails {
   personWithDisability: YesNo;
   secondLanguage: string;
   emergencyContactNo: string;
+  relationName: string;
+  relation: string;
   singleParentChild: YesNo;
   singleChild: YesNo;
   sponsorName?: string; // Add any additional fields as required

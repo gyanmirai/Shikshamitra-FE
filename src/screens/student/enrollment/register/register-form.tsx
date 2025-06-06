@@ -50,7 +50,7 @@ const steps = [
   'Additional Details',
   'Medical Records',
   'Previous School Details',
-  'Parents Bank Details',
+  'Bank Details',
 ];
 
 const RegisterForm = ({
