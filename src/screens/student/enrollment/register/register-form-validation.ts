@@ -128,7 +128,7 @@ const communicationFieldsValidation = Yup.object({
   primaryContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
     value ? matchIsValidTel(value as string) : true
   ),
-  parentContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
+  secondaryContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
     value ? matchIsValidTel(value as string) : true
   ),
   parentEmail: Yup.string().email('Invalid email format'),
@@ -196,6 +196,8 @@ const additionalDetailsValidations = Yup.object({
   emergencyContactNo: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
     value ? matchIsValidTel(value as string) : true
   ),
+  relationName: Yup.string(),
+  relation: Yup.string(),
   singleParentChild: Yup.boolean(),
   singleChild: Yup.boolean(),
   // sponsorStudent: Yup.boolean(),

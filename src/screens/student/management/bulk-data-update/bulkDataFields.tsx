@@ -337,7 +337,7 @@ export const allCategory = [
     ],
   },
   {
-    name: 'Parents Bank Details',
+    name: 'Bank Details',
     id: 'parentsBankDetails',
     subCategory: [
       { name: 'Bank Name', id: 'bankName', type: 'text' },

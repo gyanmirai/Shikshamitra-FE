@@ -138,7 +138,7 @@ const RenderPermanentAddressFields = (props: any) => {
               error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
               helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
               fullWidth
-              placeholder="Pincode"
+              placeholder="Enter Pincode"
               size="small"
               label="Pincode"
             />

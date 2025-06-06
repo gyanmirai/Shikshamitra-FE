@@ -107,7 +107,7 @@ const RenderLocalAddressFields = (props: any) => {
               error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
               helperText={formik.touched.localPincode && formik.errors.localPincode}
               fullWidth
-              placeholder="Pincode"
+              placeholder="Enter Pincode"
               size="small"
               label="Pincode"
             />

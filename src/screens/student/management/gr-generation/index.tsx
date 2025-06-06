@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { Box, Button, Checkbox } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
-import { Box, Button, Checkbox, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -144,21 +144,11 @@ const GrNoGenerationScreen = ({
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
           <Button
-            startIcon={<Save />}
-            variant="outlined"
-            onClick={handleSave}
-            disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
-            size="small"
-            sx={{ width: '180px' }}
-          >
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
-          <Button
             size="small"
             startIcon={<Grading />}
-            variant="outlined"
+            variant="contained"
             onClick={handleManualToggle}
-            sx={{ width: '180px' }}
+            // sx={{ width: '180px' }}
           >
             Manual Generation
           </Button>
@@ -167,9 +157,19 @@ const GrNoGenerationScreen = ({
             startIcon={<Refresh />}
             variant="contained"
             onClick={handleAutoGenerate}
-            sx={{ width: '180px' }}
+            // sx={{ width: '180px' }}
           >
             {isStudentGrNumberLoading ? 'Loading...' : 'Auto Generate'}
+          </Button>
+          <Button
+            startIcon={<Save />}
+            variant="contained"
+            onClick={handleSave}
+            disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
+            size="small"
+            // sx={{ width: '180px' }}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </Box>
         <CustomizableTable
@@ -224,29 +224,29 @@ const GrNoGenerationScreen = ({
                 );
               },
             },
-            { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
+            // { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
             { id: 'name', label: 'Name', align: 'left' },
-            {
-              id: 'grNoRecord',
-              label: 'New GR No.',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              render(value, row) {
-                return isManual ? (
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    placeholder="Enter New GR No."
-                    type="number"
-                    value={value}
-                    onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
-                  />
-                ) : (
-                  value
-                );
-              },
-            },
+            // {
+            //   id: 'grNoRecord',
+            //   label: 'New GR No.',
+            //   align: 'left',
+            //   isFilter: false,
+            //   isSort: false,
+            //   render(value, row) {
+            //     return isManual ? (
+            //       <TextField
+            //         size="small"
+            //         variant="standard"
+            //         placeholder="Enter New GR No."
+            //         type="number"
+            //         value={value}
+            //         onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
+            //       />
+            //     ) : (
+            //       value
+            //     );
+            //   },
+            // },
           ]}
           data={tableData}
         />{' '}

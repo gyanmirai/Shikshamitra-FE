@@ -139,7 +139,7 @@ const RenderEmergencyAddressFields = (props: any) => {
               error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
               helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
               fullWidth
-              placeholder="Pincode"
+              placeholder="Enter Pincode"
               size="small"
               label="Pincode"
             />

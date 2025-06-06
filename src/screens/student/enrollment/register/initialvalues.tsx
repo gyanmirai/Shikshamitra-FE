@@ -190,6 +190,8 @@ export const additionalDetailsInitialValues = (editData?: IInquiryData | null) =
   personWithDisability: editData?.studentAdditionalDetails?.personWithDisability || false,
   secondLanguage: editData?.studentAdditionalDetails?.secondLanguage || '',
   emergencyContactNo: editData?.studentAdditionalDetails?.emergencyContactNo || '',
+  relationName: editData?.studentAdditionalDetails?.relationName || '',
+  relation: editData?.studentAdditionalDetails?.relation || '',
   singleParentChild: editData?.studentAdditionalDetails?.singleParentChild || false,
   singleChild: editData?.studentAdditionalDetails?.singleChild || false,
   sponsorStudent: '',
