@@ -1,20 +1,13 @@
+import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
-import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import {
-  Box,
-  Button,
-  Tooltip,
-  Checkbox,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Button, Tooltip, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -40,10 +33,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddLeaveRequest from './leave-requst';
-
-import type { LeaveRequestType } from './type';
+import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -56,11 +50,11 @@ const LeaveHistory = (props: any) => {
   const { modal } = props;
 
   const approveConfirmation = useBoolean();
-  const rejectConfirmation = useBoolean();
+  const approveOrRejectConfirmation = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
-    ({ popover }: { popover: UsePopoverReturn }, row: any) => (
+    ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
           onClick={async () => {
@@ -83,8 +77,9 @@ const LeaveHistory = (props: any) => {
         </MenuItem>
         <MenuItem
           onClick={async () => {
-            setEditData(row);
-            approveConfirmation.onTrue();
+            setEditData({ ...row, type: EmployeeLeaveStatusType.Approved });
+
+            approveOrRejectConfirmation.onTrue();
 
             popover.onClose();
           }}
@@ -95,8 +90,8 @@ const LeaveHistory = (props: any) => {
         </MenuItem>
         <MenuItem
           onClick={async () => {
-            setEditData(row);
-            rejectConfirmation.onTrue();
+            setEditData({ ...row, type: EmployeeLeaveStatusType.Rejected });
+            approveOrRejectConfirmation.onTrue();
 
             popover.onClose();
           }}
@@ -107,17 +102,28 @@ const LeaveHistory = (props: any) => {
         </MenuItem>
       </MenuList>
     ),
-    [approveConfirmation, changeStatus, modal, rejectConfirmation]
+    [changeStatus, modal, approveOrRejectConfirmation]
   );
 
   const tableData = useMemo(
     () =>
-      data?.items?.map((item: LeaveRequestType) => ({
+      data?.items?.map((item: any) => ({
         ...item,
         start: dayjs(item.startDate).format('DD/MM/YYYY'),
         end: dayjs(item.endDate).format('DD/MM/YYYY'),
         statusValue: item.status,
+        viewStartDate: item.startDate,
+        color: item.leavePolicy.color,
+        viewEndDate: item.endDate,
+        allDay: false,
+        textColor: item.leavePolicy.color,
+        title: `${item.leavePolicy.leaveType} [${item.employee.firstName} ${item.employee.lastName}]`,
         description: item.description.replace(/<[^>]+>/g, ''),
+        totalDays: item.isHalfDay
+          ? 0.5
+          : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1 < 0
+            ? 0
+            : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1,
       })) || [],
     [data]
   );
@@ -145,6 +151,37 @@ const LeaveHistory = (props: any) => {
 
   return (
     <>
+      <Box sx={{ display: 'flex', gap: 2, my: 2, pl: 1, justifyContent: 'space-between' }}>
+        <DatePicker
+          label="Date"
+          format="MMM-YYYY"
+          value={date}
+          views={['month', 'year']}
+          slotProps={{
+            textField: {
+              fullWidth: true,
+              size: 'small',
+            },
+          }}
+          sx={{
+            maxWidth: '400px',
+            width: '100%',
+          }}
+          onChange={(newDate) => {
+            setDate(newDate);
+          }}
+        />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Add />}
+          onClick={() => {
+            modal?.onTrue?.();
+          }}
+        >
+          Leave Request
+        </Button>
+      </Box>
       <CustomizableTable
         noDataText={
           <>
@@ -180,47 +217,49 @@ const LeaveHistory = (props: any) => {
           },
         }}
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '60px',
+          //   sticky: true,
+          //   isSort: false,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(tableData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             label: 'Name',
             sticky: true,
             id: 'employee.firstName',
+            minWidth: '8vw',
+            align: 'left',
             render(value, row) {
               return `${value} ${row.employee.lastName}`;
             },
@@ -230,12 +269,22 @@ const LeaveHistory = (props: any) => {
             id: 'start',
             filterType: 'date',
             minWidth: '120px',
+            align: 'left',
+            isDateFilter: true,
           },
           {
             label: 'End Date',
             id: 'end',
             filterType: 'date',
             minWidth: '100px',
+            align: 'left',
+            isDateFilter: true,
+          },
+          {
+            label: 'Total Days',
+            id: 'totalDays',
+            minWidth: '6vw',
+            align: 'left',
           },
           {
             label: 'Half Day',
@@ -342,61 +391,80 @@ const LeaveHistory = (props: any) => {
           </Box>
         }
       >
-        <Box>
-          <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
-        </Box>
-      </CustomDialog>
-      <CustomDialog
-        open={rejectConfirmation?.value}
-        handleClose={() => {
-          rejectConfirmation?.onFalse();
-          setRejectionReason('');
-          setEditData(null);
-        }}
-        title="Reject Leave Request"
-      >
-        <Box sx={{ p: 2 }}>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            placeholder="Enter rejection reason"
-            onChange={(e) => {
-              setRejectionReason(e.target.value);
-            }}
-            value={rejectionReason}
-            sx={{ mb: 2 }}
-          />
-          <Box display="flex" justifyContent="flex-end" gap={2}>
-            <Button
-              variant="outlined"
-              onClick={handleClose}
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              variant="contained"
-              loading={isChangeStatusLoading}
-              startIcon={<Iconify icon={GlobalIcons.reject} />}
-              onClick={async () => {
-                await changeStatus({
-                  id: editData?.id,
-                  body: {
-                    status: EmployeeLeaveStatusType.Rejected,
-                    rejectionReason,
-                  },
-                });
-                rejectConfirmation?.onFalse();
-                setRejectionReason('');
-                setEditData(null);
-              }}
-            >
-              Reject
-            </LoadingButton>
+        {editData ? (
+          <LeaveRequestForm editData={editData} />
+        ) : (
+          <Box>
+            <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
           </Box>
-        </Box>
+        )}
       </CustomDialog>
+      {editData?.type && (
+        <CustomDialog
+          open={approveOrRejectConfirmation?.value}
+          handleClose={() => {
+            approveOrRejectConfirmation?.onFalse();
+            setRejectionReason('');
+            setEditData(null);
+          }}
+          title={
+            editData.type === EmployeeLeaveStatusType.Rejected
+              ? 'Reject Leave Request'
+              : 'Approve Leave Request'
+          }
+        >
+          <Box sx={{ p: 2 }}>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Remarks"
+              placeholder="Remarks"
+              onChange={(e) => {
+                setRejectionReason(e.target.value);
+              }}
+              value={rejectionReason}
+              sx={{ mb: 2 }}
+            />
+            <Box display="flex" justifyContent="flex-end" gap={2}>
+              <Button
+                variant="outlined"
+                onClick={handleClose}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                variant="contained"
+                loading={isChangeStatusLoading}
+                startIcon={
+                  <Iconify
+                    icon={
+                      editData.type === EmployeeLeaveStatusType.Rejected
+                        ? GlobalIcons.reject
+                        : GlobalIcons.approvedIcon
+                    }
+                  />
+                }
+                onClick={async () => {
+                  await changeStatus({
+                    id: editData?.id,
+                    body: {
+                      status: editData.type,
+                      rejectionReason,
+                    },
+                  });
+                  approveOrRejectConfirmation?.onFalse();
+                  setRejectionReason('');
+                  setEditData(null);
+                }}
+              >
+                {editData.type === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
+              </LoadingButton>
+            </Box>
+          </Box>
+        </CustomDialog>
+      )}
     </>
   );
 };

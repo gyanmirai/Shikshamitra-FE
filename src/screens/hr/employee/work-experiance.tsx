@@ -2,9 +2,8 @@ import React from 'react';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { Add, RemoveCircle } from '@mui/icons-material';
-import { Box, Button, Divider, TextField, IconButton } from '@mui/material';
+import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 
 const WorkExperiences = (props: any) => {
   const { formik, disabled } = props;
@@ -15,7 +14,6 @@ const WorkExperiences = (props: any) => {
       <Box display="flex" justifyContent="flex-end">
         <Button
           variant="contained"
-          color="primary"
           size="small"
           startIcon={<Add />}
           disabled={!!disabled}
@@ -29,144 +27,146 @@ const WorkExperiences = (props: any) => {
                 toDate: null,
                 department: '',
                 designation: '',
-                responsibilities: '',
-                references: '',
               },
             ]);
           }}
         >
-          Add
+          Experience
         </Button>
       </Box>
       {values.experiences.map((experience: any, index: number) => (
-        <Grid key={index} container spacing={1} flexWrap="wrap">
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              size="small"
-              name={`experiences.${index}.organizationName`}
-              label="Organization Name"
-              margin="normal"
-              value={experience.organizationName}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.organizationName`, val);
-              }}
-              disabled={!!disabled}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              size="small"
-              name={`experiences.${index}.organizationAddress`}
-              label="Organization Address"
-              margin="normal"
-              value={experience.organizationAddress}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.organizationAddress`, val);
-              }}
-              disabled={!!disabled}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <DatePicker
-              label="From Date"
-              name={`experiences.${index}.fromDate`}
-              value={experience.fromDate}
-              onChange={(date) => {
-                setFieldValue(`experiences.${index}.fromDate`, date);
-              }}
-              disabled={!!disabled}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  margin: 'normal',
-                  fullWidth: true,
-                },
-              }}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <DatePicker
-              label="To Date"
-              name={`experiences.${index}.toDate`}
-              value={experience.toDate}
-              onChange={(date) => {
-                setFieldValue(`experiences.${index}.toDate`, date);
-              }}
-              disabled={!!disabled}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  margin: 'normal',
-                  fullWidth: true,
-                },
-              }}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              size="small"
-              name={`experiences.${index}.department`}
-              label="Department"
-              margin="normal"
-              value={experience.department}
-              disabled={!!disabled}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.department`, val);
-              }}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              size="small"
-              name={`experiences.${index}.designation`}
-              label="Designation"
-              margin="normal"
-              value={experience.designation}
-              disabled={!!disabled}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.designation`, val);
-              }}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              name={`experiences.${index}.responsibilities`}
-              label="Responsibilities"
-              size="small"
-              margin="normal"
-              value={experience.responsibilities}
-              disabled={!!disabled}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.responsibilities`, val);
-              }}
-            />
-          </Grid>
-          <Grid xs={1.4375}>
-            <TextField
-              fullWidth
-              name={`experiences.${index}.references`}
-              label="References"
-              margin="normal"
-              size="small"
-              value={experience.references}
-              disabled={!!disabled}
-              onChange={(event) => {
-                const val = capitalize(event.target.value);
-                setFieldValue(`experiences.${index}.references`, val);
-              }}
-            />
-          </Grid>
-          <Grid xs={0.5} display="flex" alignItems="center">
+        <Paper
+          key={index}
+          elevation={3}
+          sx={{ display: 'flex', gap: 1, alignItems: 'center', position: 'relative', my: 2, p: 2 }}
+        >
+          <Box
+            sx={{
+              height: '24px',
+              minWidth: '24px',
+              borderRadius: '50%',
+              background: (theme) => theme.palette.primary.main,
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+            }}
+          >
+            {index + 1}
+          </Box>
+
+          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.organizationName`}
+                label="Organization Name"
+                value={experience.organizationName}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.organizationName`, val);
+                }}
+                disabled={!!disabled}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.organizationState`}
+                label="Organization State"
+                value={experience.organizationState}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.organizationState`, val);
+                }}
+                disabled={!!disabled}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.organizationCity`}
+                label="Organization City"
+                value={experience.organizationCity}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.organizationCity`, val);
+                }}
+                disabled={!!disabled}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <DatePicker
+                label="From Date"
+                name={`experiences.${index}.fromDate`}
+                format="DD/MM/YYYY"
+                value={experience.fromDate}
+                onChange={(date) => {
+                  setFieldValue(`experiences.${index}.fromDate`, date);
+                }}
+                disabled={!!disabled}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <DatePicker
+                label="To Date"
+                name={`experiences.${index}.toDate`}
+                format="DD/MM/YYYY"
+                value={experience.toDate}
+                onChange={(date) => {
+                  setFieldValue(`experiences.${index}.toDate`, date);
+                }}
+                disabled={!!disabled}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+
+                    fullWidth: true,
+                  },
+                }}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.department`}
+                label="Department"
+                value={experience.department}
+                disabled={!!disabled}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.department`, val);
+                }}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.designation`}
+                label="Designation"
+                value={experience.designation}
+                disabled={!!disabled}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.designation`, val);
+                }}
+              />
+            </Box>
+          </Box>
+          <Box sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
             <IconButton
               disabled={!!disabled}
               onClick={() => {
@@ -178,10 +178,8 @@ const WorkExperiences = (props: any) => {
             >
               <RemoveCircle sx={{ color: 'error.main' }} />
             </IconButton>
-          </Grid>
-          {/* <Grid xs={1.2}></Grid> */}
-          <Divider />
-        </Grid>
+          </Box>
+        </Paper>
       ))}
     </Box>
   );

@@ -4,8 +4,7 @@ import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
 
 import React, { useMemo } from 'react';
 
-import { Add } from '@mui/icons-material';
-import { Box, Tab, Button } from '@mui/material';
+import { Box, Tab } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
@@ -64,20 +63,6 @@ const LeaveRequest = () => {
           currentActiveComponent?.value === 'leaveRequest'
             ? 'On this screen, you can create new leave requests for employees. The screen also displays a list of all previously created requests, where you can approve or reject them as needed.'
             : 'The Leave Calendar provides a visual overview of all employee leave requests. You can view the leave status for each employee on specific dates and track approved, pending, or rejected leaves.'
-        }
-        action={
-          searchParams?.tab === 'leaveRequest' && (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Add />}
-              onClick={() => {
-                modal?.onTrue?.();
-              }}
-            >
-              Leave Request
-            </Button>
-          )
         }
       />
       <CustomTabs

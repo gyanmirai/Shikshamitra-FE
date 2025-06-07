@@ -12,6 +12,7 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Button,
   Tooltip,
   Checkbox,
   Typography,
@@ -21,6 +22,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -46,20 +48,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { LeavePolicyForm } from '../attendance-setting/leave-policy';
 
 import type { TabComponentType } from '.';
-
-export const leaveTypes = [
-  { value: 'sick', label: 'Sick Leave' },
-  { value: 'personal', label: 'Personal Leave' },
-  { value: 'maternity', label: 'Maternity Leave' },
-  { value: 'paternity', label: 'Paternity Leave' },
-  { value: 'bereavement', label: 'Bereavement Leave' },
-  { value: 'marriage', label: 'Marriage Leave' },
-  { value: 'study', label: 'Study Leave' },
-  { value: 'unpaid', label: 'Unpaid Leave' },
-  { value: 'compensatory', label: 'Compensatory Leave' },
-  { value: 'medical', label: 'Medical Leave' },
-  { value: 'emergency', label: 'Emergency Leave' },
-];
 
 // ----------------------------------------------------------------------
 
@@ -369,26 +357,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             />
           </Grid> */}
                 <Grid item xs={12}>
-                  <Upload
-                    {...uploadProps}
-                    thumbnail
-                    value={values.docs}
-                    onDrop={(acceptedFiles) => {
-                      const file = acceptedFiles[0];
-                      const reader = new FileReader();
-                      reader.readAsDataURL(file);
-                      reader.onload = () => {
-                        const base64String = reader.result;
-                        setFieldValue('docs', base64String);
-                      };
-                    }}
-                    multiple={false}
-                    onDelete={() => handleRemoveFile(setFieldValue)}
-                    onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
-                    disabled={editData}
-                  />
-                </Grid>
-                <Grid item xs={12}>
                   <ShakingTextField error={touched.description && Boolean(errors.description)}>
                     <Editor
                       onChange={(value) => {
@@ -408,6 +376,26 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       }}
                     />
                   </ShakingTextField>
+                </Grid>
+                <Grid item xs={12}>
+                  <Upload
+                    {...uploadProps}
+                    thumbnail
+                    value={values.docs}
+                    onDrop={(acceptedFiles) => {
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = () => {
+                        const base64String = reader.result;
+                        setFieldValue('docs', base64String);
+                      };
+                    }}
+                    multiple={false}
+                    onDelete={() => handleRemoveFile(setFieldValue)}
+                    onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                    disabled={editData}
+                  />
                 </Grid>
 
                 {/* <Grid item xs={12} display="flex" justifyContent="flex-end">
@@ -468,6 +456,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </Grid>
             </Scrollbar>
             <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                onClick={() => {
+                  handleClose?.();
+                }}
+              >
+                Cancel
+              </Button>
               {!editData && <SubmitButton loading={isLoading} />}
 
               {values.status === EmployeeLeaveStatusType.Rejected && (

@@ -6,17 +6,7 @@ import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import {
-  Box,
-  Grid,
-  Card,
-  Paper,
-  Button,
-  Avatar,
-  MenuList,
-  MenuItem,
-  Checkbox,
-} from '@mui/material';
+import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -26,6 +16,7 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
@@ -116,6 +107,8 @@ const HrEmployee = () => {
     doi: dayjs(item?.dateOfJoining, 'YYYY-MM-DD').format('DD-MM-YYYY'),
     roleValue: item?.role?.name || 'Not Assigned',
     statusValue: item?.employeeStatusType,
+    fullName: `${item?.lastName} ${item?.firstName} ${item?.middleName}`,
+    // employeeType: EmployeeGroupType[item?.employeeGroup],
   }));
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -148,10 +141,10 @@ const HrEmployee = () => {
         <>
           {' '}
           <CustomBreadcrumbs
-            heading="Employee"
+            heading="Employee List"
             links={[
-              { name: 'HR', href: '/hr/dashboard/' },
-              { name: 'Employee' },
+              { name: 'HR/Staff', href: '/hr/dashboard/' },
+              { name: 'Employee', href: '/hr/employee/' },
               { name: 'Employee List', href: '/hr/employee/' },
             ]}
             sx={{ px: 1, mb: 2 }}
@@ -191,10 +184,10 @@ const HrEmployee = () => {
                 </>
               }
               searchFieldProps={{
-                placeholder: 'Search by Employee Code, Name...',
-                label: 'Search by Employee Code, Name....',
+                placeholder: 'Search by Employee Name, Code...',
+                label: 'Search by Employee Name, Code....',
                 sx: {
-                  maxWidth: '400px',
+                  maxWidth: '350px',
                   width: '100%',
                 },
               }}
@@ -203,52 +196,52 @@ const HrEmployee = () => {
               isLoading={isLoading}
               tableId="employee-table"
               columns={[
+                // {
+                //   id: 'checkBox',
+                //   align: 'left',
+                //   minWidth: '60px',
+                //   isSort: false,
+                //   isFilter: false,
+                //   sticky: true,
+                //   label: '',
+                //   renderColumn() {
+                //     return (
+                //       <Checkbox
+                //         checked={
+                //           tableData?.length && selectedStudents?.length === tableData?.length
+                //         }
+                //         onChange={(e) => {
+                //           if (e.target.checked) {
+                //             setSelectedStudents(tableData || []);
+                //           } else {
+                //             setSelectedStudents([]);
+                //           }
+                //         }}
+                //       />
+                //     );
+                //   },
+                //   render(value, row) {
+                //     return (
+                //       <Checkbox
+                //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+                //         onChange={(e) => {
+                //           if (e.target.checked) {
+                //             setSelectedStudents([...selectedStudents, row]);
+                //           } else {
+                //             setSelectedStudents(
+                //               selectedStudents.filter((i: any) => i.id !== row.id)
+                //             );
+                //           }
+                //         }}
+                //       />
+                //     );
+                //   },
+                // },
                 {
-                  id: 'checkBox',
-                  align: 'left',
-                  minWidth: '60px',
-                  isSort: false,
-                  isFilter: false,
+                  id: 'fullName',
+                  label: 'Name',
+                  minWidth: '12vw',
                   sticky: true,
-                  label: '',
-                  renderColumn() {
-                    return (
-                      <Checkbox
-                        checked={
-                          tableData?.length && selectedStudents?.length === tableData?.length
-                        }
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedStudents(tableData || []);
-                          } else {
-                            setSelectedStudents([]);
-                          }
-                        }}
-                      />
-                    );
-                  },
-                  render(value, row) {
-                    return (
-                      <Checkbox
-                        checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedStudents([...selectedStudents, row]);
-                          } else {
-                            setSelectedStudents(
-                              selectedStudents.filter((i: any) => i.id !== row.id)
-                            );
-                          }
-                        }}
-                      />
-                    );
-                  },
-                },
-                { id: 'employeeCode', label: 'Employee Code', sticky: true, minWidth: '140px' },
-                {
-                  id: 'employeeName',
-                  label: 'Full Name',
-                  minWidth: 150,
                   align: 'left',
                   render(value, row) {
                     return (
@@ -263,18 +256,43 @@ const HrEmployee = () => {
                     );
                   },
                 },
+                {
+                  id: 'employeeCode',
+                  label: 'Employee Code',
+                  minWidth: '150px',
+                  align: 'left',
+                },
 
-                { id: 'dob', label: 'DOB', minWidth: 100, filterType: 'date' },
+                { id: 'dob', label: 'DOB', minWidth: 100, filterType: 'date', align: 'left' },
                 {
                   id: 'genderValue',
                   label: 'Gender',
+                  align: 'left',
                 },
-                { id: 'doi', label: 'Date Of Joining', minWidth: 150, filterType: 'date' },
-                { id: 'email', label: 'Email' },
-                { id: 'mobileNo', label: 'Mobile No', minWidth: 150 },
+                {
+                  id: 'doi',
+                  label: 'Joining Date',
+                  minWidth: 150,
+                  filterType: 'date',
+                  align: 'left',
+                },
+                { id: 'email', label: 'Email', align: 'left' },
+                { id: 'mobileNo', label: 'Mobile No', minWidth: 150, align: 'left' },
+                {
+                  id: 'employeeGroup',
+                  label: 'Employee Group',
+                  minWidth: '10vw',
+                  align: 'left',
+                  filterType: 'enum',
+                  enumOptions: EmployeeGroupTypeFilter,
+                  render(value, row) {
+                    return EmployeeGroupType[row?.employeeGroup];
+                  },
+                },
                 {
                   id: 'roleValue',
                   label: 'Role',
+                  align: 'left',
                   render(value, row) {
                     return <Label variant="soft">{value}</Label>;
                   },
