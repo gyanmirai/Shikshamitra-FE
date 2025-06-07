@@ -151,7 +151,7 @@ const HrEventsAndHolidaysScreen = () => {
         }
         description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pl: 1, my: 2 }}>
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
@@ -159,6 +159,10 @@ const HrEventsAndHolidaysScreen = () => {
           value={date}
           onChange={(newValue) => {
             setDate(newValue);
+          }}
+          sx={{
+            maxWidth: '400px',
+            width: '100%',
           }}
           slotProps={{
             textField: {

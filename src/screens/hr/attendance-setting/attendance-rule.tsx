@@ -122,23 +122,34 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         isLoading={isLoading}
         tableId="attendance-rule"
         columns={[
-          { label: 'Name', id: 'name' },
-          { label: 'Type', id: 'typeValue' },
-          { label: 'Late Threshold', id: 'lateThreshold', minWidth: '150px' },
-          { label: 'Late Threshold Unit', id: 'lateThresholdUnitValue', minWidth: '180px' },
-          { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '180px' },
-          { label: 'Half Day Threshold Unit', id: 'halfDayThresholdUnitValue', minWidth: '210px' },
+          { label: 'Name', id: 'name', align: 'left' },
+          { label: 'Type', id: 'typeValue', align: 'left' },
+          { label: 'Late Threshold', id: 'lateThreshold', minWidth: '150px', align: 'left' },
+          {
+            label: 'Late Threshold Unit',
+            id: 'lateThresholdUnitValue',
+            minWidth: '180px',
+            align: 'left',
+          },
+          { label: 'Half Day Threshold', id: 'halfDayThreshold', minWidth: '180px', align: 'left' },
+          {
+            label: 'Half Day Threshold Unit',
+            id: 'halfDayThresholdUnitValue',
+            minWidth: '210px',
+            align: 'left',
+          },
           {
             label: 'Enable Notification',
             id: 'enableNotification',
             minWidth: '180px',
             isFilter: false,
-
+            align: 'left',
             isSort: false,
           },
           {
             label: 'Actions',
             id: 'action',
+            align: 'left',
             isFilter: false,
             sticky: true,
             isSort: false,

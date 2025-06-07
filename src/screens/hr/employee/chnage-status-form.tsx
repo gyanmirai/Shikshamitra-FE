@@ -60,7 +60,7 @@ const ChangeStatusForm = ({
             onChange={(val) => {
               formik.setFieldValue('status', val);
             }}
-            label="Change Status"
+            label="Select Status"
             formControlProps={{
               fullWidth: true,
               sx: {
@@ -87,8 +87,13 @@ const ChangeStatusForm = ({
         >
           Cancel
         </Button>
-        <LoadingButton loading={isLoading} variant="contained" type="submit">
-          Change Status
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          loading={isLoading}
+          variant="contained"
+          type="submit"
+        >
+          Update
         </LoadingButton>
       </DialogActions>
     </Box>

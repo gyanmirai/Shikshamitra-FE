@@ -25,6 +25,60 @@ function FatherAddressComponent(props: any) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
+        >
+          <TextField
+            name="fatherAddress1"
+            label="Building/Flat/House No"
+            value={formik.values.fatherAddress1}
+            onChange={formik.handleChange}
+            error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
+            helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
+        >
+          <TextField
+            name="fatherAddress2"
+            label="Street/Road Name"
+            value={formik.values.fatherAddress2}
+            onChange={formik.handleChange}
+            error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
+            helperText={formik.touched.fatherAddress2 && formik.errors.fatherAddress2}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
+        >
+          <TextField
+            name="fatherAddress3"
+            label="Area/Locality/Landmark"
+            value={formik.values.fatherAddress3}
+            onChange={formik.handleChange}
+            error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
+            helperText={formik.touched.fatherAddress3 && formik.errors.fatherAddress3}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
         <CountryComponent
           value={formik.values.fatherCountry}
           onChange={(_e: any, value: any) => {
@@ -79,60 +133,6 @@ function FatherAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
-        >
-          <TextField
-            name="fatherAddress1"
-            label="Father Address 1"
-            value={formik.values.fatherAddress1}
-            onChange={formik.handleChange}
-            error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
-            helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
-        >
-          <TextField
-            name="fatherAddress2"
-            label="Father Address 2"
-            value={formik.values.fatherAddress2}
-            onChange={formik.handleChange}
-            error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
-            helperText={formik.touched.fatherAddress2 && formik.errors.fatherAddress2}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
-        >
-          <TextField
-            name="fatherAddress3"
-            label="Father Address 3"
-            value={formik.values.fatherAddress3}
-            onChange={formik.handleChange}
-            error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
-            helperText={formik.touched.fatherAddress3 && formik.errors.fatherAddress3}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
     </Grid>
   );
 }
@@ -165,6 +165,60 @@ function MotherAddressComponent(props: any) {
           }
           label="Same as Father Address"
         />
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
+        >
+          <TextField
+            name="motherAddress1"
+            label="Building/Flat/House No"
+            value={formik.values.motherAddress1}
+            onChange={formik.handleChange}
+            error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
+            helperText={formik.touched.motherAddress1 && formik.errors.motherAddress1}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
+        >
+          <TextField
+            name="motherAddress2"
+            label="Street/Road Name"
+            value={formik.values.motherAddress2}
+            onChange={formik.handleChange}
+            error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
+            helperText={formik.touched.motherAddress2 && formik.errors.motherAddress2}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
+        >
+          <TextField
+            name="motherAddress3"
+            label="Area/Locality/Landmark"
+            value={formik.values.motherAddress3}
+            onChange={formik.handleChange}
+            error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
+            helperText={formik.touched.motherAddress3 && formik.errors.motherAddress3}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -222,60 +276,6 @@ function MotherAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
-        >
-          <TextField
-            name="motherAddress1"
-            label="Mother Address 1"
-            value={formik.values.motherAddress1}
-            onChange={formik.handleChange}
-            error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
-            helperText={formik.touched.motherAddress1 && formik.errors.motherAddress1}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
-        >
-          <TextField
-            name="motherAddress2"
-            label="Mother Address 2"
-            value={formik.values.motherAddress2}
-            onChange={formik.handleChange}
-            error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
-            helperText={formik.touched.motherAddress2 && formik.errors.motherAddress2}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
-        >
-          <TextField
-            name="motherAddress3"
-            label="Mother Address 3"
-            value={formik.values.motherAddress3}
-            onChange={formik.handleChange}
-            error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
-            helperText={formik.touched.motherAddress3 && formik.errors.motherAddress3}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
     </Grid>
   );
 }
@@ -308,6 +308,60 @@ function SpouseAddressComponent(props: any) {
           }
           label="Same as Father Address"
         />
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
+        >
+          <TextField
+            name="spouseAddress1"
+            label="Building/Flat/House No"
+            value={formik.values.spouseAddress1}
+            onChange={formik.handleChange}
+            error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
+            helperText={formik.touched.spouseAddress1 && formik.errors.spouseAddress1}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
+        >
+          <TextField
+            name="spouseAddress2"
+            label="Street/Road Name"
+            value={formik.values.spouseAddress2}
+            onChange={formik.handleChange}
+            error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
+            helperText={formik.touched.spouseAddress2 && formik.errors.spouseAddress2}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <ShakingTextField
+          error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
+        >
+          <TextField
+            name="spouseAddress3"
+            label="Area/Locality/Landmark"
+            value={formik.values.spouseAddress3}
+            onChange={formik.handleChange}
+            error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
+            helperText={formik.touched.spouseAddress3 && formik.errors.spouseAddress3}
+            fullWidth
+            size="small"
+            disabled={!!disabled}
+          />
+        </ShakingTextField>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -365,60 +419,6 @@ function SpouseAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
-        >
-          <TextField
-            name="spouseAddress1"
-            label="Spouse Address 1"
-            value={formik.values.spouseAddress1}
-            onChange={formik.handleChange}
-            error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
-            helperText={formik.touched.spouseAddress1 && formik.errors.spouseAddress1}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
-        >
-          <TextField
-            name="spouseAddress2"
-            label="Spouse Address 2"
-            value={formik.values.spouseAddress2}
-            onChange={formik.handleChange}
-            error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
-            helperText={formik.touched.spouseAddress2 && formik.errors.spouseAddress2}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <ShakingTextField
-          error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
-        >
-          <TextField
-            name="spouseAddress3"
-            label="Spouse Address 3"
-            value={formik.values.spouseAddress3}
-            onChange={formik.handleChange}
-            error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
-            helperText={formik.touched.spouseAddress3 && formik.errors.spouseAddress3}
-            fullWidth
-            size="small"
-            disabled={!!disabled}
-          />
-        </ShakingTextField>
-      </Grid>
     </Grid>
   );
 }
@@ -464,8 +464,8 @@ const FamilyMemberSection = ({
             <TextField
               name={`${type}Name`}
               value={formik.values[`${type}Name`]}
-              label={`${capitalizedType} Name *`}
-              placeholder={`Enter ${capitalizedType} Name *`}
+              label={`${capitalizedType} Name `}
+              placeholder={`Enter ${capitalizedType} Name `}
               onChange={(e) => {
                 const value = capitalize(e.target.value);
                 formik.setFieldValue(`${type}Name`, value);
@@ -507,7 +507,7 @@ const FamilyMemberSection = ({
             <PhoneInput
               name={`${type}ContactNo`}
               value={formik.values[`${type}ContactNo`]}
-              label={`${capitalizedType} Contact No.${type === 'father' ? ' *' : ''}`}
+              label={`${capitalizedType} Contact No.`}
               onChange={(value) => {
                 formik.setFieldValue(`${type}ContactNo`, value);
               }}

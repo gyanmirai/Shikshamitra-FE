@@ -3,15 +3,15 @@ import type { LabelColor } from 'src/components/label';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-import { Box, Skeleton, IconButton } from '@mui/material';
+import { Box, Tooltip, Skeleton, IconButton } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
-import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetDocumentsQuery } from 'src/redux/document/documentApi';
+import { DocumentType, DocumentFileType, convertFileAcceptType } from 'src/enums/documnet-type';
 import { DocumentStatusOptions, DocumentStatusTypeColors } from 'src/enums/document-statusType';
 import {
   useUploadDocumentsMutation,
@@ -20,10 +20,10 @@ import {
   useEmployeeUpdateDocumentMutation,
 } from 'src/redux/employee/employeeApi';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface ViewDocumentsProps {
@@ -39,13 +39,30 @@ const ViewDocuments = ({ employeeId, docId }: ViewDocumentsProps) => {
   });
 
   return (
-    <Box>
+    <Box
+      height="60vh"
+      width="100%"
+      sx={{
+        '& iframe img': {
+          height: '100%',
+        },
+      }}
+    >
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <iframe
+        <Box
+          component="iframe"
           src={convertBase64Format(documents.content)}
-          style={{ width: '100%', height: 500 }}
+          sx={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            objectFit: 'contain',
+            '& img': {
+              height: '100%',
+            },
+          }}
           title="Employee Document"
         />
       )}
@@ -100,8 +117,8 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
       <CustomizableTable
         noDataText={<>No Certificate Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Document Type, Name, Status..',
-          label: 'Search by Document Type, Name, Status...',
+          placeholder: 'Search by Document Type, Name...',
+          label: 'Search by Document Type, Name...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -125,7 +142,20 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
               const color = DocumentStatusTypeColors[
                 row.statusVal as keyof typeof DocumentStatusTypeColors
               ] as LabelColor;
-              return <Label color={color}>{value}</Label>;
+              return (
+                <Tooltip title={row.statusVal}>
+                  <Iconify
+                    icon={row.statusVal === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                    height={20}
+                    width={20}
+                    sx={{
+                      color: (theme) =>
+                        row.statusVal === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                      cursor: 'pointer',
+                    }}
+                  />
+                </Tooltip>
+              );
             },
           },
           {
@@ -138,6 +168,20 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                 <UploadButton
                   onChange={async (e) => {
                     const file = e.target.files[0];
+                    if (!file) return;
+                    const acceptableFileFormats: string[] = [];
+
+                    row.documentTypes.forEach((item: number) => {
+                      acceptableFileFormats.push(
+                        DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
+                      );
+                    });
+                    if (!acceptableFileFormats.includes(file?.type)) {
+                      shikshaMitraToast.error({
+                        message: `Please upload ${row.docType} file`,
+                      });
+                      return;
+                    }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
                     const formData = new FormData();
                     formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
@@ -154,12 +198,15 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                         loading: `Uploading Document ${row.documentName} `,
                         success: () => `Upload Successfully!`,
                         error: 'Error',
-                        closeButton: false,
+                        closeButton: true,
                       }
                     );
                   }}
+                  fileInputProps={{
+                    accept: convertFileAcceptType(row.documentTypes),
+                  }}
                 >
-                  <Iconify icon="ri:file-upload-fill" />
+                  <Iconify icon="ci:file-upload" />
                 </UploadButton>
               );
             },

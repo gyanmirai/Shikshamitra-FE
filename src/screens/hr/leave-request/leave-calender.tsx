@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 
-import { Box, Grid, useTheme, Typography } from '@mui/material';
+import { Grid, useTheme, Typography } from '@mui/material';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
@@ -53,6 +53,8 @@ const LeaveCalender = (props: TabComponentType) => {
         textColor: i.leavePolicy.color,
         title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
         description: i.description.replace(/<[^>]+>/g, ''),
+        viewStartDate: i.startDate,
+        viewEndDate: i.endDate,
         ...(i.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
       })) || [],
     [data?.items, employee?.id]
@@ -63,8 +65,6 @@ const LeaveCalender = (props: TabComponentType) => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-
-  console.log('currentDateClick', editData);
 
   return (
     <>
@@ -88,13 +88,15 @@ const LeaveCalender = (props: TabComponentType) => {
 
 export default LeaveCalender;
 
-const LeaveRequestForm = ({ editData }: any) => (
+export const LeaveRequestForm = ({ editData }: any) => (
   <Grid container spacing={2} bgcolor="background.neutral" m={0} p={2}>
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Employee</Typography>
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      {editData?.employee?.firstName} {editData?.employee?.lastName}
+      <Typography variant="body2">
+        {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
+      </Typography>
     </Grid>
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Leave Type</Typography>
@@ -103,14 +105,8 @@ const LeaveRequestForm = ({ editData }: any) => (
       {editData?.leavePolicy?.leaveType && (
         <Typography
           variant="body2"
-          component="span"
-          color={editData?.leavePolicy?.color}
-          sx={{
-            backgroundColor: `${editData?.leavePolicy?.color}20`,
-            p: 0.8,
-            borderRadius: 1,
-            fontSize: 12,
-          }}
+
+          // color={editData?.leavePolicy?.color}
         >
           {editData?.leavePolicy?.leaveType}
         </Typography>
@@ -120,13 +116,16 @@ const LeaveRequestForm = ({ editData }: any) => (
       <Typography variant="body2"> Half Day</Typography>
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      {editData?.halfDay ? 'Yes' : 'No'}
+      <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
     </Grid>
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Start Date</Typography>
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      {dayjs(editData?.startDate).format('DD-MM-YYYY')}
+      <Typography variant="body2">
+        {' '}
+        {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
+      </Typography>
     </Grid>
     {!editData?.halfDay && (
       <>
@@ -135,7 +134,9 @@ const LeaveRequestForm = ({ editData }: any) => (
           <Typography variant="body2"> End Date</Typography>
         </Grid>
         <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-          {dayjs(editData?.endDate).format('DD-MM-YYYY')}
+          <Typography variant="body2">
+            {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
+          </Typography>
         </Grid>{' '}
       </>
     )}
@@ -143,14 +144,14 @@ const LeaveRequestForm = ({ editData }: any) => (
       <Typography variant="body2"> Description</Typography>
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Box dangerouslySetInnerHTML={{ __html: editData?.description }} />
+      <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
     </Grid>
     {editData?.rejectionReason && (
       <>
         <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
           <Typography variant="body2"> Rejection Reason</Typography>
         </Grid>
-        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+        <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
           <Typography variant="body2"> {editData.rejectionReason}</Typography>
         </Grid>
       </>

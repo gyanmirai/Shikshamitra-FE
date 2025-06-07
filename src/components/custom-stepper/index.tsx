@@ -15,6 +15,7 @@ import {
   stepConnectorClasses,
 } from '@mui/material';
 
+import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 
 // const steps = ['Personal Information', 'Contact Information', 'Review'];
@@ -43,6 +44,7 @@ interface CustomStepperWithFormikProps {
   activeStep: number;
   initialValues: any;
   steps: string[];
+  validateOnChange?: boolean;
   handleNext: (
     isLastStep: boolean,
     value: any,
@@ -111,6 +113,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   renderItem,
   onStepClick = () => {},
   errors = [],
+  validateOnChange = false,
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -123,6 +126,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       setIsBackClick(false);
       handleNext(activeStep === steps.length - 1, values, formik, setIsLoading);
     },
+    validateOnChange,
   });
 
   return (
@@ -203,6 +207,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               setIsBackClick(true);
               handleBack();
             }}
+            startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
           >
             Back
           </Button>
@@ -212,6 +217,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             type="submit"
             size="small"
             loading={isLoading}
+            endIcon={
+              activeStep === steps.length - 1 ? undefined : (
+                <Iconify icon="ic:round-arrow-forward" width={20} />
+              )
+            }
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </LoadingButton>

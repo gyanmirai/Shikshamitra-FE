@@ -1,5 +1,3 @@
-import { TextField, Autocomplete } from '@mui/material';
-
 import { RenderPfRules } from './RenderPfRules';
 
 import type { FieldsType } from './types';
@@ -73,33 +71,6 @@ export const PayrollFields: FieldsType[] = [
     label: 'Punch Id',
     name: 'punchId',
     placeholder: 'Enter Punch Id',
-  },
-  {
-    type: 'text',
-    label: 'Shift Name',
-    name: 'shiftName',
-    placeholder: 'Enter Shift Name',
-    renderComp(props) {
-      return (
-        <Autocomplete
-          options={[]}
-          disabled={!!props.disabled}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select Shift"
-              placeholder="Search Select Shift"
-              size="small"
-              fullWidth
-              sx={{ width: '100%', minWidth: 'unset' }}
-            />
-          )}
-          onChange={(e, value) => {
-            // formik.setFieldValue('examType', value?.id);
-          }}
-        />
-      );
-    },
   },
   {
     type: 'text',

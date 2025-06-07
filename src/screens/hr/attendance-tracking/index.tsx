@@ -27,7 +27,6 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
-import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
@@ -50,8 +49,16 @@ const AttendanceTrackingScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
   const { employee } = useSelector((store: any) => store.auth);
   const MAIN_TABS = [
-    { value: 'dateWise', label: 'Date Wise' },
-    { value: 'employeeWise', label: 'Employee Wise' },
+    {
+      value: 'dateWise',
+      label: 'Date Wise',
+      icon: <Iconify icon="lets-icons:date-today-duotone" width={20} />,
+    },
+    {
+      value: 'employeeWise',
+      label: 'Employee Wise',
+      icon: <Iconify icon="uim:user-md" width={20} />,
+    },
   ];
   const role = employee?.role?.name;
   return (
@@ -74,11 +81,13 @@ const AttendanceTrackingScreen = () => {
             <CustomTabs
               value={searchParams.tab}
               onChange={(e, value) => setSearchParams({ tab: value })}
-              variant="fullWidth"
-              slotProps={{ tab: { px: 0 } }}
+              // variant="fullWidth"
+              role="tablist"
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              // slotProps={{ tab: { px: 0 } }}
             >
               {MAIN_TABS.map((tab) => (
-                <Tab key={tab.value} value={tab.value} label={tab.label} />
+                <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
               ))}
             </CustomTabs>
           </Card>
@@ -267,43 +276,43 @@ const DateWise = ({
         tableId="employee-attendance-table"
         isLoading={isLoading}
         columns={[
-          {
-            id: 'checkBox',
-            align: 'left',
-            minWidth: '60px',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '60px',
+          //   sticky: true,
+          //   isSort: false,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(tableData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           { id: 'employeeName', label: 'Name', minWidth: '8vw', align: 'left', sticky: true },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
@@ -574,7 +583,7 @@ const EmployeeWise = ({
             sx={{
               maxWidth: 280,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+              // backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
               color: (theme) => theme.palette.success.main,
               display: 'flex',
               alignItems: 'center',
@@ -595,7 +604,7 @@ const EmployeeWise = ({
               maxWidth: 280,
               p: 2,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              // backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
               color: (theme) => theme.palette.error.main,
               display: 'flex',
               alignItems: 'center',
@@ -614,7 +623,7 @@ const EmployeeWise = ({
               maxWidth: 280,
               p: 2,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              // backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
               color: (theme) => theme.palette.warning.main,
               display: 'flex',
               alignItems: 'center',

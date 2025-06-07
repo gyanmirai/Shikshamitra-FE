@@ -56,7 +56,7 @@ export function NavVertical({
     <>
       {slots?.topArea ?? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5 }}>
-          <Logo />
+          <Logo href="/dashboard" />
         </Box>
       )}
 

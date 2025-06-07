@@ -8,6 +8,7 @@ import { Box, Grid, Slide, TextField } from '@mui/material';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
+import { GenderType } from 'src/enums/gender';
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
@@ -43,7 +44,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
   familyCast: editData ? editData.familyCast : '',
   castType: editData ? editData.castType : '',
-  gender: editData ? editData.genderType : '',
+  gender: editData ? editData.genderType : GenderType.Male,
   religion: editData ? editData.religion : '',
   maritalStatus: editData ? editData.maritalStatus : '',
   bloodGroup: editData ? editData.bloodGroup : '',
@@ -51,7 +52,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   email: editData ? editData.email : '',
   department: editData ? editData.department : '',
   designation: editData ? editData.designation : '',
-  dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : null,
+  dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : dayjs(),
   employeeGroup: editData ? editData.employeeGroup : '',
   qualification: editData ? editData.qualification : '',
   role: editData ? editData?.role?.id : '',
@@ -69,7 +70,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   pincode: editData ? editData?.pinCode : '',
   employeeId: editData ? editData.id : '',
   organization: editData ? editData?.educationMediumStageId : '',
-  shift: editData ? editData?.shift : '',
+  shift: editData ? editData?.shift?.id : '',
 });
 
 export const familyInformationInitialValues = (editData: any) => ({
@@ -410,7 +411,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
             pincode: `${values.pincode}`,
             educationMediumStageId: values.organization,
-            shift: values.shift,
+            shiftId: values.shift,
           },
         }).unwrap();
 
@@ -436,6 +437,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           setActiveStep(step);
         }
       }}
+      validateOnChange
       handleNext={async (isLastStep, values, formik, setIsLoading) => {
         const isChanged = isEqual(values, initialValues);
 

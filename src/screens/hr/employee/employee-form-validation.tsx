@@ -18,7 +18,7 @@ const personalInformationValidationSchema = Yup.object({
   maritalStatus: Yup.string().required('Marital status is required'),
   bloodGroup: Yup.string(),
   mobileNo: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
+    .test('mobileNo', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
     .required('Mobile number is required'),
   email: Yup.string().email('Invalid email').required('Email is required'),
   department: Yup.string(),
@@ -44,23 +44,22 @@ const personalInformationValidationSchema = Yup.object({
     .shape({ name: Yup.string().required('State is required') })
     .default(() => ({ name: '' }))
     .required('State is required'),
-  pincode: Yup.number()
-    .test('picode', 'Must be exactly 6 numbers', (value) => !!`${value}`.match(/\b\d{6}\b/))
-
-    .required('Pin code is required'),
+  pincode: Yup.number().test('picode', 'Must be exactly 6 numbers', (value) =>
+    value ? !!`${value}`.match(/\b\d{6}\b/) : true
+  ),
   organization: Yup.string().required('Organization is required'),
   shift: Yup.string().required('Shift is required'),
   //   employeeId: Yup.string().required('Employee ID is required'),
 });
 
 const familyInformationValidationSchema = Yup.object({
-  fatherName: Yup.string().required('Father name is required'),
+  fatherName: Yup.string().nullable(),
   //   fatherOccupation: Yup.string().required('Father occupation is required'),
   fatherContactNo: Yup.string()
     .test('Mobile NO', 'mobile number is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     )
-    .required('Mobile number is required'),
+    .nullable(),
   // fatherAddress1: Yup.string(),
   // fatherAddress2: Yup.string(),
 
