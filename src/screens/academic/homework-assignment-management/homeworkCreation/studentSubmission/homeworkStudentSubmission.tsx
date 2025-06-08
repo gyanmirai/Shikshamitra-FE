@@ -164,24 +164,24 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             label: 'Submission Date',
             align: 'left',
           },
-          {
-            id: 'marks',
-            label: 'Marks',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
-                </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
-          },
-          {
-            id: 'totalMarks',
-            label: 'Total Marks',
-          },
+          // {
+          //   id: 'marks',
+          //   label: 'Marks',
+          //   render: (value, row) =>
+          //     value === '' ? (
+          //       <Typography variant="subtitle2" color="textSecondary">
+          //         -
+          //       </Typography>
+          //     ) : (
+          //       <Typography variant="caption" gutterBottom>
+          //         {value}
+          //       </Typography>
+          //     ),
+          // },
+          // {
+          //   id: 'totalMarks',
+          //   label: 'Total Marks',
+          // },
           {
             id: 'feedback',
             label: 'Feedback',
@@ -198,7 +198,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
           {
             id: 'marksStatus',
-            label: 'Marks Status',
+            label: 'Feedback Status',
             sticky: true,
             filterType: 'enum',
             enumOptions: ScheduleExamStatusOptions,
@@ -222,7 +222,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
           {
             id: 'actions',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
             align: 'center',
@@ -244,7 +244,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             studentName: 'Aarav Mehta',
             homework: 'Math Assignment 1',
             homeworkType: 'Assignment',
-            submissionType: 'Online',
+            submissionType: 'online_text',
             submissionDate: '20-05-2025',
             marks: 18,
             totalMarks: 20,
@@ -258,7 +258,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             studentName: 'Nisha Patel',
             homework: 'Science Homework',
             homeworkType: 'Homework',
-            submissionType: 'File Upload',
+            submissionType: 'file_upload',
             submissionDate: '19-05-2025',
             marks: 30,
             totalMarks: 35,
@@ -272,7 +272,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             studentName: 'Ravi Shah',
             homework: 'English Essay',
             homeworkType: 'Essay',
-            submissionType: 'Online',
+            submissionType: 'online_text',
             submissionDate: '18-05-2025',
             marks: 15,
             totalMarks: 25,
@@ -286,7 +286,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             studentName: 'Sneha Desai',
             homework: 'History Worksheet',
             homeworkType: 'Worksheet',
-            submissionType: 'File Upload',
+            submissionType: 'file_upload',
             submissionDate: '',
             marks: 0,
             totalMarks: 30,
@@ -311,7 +311,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={selectedStudent ? 'Edit Feedback' : 'Add Feedback'}
         maxWidth="sm"
       >
-        {selectedHomework?.submissionType === 'file_upload' ? (
+        {selectedStudent?.submissionType === 'file_upload' ? (
           <AssignGrade data={selectedStudent} onClose={handleClose} isEdit />
         ) : (
           <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />

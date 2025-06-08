@@ -1,173 +1,17 @@
 [
   {
     "id": 1,
-    "status": "Draft",
-    "className": "10th Grade",
-    "subjectName": "Science",
-    "subjectType": "elective",
-    "subjects": [
-      {
-        "id": 101,
-        "subjectName": "Physics",
-        "subjectCode": "PHY-10",
-        "primaryTeacher": "teacher_1",
-        "secondaryTeacher": ["teacher_2", "teacher_3"],
-        "prerequisites": "Basic understanding of Mathematics",
-        "learningGoal": "Learn the fundamentals of Physics.",
-        "description": "This subject covers classical mechanics, thermodynamics, and electromagnetism.",
-        "isSubjectOpen": true,
-        "subjectColor": "#1E90FF"
-      },
-      {
-        "id": 102,
-        "subjectName": "Chemistry",
-        "subjectCode": "CHEM-10",
-        "primaryTeacher": "teacher_4",
-        "secondaryTeacher": ["teacher_2", "teacher_3"],
-        "prerequisites": "Basic Science knowledge",
-        "learningGoal": "Master fundamental chemical concepts",
-        "description": "Study of atomic structure, chemical bonding, and basic reactions",
-        "isSubjectOpen": true,
-        "subjectColor": "#32CD32"
-      },
-      {
-        "id": 103,
-        "subjectName": "Biology",
-        "subjectCode": "BIO-10",
-        "primaryTeacher": "teacher_7",
-        "secondaryTeacher": ["teacher_8"],
-        "prerequisites": "Basic Science knowledge",
-        "learningGoal": "Understand living systems and organisms",
-        "description": "Study of cells, genetics, and human anatomy",
-        "isSubjectOpen": true,
-        "subjectColor": "#FF7F50"
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "status": "Published", 
-    "className": "10th Grade",
-    "subjectName": "Mathematics",
-    "subjectType": "core",
-    "subjects": [
-      {
-        "id": 201,
-        "subjectName": "Mathematics",
-        "subjectCode": "MATH-10",
-        "primaryTeacher": "teacher_5",
-        "secondaryTeacher": ["teacher_6"],
-        "prerequisites": "Basic Arithmetic",
-        "learningGoal": "Understand algebra, geometry, and basic trigonometry.",
-        "description": "This subject covers algebraic equations, geometry concepts, and introductory trigonometry.",
-        "isSubjectOpen": true,
-        "subjectColor": "#DEB887"
-      }
-    ]
-  },
-  {
-    "id": 3,
-    "status": "Draft",
-    "className": "11th Grade", 
-    "subjectName": "Languages",
-    "subjectType": "elective",
-    "subjects": [
-      {
-        "id": 301,
-        "subjectName": "French",
-        "subjectCode": "FRE-11",
-        "primaryTeacher": "teacher_10",
-        "secondaryTeacher": ["teacher_11"],
-        "prerequisites": "None",
-        "learningGoal": "Achieve basic French language proficiency.",
-        "description": "Introduction to French vocabulary, grammar, and conversation.",
-        "isSubjectOpen": true,
-        "subjectColor": "#DC143C"
-      },
-      {
-        "id": 302,
-        "subjectName": "Spanish",
-        "subjectCode": "SPA-11",
-        "primaryTeacher": "teacher_12",
-        "secondaryTeacher": ["teacher_13"],
-        "prerequisites": "None",
-        "learningGoal": "Develop Spanish language skills",
-        "description": "Introduction to Spanish grammar, vocabulary, and culture",
-        "isSubjectOpen": true,
-        "subjectColor": "#FF8C00"
-      },
-      {
-        "id": 303,
-        "subjectName": "German",
-        "subjectCode": "GER-11",
-        "primaryTeacher": "teacher_14",
-        "secondaryTeacher": ["teacher_15"],
-        "prerequisites": "None",
-        "learningGoal": "Learn basic German communication",
-        "description": "Study of German language fundamentals and culture",
-        "isSubjectOpen": true,
-        "subjectColor": "#4682B4"
-      }
-    ]
-  },
-  {
-    "id": 4,
-    "status": "Published",
-    "className": "11th Grade",
-    "subjectName": "Arts",
-    "subjectType": "elective",
-    "subjects": [
-      {
-        "id": 401,
-        "subjectName": "Fine Arts",
-        "subjectCode": "ART-11",
-        "primaryTeacher": "teacher_14",
-        "secondaryTeacher": ["teacher_15"],
-        "prerequisites": "None",
-        "learningGoal": "Develop artistic skills and creativity.",
-        "description": "Exploration of various art mediums, techniques, and art history.",
-        "isSubjectOpen": true,
-        "subjectColor": "#8A2BE2"
-      },
-      {
-        "id": 402,
-        "subjectName": "Sculpture",
-        "subjectCode": "SCUL-11",
-        "primaryTeacher": "teacher_16",
-        "secondaryTeacher": ["teacher_17"],
-        "prerequisites": "Basic art skills",
-        "learningGoal": "Master 3D art techniques",
-        "description": "Creating art through various sculpting methods and materials",
-        "isSubjectOpen": true,
-        "subjectColor": "#BA55D3"
-      },
-      {
-        "id": 403,
-        "subjectName": "Digital Arts",
-        "subjectCode": "DART-11",
-        "primaryTeacher": "teacher_18",
-        "secondaryTeacher": ["teacher_19"],
-        "prerequisites": "Basic computer skills",
-        "learningGoal": "Learn digital art creation",
-        "description": "Digital illustration, animation, and graphic design",
-        "isSubjectOpen": true,
-        "subjectColor": "#9932CC"
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "status": "Draft",
-    "className": "12th Grade",
-    "subjectName": "Computer Science",
-    "subjectType": "elective",
+    "status": 1,
+    "className": "12",
+    "subjectName": "Elective 1",
+    "subjectType": "Elective",
     "subjects": [
       {
         "id": 501,
         "subjectName": "Programming",
         "subjectCode": "CS-12",
-        "primaryTeacher": "teacher_16",
-        "secondaryTeacher": ["teacher_17"],
+        "primaryTeacher": "James Wilson",
+        "secondaryTeacher": ["Kevin Park"],
         "prerequisites": "Basic computer knowledge",
         "learningGoal": "Learn programming fundamentals.",
         "description": "Introduction to programming concepts and algorithms.",
@@ -175,65 +19,11 @@
         "subjectColor": "#4169E1"
       },
       {
-        "id": 502,
-        "subjectName": "Web Development",
-        "subjectCode": "WEB-12",
-        "primaryTeacher": "teacher_18",
-        "secondaryTeacher": ["teacher_19"],
-        "prerequisites": "Basic programming knowledge",
-        "learningGoal": "Master web development basics",
-        "description": "HTML, CSS, JavaScript, and responsive design",
-        "isSubjectOpen": true,
-        "subjectColor": "#1E90FF"
-      },
-      {
-        "id": 503,
-        "subjectName": "Database Management",
-        "subjectCode": "DB-12",
-        "primaryTeacher": "teacher_20",
-        "secondaryTeacher": ["teacher_21"],
-        "prerequisites": "Basic SQL knowledge",
-        "learningGoal": "Learn database design and management",
-        "description": "SQL, database design, and data modeling",
-        "isSubjectOpen": true,
-        "subjectColor": "#00BFFF"
-      }
-    ]
-  },
-  {
-    "id": 6,
-    "status": "Published",
-    "className": "12th Grade",
-    "subjectName": "Business Studies",
-    "subjectType": "core",
-    "subjects": [
-      {
-        "id": 601,
-        "subjectName": "Economics",
-        "subjectCode": "ECO-12",
-        "primaryTeacher": "teacher_18",
-        "secondaryTeacher": ["teacher_19"],
-        "prerequisites": "None",
-        "learningGoal": "Understand basic economic principles.",
-        "description": "Study of micro and macroeconomics concepts.",
-        "isSubjectOpen": true,
-        "subjectColor": "#20B2AA"
-      }
-    ]
-  },
-  {
-    "id": 7,
-    "status": "Draft",
-    "className": "12th Grade",
-    "subjectName": "Physical Education",
-    "subjectType": "core",
-    "subjects": [
-      {
         "id": 701,
-        "subjectName": "Sports Science",
+        "subjectName": "Physical Training",
         "subjectCode": "PE-12",
-        "primaryTeacher": "teacher_20",
-        "secondaryTeacher": ["teacher_21"],
+        "primaryTeacher": "Mark Johnson",
+        "secondaryTeacher": ["Laura Phillips"],
         "prerequisites": "Good physical fitness",
         "learningGoal": "Learn about sports and fitness.",
         "description": "Study of physical fitness, sports theory, and nutrition.",
@@ -243,23 +33,140 @@
     ]
   },
   {
-    "id": 8,
-    "status": "Published",
-    "className": "12th Grade",
-    "subjectName": "Music",
-    "subjectType": "core",
+    "id": 2,
+    "status": 1,
+    "className": "12",
+    "subjectName": "Elective 2",
+    "subjectType": "Elective",
     "subjects": [
       {
-        "id": 801,
-        "subjectName": "Music Theory",
-        "subjectCode": "MUS-12",
-        "primaryTeacher": "teacher_22",
-        "secondaryTeacher": ["teacher_23"],
-        "prerequisites": "Basic music knowledge",
-        "learningGoal": "Develop musical understanding and skills.",
-        "description": "Study of music theory, composition, and performance.",
+        "id": 901,
+        "subjectName": "Hindi",
+        "subjectCode": "HIN-12",
+        "primaryTeacher": "Anita Sharma",
+        "secondaryTeacher": ["Vikram Patel"],
+        "prerequisites": "None",
+        "learningGoal": "Gain proficiency in Hindi language.",
+        "description": "Advanced grammar, literature, and composition in Hindi.",
         "isSubjectOpen": true,
-        "subjectColor": "#9370DB"
+        "subjectColor": "#FF4500"
+      },
+      {
+        "id": 902,
+        "subjectName": "Sanskrit",
+        "subjectCode": "SAN-12",
+        "primaryTeacher": "Ravi Verma",
+        "secondaryTeacher": ["Neha Kulkarni"],
+        "prerequisites": "None",
+        "learningGoal": "Learn classical Sanskrit language.",
+        "description": "Study of Sanskrit grammar, shlokas, and translation.",
+        "isSubjectOpen": true,
+        "subjectColor": "#DA70D6"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "status": 0,
+    "className": "12",
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "subjects": [
+      {
+        "id": 201,
+        "subjectName": "Mathematics",
+        "subjectCode": "MATH-10",
+        "primaryTeacher": "Robert Taylor",
+        "secondaryTeacher": ["Jennifer Davis"],
+        "prerequisites": "Basic Arithmetic",
+        "learningGoal": "Understand algebra, geometry, and basic trigonometry.",
+        "description": "This subject covers algebraic equations, geometry concepts, and introductory trigonometry.",
+        "isSubjectOpen": true,
+        "subjectColor": "#DEB887"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "status": 0,
+    "className": "12",
+    "subjectName": "Science",
+    "subjectType": "Core",
+    "subjects": [
+      {
+        "id": 910,
+        "subjectName": "Science",
+        "subjectCode": "SCI-12",
+        "primaryTeacher": "Dr. Kavita Mehta",
+        "secondaryTeacher": ["Amit Trivedi"],
+        "prerequisites": "Basic Science knowledge",
+        "learningGoal": "Explore biology, chemistry, and physics concepts.",
+        "description": "Integrated science subject covering key natural sciences.",
+        "isSubjectOpen": true,
+        "subjectColor": "#00CED1"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "status": 0,
+    "className": "12",
+    "subjectName": "Social Science",
+    "subjectType": "Core",
+    "subjects": [
+      {
+        "id": 911,
+        "subjectName": "Social Science",
+        "subjectCode": "SOC-12",
+        "primaryTeacher": "Sunita Desai",
+        "secondaryTeacher": ["Harsh Vyas"],
+        "prerequisites": "None",
+        "learningGoal": "Understand history, geography, and civics.",
+        "description": "Comprehensive study of social structures and history.",
+        "isSubjectOpen": true,
+        "subjectColor": "#B22222"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "status": 0,
+    "className": "12",
+    "subjectName": "Gujarati",
+    "subjectType": "Core",
+    "subjects": [
+      {
+        "id": 912,
+        "subjectName": "Gujarati",
+        "subjectCode": "GUJ-12",
+        "primaryTeacher": "Bhavesh Joshi",
+        "secondaryTeacher": ["Kajal Patel"],
+        "prerequisites": "None",
+        "learningGoal": "Develop Gujarati language fluency.",
+        "description": "Grammar, vocabulary, and literature in Gujarati.",
+        "isSubjectOpen": true,
+        "subjectColor": "#3CB371"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "status": 0,
+    "className": "12",
+    "subjectName": "English",
+    "subjectType": "Core",
+    "subjects": [
+      {
+        "id": 602,
+        "subjectName": "English",
+        "subjectCode": "ENG-12",
+        "primaryTeacher": "Emma Watson",
+        "secondaryTeacher": ["Henry Blake"],
+        "prerequisites": "Basic English understanding",
+        "learningGoal": "Enhance literature and language skills.",
+        "description": "Covers grammar, reading comprehension, and literature analysis.",
+        "isSubjectOpen": true,
+        "subjectColor": "#4682B4"
       }
     ]
   }

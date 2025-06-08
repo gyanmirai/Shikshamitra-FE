@@ -18,8 +18,6 @@ import { Box, Card, Button, MenuItem, MenuList } from '@mui/material';
 // Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -174,7 +172,7 @@ const Subjects = (props: TabComponentType) => {
             // Links for form view (adding/editing chapter)
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Manage Chapter' },
+            { name: 'Chapters Management' },
             { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
           ]}
           isBack
@@ -185,12 +183,12 @@ const Subjects = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Manage Chapter"
+          heading="Chapters Management"
           description="Manage your academic syllabus by organizing chapters and subjects. Create, update and track chapter progress across different classes and divisions. Add learning resources and documents to enhance the learning experience."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Manage Chapter' },
+            { name: 'Chapters Management' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -292,12 +290,16 @@ const Subjects = (props: TabComponentType) => {
           setSelectedChapter(null);
         }}
         title="Delete"
-        content="Are you sure you want to Delete Chapter ?"
+        content={
+          <>
+            Are you sure you want to delete chapter <strong>{selectedChapter?.chapterName}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedChapter?.id);
             }}

@@ -1,10 +1,8 @@
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -22,9 +20,9 @@ import HomeworkTypeTable from './homeworkTypeTable';
 
 import type { IHomeworkType } from './type';
 
-const HomeworkTypeCreation = (props: TabComponentType) => {
+const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
   // Dialog control for add/Update Homework Type
-  const addDialog = useBoolean();
+  // const addHomeworkTypeDialog = useBoolean();
 
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
@@ -54,19 +52,19 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
       setOpen(false);
       dispatch(setIsChanges(false));
       setSelectedData(null);
-      addDialog.onFalse();
+      addHomeworkTypeDialog.onFalse();
     } else if (!isChanges) {
       setOpen(false);
       setSelectedData(null);
-      addDialog.onFalse();
+      addHomeworkTypeDialog.onFalse();
     }
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
+      {/* <Box display="flex" justifyContent="flex-end">
         <Button
           variant="contained"
-          onClick={addDialog.onTrue}
+          onClick={addHomeworkTypeDialog.onTrue}
           startIcon={<Add />}
           size="small"
           sx={{
@@ -75,13 +73,13 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
         >
           Homework Type
         </Button>
-      </Box>
+      </Box> */}
 
       <HomeworkTypeTable
         data={tableData}
         onEdit={(data) => {
           setSelectedData(data);
-          addDialog.onTrue();
+          addHomeworkTypeDialog.onTrue();
         }}
         onDelete={(data) => {
           setSelectedData(data);
@@ -90,15 +88,15 @@ const HomeworkTypeCreation = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        open={addDialog.value}
+        open={addHomeworkTypeDialog.value}
         handleClose={() => {
-          addDialog.onFalse();
+          addHomeworkTypeDialog.onFalse();
           setSelectedData(null);
         }}
         title={selectedData ? 'Update Homework Type' : 'Add Homework Type'}
       >
         <HomeworkTypeForm
-          open={addDialog}
+          open={addHomeworkTypeDialog}
           onClose={() => handleClose(null, false)}
           editData={selectedData}
         />

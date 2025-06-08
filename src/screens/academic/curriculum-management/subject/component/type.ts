@@ -17,7 +17,7 @@ export interface ISubject {
 
 export interface ISubjectFormValues {
   id?: number;
-  status: string;
+  status: number;
   className: string;
   subjectName: string;
   subjects?: ISubject[];
@@ -56,13 +56,21 @@ export interface IDocument {
   size?: string;
 }
 
+// Available teachers for selection
+export interface ITeacherOption {
+  value: string;
+  label: string;
+  department: string;
+  avatar: string;
+}
+
 export interface ISubjectCardProps {
   index: number; // add index to access nested Formik data
   formik: FormikProps<ISubjectFormValues>;
   subject: ISubject;
   isCore: boolean;
   isPublished: boolean;
-  teacherOptions: { value: string; label: string }[];
+  teacherOptions: any;
   onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
 }
 

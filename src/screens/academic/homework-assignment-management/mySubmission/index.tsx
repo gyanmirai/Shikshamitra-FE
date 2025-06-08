@@ -59,8 +59,7 @@ const MySubmission = () => {
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => setSearchParams({ tab: value })}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />

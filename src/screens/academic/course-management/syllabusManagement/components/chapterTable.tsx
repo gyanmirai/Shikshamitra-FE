@@ -1,9 +1,6 @@
 // components/ChapterTable.tsx
-import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -82,54 +79,54 @@ const ChapterTable = ({
         align: 'left',
         filterType: 'string',
       },
-      {
-        id: 'viewMaterial',
-        label: 'Material',
-        isFilter: false,
-        isSort: false,
-        render(value, row) {
-          return (
-            <IconButton
-              onClick={() => {
-                onViewDocuments(row as IChapter);
-              }}
-            >
-              <Iconify icon={GlobalIcons.eye} />
-            </IconButton>
-          );
-        },
-      },
-      {
-        id: 'progress',
-        label: 'Progress',
-        filterType: 'number',
-        render(value) {
-          return (
-            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-              <CircularProgress variant="determinate" value={value} />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: 'absolute',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-                  {value}%
-                </Typography>
-              </Box>
-            </Box>
-          );
-        },
-      },
+      // {
+      //   id: 'viewMaterial',
+      //   label: 'Material',
+      //   isFilter: false,
+      //   isSort: false,
+      //   render(value, row) {
+      //     return (
+      //       <IconButton
+      //         onClick={() => {
+
+      //         }}
+      //       >
+      //         <Iconify icon={GlobalIcons.eye} />
+      //       </IconButton>
+      //     );
+      //   },
+      // },
+      // {
+      //   id: 'progress',
+      //   label: 'Progress',
+      //   filterType: 'number',
+      //   render(value) {
+      //     return (
+      //       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+      //         <CircularProgress variant="determinate" value={value} />
+      //         <Box
+      //           sx={{
+      //             top: 0,
+      //             left: 0,
+      //             bottom: 0,
+      //             right: 0,
+      //             position: 'absolute',
+      //             display: 'flex',
+      //             alignItems: 'center',
+      //             justifyContent: 'center',
+      //           }}
+      //         >
+      //           <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+      //             {value}%
+      //           </Typography>
+      //         </Box>
+      //       </Box>
+      //     );
+      //   },
+      // },
       {
         id: 'actions',
-        label: 'Action',
+        label: 'Actions',
         minWidth: 70,
         isSort: false,
         isFilter: false,
@@ -142,7 +139,10 @@ const ChapterTable = ({
               placement="right-top"
               showEditIcon
               showDeleteIcon
-              handleViewClick={() => handleEyeClick(row.subjectName)}
+              showViewIcon
+              handleViewClick={() => {
+                onViewDocuments(row as IChapter);
+              }}
               handleEditClick={() => {
                 setEditData(row as IChapter);
                 addChapterDialog.onTrue();

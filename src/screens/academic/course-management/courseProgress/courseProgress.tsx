@@ -248,7 +248,7 @@ const CourseProgress = (props: TabComponentType) => {
               },
               {
                 id: 'actions',
-                label: 'Action',
+                label: 'Actions',
                 minWidth: 50,
                 align: 'left',
                 sticky: true,
@@ -297,7 +297,9 @@ export default CourseProgress;
 const marks = [
   { value: 0, label: '0' },
   { value: 20, label: '20' },
-  { value: 37, label: '40' },
+  { value: 40, label: '40' },
+  { value: 60, label: '60' },
+  { value: 80, label: '80' },
   { value: 100, label: '100' },
 ];
 
@@ -331,7 +333,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
                 formik.setFieldValue('completePercentage', value);
               }}
               getAriaValueText={(value) => `${value}%`}
-              step={10}
+              step={2}
               valueLabelDisplay="auto"
               marks={marks}
               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
@@ -345,7 +347,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
           rows={4}
           name="description"
           label="Description"
-          placeholder="Enter description"
+          // placeholder="Enter description"
           value={formik.values.description}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}

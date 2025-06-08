@@ -19,7 +19,7 @@ const ChapterDocuments = ({ documents }: { documents: File[] | undefined }) => {
         <Box sx={{ mb: 2 }}>
           <Grid container spacing={2}>
             {subjectDocuments.documents?.map((doc: any, index: number) => (
-              <Grid item xs={12} key={index}>
+              <Grid item xs={12} md={6} key={index}>
                 <Card
                   variant="outlined"
                   sx={{

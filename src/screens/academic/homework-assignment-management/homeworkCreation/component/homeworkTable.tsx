@@ -1,19 +1,15 @@
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
 
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Tooltip, MenuItem, MenuList, useTheme, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
-  PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -42,6 +38,11 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   onViewDetails,
   onViewSubmission,
 }) => {
+  /**
+   * Get the MUI theme object for styling
+   * Used for accessing theme colors and other theme properties
+   */
+  const theme = useTheme();
   /**
    * Memoized actions menu renderer for the table
    * @param {Object} params - Action menu parameters
@@ -154,27 +155,41 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         },
         {
           id: 'status',
-          label: 'Status',
-          align: 'left',
+          label: 'Publish/Draft',
+          align: 'center',
           isFilter: false,
           sticky: true,
           isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
           render(value, row) {
-            const color = PublishUnpublishStatusTypeColors[
-              value as PublishUnpublishStatusType
-            ] as LabelColor;
-            return <Label color={color}>{PublishUnpublishStatusType[value]}</Label>;
+            const statusColor =
+              value === PublishUnpublishStatusType.Published
+                ? theme.palette.success.main
+                : theme.palette.text.secondary;
+
+            return (
+              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
+                <Iconify
+                  icon={GlobalIcons.tick}
+                  sx={{
+                    width: 25,
+                    height: 25,
+                    cursor: 'pointer',
+                    color: statusColor,
+                  }}
+                />
+              </Tooltip>
+            );
           },
         },
         {
           id: 'action',
-          label: 'Action',
+          label: 'Actions',
           isSort: false,
           isFilter: false,
           sticky: true,
-          align: 'center',
+          align: 'left',
           minWidth: 100,
           render: (value, row) => (
             <ThreeDotsActions

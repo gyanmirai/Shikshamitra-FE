@@ -1,3 +1,4 @@
+import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -17,6 +18,12 @@ import {
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
+
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -99,7 +106,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                 <Box display="flex" flexDirection="column" gap={0.5}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
-                      label={`Subject Type : ${subject?.subjectType}`}
+                      label={`Type : ${subject?.subjectType}`}
                       variant="outlined"
                       sx={{ fontSize: '0.9rem' }}
                     />
@@ -108,15 +115,44 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                       variant="outlined"
                       sx={{ fontSize: '0.9rem' }}
                     />
-                    <Chip
-                      label={`Status : ${subject?.status}`}
+                    <Label
+                      variant="soft"
+                      color={
+                        PublishUnpublishStatusTypeColors[
+                          subject?.status as PublishUnpublishStatusType
+                        ] as LabelColor
+                      }
+                      sx={
+                        {
+                          // p: 1.8,
+                          // fontSize: '1rem',
+                          // fontWeight: 500,
+                          // minWidth: '100px',
+                          // textAlign: 'center',
+                        }
+                      }
+                    >
+                      {
+                        PublishUnpublishStatusType[
+                          subject?.status as PublishUnpublishStatusType
+                        ] as string
+                      }
+                    </Label>
+                    {/* <Label
+                      label={`Status : ${subject?.status === 1 ? 'Draft' : 'Published'}`}
                       variant="outlined"
                       sx={{
                         fontSize: '0.9rem',
-                        color: subject?.status === 'Draft' ? '#B71C1C' : '#2E7D32',
-                        borderColor: subject?.status === 'Draft' ? '#B71C1C' : '#2E7D32',
+                        color:
+                          PublishUnpublishStatusTypeColors[
+                            subject?.status as PublishUnpublishStatusType
+                          ],
+                        borderColor:
+                          PublishUnpublishStatusTypeColors[
+                            subject?.status as PublishUnpublishStatusType
+                          ],
                       }}
-                    />
+                    /> */}
                   </Box>
                 </Box>
               </Box>
@@ -137,8 +173,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                   display: 'none', // remove default divider line at top
                 },
                 borderRadius: 1, // optional, round corners
-
-                mb: 2, // optional margin between accordions
+                marginBottom: 1, // optional, add space between accordions
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -150,6 +185,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                       borderRadius: '50%',
                       mt: 0.5,
                       backgroundColor: sub?.subjectColor,
+                      p: 0,
                     }}
                   />
                   <Typography variant="subtitle1" fontWeight={600}>
@@ -175,7 +211,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     />
                   ))}
                 </Tabs>
-                <Divider sx={{ mb: 1 }} />
+                <Divider sx={{ mb: 2 }} />
 
                 {currentActiveComponent?.component && (
                   <currentActiveComponent.component tabs={tabs} subject={sub} />

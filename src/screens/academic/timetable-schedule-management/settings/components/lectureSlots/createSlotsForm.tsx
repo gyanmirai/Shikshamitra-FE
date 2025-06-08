@@ -148,7 +148,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     options={allClass}
                     value={formik.values.className}
                     onChange={(val) => formik.setFieldValue('className', val as string)}
-                    label="Class"
+                    label="Class *"
                     labelKey="name"
                     valueKey="id"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -169,7 +169,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                 >
                   <TextField
                     fullWidth
-                    label="School Hours"
+                    label="School Hours *"
                     name="schoolHours"
                     value={formik.values.schoolHours}
                     onChange={formik.handleChange}
@@ -212,7 +212,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                   <TextField
                     fullWidth
                     label="Total Slots *"
-                    placeholder="Enter Total Slots"
+                    // placeholder="Enter Total Slots"
                     name="totalSlots"
                     type="number"
                     value={formik.values.totalSlots}

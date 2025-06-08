@@ -5,7 +5,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,9 +19,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import CreateSlotsForm from './createSlotsForm';
 import AssignSlots from './assignSlotsComponent';
 
-const LectureSlots = () => {
+const LectureSlots = ({ addLectureSlotDialog }: any) => {
   // Dialog state for creating new slots
-  const createSlotsDialog = useBoolean();
+  // const addLectureSlotDialog = useBoolean();
   const [disabled, setDisabled] = useState(false);
   // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
@@ -50,29 +50,29 @@ const LectureSlots = () => {
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      createSlotsDialog.onFalse();
+      addLectureSlotDialog.onFalse();
 
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      createSlotsDialog.onFalse();
+      addLectureSlotDialog.onFalse();
     }
   };
 
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
+      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           size="small"
-          onClick={createSlotsDialog.onTrue}
+          onClick={addLectureSlotDialog.onTrue}
           sx={{
             width: '145px',
           }}
         >
           Slots
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
@@ -88,7 +88,7 @@ const LectureSlots = () => {
             No Lecture Slots Found{' '}
             <Box
               onClick={() => {
-                createSlotsDialog.onTrue();
+                addLectureSlotDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -127,7 +127,7 @@ const LectureSlots = () => {
                   }}
                   handleEditClick={() => {
                     setIsEdit(true);
-                    createSlotsDialog.onTrue();
+                    addLectureSlotDialog.onTrue();
                   }}
                   placement="right-top"
                 />
@@ -158,8 +158,8 @@ const LectureSlots = () => {
       />
       <CustomDialog
         title={isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots'}
-        open={createSlotsDialog.value}
-        handleClose={createSlotsDialog.onFalse}
+        open={addLectureSlotDialog.value}
+        handleClose={addLectureSlotDialog.onFalse}
         maxWidth="md"
       >
         <CreateSlotsForm

@@ -36,8 +36,6 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { ViewSubject } from './subject/component/viewDetailComponents/viewSubjectComponent';
-
 interface TSubject {
   name: string;
   color: string;
@@ -330,7 +328,7 @@ const CurriculumOverview = (props: TabComponentType) => {
         </>
       )}
 
-      <CustomDialog
+      {/* <CustomDialog
         title="Subject Details"
         open={showDialog.value}
         handleClose={() => {
@@ -339,7 +337,7 @@ const CurriculumOverview = (props: TabComponentType) => {
         maxWidth="sm"
       >
         <ViewSubject subject={subjectData} />
-      </CustomDialog>
+      </CustomDialog> */}
 
       <CustomDialog
         title="Confirm Publication"

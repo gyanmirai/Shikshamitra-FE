@@ -6,7 +6,6 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -26,7 +25,7 @@ import type { IAssignmentType } from './type';
 
 const AssignmentTypeCreation = (props: TabComponentType) => {
   // Dialog control for add/edit form
-  const addDialog = useBoolean();
+  const addAssignmentTypeDialog = useBoolean();
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
   // State to control modal visibility (unused)
@@ -52,26 +51,26 @@ const AssignmentTypeCreation = (props: TabComponentType) => {
       setOpen(false);
       dispatch(setIsChanges(false));
       setSelectedData(null);
-      addDialog.onFalse();
+      addAssignmentTypeDialog.onFalse();
     } else if (!isChanges) {
       setOpen(false);
       setSelectedData(null);
-      addDialog.onFalse();
+      addAssignmentTypeDialog.onFalse();
     }
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end">
-        <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
+      {/* <Box display="flex" justifyContent="flex-end">
+        <Button variant="contained" onClick={addAssignmentTypeDialog.onTrue} startIcon={<Add />} size="small">
           Assignment Type
         </Button>
-      </Box>
+      </Box> */}
 
       <AssignmentTypeTable
         data={tableData}
         onEdit={(data) => {
           setSelectedData(data);
-          addDialog.onTrue();
+          addAssignmentTypeDialog.onTrue();
         }}
         onDelete={(data) => {
           setSelectedData(data);
@@ -80,15 +79,15 @@ const AssignmentTypeCreation = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        open={addDialog.value}
+        open={addAssignmentTypeDialog.value}
         handleClose={() => {
-          addDialog.onFalse();
+          addAssignmentTypeDialog.onFalse();
           setSelectedData(null);
         }}
         title={selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
       >
         <AssignmentTypeForm
-          open={addDialog}
+          open={addAssignmentTypeDialog}
           onClose={() => handleClose(null, false)}
           editData={selectedData}
         />
