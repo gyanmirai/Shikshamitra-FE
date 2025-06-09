@@ -31,7 +31,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
+import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
 import CourseCardsGrid from 'src/screens/academic/course-management/courseProgress/components/courseCardsGrid';
 import ViewChapterLogs from 'src/screens/academic/course-management/courseProgress/components/viewChapterLogs';
 

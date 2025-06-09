@@ -81,7 +81,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
   const search = useBoolean();
 
   const [searchQuery, setSearchQuery] = useState('');
-  useBindShortcutKey(navItems);
+  // useBindShortcutKey(navItems);
 
   const handleClose = useCallback(() => {
     search.onFalse();

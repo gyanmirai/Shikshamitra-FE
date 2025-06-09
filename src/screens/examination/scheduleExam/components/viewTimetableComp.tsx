@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Box, Chip, Stack, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,47 +22,8 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   if (!examData) return null;
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Stack direction="row" spacing={2} flexWrap="wrap">
-          <Box display="flex">
-            <Typography variant="body2" mb={0.5}>
-              Classes :{' '}
-              <Chip label={examData.className} size="small" color="primary" variant="outlined" />
-            </Typography>
-          </Box>
-
-          {examData.divisions && (
-            <Box display="flex">
-              <Typography variant="body2" mb={0.5}>
-                Divisions :{' '}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {Array.isArray(examData.divisions) ? (
-                  examData.divisions.map((division, index) => (
-                    <Chip
-                      key={index}
-                      label={division}
-                      size="small"
-                      color="secondary"
-                      variant="outlined"
-                    />
-                  ))
-                ) : (
-                  <Chip
-                    label={examData.divisions}
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
-                  />
-                )}
-              </Stack>
-            </Box>
-          )}
-        </Stack>
-      </Stack>
-
-      <Scrollbar sx={{ p: 2 }}>
+    <Box>
+      <Scrollbar>
         <CustomizableTable
           tableId="subjects-table"
           isPagination={false}

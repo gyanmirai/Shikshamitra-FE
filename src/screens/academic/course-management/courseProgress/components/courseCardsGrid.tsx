@@ -21,7 +21,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
         const isSelected = selectedCourseId === course.id;
 
         return (
-          <Grid item xs={12} md={6} lg={2} key={course.id}>
+          <Grid item xs={12} md={6} lg={3} key={course.id}>
             <Card
               sx={{
                 display: 'flex',

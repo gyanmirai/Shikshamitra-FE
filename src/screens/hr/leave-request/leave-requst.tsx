@@ -457,7 +457,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Scrollbar>
             <DialogActions sx={{ flexShrink: 0, p: 2 }}>
               <Button
-                variant="contained"
+                variant="outlined"
                 size="small"
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}
                 onClick={() => {

@@ -61,6 +61,14 @@ const AttendanceType = () => {
         </Button>
       </Box>
       <CustomizableTable
+        searchFieldProps={{
+          placeholder: 'Search by Type, Color..',
+          label: 'Search by Type, Color..',
+          sx: {
+            maxWidth: '400px',
+            width: '100%',
+          },
+        }}
         noDataText={
           <>
             No Attendance Type Found{' '}

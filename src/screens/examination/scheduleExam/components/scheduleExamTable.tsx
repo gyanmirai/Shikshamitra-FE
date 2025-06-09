@@ -1,6 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { Box, Tab, Chip, Tabs, Button } from '@mui/material';
@@ -12,6 +12,8 @@ import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+
+import ViewTimetableComp from './viewTimetableComp';
 
 import type { ISubjectDetail, IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -26,7 +28,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 }) => {
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
-
+  // Add this outside your component
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   // Calculate counts of exams by status
   const examCounts = useMemo(
     () => ({
@@ -65,6 +68,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     () => data?.filter((i: any) => i.status === tabs.value),
     [data, tabs.value]
   );
+
+  const handleAccordionToggle = (row: IExamFormValues) => {
+    const isOpen = expandedRowId === row.id;
+    setExpandedRowId(isOpen ? null : row.id || null);
+
+    // Call view action only when opening
+    if (!isOpen) {
+      onViewTimetable(row);
+    }
+  };
 
   return (
     <Box>
@@ -144,7 +157,14 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           </>
         }
         columns={[
-          { id: 'className', label: 'Class', align: 'left' },
+          {
+            id: 'className',
+            label: 'Class',
+            align: 'left',
+            children: (row): React.ReactNode => (
+              <ViewTimetableComp examData={row as IExamFormValues} />
+            ),
+          },
           {
             id: 'divisions',
             label: 'Division',
@@ -187,7 +207,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                 <ThreeDotsActions
                   showThreeDots={false}
                   placement="right-top"
-                  showViewIcon
+                  // showViewIcon
                   showDeleteIcon
                   showEditIcon
                   handleDeleteClick={() => {
@@ -197,9 +217,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     setEditData(row as IExamFormValues);
                     setOpenDialog(true);
                   }}
-                  handleViewClick={() => {
-                    onViewTimetable(row as IExamFormValues);
-                  }}
+                  // handleViewClick={() => {
+                  //   onViewTimetable(row as IExamFormValues);
+                  // }}
                 />
               );
             },

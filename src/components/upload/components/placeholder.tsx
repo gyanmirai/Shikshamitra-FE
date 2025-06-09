@@ -21,8 +21,6 @@ export function UploadPlaceholder({ onBrowseClick, ...other }: UploadPlaceholder
       <UploadIllustration hideBackground sx={{ width: 200 }} />
 
       <Stack>
-        <Box sx={{ typography: 'h6' }}>Drop or select file</Box>
-
         <Box
           component="span"
           onClick={(e) => {
@@ -30,7 +28,7 @@ export function UploadPlaceholder({ onBrowseClick, ...other }: UploadPlaceholder
             onBrowseClick?.();
           }}
           sx={{
-            mx: 0.5,
+            // mx: 0.5,
             color: 'primary.main',
             textDecoration: 'underline',
             cursor: 'pointer',

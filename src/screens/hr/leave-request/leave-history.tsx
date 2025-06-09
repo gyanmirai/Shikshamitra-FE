@@ -63,7 +63,7 @@ const LeaveHistory = (props: any) => {
               await changeStatus({
                 id: row?.id,
                 body: {
-                  status: EmployeeLeaveStatusType.Reviewed,
+                  status: EmployeeLeaveStatusType.Viewed,
                   rejectionReason: '',
                 },
               });
@@ -73,7 +73,7 @@ const LeaveHistory = (props: any) => {
           }}
         >
           <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
-          Review
+          View
         </MenuItem>
         <MenuItem
           onClick={async () => {
@@ -164,7 +164,7 @@ const LeaveHistory = (props: any) => {
             },
           }}
           sx={{
-            maxWidth: '400px',
+            maxWidth: '300px',
             width: '100%',
           }}
           onChange={(newDate) => {
@@ -212,7 +212,7 @@ const LeaveHistory = (props: any) => {
           placeholder: 'Search by Name, Status..',
           label: 'Search by Name, Status...',
           sx: {
-            maxWidth: '400px',
+            maxWidth: '300px',
             width: '100%',
           },
         }}
@@ -419,7 +419,7 @@ const LeaveHistory = (props: any) => {
               multiline
               rows={4}
               label="Remarks"
-              placeholder="Remarks"
+              placeholder="Enter your remarks or reason for approval/rejection"
               onChange={(e) => {
                 setRejectionReason(e.target.value);
               }}

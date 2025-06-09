@@ -20,28 +20,28 @@ import { ViewAnswers } from './viewStudentAnswer';
 const studentTableInitialData = [
   {
     id: 1,
-    GrNo: '12345',
-    studentName: 'John Doe',
+    GrNo: 'SM2024001',
+    studentName: 'Patel Raj Mukeshbhai',
     subject: 'Mathematics',
     totalMarks: 100,
     passingMarks: 40,
-    scoringMarks: 85,
-    status: 1, // Pass
+    scoringMarks: 50,
+    status: 0, // Pass
   },
   {
     id: 2,
-    GrNo: '12345',
-    studentName: 'Jane Smith',
+    GrNo: 'SM2024002',
+    studentName: 'Shah Priya Hiteshbhai',
     subject: 'Science',
     totalMarks: 100,
     passingMarks: 50,
     scoringMarks: 35,
-    status: 0, // Fail
+    status: 1, // Fail
   },
   {
     id: 3,
-    GrNo: '12345',
-    studentName: 'Alice Johnson',
+    GrNo: 'SM2024003',
+    studentName: 'Mehta Riya Rajeshbhai',
     subject: 'History',
     totalMarks: 100,
     passingMarks: 50,
@@ -50,8 +50,8 @@ const studentTableInitialData = [
   },
   {
     id: 4,
-    GrNo: '12345',
-    studentName: 'Bob Brown',
+    GrNo: 'SM2024004',
+    studentName: 'Desai Jay Prakashbhai',
     subject: 'Geography',
     totalMarks: 100,
     passingMarks: 50,
@@ -60,28 +60,28 @@ const studentTableInitialData = [
   },
   {
     id: 5,
-    GrNo: '12345',
-    studentName: 'Eve Davis',
+    GrNo: 'SM2024005',
+    studentName: 'Joshi Neel Sanjaybhai',
     subject: 'English',
     totalMarks: 100,
     passingMarks: 40,
     scoringMarks: 70,
-    status: 1, // Pass
+    status: 0, // Pass
   },
   {
     id: 6,
-    GrNo: '12345',
-    studentName: 'Chris Wilson',
+    GrNo: 'SM2024006',
+    studentName: 'Sharma Dhruv Amitbhai',
     subject: 'Biology',
     totalMarks: 100,
     passingMarks: 50,
     scoringMarks: 45,
-    status: 0, // Fail
+    status: 1, // Fail
   },
   {
     id: 7,
-    GrNo: '12345',
-    studentName: 'Laura Adams',
+    GrNo: 'SM2024007',
+    studentName: 'Modi Krisha Nileshbhai',
     subject: 'Chemistry',
     totalMarks: 100,
     passingMarks: 40,
@@ -89,7 +89,6 @@ const studentTableInitialData = [
     status: 2, // Pending
   },
 ];
-
 export const StudentSubmissions = () => {
   // State to track the currently selected student for individual actions
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
@@ -161,11 +160,20 @@ export const StudentSubmissions = () => {
       <Scrollbar sx={{ p: 2 }}>
         <CustomizableTable
           tableId="student-table"
+          searchFieldProps={{
+            placeholder: 'Search by Gr No, Student Name, Total Marks...',
+            label: 'Search by Gr No, Student Name, Total Marks...',
+            sx: {
+              maxWidth: '400px',
+              width: '100%',
+            },
+          }}
           columns={[
             {
-              id: 'GrNO',
-              label: 'Gr No',
+              id: 'GrNo',
+              label: 'Gr No.',
               align: 'left',
+              sticky: true,
             },
             {
               id: 'studentName',

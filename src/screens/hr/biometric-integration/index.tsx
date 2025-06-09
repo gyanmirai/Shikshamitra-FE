@@ -42,7 +42,7 @@ const BiometricIntegrationScreen = () => {
         sx={{ px: 1, mb: 3 }}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 3, pl: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1, pl: 1 }}>
         <DatePicker
           label="Date"
           value={date}
@@ -58,7 +58,7 @@ const BiometricIntegrationScreen = () => {
             },
           }}
           sx={{
-            maxWidth: '400px',
+            maxWidth: '300px',
             width: '100%',
           }}
         />
@@ -77,16 +77,16 @@ const BiometricIntegrationScreen = () => {
         // isLoading={isLoading}
         noDataText={<>No Biometric Integration Data Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Name, Hours Worked, In-time..',
-          label: 'Search by Name, Hours Worked, In-time...',
+          placeholder: 'Search by Name, Hours Worked...',
+          label: 'Search by Name, Hours Worked...',
           sx: {
-            maxWidth: '400px',
+            maxWidth: '300px',
             width: '100%',
           },
         }}
         tableId="biometric-integration-table"
         columns={[
-          { id: 'employeeName', label: 'Name', minWidth: '8vw', align: 'left', sticky: true },
+          { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'hoursWorked', label: 'Hours Worked', minWidth: '8vw', align: 'left' },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
@@ -141,70 +141,70 @@ const BiometricIntegrationScreen = () => {
         ]}
         data={[
           {
-            employeeName: 'Rajesh Kumar',
+            employeeName: 'Kumar Rajesh Prakash',
             hoursWorked: '8.5',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
           },
           {
-            employeeName: 'Priya Sharma',
+            employeeName: 'Sharma Priya Rajesh',
             hoursWorked: '7.5',
             timeIn: '09:30 AM',
             timeOut: '05:00 PM',
             status: 'Present',
           },
           {
-            employeeName: 'Amit Patel',
+            employeeName: 'Patel Amit Naresh',
             hoursWorked: '0',
             timeIn: '-',
             timeOut: '-',
             status: 'Leave',
           },
           {
-            employeeName: 'Neha Gupta',
+            employeeName: 'Gupta Neha Ramesh',
             hoursWorked: '4',
             timeIn: '09:00 AM',
             timeOut: '01:00 PM',
             status: 'Half Day',
           },
           {
-            employeeName: 'Suresh Verma',
+            employeeName: 'Verma Suresh Kumar',
             hoursWorked: '8',
             timeIn: '09:15 AM',
             timeOut: '05:15 PM',
             status: 'Present',
           },
           {
-            employeeName: 'Anita Singh',
+            employeeName: 'Singh Anita Raj',
             hoursWorked: '8.25',
             timeIn: '09:00 AM',
             timeOut: '05:15 PM',
             status: 'Present',
           },
           {
-            employeeName: 'Deepak Mishra',
+            employeeName: 'Mishra Deepak Shyam',
             hoursWorked: '0',
             timeIn: '-',
             timeOut: '-',
             status: 'Leave',
           },
           {
-            employeeName: 'Meera Reddy',
+            employeeName: 'Reddy Meera Krishna',
             hoursWorked: '4.5',
             timeIn: '09:00 AM',
             timeOut: '01:30 PM',
             status: 'Half Day',
           },
           {
-            employeeName: 'Vikram Malhotra',
+            employeeName: 'Malhotra Vikram Singh',
             hoursWorked: '8.5',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
           },
           {
-            employeeName: 'Pooja Iyer',
+            employeeName: 'Iyer Pooja Venkat',
             hoursWorked: '8',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',

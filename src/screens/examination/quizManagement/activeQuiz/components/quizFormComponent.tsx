@@ -3,7 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
@@ -40,6 +40,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -113,7 +114,7 @@ const QuizInformation = ({ formik }: any) => {
             error={!!(formik.touched.quizStartDateTime && formik.errors.quizStartDateTime) || false}
           >
             <DateTimePicker
-              label="Quiz Start Date/Time"
+              label="Quiz Start Date/Time *"
               format="DD/MM/YYYY HH:mm"
               value={formik.values.quizStartDateTime}
               onChange={(value) => {
@@ -137,7 +138,7 @@ const QuizInformation = ({ formik }: any) => {
             error={!!(formik.touched.quizEndDateTime && formik.errors.quizEndDateTime) || false}
           >
             <DateTimePicker
-              label="Quiz End Date/Time"
+              label="Quiz End Date/Time *"
               value={formik.values.quizEndDateTime}
               onChange={(value) => {
                 formik.setFieldValue('quizEndDateTime', value);
@@ -160,7 +161,7 @@ const QuizInformation = ({ formik }: any) => {
             error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType) || false}
           >
             <CustomSelect
-              label="Quiz Taken Type"
+              label="Quiz Taken Type *"
               options={[
                 { value: 'online', label: 'Online' },
                 { value: 'offline', label: 'Offline' },
@@ -180,7 +181,8 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
-              label="Quiz Title"
+              label="Quiz Title *"
+              placeholder="Enter Quiz Title"
               name="quizTitle"
               value={formik.values.quizTitle}
               onChange={formik.handleChange}
@@ -200,7 +202,7 @@ const QuizInformation = ({ formik }: any) => {
               onChange={(val) => {
                 formik.setFieldValue('className', val);
               }}
-              label="Class"
+              label="Class *"
               labelKey="name"
               valueKey="name"
               error={!!(formik.touched.className && formik.errors.className) || false}
@@ -213,7 +215,7 @@ const QuizInformation = ({ formik }: any) => {
         <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division) || false}>
             <CustomSelect
-              label="Select Divisions"
+              label="Select Divisions *"
               disabled={!formik.values.className}
               options={[
                 {
@@ -234,8 +236,6 @@ const QuizInformation = ({ formik }: any) => {
                   ? formik.errors.division.join(', ')
                   : (formik.touched.division && formik.errors.division) || undefined
               }
-
-              // helperText={formik.touched.division && formik.errors.division}
             />
           </ShakingTextField>
         </Grid>
@@ -243,7 +243,7 @@ const QuizInformation = ({ formik }: any) => {
         <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject) || false}>
             <CustomSelect
-              label="Subject"
+              label="Subject *"
               options={[
                 { value: 'math', label: 'Math' },
                 { value: 'english', label: 'English' },
@@ -263,7 +263,7 @@ const QuizInformation = ({ formik }: any) => {
         <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter) || false}>
             <CustomSelect
-              label="Chapter"
+              label="Chapter *"
               options={[
                 { value: 'chapter1', label: 'chapter1' },
                 { value: 'chapter2', label: 'chapter2' },
@@ -291,7 +291,8 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
-              label="Total Marks"
+              label="Total Marks *"
+              placeholder="Enter Total Marks"
               name="totalMarks"
               value={formik.values.totalMarks}
               onChange={formik.handleChange}
@@ -308,7 +309,8 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
-              label="Passing Marks"
+              label="Passing Marks *"
+              placeholder="Enter Passing Marks"
               name="passingMarks"
               value={formik.values.passingMarks}
               onChange={formik.handleChange}
@@ -325,7 +327,8 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
-              label="Duration (In Minutes)"
+              label="Duration (In Minutes) *"
+              placeholder="Enter Duration"
               name="quizDuration"
               value={formik.values.quizDuration}
               onChange={formik.handleChange}
@@ -356,6 +359,7 @@ const QuizInformation = ({ formik }: any) => {
 };
 
 const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }: any) => {
+  const deleteQuestionDialog = useBoolean();
   if (!questions?.length) {
     return (
       <Box
@@ -371,7 +375,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
         }}
       >
         <Typography color="text.secondary">
-          No questions added. Click &apos;Add Question&apos; to get started.{' '}
+          No questions added. Click &apos;+ Question&apos; to get started.{' '}
         </Typography>
       </Box>
     );
@@ -399,84 +403,109 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
             {(provided) => (
               <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                 {questions.map((question: any, index: any) => (
-                  <Draggable key={index.toString()} draggableId={index.toString()} index={index}>
-                    {(provided2, snapshot) => (
-                      <TableRow
-                        ref={provided2.innerRef}
-                        {...provided2.draggableProps}
-                        sx={{
-                          '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.03)' },
-                          ...(snapshot.isDragging && {
-                            backgroundColor: 'rgba(63, 81, 181, 0.08) !important',
-                            '& td': { borderBottom: 'none' },
-                          }),
-                        }}
-                      >
-                        <TableCell {...provided2.dragHandleProps} sx={{ width: '50px' }}>
-                          <IconButton size="small" sx={{ cursor: 'grab' }}>
-                            <Iconify icon="mdi:drag" />
-                          </IconButton>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{question.question}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={question.questionType}
-                            color="primary"
-                            variant="outlined"
-                            size="small"
-                            sx={{ textTransform: 'capitalize' }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body1">{question.isRequired}</Typography>
-                          {question.isRequired ? (
-                            <Iconify icon="mdi:tick" />
-                          ) : (
-                            <Iconify icon="mdi:cross-circle-outline" />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                            {question.options.length
-                              ? question.options.map((audience: string) => (
-                                  <Chip
-                                    key={audience}
-                                    label={audience}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                ))
-                              : '-'}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{question.marks}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{question.questionTime}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{question.correctAnswer}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton size="small" onClick={() => onEditQuestion(index)}>
-                            <Iconify icon={GlobalIcons.edit} />
-                          </IconButton>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => onDeleteQuestion(index)}
-                          >
-                            <Iconify icon={GlobalIcons.delete} />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </Draggable>
+                  <>
+                    <Draggable key={index.toString()} draggableId={index.toString()} index={index}>
+                      {(provided2, snapshot) => (
+                        <TableRow
+                          ref={provided2.innerRef}
+                          {...provided2.draggableProps}
+                          sx={{
+                            '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.03)' },
+                            ...(snapshot.isDragging && {
+                              backgroundColor: 'rgba(63, 81, 181, 0.08) !important',
+                              '& td': { borderBottom: 'none' },
+                            }),
+                          }}
+                        >
+                          <TableCell {...provided2.dragHandleProps} sx={{ width: '50px' }}>
+                            <IconButton size="small" sx={{ cursor: 'grab' }}>
+                              <Iconify icon="mdi:drag" />
+                            </IconButton>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{question.question}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={question.questionType}
+                              color="primary"
+                              variant="outlined"
+                              size="small"
+                              sx={{ textTransform: 'capitalize' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body1">{question.isRequired}</Typography>
+                            {question.isRequired ? (
+                              <Iconify icon="mdi:tick" />
+                            ) : (
+                              <Iconify icon="mdi:cross-circle-outline" />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              {question.options.length
+                                ? question.options.map((audience: string) => (
+                                    <Chip
+                                      key={audience}
+                                      label={audience}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  ))
+                                : '-'}
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{question.marks}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{question.questionTime}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{question.correctAnswer}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton size="small" onClick={() => onEditQuestion(index)}>
+                              <Iconify icon={GlobalIcons.edit} />
+                            </IconButton>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={() => {
+                                deleteQuestionDialog.onTrue();
+                              }}
+                            >
+                              <Iconify icon={GlobalIcons.delete} />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Draggable>
+                    <ConfirmDialog
+                      open={deleteQuestionDialog.value}
+                      onClose={() => {
+                        deleteQuestionDialog.onFalse();
+                      }}
+                      title="Delete"
+                      content="Are you sure you want to Delete Question ?"
+                      action={
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => {
+                            onDeleteQuestion(index);
+                            deleteQuestionDialog.onFalse();
+                          }}
+                          startIcon={<Iconify icon={GlobalIcons.delete} />}
+                        >
+                          Yes
+                        </Button>
+                      }
+                    />
+                  </>
                 ))}
                 {provided.placeholder}
               </TableBody>
@@ -491,6 +520,8 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
 const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
   // Question text input state
   const [question, setQuestion] = useState(initialData?.question || '');
+
+  const deleteQuestionDialog = useBoolean();
 
   // Type of question (multiple choice, true/false etc.)
   const [questionType, setQuestionType] = useState(initialData?.questionType || '');
@@ -650,7 +681,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
         return (
           <Grid item xs={12}>
             <CustomSelect
-              label="Correct Answer"
+              label="Correct Answer *"
               options={options.map((option: any) => ({
                 value: option,
                 label: option,
@@ -762,13 +793,13 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
           <Grid item xs={12} md={4}>
             <ShakingTextField error={!!(errors.questionTime && errors.questionTime) || false}>
               <TextField
-                label="Time (Minutes)"
+                label="Time (Minutes) *"
                 type="number"
+                placeholder="Enter Time in minutes"
                 value={questionTime}
                 onChange={(e) => setQuestionTime(e.target.value)}
                 size="small"
                 fullWidth
-                required
                 error={!!errors.questionTime}
                 helperText={errors.questionTime}
                 InputProps={{ inputProps: { min: 1 } }}
@@ -809,6 +840,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
                         label={`Option ${index + 1}`}
+                        placeholder="Enter option"
                         value={option}
                         onChange={(e) => handleOptionChange(index, e.target.value)}
                         size="small"
@@ -817,15 +849,38 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
                         error={!!errors.options}
                       />
                       <IconButton
-                        onClick={() => handleRemoveOption(index)}
+                        onClick={() => {
+                          deleteQuestionDialog.onTrue();
+                        }}
                         size="small"
                         color="error"
                         disabled={options.length <= 2}
                         sx={{ ml: 1 }}
                       >
-                        <Iconify icon="mdi:trash" />
+                        <Iconify icon={GlobalIcons.delete} />
                       </IconButton>
                     </Box>
+                    <ConfirmDialog
+                      open={deleteQuestionDialog.value}
+                      onClose={() => {
+                        deleteQuestionDialog.onFalse();
+                      }}
+                      title="Delete"
+                      content="Are you sure you want to Delete Question ?"
+                      action={
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => {
+                            handleRemoveOption(index);
+                            deleteQuestionDialog.onFalse();
+                          }}
+                          startIcon={<Iconify icon={GlobalIcons.delete} />}
+                        >
+                          Yes
+                        </Button>
+                      }
+                    />
                   </Grid>
                 ))}
               </Grid>
@@ -932,6 +987,11 @@ const QuizBuilder = ({ formik }: any) => {
     );
   };
 
+  // Handler to remove a single file attachment
+  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+    setFieldValue('rubric', '');
+  }, []);
+
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       {formik.errors.questions && (
@@ -958,7 +1018,7 @@ const QuizBuilder = ({ formik }: any) => {
             startIcon={<Add />}
             onClick={() => addQuestionDialog.onTrue()}
           >
-            Add Question
+            Question
           </Button>
         </Box>
       )}
@@ -967,7 +1027,7 @@ const QuizBuilder = ({ formik }: any) => {
         maxWidth="sm"
         open={addQuestionDialog.value}
         handleClose={addQuestionDialog.onFalse}
-        title="New Question"
+        title="Add Question"
       >
         <QuestionForm onSave={handleAddQuestion} onCancel={addQuestionDialog.onFalse} />
       </CustomDialog>
@@ -976,7 +1036,7 @@ const QuizBuilder = ({ formik }: any) => {
         maxWidth="sm"
         open={!!editingQuestion}
         handleClose={() => setEditingQuestion(null)}
-        title="Edit Question"
+        title="Update Question"
       >
         {editingQuestion && (
           <QuestionForm
@@ -1008,7 +1068,9 @@ const QuizBuilder = ({ formik }: any) => {
             formik.setFieldValue('rubric', file);
           }}
           multiple={false}
-          onDelete={() => {}}
+          onDelete={() => {
+            handleRemoveFile(formik.setFieldValue);
+          }}
           onRemoveAll={() => {}}
           sx={{
             p: 2,

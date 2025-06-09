@@ -125,7 +125,7 @@ const HrEmployee = () => {
           <CustomBreadcrumbs
             heading={editData ? 'Update Employee' : 'Add Employee'}
             links={[
-              { name: 'HR', href: '/hr/dashboard/' },
+              { name: 'HR/Staff', href: '/hr/dashboard/' },
               { name: 'Employee List', onClick: handleClose },
               { name: editData ? 'Update Employee' : 'Add Employee' },
             ]}
