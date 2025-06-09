@@ -8,7 +8,7 @@ export const getSubjectInitialValues = (
   const initialValues = {
     subjectName: '',
     className: selectedClass,
-    status: 'Draft',
+    status: 1,
     subjects: [],
     subjectType: 'core',
   };
@@ -19,29 +19,29 @@ export const getSubjectInitialValues = (
   }
 
   // Determine subject type
-  const subjectType = editData.subjectType || 'core';
+  const subjectType = editData.subjectType || 'Core';
 
-  if (subjectType === 'core') {
+  if (subjectType === 'Core') {
     // For core subjects, populate all fields from edit data
     return {
       subjectName: editData.subjectName || '',
       className: editData.className || '',
-      status: editData.status || 'Draft',
-      subjectType: 'core',
+      status: editData.status || 0,
+      subjectType: 'Core',
       // For core, we typically don't use the subjects array
       subjects: editData.subjects || [],
     };
   }
-  // For elective subjects, ONLY populate className and subjectName,
+  // For Elective subjects, ONLY populate className and subjectName,
   // with all other details being empty/default
   return {
     className: editData.className || '',
     subjectName: editData.subjectName || '',
     // Preserve status
-    status: editData.status || 'Draft',
-    // Mark as elective type
-    subjectType: 'elective',
-    // For electives, subjects array contains all the detailed information
+    status: editData.status || 1,
+    // Mark as Elective type
+    subjectType: 'Elective',
+    // For Electives, subjects array contains all the detailed information
     subjects: editData.subjects || [],
   };
 };

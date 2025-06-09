@@ -8,8 +8,8 @@ import React, { useState, useEffect } from 'react';
 
 import { Save, RestartAlt } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { Box, Button, Checkbox, TextField, Autocomplete } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { Box, Chip, Button, Avatar, Checkbox, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -25,8 +25,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import TeacherReassign from './teacherReassignForm';
+import { TeacherListPopover } from '../../subject/component/subjectCardComponent';
 
 import type { ITeacher } from './type';
+import type { ITeacherOption } from '../../subject/component/type';
 
 const Teacher = ({
   searchParams,
@@ -88,12 +90,37 @@ const Teacher = ({
   ]);
 
   // Array of available teachers with their IDs and names for selection
-  const teacherOptions = [
-    { id: '1', name: 'Prerna' },
-    { id: '2', name: 'Sweta' },
-    { id: '3', name: 'Punam' },
-    { id: '4', name: 'Parth' },
-    { id: '5', name: 'Dharmik' },
+  const teacherOptions: ITeacherOption[] = [
+    {
+      value: 't1',
+      label: 'Sharma Riya Kumar',
+      department: 'Mathematics Department',
+      avatar: 'https://yourcdn.com/riya.png',
+    },
+    {
+      value: 't2',
+      label: 'Patel Ankit Rajesh',
+      department: 'Science Department',
+      avatar: 'https://yourcdn.com/ankit.png',
+    },
+    {
+      value: 't3',
+      label: 'Desai Priya Mahesh',
+      department: 'English Department',
+      avatar: 'https://yourcdn.com/priya.png',
+    },
+    {
+      value: 't4',
+      label: 'Singh Rahul Vikram',
+      department: 'Social Studies Department',
+      avatar: 'https://yourcdn.com/rahul.png',
+    },
+    {
+      value: 't5',
+      label: 'Mehta Neha Suresh',
+      department: 'Hindi Department',
+      avatar: 'https://yourcdn.com/neha.png',
+    },
   ];
   // State to store the selected division
   const [division, setDivision] = useState<string>('');
@@ -166,12 +193,12 @@ const Teacher = ({
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Teacher-Subject Pairing"
+        heading="Teachers Assignment"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-          { name: 'Teacher-Subject Pairing' },
+          { name: 'Teachers Assignment' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -210,6 +237,8 @@ const Teacher = ({
             label: 'Subject',
             filterType: 'string',
             align: 'left',
+            minWidth: '100px',
+            sticky: true,
           },
           ...divisionList.map((div) => ({
             id: div,
@@ -220,18 +249,23 @@ const Teacher = ({
               <Autocomplete
                 multiple
                 options={teacherOptions}
-                getOptionLabel={(option) => option.name}
-                value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.id)) : []}
+                getOptionLabel={(option) => option.label}
+                value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.value)) : []}
                 onChange={(_, newValue) => {
-                  const updatedData = [...tableData];
-                  const subjectIndex = subjectList.indexOf(row.subject.toLowerCase());
-                  if (subjectIndex !== -1) {
-                    updatedData[subjectIndex] = {
-                      ...updatedData[subjectIndex],
-                      [div]: newValue.map((teacher) => teacher.id),
-                    };
-                    setTableData(updatedData);
-                  }
+                  const updatedTableData = tableData.map((divisionData) => {
+                    if (divisionData.division === div) {
+                      return {
+                        ...divisionData,
+                        subjects: {
+                          ...divisionData.subjects,
+                          [row.subject]: newValue.map((teacher) => teacher.value),
+                        },
+                      };
+                    }
+                    return divisionData;
+                  });
+
+                  setTableData(updatedTableData);
                 }}
                 renderInput={(params) => (
                   <TextField label="Assign Teachers" {...params} variant="outlined" size="small" />
@@ -244,20 +278,49 @@ const Teacher = ({
                       style={{ marginRight: 8 }}
                       checked={selected}
                     />
-                    {option.name}
+                    {option.label}
                   </li>
                 )}
-                sx={{ width: '100%' }}
+                sx={{ width: '100%', minWidth: '350px' }}
+                renderTags={(val) => {
+                  if (val.length === 0) return null;
+                  const first = val[0];
+                  const remainingCount = val.length - 1;
+                  return [
+                    <Chip
+                      key={first.value}
+                      variant="soft"
+                      avatar={<Avatar>{first.label.charAt(0)}</Avatar>}
+                      label={first.label}
+                      sx={{ ml: 1 }}
+                      size="small"
+                    />,
+                    remainingCount > 0 && (
+                      <TeacherListPopover
+                        key="more-count"
+                        teachers={val.slice(1)}
+                        count={remainingCount}
+                      />
+                    ),
+                  ];
+                }}
               />
             ),
           })),
         ]}
-        data={subjectList.map((subject) => ({
-          subject: subject.charAt(0).toUpperCase() + subject.slice(1),
-          A: '',
-          B: '',
-          C: '',
-        }))}
+        data={subjectList.map((subject) => {
+          const formattedSubject = subject.charAt(0).toUpperCase() + subject.slice(1);
+
+          const row: any = { subject: formattedSubject };
+
+          divisionList.forEach((div) => {
+            const divisionData = tableData.find((d) => d.division === div);
+            row[div] =
+              divisionData?.subjects[formattedSubject as keyof typeof divisionData.subjects] || [];
+          });
+
+          return row;
+        })}
       />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog

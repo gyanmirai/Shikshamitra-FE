@@ -274,7 +274,7 @@ const TimeTableCell = ({
                 variant="contained"
                 color="error"
                 onClick={() => {}}
-                startIcon={<Iconify icon={GlobalIcons.delete} />}
+                // startIcon={<Iconify icon={GlobalIcons.delete} />}
               >
                 Yes
               </Button>

@@ -69,7 +69,7 @@ export const subjectGroups: TSubjectGroup[] = [
     subjectName: 'Language Subjects',
     subjectColor: '#42a5f5',
     noOfLecture: 7,
-    subjectType: 'elective',
+    subjectType: 'Elective',
     subjects: [
       {
         name: 'English',

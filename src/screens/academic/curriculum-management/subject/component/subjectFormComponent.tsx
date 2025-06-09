@@ -22,6 +22,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -35,19 +37,19 @@ import { getSubjectInitialValues } from './initialValues';
 import SettingSubjectForm from '../../setting/subjectCreation/subjectForm';
 import SettingElectiveSubjectForm from '../../setting/electiveSubjectSetting/components/electiveSubjectForm';
 
-import type { ISubjectFormProps, ISubjectFormValues } from './type';
+import type { ITeacherOption, ISubjectFormProps, ISubjectFormValues } from './type';
 
-// Enhanced subject options with core and elective groups
+// Enhanced subject options with Core and Elective groups
 const subjectOptions = [
   // Core subjects
-  { label: 'Mathematics', value: 'Mathematics', type: 'core' },
-  { label: 'Physics', value: 'Physics', type: 'core' },
-  { label: 'Biology', value: 'Biology', type: 'core' },
+  { label: 'Mathematics', value: 'Mathematics', type: 'Core' },
+  { label: 'Physics', value: 'Physics', type: 'Core' },
+  { label: 'Biology', value: 'Biology', type: 'Core' },
   // Elective subject groups
   {
     label: 'Science Electives',
     value: 'Science Electives',
-    type: 'elective',
+    type: 'Elective',
     subjects: [
       { name: 'Chemistry', code: 'CHEM101' },
       { name: 'Earth Science', code: 'ESCI101' },
@@ -57,7 +59,7 @@ const subjectOptions = [
   {
     label: 'Language Electives',
     value: 'Language Electives',
-    type: 'elective',
+    type: 'Elective',
     subjects: [
       { name: 'French', code: 'FREN101' },
       { name: 'Spanish', code: 'SPAN101' },
@@ -67,7 +69,7 @@ const subjectOptions = [
   {
     label: 'Arts Electives',
     value: 'Arts Electives',
-    type: 'elective',
+    type: 'Elective',
     subjects: [
       { name: 'Music', code: 'MUS101' },
       { name: 'Visual Arts', code: 'ARTS101' },
@@ -76,21 +78,48 @@ const subjectOptions = [
   },
 ];
 
-// Available teachers for selection
-const teacherOptions = [
-  { value: 'Jiya', label: 'Jiya' },
-  { value: 'Riya', label: 'Riya' },
-  { value: 'Priya', label: 'Priya' },
+const teacherOptions: ITeacherOption[] = [
+  {
+    value: 't1',
+    label: 'Sharma Riya Kumar',
+    department: 'Mathematics Department',
+    avatar: 'https://yourcdn.com/riya.png',
+  },
+  {
+    value: 't2',
+    label: 'Patel Ankit Rajesh',
+    department: 'Science Department',
+    avatar: 'https://yourcdn.com/ankit.png',
+  },
+  {
+    value: 't3',
+    label: 'Desai Priya Mahesh',
+    department: 'English Department',
+    avatar: 'https://yourcdn.com/priya.png',
+  },
+  {
+    value: 't4',
+    label: 'Singh Rahul Vikram',
+    department: 'Social Studies Department',
+    avatar: 'https://yourcdn.com/rahul.png',
+  },
+  {
+    value: 't5',
+    label: 'Mehta Neha Suresh',
+    department: 'Hindi Department',
+    avatar: 'https://yourcdn.com/neha.png',
+  },
 ];
 
 const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps) => {
   // State to track if the form is in draft mode - determined by edit status or existing data status
-  const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'Unpublish'));
+  const [isDraft, setIsDraft] = useState<boolean>(false);
   // Flag to check if the subject is already published
-  const isPublished = data?.status === 'Publish';
+  const isPublished: boolean =
+    PublishUnpublishStatusType[data?.status as PublishUnpublishStatusType] === 'Published';
   // State to control visibility of add subject dialog
   const addSubjectDialog = useBoolean();
-  // State to control visibility of add elective subject dialog
+  // State to control visibility of add Elective subject dialog
   const addElectiveSubjectDialog = useBoolean();
   // State to track selected option for the autocomplete
   const [selectedOption, setSelectedOption] = useState<any>(null);
@@ -143,7 +172,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       const option = subjectOptions.find(
         (opt) =>
           opt.value === data.subjectName ||
-          (opt.type === 'elective' &&
+          (opt.type === 'Elective' &&
             opt.subjects?.some((s) => data.subjects?.some((ds) => ds.subjectName === s.name)))
       );
 
@@ -164,7 +193,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   const handleSubjectChange = (newValue: any) => {
     if (!newValue) {
       formik.setFieldValue('subjectName', '');
-      formik.setFieldValue('subjectType', 'core');
+      formik.setFieldValue('subjectType', 'Core');
       formik.setFieldValue('subjects', []);
       setSelectedOption(null);
       return;
@@ -175,9 +204,9 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     formik.setFieldValue('subjectType', newValue.type);
     setSelectedOption(newValue);
 
-    // Determine if this is a core subject or an elective group
-    if (newValue.type === 'core') {
-      // For core subject, create a single subject entry
+    // Determine if this is a Core subject or an Elective group
+    if (newValue.type === 'Core') {
+      // For Core subject, create a single subject entry
       const newSubject = {
         id: Date.now() + Math.random(),
         name: newValue.name,
@@ -187,6 +216,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         primaryTeacher: '',
         secondaryTeacher: [],
         description: '',
+        isExpanded: true,
         learningGoal: '',
         prerequisites: '',
         subjectColor: '#1976d2',
@@ -195,8 +225,8 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       };
       // Update subjects array in formik state
       formik.setFieldValue('subjects', [newSubject]);
-    } else if (newValue.type === 'elective') {
-      // For elective group, create multiple subject entries
+    } else if (newValue.type === 'Elective') {
+      // For Elective group, create multiple subject entries
       const initialElectives = newValue.subjects.map((subject: any) => ({
         id: Date.now() + Math.random(),
         name: subject.name,
@@ -244,7 +274,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     value={formik.values.className || selectedClass}
                     labelKey="name"
                     valueKey="id"
-                    placeholder="Search Class"
+                    // placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
 
@@ -287,8 +317,8 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                           {option.label}
                           <Chip
                             size="small"
-                            label={option.type === 'core' ? 'Core' : 'Elective'}
-                            color={option.type === 'core' ? 'primary' : 'secondary'}
+                            label={option.type === 'Core' ? 'Core' : 'Elective'}
+                            color={option.type === 'Core' ? 'primary' : 'secondary'}
                             sx={{ ml: 1, height: 20 }}
                           />
                         </Box>
@@ -315,7 +345,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       sx={{ cursor: 'pointer' }}
                       onClick={addSubjectDialog.onTrue}
                     >
-                      Add Subject ?
+                      Add Subject
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'inline-block' }}>
@@ -327,7 +357,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       sx={{ cursor: 'pointer' }}
                       onClick={addElectiveSubjectDialog.onTrue}
                     >
-                      Add Elective Group ?
+                      Add Elective Group
                     </Typography>
                   </Box>
                 </Box>
@@ -370,7 +400,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       index={index}
                       formik={formik}
                       subject={subject}
-                      isCore={formik.values.subjectType === 'core'}
+                      isCore={formik.values.subjectType === 'Core'}
                       isPublished={isPublished}
                       teacherOptions={teacherOptions}
                       onSubjectChange={handleSubjectFieldChange}

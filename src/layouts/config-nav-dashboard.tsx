@@ -1,5 +1,6 @@
 import {
   hrPath,
+  classPath,
   hostelPath,
   financePath,
   studentPath,
@@ -62,6 +63,7 @@ export const ICONS = {
   examination: icon('ic-examination'),
   school: icon('ic-school'),
   resource: icon('ic-hostel'),
+  class: icon('ic-class'),
 };
 
 // ----------------------------------------------------------------------
@@ -642,6 +644,39 @@ const hrModule = {
   ],
 };
 
+const classManagementModule = {
+  [classPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/classManagement/dashboard',
+          _action: 'dashboard',
+          shortcutKey: 'Alt+A+1',
+          shortcutKeyName: 'Alt+A+1',
+          disabled: true,
+          caption: 'Coming Soon',
+        },
+        {
+          title: 'Assign Elective Subject',
+          path: '/classManagement/assign-elective-subject',
+          _action: 'assign-elective-subject',
+          shortcutKey: 'Alt+A+C+1',
+          shortcutKeyName: 'Alt+A+C+1',
+        },
+        {
+          title: 'Chapter Progress',
+          path: '/classManagement/courseProgress',
+          _action: 'course-management-courseProgress',
+          shortcutKey: 'Alt+A+S+3',
+          shortcutKeyName: 'Alt+A+S+3',
+        },
+      ],
+    },
+  ],
+};
+
 const academicModule = {
   [academicPath]: [
     {
@@ -664,35 +699,35 @@ const academicModule = {
           shortcutKeyName: 'Alt+A+C',
           children: [
             {
-              title: 'Allocate Subject',
+              title: 'Subject Assignment',
               path: '/academic/curriculumSubjects',
               _action: 'curriculum-management-subjects',
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
             },
+            // {
+            //   title: 'Assign Elective Subject',
+            //   path: '/academic/assign-elective-subject',
+            //   _action: 'assign-elective-subject',
+            //   shortcutKey: 'Alt+A+C+1',
+            //   shortcutKeyName: 'Alt+A+C+1',
+            // },
+            // {
+            //   title: 'Choose Elective Subjects',
+            //   path: '/academic/choose-elective-subject',
+            //   _action: 'assign-elective-subject',
+            //   shortcutKey: 'Alt+A+C+1',
+            //   shortcutKeyName: 'Alt+A+C+1',
+            // },
             {
-              title: 'Allocate Elective Subjects',
-              path: '/academic/assign-elective-subject',
-              _action: 'assign-elective-subject',
-              shortcutKey: 'Alt+A+C+1',
-              shortcutKeyName: 'Alt+A+C+1',
-            },
-            {
-              title: 'Choose Elective Subjects',
-              path: '/academic/choose-elective-subject',
-              _action: 'assign-elective-subject',
-              shortcutKey: 'Alt+A+C+1',
-              shortcutKeyName: 'Alt+A+C+1',
-            },
-            {
-              title: 'Teacher-Subject Pairing',
+              title: 'Teachers Assignment',
               path: '/academic/teacher',
               _action: 'student-enrollment-teacher',
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
             },
             {
-              title: 'Manage Chapter',
+              title: 'Chapters Management',
               path: '/academic/courseSubjects',
               _action: 'course-management-subjects',
               shortcutKey: 'Alt+A+S+1',
@@ -705,13 +740,13 @@ const academicModule = {
               shortcutKey: 'Alt+A+S+2',
               shortcutKeyName: 'Alt+A+S+2',
             },
-            {
-              title: 'Chapter Progress',
-              path: '/academic/courseProgress',
-              _action: 'course-management-courseProgress',
-              shortcutKey: 'Alt+A+S+3',
-              shortcutKeyName: 'Alt+A+S+3',
-            },
+            // {
+            //   title: 'Chapter Progress',
+            //   path: '/academic/courseProgress',
+            //   _action: 'course-management-courseProgress',
+            //   shortcutKey: 'Alt+A+S+3',
+            //   shortcutKeyName: 'Alt+A+S+3',
+            // },
             {
               title: 'Reports',
               path: '/academic/curriculumReports',
@@ -800,7 +835,7 @@ const academicModule = {
           ],
         },
         {
-          title: 'Assign ClassTeacher',
+          title: 'Assign Class Teacher',
           path: '/academic/assignTeacher',
           _action: 'assign-teacher',
           shortcutKey: 'Alt+A+Z',
@@ -2011,6 +2046,15 @@ export const navData = (isDdvs: boolean) => [
         submodule: academicModule[academicPath].flatMap((list) => list.items),
       },
       {
+        title: 'Class Management',
+        path: '/classManagement/dashboard',
+        icon: ICONS.class,
+        _action: 'classManagement',
+        shortcutKey: 'Alt+A',
+        shortcutKeyName: 'Alt+A',
+        submodule: classManagementModule[classPath].flatMap((list) => list.items),
+      },
+      {
         title: 'HR/Staff',
         path: '/hr/dashboard',
         icon: ICONS.hr,
@@ -2110,4 +2154,5 @@ export const navSubData = (isDdvs: boolean) => ({
   ...libraryModule,
   ...resourceManagement,
   ...securityGuardModule,
+  ...classManagementModule,
 });

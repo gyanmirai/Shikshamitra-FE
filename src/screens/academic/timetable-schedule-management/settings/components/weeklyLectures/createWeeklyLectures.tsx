@@ -85,7 +85,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                     onChange={(val) => {
                       formik.setFieldValue('className', val as string);
                     }}
-                    label="Class"
+                    label="Class *"
                     // isLoading={isLoading}
                     labelKey="name"
                     valueKey="id"
@@ -134,7 +134,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                             type="number"
                             size="small"
                             label="Weekly Lectures *"
-                            placeholder="Enter weekly lectures"
+                            // placeholder="Enter weekly lectures"
                             value={value}
                             onChange={(e) => handleInputChange(row.id, e.target.value)}
                             className="w-24"

@@ -1,13 +1,12 @@
 import { useDropzone } from 'react-dropzone';
 
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
+import { Card } from '@mui/material';
 import Button from '@mui/material/Button';
 import FormHelperText from '@mui/material/FormHelperText';
 
-import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from '../iconify';
+import { Scrollbar } from '../scrollbar';
 import { UploadPlaceholder } from './components/placeholder';
 import { RejectionFiles } from './components/rejection-files';
 import { MultiFilePreview } from './components/preview-multi-file';
@@ -32,80 +31,83 @@ export function Upload({
   isPreview = true,
   ...other
 }: UploadProps) {
-  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections } = useDropzone({
-    multiple,
-    disabled,
-    ...other,
-  });
+  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections, open } =
+    useDropzone({
+      multiple,
+      disabled,
+      ...other,
+    });
 
   const isArray = Array.isArray(value) && multiple;
 
   const hasFile = !isArray && !!value;
 
-  const hasFiles = isArray && !!value.length;
-
-  const hasError = isDragReject || !!error;
-
-  const renderMultiPreview = hasFiles && (
-    <>
-      <MultiFilePreview files={value} thumbnail={thumbnail} onRemove={onRemove} sx={{ my: 3 }} />
-
-      {(onRemoveAll || onUpload) && (
-        <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-          {onRemoveAll && (
-            <Button color="inherit" variant="outlined" size="small" onClick={onRemoveAll}>
-              Remove all
-            </Button>
-          )}
-
-          {onUpload && (
-            <Button
-              size="small"
-              variant="contained"
-              onClick={onUpload}
-              startIcon={<Iconify icon="eva:cloud-upload-fill" />}
-            >
-              Upload
-            </Button>
-          )}
-        </Stack>
-      )}
-    </>
-  );
+  const hasFiles = isArray && value.length > 0;
+  const hasError = !!error;
 
   return (
-    <Box sx={{ width: 1, position: 'relative', ...sx }}>
-      <Box
+    <Card sx={{ ...sx, p: 2, height: '230px', width: '100%' }}>
+      {/* Upload Button */}
+      {/* <Box
         {...getRootProps()}
         sx={{
-          p: 5,
-          outline: 'none',
+          p: 3,
+          textAlign: 'center',
           borderRadius: 1,
-          cursor: 'pointer',
-          overflow: 'hidden',
-          position: 'relative',
-          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
           border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-          transition: (theme) => theme.transitions.create(['opacity', 'padding']),
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+          cursor: 'pointer',
           '&:hover': { opacity: 0.72 },
-          ...(isDragActive && { opacity: 0.72 }),
-          ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
           ...(hasError && {
             color: 'error.main',
             borderColor: 'error.main',
             bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
           }),
-          ...(hasFile && { padding: '28% 0' }),
         }}
-      >
-        <input {...getInputProps()} />
+      > */}
+      <input {...getInputProps()} />
 
-        {/* Single file */}
-        {hasFile ? <SingleFilePreview file={value as File} /> : <UploadPlaceholder />}
-      </Box>
+      {hasFile ? (
+        <>
+          <SingleFilePreview file={value as File} />
+          <DeleteButton onClick={onDelete} />
+        </>
+      ) : hasFiles ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={open}
+            startIcon={<Iconify icon="eva:cloud-upload-fill" />}
+          >
+            Document
+          </Button>
+        </Box>
+      ) : (
+        <UploadPlaceholder onBrowseClick={open} />
+      )}
+      {/* </Box> */}
 
-      {/* Single file */}
-      {hasFile && <DeleteButton onClick={onDelete} />}
+      {/* Preview List */}
+      {hasFiles && (
+        <Box sx={{ mt: 3 }}>
+          <Scrollbar sx={{ height: 130 }}>
+            <MultiFilePreview files={value} thumbnail={thumbnail} onRemove={onRemove} />
+          </Scrollbar>
+          {/* <Stack direction="row" justifyContent="flex-end" spacing={1.5} sx={{ mt: 1 }}>
+            {onRemoveAll && (
+              <Button variant="outlined" size="small" onClick={onRemoveAll}>
+                Remove All
+              </Button>
+            )}
+            {onUpload && (
+              <Button variant="contained" size="small" onClick={onUpload}>
+                Upload
+              </Button>
+            )}
+          </Stack> */}
+        </Box>
+      )}
 
       {helperText && (
         <FormHelperText error={!!error} sx={{ px: 2 }}>
@@ -114,9 +116,6 @@ export function Upload({
       )}
 
       <RejectionFiles files={[...fileRejections]} />
-
-      {/* Multi files */}
-      {isPreview && renderMultiPreview}
-    </Box>
+    </Card>
   );
 }

@@ -21,11 +21,11 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
+import { TeacherHoverProfile } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/subjectOverview';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import UserHoverProfile from 'src/components/student-popover';
 
 import type { IHomework } from '../../type';
 
@@ -35,8 +35,15 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
       <Grid item xs={12} md={8}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              <Iconify icon="mdi:information-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <Iconify
+                icon="mdi:information-outline"
+                sx={{ mr: 1, height: '22px', width: '22px' }}
+              />
               Homework Details
             </Typography>
             <Divider sx={{ mb: 2 }} />
@@ -51,14 +58,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
             <DetailRow label="Class" value={homework?.class} icon="mdi:school-outline" />
 
             {/* Divisions */}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:account-group-outline" />
-                <Typography variant="subtitle1" className="text-gray-600 mb-1">
-                  Divisions
-                </Typography>
+                <Typography variant="subtitle2">Divisions</Typography>
               </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+              <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
                 {homework?.division && homework.division.length > 0 ? (
                   homework.division.map((div, index) => (
                     <Chip key={index} label={div} size="small" variant="outlined" />
@@ -72,14 +77,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
             </Box>
 
             {/* Chapters */}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1, mb: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:book-multiple-outline" />
-                <Typography variant="subtitle1" className="text-gray-600 mb-1">
-                  Chapters
-                </Typography>
+                <Typography variant="subtitle2">Chapters</Typography>
               </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+              <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
                 {homework?.chapters && homework.chapters.length > 0 ? (
                   homework.chapters.map((chapter, index) => (
                     <Chip key={index} label={chapter} size="small" variant="outlined" />
@@ -107,13 +110,11 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
 
             {/* Status with color */}
             <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:information" />
-                <Typography variant="subtitle1" className="text-gray-600 mb-1">
-                  Status
-                </Typography>
+                <Typography variant="subtitle2">Status</Typography>
               </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+              <Box sx={{ display: 'flex', pb: 2, pl: 3.5, gap: 1 }}>
                 <Label
                   color={
                     PublishUnpublishStatusTypeColors[
@@ -151,8 +152,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
         <Card sx={{ height: '100%' }}>
           <Scrollbar sx={{ height: '100%' }}>
             <CardContent sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                <Iconify icon="mdi:clock-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <Iconify icon="mdi:clock-outline" sx={{ mr: 1, height: '22px', width: '22px' }} />
                 Timeline & Dates
               </Typography>
               <Divider sx={{ mb: 2 }} />
@@ -164,7 +169,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Iconify icon="mdi:calendar-alert" color="error.main" />
-                  <Typography variant="body1" fontWeight={500}>
+                  <Typography variant="body2">
                     {dayjs(homework?.startDate).format('DD MMM YYYY hh:mm')}
                   </Typography>
                 </Box>
@@ -178,7 +183,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="mdi:calendar-end" color="warning.main" />
-                    <Typography variant="body1" fontWeight={500}>
+                    <Typography variant="body2">
                       {dayjs(homework.endDate).format('DD MMM YYYY')}
                     </Typography>
                   </Box>
@@ -203,8 +208,12 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
               <Divider sx={{ my: 2 }} />
 
               {/* Created By */}
-              <Typography variant="h6" gutterBottom>
-                <Iconify icon="mdi:account" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <Iconify icon="mdi:account" sx={{ mr: 1, height: '22px', width: '22px' }} />
                 Created By
               </Typography>
 
@@ -220,7 +229,28 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                   }}
                 >
                   <ListItemAvatar>
-                    <UserHoverProfile
+                    <TeacherHoverProfile
+                      avatarComp={
+                        <Avatar
+                          src={homework?.createdBy}
+                          alt={homework?.createdBy}
+                          sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                        />
+                      }
+                      teacher={{
+                        name: homework?.createdBy,
+                        designation: 'Senior Teacher',
+                        department: 'CSE',
+                        class: '10',
+                        division: 'A',
+                        email: 'aisha.sharma@example.com',
+                        experience: '12 Years',
+                        qualification: 'M.Tech (CSE)',
+                        subjects: ['Mathematics', 'Physics'],
+                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                      }}
+                    />
+                    {/* <UserHoverProfile
                       avatarComp={
                         <Avatar
                           sx={{
@@ -247,7 +277,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                         medium: 'English',
                         organization: 'Higher Secondary',
                       }}
-                    />
+                    /> */}
                   </ListItemAvatar>
                   <ListItemText
                     primary={<Typography variant="subtitle2">{homework?.createdBy}</Typography>}

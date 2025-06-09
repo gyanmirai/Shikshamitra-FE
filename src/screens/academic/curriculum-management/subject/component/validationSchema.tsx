@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 export const validationSchema = Yup.object().shape({
   className: Yup.string().required('Class is required'),
   subjectName: Yup.string().required('Subject Name is required'),
-  subjectType: Yup.string().oneOf(['core', 'elective']).required('Subject Type is required'),
+  subjectType: Yup.string().oneOf(['core', 'Elective']).required('Subject Type is required'),
   status: Yup.string().required('Status is required'),
 
   // Validate each subject in the array

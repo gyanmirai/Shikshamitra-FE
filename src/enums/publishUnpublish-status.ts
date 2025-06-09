@@ -16,5 +16,5 @@ export const PublishUnpublishStatusOptions = [
 
 export const PublishUnpublishStatusTypeColors = {
   [PublishUnpublishStatusType.Published]: 'success',
-  [PublishUnpublishStatusType.Draft]: 'error',
+  [PublishUnpublishStatusType.Draft]: 'default',
 };

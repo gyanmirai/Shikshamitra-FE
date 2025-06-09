@@ -1,20 +1,20 @@
 export enum SubjectType {
-  core,
-  elective,
+  Core,
+  Elective,
 }
 
 export const SubjectTypeOptions = [
   {
-    label: 'core',
-    value: SubjectType.core,
+    label: 'Core',
+    value: SubjectType.Core,
   },
   {
-    label: 'elective',
-    value: SubjectType.elective,
+    label: 'Elective',
+    value: SubjectType.Elective,
   },
 ];
 
 export const SubjectTypeColors = {
-  [SubjectType.core]: 'primary',
-  [SubjectType.elective]: 'secondary',
+  [SubjectType.Core]: 'primary',
+  [SubjectType.Elective]: 'secondary',
 };

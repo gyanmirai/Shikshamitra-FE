@@ -81,4 +81,5 @@ export interface TStudentGrade {
   weightedAverage: string;
   status: string;
   submissionDate: Dayjs | null;
+  submissionType?: string;
 }

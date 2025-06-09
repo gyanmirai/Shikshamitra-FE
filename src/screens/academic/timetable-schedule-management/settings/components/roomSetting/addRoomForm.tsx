@@ -66,7 +66,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                   <TextField
                     disabled={isEdit}
                     label="Room Number *"
-                    placeholder="Enter Room Number"
+                    // placeholder="Enter Room Number"
                     size="small"
                     name="roomNumber"
                     type="number"
@@ -86,7 +86,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                   <TextField
                     disabled={isEdit}
                     label="Building Name *"
-                    placeholder="Enter Building Name"
+                    // placeholder="Enter Building Name"
                     size="small"
                     name="buildingName"
                     value={formik.values.buildingName}
@@ -104,7 +104,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     disabled={isEdit}
                     name="floor"
                     label="Floor *"
-                    placeholder="Enter Floor"
+                    // placeholder="Enter Floor"
                     size="small"
                     type="number"
                     value={formik.values.floor}
@@ -121,7 +121,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                   <TextField
                     name="capacity"
                     label="Room Capacity *"
-                    placeholder="Enter Room Capacity"
+                    // placeholder="Enter Room Capacity"
                     type="number"
                     size="small"
                     value={formik.values.capacity}

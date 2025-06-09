@@ -1,13 +1,11 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 
@@ -30,9 +28,9 @@ import { StudentSubmissions } from './studentSubmission/studentSubmission';
 
 import type { IAssignment } from './type';
 
-const AssignmentCreation = (props: TabComponentType) => {
+const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // Dialog state for add/edit assignment form
-  const addAssignmentDialog = useBoolean();
+  // const addAssignmentDialog = useBoolean();
   // Dialog state for delete assignment confirmation
   const deleteAssignmentDialog = useBoolean();
   // Dialog state for publish assignment confirmation
@@ -155,7 +153,7 @@ const AssignmentCreation = (props: TabComponentType) => {
             sx={{ minWidth: '250px' }}
           />
         </Box>
-        <Box display="flex" justifyContent="flex-end">
+        {/* <Box display="flex" justifyContent="flex-end">
           <Button
             variant="contained"
             onClick={addAssignmentDialog.onTrue}
@@ -165,7 +163,7 @@ const AssignmentCreation = (props: TabComponentType) => {
           >
             Assignment
           </Button>
-        </Box>
+        </Box> */}
       </Box>
 
       <CustomDialog

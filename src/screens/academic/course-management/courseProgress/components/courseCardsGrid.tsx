@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { Box, Grid, Card, alpha, useTheme, Typography } from '@mui/material';
-
-import { SvgColor } from 'src/components/svg-color';
-import { Chart, useChart } from 'src/components/chart';
+import { Box, Grid, Card, alpha, Typography, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
@@ -24,19 +21,20 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
         const isSelected = selectedCourseId === course.id;
 
         return (
-          <Grid item xs={12} md={2} key={course.id}>
+          <Grid item xs={12} md={6} lg={2} key={course.id}>
             <Card
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
-                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                transform: isSelected ? 'scale(1)' : 'scale(1)',
                 boxShadow: isSelected
-                  ? `0 8px 25px ${alpha(course.color, 0.4)}`
-                  : '0 1px 6px rgba(0,0,0,0.05)',
+                  ? `0 2px 10px ${alpha(course.color, 0.4)}`
+                  : '0 1px 6px rgba(0,0,0,0.10)',
                 cursor: 'pointer',
                 zIndex: isSelected ? 2 : 1,
                 backgroundColor: 'transparent',
+                height: '100%',
               }}
               onClick={() => {
                 setSelectedCourseId(course.id);
@@ -46,7 +44,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
               <AppWidget
                 title={course.name}
                 color={course.color}
-                icon="solar:user-rounded-bold"
+                // icon="solar:user-rounded-bold"
                 chart={{ series: course.progress }}
                 completedChapter={course.completedChapter}
                 totalChapter={course.totalChapter}
@@ -61,124 +59,52 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
 
 export const AppWidget: React.FC<IAppWidgetProps> = ({
   title,
-  total,
   color,
-  icon,
   chart,
-  totalChapter,
   completedChapter,
+  totalChapter,
 }: IAppWidgetProps) => {
-  const theme = useTheme();
-
-  // Progress bar uses full course color (no opacity)
-  const chartColors = [color, color];
-
-  const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
-    stroke: { width: 0 },
-    fill: {
-      type: 'solid',
-      colors: chartColors,
-      opacity: 1, // Full opacity for progress bar
-    },
-    plotOptions: {
-      radialBar: {
-        hollow: {
-          margin: 0,
-          size: '70%', // Reduced from 70% to make progress bar thicker
-        },
-        track: {
-          background: alpha('#ffffff', 0.2), // Lighter white track
-          opacity: 1,
-          margin: 0, // Remove margin for thicker progress
-        },
-        dataLabels: {
-          name: { show: false },
-          value: {
-            offsetY: 6,
-            color, // Use course color for text
-            fontSize: theme.typography.subtitle2.fontSize as string,
-            fontWeight: 'bold',
-          },
-        },
-      },
-    },
-    ...chart.options,
-  });
+  const progress = chart.series;
 
   return (
     <Box
       sx={{
-        p: { xs: 1, sm: 2 },
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        bgcolor: alpha(color, 0.1), // Light background with course color
-        color, // Text color matches course color
+        px: 2,
+        py: 2,
         width: '100%',
-        minHeight: { xs: 80, sm: 100, md: 120 },
-        position: 'relative',
-        overflow: 'hidden',
-        // Removed opacity: 0.5 to make colors vibrant
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
       }}
     >
-      {/* Circular Progress Chart */}
-      <Box
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: { xs: 40, sm: 50, md: 90 }, // Responsive width
-          height: { xs: 40, sm: 50, md: 70 }, // Responsive height
-          color,
-        }}
-      >
-        <Chart
-          type="radialBar"
-          series={[chart.series]}
-          options={chartOptions}
-          width={60} // You can also make these dynamic like: width={isSmallScreen ? 50 : 70}
-          height={60}
-        />
+      <Box>
+        <Typography variant="h6" fontWeight={700} color="text.primary">
+          {title}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary" mt={0.5}>
+          {completedChapter}/{totalChapter} Chapters
+        </Typography>
       </Box>
 
-      {/* Background SVG */}
-      <SvgColor
-        src="/assets/background/shape-circle-3.svg"
-        sx={{
-          width: 50,
-          height: 50,
-          position: 'absolute',
-          opacity: 0.06,
-          right: 0,
-          top: 0,
-          zIndex: 0,
-        }}
-      />
-
-      {/* Textual Content */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        <Typography
-          variant="h6"
+      <Box mt={2}>
+        <LinearProgress
+          variant="determinate"
+          value={progress}
           sx={{
-            fontWeight: 'bold',
-            // fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
-            color,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: alpha('#000', 0.08),
+            '& .MuiLinearProgress-bar': {
+              background: `linear-gradient(90deg, ${alpha(color, 0.8)} 0%, ${color} 100%)`,
+              borderRadius: 5,
+              boxShadow: `0 0 10px ${alpha(color, 0.4)}`,
+            },
           }}
-        >
-          {completedChapter}/{totalChapter}
-        </Typography>
+        />
 
-        <Typography
-          variant="subtitle1"
-          sx={{
-            fontSize: { xs: '0.85rem', sm: '1rem', md: '1.1rem' }, // increased font sizes
-            color: alpha(color, 0.8),
-            fontWeight: 600,
-          }}
-        >
-          {title}
+        <Typography variant="body2" color="text.secondary" mt={1} textAlign="right">
+          {progress}% completed
         </Typography>
       </Box>
     </Box>

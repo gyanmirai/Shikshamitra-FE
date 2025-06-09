@@ -1,5 +1,4 @@
 import type { Dayjs } from 'dayjs';
-import type { ChartOptions } from 'src/components/chart';
 
 // Interface representing details of a course chapter
 export interface ICourseDetail {
@@ -28,16 +27,10 @@ export interface ICourseCardsGridProps {
 
 export interface IAppWidgetProps {
   title: string;
-  total?: number;
   color: string;
-  icon: string;
-  totalChapter: number;
   completedChapter: number;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  totalChapter: number;
+  chart: { series: number }; // % progress
 }
 
 export interface IUpdateProgressProps {

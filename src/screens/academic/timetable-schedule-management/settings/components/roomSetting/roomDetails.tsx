@@ -5,13 +5,10 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
+import { Box } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -40,9 +37,9 @@ const tableData = [
   },
 ];
 
-const RoomDetails = () => {
-  // Dialog state to control the visibility of the dialog
-  const dialog = useBoolean();
+const RoomDetails = ({ addRoomDialog }: any) => {
+  // addRoomDialog state to control the visibility of the addRoomDialog
+  // const addRoomDialog = useBoolean();
 
   // State to store the selected entry for editing
   const [selectedEntry, setSelectedEntry] = useState<any>(tableData);
@@ -55,8 +52,8 @@ const RoomDetails = () => {
   const [roomData, setRoomData] = useState(tableData);
 
   /**
-   * Handles saving room data from the dialog form
-   * @param dataFromDialog - Object containing room details (roomNumber, buildingName, floor, capacity)
+   * Handles saving room data from the addRoomDialog form
+   * @param dataFromaddRoomDialog - Object containing room details (roomNumber, buildingName, floor, capacity)
    * @returns void
    *
    * This method:
@@ -64,19 +61,19 @@ const RoomDetails = () => {
    * 2. Prevents duplicate entries when creating new rooms
    * 3. Creates new room entry or updates existing room based on isEdit flag
    * 4. Updates the roomData state with new/modified entry
-   * 5. Closes the dialog after successful operation
+   * 5. Closes the addRoomDialog after successful operation
    */
-  const handleSave = (dataFromDialog: any) => {
-    const { roomNumber, buildingName, floor, capacity } = dataFromDialog;
+  const handleSave = (dataFromaddRoomDialog: any) => {
+    const { roomNumber, buildingName, floor, capacity } = dataFromaddRoomDialog;
 
-    if (dataFromDialog) {
+    if (dataFromaddRoomDialog) {
       const existingEntryIndex = roomData.findIndex(
         (val) => roomNumber === val.roomNumber && buildingName === val.buildingName
       );
 
-      // If the entry already exists and it's not an edit, show duplicate dialog
+      // If the entry already exists and it's not an edit, show duplicate addRoomDialog
       if (existingEntryIndex !== -1 && !isEdit) {
-        dialog.onFalse();
+        addRoomDialog.onFalse();
         return;
       }
 
@@ -98,19 +95,19 @@ const RoomDetails = () => {
         setRoomData(updatedRoomData); // Update room data
       }
     }
-    dialog.onFalse();
+    addRoomDialog.onFalse();
 
     shikshaMitraToast.success({ message: 'Room added successfully' });
   };
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      dialog.onFalse();
+      addRoomDialog.onFalse();
       setIsEdit(false);
       setSelectedEntry(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      dialog.onFalse();
+      addRoomDialog.onFalse();
       setIsEdit(false);
       setSelectedEntry(null);
     }
@@ -118,19 +115,19 @@ const RoomDetails = () => {
 
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
+      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           size="small"
           variant="contained"
-          onClick={dialog.onTrue}
+          onClick={addRoomDialog.onTrue}
           sx={{
             width: '145px',
           }}
         >
           Room
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
@@ -146,7 +143,7 @@ const RoomDetails = () => {
             No Rooms Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                addRoomDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -183,7 +180,7 @@ const RoomDetails = () => {
                   handleEditClick={() => {
                     setIsEdit(true);
                     setSelectedEntry(row);
-                    dialog.onTrue();
+                    addRoomDialog.onTrue();
                   }}
                   placement="right-top"
                 />
@@ -195,13 +192,13 @@ const RoomDetails = () => {
       />
       <CustomDialog
         title={isEdit ? 'Update Room' : 'Create Room'}
-        open={dialog.value}
-        handleClose={dialog.onFalse}
+        open={addRoomDialog.value}
+        handleClose={addRoomDialog.onFalse}
         maxWidth="sm"
       >
         <RoomCreationForm
           onSave={handleSave}
-          dialogValue={dialog.value}
+          dialogValue={addRoomDialog.value}
           onClose={handleClose}
           data={selectedEntry}
           isEdit={isEdit}

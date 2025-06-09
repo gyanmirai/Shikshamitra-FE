@@ -1,11 +1,14 @@
 // SubjectTable.tsx
 
-import { Box, Chip, Tooltip, IconButton } from '@mui/material';
+import { Box, Tooltip, useTheme, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { SubjectTypeOptions } from 'src/enums/subject-type';
-import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -24,13 +27,15 @@ const SubjectTable = ({
   onDelete,
   onToggleStatus,
 }: ISubjectTableProps) => {
+  const theme = useTheme();
+
   function getSubjectTableData(formDataArray: ISubjectFormValues[]) {
     // Accumulate all rows here
     const rows: any[] = [];
 
     // eslint-disable-next-line no-restricted-syntax
     for (const formData of formDataArray) {
-      if (formData.subjectType === 'core') {
+      if (formData.subjectType === 'Core') {
         // Each subject is a row
         (formData.subjects || []).forEach((subject: ISubject) => {
           rows.push({
@@ -42,7 +47,7 @@ const SubjectTable = ({
             subjectType: formData.subjectType,
           });
         });
-      } else if (formData.subjectType === 'elective') {
+      } else if (formData.subjectType === 'Elective') {
         // All subjects in one row
         rows.push({
           id: formData.id,
@@ -101,54 +106,77 @@ const SubjectTable = ({
       }
       columns={[
         {
-          id: 'subjectName',
-          label: 'Subject Name',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {row.subjectType === 'core' ? (
-                <Chip
-                  key={value}
-                  label={`${value} (${row.subjectCode})`}
-                  size="small"
-                  variant="outlined"
-                  sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
-                />
-              ) : Array.isArray(value) ? (
-                value.map((subjectName: string, index: number) => (
-                  <Chip
-                    key={subjectName}
-                    label={`${subjectName} (${Array.isArray(row.subjectCode) ? row.subjectCode[index] : row.subjectCode})`}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderColor: Array.isArray(row.subjectColor)
-                        ? row.subjectColor[index]
-                        : row.subjectColor,
-                      color: Array.isArray(row.subjectColor)
-                        ? row.subjectColor[index]
-                        : row.subjectColor,
-                    }}
-                  />
-                ))
-              ) : (
-                <Chip
-                  key={value}
-                  label={`${value} (${row.subjectCode})`}
-                  size="small"
-                  variant="outlined"
-                  sx={{ borderColor: row.subjectColor, color: row.subjectColor }}
-                />
-              )}
-            </Box>
-          ),
-        },
-        {
           id: 'subjectType',
           label: 'Subject Type',
           align: 'left',
           filterType: 'enum',
+          minWidth: 130,
           enumOptions: SubjectTypeOptions,
+          sticky: true,
+        },
+        {
+          id: 'subjectName',
+          label: 'Subject Name',
+          align: 'left',
+          render: (value, row) => (
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+              {row.subjectType === 'Core' ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 18,
+                      borderRadius: 1,
+                      backgroundColor: row.subjectColor,
+                    }}
+                  />
+                  <Typography variant="body2">
+                    {value} ({row.subjectCode})
+                  </Typography>
+                </Box>
+              ) : Array.isArray(value) ? (
+                value.map((subjectName: string, index: number) => {
+                  const subjectCode = Array.isArray(row.subjectCode)
+                    ? row.subjectCode[index]
+                    : row.subjectCode;
+
+                  const subjectColor = Array.isArray(row.subjectColor)
+                    ? row.subjectColor[index]
+                    : row.subjectColor;
+
+                  return (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box
+                        sx={{
+                          width: 4,
+                          height: 18,
+                          borderRadius: 1,
+                          backgroundColor: subjectColor,
+                        }}
+                      />
+                      <Typography variant="body2">
+                        {subjectName} ({subjectCode})
+                      </Typography>
+                    </Box>
+                  );
+                })
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 18,
+                      borderRadius: 1,
+                      backgroundColor: row.subjectColor,
+                    }}
+                  />
+                  <Typography variant="body2">
+                    {value} ({row.subjectCode})
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ),
         },
 
         // {
@@ -194,25 +222,32 @@ const SubjectTable = ({
           isSort: false,
           filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
-          render: (value, row) => (
-            <Tooltip title={value === 'Published' ? 'Publish' : 'Draft'}>
-              <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
-                <Iconify
-                  icon={GlobalIcons.tick}
-                  sx={{
-                    width: 25,
-                    height: 25,
-                    cursor: 'pointer',
-                    color: value === 'Published' ? 'green' : 'gray',
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          ),
+          render(value, row) {
+            const statusColor =
+              value === PublishUnpublishStatusType.Published
+                ? theme.palette.success.main
+                : theme.palette.text.secondary;
+
+            return (
+              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
+                <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{
+                      width: 25,
+                      height: 25,
+                      cursor: 'pointer',
+                      color: statusColor,
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+            );
+          },
         },
         {
           id: 'action',
-          label: 'Action',
+          label: 'Actions',
           minWidth: 100,
           sticky: true,
           isFilter: false,

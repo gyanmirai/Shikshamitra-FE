@@ -58,7 +58,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
       <form onSubmit={handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '200px' }}>
           <CustomizableTable
-            tableId="elective-subject-table"
+            tableId="Elective-subject-table"
             isFilter={false}
             isPagination={false}
             isSearch={false}
