@@ -188,10 +188,22 @@ const CourseProgress = () => {
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+
+              {
+                id: 'timeLine',
+                label: 'Deadline',
+                align: 'left',
+                filterType: 'date',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD-MM-YYYY')}
+                  </Typography>
+                ),
+              },
               {
                 id: 'progress',
                 label: 'Progress',
-                align: 'center',
+                align: 'left',
                 filterType: 'number',
                 render(value, row) {
                   return (
@@ -221,17 +233,6 @@ const CourseProgress = () => {
                     </Box>
                   );
                 },
-              },
-              {
-                id: 'timeLine',
-                label: 'Deadline',
-                align: 'left',
-                filterType: 'date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD-MM-YYYY')}
-                  </Typography>
-                ),
               },
               // {
               //   id: 'actions',

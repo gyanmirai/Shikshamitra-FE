@@ -9,7 +9,6 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import CustomSelect from 'src/components/custom-select';
 
-import RenderStudent from './RenderStudent';
 import { RenderDocuments } from './RenderDocument';
 import { generalFormFields } from './GeneralFormFields';
 import RenderFamilyInformation from './RenderFamilyInformation';
@@ -24,7 +23,7 @@ export const documentFields: FieldsType[] = [
     type: 'text',
     label: 'Certificate Name',
     name: 'certificateName',
-    placeholder: 'Enter Certificate Name',
+
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
       return <RenderDocuments id={props.formik.values.id} />;
@@ -61,7 +60,6 @@ export const communicationFields: FieldsType[] = [
           }}
           autoFocus
           label="Primary Contact Number"
-          placeholder="Enter Primary Contact No."
           error={formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)}
         />
       );
@@ -84,7 +82,6 @@ export const communicationFields: FieldsType[] = [
             formik.setFieldValue('secondaryContactNumber', value);
           }}
           label="Secondary Contact Number"
-          placeholder="Enter Secondary Contact No."
           error={
             formik.touched.secondaryContactNumber && Boolean(formik.errors.secondaryContactNumber)
           }
@@ -95,7 +92,7 @@ export const communicationFields: FieldsType[] = [
   {
     name: 'parentEmail',
     label: 'Parent Email',
-    placeholder: 'Enter Parent email',
+
     type: 'email',
     otherProps: {
       InputProps: {
@@ -125,7 +122,6 @@ export const communicationFields: FieldsType[] = [
             formik.setFieldValue('studentContactNo', value);
           }}
           label="Student Contact No."
-          placeholder="Enter Student Contact No."
           error={formik.touched.studentContactNo && Boolean(formik.errors.studentContactNo)}
           helperText={formik.touched.studentContactNo && formik.errors.studentContactNo}
         />
@@ -135,7 +131,7 @@ export const communicationFields: FieldsType[] = [
   {
     name: 'studentEmail',
     label: 'Student Email',
-    placeholder: 'Enter Student Email',
+
     type: 'email',
     otherProps: {
       InputProps: {
@@ -165,7 +161,6 @@ export const communicationFields: FieldsType[] = [
             formik.setFieldValue('whatsAppContactNo', value);
           }}
           label="Whatsapp No."
-          placeholder="Enter WhatsApp Contact No."
           error={formik.touched.whatsAppContactNo && Boolean(formik.errors.whatsAppContactNo)}
           helperText={formik.touched.whatsAppContactNo && formik.errors.whatsAppContactNo}
         />
@@ -200,7 +195,7 @@ export const communicationFields: FieldsType[] = [
     name: 'remarks',
     label: 'Remarks',
     type: 'text',
-    placeholder: 'Enter Remarks',
+
     otherProps: { multiline: true, rows: 4 },
     gridProps: { xs: 12, md: 12 },
   },
@@ -312,7 +307,7 @@ export const additionalDetailsFields: FieldsType[] = [
   {
     name: 'secondLanguage',
     label: 'Second Language',
-    placeholder: 'Enter Second Language',
+
     type: 'text',
     otherProps: {},
   },
@@ -331,7 +326,6 @@ export const additionalDetailsFields: FieldsType[] = [
           onChange={(value) => {
             formik.setFieldValue('emergencyContactNo', value);
           }}
-          placeholder="Emergency Contact No."
           label="Emergency Contact No"
           error={formik.touched.emergencyContactNo && Boolean(formik.errors.emergencyContactNo)}
         />
@@ -341,7 +335,7 @@ export const additionalDetailsFields: FieldsType[] = [
   {
     name: 'relationName',
     label: 'Relation Name',
-    placeholder: 'Enter Relation Name',
+
     type: 'text',
     otherProps: ({ formik }: any) => ({
       disabled: !formik.values.bplStudent,
@@ -350,7 +344,7 @@ export const additionalDetailsFields: FieldsType[] = [
   {
     name: 'relation',
     label: 'Relation',
-    placeholder: 'Enter Relation',
+
     type: 'text',
     otherProps: ({ formik }: any) => ({
       disabled: !formik.values.bplStudent,
@@ -404,13 +398,13 @@ export const additionalDetailsFields: FieldsType[] = [
       );
     },
   },
-  {
-    name: 'sponsorStudent',
-    label: 'Student Referrer',
-    type: 'text',
-    otherProps: {},
-    renderComp: (props) => <RenderStudent {...props} />,
-  },
+  // {
+  //   name: 'sponsorStudent',
+  //   label: 'Student Referrer',
+  //   type: 'text',
+  //   otherProps: {},
+  //   renderComp: (props) => <RenderStudent {...props} />,
+  // },
   // {
   //   name: 'sponsorName ',
   //   label: 'Sponsor Name',
@@ -423,65 +417,63 @@ export const medicalFields: FieldsType[] = [
   {
     name: 'weight',
     label: 'Weight (kg)',
-    placeholder: 'Enter Weight (kg)',
+
     type: 'number',
     otherProps: { autoFocus: true },
   },
   {
     name: 'height',
     label: 'Height (cm)',
-    placeholder: 'Enter Height (cm)',
+
     type: 'number',
     otherProps: {},
   },
   {
     name: 'bmi',
     label: 'Body Mass Index (BMI)',
-    placeholder: 'Enter Body Mass Index (BMI)',
+
     type: 'number',
     otherProps: {},
   },
   {
     name: 'pulseRate',
     label: 'Pulse Rate',
-    placeholder: 'Enter Pulse Rate',
+
     type: 'number',
     otherProps: {},
   },
   {
     name: 'haemoglobin',
     label: 'Haemoglobin (hb)',
-    placeholder: 'Enter Haemoglobin (hb)',
+
     type: 'string',
     otherProps: {},
   },
   {
     name: 'allergies',
     label: 'Allergies',
-    placeholder: 'Enter Allergies',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'covidVaccination',
     label: 'Covid Vaccination',
-    placeholder: 'Enter Covid Vaccination',
+
     type: 'text',
-    otherProps: {
-      placeholder: 'Enter Covid Vaccination *',
-    },
+    otherProps: {},
   },
   {
     name: 'childImmunisation',
     label: 'Child Immunisation',
-    placeholder: 'Enter Child Immunisation',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'immunisationRemarks',
     label: 'Immunisation Remarks',
-    placeholder: 'Enter Immunisation Remarks',
+
     type: 'text',
     otherProps: {},
   },
@@ -491,7 +483,7 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'schoolName',
     label: 'Previous School Name',
-    placeholder: 'Enter Previous School Name',
+
     type: 'text',
     otherProps: ({ formik }: any) => ({
       onChange: (e: any) => {
@@ -504,7 +496,7 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'schoolAddress',
     label: 'Previous School Address',
-    placeholder: 'Enter Previous School Address',
+
     type: 'text',
     otherProps: ({ formik }: any) => ({
       onChange: (e: any) => {
@@ -516,14 +508,14 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'schoolBoard',
     label: 'Previous School Board',
-    placeholder: 'Enter Previous School Board',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'schoolMedium',
     label: 'Previous School Medium',
-    placeholder: 'Enter Previous School Medium',
+
     type: 'text',
     otherProps: ({ formik }: any) => ({
       onChange: (e: any) => {
@@ -535,21 +527,21 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'tcNumber',
     label: 'TC Number',
-    placeholder: 'Enter TC Number',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'previousClass',
     label: 'Previous Class',
-    placeholder: 'Enter Previous Class',
+
     type: 'number',
     otherProps: {},
   },
   {
     name: 'percentage',
     label: 'Percentage',
-    placeholder: 'Enter Percentage',
+
     type: 'number',
     otherProps: {},
   },
@@ -559,35 +551,35 @@ export const bankDetailsFields: FieldsType[] = [
   {
     name: 'bankName',
     label: 'Bank Name',
-    placeholder: 'Enter Bank Name',
+
     type: 'text',
     otherProps: { autoFocus: true },
   },
   {
     name: 'accountNo',
     label: 'Account No',
-    placeholder: 'Enter Account No',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'ifscCode',
     label: 'IFSC Code',
-    placeholder: 'Enter IFSC Code',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'branchName',
     label: 'Branch Name',
-    placeholder: 'Enter Branch Name',
+
     type: 'text',
     otherProps: {},
   },
   {
     name: 'accountHolderName',
     label: 'Account Holder Name',
-    placeholder: 'Enter Account Holder Name',
+
     type: 'text',
     otherProps: {},
   },

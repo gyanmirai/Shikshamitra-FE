@@ -5,6 +5,8 @@ import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
+import { varAlpha } from 'src/theme/styles';
+
 import { layoutClasses } from '../classes';
 
 // ----------------------------------------------------------------------
@@ -46,7 +48,11 @@ export function LayoutSection({
     <>
       {inputGlobalStyles}
 
-      <Box id="root__layout" className={layoutClasses.root} sx={sx}>
+      <Box
+        id="root__layout"
+        className={layoutClasses.root}
+        sx={{ background: (theme) => varAlpha(theme.palette.grey['400Channel'], 0.08), ...sx }}
+      >
         {sidebarSection ? (
           <>
             {sidebarSection}

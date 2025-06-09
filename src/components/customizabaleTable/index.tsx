@@ -562,7 +562,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         {isFilter && (
           <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
             <Box sx={{ ml: 2 }}>
-              {showCheckbox && (
+              {/* {showCheckbox && (
                 <Button
                   // variant="outlined"
                   size="small"
@@ -573,7 +573,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 >
                   Send Notification
                 </Button>
-              )}
+              )} */}
               <Button
                 // variant="outlined"
                 size="small"

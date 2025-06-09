@@ -88,6 +88,7 @@ const RegistrationFormScreen = () => {
       })),
     [inquiryFormData?.items]
   );
+  console.log('🚀 ~ RegistrationFormScreen ~ tableData:', tableData);
 
   return (
     <Box>
@@ -152,7 +153,7 @@ const RegistrationFormScreen = () => {
               align: 'left',
               sticky: true,
             },
-            { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left' },
+            { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left', sticky: true },
             {
               id: 'inquiryNumber',
               label: 'Inquiry No.',
@@ -208,7 +209,7 @@ const RegistrationFormScreen = () => {
             },
             {
               id: 'inquiryPreference.preferenceName',
-              label: 'Inquiry Type',
+              label: 'Inquiry Prefrance',
               minWidth: '130px',
               align: 'left',
             },
@@ -233,6 +234,8 @@ const RegistrationFormScreen = () => {
               sticky: true,
               minWidth: 40,
               render(value, row) {
+                console.log('🚀 ~ render ~ row:', row);
+
                 return (
                   <ThreeDotsActions
                     actions={({ popover }) => (
@@ -241,12 +244,12 @@ const RegistrationFormScreen = () => {
                           onClick={async (e) => {
                             // dialog.onTrue();
                             // setMoveId(row.id);
-                            registerFormDialog.onTrue();
                             setEditData(row as IInquiryData);
+                            registerFormDialog.onTrue();
                             popover.onClose();
                           }}
                         >
-                          <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+                          <Iconify icon="mdi:arrow-right-circle" />
                           Move to Registration
                         </MenuItem>
                         <MenuItem
@@ -257,8 +260,8 @@ const RegistrationFormScreen = () => {
                             popover.onClose();
                           }}
                         >
-                          <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                          Follow Up
+                          <Iconify icon="clarity:note-edit-line" />
+                          Note
                         </MenuItem>
                       </MenuList>
                     )}
@@ -278,7 +281,7 @@ const RegistrationFormScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Follow Up"
+        title="Note"
       >
         <CommunicationForm
           handleCloseDialog={() => {

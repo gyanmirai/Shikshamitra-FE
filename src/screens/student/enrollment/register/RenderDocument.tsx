@@ -4,16 +4,16 @@ import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
+import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
-import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { DocumentStatusOptions } from 'src/enums/document-statusType';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { DocumentType, DocumentFileType } from 'src/enums/documnet-type';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import {
   useUploadDocumentsMutation,
@@ -22,10 +22,10 @@ import {
   useStudentUpdateDocumentMutation,
 } from 'src/redux/student/registration/registration-api';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { DocumentForm } from '../setting/document-type';
@@ -102,7 +102,7 @@ export const RenderDocuments = (props: any) => {
   };
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
         <Button
           size="small"
           variant="contained"
@@ -113,7 +113,7 @@ export const RenderDocuments = (props: any) => {
         >
           Add Document
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         isLoading={isLoading || isEmployeeDocLoading}
         tableId="documents"
@@ -127,11 +127,22 @@ export const RenderDocuments = (props: any) => {
           {
             id: 'statusVal',
             label: 'Status',
+            enumOptions: DocumentStatusOptions,
+            filterType: 'enum',
             render(value, row) {
               return (
-                <Label color={row.uploadDocument ? 'success' : 'warning'}>
-                  {row.uploadDocument ? 'Uploaded' : 'Pending'}
-                </Label>
+                <Tooltip title={row.statusVal}>
+                  <Iconify
+                    icon={row.statusVal === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                    height={20}
+                    width={20}
+                    sx={{
+                      color: (theme) =>
+                        row.statusVal === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                      cursor: 'pointer',
+                    }}
+                  />
+                </Tooltip>
               );
             },
           },
@@ -143,6 +154,20 @@ export const RenderDocuments = (props: any) => {
                 <UploadButton
                   onChange={async (e) => {
                     const file = e.target.files[0];
+                    if (!file) return;
+                    const acceptableFileFormats: string[] = [];
+
+                    row.documentTypes.forEach((item: number) => {
+                      acceptableFileFormats.push(
+                        DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
+                      );
+                    });
+                    if (!acceptableFileFormats.includes(file?.type)) {
+                      shikshaMitraToast.error({
+                        message: `Please upload ${row.docType} file`,
+                      });
+                      return;
+                    }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
                     const formData = new FormData();
                     formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
@@ -159,7 +184,7 @@ export const RenderDocuments = (props: any) => {
                         loading: `Uploading Document ${row.documentName} `,
                         success: () => `Upload Successfully!`,
                         error: 'Error',
-                        closeButton: false,
+                        closeButton: true,
                       }
                     );
                   }}
@@ -232,13 +257,30 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
   });
 
   return (
-    <Box>
+    <Box
+      height="60vh"
+      width="100%"
+      sx={{
+        '& iframe img': {
+          height: '100%',
+        },
+      }}
+    >
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
-        <iframe
+        <Box
+          component="iframe"
           src={convertBase64Format(documents.content)}
-          style={{ width: '100%', height: 500 }}
+          sx={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            objectFit: 'contain',
+            '& img': {
+              height: '100%',
+            },
+          }}
           title="Employee Document"
         />
       )}

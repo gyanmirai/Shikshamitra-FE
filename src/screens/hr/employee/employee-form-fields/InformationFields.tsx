@@ -76,7 +76,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 size="small"
                 label="First Name *"
-                placeholder="Enter First Name *"
                 {...formik.getFieldProps('firstName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
@@ -96,7 +95,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 size="small"
                 label="Middle Name *"
-                placeholder="Enter Middle Name *"
                 {...formik.getFieldProps('middleName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
@@ -114,7 +112,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 size="small"
                 label="Last Name *"
-                placeholder="Enter Last Name *"
                 {...formik.getFieldProps('lastName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
@@ -132,7 +129,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 size="small"
                 label="Short Name"
-                placeholder="Enter Short Name"
                 {...formik.getFieldProps('shortName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
@@ -157,7 +153,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                   textField: {
                     size: 'small',
                     fullWidth: true,
-                    placeholder: 'Select Date of Birth *',
                     error: formik.touched.dob && Boolean(formik.errors.dob),
                     helperText: formik.touched.dob && formik.errors.dob,
                   },
@@ -167,7 +162,10 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           </Grid>
           <Grid item xs={12} md={4}>
             <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-              <FormControl fullWidth>
+              <FormControl
+                fullWidth
+                sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
+              >
                 <FormLabel id="gender-radio-group">Gender</FormLabel>
                 <RadioGroup
                   row
@@ -235,7 +233,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                   <TextField
                     {...params}
                     label="Category *"
-                    placeholder="Search Category *"
                     size="small"
                     fullWidth
                     error={formik.touched.castType && Boolean(formik.errors.castType)}
@@ -256,7 +253,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 size="small"
                 label="Family Cast *"
-                placeholder="Enter Family Cast *"
                 {...formik.getFieldProps('familyCast')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
@@ -348,7 +344,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             fullWidth
             size="small"
             label="Email *"
-            placeholder="Enter Email *"
             {...formik.getFieldProps('email')}
             error={formik.touched.email && Boolean(formik.errors.email)}
             helperText={formik.touched.email && formik.errors.email}
@@ -373,7 +368,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               formik.setFieldValue('mobileNo', value);
               formik.validateField('mobileNo');
             }}
-            placeholder="Enter Mobile No. *"
             label="Mobile No. *"
             error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
             disabled={disabled}
@@ -398,7 +392,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               textField: {
                 size: 'small',
                 fullWidth: true,
-                placeholder: 'Select Date of Joining *',
                 error: formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining),
                 helperText: formik.touched.dateOfJoining && formik.errors.dateOfJoining,
               },
@@ -427,7 +420,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               <TextField
                 {...params}
                 label="Employee Group *"
-                placeholder="Search Employee Group *"
                 size="small"
                 fullWidth
                 error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
@@ -446,7 +438,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             fullWidth
             size="small"
             label="Department"
-            placeholder="Enter Department"
             {...formik.getFieldProps('department')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -464,7 +455,6 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             fullWidth
             size="small"
             label="Designation"
-            placeholder="Enter Designation"
             {...formik.getFieldProps('designation')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -496,8 +486,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Building / Flat / House No"
-            placeholder="Enter Building / Flat / House No"
+            label="Building No / Flat / House No"
             {...formik.getFieldProps('addressLine1')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -516,8 +505,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Street / Road Name"
-            placeholder="Enter Street / Road Name"
+            label="Area/Locality/Road Name"
             {...formik.getFieldProps('addressLine2')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -536,8 +524,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Area / Locality / Landmark"
-            placeholder="Enter Area / Locality / Landmark"
+            label="Landmark"
             {...formik.getFieldProps('addressLine3')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -602,14 +589,21 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             size="small"
             label="Pincode"
             type="number"
-            placeholder="Enter Pincode"
             {...formik.getFieldProps('pincode')}
             error={formik.touched.pincode && Boolean(formik.errors.pincode)}
             helperText={formik.touched.pincode && formik.errors.pincode}
             disabled={disabled}
+            name="pincode"
             onChange={(e) => {
-              formik.handleChange(e);
-              formik.validateField('pincode');
+              const { value } = e.target;
+              if (value.length <= 6) {
+                formik.handleChange(e);
+                formik.validateField('pincode');
+              }
+            }}
+            inputProps={{
+              maxLength: 6,
+              pattern: '[0-9]*',
             }}
           />
         </ShakingTextField>

@@ -445,7 +445,6 @@ const FamilyMemberSection = ({
         p: 3,
         mb: 2,
         borderRadius: 1,
-        // bgcolor: (theme) => theme.palette.grey[100],
         border: '1px solid',
         borderColor: 'divider',
       }}
@@ -455,7 +454,7 @@ const FamilyMemberSection = ({
         {title}
       </Typography>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {/* Name Field */}
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <ShakingTextField
@@ -465,7 +464,6 @@ const FamilyMemberSection = ({
               name={`${type}Name`}
               value={formik.values[`${type}Name`]}
               label={`${capitalizedType} Name `}
-              placeholder={`Enter ${capitalizedType} Name `}
               onChange={(e) => {
                 const value = capitalize(e.target.value);
                 formik.setFieldValue(`${type}Name`, value);
@@ -511,7 +509,6 @@ const FamilyMemberSection = ({
               onChange={(value) => {
                 formik.setFieldValue(`${type}ContactNo`, value);
               }}
-              placeholder={`Enter ${capitalizedType} Contact No.`}
               error={
                 formik.touched[`${type}ContactNo`] && Boolean(formik.errors[`${type}ContactNo`])
               }
@@ -530,6 +527,7 @@ const FamilyMemberSection = ({
     </Paper>
   );
 };
+
 function RenderFamilyInformation(props: any) {
   const { formik, disabled } = props;
 
@@ -558,12 +556,12 @@ function RenderFamilyInformation(props: any) {
     </Box>
   );
 }
+
 export const FamilyFields: FieldsType[] = [
   {
     type: 'text',
     label: 'Father Name',
     name: 'fatherName',
-    placeholder: 'Enter Father Name',
     renderComp(props: any) {
       return <RenderFamilyInformation {...props} />;
     },

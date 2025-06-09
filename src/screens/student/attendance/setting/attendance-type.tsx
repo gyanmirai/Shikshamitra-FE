@@ -8,6 +8,8 @@ import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } fro
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetStudentAttendanceTypeQuery,
@@ -111,6 +113,7 @@ const AttendanceType = () => {
             isFilter: false,
             isSort: false,
             minWidth: 130,
+            align: 'left',
             render: (value, row) => (
               <ThreeDotsActions
                 showThreeDots={false}
@@ -248,11 +251,23 @@ export const AttendanceTypeForm = ({
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={handleClose}>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          color="inherit"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
-          Save
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          loading={isUpdateLoading || isLoading}
+          variant="contained"
+          type="submit"
+          size="small"
+        >
+          Submit
         </LoadingButton>
       </DialogActions>
     </Box>

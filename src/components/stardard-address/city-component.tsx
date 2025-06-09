@@ -40,7 +40,7 @@ const CityComponent = ({
           {`${option?.name}`}
         </li>
       )}
-      disabled={!stateValue}
+      disabled={!stateValue?.name}
       options={allCities || []}
       getOptionLabel={(option: any) => `${option?.name || ''}`}
       renderInput={(params) => (

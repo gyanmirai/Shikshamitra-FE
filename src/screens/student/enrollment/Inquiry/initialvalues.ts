@@ -35,7 +35,7 @@ export const inquiryInitialValues: (editData: IInquiryData | null) => IInquiryFo
   formNo: editData?.formNumber || undefined,
   country: editData
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-    : { name: '', isoCode: '' },
+    : { name: 'India', isoCode: 'IN' },
   addressLine1: editData?.addressLine1 || '',
   addressLine2: editData?.addressLine2 || '',
   addressLine3: editData?.addressLine3 || '',

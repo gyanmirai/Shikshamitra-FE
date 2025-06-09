@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import { useMemo, useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Card, Grid, Stack, Button, TextField, CardContent } from '@mui/material';
+import { Tab, Box, Card, Grid, Stack, Button, TextField } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -269,7 +269,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       <form onSubmit={formik.handleSubmit}>
         <Card
           sx={{
-            px: 1,
+            px: 0,
             // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
           }}
         >
@@ -277,14 +277,14 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             value={tabs.value}
             onChange={handleTabChange}
             variant="fullWidth"
-            slotProps={{ tab: { px: 0 } }}
+            // slotProps={{ tab: { px: 0 } }}
           >
             {TABS.map((tab) => (
               <Tab key={tab.value} value={tab.value} label={tab.label} />
             ))}
           </CustomTabs>
 
-          <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
+          <Stack direction="row" justifyContent="flex-end" sx={{ px: 2, pt: 2 }}>
             <Button
               variant="outlined"
               size="small"
@@ -343,7 +343,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
               </Button>
             )}
           </Stack>
-          <Card sx={{ backgroundColor: (theme) => theme.palette.background.paper }}>
+          {/* <Card
+            sx={{ backgroundColor: (theme) => theme.palette.background.paper, boxShadow: 'none' }}
+          >
             <CardContent
               sx={{
                 width: '100%',
@@ -357,97 +359,97 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                 //   // color: (theme) => `${theme.palette.text.disabled} !important`,
                 // },
               }}
-            >
-              <Grid container spacing={2}>
-                {' '}
-                {fields[activeTabIndex].map((field: FieldsType, index: number) => (
-                  <Grid
-                    item
-                    xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                    md={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                    key={field.name}
-                    {...field.gridProps}
-                    mb="15px"
+            > */}
+          <Grid container spacing={2} p={2}>
+            {' '}
+            {fields[activeTabIndex].map((field: FieldsType, index: number) => (
+              <Grid
+                item
+                xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                md={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                key={field.name}
+                {...field.gridProps}
+                mb="15px"
+              >
+                {field.renderComp ? (
+                  field.renderComp({
+                    formik,
+                    field,
+                    disabled: !isEdit,
+                  })
+                ) : field.type === 'date' ? (
+                  <ShakingTextField
+                    error={
+                      formik.touched[field.name as keyof typeof formik.values] &&
+                      Boolean(formik.errors[field.name as keyof typeof formik.values])
+                    }
                   >
-                    {field.renderComp ? (
-                      field.renderComp({
-                        formik,
-                        field,
-                        disabled: !isEdit,
-                      })
-                    ) : field.type === 'date' ? (
-                      <ShakingTextField
-                        error={
-                          formik.touched[field.name as keyof typeof formik.values] &&
-                          Boolean(formik.errors[field.name as keyof typeof formik.values])
-                        }
-                      >
-                        <DatePicker
-                          label={field.label}
-                          name={field.name}
-                          value={formik.values[field.name as keyof typeof formik.values]}
-                          format="DD/MM/YYYY"
-                          onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                          sx={{
-                            ...((field?.sx as any) || {}),
-                          }}
-                          disabled={!isEdit}
-                          slotProps={{
-                            textField: {
-                              placeholder: field.placeholder,
-                              fullWidth: true,
-                              size: 'small',
-                              helperText:
-                                formik.touched[field.name as keyof typeof formik.values] &&
-                                formik.errors[field.name as keyof typeof formik.values]
-                                  ? String(formik.errors[field.name as keyof typeof formik.values])
-                                  : undefined,
-                              error:
-                                formik.touched[field.name as keyof typeof formik.values] &&
-                                Boolean(formik.errors[field.name as keyof typeof formik.values]),
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    ) : (
-                      <ShakingTextField
-                        error={
-                          formik.touched[field.name as keyof typeof formik.values] &&
-                          Boolean(formik.errors[field.name as keyof typeof formik.values])
-                        }
-                      >
-                        <TextField
-                          key={field.name}
-                          type={field.type}
-                          size="small"
-                          label={field.label}
-                          name={field.name}
-                          disabled={!isEdit}
-                          placeholder={field.placeholder}
-                          value={formik.values[field.name as keyof typeof formik.values]}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={
-                            formik.touched[field.name as keyof typeof formik.values] &&
-                            Boolean(formik.errors[field.name as keyof typeof formik.values])
-                          }
-                          helperText={
+                    <DatePicker
+                      label={field.label}
+                      name={field.name}
+                      value={formik.values[field.name as keyof typeof formik.values]}
+                      format="DD/MM/YYYY"
+                      onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                      sx={{
+                        ...((field?.sx as any) || {}),
+                      }}
+                      disabled={!isEdit}
+                      slotProps={{
+                        textField: {
+                          placeholder: field.placeholder,
+                          fullWidth: true,
+                          size: 'small',
+                          helperText:
                             formik.touched[field.name as keyof typeof formik.values] &&
                             formik.errors[field.name as keyof typeof formik.values]
                               ? String(formik.errors[field.name as keyof typeof formik.values])
-                              : undefined
-                          }
-                          fullWidth
-                          sx={{ ...(field?.sx || {}) }}
-                          {...(field?.otherProps || {})}
-                        />
-                      </ShakingTextField>
-                    )}
-                  </Grid>
-                ))}{' '}
+                              : undefined,
+                          error:
+                            formik.touched[field.name as keyof typeof formik.values] &&
+                            Boolean(formik.errors[field.name as keyof typeof formik.values]),
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                ) : (
+                  <ShakingTextField
+                    error={
+                      formik.touched[field.name as keyof typeof formik.values] &&
+                      Boolean(formik.errors[field.name as keyof typeof formik.values])
+                    }
+                  >
+                    <TextField
+                      key={field.name}
+                      type={field.type}
+                      size="small"
+                      label={field.label}
+                      name={field.name}
+                      disabled={!isEdit}
+                      placeholder={field.placeholder}
+                      value={formik.values[field.name as keyof typeof formik.values]}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched[field.name as keyof typeof formik.values] &&
+                        Boolean(formik.errors[field.name as keyof typeof formik.values])
+                      }
+                      helperText={
+                        formik.touched[field.name as keyof typeof formik.values] &&
+                        formik.errors[field.name as keyof typeof formik.values]
+                          ? String(formik.errors[field.name as keyof typeof formik.values])
+                          : undefined
+                      }
+                      fullWidth
+                      sx={{ ...(field?.sx || {}) }}
+                      {...(field?.otherProps || {})}
+                    />
+                  </ShakingTextField>
+                )}
               </Grid>
-            </CardContent>
-          </Card>
+            ))}{' '}
+          </Grid>
+          {/* </CardContent>
+          </Card> */}
         </Card>
       </form>
     </Box>

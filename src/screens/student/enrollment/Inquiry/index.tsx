@@ -100,6 +100,7 @@ export interface IInquiryData {
   remarks: string;
   onboardingProgressState: number;
   groupMembership: IGroupMembership;
+  formNo: string;
 }
 
 export interface ParentBankDetails {
@@ -322,12 +323,13 @@ const InquiryScreen = () => {
       )}
 
       <CustomDialog
+        maxWidth="sm"
         open={followUpDialog.value}
         handleClose={() => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Follow Up"
+        title="Notes"
       >
         <CommunicationForm
           handleCloseDialog={() => {

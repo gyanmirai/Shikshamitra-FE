@@ -6,9 +6,9 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { Form, Field, Formik, useFormik } from 'formik';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
@@ -26,6 +26,7 @@ import {
   Typography,
   Autocomplete,
   DialogActions,
+  DialogContent,
   FormControlLabel,
 } from '@mui/material';
 
@@ -103,6 +104,7 @@ const LeaveAndAbsentScreen = () => {
         name: `${item.student?.lastName} ${item.student?.firstName} ${
           item.student?.middleName ? item.student?.middleName : ''
         }`,
+        totalDays: dayjs(item.endDate).diff(item.startDate, 'day'),
       })),
     [leaveData]
   );
@@ -158,45 +160,46 @@ const LeaveAndAbsentScreen = () => {
           },
         }}
         columns={[
-          {
-            id: 'checkBox',
-            label: ' ',
-            isSort: false,
-            isFilter: false,
-            minWidth: '60px',
-            sticky: true,
-            renderColumn: (value) => (
-              <Checkbox
-                checked={tableData?.length === selectedStudent?.length}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedStudent(tableData);
-                  } else {
-                    setSelectedStudent([]);
-                  }
-                }}
-              />
-            ),
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={selectedStudent.some((student: any) => student.id === row.id)}
-                  onChange={(e) => {
-                    if (!e.target.checked) {
-                      setSelectedStudent(
-                        selectedStudent.filter((student: any) => student.id !== row.id)
-                      );
-                    } else {
-                      setSelectedStudent([...selectedStudent, row]);
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   label: ' ',
+          //   isSort: false,
+          //   isFilter: false,
+          //   minWidth: '60px',
+          //   sticky: true,
+          //   renderColumn: (value) => (
+          //     <Checkbox
+          //       checked={tableData?.length === selectedStudent?.length}
+          //       onChange={(e) => {
+          //         if (e.target.checked) {
+          //           setSelectedStudent(tableData);
+          //         } else {
+          //           setSelectedStudent([]);
+          //         }
+          //       }}
+          //     />
+          //   ),
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={selectedStudent.some((student: any) => student.id === row.id)}
+          //         onChange={(e) => {
+          //           if (!e.target.checked) {
+          //             setSelectedStudent(
+          //               selectedStudent.filter((student: any) => student.id !== row.id)
+          //             );
+          //           } else {
+          //             setSelectedStudent([...selectedStudent, row]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'name',
             label: 'Student',
+            sticky: true,
             render(value, row) {
               return (
                 <Box display="flex" alignItems="center" gap={1}>
@@ -225,6 +228,13 @@ const LeaveAndAbsentScreen = () => {
             minWidth: '120px',
             align: 'left',
           },
+          {
+            id: 'totalDays',
+            label: 'Total Days',
+            minWidth: '10vw',
+            filterType: 'number',
+            align: 'left',
+          },
           { id: 'description', label: 'Description' },
           { id: 'rejectionReason', label: 'Remarks' },
           {
@@ -247,6 +257,7 @@ const LeaveAndAbsentScreen = () => {
             minWidth: 80,
             isSort: false,
             isFilter: false,
+            align: 'left',
             render(value, row) {
               return (
                 <Box display="flex" gap={1}>
@@ -344,6 +355,8 @@ const uploadProps = {
   accept: { 'image/*': [] },
 };
 const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -427,153 +440,156 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
     },
     []
   );
-  return (
-    <Box p={2}>
-      <Box display="flex" my={2} gap={2} flexWrap="wrap">
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!medium}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!organization}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!classes}
-        />
-        <Autocomplete
-          loading={false}
-          noOptionsText="No Student Found"
-          sx={{ maxWidth: '250px', width: '100%' }}
-          value={student}
-          onChange={(e, value: any) => {
-            setStudent(value);
-          }}
-          options={StudentsData?.items || []}
-          getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              label="Student"
-              placeholder="Search  Student"
-              fullWidth
-            />
-          )}
-          renderOption={(prop: any, option: any) => (
-            <li {...prop} key={option.id}>
-              {option.firstName || ''} {option.lastName || ''}
-            </li>
-          )}
-        />
-      </Box>
 
-      {student?.id && (
-        <Formik<IFormValues>
-          initialValues={{
-            leaveType: '',
-            description: '',
-            startDate: null,
-            endDate: null,
-            isHalfDay: false,
-            rejectionReason: '',
-            status: null,
-            docs: '',
-          }}
-          validationSchema={Yup.object().shape({
-            leaveType: Yup.string().required('Leave type is required'),
-            isHalfDay: Yup.boolean(),
-            startDate: Yup.date().required('Start date is required'),
-            endDate: Yup.string()
-              .nullable()
-              .test('endDate', '', (value, context) => {
-                const { isHalfDay } = context.parent;
-                const { startDate } = context.parent;
-                if (isHalfDay) return true;
-                if (startDate && value) {
-                  const fullStartDate = dayjs(startDate);
-                  const endDate = dayjs(value);
+  const { errors, touched, setFieldValue, values, submitForm, handleSubmit } =
+    useFormik<IFormValues>({
+      initialValues: {
+        leaveType: '',
+        description: '',
+        startDate: null,
+        endDate: null,
+        isHalfDay: false,
+        rejectionReason: '',
+        status: null,
+        docs: '',
+      },
+      validationSchema: Yup.object({
+        leaveType: Yup.string().required('Leave type is required'),
+        isHalfDay: Yup.boolean(),
+        startDate: Yup.date().required('Start date is required'),
+        endDate: Yup.string()
+          .nullable()
+          .test('endDate', '', (value, context) => {
+            const { isHalfDay } = context.parent;
+            const { startDate } = context.parent;
+            if (isHalfDay) return true;
+            if (startDate && value) {
+              const fullStartDate = dayjs(startDate);
+              const endDate = dayjs(value);
 
-                  const isAfter = endDate.isAfter(fullStartDate);
+              const isAfter = endDate.isAfter(fullStartDate);
 
-                  return (
-                    isAfter || context.createError({ message: 'End date must be after start date' })
-                  );
-                }
-                if (!value && !isHalfDay) {
-                  return context.createError({ message: 'End date is required' });
-                }
-                return true;
-              }),
-            description: Yup.string().required('Description is required'),
-            status: Yup.string().nullable(),
-            rejectionReason: Yup.string().test(
-              'rejectionReason',
-              'Rejection reason is required',
-              (value, context) => {
-                const { status } = context.parent;
-                if (status === EmployeeLeaveStatusType.Rejected) {
-                  return (
-                    !!value || context.createError({ message: 'Rejection reason is required' })
-                  );
-                }
-                return true;
-              }
-            ),
-            // color: Yup.string().required('Color is required'),
-          })}
-          onSubmit={async (values, { setSubmitting }) => {
-            try {
-              const res = await addLeaveRequest({
-                studentId: student?.id,
-                leaveTypeId: values.leaveType,
-                halfDay: values.isHalfDay,
-                startDate: dateConvertor(values?.startDate?.format(dateFormat) || ''),
-                ...(!values.isHalfDay
-                  ? {
-                      endDate: dateConvertor(values?.endDate?.format(dateFormat) || ''),
-                    }
-                  : {}),
-                description: values.description,
-                attachment: values.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-              }).unwrap();
-              handleClose();
-            } catch (err) {
-              console.log(err);
+              return (
+                isAfter || context.createError({ message: 'End date must be after start date' })
+              );
             }
-          }}
-        >
-          {({ errors, touched, setFieldValue, values, submitForm }) => (
-            <Form>
+            if (!value && !isHalfDay) {
+              return context.createError({ message: 'End date is required' });
+            }
+            return true;
+          }),
+        description: Yup.string().required('Description is required'),
+        status: Yup.string().nullable(),
+        rejectionReason: Yup.string().test(
+          'rejectionReason',
+          'Rejection reason is required',
+          (value, context) => {
+            const { status } = context.parent;
+            if (status === EmployeeLeaveStatusType.Rejected) {
+              return !!value || context.createError({ message: 'Rejection reason is required' });
+            }
+            return true;
+          }
+        ),
+      }),
+      onSubmit: async (val) => {
+        try {
+          const res = await addLeaveRequest({
+            studentId: student?.id,
+            leaveTypeId: val.leaveType,
+            halfDay: val.isHalfDay,
+            startDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
+            ...(!val.isHalfDay
+              ? {
+                  endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
+                }
+              : {}),
+            description: val.description,
+            attachment: val.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+          }).unwrap();
+          handleClose();
+        } catch (err) {
+          console.log(err);
+        }
+      },
+    });
+  return (
+    <>
+      <Scrollbar ref={scrollRef}>
+        <DialogContent ref={scrollRef} sx={{ overflowY: 'hidden' }}>
+          <Box display="flex" my={2} gap={2} flexWrap="wrap">
+            <CustomSelect
+              options={allOrganization}
+              label="Organization"
+              value={organization}
+              onChange={(val) => setOrganization(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!medium}
+            />
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!organization}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!classes}
+            />
+            <Autocomplete
+              loading={false}
+              noOptionsText="No Student Found"
+              sx={{ maxWidth: '250px', width: '100%' }}
+              value={student}
+              onChange={(e, value: any) => {
+                setStudent(value);
+              }}
+              options={StudentsData?.items || []}
+              getOptionLabel={(option: any) =>
+                `${option?.firstName || ''} ${option?.lastName || ''}`
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Student"
+                  placeholder="Search  Student"
+                  fullWidth
+                />
+              )}
+              renderOption={(prop: any, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.firstName || ''} {option.lastName || ''}
+                </li>
+              )}
+            />
+          </Box>
+
+          {student?.id && (
+            <Box component="form">
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Field
+                  <TextField
                     name="leaveType"
-                    as={TextField}
                     select
                     fullWidth
                     label="Leave Type"
                     size="small"
-                    error={touched.leaveType && errors.leaveType}
+                    value={values.leaveType}
+                    onChange={(e) => setFieldValue('leaveType', e.target.value)}
+                    error={touched.leaveType && Boolean(errors.leaveType)}
                     helperText={touched.leaveType && errors.leaveType}
                   >
                     {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
@@ -585,7 +601,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                         {option.type}
                       </MenuItem>
                     ))}
-                  </Field>
+                  </TextField>
                   <Typography
                     variant="body2"
                     fontWeight={500}
@@ -606,10 +622,10 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                 <Grid item xs={4}>
                   <FormControlLabel
                     control={
-                      <Field
+                      <Checkbox
                         name="isHalfDay"
-                        as={Checkbox}
-                        onChange={(e: any) => {
+                        checked={values.isHalfDay}
+                        onChange={(e) => {
                           setFieldValue('isHalfDay', e.target.checked);
                           if (e.target.checked) {
                             setFieldValue('endDate', null);
@@ -677,22 +693,31 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     helperText={touched.description && errors.description}
                   />
                 </Grid>
-                <Grid item xs={12} display="flex" justifyContent="flex-end">
-                  <Button
-                    startIcon={<Iconify icon={GlobalIcons.submit} />}
-                    type="submit"
-                    variant="contained"
-                    size="small"
-                  >
-                    Submit
-                  </Button>
-                </Grid>
               </Grid>
-            </Form>
+            </Box>
           )}
-        </Formik>
-      )}
-    </Box>
+        </DialogContent>
+      </Scrollbar>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          onClick={handleClose}
+          variant="outlined"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={(e: any) => handleSubmit(e)}
+          variant="contained"
+          size="small"
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </>
   );
 };
 

@@ -5,9 +5,9 @@ import type { Division } from 'src/types/school';
 import { useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
+import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
-import { Box, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -111,43 +111,43 @@ const ChangeDivisionScreen = ({
             },
           }}
           columns={[
-            {
-              id: 'checkBox',
-              align: 'left',
-              minWidth: '60px',
-              sticky: true,
-              isSort: false,
-              isFilter: false,
-              label: '',
-              renderColumn() {
-                return (
-                  <Checkbox
-                    checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents(tableData || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                  />
-                );
-              },
-              render(value, row) {
-                return (
-                  <Checkbox
-                    checked={selectedStudents.some((i: any) => i.id === row.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                      }
-                    }}
-                  />
-                );
-              },
-            },
+            // {
+            //   id: 'checkBox',
+            //   align: 'left',
+            //   minWidth: '60px',
+            //   sticky: true,
+            //   isSort: false,
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(tableData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            //   render(value, row) {
+            //     return (
+            //       <Checkbox
+            //         checked={selectedStudents.some((i: any) => i.id === row.id)}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
             { id: 'grNoRecord', label: 'GR No.' },
             { id: 'name', label: 'Name' },
             {

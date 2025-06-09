@@ -22,6 +22,7 @@ import {
   Drawer,
   Dialog,
   Divider,
+  Checkbox,
   useTheme,
   MenuList,
   MenuItem,
@@ -635,43 +636,43 @@ const AdmissionScreen = () => {
         }}
         isLoading={isLoading}
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   isSort: false,
-          //   sticky: true,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
+          {
+            id: 'checkBox',
+            align: 'left',
+            minWidth: '60px',
+            isSort: false,
+            sticky: true,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(tableData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              return (
+                <Checkbox
+                  checked={selectedStudents.some((i: any) => i.id === row.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
           { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
@@ -718,7 +719,7 @@ const AdmissionScreen = () => {
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Type',
+            label: 'Inquiry Prefrance',
             minWidth: '200px',
             align: 'left',
           },
@@ -813,11 +814,11 @@ const AdmissionScreen = () => {
                         }}
                       >
                         <Iconify
-                          icon="icon-park:follow-up-date-sort"
+                          icon="clarity:note-edit-line"
                           color="default.main"
                           sx={{ mr: 2 }}
                         />
-                        Follow Up
+                        Note
                       </MenuItem>
                     </MenuList>
                   )}
@@ -892,7 +893,7 @@ const AdmissionScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Follow Up"
+        title="Note"
       >
         <CommunicationForm
           handleCloseDialog={() => {

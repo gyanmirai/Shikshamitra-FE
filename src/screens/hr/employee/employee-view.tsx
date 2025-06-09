@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
+import EmployeeDashboard from './employee-dashboard';
 import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
@@ -23,12 +24,12 @@ import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
 
 export const TABS = [
-  //   {
-  //     value: 'dashboard',
-  //     label: 'Dashboard',
-  //     icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
-  //     component: (props: { tabs: UseTabsReturn }) => <>Dashboard</>,
-  //   },
+  {
+    value: 'dashboard',
+    label: 'Dashboard',
+    icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
+    component: (props: { tabs: UseTabsReturn }) => <EmployeeDashboard />,
+  },
   {
     value: 'personalInformation',
     label: 'Information',

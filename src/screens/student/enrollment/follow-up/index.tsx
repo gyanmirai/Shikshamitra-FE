@@ -9,18 +9,27 @@ import { useFormik } from 'formik';
 import { useDispatch } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Paper,
   Button,
-  Avatar,
   TextField,
   IconButton,
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  Timeline,
+  TimelineDot,
+  TimelineItem,
+  LoadingButton,
+  TimelineContent,
+  TimelineConnector,
+  TimelineSeparator,
+  TimelineOppositeContent,
+} from '@mui/lab';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -167,6 +176,7 @@ interface IFollowUpResponse {
     message: string;
     author: string;
     timestamp: string;
+    dueDate: string;
   }[];
   inquiryStatusType: number;
   dueDate: string;
@@ -230,7 +240,7 @@ export const CommunicationForm = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar
         sx={{
-          bgcolor: 'background.neutral',
+          // bgcolor: 'background.neutral',
 
           position: 'relative',
           height: '350px',
@@ -240,22 +250,51 @@ export const CommunicationForm = ({
         {isLoading ? (
           <Box className="loader" />
         ) : (
-          data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (
-            <Box key={index} py={1} borderBottom={1} borderColor="divider">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar />
-                <Box display="flex" flexDirection="column">
-                  <Typography variant="subtitle1">{followUp?.author}</Typography>
-                  <Typography component="span" variant="subtitle2" color="text.secondary">
-                    {dayjs(followUp?.timestamp).format('DD-MM-YYYY')}
+          <Timeline>
+            {data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
+              <TimelineItem key={index}>
+                <TimelineOppositeContent>
+                  <Typography sx={{ color: 'text.primary' }}>
+                    {dayjs(item?.timestamp).format('DD-MM-YYYY')}
                   </Typography>
-                </Box>
-              </Box>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {followUp?.message}
-              </Typography>
-            </Box>
-          ))
+                  <Typography sx={{ color: 'text.secondary' }}>{item?.author}</Typography>
+                </TimelineOppositeContent>
+                <TimelineSeparator>
+                  <TimelineDot color="primary" />
+                  {data?.followUps.length === index ? null : <TimelineConnector />}
+                </TimelineSeparator>
+                <TimelineContent>
+                  <Paper
+                    sx={{
+                      p: 3,
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                    }}
+                  >
+                    <Typography> {item?.message}</Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Due Date : {dayjs(item.dueDate).format('DD-MM-YYYY')}
+                    </Typography>
+                  </Paper>
+                </TimelineContent>
+              </TimelineItem>
+            ))}
+          </Timeline>
+          // data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (
+          //   <Box key={index} py={1} borderBottom={1} borderColor="divider">
+          //     <Box display="flex" alignItems="center" gap={1}>
+          //       <Avatar />
+          //       <Box display="flex" flexDirection="column">
+          //         <Typography variant="subtitle1">{followUp?.author}</Typography>
+          //         <Typography component="span" variant="subtitle2" color="text.secondary">
+          //           {dayjs(followUp?.timestamp).format('DD-MM-YYYY')}
+          //         </Typography>
+          //       </Box>
+          //     </Box>
+          //     <Typography variant="body2" sx={{ mt: 1 }}>
+          //       {followUp?.message}
+          //     </Typography>
+          //   </Box>
+          // ))
         )}
       </Scrollbar>
       <Box
@@ -270,7 +309,7 @@ export const CommunicationForm = ({
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Follow Up Message"
+          placeholder="Notes"
           size="small"
           value={formik.values.msg}
           name="msg"
@@ -288,7 +327,7 @@ export const CommunicationForm = ({
           helperText={formik.touched.msg && formik.errors.msg}
         />
         <DatePicker
-          label="Due Date"
+          label="Next Reminder Date"
           slotProps={{
             textField: {
               size: 'small',
@@ -311,9 +350,10 @@ export const CommunicationForm = ({
             formik.setFieldValue('status', newValue);
           }}
           size="small"
+          label="Status"
         />
       </Box>
-      <DialogActions>
+      <DialogActions sx={{ p: 2 }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleCloseDialog}

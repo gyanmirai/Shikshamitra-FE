@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, MenuItem, MenuList, Checkbox, Typography, CircularProgress } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
 
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 
@@ -83,8 +83,8 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="icon-park:follow-up-date-sort" color="default.main" sx={{ mr: 2 }} />
-            Follow Up
+            <Iconify icon="clarity:note-edit-line" color="default.main" sx={{ mr: 2 }} />
+            Note
           </MenuItem>
         </MenuList>
       </>
@@ -162,42 +162,49 @@ const RegistrationTable = ({
           },
         }}
         columns={[
+          // {
+          //   id: 'checkBox',
+          //   align: 'left',
+          //   minWidth: '30px',
+          //   isSort: false,
+          //   sticky: true,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(tableData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
-            id: 'checkBox',
+            id: 'studentName',
+            label: 'Student Name',
+            minWidth: '160px',
             align: 'left',
-            minWidth: '30px',
-            isSort: false,
             sticky: true,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
           },
           { id: 'formNumber', label: 'Form No.', minWidth: '110px', align: 'left' },
           {
@@ -209,7 +216,6 @@ const RegistrationTable = ({
             align: 'left',
           },
           { id: 'standard.name', label: 'Class', align: 'left' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
           {
             id: 'dobValue',
             label: 'DOB',
@@ -244,7 +250,7 @@ const RegistrationTable = ({
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Type',
+            label: 'Inquiry Prefrance',
             minWidth: '130px',
             align: 'left',
           },

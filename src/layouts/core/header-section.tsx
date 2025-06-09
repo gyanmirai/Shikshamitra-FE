@@ -93,6 +93,8 @@ export function HeaderSection({
       className={layoutClasses.header}
       sx={{
         zIndex: 'var(--layout-header-zIndex)',
+        boxShadow: 'var(--shadows-1)',
+        backgroundColor: theme.palette.background.paper,
         ...sx,
       }}
       {...other}

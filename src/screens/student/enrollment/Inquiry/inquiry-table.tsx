@@ -103,8 +103,14 @@ const InquiryTable = ({
           filterType: 'string',
           align: 'left',
         },
+        {
+          id: 'studentName',
+          label: 'Student Name',
+          minWidth: '150px',
+          align: 'left',
+          sticky: true,
+        },
         { id: 'standard.name', label: 'Class', align: 'left' },
-        { id: 'studentName', label: 'Student Name', minWidth: '150px', align: 'left' },
         {
           id: 'dobValue',
           label: 'DOB',
@@ -125,7 +131,7 @@ const InquiryTable = ({
         {
           id: 'address',
           label: 'Address',
-          minWidth: '120px',
+          minWidth: '200px',
           align: 'left',
           render(value, row) {
             return value || '-';
@@ -146,7 +152,7 @@ const InquiryTable = ({
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
         {
           id: 'inquiryPreference.preferenceName',
-          label: 'Inquiry Type',
+          label: 'Inquiry Prefrance',
           minWidth: '130px',
           align: 'left',
         },
@@ -194,8 +200,8 @@ const InquiryTable = ({
                         popover.onClose();
                       }}
                     >
-                      <Iconify icon="icon-park:follow-up-date-sort" sx={{ mr: 2 }} />
-                      Follow Up
+                      <Iconify icon="clarity:note-edit-line" />
+                      Note
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
@@ -204,7 +210,7 @@ const InquiryTable = ({
                         popover.onClose();
                       }}
                     >
-                      <Iconify icon="mdi-light:arrow-right" sx={{ mr: 2 }} />
+                      <Iconify icon="clarity:form-line" />
                       Issue Registration Form
                     </MenuItem>
                   </MenuList>

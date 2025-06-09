@@ -18,7 +18,7 @@ export const basicInformationInitialValues = (editData: any) => ({
         name: editData?.extraProperties?.Country?.name,
         isoCode: editData?.extraProperties?.Country?.isoCode,
       }
-    : undefined,
+    : { name: 'India', isoCode: 'IN' },
   contactNumber: editData?.extraProperties?.ContactNumber || '',
   emailAddress: editData?.adminEmailAddress || '',
   password: '',
