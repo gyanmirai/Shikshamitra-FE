@@ -2,12 +2,11 @@
 
 import { useFormik } from 'formik';
 
-import { Box, Button, DialogActions } from '@mui/material';
+import { Button, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import UploadDocument from 'src/components/upload-document/uploadDocument';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -32,30 +31,26 @@ export const SubmitAssignmentFile = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '300px' }}>
-            <UploadDocument formik={formik} name="submission" title="Upload Assignment" />
-          </Scrollbar>
-          <DialogActions>
-            <Button
-              variant="outlined"
-              onClick={() => onClose(null, false)}
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              type="submit"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-            >
-              Submit
-            </Button>
-          </DialogActions>
-        </form>
-      </BackPopUpChecked>
-    </Box>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <form onSubmit={formik.handleSubmit}>
+        <UploadDocument formik={formik} name="submission" title="Upload Assignment" />
+        <DialogActions>
+          <Button
+            variant="outlined"
+            onClick={() => onClose(null, false)}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            type="submit"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </form>
+    </BackPopUpChecked>
   );
 };

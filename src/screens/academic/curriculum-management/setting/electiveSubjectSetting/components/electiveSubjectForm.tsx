@@ -60,7 +60,6 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     label="Elective Group Name *"
                     name="title"
                     size="small"
-                    placeholder="Enter Elective Group Name"
                     value={formik.values.title}
                     onChange={formik.handleChange}
                     error={formik.touched.title && Boolean(formik.errors.title)}
@@ -112,12 +111,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                       );
                     }}
                     renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select Subjects *"
-                        placeholder="Select Subjects"
-                        size="small"
-                      />
+                      <TextField {...params} label="Select Subjects *" size="small" />
                     )}
                   />
                   {formik.touched.subjects && formik.errors.subjects && (
@@ -135,9 +129,9 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
                   <MuiColorInput
-                    placeholder="Elective Group Color *"
                     size="small"
                     format="hex"
+                    placeholder="Elective Group Color *"
                     value={formik.values.subjectColor}
                     onChange={(e) => {
                       formik.setFieldValue('subjectColor', e);

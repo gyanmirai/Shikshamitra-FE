@@ -31,7 +31,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
       <form onSubmit={handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '25s0px' }}>
           <CustomizableTable
-            tableId="elective-subject-table"
+            tableId="Elective-subject-table"
             isFilter={false}
             isPagination={false}
             isSearch={false}

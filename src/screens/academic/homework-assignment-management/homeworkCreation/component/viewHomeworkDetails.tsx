@@ -1,4 +1,3 @@
-import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState } from 'react';
@@ -25,6 +24,7 @@ import {
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Label, type LabelColor } from 'src/components/label';
 
 import HomeworkOverview from './viewHomeworkDetails/homeworkOverview';
 import HomeworkDocuments from './viewHomeworkDetails/homeworkDocuments';
@@ -73,7 +73,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
 
   return (
     <Box sx={{ p: 2, height: '100%' }}>
-      <Scrollbar sx={{ height: '700px' }}>
+      <Scrollbar sx={{ height: '600px' }}>
         {/* Homework Header */}
         <Box>
           <Box
@@ -86,27 +86,39 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
-                  label={`Class : ${homework?.class}`}
-                  variant="outlined"
-                  sx={{ fontSize: '0.9rem' }}
-                />
-                <Chip
                   label={`Type : ${homework?.homeworkType}`}
                   variant="outlined"
                   sx={{ fontSize: '0.9rem' }}
                 />
                 <Chip
-                  label={`Status : ${PublishUnpublishStatusType[homework?.status as PublishUnpublishStatusType]}`}
+                  label={`Class : ${homework?.class}`}
                   variant="outlined"
+                  sx={{ fontSize: '0.9rem' }}
+                />
+
+                <Label
+                  variant="soft"
                   color={
                     PublishUnpublishStatusTypeColors[
                       homework?.status as PublishUnpublishStatusType
                     ] as LabelColor
                   }
-                  sx={{
-                    fontSize: '0.9rem',
-                  }}
-                />
+                  sx={
+                    {
+                      // p: 1.8,
+                      // fontSize: '1rem',
+                      // fontWeight: 500,
+                      // minWidth: '100px',
+                      // textAlign: 'center',
+                    }
+                  }
+                >
+                  {
+                    PublishUnpublishStatusType[
+                      homework?.status as PublishUnpublishStatusType
+                    ] as string
+                  }
+                </Label>
                 {/* {homework?.isDailyTask && (
                   <Label color="warning" sx={{ fontSize: '0.875rem' }}>
                     Daily Task

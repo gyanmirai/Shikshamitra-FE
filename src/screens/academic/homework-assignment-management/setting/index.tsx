@@ -1,12 +1,11 @@
 'use client';
 
-import type { TabComponentType } from 'src/screens/hr/leave-request';
+import React, { useMemo, useState } from 'react';
 
-import React, { useMemo } from 'react';
+import { Add } from '@mui/icons-material';
+import { Tab, Box, Card, Button } from '@mui/material';
 
-import { Tab, Box, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -18,23 +17,54 @@ const TABS = [
   {
     value: 'homeworkType',
     label: 'Homework Type',
-    component: (props: TabComponentType) => <HomeworkTypeCreation {...props} />,
+    component: (props: any) => <HomeworkTypeCreation {...props} />,
   },
   {
     value: 'assignmentType',
     label: 'Assignment Type',
-    component: (props: TabComponentType) => <AssignmentTypeCreation {...props} />,
+    component: (props: any) => <AssignmentTypeCreation {...props} />,
   },
 ];
-const HomeworkSetting = () => {
-  // Initialize search params with default tab 'subjectSetting'
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkType' });
 
-  // Find and memoize the currently active tab component based on search params
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+const HomeworkSetting = () => {
+  const [activeTab, setActiveTab] = useState('homeworkType');
+
+  const addHomeworkTypeDialog = useBoolean(false);
+  const addAssignmentTypeDialog = useBoolean(false);
+
+  const renderButton = useMemo(
+    () => ({
+      homeworkType: (
+        <Button
+          sx={{ width: '180px' }}
+          startIcon={<Add />}
+          onClick={addHomeworkTypeDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Homework Type
+        </Button>
+      ),
+      assignmentType: (
+        <Button
+          sx={{ width: '180px' }}
+          startIcon={<Add />}
+          onClick={addAssignmentTypeDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Assignment Type
+        </Button>
+      ),
+    }),
+    [addHomeworkTypeDialog.onTrue, addAssignmentTypeDialog.onTrue]
   );
+
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
+  );
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -50,32 +80,35 @@ const HomeworkSetting = () => {
           { name: 'Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
+        action={renderButton[activeTab as keyof typeof renderButton]}
       />
+
       <Card
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
         <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          value={activeTab}
+          onChange={(e, value) => setActiveTab(value)}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
+
       <Box px={1} pt={2}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
-            searchParams={searchParams}
-            setSearchParams={setSearchParams}
+            addHomeworkTypeDialog={addHomeworkTypeDialog}
+            addAssignmentTypeDialog={addAssignmentTypeDialog}
           />
-        )}{' '}
+        )}
       </Box>
     </Box>
   );
 };
+
 export default HomeworkSetting;

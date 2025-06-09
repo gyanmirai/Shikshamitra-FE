@@ -74,7 +74,7 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
       { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
-        label: 'Action',
+        label: 'Actions',
         minWidth: 50,
         isSort: false,
         sticky: true,

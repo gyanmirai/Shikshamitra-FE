@@ -66,7 +66,8 @@ const Subject = (props: TabComponentType) => {
   const showSubjectDialog = useBoolean();
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
-  const [selectedSubject, setSelectedSubject] = useState<ISubjectFormValues | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  console.log('selected subject-----', selectedSubject);
 
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
@@ -107,11 +108,11 @@ const Subject = (props: TabComponentType) => {
   };
   // Close all dialogs and reset form state
   const handleCloseDialog = () => {
+    setSelectedSubject(null);
     addSubjectDialog.onFalse();
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
-    setSelectedSubject(null);
   };
 
   // Delete selected subject from table
@@ -128,7 +129,7 @@ const Subject = (props: TabComponentType) => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedSubject ? 'Update Subject Form' : 'Allocate Subject Form'}
+          heading="Subject Assignment"
           description="Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries."
           isBack
           onBack={() => {
@@ -137,21 +138,21 @@ const Subject = (props: TabComponentType) => {
           links={[
             // Links when viewing subject list
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Curriculum Management' },
-            { name: 'Allocate Subject' },
-            { name: selectedSubject ? 'Update Subject Form' : 'Allocate Subject Form' },
+            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+            { name: 'Subject Assignment', href: '/academic/curriculumSubjects' },
+            // { name: selectedSubject ? 'Update Subject Assignment' : 'Subject Assignment Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Allocate Subject"
+          heading="Subject Assignment"
           description="Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed."
           links={[
             // Links when form is open
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Curriculum Management' },
-            { name: 'Allocate Subject' },
+            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+            { name: 'Subject Assignment' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -201,7 +202,7 @@ const Subject = (props: TabComponentType) => {
                     }
               }
             >
-              Allocate Subject
+              Subject Assignment
             </Button>
           </Box>
           {/* Subject table displayed when class is selected */}
@@ -233,19 +234,38 @@ const Subject = (props: TabComponentType) => {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteConfirmDialog.value}
-        onClose={() => {
-          handleCloseDialog();
-        }}
+        onClose={handleCloseDialog}
         title="Delete"
-        content="Are you sure you want to Delete Subject ?"
+        content={
+          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+            <>
+              Are you sure you want to Delete{' '}
+              <strong>
+                {selectedSubject.subjectName
+                  .map((name: any, index: any) => {
+                    const code = selectedSubject.subjectCode?.[index] || '';
+                    return `${name} (${code})`;
+                  })
+                  .join(', ')}
+              </strong>{' '}
+              subject?
+            </>
+          ) : (
+            <>
+              Are you sure you want to Delete{' '}
+              <strong>
+                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+              </strong>{' '}
+              subject?
+            </>
+          )
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              handleDelete();
-            }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={handleDelete}
           >
             Yes
           </Button>
@@ -256,14 +276,33 @@ const Subject = (props: TabComponentType) => {
       <ConfirmDialog
         open={confirmPublishDialog.value}
         onClose={() => {
-          confirmPublishDialog.onFalse();
           setSelectedSubject(null);
+          confirmPublishDialog.onFalse();
         }}
-        title={selectedSubject?.status === 'Published' ? 'Draft' : 'Publish'}
+        title={selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
         content={
-          selectedSubject?.status === 'Published'
-            ? 'Are you sure you want to Draft this subject?'
-            : 'Are you sure you want to Publish this subject?'
+          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+            <>
+              Are you sure you want to {selectedSubject.status === 0 ? 'Draft' : 'Publish'}{' '}
+              <strong>
+                {selectedSubject.subjectName
+                  .map((name: any, index: any) => {
+                    const code = selectedSubject.subjectCode?.[index] || '';
+                    return `${name} (${code})`;
+                  })
+                  .join(', ')}
+              </strong>{' '}
+              subject?
+            </>
+          ) : (
+            <>
+              Are you sure you want to {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}{' '}
+              <strong>
+                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+              </strong>{' '}
+              subject?
+            </>
+          )
         }
         action={
           <Button
@@ -271,7 +310,7 @@ const Subject = (props: TabComponentType) => {
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {}}
           >
-            {selectedSubject?.status === 'Published' ? 'Draft' : 'Publish'}
+            {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
           </Button>
         }
       />

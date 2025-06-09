@@ -7,13 +7,33 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import { Save, RestartAlt } from '@mui/icons-material';
-import { Box, Button, TextField, Autocomplete } from '@mui/material';
+import { Box, Button, useTheme } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+const electiveGroups = [
+  {
+    id: 'elective1',
+    name: 'Elective Group 1',
+    subjects: [
+      { id: 'computer', name: 'Computer' },
+      { id: 'pt', name: 'Physical Training' },
+    ],
+  },
+  {
+    id: 'elective2',
+    name: 'Elective Group 2',
+    subjects: [
+      { id: 'hindi', name: 'Hindi' },
+      { id: 'sanskrit', name: 'Sanskrit' },
+    ],
+  },
+];
+
 const AssignElectiveSubject = () => {
+  const theme = useTheme();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -22,6 +42,9 @@ const AssignElectiveSubject = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
+  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
+  const [students, setStudents] = useState<any[]>([]);
+
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
   const {
@@ -44,6 +67,15 @@ const AssignElectiveSubject = () => {
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    const dummyStudents = [
+      { srNo: 1, grNo: 'GR001', name: 'Atre Prerna Bhanudas' },
+      { srNo: 2, grNo: 'GR002', name: 'Mehta Divya Hitesh' },
+      { srNo: 3, grNo: 'GR003', name: 'Patel Jiya Ganesh' },
+    ];
+    setElectiveSubject(electiveGroups[0].id);
+
+    setStudents(dummyStudents);
+    setStudentSelections({});
   }, [allClass, classes, setDivision]);
 
   // State to store the selected elective subject from dropdown
@@ -52,23 +84,15 @@ const AssignElectiveSubject = () => {
   // State to store the selected elective subject for individual students in the table
   const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
 
-  // Available elective subject options that can be assigned to students
-  const teacherOptions = [
-    { id: '1', name: 'Physics' },
-    { id: '2', name: 'Chemistry' },
-    { id: '3', name: 'Biology' },
-    { id: '4', name: 'Computer Science' },
-    { id: '5', name: 'Economics' },
-  ];
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Allocate Elective Subjects"
+        heading="Assign Elective Subject"
         description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-          { name: 'Allocate Elective Subjects' },
+          { name: 'Assign Elective Subject' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -95,17 +119,11 @@ const AssignElectiveSubject = () => {
             disabled={!classes}
           />
           <CustomSelect
-            label="Elective Subject"
+            label="Elective Group"
             labelKey="name"
             valueKey="id"
-            disabled={!division}
-            options={[
-              { id: '1', name: 'Physics' },
-              { id: '2', name: 'Chemistry' },
-              { id: '3', name: 'Biology' },
-              { id: '4', name: 'Computer Science' },
-              { id: '5', name: 'Economics' },
-            ]}
+            // disabled={!division}
+            options={electiveGroups}
             value={electiveSubject}
             onChange={(value) => {
               setElectiveSubject(value as string);
@@ -132,7 +150,7 @@ const AssignElectiveSubject = () => {
 
       <CustomizableTable
         tableId="elective-subject-table"
-        noDataText={<>No Bulk Update Data Found </>}
+        noDataText={<>No Students Found</>}
         searchFieldProps={{
           placeholder: 'Search by Sr. No, GR No, Student Name...',
           label: 'Search by Sr. No, GR No, Student Name...',
@@ -142,128 +160,104 @@ const AssignElectiveSubject = () => {
           },
         }}
         columns={[
-          { id: 'srNo', label: 'Sr. No.', minWidth: '150px', align: 'left' },
-          { id: 'grNo', label: 'GR No.', minWidth: '200px', align: 'left' },
-          { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left' },
+          { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
+          { id: 'grNo', label: 'GR No.', minWidth: '120px', align: 'left' },
           {
             id: 'electiveSubject',
-            label: 'Elective Subject',
-            isSort: false,
-            minWidth: '200px',
+            label: '',
+            minWidth: '500px',
             align: 'left',
+            isSort: false,
             isFilter: false,
-            // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
-            // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
-            render: (value, row: any) => (
-              <Autocomplete
-                options={teacherOptions}
-                getOptionLabel={(option) => option.name}
-                value={teacherOptions.find((opt) => opt.id === division) || null}
-                onChange={(_, newValue) => {
-                  setSelectedElectiveSubject(newValue?.id || '');
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="Elective Subject" variant="outlined" size="small" />
-                )}
-                sx={{ minWidth: '200px', width: '100%' }}
-              />
-            ),
+            renderColumn: () => {
+              const group = electiveGroups.find((g) => g.id === electiveSubject);
+              const subjects = group?.subjects || [];
 
-            // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
+              return (
+                <Box display="flex" alignItems="center" gap={2}>
+                  {subjects.map((subj) => {
+                    const isSelected = selectedElectiveSubject === subj.id;
+                    return (
+                      <Button
+                        key={subj.id}
+                        variant={isSelected ? 'contained' : 'outlined'}
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          const isSame = selectedElectiveSubject === subj.id;
+                          const newValue = isSame ? '' : subj.id;
+                          setSelectedElectiveSubject(newValue);
+
+                          if (!isSame) {
+                            const newSelections = students.reduce(
+                              (acc, student) => {
+                                acc[student.grNo] = subj.id;
+                                return acc;
+                              },
+                              {} as Record<string, string>
+                            );
+                            setStudentSelections(newSelections);
+                          }
+                        }}
+                        sx={{
+                          color: isSelected
+                            ? '#fff' // For contained: always white text
+                            : theme.palette.mode === 'dark'
+                              ? '#fff'
+                              : '#000', // For outlined: black in light, white in dark
+                          borderColor: theme.palette.primary.main,
+                          backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
+                          '&:hover': {
+                            backgroundColor: isSelected
+                              ? theme.palette.primary.dark
+                              : theme.palette.action.hover,
+                          },
+                        }}
+                      >
+                        {subj.name}
+                      </Button>
+                    );
+                  })}
+                </Box>
+              );
+            },
+            render: (_, row: any) => {
+              const group = electiveGroups.find((g) => g.id === electiveSubject);
+              const subjects = group?.subjects || [];
+
+              return (
+                <Box display="flex" alignItems="center" gap={2}>
+                  {subjects.map((subj) => {
+                    const isSelected = studentSelections[row.grNo] === subj.id;
+                    return (
+                      <Button
+                        key={subj.id}
+                        // color="primary"
+                        // fontColor={isSelected? 'white' : 'primary'}
+                        variant={isSelected ? 'contained' : 'outlined'}
+                        size="small"
+                        color="primary"
+                        onClick={() =>
+                          setStudentSelections((prev) => ({
+                            ...prev,
+                            [row.grNo]: subj.id,
+                          }))
+                        }
+                        sx={{
+                          color: isSelected ? 'white' : 'primary',
+                          borderColor: isSelected ? 'primary' : 'primary',
+                        }}
+                      >
+                        {subj.name}
+                      </Button>
+                    );
+                  })}
+                </Box>
+              );
+            },
           },
         ]}
-        data={[
-          {
-            srNo: 1,
-            grNo: 'GR001',
-            name: 'Aarav Sharma',
-            electiveSubject: '1', // Physics
-          },
-          {
-            srNo: 2,
-            grNo: 'GR002',
-            name: 'Diya Mehta',
-            electiveSubject: '3', // Biology
-          },
-          {
-            srNo: 3,
-            grNo: 'GR003',
-            name: 'Kabir Patel',
-            electiveSubject: '4', // Computer Science
-          },
-          {
-            srNo: 4,
-            grNo: 'GR004',
-            name: 'Meera Desai',
-            electiveSubject: '2', // Chemistry
-          },
-          {
-            srNo: 5,
-            grNo: 'GR005',
-            name: 'Ishaan Joshi',
-            electiveSubject: '5', // Economics
-          },
-          {
-            srNo: 6,
-            grNo: 'GR006',
-            name: 'Zara Khan',
-            electiveSubject: '1', // Physics
-          },
-          {
-            srNo: 7,
-            grNo: 'GR007',
-            name: 'Arjun Singh',
-            electiveSubject: '2', // Chemistry
-          },
-          {
-            srNo: 8,
-            grNo: 'GR008',
-            name: 'Priya Gupta',
-            electiveSubject: '3', // Biology
-          },
-          {
-            srNo: 9,
-            grNo: 'GR009',
-            name: 'Rohan Verma',
-            electiveSubject: '4', // Computer Science
-          },
-          {
-            srNo: 10,
-            grNo: 'GR010',
-            name: 'Ananya Shah',
-            electiveSubject: '5', // Economics
-          },
-          {
-            srNo: 11,
-            grNo: 'GR011',
-            name: 'Vihaan Kumar',
-            electiveSubject: '1', // Physics
-          },
-          {
-            srNo: 12,
-            grNo: 'GR012',
-            name: 'Aisha Patel',
-            electiveSubject: '2', // Chemistry
-          },
-          {
-            srNo: 13,
-            grNo: 'GR013',
-            name: 'Reyansh Malhotra',
-            electiveSubject: '3', // Biology
-          },
-          {
-            srNo: 14,
-            grNo: 'GR014',
-            name: 'Saanvi Reddy',
-            electiveSubject: '4', // Computer Science
-          },
-          {
-            srNo: 15,
-            grNo: 'GR015',
-            name: 'Advait Menon',
-            electiveSubject: '5', // Economics
-          },
-        ]}
+        data={students}
       />
     </Box>
   );

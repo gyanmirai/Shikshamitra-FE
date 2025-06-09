@@ -5,27 +5,26 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 
-const WeeklyLectures = () => {
+const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
   // Dialog state to control the visibility of create lecture number dialog
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
   const [isEdit, setIsEdit] = useState(false);
   // Custom boolean hook to control create lecture number dialog visibility
-  const createLectureNumberDialog = useBoolean();
+  // const addWeeklyLectureDialog = useBoolean();
 
   // State to control form field disabled status
   const [disabled, setDisabled] = React.useState(false);
@@ -41,27 +40,27 @@ const WeeklyLectures = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     // Close dialog if form submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      createLectureNumberDialog.onFalse();
+      addWeeklyLectureDialog.onFalse();
       dispatch(setIsChanges(false));
     }
     // Close dialog if no unsaved changes
     else if (!isChanges) {
-      createLectureNumberDialog.onFalse();
+      addWeeklyLectureDialog.onFalse();
     }
   };
 
   return (
     <Box>
-      <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
+      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           size="small"
-          onClick={createLectureNumberDialog.onTrue}
+          onClick={addWeeklyLectureDialog.onTrue}
         >
           Weekly Lectures
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         searchFieldProps={{
@@ -77,7 +76,7 @@ const WeeklyLectures = () => {
             No Create Number Of Lectures Found{' '}
             <Box
               onClick={() => {
-                createLectureNumberDialog.onTrue();
+                addWeeklyLectureDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -116,7 +115,7 @@ const WeeklyLectures = () => {
                   showThreeDots={false}
                   handleEditClick={() => {
                     setIsEdit(true);
-                    createLectureNumberDialog.onTrue();
+                    addWeeklyLectureDialog.onTrue();
                   }}
                   placement="right-top"
                 />
@@ -150,8 +149,8 @@ const WeeklyLectures = () => {
 
       <CustomDialog
         title={isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
-        open={createLectureNumberDialog.value}
-        handleClose={createLectureNumberDialog.onFalse}
+        open={addWeeklyLectureDialog.value}
+        handleClose={addWeeklyLectureDialog.onFalse}
         maxWidth="md"
       >
         <CreateNoOfLecture

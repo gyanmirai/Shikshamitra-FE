@@ -1,20 +1,15 @@
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -23,9 +18,9 @@ import SettingSubjectTable from './settingSubjectTable';
 
 import type { ISubject } from './type';
 
-const SubjectCreation = (props: TabComponentType) => {
+const SubjectCreation = ({ addSubjectDialog }: any) => {
   // Dialog state for adding disciplinary incidents
-  const addSubjectDialog = useBoolean();
+  // const addSubjectDialog = useBoolean();
   const deleteSubjectDialog = useBoolean();
   // Controls form visibility
   const [open, setOpen] = useState(false);
@@ -52,7 +47,7 @@ const SubjectCreation = (props: TabComponentType) => {
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end" mb={1}>
+      {/* <Box display="flex" justifyContent="flex-end" mb={1}>
         <Button
           variant="contained"
           onClick={addSubjectDialog.onTrue}
@@ -64,7 +59,7 @@ const SubjectCreation = (props: TabComponentType) => {
         >
           Subject
         </Button>
-      </Box>
+      </Box> */}
 
       <SettingSubjectTable
         onDelete={(data) => {
@@ -107,13 +102,19 @@ const SubjectCreation = (props: TabComponentType) => {
           deleteSubjectDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to Delete Subject ?"
+        content={
+          <>
+            Are you sure you want to delete subject <strong>{selectedSubject?.subjectName}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            onClick={() => {}}
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={() => {
+              // handle delete action
+            }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </Button>

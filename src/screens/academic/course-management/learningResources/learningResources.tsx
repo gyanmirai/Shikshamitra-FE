@@ -12,11 +12,8 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -169,6 +166,8 @@ const LearningResources = (props: TabComponentType) => {
         }}
       />
 
+      {/* <VSCodeFolderTreeView /> */}
+
       <CustomDialog
         title="Update Learning Resource"
         open={editResourceDialog.value}
@@ -198,7 +197,7 @@ const LearningResources = (props: TabComponentType) => {
         action={
           <Button
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {}}
           >
@@ -207,7 +206,7 @@ const LearningResources = (props: TabComponentType) => {
         }
       />
 
-      <ConfirmDialog
+      {/* <ConfirmDialog
         open={confirm_dialog.value}
         onClose={() => {
           confirm_dialog.onFalse();
@@ -225,7 +224,7 @@ const LearningResources = (props: TabComponentType) => {
             Publish
           </Button>
         }
-      />
+      /> */}
     </Box>
   );
 };

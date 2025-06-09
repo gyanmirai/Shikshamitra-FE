@@ -1,13 +1,11 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 
@@ -30,9 +28,9 @@ import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmissi
 
 import type { IHomework } from '../type';
 
-const HomeworkCreation = (props: TabComponentType) => {
+const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   // Dialog state for adding disciplinary incidents
-  const addHomeworkDialog = useBoolean();
+  // const addHomeworkDialog = useBoolean();
   // Dialog state for deleting homework assignments
   const deleteHomeworkDialog = useBoolean();
   // Dialog state for publishing homework assignments
@@ -158,7 +156,7 @@ const HomeworkCreation = (props: TabComponentType) => {
             sx={{ minWidth: '250px' }}
           />
         </Box>
-        <Box display="flex" justifyContent="flex-end">
+        {/* <Box display="flex" justifyContent="flex-end">
           <Button
             variant="contained"
             onClick={addHomeworkDialog.onTrue}
@@ -168,7 +166,7 @@ const HomeworkCreation = (props: TabComponentType) => {
           >
             Homework
           </Button>
-        </Box>
+        </Box> */}
       </Box>
 
       <CustomDialog
@@ -226,11 +224,15 @@ const HomeworkCreation = (props: TabComponentType) => {
           deleteHomeworkDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to Delete Homework ?"
+        content={
+          <>
+            Are you sure you want to Delete <strong>{selectedHomework?.title}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {}}
           >
@@ -246,7 +248,11 @@ const HomeworkCreation = (props: TabComponentType) => {
           setSelectedHomework(null);
         }}
         title="Publish"
-        content="Are you sure want to Publish Homework ?"
+        content={
+          <>
+            Are you sure you want to Publish <strong>{selectedHomework?.title}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"

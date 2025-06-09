@@ -254,7 +254,7 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
   const lastItem = data[data.length - 1].key;
 
   return (
-    <Timeline position="alternate">
+    <Timeline position="right">
       {data.map((item) => (
         <TimelineItem key={item.key}>
           <TimelineOppositeContent>

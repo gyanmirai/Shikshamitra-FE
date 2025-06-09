@@ -120,13 +120,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
-          <Scrollbar sx={{ p: 2, height: '600px' }}>
+          <Scrollbar sx={{ p: 2, height: '400px' }}>
             <Grid container spacing={3}>
               {/* Class Selection */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
                   <CustomSelect
-                    label="Class *"
+                    label="Class *" // Select class from dropdown
                     options={classData?.items || []}
                     value={formik.values.class || classes}
                     disabled={!!classes}
@@ -151,7 +151,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   error={!!(formik.touched.division && formik.errors.division) || false}
                 >
                   <CustomSelect
-                    label="Division *"
+                    label="Division *" // Select division from dropdown
                     labelKey="name"
                     valueKey="id"
                     multiple
@@ -180,7 +180,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   error={!!(formik.touched.subject && formik.errors.subject) || false}
                 >
                   <CustomSelect
-                    label="Subject *"
+                    label="Subject *" // Select subject from dropdown
                     disabled={!formik.values.division || formik.values.division.length === 0}
                     options={[
                       { value: 'Mathematics', label: 'Mathematics' },
@@ -206,7 +206,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     size="small"
                     fullWidth
                     disabled={!formik.values.subject}
-                    label="Chapter *"
+                    label="Chapter *" // Select chapter from dropdown
                     name="chapters"
                     multiple
                     options={[
@@ -230,8 +230,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
                   <TextField
                     fullWidth
-                    label="Homework Title *"
-                    placeholder="Enter Homework Title"
+                    label="Homework Title *" // Enter homework title
+                    // placeholder="Enter title for the homework"
                     name="title"
                     size="small"
                     value={formik.values.title}
@@ -248,7 +248,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
                 >
                   <CustomSelect
-                    label="Homework Type *"
+                    label="Homework Type *" // Select homework type from dropdown
                     options={[
                       { value: 'practice', label: 'Practice Questions' },
                       { value: 'reading', label: 'Reading Material' },
@@ -270,7 +270,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     sx={{ cursor: 'pointer' }}
                     onClick={() => homeworkTypeDialog.onTrue()}
                   >
-                    Add Homework Type ?
+                    Add Homework Type
                   </Typography>
                 </Box>
 
@@ -297,7 +297,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     onChange={(value) => {
                       formik.setFieldValue('description', value);
                     }}
-                    placeholder="Homework Description"
+                    placeholder="Enter Description" // Enter homework description
                     sx={{ width: '100%' }}
                   />
                 </ShakingTextField>
@@ -321,72 +321,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </SectionCard>
               </Grid>
 
-              {/* <Grid item xs={12}>
-                <SectionCard title="Homework Schedule Settings">
-                  <Grid container spacing={2} p={2}>
-             
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={formik.values.isDailyTask}
-                            onChange={(e) => formik.setFieldValue('isDailyTask', e.target.checked)}
-                          />
-                        }
-                        label="Daily Task"
-                      />
-                    </Grid>
-
-                    {formik.values.isDailyTask && (
-                      <Grid item xs={12} md={6}>
-                        <ShakingTextField
-                          error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                        >
-                          <DateTimePicker
-                            name="endDate"
-                            label="Select End Date"
-                            format="DD/MM/YYYY hh:mm "
-                            value={dayjs(formik.values.endDate)}
-                            onChange={(date) => formik.setFieldValue('endDate', date)}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                                helperText: formik.touched.endDate && formik.errors.endDate,
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    )}
-
-                    {!formik.values.isDailyTask && (
-                      <Grid item xs={12} md={6}>
-                        <ShakingTextField
-                          error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
-                        >
-                          <DateTimePicker
-                            label="Due Date Time"
-                            value={dayjs(formik.values.dueDate)}
-                            format="DD/MM/YYYY hh:mm"
-                            onChange={(date) => formik.setFieldValue('dueDate', date)}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
-                                helperText: formik.touched.dueDate && formik.errors.dueDate,
-                              },
-                            }}
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                    )}
-                  </Grid>
-                </SectionCard>
-              </Grid> */}
-
               {/* Schedule Homework Switch */}
               <Grid item xs={12}>
                 <SectionCard title="Schedule Homework">
@@ -396,7 +330,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                       >
                         <DateTimePicker
-                          label="Start Date Time *"
+                          label="Start Date Time *" // Select start date and time
                           value={dayjs(formik.values.startDate)}
                           format="DD/MM/YYYY hh:mm"
                           onChange={(date) => formik.setFieldValue('startDate', date)}
@@ -417,7 +351,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                       >
                         <DateTimePicker
-                          label="End Date Time *"
+                          label="End Date Time *" // Select end date and time
                           value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                           format="DD/MM/YYYY hh:mm"
                           onChange={(date) => formik.setFieldValue('endDate', date)}
@@ -451,17 +385,17 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       onChange={formik.handleChange}
                     >
                       <FormControlLabel
-                        value="online_text"
+                        value="online_text" // Select online text submission
                         control={<Radio />}
                         label="Online Text"
                       />
                       <FormControlLabel
-                        value="file_upload"
+                        value="file_upload" // Select file upload submission
                         control={<Radio />}
                         label="File Upload"
                       />
                       <FormControlLabel
-                        value="in_person"
+                        value="in_person" // Select in-person submission
                         control={<Radio />}
                         label="In-Person Submission"
                       />
@@ -481,33 +415,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <DialogActions>
             <Button
               variant="outlined"
-              onClick={() => {
-                if (editData) {
-                  onClose(null, false);
-                } else {
-                  formik.setFieldValue('status', 0);
-                  formik.handleSubmit();
-                }
-              }}
-              startIcon={
-                editData ? (
-                  <Iconify icon={GlobalIcons.cancel} />
-                ) : (
-                  <Iconify icon={GlobalIcons.draftIcon} />
-                )
-              }
+              onClick={() => onClose(null, false)}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
-              {editData ? 'Cancel' : 'Save Draft'}
+              Cancel
             </Button>
             <Button
               variant="contained"
               onClick={() => {
-                formik.setFieldValue('status', 1);
+                // formik.setFieldValue('status', 1);
                 formik.handleSubmit();
               }}
-              startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.publish} />}
+              startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
             >
-              {editData ? 'Update' : 'Publish'}
+              {editData ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

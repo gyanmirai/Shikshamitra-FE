@@ -65,12 +65,12 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
 
   // Handler to remove a single file attachment
   const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('rubric', '');
+    setFieldValue('document', '');
   }, []);
 
   // Handler to remove all file attachments
   const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('rubric', '');
+    setFieldValue('document', '');
   }, []);
 
   return (
@@ -92,7 +92,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     label="Class *"
                     labelKey="name"
                     valueKey="name"
-                    placeholder="Class"
                     formControlProps={{ sx: { minWidth: 270, width: '100%' } }}
                     error={!!(formik.touched.className && formik.errors.className) || false}
                     helperText={(formik.touched.className && formik.errors.className) || ''}
@@ -114,7 +113,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                     name="subject"
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val as string)}
-                    placeholder="Select Subject"
                     formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                     error={!!(formik.touched.subject && formik.errors.subject) || false}
                     helperText={(formik.touched.subject && formik.errors.subject) || ''}
@@ -135,11 +133,10 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                       { value: 'chapter4', label: 'Chapter 4' },
                       { value: 'chapter5', label: 'Chapter 5' },
                     ]}
-                    disabled={!formik.values.chapter}
+                    disabled={!formik.values.subject}
                     name="chapter"
                     value={formik.values.chapter || ''}
                     onChange={(val) => formik.setFieldValue('chapter', val as string)}
-                    placeholder="Select chapter"
                     formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                     error={!!(formik.touched.chapter && formik.errors.chapter) || false}
                     helperText={(formik.touched.chapter && formik.errors.chapter) || ''}
@@ -154,7 +151,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   <TextField
                     disabled={isEdit}
                     label="Resource Title *"
-                    placeholder="Enter Resource Title"
                     size="small"
                     name="resourceTitle"
                     value={formik.values.resourceTitle}
@@ -169,7 +165,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               {/* File upload box */}
               <Grid item xs={12}>
                 <Upload
-                  // {...uploadProps}
                   thumbnail
                   value={formik.values.document}
                   onDrop={(acceptedFiles) => {

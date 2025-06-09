@@ -87,7 +87,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <TextField
                     fullWidth
                     label="Chapter Number *"
-                    placeholder="Enter Chapter Number"
+                    // placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
                     value={formik.values.chapterNo}
@@ -106,7 +106,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <TextField
                     fullWidth
                     label="Chapter Name  *"
-                    placeholder="Enter Chapter Name"
+                    // placeholder="Enter Chapter Name"
                     name="chapterName"
                     value={formik.values.chapterName}
                     onChange={formik.handleChange}
@@ -133,7 +133,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       textField: {
                         fullWidth: true,
                         size: 'small',
-                        placeholder: 'Select Start Date',
+                        // placeholder: 'Select Start Date',
                         helperText: formik.touched.startTime && (formik.errors.startTime as string),
                         error: formik.touched.startTime && Boolean(formik.errors.startTime),
                       },
@@ -158,7 +158,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     slotProps={{
                       textField: {
                         size: 'small',
-                        placeholder: 'Select End Date',
+                        // placeholder: 'Select End Date',
                         error: !!(formik.touched.endTime && formik.errors.endTime) || false,
                         helperText: formik.touched.endTime && formik.errors.endTime,
                       },
@@ -175,7 +175,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     formik.setFieldValue('content', value);
                   }}
                   placeholder="Chapter Description"
-                  sx={{ width: '100%', height: '290px' }}
+                  sx={{ width: '100%', height: '100px' }}
                 />
               </Grid>
               {/* Document Upload Section */}

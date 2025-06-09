@@ -40,11 +40,11 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
+    <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '350px' }}>
-            <Grid container spacing={2} mt={1}>
+            <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Editor onChange={(value) => {}} value="Submission Data" editable={false} />
               </Grid>

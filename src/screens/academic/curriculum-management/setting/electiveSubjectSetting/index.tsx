@@ -1,19 +1,14 @@
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -22,10 +17,10 @@ import SettingElectiveSubjectForm from './components/electiveSubjectForm';
 
 import type { IElectiveSubject } from './type';
 
-const ElectiveSubjectSetting = (props: TabComponentType) => {
+const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
   // Dialog control hooks
   // Controls visibility of add/edit elective subject dialog
-  const addDialog = useBoolean();
+  // const addElectiveGroupDialog = useBoolean();
   // Controls visibility of delete confirmation dialog
   const deleteDialog = useBoolean();
   // Controls visibility of main dialog window
@@ -48,20 +43,25 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
       setOpen(false);
       dispatch(setIsChanges(false));
       setSelected(null);
-      addDialog.onFalse();
+      addElectiveGroupDialog.onFalse();
     } else if (!isChanges) {
       setOpen(false);
       setSelected(null);
-      addDialog.onFalse();
+      addElectiveGroupDialog.onFalse();
     }
   };
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
+      {/* <Box display="flex" justifyContent="flex-end" mb={1}>
+        <Button
+          variant="contained"
+          onClick={addElectiveGroupDialog.onTrue}
+          startIcon={<Add />}
+          size="small"
+        >
           Elective Group
         </Button>
-      </Box>
+      </Box> */}
 
       <ElectiveSubjectTable
         onDelete={(data) => {
@@ -70,48 +70,42 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
         }}
         onEdit={(data) => {
           setSelected(data);
-          addDialog.onTrue();
+          addElectiveGroupDialog.onTrue();
         }}
         open={open}
-        onAddElective={addDialog}
+        onAddElective={addElectiveGroupDialog}
         setOpenDialog={setOpen}
         editData={selected}
         setEditData={setSelected}
         data={[
           {
-            title: 'Language Electives',
-            subjects: [{ name: 'French' }, { name: 'German' }, { name: 'Spanish' }],
-            subjectColor: '#FF5733',
-            createdBy: 'John Smith',
+            title: 'Elective Group 1',
+            subjects: [{ name: 'Programming' }, { name: 'Physical Training' }],
+            subjectColor: '#1E90FF', // You can customize this color
+            createdBy: 'Anita Verma',
           },
           {
-            title: 'Science Electives',
-            subjects: [
-              { name: 'Astronomy' },
-              { name: 'Biotechnology' },
-              { name: 'Environmental Science' },
-            ],
-            subjectColor: '#33FF57',
-            createdBy: 'Sarah Johnson',
-          },
-          {
-            title: 'Arts Electives',
-            subjects: [{ name: 'Painting' }, { name: 'Sculpture' }, { name: 'Music' }],
-            subjectColor: '#3357FF',
-            createdBy: 'Michael Brown',
+            title: 'Elective Group 2',
+            subjects: [{ name: 'Hindi' }, { name: 'Sanskrit' }],
+            subjectColor: '#FF4500', // You can change this too
+            createdBy: 'Rakesh Mehta',
           },
         ]}
       />
 
       <CustomDialog
-        open={addDialog.value}
+        open={addElectiveGroupDialog.value}
         handleClose={() => {
-          addDialog.onFalse();
+          addElectiveGroupDialog.onFalse();
           setSelected(null);
         }}
         title={selected ? 'Update Elective Group' : 'Add Elective Group'}
       >
-        <SettingElectiveSubjectForm open={addDialog} onClose={handleClose} editData={selected} />
+        <SettingElectiveSubjectForm
+          open={addElectiveGroupDialog}
+          onClose={handleClose}
+          editData={selected}
+        />
       </CustomDialog>
 
       <ConfirmDialog
@@ -121,13 +115,19 @@ const ElectiveSubjectSetting = (props: TabComponentType) => {
           deleteDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to Delete Elective Subject ?"
+        content={
+          <>
+            Are you sure you want to delete elective subject <strong>{selected?.title}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              // handle delete
+            }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </Button>
