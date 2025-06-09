@@ -2,7 +2,7 @@ import type { FormikProps } from 'formik';
 
 import { useState } from 'react';
 
-import { Box, Grid } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -48,15 +48,26 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
+  // Configuration for file upload component
+  const uploadProps = {
+    multiple: true,
+    accept: {
+      'application/pdf': [],
+    },
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom>
+            Upload Rubric
+          </Typography>
           <Upload
-            multiple
             value={formik.values.subjects[0]?.rubric}
             onDrop={handleDrop}
             onRemove={handleRemove}
+            {...uploadProps}
           />
         </Grid>
         {/* Commented out rubric selection UI */}

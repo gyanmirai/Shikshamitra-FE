@@ -53,7 +53,7 @@ const StateComponent = ({
           {`${option?.isoCode} ${option?.name}`}
         </li>
       )}
-      disabled={!countryValue}
+      disabled={!countryValue?.name}
       label="State"
       {...filedProps}
     />

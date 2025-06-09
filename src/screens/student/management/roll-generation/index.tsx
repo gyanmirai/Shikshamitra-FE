@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
+import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
-import { Box, Button, Checkbox, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -180,33 +180,29 @@ const RollNoGenerationScreen = ({
           {arrangeBy && (
             <Box display="flex" gap={2}>
               <Button
-                startIcon={<Save />}
-                variant="outlined"
-                onClick={handleSave}
-                disabled={isSaving || !tableData.some((item) => item.rollNo)}
-                size="small"
-                sx={{ width: '180px' }}
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-
-              <Button
                 startIcon={<Grading />}
                 variant="outlined"
                 onClick={() => setIsManual(!isManual)}
                 size="small"
-                sx={{ width: '180px' }}
               >
                 Manual Generation
               </Button>
               <Button
                 size="small"
                 startIcon={<Refresh />}
-                variant="contained"
+                variant="outlined"
                 onClick={handleAutoGenerate}
-                sx={{ width: '180px' }}
               >
                 Auto Generate
+              </Button>
+              <Button
+                startIcon={<Save />}
+                variant="contained"
+                onClick={handleSave}
+                disabled={isSaving || !tableData.some((item) => item.rollNo)}
+                size="small"
+              >
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
             </Box>
           )}
@@ -227,45 +223,45 @@ const RollNoGenerationScreen = ({
               },
             }}
             columns={[
-              {
-                id: 'checkBox',
-                align: 'left',
-                minWidth: '60px',
-                isSort: false,
-                isFilter: false,
-                label: '',
-                sticky: true,
-                renderColumn() {
-                  return (
-                    <Checkbox
-                      checked={
-                        !!tableData?.length && selectedStudents?.length === tableData?.length
-                      }
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents(tableData || []);
-                        } else {
-                          setSelectedStudents([]);
-                        }
-                      }}
-                    />
-                  );
-                },
-                render(value, row) {
-                  return (
-                    <Checkbox
-                      checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStudents([...selectedStudents, row]);
-                        } else {
-                          setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                        }
-                      }}
-                    />
-                  );
-                },
-              },
+              // {
+              //   id: 'checkBox',
+              //   align: 'left',
+              //   minWidth: '60px',
+              //   isSort: false,
+              //   isFilter: false,
+              //   label: '',
+              //   sticky: true,
+              //   renderColumn() {
+              //     return (
+              //       <Checkbox
+              //         checked={
+              //           !!tableData?.length && selectedStudents?.length === tableData?.length
+              //         }
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents(tableData || []);
+              //           } else {
+              //             setSelectedStudents([]);
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              //   render(value, row) {
+              //     return (
+              //       <Checkbox
+              //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents([...selectedStudents, row]);
+              //           } else {
+              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              // },
               { id: 'grNoRecord', label: 'GR No.' },
               { id: 'name', label: 'Name' },
               {

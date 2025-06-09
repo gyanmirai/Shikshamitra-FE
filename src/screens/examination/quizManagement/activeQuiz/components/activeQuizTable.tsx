@@ -269,7 +269,7 @@ const QuizTable = ({
                 },
                 {
                   id: 'actions',
-                  label: 'Actions',
+                  label: 'Action',
                   isSort: false,
                   sticky: true,
                   isFilter: false,
@@ -389,7 +389,7 @@ const QuizTable = ({
                 },
                 {
                   id: 'actions',
-                  label: 'Actions',
+                  label: 'Action',
                   isSort: false,
                   sticky: true,
                   isFilter: false,

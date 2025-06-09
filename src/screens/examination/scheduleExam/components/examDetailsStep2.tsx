@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 
 import { TextField } from '@mui/material';
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -62,6 +62,10 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             return (
               <TimePicker
                 format="hh:mm"
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
                 value={value ? dayjs(value) : null}
                 onChange={(newTime) => {
                   const updatedSchedules = [...examSchedules];
@@ -84,6 +88,10 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               <TimePicker
                 format="hh:mm"
                 value={value ? dayjs(value) : null}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
                 onChange={(newTime) => {
                   const updatedSchedules = [...examSchedules];
                   updatedSchedules[row.id].startTime = newTime;

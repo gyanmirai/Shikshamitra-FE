@@ -46,7 +46,7 @@ export function Upload({
   const hasError = !!error;
 
   return (
-    <Card sx={{ ...sx, p: 2, height: '230px', width: '100%' }}>
+    <Card sx={{ ...sx, p: 2, height: '230px', width: '100%', boxShadow: 3 }}>
       {/* Upload Button */}
       {/* <Box
         {...getRootProps()}

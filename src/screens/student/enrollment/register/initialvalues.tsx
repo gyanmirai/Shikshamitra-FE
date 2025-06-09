@@ -9,7 +9,7 @@ import type { IInquiryData } from '../Inquiry';
 
 export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   inquiryNo: editData?.inquiryNumber || '',
-  formNo: editData?.formNumber || '',
+  formNo: editData?.formNo || '',
   firstName: editData?.firstName || '',
   lastName: editData?.lastName || '',
   middleName: editData?.middleName || '',
@@ -21,7 +21,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   familyCast: editData ? editData?.familyCast : '',
   castCategory: editData ? editData?.castType : null,
   motherTongue: editData?.motherTongue || '',
-  nationality: editData?.nationality || '',
+  nationality: editData?.nationality || 'Indian',
   birthPlace: editData?.birthPlace || '',
   temporaryGr: editData?.temporaryGr || '',
   remarks: editData?.remarks || '',
@@ -42,7 +42,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
     : { name: '' },
   country: editData?.country
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-    : { name: '' },
+    : { name: 'India', isoCode: 'IN' },
   addressLine1: editData?.addressLine1 || '',
 
   addressLine2: editData?.addressLine2 || '',
@@ -130,10 +130,12 @@ export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null)
   studentEmail: editData?.studentCommunicationDetails?.studentEmail || '',
   whatsAppContactNo: editData?.studentCommunicationDetails?.whatsAppNo || '',
 
-  localCountry: {
-    name: editData?.studentCommunicationDetails?.localCountry?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.localCountry?.isoCode || '',
-  },
+  localCountry: editData?.studentCommunicationDetails?.localCountry?.name
+    ? {
+        name: editData?.studentCommunicationDetails?.localCountry?.name || '',
+        isoCode: editData?.studentCommunicationDetails?.localCountry?.isoCode || '',
+      }
+    : { name: 'India', isoCode: 'IN' },
   localState: {
     name: editData?.studentCommunicationDetails?.localState?.name || '',
     isoCode: editData?.studentCommunicationDetails?.localState?.isoCode || '',
@@ -147,10 +149,12 @@ export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null)
   localAddressLine3: editData?.studentCommunicationDetails?.localAddressLine3 || '',
   isOpenLocalAddress: true,
 
-  emergencyCountry: {
-    name: editData?.studentCommunicationDetails?.emergencyCountry?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.emergencyCountry?.isoCode || '',
-  },
+  emergencyCountry: editData?.studentCommunicationDetails?.emergencyCountry?.name
+    ? {
+        name: editData?.studentCommunicationDetails?.emergencyCountry?.name || '',
+        isoCode: editData?.studentCommunicationDetails?.emergencyCountry?.isoCode || '',
+      }
+    : { name: 'India', isoCode: 'IN' },
   emergencyState: {
     name: editData?.studentCommunicationDetails?.emergencyState?.name || '',
     isoCode: editData?.studentCommunicationDetails?.emergencyState?.isoCode || '',
@@ -166,10 +170,12 @@ export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null)
   permanentAddress: editData?.studentCommunicationDetails?.permanentAddressLine1 || '',
   permanentAddressLine2: editData?.studentCommunicationDetails?.permanentAddressLine2 || '',
   permanentAddressLine3: editData?.studentCommunicationDetails?.permanentAddressLine3 || '',
-  permanentCountry: {
-    name: editData?.studentCommunicationDetails?.permanentCountry?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.permanentCountry?.isoCode || '',
-  },
+  permanentCountry: editData?.studentCommunicationDetails?.permanentCountry?.name
+    ? {
+        name: editData?.studentCommunicationDetails?.permanentCountry?.name || '',
+        isoCode: editData?.studentCommunicationDetails?.permanentCountry?.isoCode || '',
+      }
+    : { name: 'India', isoCode: 'IN' },
   permanentState: {
     name: editData?.studentCommunicationDetails?.permanentState?.name || '',
     isoCode: editData?.studentCommunicationDetails?.permanentState?.isoCode || '',

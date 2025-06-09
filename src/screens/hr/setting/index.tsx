@@ -69,7 +69,7 @@ const HrSetting = () => {
       />
       <CustomBreadcrumbs
         heading="Setting"
-        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Setting' }]}
+        links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Setting' }]}
         sx={{ px: 1, mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">

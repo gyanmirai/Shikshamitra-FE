@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Box,
@@ -90,7 +90,7 @@ const QuestionList = ({
         <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
         <Typography variant="body2">Skipped</Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Box
           sx={{
             width: 16,
@@ -108,14 +108,14 @@ const QuestionList = ({
 );
 
 // QuestionDisplay Component
-const QuestionDisplay = ({ question, onAnswer }: any) => {
+const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
   if (!question) return null;
 
   const renderOptions = () => {
     switch (question.questionType) {
       case 'multiple-choice':
         return (
-          <RadioGroup onChange={(e) => onAnswer(e.target.value)}>
+          <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
             {question.options.map((option: any) => (
               <FormControlLabel
                 key={option.value}
@@ -129,7 +129,7 @@ const QuestionDisplay = ({ question, onAnswer }: any) => {
         );
       case 'trueFalse':
         return (
-          <RadioGroup onChange={(e) => onAnswer(e.target.value)}>
+          <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
             {['true', 'false'].map((value) => (
               <FormControlLabel
                 key={value}
@@ -141,13 +141,14 @@ const QuestionDisplay = ({ question, onAnswer }: any) => {
             ))}
           </RadioGroup>
         );
-      case 'shortAns':
+      case 'descriptive':
         return (
           <TextField
             fullWidth
             multiline
             rows={4}
             variant="outlined"
+            value={currentAnswer || ''}
             placeholder="Type your answer here..."
             onChange={(e) => onAnswer(e.target.value)}
           />
@@ -176,11 +177,18 @@ const QuestionDisplay = ({ question, onAnswer }: any) => {
 };
 
 // Navigation Component
-const NavigationButtons = ({ currentQuestion, totalQuestions, onNext, onBack, onSkip }: any) => (
+const NavigationButtons = ({
+  currentQuestion,
+  totalQuestions,
+  onNext,
+  onBack,
+  onSkip,
+  onSubmit,
+}: any) => (
   <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
     <Box>
       {currentQuestion > 1 && (
-        <Button variant="contained" color="secondary" onClick={onBack}>
+        <Button variant="contained" onClick={onBack}>
           Back
         </Button>
       )}
@@ -193,19 +201,83 @@ const NavigationButtons = ({ currentQuestion, totalQuestions, onNext, onBack, on
       >
         Skip
       </Button>
-      <Button variant="contained" onClick={onNext}>
-        Next
-      </Button>
+      {currentQuestion === totalQuestions ? (
+        <Button variant="contained" color="success" onClick={onSubmit}>
+          Submit
+        </Button>
+      ) : (
+        <Button variant="contained" onClick={onNext}>
+          Next
+        </Button>
+      )}
     </Stack>
   </Stack>
 );
 
+// Sample quiz data
+const sampleQuizData = [
+  {
+    questionType: 'multiple-choice',
+    question: 'What is the capital of France?',
+    options: [
+      { value: 'paris', label: 'Paris' },
+      { value: 'london', label: 'London' },
+      { value: 'berlin', label: 'Berlin' },
+      { value: 'madrid', label: 'Madrid' },
+    ],
+    marks: 2,
+  },
+  {
+    questionType: 'trueFalse',
+    question: 'The Earth is flat.',
+    marks: 1,
+  },
+  {
+    questionType: 'descriptive',
+    question: 'Explain the process of photosynthesis.',
+    marks: 5,
+  },
+  {
+    questionType: 'multiple-choice',
+    question: 'Which programming language is used for React?',
+    options: [
+      { value: 'javascript', label: 'JavaScript' },
+      { value: 'python', label: 'Python' },
+      { value: 'java', label: 'Java' },
+      { value: 'cpp', label: 'C++' },
+    ],
+    marks: 2,
+  },
+  {
+    questionType: 'descriptive',
+    question: 'What are the key principles of Object-Oriented Programming?',
+    marks: 5,
+  },
+];
+
 // Main Quiz Portal Component
-const QuizPortal = ({ quizData }: any) => {
+const QuizPortal = ({ quizData }: { quizData: any }) => {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<number[]>([]);
-  const [answers, setAnswers] = useState({});
+  type Answer = string | boolean;
+  const [answers, setAnswers] = useState<Record<number, Answer>>({});
+  const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 0) {
+          clearInterval(timer);
+          // Handle quiz submission when time is up
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleAnswer = (answer: any) => {
     setAnswers((prev) => ({ ...prev, [currentQuestion]: answer }));
@@ -222,7 +294,7 @@ const QuizPortal = ({ quizData }: any) => {
   };
 
   const handleNext = () => {
-    if (currentQuestion < quizData.length) {
+    if (currentQuestion < sampleQuizData.length) {
       // If moving to next without answering, consider it skipped
       if (
         !answeredQuestions.includes(currentQuestion) &&
@@ -256,32 +328,50 @@ const QuizPortal = ({ quizData }: any) => {
     setCurrentQuestion(questionNumber);
   };
 
+  const handleSubmit = () => {
+    // Add your submit logic here
+    console.log('Quiz submitted:', answers);
+  };
+
   return (
-    <Box>
-      <QuestionList
-        totalQuestions={quizData.length}
-        currentQuestion={currentQuestion}
-        answeredQuestions={answeredQuestions}
-        skippedQuestions={skippedQuestions}
-        onQuestionSelect={handleQuestionSelect}
-      />
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={8}>
+        <Stack spacing={2}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+            <Typography variant="h6">
+              Time Left: {Math.floor(timeLeft / 3600)}:
+              {Math.floor((timeLeft % 3600) / 60)
+                .toString()
+                .padStart(2, '0')}
+              :{(timeLeft % 60).toString().padStart(2, '0')}
+            </Typography>
+          </Box>
 
-      <QuestionDisplay
-        question={{ ...quizData[currentQuestion - 1], questionNumber: currentQuestion }}
-        onAnswer={handleAnswer}
-        isSkipped={skippedQuestions.includes(currentQuestion)}
-      />
+          <QuestionDisplay
+            question={{ ...sampleQuizData[currentQuestion - 1], questionNumber: currentQuestion }}
+            onAnswer={handleAnswer}
+            currentAnswer={answers[currentQuestion]}
+            isSkipped={skippedQuestions.includes(currentQuestion)}
+          />
 
-      <NavigationButtons
-        currentQuestion={currentQuestion}
-        totalQuestions={quizData.length}
-        onNext={handleNext}
-        onBack={handleBack}
-        onSkip={handleSkip}
-        isAnswered={answeredQuestions.includes(currentQuestion)}
-        isSkipped={skippedQuestions.includes(currentQuestion)}
-      />
-    </Box>
+          <NavigationButtons
+            currentQuestion={currentQuestion}
+            totalQuestions={sampleQuizData.length}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSkip={handleSkip}
+            onSubmit={handleSubmit}
+            isAnswered={answeredQuestions.includes(currentQuestion)}
+            isSkipped={skippedQuestions.includes(currentQuestion)}
+          />
+        </Stack>
+      </Grid>
+
+      {/* Right side remains the same */}
+      <Grid item xs={12} md={4}>
+        {/* ... existing right side code ... */}
+      </Grid>
+    </Grid>
   );
 };
 

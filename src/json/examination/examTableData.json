@@ -76,5 +76,285 @@
     ],
     "description": "Comprehensive final exam covering entire syllabus.",
     "status": 1
+  },
+  {
+    "examType": "Mid-term Exam",
+    "examName": "Class 7 Mid-term",
+    "className": "7",
+    "divisions": ["A", "B", "C"],
+    "subjects": [
+      {
+        "id": 5,
+        "subjectName": "Mathematics",
+        "examDate": "10/09/2024",
+        "startTime": "09:00",
+        "endTime": "11:00",
+        "totalMarks": 80,
+        "passingMarks": 32,
+        "invigilationTeacher": "Mr. Rawal",
+        "teacher": "Mrs. Gandhi",
+        "rubric": []
+      },
+      {
+        "id": 6,
+        "subjectName": "English",
+        "examDate": "11/09/2024",
+        "startTime": "09:00",
+        "endTime": "11:00",
+        "totalMarks": 80,
+        "passingMarks": 32,
+        "invigilationTeacher": "Ms. Rana",
+        "teacher": "Mr. George",
+        "rubric": []
+      },
+      {
+        "id": 7,
+        "subjectName": "Science",
+        "examDate": "12/09/2024",
+        "startTime": "09:00",
+        "endTime": "11:00",
+        "totalMarks": 80,
+        "passingMarks": 32,
+        "invigilationTeacher": "Mr. Bhatt",
+        "teacher": "Mrs. Rao",
+        "rubric": []
+      },
+      {
+        "id": 8,
+        "subjectName": "History",
+        "examDate": "13/09/2024",
+        "startTime": "09:00",
+        "endTime": "11:00",
+        "totalMarks": 80,
+        "passingMarks": 32,
+        "invigilationTeacher": "Ms. Ghosh",
+        "teacher": "Mr. Anand",
+        "rubric": []
+      },
+      {
+        "id": 9,
+        "subjectName": "Geography",
+        "examDate": "14/09/2024",
+        "startTime": "09:00",
+        "endTime": "11:00",
+        "totalMarks": 80,
+        "passingMarks": 32,
+        "invigilationTeacher": "Mr. Chawla",
+        "teacher": "Mrs. Kiran",
+        "rubric": []
+      }
+    ],
+    "description": "Mid-term exams for core subjects of class 7.",
+    "status": 0
+  },
+  {
+    "examType": "Weekly Test",
+    "examName": "Weekly Test Series - Class 6",
+    "className": "6",
+    "divisions": ["A", "B"],
+    "subjects": [
+      {
+        "id": 10,
+        "subjectName": "Maths",
+        "examDate": "07/10/2024",
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "totalMarks": 30,
+        "passingMarks": 12,
+        "invigilationTeacher": "Ms. Kapadia",
+        "teacher": "Mr. Sharma",
+        "rubric": []
+      },
+      {
+        "id": 11,
+        "subjectName": "English",
+        "examDate": "08/10/2024",
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "totalMarks": 30,
+        "passingMarks": 12,
+        "invigilationTeacher": "Mr. Nair",
+        "teacher": "Mrs. Pinto",
+        "rubric": []
+      },
+      {
+        "id": 12,
+        "subjectName": "EVS",
+        "examDate": "09/10/2024",
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "totalMarks": 30,
+        "passingMarks": 12,
+        "invigilationTeacher": "Ms. Taneja",
+        "teacher": "Mr. Chauhan",
+        "rubric": []
+      },
+      {
+        "id": 13,
+        "subjectName": "GK",
+        "examDate": "10/10/2024",
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "totalMarks": 30,
+        "passingMarks": 12,
+        "invigilationTeacher": "Mr. Yadav",
+        "teacher": "Ms. Ritu",
+        "rubric": []
+      },
+      {
+        "id": 14,
+        "subjectName": "Computer",
+        "examDate": "11/10/2024",
+        "startTime": "10:00",
+        "endTime": "11:00",
+        "totalMarks": 30,
+        "passingMarks": 12,
+        "invigilationTeacher": "Ms. Khan",
+        "teacher": "Mr. Agrawal",
+        "rubric": []
+      }
+    ],
+    "description": "Weekly unit tests for review.",
+    "status": 0
+  },
+  {
+    "examType": "Unit Test",
+    "examName": "Class 5 UT 1",
+    "className": "5",
+    "divisions": ["A", "C"],
+    "subjects": [
+      {
+        "id": 15,
+        "subjectName": "Mathematics",
+        "examDate": "15/07/2024",
+        "startTime": "08:30",
+        "endTime": "09:30",
+        "totalMarks": 25,
+        "passingMarks": 10,
+        "invigilationTeacher": "Mr. Sinha",
+        "teacher": "Mrs. Kapoor",
+        "rubric": []
+      },
+      {
+        "id": 16,
+        "subjectName": "Science",
+        "examDate": "16/07/2024",
+        "startTime": "08:30",
+        "endTime": "09:30",
+        "totalMarks": 25,
+        "passingMarks": 10,
+        "invigilationTeacher": "Ms. Bedi",
+        "teacher": "Mr. Rajan",
+        "rubric": []
+      },
+      {
+        "id": 17,
+        "subjectName": "English",
+        "examDate": "17/07/2024",
+        "startTime": "08:30",
+        "endTime": "09:30",
+        "totalMarks": 25,
+        "passingMarks": 10,
+        "invigilationTeacher": "Mr. Dutta",
+        "teacher": "Ms. Ali",
+        "rubric": []
+      },
+      {
+        "id": 18,
+        "subjectName": "Hindi",
+        "examDate": "18/07/2024",
+        "startTime": "08:30",
+        "endTime": "09:30",
+        "totalMarks": 25,
+        "passingMarks": 10,
+        "invigilationTeacher": "Ms. Sharma",
+        "teacher": "Mr. Naik",
+        "rubric": []
+      },
+      {
+        "id": 19,
+        "subjectName": "Computer",
+        "examDate": "19/07/2024",
+        "startTime": "08:30",
+        "endTime": "09:30",
+        "totalMarks": 25,
+        "passingMarks": 10,
+        "invigilationTeacher": "Mr. Basu",
+        "teacher": "Ms. Rana",
+        "rubric": []
+      }
+    ],
+    "description": "Unit test 1 of class 5 for all subjects.",
+    "status": 0
+  },
+  {
+    "examType": "Final Exam",
+    "examName": "Final Exam - Class 12 Science",
+    "className": "12",
+    "divisions": ["A"],
+    "subjects": [
+      {
+        "id": 20,
+        "subjectName": "Mathematics",
+        "examDate": "01/03/2025",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "totalMarks": 100,
+        "passingMarks": 35,
+        "invigilationTeacher": "Mr. Subramanian",
+        "teacher": "Dr. Iyengar",
+        "rubric": []
+      },
+      {
+        "id": 21,
+        "subjectName": "Physics",
+        "examDate": "03/03/2025",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "totalMarks": 100,
+        "passingMarks": 35,
+        "invigilationTeacher": "Ms. Kumari",
+        "teacher": "Dr. Nanda",
+        "rubric": []
+      },
+      {
+        "id": 22,
+        "subjectName": "Chemistry",
+        "examDate": "05/03/2025",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "totalMarks": 100,
+        "passingMarks": 35,
+        "invigilationTeacher": "Mr. Dey",
+        "teacher": "Dr. Rao",
+        "rubric": []
+      },
+      {
+        "id": 23,
+        "subjectName": "Biology",
+        "examDate": "07/03/2025",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "totalMarks": 100,
+        "passingMarks": 35,
+        "invigilationTeacher": "Mrs. Pillai",
+        "teacher": "Dr. Menon",
+        "rubric": []
+      },
+      {
+        "id": 24,
+        "subjectName": "English",
+        "examDate": "09/03/2025",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "totalMarks": 100,
+        "passingMarks": 35,
+        "invigilationTeacher": "Ms. Das",
+        "teacher": "Mr. Joseph",
+        "rubric": []
+      }
+    ],
+    "description": "Final board-level examination for Class 12 Science stream.",
+    "status": 1
   }
 ]

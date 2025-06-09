@@ -1,5 +1,3 @@
-import { Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -20,7 +18,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
   return (
     <>
       <CustomSelect
-        label="Inquiry Type"
+        label="Inquiry Prefrance"
         name="inquiryPreference"
         isLoading={inquiryPrefrenceLoading}
         options={inquiryPreference?.items || []}
@@ -36,7 +34,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
           },
         }}
       />
-      <Typography
+      {/* <Typography
         variant="body2"
         fontWeight={500}
         textAlign="right"
@@ -47,8 +45,8 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
           dialog.onTrue();
         }}
       >
-        Add Inquiry Type
-      </Typography>
+        Add Inquiry Prefrance
+      </Typography> */}
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
       </CustomDialog>

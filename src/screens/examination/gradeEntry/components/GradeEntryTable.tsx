@@ -46,7 +46,7 @@ const GradeEntryTable = ({
       //     />
       //   ),
       // },
-      { id: 'GrNo', label: 'Gr No' },
+      { id: 'GrNo', label: 'Gr No.' },
       { id: 'studentName', label: 'Student Name' },
       { id: 'marks', label: 'Marks', filterType: 'number' },
       {
@@ -91,7 +91,7 @@ const GradeEntryTable = ({
       },
       {
         id: 'actions',
-        label: 'Actions',
+        label: 'Action',
         minWidth: 50,
         sticky: true,
         isFilter: false,

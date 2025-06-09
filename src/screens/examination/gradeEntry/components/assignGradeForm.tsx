@@ -27,7 +27,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
     <Box display="flex" flexDirection="column" gap={2}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '300px' }}>
+          <Scrollbar sx={{ p: 2, height: '200px', backgroundColor: 'background.paper' }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
@@ -80,25 +80,14 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
             >
               Cancel
             </Button>
-            {data ? (
-              <Button
-                size="small"
-                type="submit"
-                variant="contained"
-                startIcon={<Iconify icon={GlobalIcons.edit} />}
-              >
-                Update
-              </Button>
-            ) : (
-              <Button
-                size="small"
-                type="submit"
-                variant="contained"
-                startIcon={<Iconify icon={GlobalIcons.submit} />}
-              >
-                Submit
-              </Button>
-            )}
+            <Button
+              size="small"
+              type="submit"
+              variant="contained"
+              startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
+            >
+              {data ? 'Update' : 'Submit'}
+            </Button>
           </DialogActions>
         </form>
       </BackPopUpChecked>

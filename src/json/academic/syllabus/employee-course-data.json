@@ -1,0 +1,21 @@
+[
+    {
+      "id": 1,
+      "name": "Programming (CS-12)",
+      "progress": 60,
+      "completedChapter": 5,
+      "totalChapter": 8,
+      "color": "#0056D2",
+      "details": [
+        { "chapterName": "Introduction to Programming", "teacherName": "John Developer", "progress": 70, "pending": 30, "timeLine": "2024-10-05" },
+        { "chapterName": "Data Types & Variables", "teacherName": "John Developer", "progress": 60, "pending": 40, "timeLine": "2024-10-08" },
+        { "chapterName": "Control Structures", "teacherName": "Jane Code", "progress": 55, "pending": 45, "timeLine": "2024-10-10" },
+        { "chapterName": "Functions & Modules", "teacherName": "Jane Code", "progress": 50, "pending": 50, "timeLine": "2024-10-13" },
+        { "chapterName": "Arrays & Lists", "teacherName": "Jake Byte", "progress": 70, "pending": 30, "timeLine": "2024-10-16" },
+        { "chapterName": "OOP Basics", "teacherName": "Jake Byte", "progress": 40, "pending": 60, "timeLine": "2024-10-20" },
+        { "chapterName": "File Handling", "teacherName": "Lucy Logic", "progress": 30, "pending": 70, "timeLine": "2024-10-23" },
+        { "chapterName": "Error Handling", "teacherName": "Lucy Logic", "progress": 50, "pending": 50, "timeLine": "2024-10-25" }
+      ]
+    }   
+  ]
+  

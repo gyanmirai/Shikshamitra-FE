@@ -396,7 +396,7 @@ export const AttendanceRuleForm = ({ handleClose, editData }: any) => {
                     name="enableNotification"
                   />
                 }
-                label="Enable notification for Upper Authority if the rule is violated to Send notification to relevant authority when rule is violated."
+                label="Send a notification to the appropriate authority when a rule is violated."
               />
             </Grid>
           </Grid>

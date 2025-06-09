@@ -122,7 +122,7 @@ const RegisterScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Follow Up"
+        title="Note"
       >
         <CommunicationForm
           handleCloseDialog={() => {

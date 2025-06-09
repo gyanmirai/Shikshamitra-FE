@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Country, type ICountry } from 'country-state-city';
+import { type ICountry } from 'country-state-city';
 
 import { TextField } from '@mui/material';
 import { Autocomplete, type TextFieldProps, type AutocompleteProps } from '@mui/material';
@@ -19,7 +19,31 @@ const CountryComponent = ({
       textFieldProps?: Partial<TextFieldProps>;
     }
 >) => {
-  const allCountry = useMemo(() => Country.getAllCountries(), []);
+  // const allCountry = useMemo(() => Country.getAllCountries(), []);
+  const allCountry = useMemo(
+    () => [
+      {
+        name: 'India',
+        isoCode: 'IN',
+        flag: '🇮🇳',
+        phonecode: '91',
+        currency: 'INR',
+        latitude: '20.00000000',
+        longitude: '77.00000000',
+        timezones: [
+          {
+            zoneName: 'Asia/Kolkata',
+            gmtOffset: 19800,
+            gmtOffsetName: 'UTC+05:30',
+            abbreviation: 'IST',
+            tzName: 'Indian Standard Time',
+          },
+        ],
+      },
+    ],
+    []
+  );
+
   return (
     <ShakingTextField error={error}>
       <Autocomplete

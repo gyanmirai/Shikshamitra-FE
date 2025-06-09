@@ -120,7 +120,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               onChange={(val) => {
                 formik.setFieldValue('className', val as string);
               }}
-              label="Class"
+              label="Class *"
               labelKey="name"
               valueKey="id"
               value={formik.values.className}
@@ -139,7 +139,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             error={!!(formik.touched.divisions && formik.errors.divisions) || false}
           >
             <CustomSelect
-              label="Division"
+              label="Division *"
               labelKey="name"
               valueKey="id"
               multiple
@@ -187,7 +187,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }}
               multiple
               disabled={formik.values.divisions.length === 0}
-              label="Subjects"
+              label="Subjects *"
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={

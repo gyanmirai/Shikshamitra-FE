@@ -44,7 +44,7 @@ export const GlobalIcons = {
   approvedIcon: 'hugeicons:tick-01',
   delete: 'solar:trash-bin-trash-bold',
   receiptIcon: 'tabler:receipt',
-  tick: 'mdi:tick-circle-outline',
+  tick: 'mdi:tick-circle',
   reject: 'fluent:text-change-reject-24-filled',
 };
 

@@ -30,6 +30,7 @@ export const RenderOrganization = ({ formik, disabled }: RenderOrganizationProps
   });
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  console.log('🚀 ~ RenderOrganization ~ medium:', medium);
 
   const organizationOptions = useMemo(
     () => data?.items?.filter((org: Organization) => org.educationMediumId === medium?.id) || [],

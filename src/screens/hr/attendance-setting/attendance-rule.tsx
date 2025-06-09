@@ -98,6 +98,14 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         </Button>
       </Box> */}
       <CustomizableTable
+        searchFieldProps={{
+          placeholder: 'Search by Name, Type, Late Threshold...',
+          label: 'Search by Name, Type, Late Threshold...',
+          sx: {
+            maxWidth: '350px',
+            width: '100%',
+          },
+        }}
         noDataText={
           <>
             No Attendance Rule Found{' '}
@@ -384,7 +392,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                       name="enableNotification"
                     />
                   }
-                  label="Enable notification for Upper Authority if the rule is violated to Send notification to relevant authority when rule is violated."
+                  label="Send a notification to the appropriate authority when a rule is violated."
                 />
               </Grid>
             </Grid>

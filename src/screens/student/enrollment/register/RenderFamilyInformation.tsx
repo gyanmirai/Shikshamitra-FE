@@ -2,16 +2,7 @@ import { useState } from 'react';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Divider,
-  Checkbox,
-  TextField,
-  Typography,
-  Autocomplete,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Grid, Divider, TextField, Typography, Autocomplete } from '@mui/material';
 
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
@@ -23,26 +14,9 @@ function MotherOfficeAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={3} p={3}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
-        <FormControlLabel
-          disabled={!!disabled}
-          control={
-            <Checkbox
-              checked={formik.values.sameAsFatherOfficeAddressForMother}
-              onChange={(e) => {
-                formik.setFieldValue('sameAsFatherOfficeAddressForMother', e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue('motherOfficeAddress1', formik.values.fatherOfficeAddress1);
-                  formik.setFieldValue('motherOfficeAddress2', formik.values.fatherOfficeAddress2);
-                  formik.setFieldValue('motherOfficeAddress3', formik.values.fatherOfficeAddress3);
-                }
-              }}
-              name="sameAsFatherOfficeAddressForMother"
-            />
-          }
-          label="Same as Father Office Address"
-        />
+        <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -52,7 +26,6 @@ function MotherOfficeAddressComponent(props: any) {
           <TextField
             name="motherOfficeAddress1"
             label="Building / Flat / House No"
-            placeholder="Enter Building / Flat / House No"
             value={formik.values.motherOfficeAddress1}
             onChange={formik.handleChange}
             error={
@@ -73,7 +46,6 @@ function MotherOfficeAddressComponent(props: any) {
           <TextField
             name="motherOfficeAddress2"
             label="Street / Road Name"
-            placeholder="Enter Street / Road Name"
             value={formik.values.motherOfficeAddress2}
             onChange={formik.handleChange}
             error={
@@ -94,7 +66,6 @@ function MotherOfficeAddressComponent(props: any) {
           <TextField
             name="motherOfficeAddress3"
             label="Area / Locality / Landmark"
-            placeholder="Enter Area / Locality / Landmark"
             value={formik.values.motherOfficeAddress3}
             onChange={formik.handleChange}
             error={
@@ -115,35 +86,9 @@ function GuardianOfficeAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={3} p={3}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
-        <FormControlLabel
-          disabled={!!disabled}
-          control={
-            <Checkbox
-              checked={formik.values.sameAsFatherOfficeAddressForGuardian}
-              onChange={(e) => {
-                formik.setFieldValue('sameAsFatherOfficeAddressForGuardian', e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue(
-                    'guardianOfficeAddress1',
-                    formik.values.fatherOfficeAddress1
-                  );
-                  formik.setFieldValue(
-                    'guardianOfficeAddress2',
-                    formik.values.fatherOfficeAddress2
-                  );
-                  formik.setFieldValue(
-                    'guardianOfficeAddress3',
-                    formik.values.fatherOfficeAddress3
-                  );
-                }
-              }}
-              name="sameAsFatherOfficeAddressForGuardian"
-            />
-          }
-          label="Same as Father Office Address"
-        />
+        <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -155,7 +100,6 @@ function GuardianOfficeAddressComponent(props: any) {
           <TextField
             name="guardianOfficeAddress1"
             label="Building / Flat / House No"
-            placeholder="Enter Building / Flat / House No"
             value={formik.values.guardianOfficeAddress1}
             onChange={formik.handleChange}
             error={
@@ -180,7 +124,6 @@ function GuardianOfficeAddressComponent(props: any) {
           <TextField
             name="guardianOfficeAddress2"
             label="Street / Road Name"
-            placeholder="Enter Street / Road Name"
             value={formik.values.guardianOfficeAddress2}
             onChange={formik.handleChange}
             error={
@@ -205,7 +148,6 @@ function GuardianOfficeAddressComponent(props: any) {
           <TextField
             name="guardianOfficeAddress3"
             label="Area / Locality / Landmark"
-            placeholder="Enter Area / Locality / Landmark"
             value={formik.values.guardianOfficeAddress3}
             onChange={formik.handleChange}
             error={
@@ -228,26 +170,9 @@ function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={3} p={3}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
-        <FormControlLabel
-          disabled={!!disabled}
-          control={
-            <Checkbox
-              checked={formik.values.sameAsFatherAddress}
-              onChange={(e) => {
-                formik.setFieldValue('sameAsFatherAddress', e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue('motherAddress1', formik.values.fatherAddress1);
-                  formik.setFieldValue('motherAddress2', formik.values.fatherAddress2);
-                  formik.setFieldValue('motherAddress3', formik.values.fatherAddress3);
-                }
-              }}
-              name="sameAsFatherAddress"
-            />
-          }
-          label="Same as Father Address"
-        />
+        <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -257,7 +182,6 @@ function MotherAddressComponent(props: any) {
           <TextField
             name="motherAddress1"
             label="Building / Flat / House No"
-            placeholder="Enter Building / Flat / House No"
             value={formik.values.motherAddress1}
             onChange={formik.handleChange}
             error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
@@ -276,7 +200,6 @@ function MotherAddressComponent(props: any) {
           <TextField
             name="motherAddress2"
             label="Street / Road Name"
-            placeholder="Enter Street / Road Name"
             value={formik.values.motherAddress2}
             onChange={formik.handleChange}
             error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
@@ -295,7 +218,6 @@ function MotherAddressComponent(props: any) {
           <TextField
             name="motherAddress3"
             label="Area / Locality / Landmark"
-            placeholder="Enter Area / Locality / Landmark"
             value={formik.values.motherAddress3}
             onChange={formik.handleChange}
             error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
@@ -314,26 +236,9 @@ function GuardianAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={3} p={3}>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
-        <FormControlLabel
-          disabled={!!disabled}
-          control={
-            <Checkbox
-              checked={formik.values.sameAsFatherAddress}
-              onChange={(e) => {
-                formik.setFieldValue('sameAsFatherAddress', e.target.checked);
-                if (e.target.checked) {
-                  formik.setFieldValue('guardianAddress1', formik.values.fatherAddress1);
-                  formik.setFieldValue('guardianAddress2', formik.values.fatherAddress2);
-                  formik.setFieldValue('guardianAddress3', formik.values.fatherAddress3);
-                }
-              }}
-              name="sameAsFatherAddress"
-            />
-          }
-          label="Same as Father Address"
-        />
+        <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -343,7 +248,6 @@ function GuardianAddressComponent(props: any) {
           <TextField
             name="guardianAddress1"
             label="Building / Flat / House No"
-            placeholder="Enter Building / Flat / House No"
             value={formik.values.guardianAddress1}
             onChange={formik.handleChange}
             error={formik.touched.guardianAddress1 && Boolean(formik.errors.guardianAddress1)}
@@ -362,7 +266,6 @@ function GuardianAddressComponent(props: any) {
           <TextField
             name="guardianAddress2"
             label="Street / Road Name"
-            placeholder="Enter Street / Road Name"
             value={formik.values.guardianAddress2}
             onChange={formik.handleChange}
             error={formik.touched.guardianAddress2 && Boolean(formik.errors.guardianAddress2)}
@@ -381,7 +284,6 @@ function GuardianAddressComponent(props: any) {
           <TextField
             name="guardianAddress3"
             label="Area / Locality / Landmark"
-            placeholder="Enter Area / Locality / Landmark"
             value={formik.values.guardianAddress3}
             onChange={formik.handleChange}
             error={formik.touched.guardianAddress3 && Boolean(formik.errors.guardianAddress3)}
@@ -410,7 +312,6 @@ function RenderFamilyInformation(props: any) {
               label=" Father full name *"
               value={formik.values.fatherName}
               autoFocus
-              placeholder="Enter Father full name"
               onChange={(e) => {
                 const value = capitalize(e.target.value);
                 formik.setFieldValue('fatherName', value);
@@ -450,7 +351,6 @@ function RenderFamilyInformation(props: any) {
             name="fatherOccupation"
             label="Father Occupation"
             value={formik.values.fatherOccupation}
-            placeholder="Enter Father Occupation"
             onChange={(e) => {
               const value = capitalize(e.target.value);
               formik.setFieldValue('fatherOccupation', value);
@@ -466,7 +366,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherEmail"
             label="Father Email"
-            placeholder="Enter Father Email"
             value={formik.values.fatherEmail}
             onChange={formik.handleChange}
             error={formik.touched.fatherEmail && Boolean(formik.errors.fatherEmail)}
@@ -489,7 +388,6 @@ function RenderFamilyInformation(props: any) {
             name="fatherPassOutYear"
             label="Father's Year of Passing"
             type="number"
-            placeholder="Enter Fathers Year of Passing"
             value={formik.values.fatherPassOutYear}
             onChange={formik.handleChange}
             error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
@@ -504,7 +402,6 @@ function RenderFamilyInformation(props: any) {
             name="fatherQualification"
             label="Father Qualification"
             value={formik.values.fatherQualification}
-            placeholder="Enter Father Qualification"
             onChange={(e) => {
               const value = capitalize(e.target.value);
               formik.setFieldValue('fatherQualification', value);
@@ -523,7 +420,6 @@ function RenderFamilyInformation(props: any) {
             onChange={(value) => {
               formik.setFieldValue('fatherContactNo', value);
             }}
-            placeholder="Enter Father Contact No."
             label="Father Contact No."
             disabled={!isEdit}
             error={formik.touched.fatherContactNo && Boolean(formik.errors.fatherContactNo)}
@@ -537,7 +433,6 @@ function RenderFamilyInformation(props: any) {
             onChange={(value) => {
               formik.setFieldValue('fatherOfficeNo', value);
             }}
-            placeholder="Enter Father Contact No."
             label="Father Office No."
             error={formik.touched.fatherOfficeNo && Boolean(formik.errors.fatherOfficeNo)}
             disabled={!isEdit}
@@ -547,7 +442,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherDesignation"
             label="Father Designation"
-            placeholder="Enter Father Designation"
             value={formik.values.fatherDesignation}
             onChange={(e) => {
               const value = capitalize(e.target.value);
@@ -564,7 +458,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherOrganization"
             label="Father Organization"
-            placeholder="Enter Father Organization"
             disabled={!isEdit}
             value={formik.values.fatherOrganization}
             onChange={(e) => {
@@ -581,7 +474,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherAadharNo"
             label="Father Aadhar No."
-            placeholder="Enter Father Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.fatherAadharNo}
@@ -596,7 +488,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="fatherRemarks"
             label="Remarks"
-            placeholder="Enter Remarks"
+            
             disabled={!isEdit}
             multiline
             rows={3}
@@ -609,7 +501,7 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid> */}
         <Grid item xs={12}>
-          <Typography variant="subtitle1">Father Office Address</Typography>
+          <Typography variant="subtitle1">Office Address</Typography>
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <ShakingTextField
@@ -620,7 +512,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherOfficeAddress1"
               label="Building / Flat / House No"
-              placeholder="Enter Building / Flat / House No"
               value={formik.values.fatherOfficeAddress1}
               onChange={formik.handleChange}
               error={
@@ -643,7 +534,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherOfficeAddress2"
               label="Street / Road Name"
-              placeholder="Enter Street / Road Name"
               value={formik.values.fatherOfficeAddress2}
               onChange={formik.handleChange}
               error={
@@ -666,7 +556,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherOfficeAddress3"
               label="Area / Locality / Landmark"
-              placeholder="Enter Area / Locality / Landmark"
               value={formik.values.fatherOfficeAddress3}
               onChange={formik.handleChange}
               error={
@@ -681,7 +570,7 @@ function RenderFamilyInformation(props: any) {
         </Grid>
 
         <Grid item xs={12}>
-          <Typography variant="subtitle1">Father Address</Typography>
+          <Typography variant="subtitle1">Local Address</Typography>
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <ShakingTextField
@@ -690,7 +579,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherAddress1"
               label="Building / Flat / House No"
-              placeholder="Enter Building / Flat / House No"
               value={formik.values.fatherAddress1}
               onChange={formik.handleChange}
               error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
@@ -709,7 +597,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherAddress2"
               label="Street / Road Name"
-              placeholder="Enter Street / Road Name"
               value={formik.values.fatherAddress2}
               onChange={formik.handleChange}
               error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
@@ -728,7 +615,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="fatherAddress3"
               label="Area / Locality / Landmark"
-              placeholder="Enter Area / Locality / Landmark"
               value={formik.values.fatherAddress3}
               onChange={formik.handleChange}
               error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
@@ -747,7 +633,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="motherName"
               label="Mother full name *"
-              placeholder="Enter Mother full name"
               disabled={!isEdit}
               value={formik.values.motherName}
               onChange={(e) => {
@@ -787,7 +672,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherOccupation"
             label="Mother Occupation"
-            placeholder="Enter Mother Occupation"
             disabled={!isEdit}
             value={formik.values.motherOccupation}
             onChange={(e) => {
@@ -804,7 +688,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherEmail"
             label="Mother Email"
-            placeholder="Enter Mother Email"
             disabled={!isEdit}
             value={formik.values.motherEmail}
             onChange={formik.handleChange}
@@ -826,7 +709,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherPassOutYear"
             label="Mother's Year of Passing"
-            placeholder="Enter Mother's Year of Passing"
             type="number"
             disabled={!isEdit}
             value={formik.values.motherPassOutYear}
@@ -841,7 +723,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherQualification"
             label="Mother Qualification"
-            placeholder="Enter Mother Qualification"
             disabled={!isEdit}
             value={formik.values.motherQualification}
             onChange={(e) => {
@@ -863,7 +744,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('motherContactNo', value);
             }}
             label="Mother Contact No."
-            placeholder="Enter Mother Contact No."
             error={formik.touched.motherContactNo && Boolean(formik.errors.motherContactNo)}
             helperText={formik.touched.motherContactNo && formik.errors.motherContactNo}
           />
@@ -876,7 +756,6 @@ function RenderFamilyInformation(props: any) {
             onChange={(value) => {
               formik.setFieldValue('motherOfficeNo', value);
             }}
-            placeholder="Enter Mother Office No."
             label="Mother Office No."
             error={formik.touched.motherOfficeNo && Boolean(formik.errors.motherOfficeNo)}
           />
@@ -885,7 +764,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherDesignation"
             label="Mother Designation"
-            placeholder="Enter Mother Designation"
             disabled={!isEdit}
             value={formik.values.motherDesignation}
             onChange={(e) => {
@@ -902,7 +780,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherOrganization"
             label="Mother Organization"
-            placeholder="Enter Mother Organization"
             disabled={!isEdit}
             value={formik.values.motherOrganization}
             onChange={(e) => {
@@ -919,7 +796,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherAadharNo"
             label="Mother Aadhar No."
-            placeholder="Enter Mother Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.motherAadharNo}
@@ -934,7 +810,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="motherRemarks"
             label="Remarks"
-            placeholder="Enter Remarks"
+            
             disabled={!isEdit}
             multiline
             rows={3}
@@ -946,9 +822,12 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid> */}
-        <MotherOfficeAddressComponent formik={formik} disabled={!isEdit} />
-
-        <MotherAddressComponent formik={formik} disabled={!isEdit} />
+        <Grid item xs={12}>
+          <MotherOfficeAddressComponent formik={formik} disabled={!isEdit} />
+        </Grid>
+        <Grid item xs={12}>
+          <MotherAddressComponent formik={formik} disabled={!isEdit} />
+        </Grid>
       </SectionCard>
 
       <SectionCard title="Guardian Details">
@@ -959,7 +838,6 @@ function RenderFamilyInformation(props: any) {
             <TextField
               name="guardianName"
               label="Guardian Full Name"
-              placeholder="Enter Guardian Full Name"
               disabled={!isEdit}
               value={formik.values.guardianName}
               onChange={(e) => {
@@ -1001,7 +879,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianOccupation"
             label="Guardian Occupation"
-            placeholder="Enter Guardian Occupation"
             disabled={!isEdit}
             value={formik.values.guardianOccupation}
             onChange={(e) => {
@@ -1018,7 +895,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianEmail"
             label="Guardian Email"
-            placeholder="Enter Guardian Email"
             disabled={!isEdit}
             value={formik.values.guardianEmail}
             onChange={formik.handleChange}
@@ -1040,7 +916,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianPassOutYear"
             label="Guardian's Year of Passing"
-            placeholder="Enter Guardian's Year of Passing"
             type="number"
             disabled={!isEdit}
             value={formik.values.guardianPassOutYear}
@@ -1055,7 +930,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianQualification"
             label="Guardian Qualification"
-            placeholder="Enter Guardian Qualification"
             disabled={!isEdit}
             value={formik.values.guardianQualification}
             onChange={(e) => {
@@ -1079,7 +953,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('guardianContactNo', value);
             }}
             label="Guardian Contact No."
-            placeholder="Enter Guardian Contact No."
             error={formik.touched.guardianContactNo && Boolean(formik.errors.guardianContactNo)}
             helperText={formik.touched.guardianContactNo && formik.errors.guardianContactNo}
           />
@@ -1093,7 +966,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('guardianOfficeNo', value);
             }}
             label="Guardian Office No."
-            placeholder="Enter Guardian Office No."
             error={formik.touched.guardianOfficeNo && Boolean(formik.errors.guardianOfficeNo)}
           />
         </Grid>
@@ -1101,7 +973,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianDesignation"
             label="Guardian Designation"
-            placeholder="Enter Guardian Designation"
             disabled={!isEdit}
             value={formik.values.guardianDesignation}
             onChange={(e) => {
@@ -1118,7 +989,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianOrganization"
             label="Guardian Organization"
-            placeholder="Enter Guardian Organization"
             disabled={!isEdit}
             value={formik.values.guardianOrganization}
             onChange={(e) => {
@@ -1137,7 +1007,6 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianAadharNo"
             label="Guardian Aadhar No."
-            placeholder="Enter Guardian Aadhar No."
             type="number"
             disabled={!isEdit}
             value={formik.values.guardianAadharNo}
@@ -1152,7 +1021,7 @@ function RenderFamilyInformation(props: any) {
           <TextField
             name="guardianRemarks"
             label="Remarks"
-            placeholder="Enter Remarks"
+            
             disabled={!isEdit}
             multiline
             rows={3}
@@ -1164,8 +1033,12 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid> */}
-        <GuardianOfficeAddressComponent formik={formik} disabled={!isEdit} />
-        <GuardianAddressComponent formik={formik} disabled={!isEdit} />
+        <Grid item xs={12}>
+          <GuardianOfficeAddressComponent formik={formik} disabled={!isEdit} />
+        </Grid>
+        <Grid item xs={12}>
+          <GuardianAddressComponent formik={formik} disabled={!isEdit} />
+        </Grid>
       </SectionCard>
 
       <SectionCard title="Sibling Details">
@@ -1183,13 +1056,7 @@ function RenderFamilyInformation(props: any) {
             options={[]}
             getOptionLabel={(option: any) => option?.firstName || ''}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Student"
-                placeholder="Search  Student"
-                fullWidth
-              />
+              <TextField {...params} size="small" label="Student" fullWidth />
             )}
             renderOption={(prop: any, option: any) => (
               <li {...prop} key={option.id}>

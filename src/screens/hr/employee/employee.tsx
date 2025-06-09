@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Card, Paper, Button, Avatar, MenuList, MenuItem } from '@mui/material';
+import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -125,7 +125,7 @@ const HrEmployee = () => {
           <CustomBreadcrumbs
             heading={editData ? 'Update Employee' : 'Add Employee'}
             links={[
-              { name: 'HR', href: '/hr/dashboard/' },
+              { name: 'HR/Staff', href: '/hr/dashboard/' },
               { name: 'Employee List', onClick: handleClose },
               { name: editData ? 'Update Employee' : 'Add Employee' },
             ]}
@@ -160,7 +160,7 @@ const HrEmployee = () => {
             }
             description="This section displays a list of employees. Click on the View action to access their detailed profile information."
           />
-          <Paper sx={{ px: 1, py: 2 }}>
+          <Box>
             <CustomizableTable
               noDataText={
                 <>
@@ -396,7 +396,7 @@ const HrEmployee = () => {
                 </Grid>
               </Box>
             </CustomDialog>
-          </Paper>{' '}
+          </Box>{' '}
         </>
       ) : (
         <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />

@@ -9,16 +9,6 @@ export default function ShakingTextField({
   error?: boolean;
   children?: React.ReactNode;
 }) {
-  console.log(children);
-  //   useEffect(() => {
-  //     if (error) {
-  //       // Mobile vibration (if supported)
-  //       if (navigator?.vibrate) {
-  //         navigator.vibrate(200); // Vibrate for 200ms
-  //       }
-  //     }
-  //   }, [error]);
-
   return (
     <Box
       component={m.div}

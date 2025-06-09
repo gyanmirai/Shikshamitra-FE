@@ -1,4 +1,3 @@
-import { useRouter } from 'next/navigation';
 import React, { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -63,7 +62,6 @@ const RegisterForm = ({
   isComeFromIssueForm?: boolean;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
-  const router = useRouter();
 
   const [addRegistration] = useQueryAndMutation({
     type: 'mutation',
@@ -215,7 +213,9 @@ const RegisterForm = ({
           body: {
             fatherDetails: {
               name: values.fatherName,
-              dateOfBirth: dateConvertor(values.fatherDob?.format(dateFormat) || '') || '',
+              dateOfBirth: values.fatherDob
+                ? dateConvertor(values.fatherDob?.format(dateFormat) || '') || ''
+                : null,
               occupation: values.fatherOccupation,
               qualification: values.fatherQualification,
               contactNo: values.fatherContactNo,
@@ -235,7 +235,9 @@ const RegisterForm = ({
             },
             motherDetails: {
               name: values.motherName,
-              dateOfBirth: dateConvertor(values.motherDob?.format(dateFormat) || '') || '',
+              dateOfBirth: values.motherDob
+                ? dateConvertor(values.motherDob?.format(dateFormat) || '') || ''
+                : null,
               occupation: values.motherOccupation,
               qualification: values.motherQualification,
               contactNo: values.motherContactNo,
@@ -253,7 +255,9 @@ const RegisterForm = ({
             },
             guardianDetails: {
               name: values.guardianName,
-              dateOfBirth: dateConvertor(values.guardianDob?.format(dateFormat) || '') || '',
+              dateOfBirth: values.guardianDob
+                ? dateConvertor(values.guardianDob?.format(dateFormat) || '') || ''
+                : null,
               occupation: values.guardianOccupation,
               qualification: values.guardianQualification,
               contactNo: values.guardianContactNo,
@@ -419,6 +423,7 @@ const RegisterForm = ({
           setActiveStep(index);
         }
       }}
+      validateOnChange
       scrollbarHeight="70vh"
       initialValues={{
         ...generalFieldsInitialValues(editData),

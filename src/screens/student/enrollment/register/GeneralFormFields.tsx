@@ -52,26 +52,6 @@ export const generalFormFields: FieldsType[] = [
       return (
         <Box>
           <SectionCard title="Inquiry & Admission Details">
-            {/* <Grid item xs={12} md={3}>
-              <ShakingTextField
-                error={formik.touched.inquiryNo && Boolean(formik.errors.inquiryNo)}
-              >
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Inquiry No"
-                  placeholder="Enter Inquiry No"
-                  {...formik.getFieldProps('inquiryNo')}
-                  onChange={(e) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('inquiryNo', newName);
-                  }}
-                  error={formik.touched.inquiryNo && Boolean(formik.errors.inquiryNo)}
-                  helperText={formik.touched.inquiryNo && formik.errors.inquiryNo}
-                  disabled
-                />
-              </ShakingTextField>
-            </Grid> */}
             <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.formNo && Boolean(formik.errors.formNo)}>
                 <TextField
@@ -79,7 +59,7 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Form No"
                   name="formNo"
-                  placeholder="Enter Form No"
+                  value={formik.values.formNo}
                   onChange={formik.handleChange}
                   error={formik.touched.formNo && Boolean(formik.errors.formNo)}
                   helperText={formik.touched.formNo && formik.errors.formNo}
@@ -109,6 +89,7 @@ export const generalFormFields: FieldsType[] = [
                   const value = acceptedFiles[0];
                   const base64 = await fileToBase64(value);
                   formik.setFieldValue('photo', base64);
+                  formik.setFieldTouched('photo', true);
                 }}
                 value={formik.values.photo}
                 error={formik.touched.photo && Boolean(formik.errors.photo)}
@@ -124,7 +105,6 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="firstName"
                       size="small"
-                      placeholder="Enter First Name *"
                       name="firstName"
                       label="First Name *"
                       value={formik.values.firstName}
@@ -135,6 +115,7 @@ export const generalFormFields: FieldsType[] = [
                       onChange={(e: any) => {
                         const newName = capitalize(e.target.value);
                         formik.setFieldValue('firstName', newName);
+                        formik.setFieldTouched('firstName', true);
                       }}
                       disabled={!disabled}
                     />
@@ -149,7 +130,6 @@ export const generalFormFields: FieldsType[] = [
                       size="small"
                       label="Middle Name *"
                       name="middleName"
-                      placeholder="Enter Middle Name *"
                       value={formik.values.middleName}
                       onBlur={formik.handleBlur}
                       error={formik.touched.middleName && Boolean(formik.errors.middleName)}
@@ -158,6 +138,7 @@ export const generalFormFields: FieldsType[] = [
                       onChange={(e: any) => {
                         const newName = capitalize(e.target.value);
                         formik.setFieldValue('middleName', newName);
+                        formik.setFieldTouched('middleName', true);
                       }}
                       disabled={!disabled}
                     />
@@ -172,7 +153,6 @@ export const generalFormFields: FieldsType[] = [
                       size="small"
                       label="Last Name *"
                       name="lastName"
-                      placeholder="Enter Last Name *"
                       value={formik.values.lastName}
                       onBlur={formik.handleBlur}
                       error={formik.touched.lastName && Boolean(formik.errors.lastName)}
@@ -181,6 +161,7 @@ export const generalFormFields: FieldsType[] = [
                       onChange={(e: any) => {
                         const newName = capitalize(e.target.value);
                         formik.setFieldValue('lastName', newName);
+                        formik.setFieldTouched('lastName', true);
                       }}
                       disabled={!disabled}
                     />
@@ -196,7 +177,6 @@ export const generalFormFields: FieldsType[] = [
                       format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
-                          placeholder: 'Date of Birth *',
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.dob && Boolean(formik.errors.dob),
@@ -211,6 +191,7 @@ export const generalFormFields: FieldsType[] = [
                           formik.setFieldValue('age', age);
                         }
                         formik.setFieldValue('dob', newValue);
+                        formik.setFieldTouched('dob', true);
                       }}
                     />
                   </ShakingTextField>
@@ -264,11 +245,12 @@ export const generalFormFields: FieldsType[] = [
                   value={formik.values.mobileNo}
                   onChange={(value) => {
                     formik.setFieldValue('mobileNo', value);
+                    formik.setFieldTouched('mobileNo', true);
                   }}
-                  placeholder="Enter Primary Contact No."
                   label="Primary Contact No *"
                   error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
                   helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+                  onBlur={formik.handleBlur}
                   variant="outlined"
                   size="small"
                 />
@@ -287,8 +269,8 @@ export const generalFormFields: FieldsType[] = [
                   disabled={!disabled}
                   onChange={(value) => {
                     formik.setFieldValue('alternativeContactNumber', value);
+                    formik.setFieldTouched('alternativeContactNumber', true);
                   }}
-                  placeholder="Enter Secondary Contact No."
                   label="Secondary Contact No."
                   error={
                     formik.touched.alternativeContactNumber &&
@@ -310,15 +292,14 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Email"
                   name="email"
-                  placeholder="Enter Email"
                   value={formik.values.email}
                   onBlur={formik.handleBlur}
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
                   fullWidth
                   onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('email', newName);
+                    formik.setFieldValue('email', e.target.value);
+                    formik.setFieldTouched('email', true);
                   }}
                   disabled={!disabled}
                   InputProps={{
@@ -342,14 +323,24 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Aadhar No"
                   name="adharNo"
-                  type="number"
-                  placeholder="Enter Aadhar No"
+                  type="text"
                   value={formik.values.adharNo}
                   onBlur={formik.handleBlur}
                   error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
                   helperText={formik.touched.adharNo && formik.errors.adharNo}
                   fullWidth
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 12) {
+                      value = value.slice(0, 12);
+                    }
+                    formik.setFieldValue('adharNo', value);
+                    formik.setFieldTouched('adharNo', true);
+                  }}
+                  inputProps={{
+                    maxLength: 12,
+                    pattern: '[0-9]*',
+                  }}
                   disabled={!disabled}
                 />
               </ShakingTextField>
@@ -361,7 +352,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Appar Id"
                   name="apparId"
-                  placeholder="Enter Appar Id"
                   value={formik.values.apparId}
                   onBlur={formik.handleBlur}
                   error={formik.touched.apparId && Boolean(formik.errors.apparId)}
@@ -379,7 +369,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Pan No"
                   name="panNo"
-                  placeholder="Enter Pan No"
                   value={formik.values.panNo}
                   onBlur={formik.handleBlur}
                   error={formik.touched.panNo && Boolean(formik.errors.panNo)}
@@ -399,23 +388,36 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
             <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
-                <TextField
-                  key="religion"
-                  size="small"
-                  label="Religion"
-                  name="religion"
-                  placeholder="Enter Religion"
-                  value={formik.values.religion}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.religion && Boolean(formik.errors.religion)}
-                  helperText={formik.touched.religion && formik.errors.religion}
+                <FormControl
                   fullWidth
-                  onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('religion', newName);
-                  }}
                   disabled={!disabled}
-                />
+                  error={!!formik.errors.religion && formik.touched.religion}
+                >
+                  <InputLabel id="religion-label" size="small">
+                    Religion
+                  </InputLabel>
+                  <Select
+                    labelId="religion-label"
+                    id="religion"
+                    value={formik.values.religion}
+                    onChange={formik.handleChange}
+                    size="small"
+                    label="Religion "
+                    name="religion"
+                  >
+                    <MenuItem value="Hinduism">Hinduism</MenuItem>
+                    <MenuItem value="Islam">Islam</MenuItem>
+                    <MenuItem value="Christianity">Christianity</MenuItem>
+                    <MenuItem value="Sikhism">Sikhism</MenuItem>
+                    <MenuItem value="Buddhism">Buddhism</MenuItem>
+                    <MenuItem value="Jainism">Jainism</MenuItem>
+                    <MenuItem value="Judaism">Judaism</MenuItem>
+                    <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
+                  </Select>
+                  {formik.touched.religion && formik.errors.religion && (
+                    <FormHelperText>{formik.errors.religion}</FormHelperText>
+                  )}
+                </FormControl>
               </ShakingTextField>
             </Grid>
             <Grid item xs={12} md={3}>
@@ -427,7 +429,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Family Cast"
                   name="familyCast"
-                  placeholder="Enter Family Cast"
                   value={formik.values.familyCast}
                   onBlur={formik.handleBlur}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
@@ -436,6 +437,7 @@ export const generalFormFields: FieldsType[] = [
                   onChange={(e: any) => {
                     const newName = capitalize(e.target.value);
                     formik.setFieldValue('familyCast', newName);
+                    formik.setFieldTouched('familyCast', true);
                   }}
                   disabled={!disabled}
                 />
@@ -496,7 +498,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Nationality"
                   name="nationality"
-                  placeholder="Enter Nationality"
                   value={formik.values.nationality}
                   onBlur={formik.handleBlur}
                   error={formik.touched.nationality && Boolean(formik.errors.nationality)}
@@ -505,6 +506,7 @@ export const generalFormFields: FieldsType[] = [
                   onChange={(e: any) => {
                     const newName = capitalize(e.target.value);
                     formik.setFieldValue('nationality', newName);
+                    formik.setFieldTouched('nationality', true);
                   }}
                   disabled={!disabled}
                 />
@@ -519,7 +521,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Birth Place"
                   name="birthPlace"
-                  placeholder="Enter Birth Place"
                   value={formik.values.birthPlace}
                   onBlur={formik.handleBlur}
                   error={formik.touched.birthPlace && Boolean(formik.errors.birthPlace)}
@@ -528,6 +529,7 @@ export const generalFormFields: FieldsType[] = [
                   onChange={(e: any) => {
                     const newName = capitalize(e.target.value);
                     formik.setFieldValue('birthPlace', newName);
+                    formik.setFieldTouched('birthPlace', true);
                   }}
                   disabled={!disabled}
                 />
@@ -576,7 +578,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Building / Flat / House No"
                   name="addressLine1"
-                  placeholder="Enter Building / Flat / House No"
                   value={formik.values.addressLine1}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
@@ -596,7 +597,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Street / Road Name"
                   name="addressLine2"
-                  placeholder="Enter Street / Road Name"
                   value={formik.values.addressLine2}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
@@ -616,7 +616,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Area / Locality / Landmark"
                   name="addressLine3"
-                  placeholder="Enter Area / Locality / Landmark"
                   value={formik.values.addressLine3}
                   onBlur={formik.handleBlur}
                   error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
@@ -633,6 +632,7 @@ export const generalFormFields: FieldsType[] = [
                   value={props.formik.values.country}
                   onChange={(e, value) => {
                     props.formik.setFieldValue('country', value);
+                    formik.setFieldTouched('country', true);
                   }}
                   error={
                     props.formik.touched.country && Boolean(props.formik.errors?.country?.name)
@@ -641,7 +641,6 @@ export const generalFormFields: FieldsType[] = [
                   disabled={!disabled}
                   textFieldProps={{
                     label: 'Country *',
-                    placeholder: 'Country *',
                   }}
                 />
               </ShakingTextField>
@@ -652,6 +651,7 @@ export const generalFormFields: FieldsType[] = [
                   value={props.formik.values.state}
                   onChange={(e, value) => {
                     props.formik.setFieldValue('state', value);
+                    formik.setFieldTouched('state', true);
                   }}
                   countryValue={props.formik.values.country}
                   error={props.formik.touched.state && Boolean(props.formik.errors?.state?.name)}
@@ -659,7 +659,6 @@ export const generalFormFields: FieldsType[] = [
                   disabled={!disabled}
                   textFieldProps={{
                     label: 'State *',
-                    placeholder: 'State *',
                   }}
                 />
               </ShakingTextField>
@@ -670,6 +669,7 @@ export const generalFormFields: FieldsType[] = [
                   value={props.formik.values.city}
                   onChange={(e, value) => {
                     props.formik.setFieldValue('city', value);
+                    formik.setFieldTouched('city', true);
                   }}
                   stateValue={props.formik.values.state}
                   error={props.formik.touched.city && Boolean(props.formik.errors?.city?.name)}
@@ -677,7 +677,6 @@ export const generalFormFields: FieldsType[] = [
                   disabled={!disabled}
                   textFieldProps={{
                     label: 'City *',
-                    placeholder: 'City *',
                   }}
                 />
               </ShakingTextField>
@@ -689,13 +688,23 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Pin Code"
                   name="pinCode"
-                  placeholder="Enter Pin Code"
                   value={formik.values.pinCode}
                   onBlur={formik.handleBlur}
                   error={formik.touched.pinCode && Boolean(formik.errors.pinCode)}
                   helperText={formik.touched.pinCode && formik.errors.pinCode}
                   fullWidth
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 6) {
+                      value = value.slice(0, 6);
+                    }
+                    formik.setFieldValue('pinCode', value);
+                    formik.setFieldTouched('pinCode', true);
+                  }}
+                  inputProps={{
+                    maxLength: 6,
+                    pattern: '[0-9]*',
+                  }}
                   disabled={!disabled}
                 />
               </ShakingTextField>
@@ -712,7 +721,6 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Previous School"
                   name="previousSchool"
-                  placeholder="Enter Previous School"
                   value={formik.values.previousSchool}
                   onBlur={formik.handleBlur}
                   error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}

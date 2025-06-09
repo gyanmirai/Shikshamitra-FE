@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button, Checkbox } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -146,7 +146,7 @@ const GrNoGenerationScreen = ({
           <Button
             size="small"
             startIcon={<Grading />}
-            variant="contained"
+            variant="outlined"
             onClick={handleManualToggle}
             // sx={{ width: '180px' }}
           >
@@ -155,7 +155,7 @@ const GrNoGenerationScreen = ({
           <Button
             size="small"
             startIcon={<Refresh />}
-            variant="contained"
+            variant="outlined"
             onClick={handleAutoGenerate}
             // sx={{ width: '180px' }}
           >
@@ -187,66 +187,66 @@ const GrNoGenerationScreen = ({
           }}
           columns={[
             // { id: 'srNo', label: 'Sr. No.' },
-            {
-              id: 'checkBox',
-              align: 'left',
-              sticky: true,
-              minWidth: '60px',
-              isSort: false,
-              isFilter: false,
-              label: '',
-              renderColumn() {
-                return (
-                  <Checkbox
-                    checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents(tableData || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                  />
-                );
-              },
-              render(value, row) {
-                return (
-                  <Checkbox
-                    checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                      }
-                    }}
-                  />
-                );
-              },
-            },
-            // { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
-            { id: 'name', label: 'Name', align: 'left' },
             // {
-            //   id: 'grNoRecord',
-            //   label: 'New GR No.',
+            //   id: 'checkBox',
             //   align: 'left',
-            //   isFilter: false,
+            //   sticky: true,
+            //   minWidth: '60px',
             //   isSort: false,
-            //   render(value, row) {
-            //     return isManual ? (
-            //       <TextField
-            //         size="small"
-            //         variant="standard"
-            //         placeholder="Enter New GR No."
-            //         type="number"
-            //         value={value}
-            //         onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(tableData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
             //       />
-            //     ) : (
-            //       value
+            //     );
+            //   },
+            //   render(value, row) {
+            //     return (
+            //       <Checkbox
+            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
             //     );
             //   },
             // },
+            // { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
+            { id: 'name', label: 'Name', align: 'left' },
+            {
+              id: 'grNoRecord',
+              label: 'New GR No.',
+              align: 'left',
+              isFilter: false,
+              isSort: false,
+              render(value, row) {
+                return isManual ? (
+                  <TextField
+                    size="small"
+                    variant="standard"
+                    placeholder="Enter New GR No."
+                    type="number"
+                    value={value}
+                    onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
+                  />
+                ) : (
+                  value
+                );
+              },
+            },
           ]}
           data={tableData}
         />{' '}

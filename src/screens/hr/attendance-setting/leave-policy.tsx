@@ -130,6 +130,14 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
         </Button>
       </Box> */}
       <CustomizableTable
+        searchFieldProps={{
+          placeholder: 'Search by Leave Type, Leave Days...',
+          label: 'Search by Leave Type, Leave Days...',
+          sx: {
+            maxWidth: '350px',
+            width: '100%',
+          },
+        }}
         noDataText={
           <>
             No Leave Policy Found{' '}
@@ -192,7 +200,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
             sticky: true,
@@ -737,7 +745,7 @@ export const LeavePolicyForm = ({
             type="submit"
             variant="contained"
           >
-            Save
+            Submit
           </LoadingButton>
         </DialogActions>
       </form>

@@ -16,7 +16,6 @@ import {
   Radio,
   Paper,
   Button,
-  Divider,
   TextField,
   RadioGroup,
   Typography,
@@ -288,7 +287,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               </Grid>
 
               {/* Description */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description) || false}
                 >
@@ -298,27 +297,21 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       formik.setFieldValue('description', value);
                     }}
                     placeholder="Enter Description" // Enter homework description
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', height: '150px' }}
                   />
                 </ShakingTextField>
               </Grid>
 
-              {/* File Upload */}
-              <Grid item xs={12}>
-                <Divider />
-              </Grid>
-              <Grid item xs={12}>
-                <SectionCard title="Homework Attachments">
-                  <Upload
-                    multiple
-                    value={formik.values.attachments || []}
-                    onDrop={handleDrop}
-                    onRemove={handleRemove}
-                    sx={{
-                      p: 2,
-                    }}
-                  />
-                </SectionCard>
+              <Grid item xs={12} md={6}>
+                <Upload
+                  multiple
+                  value={formik.values.attachments || []}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
+                  sx={{
+                    p: 2,
+                  }}
+                />
               </Grid>
 
               {/* Schedule Homework Switch */}

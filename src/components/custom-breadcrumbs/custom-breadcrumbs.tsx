@@ -88,7 +88,7 @@ export function CustomBreadcrumbs({
   return (
     <Stack
       spacing={2}
-      sx={{ pl: 0, pb: 2, borderBottom: (theme) => `1px dashed ${theme.palette.grey[400]}`, ...sx }}
+      sx={{ pl: 0, pb: 2, borderBottom: (theme) => `1px solid ${theme.palette.grey[400]}`, ...sx }}
     >
       <Stack direction="row" alignItems="center">
         <Box sx={{ flexGrow: 1 }}>

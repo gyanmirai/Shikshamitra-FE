@@ -62,7 +62,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   addressLine3: editData ? editData.address3 : '',
   country: editData?.country?.name
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-    : { name: '', isoCode: '' },
+    : { name: 'India', isoCode: 'IN' },
   state: editData?.state?.name
     ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
     : { name: '', isoCode: '' },
@@ -88,7 +88,7 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.fatherDetails?.countryName,
         isoCode: editData?.fatherDetails?.countryIsoCode,
       }
-    : { name: '', isoCode: '' },
+    : { name: 'India', isoCode: 'IN' },
   fatherState: editData
     ? {
         name: editData?.fatherDetails?.stateName,
@@ -110,7 +110,7 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.motherDetails?.countryName,
         isoCode: editData?.motherDetails?.countryIsoCode,
       }
-    : { name: '', isoCode: '' },
+    : { name: 'India', isoCode: 'IN' },
   motherState: editData
     ? {
         name: editData?.motherDetails?.stateName,
@@ -133,7 +133,7 @@ export const familyInformationInitialValues = (editData: any) => ({
         name: editData?.spouseDetails?.countryName,
         isoCode: editData?.spouseDetails?.countryIsoCode,
       }
-    : { name: '', isoCode: '' },
+    : { name: 'India', isoCode: 'IN' },
   spouseState: editData
     ? {
         name: editData?.spouseDetails?.stateName,

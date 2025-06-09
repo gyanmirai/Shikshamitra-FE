@@ -169,7 +169,8 @@ export const ViewAnswers = () => {
 
                 <Stack direction="row" spacing={2} mt={2}>
                   <TextField
-                    label="Marks"
+                    label="Marks *"
+                    placeholder="Marks"
                     type="number"
                     value={question.marks || ''}
                     onChange={(e) => handleMarksChange(question.id, Number(e.target.value))}

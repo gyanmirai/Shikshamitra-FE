@@ -22,11 +22,9 @@ import {
   Button,
   Divider,
   Tooltip,
-  Checkbox,
   TextField,
   Typography,
   IconButton,
-  ButtonGroup,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -205,54 +203,38 @@ const TakeAttendanceScreen = () => {
       </Box>
 
       <Divider sx={{ my: 2 }} />
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <ButtonGroup>
-            <Button
-              variant={view === 'list' ? 'outlined' : 'contained'}
-              color="inherit"
-              onClick={() => setView('calender')}
-            >
-              <Iconify icon="material-symbols:grid-view" />
-            </Button>
-            <Button
-              color="inherit"
-              variant={view === 'list' ? 'contained' : 'outlined'}
-              onClick={() => setView('list')}
-            >
-              <Iconify icon="lucide:layout-list" />
-            </Button>
-          </ButtonGroup>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setStudentData((pre: any) =>
-                  pre.map((item: any) => ({ ...item, isPresent: true }))
-                );
-              }}
-              size="small"
-              color="success"
-              startIcon={<CheckCircleOutlined />}
-            >
-              Mark as All Present
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setStudentData((pre: any) =>
-                  pre.map((item: any) => ({ ...item, isPresent: false }))
-                );
-              }}
-              size="small"
-              color="error"
-              startIcon={<CancelOutlined />}
-            >
-              Mark as All Absent
-            </Button>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setStudentData((pre: any) => pre.map((item: any) => ({ ...item, isPresent: true })));
+            }}
+            size="small"
+            // color="success"
+            startIcon={<CheckCircleOutlined />}
+            sx={{ color: 'success.main' }}
+          >
+            All Present
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setStudentData((pre: any) => pre.map((item: any) => ({ ...item, isPresent: false })));
+            }}
+            size="small"
+            // color="error"
+            startIcon={<CancelOutlined />}
+            sx={{ color: 'error.main' }}
+          >
+            All Absent
+          </Button>
           <Button
             size="small"
             variant="outlined"
@@ -294,7 +276,7 @@ const TakeAttendanceScreen = () => {
           my: 1,
         }}
       >
-        <Typography variant="body1" fontWeight={500} color="error">
+        <Typography variant="body1" fontWeight={500}>
           Total Absent : <b>{absentStudents.length}</b>
         </Typography>
         {absentStudents.map((item: any) => (
@@ -302,17 +284,26 @@ const TakeAttendanceScreen = () => {
             size="small"
             label={`${item.student.rollNo} - ${item.name}`}
             color="error"
-            icon={
-              <CancelOutlined
-                onClick={() => {
-                  setStudentData((studentDetails: any) =>
-                    studentDetails.map((student: any) =>
-                      item.id === student.id ? { ...item, isPresent: false } : item
-                    )
-                  );
-                }}
-              />
-            }
+            avatar={<Avatar>{item.name[0]}</Avatar>}
+            variant="soft"
+            onDelete={() => {
+              setStudentData((studentDetails: any) =>
+                studentDetails.map((student: any) =>
+                  item.student.id === student.student.id ? { ...item, isPresent: false } : item
+                )
+              );
+            }}
+            // icon={
+            //   <CancelOutlined
+            //     onClick={() => {
+            //       setStudentData((studentDetails: any) =>
+            //         studentDetails.map((student: any) =>
+            //           item.student.id === student.student.id ? { ...item, isPresent: false } : item
+            //         )
+            //       );
+            //     }}
+            //   />
+            // }
           />
         ))}
       </Box>
@@ -467,59 +458,60 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           },
         })}
         columns={[
-          {
-            id: 'checkBox',
-            label: ' ',
-            minWidth: '60px',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            renderColumn: (value) => (
-              <Checkbox
-                checked={data.length === selectedStudent.length}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedStudent(data);
-                  } else {
-                    setSelectedStudent([]);
-                  }
-                }}
-              />
-            ),
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={selectedStudent.some((student: any) => student.id === row.id)}
-                  onChange={(e) => {
-                    if (!e.target.checked) {
-                      setSelectedStudent(
-                        selectedStudent.filter((student: any) => student.id !== row.id)
-                      );
-                    } else {
-                      setSelectedStudent([...selectedStudent, row]);
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          // {
+          //   id: 'checkBox',
+          //   label: '',
+          //   minWidth: '60px',
+          //   sticky: true,
+          //   isSort: false,
+          //   isFilter: false,
+          //   align: 'center',
+          //   renderColumn: (value) => (
+          //     <Checkbox
+          //       checked={data.length ? data.length === selectedStudent.length : false}
+          //       onChange={(e) => {
+          //         if (e.target.checked) {
+          //           setSelectedStudent(data);
+          //         } else {
+          //           setSelectedStudent([]);
+          //         }
+          //       }}
+          //     />
+          //   ),
+          //   render(value, row) {
+          //     return (
+          //       <Checkbox
+          //         checked={selectedStudent.some(
+          //           (student: any) => student.student.id === row.student.id
+          //         )}
+          //         onChange={(e) => {
+          //           if (!e.target.checked) {
+          //             setSelectedStudent(
+          //               selectedStudent.filter(
+          //                 (student: any) => student.student.id !== row.student.id
+          //               )
+          //             );
+          //           } else {
+          //             setSelectedStudent([...selectedStudent, row]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'student.rollNo',
             label: 'Roll No',
             align: 'left',
             minWidth: '100px',
-          },
-          {
-            id: 'student.grNoRecord',
-            label: 'Gr No',
-            align: 'left',
-            minWidth: '100px',
+            sticky: true,
           },
           {
             id: 'name',
             label: 'Name',
             align: 'left',
-            minWidth: '300px',
+            sticky: true,
+            minWidth: '180px',
             render(value, row) {
               return (
                 <Box display="flex" alignItems="center" gap={1}>
@@ -539,6 +531,13 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             },
           },
           {
+            id: 'student.grNoRecord',
+            label: 'Gr No',
+            align: 'left',
+            minWidth: '100px',
+          },
+
+          {
             id: 'presentDays',
             label: 'Total Present Days',
             align: 'left',
@@ -551,11 +550,38 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             minWidth: '210px',
           },
           {
+            id: 'remarks',
+            label: 'Remarks',
+            render(value, row) {
+              return row.attendance === 'Present' ? (
+                '-'
+              ) : (
+                <TextField
+                  size="small"
+                  value={value || ''}
+                  onChange={(e) => {
+                    console.log(e.target.value);
+                    setStudentData(
+                      data.map((item: any) =>
+                        item.id === row.id ? { ...item, remarks: e.target.value } : item
+                      )
+                    );
+                  }}
+                  multiline
+                  rows={2}
+                  sx={{ maxWidth: '200px', width: '100%' }}
+                />
+              );
+            },
+          },
+          {
             id: 'isPresent',
             label: 'Attendance',
-            minWidth: '130px',
+            minWidth: '6vw',
             align: 'left',
             isSort: false,
+            sticky: true,
+            isFilter: false,
             render(value, row) {
               return isSaved.value ? (
                 <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>
@@ -588,37 +614,14 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                     onChange={(e) => {
                       setStudentData(
                         data.map((item: any) =>
-                          item.id === row.id ? { ...item, isPresent: e.target.checked } : item
+                          item.student.id === row.student.id
+                            ? { ...item, isPresent: e.target.checked }
+                            : item
                         )
                       );
                     }}
                   />
                 </Stack>
-              );
-            },
-          },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            render(value, row) {
-              return row.attendance === 'Present' ? (
-                '-'
-              ) : (
-                <TextField
-                  size="small"
-                  value={value || ''}
-                  onChange={(e) => {
-                    console.log(e.target.value);
-                    setStudentData(
-                      data.map((item: any) =>
-                        item.id === row.id ? { ...item, remarks: e.target.value } : item
-                      )
-                    );
-                  }}
-                  multiline
-                  rows={2}
-                  sx={{ maxWidth: '200px', width: '100%' }}
-                />
               );
             },
           },

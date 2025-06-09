@@ -15,7 +15,6 @@ import {
   Tabs,
   Paper,
   Divider,
-  Checkbox,
   TextField,
   Typography,
   Autocomplete,
@@ -25,6 +24,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -66,7 +66,7 @@ const AttendanceTrackingScreen = () => {
       <CustomBreadcrumbs
         heading="Attendance Tracking"
         links={[
-          { name: 'HR', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
@@ -264,8 +264,8 @@ const DateWise = ({
       <CustomizableTable
         noDataText={<>No Data Availabel For Attendance </>}
         searchFieldProps={{
-          placeholder: 'Search by Name, Hours Work...',
-          label: 'Search by Name, Hours Work....',
+          placeholder: 'Search by Name, In Time, Out time...',
+          label: 'Search by Name, In Time, Out time....',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -313,7 +313,7 @@ const DateWise = ({
           //     );
           //   },
           // },
-          { id: 'employeeName', label: 'Name', minWidth: '8vw', align: 'left', sticky: true },
+          { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
@@ -362,7 +362,7 @@ const DateWise = ({
             timeOut: '06:00 PM',
             totalHoursWorked: '9 hrs',
             status: 'Present',
-            employeeName: 'Rajesh Kumar',
+            employeeName: 'Kumar Rajesh Mohan',
           },
           {
             id: 2,
@@ -371,7 +371,7 @@ const DateWise = ({
             timeOut: '05:30 PM',
             totalHoursWorked: '8 hrs',
             status: 'Present',
-            employeeName: 'Priya Sharma',
+            employeeName: 'Sharma Priya Raj',
           },
           {
             id: 3,
@@ -380,7 +380,7 @@ const DateWise = ({
             timeOut: '-',
             totalHoursWorked: '0 hrs',
             status: 'Leave',
-            employeeName: 'Amit Patel',
+            employeeName: 'Patel Amit Naresh',
           },
           {
             id: 4,
@@ -389,7 +389,7 @@ const DateWise = ({
             timeOut: '02:15 PM',
             totalHoursWorked: '5 hrs',
             status: 'Half day',
-            employeeName: 'Sneha Gupta',
+            employeeName: 'Gupta Sneha Ramesh',
           },
           {
             id: 5,
@@ -398,7 +398,7 @@ const DateWise = ({
             timeOut: '06:00 PM',
             totalHoursWorked: '9 hrs',
             status: 'Present',
-            employeeName: 'Vikram Singh',
+            employeeName: 'Singh Vikram Pratap',
           },
           {
             id: 6,
@@ -407,7 +407,7 @@ const DateWise = ({
             timeOut: '06:45 PM',
             totalHoursWorked: '9 hrs',
             status: 'Present',
-            employeeName: 'Neha Verma',
+            employeeName: 'Verma Neha Suresh',
           },
           {
             id: 7,
@@ -416,7 +416,7 @@ const DateWise = ({
             timeOut: '-',
             totalHoursWorked: '0 hrs',
             status: 'Leave',
-            employeeName: 'Arun Joshi',
+            employeeName: 'Joshi Arun Kumar',
           },
           {
             id: 8,
@@ -425,7 +425,7 @@ const DateWise = ({
             timeOut: '06:00 PM',
             totalHoursWorked: '9 hrs',
             status: 'Present',
-            employeeName: 'Meera Reddy',
+            employeeName: 'Reddy Meera Krishna',
           },
           {
             id: 9,
@@ -434,7 +434,7 @@ const DateWise = ({
             timeOut: '02:30 PM',
             totalHoursWorked: '5 hrs',
             status: 'Half day',
-            employeeName: 'Rahul Malhotra',
+            employeeName: 'Malhotra Rahul Dinesh',
           },
           {
             id: 10,
@@ -443,7 +443,7 @@ const DateWise = ({
             timeOut: '06:00 PM',
             totalHoursWorked: '9 hrs',
             status: 'Present',
-            employeeName: 'Anita Desai',
+            employeeName: 'Desai Anita Mahesh',
           },
         ]}
       />
@@ -605,7 +605,7 @@ const EmployeeWise = ({
               p: 2,
               width: '100%',
               // backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
-              color: (theme) => theme.palette.error.main,
+              color: (theme) => theme.palette.info.main,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -632,10 +632,28 @@ const EmployeeWise = ({
           >
             <Box>
               <Typography variant="subtitle1">Half Day Leave</Typography>
-
               <Typography variant="h3">{data?.[0]?.halfDayLeaves || 3}</Typography>
             </Box>
             <Iconify icon="mdi:fraction-one-half" width={32} />
+          </Card>
+
+          <Card
+            sx={{
+              maxWidth: 280,
+              p: 2,
+              width: '100%',
+              // backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              color: (theme) => theme.palette.error.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box>
+              <Typography variant="subtitle1">Rejected Leave</Typography>
+              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 3}</Typography>
+            </Box>
+            <Iconify icon={GlobalIcons.reject} width={32} />
           </Card>
         </Box>
       )}
@@ -646,44 +664,52 @@ const EmployeeWise = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="employee-wise-attendance-table"
           isLoading={attendanceLoading}
-          columns={[
-            {
-              id: 'checkBox',
-              align: 'left',
-              minWidth: '60px',
-              sticky: true,
-              isSort: false,
-              isFilter: false,
-              label: '',
-              renderColumn() {
-                return (
-                  <Checkbox
-                    checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents(tableData || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                  />
-                );
-              },
-              render(value, row) {
-                return (
-                  <Checkbox
-                    checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                      }
-                    }}
-                  />
-                );
-              },
+          searchFieldProps={{
+            placeholder: 'Search by Date, In-time, Out-time...',
+            label: 'Search by Date, In-time, Out-time...',
+            sx: {
+              maxWidth: '320px',
+              width: '100%',
             },
+          }}
+          columns={[
+            // {
+            //   id: 'checkBox',
+            //   align: 'left',
+            //   minWidth: '60px',
+            //   sticky: true,
+            //   isSort: false,
+            //   isFilter: false,
+            //   label: '',
+            //   renderColumn() {
+            //     return (
+            //       <Checkbox
+            //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents(tableData || []);
+            //           } else {
+            //             setSelectedStudents([]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            //   render(value, row) {
+            //     return (
+            //       <Checkbox
+            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+            //         onChange={(e) => {
+            //           if (e.target.checked) {
+            //             setSelectedStudents([...selectedStudents, row]);
+            //           } else {
+            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
             {
               id: 'attendanceDate',
               label: 'Date',

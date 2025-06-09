@@ -215,13 +215,13 @@ const GradeEntry = (props: TabComponentType) => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      setSelectedStudent(null);
       dialog.onFalse();
       bulkGradeDialog.onFalse();
     } else if (!isChanges) {
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      setSelectedStudent(null);
       dialog.onFalse();
       bulkGradeDialog.onFalse();
     }
@@ -367,7 +367,7 @@ const GradeEntry = (props: TabComponentType) => {
           viewSubmissionDialog.onFalse();
           setSelectedStudent(null);
         }}
-        title="Assign Marks"
+        title={selectedStudent ? 'Update Marks' : 'Assign Marks'}
       >
         <AssignGrade data={selectedStudent} onClose={handleClose} />
       </CustomDialog>

@@ -38,8 +38,10 @@ const SubLayout = ({ children }: any) => {
             sx={{
               height: '100%',
               width: '320px',
-              boxShadow: 'var(--shadows-3)',
+              // boxShadow: 'var(--shadows-3)',
               bgcolor: (theme) => theme.palette.background.paper,
+              borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+              // borderTop: (theme) => `1px solid ${theme.palette.divider}`,
               borderRadius: 1,
             }}
           >
@@ -58,12 +60,12 @@ const SubLayout = ({ children }: any) => {
           height: '100%',
           overflow: 'hidden',
 
-          boxShadow: 'var(--shadows-3)',
+          // boxShadow: 'var(--shadows-3)',
           '& .simplebar-content': { height: '100%' },
 
-          bgcolor: (theme) => theme.palette.background.default,
-          border: (theme) =>
-            currentData?.length ? `4px solid ${theme.palette.background.paper}` : 'none',
+          bgcolor: (theme) => 'transparent',
+          // border: (theme) =>
+          //   currentData?.length ? `4px solid ${theme.palette.background.paper}` : 'none',
           borderRadius: 1,
           borderBottom: 'none',
           borderRight: 'none',
@@ -76,7 +78,9 @@ const SubLayout = ({ children }: any) => {
             mx: 'auto',
             height: '100%',
             overflow: 'auto',
-            p: 2,
+            pt: 2,
+            pr: 2,
+            pl: 0.5,
           }}
         >
           {children}

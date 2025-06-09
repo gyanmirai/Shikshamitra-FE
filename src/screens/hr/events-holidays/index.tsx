@@ -142,26 +142,21 @@ const HrEventsAndHolidaysScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Events & Holidays"
-        links={[{ name: 'HR', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
+        links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
         sx={{ px: 1, mb: 2 }}
-        action={
-          <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
-            Event & Holidays
-          </Button>
-        }
         description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pl: 1, my: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 3, pl: 1, my: 2 }}>
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
-          label="Select Moth Year"
+          label="Select Month Year"
           value={date}
           onChange={(newValue) => {
             setDate(newValue);
           }}
           sx={{
-            maxWidth: '400px',
+            maxWidth: '300px',
             width: '100%',
           }}
           slotProps={{
@@ -170,6 +165,9 @@ const HrEventsAndHolidaysScreen = () => {
             },
           }}
         />
+        <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
+          Event & Holidays
+        </Button>
       </Box>
       {view === 'list' ? (
         <CustomizableTable
@@ -198,7 +196,7 @@ const HrEventsAndHolidaysScreen = () => {
             placeholder: 'Search by Start Date, End Date..',
             label: 'Search by Start Date, End Date..',
             sx: {
-              maxWidth: '400px',
+              maxWidth: '300px',
               width: '100%',
             },
           }}
@@ -212,7 +210,7 @@ const HrEventsAndHolidaysScreen = () => {
               id: 'title',
               label: 'Type',
               render: (value) => (
-                <Label variant="filled" color={value === 'Holiday' ? 'error' : 'success'}>
+                <Label variant="soft" color={value === 'Holiday' ? 'error' : 'success'}>
                   {value}
                 </Label>
               ),

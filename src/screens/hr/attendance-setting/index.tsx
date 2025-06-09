@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Tab, Box, Button } from '@mui/material';
+import { Tab, Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -97,7 +97,7 @@ const HrAttendanceSettingScreen = () => {
       <CustomBreadcrumbs
         heading="Setting"
         links={[
-          { name: 'HR', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: `/hr/attendance-setting` },
           { name: 'Setting' },
         ]}
@@ -105,23 +105,29 @@ const HrAttendanceSettingScreen = () => {
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
       />
-      <CustomTabs
-        value={searchParams.tab}
-        onChange={(e, value) => setSearchParams({ tab: value })}
-        sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-        role="tablist"
+      <Card
+        sx={{
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
       >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            value={tab.value}
-            icon={tab.icon}
-            label={tab.label}
-            role="tab"
-          />
-        ))}
-      </CustomTabs>
+        <CustomTabs
+          value={searchParams.tab}
+          onChange={(e, value) => setSearchParams({ tab: value })}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
+          ))}
+        </CustomTabs>
+      </Card>
       <Scrollbar sx={{ p: 1 }}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
