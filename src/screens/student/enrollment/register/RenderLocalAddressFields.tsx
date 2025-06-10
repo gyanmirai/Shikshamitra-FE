@@ -16,7 +16,7 @@ const RenderLocalAddressFields = (props: any) => {
         <Grid item xs={12} md={4}>
           <TextField
             name="localAddressLine1"
-            label="Building / Flat / House No"
+            label="Building No./Flat/House No."
             disabled={!isEdit}
             value={formik.values.localAddressLine1}
             onChange={formik.handleChange}
@@ -30,7 +30,7 @@ const RenderLocalAddressFields = (props: any) => {
           <TextField
             disabled={!isEdit}
             name="localAddressLine2"
-            label="Street / Road Name"
+            label="Area/Locality/Road Name"
             value={formik.values.localAddressLine2}
             onChange={formik.handleChange}
             error={formik.touched.localAddressLine2 && Boolean(formik.errors.localAddressLine2)}
@@ -43,7 +43,7 @@ const RenderLocalAddressFields = (props: any) => {
           <TextField
             disabled={!isEdit}
             name="localAddressLine3"
-            label="Area / Locality / Landmark"
+            label="Landmark"
             value={formik.values.localAddressLine3}
             onChange={formik.handleChange}
             error={formik.touched.localAddressLine3 && Boolean(formik.errors.localAddressLine3)}

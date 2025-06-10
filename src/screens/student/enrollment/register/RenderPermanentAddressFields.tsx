@@ -42,7 +42,7 @@ const RenderPermanentAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine1"
-          label="Building / Flat / House No"
+          label="Building No./Flat/House No."
           value={formik.values.permanentAddressLine1}
           onChange={formik.handleChange}
           error={
@@ -57,7 +57,7 @@ const RenderPermanentAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine2"
-          label="Street / Road Name"
+          label="Area/Locality/Road Name"
           value={formik.values.permanentAddressLine2}
           onChange={formik.handleChange}
           error={
@@ -72,7 +72,7 @@ const RenderPermanentAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine3"
-          label="Area / Locality / Landmark"
+          label="Landmark"
           value={formik.values.permanentAddressLine3}
           onChange={formik.handleChange}
           error={

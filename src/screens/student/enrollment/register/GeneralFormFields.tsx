@@ -51,7 +51,7 @@ export const generalFormFields: FieldsType[] = [
       const { formik, isEdit: disabled } = props;
       return (
         <Box>
-          <SectionCard title="Inquiry & Admission Details">
+          <SectionCard title="Inquiry & Admission">
             <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.formNo && Boolean(formik.errors.formNo)}>
                 <TextField
@@ -81,7 +81,7 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
           </SectionCard>
 
-          <SectionCard title="Student Information">
+          <SectionCard title="Student">
             <Grid item xs={12} md={3}>
               <UploadAvatar
                 maxSize={3145728}
@@ -98,7 +98,7 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
             <Grid item xs={12} md={9}>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <ShakingTextField
                     error={formik.touched.firstName && Boolean(formik.errors.firstName)}
                   >
@@ -121,7 +121,7 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <ShakingTextField
                     error={formik.touched.middleName && Boolean(formik.errors.middleName)}
                   >
@@ -144,7 +144,7 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <ShakingTextField
                     error={formik.touched.lastName && Boolean(formik.errors.lastName)}
                   >
@@ -167,7 +167,7 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
                     <DatePicker
                       label="Date of Birth *"
@@ -196,7 +196,7 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12} md={4}>
                   <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
                     <FormControl
                       fullWidth
@@ -315,7 +315,7 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
           </SectionCard>
 
-          <SectionCard title="Identification & Personal Details">
+          <SectionCard title="Identification & Personal">
             <Grid item xs={12} md={3}>
               <ShakingTextField error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}>
                 <TextField
@@ -568,7 +568,7 @@ export const generalFormFields: FieldsType[] = [
             </Grid>
           </SectionCard>
 
-          <SectionCard title="Address Information">
+          <SectionCard title="Address">
             <Grid item xs={12} md={3}>
               <ShakingTextField
                 error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
@@ -576,7 +576,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine1"
                   size="small"
-                  label="Building / Flat / House No"
+                  label="Building No./Flat/ House No."
                   name="addressLine1"
                   value={formik.values.addressLine1}
                   onBlur={formik.handleBlur}
@@ -595,7 +595,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine2"
                   size="small"
-                  label="Street / Road Name"
+                  label="Area/Locality/Road Name"
                   name="addressLine2"
                   value={formik.values.addressLine2}
                   onBlur={formik.handleBlur}
@@ -614,7 +614,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="addressLine3"
                   size="small"
-                  label="Area / Locality / Landmark"
+                  label="Landmark"
                   name="addressLine3"
                   value={formik.values.addressLine3}
                   onBlur={formik.handleBlur}

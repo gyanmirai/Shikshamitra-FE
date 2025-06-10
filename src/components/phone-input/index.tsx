@@ -10,25 +10,42 @@ type PhoneInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'placeholder'
   placeholder?: string;
 };
 
-const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: PhoneInputProps) => (
-  <MuiTelInput
-    forceCallingCode
-    size="small"
-    defaultCountry="IN"
-    onChange={onChange}
-    value={value}
-    error={error}
-    helperText={helperText}
-    fullWidth
-    // variant="outlined"
-    label={label}
-    sx={{
-      '& .MuiInputBase-input': {
-        font: 'unset',
-        fontSize: '14px',
-      },
-    }}
-    {...(props as any)}
-  />
-);
+const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: PhoneInputProps) => {
+  const handleChange = (newPhone: string, info: MuiTelInputInfo) => {
+    // Extract digits excluding the country code
+    const digitsOnly = newPhone.replace(/\D/g, ''); // e.g., "+91 1234567890" => "911234567890"
+
+    // Get country code length (e.g., 91 for India)
+    const countryCode = info.countryCallingCode; // or dynamically extract based on country
+    const nationalNumber = digitsOnly.startsWith(countryCode as string)
+      ? digitsOnly.slice((countryCode as string).length)
+      : digitsOnly;
+
+    if (nationalNumber.length <= 10) {
+      onChange(newPhone);
+    }
+  };
+
+  return (
+    <MuiTelInput
+      forceCallingCode
+      size="small"
+      defaultCountry="IN"
+      onChange={handleChange}
+      value={value}
+      error={error}
+      helperText={helperText}
+      fullWidth
+      // variant="outlined"
+      label={label}
+      sx={{
+        '& .MuiInputBase-input': {
+          font: 'unset',
+          fontSize: '14px',
+        },
+      }}
+      {...(props as any)}
+    />
+  );
+};
 export default PhoneInput;

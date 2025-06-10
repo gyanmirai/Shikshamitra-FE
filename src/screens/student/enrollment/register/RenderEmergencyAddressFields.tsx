@@ -41,7 +41,7 @@ const RenderEmergencyAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine1"
-          label="Building / Flat / House No"
+          label="Building No./Flat/House No."
           value={formik.values.emergencyAddressLine1}
           onChange={formik.handleChange}
           error={
@@ -56,7 +56,7 @@ const RenderEmergencyAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine2"
-          label="Street / Road Name"
+          label="Area/Locality/Road Name"
           value={formik.values.emergencyAddressLine2}
           onChange={formik.handleChange}
           error={
@@ -71,7 +71,7 @@ const RenderEmergencyAddressFields = (props: any) => {
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine3"
-          label="Area / Locality / Landmark"
+          label="Landmark"
           value={formik.values.emergencyAddressLine3}
           onChange={formik.handleChange}
           error={

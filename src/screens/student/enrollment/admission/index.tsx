@@ -16,10 +16,8 @@ import {
   Box,
   Tab,
   Tabs,
-  Paper,
   Stack,
   Button,
-  Drawer,
   Dialog,
   Divider,
   Checkbox,
@@ -31,7 +29,6 @@ import {
   IconButton,
   Typography,
   DialogActions,
-  drawerClasses,
   CircularProgress,
 } from '@mui/material';
 
@@ -43,7 +40,6 @@ import calculateAge from 'src/utils/calculate-age';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { GenderType } from 'src/enums/gender';
-import { paper, varAlpha } from 'src/theme/styles';
 import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
@@ -68,13 +64,13 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { CommunicationForm } from '../follow-up';
@@ -926,52 +922,23 @@ const AdmissionScreen = () => {
         // />
       )}
 
-      <Drawer
-        anchor="right"
+      <CustomDialog
         open={openDetails.value}
-        onClose={() => {
+        handleClose={() => {
           setEditData(null);
           openDetails.onFalse();
         }}
-        slotProps={{ backdrop: { invisible: true } }}
-        sx={{
-          [`& .${drawerClasses.paper}`]: (theme) => ({
-            ...paper({
-              theme,
-              color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
-            }),
-            width: 400,
-          }),
-        }}
+        title="Student Details"
       >
-        <Paper
-          elevation={12}
-          component="button"
-          autoFocus
-          sx={{
-            border: 'none',
-            maxWidth: '400px',
-            width: '100%',
-            zIndex: 9999,
-            height: '100%',
-            textAlign: 'left',
-            boxShadow: 0,
-            // transition: 'all 0.3s ease',
-            // transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
+        <StudentDetails
+          tabValue={tabs.value}
+          editData={editData}
+          onClose={() => {
+            setEditData(null);
+            openDetails.onFalse();
           }}
-
-          // ref={ref}
-        >
-          <StudentDetails
-            tabValue={tabs.value}
-            editData={editData}
-            onClose={() => {
-              setEditData(null);
-              openDetails.onFalse();
-            }}
-          />
-        </Paper>
-      </Drawer>
+        />
+      </CustomDialog>
     </Box>
   );
 };
@@ -985,158 +952,155 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
   });
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Iconify
-        icon="zondicons:close-outline"
-        onClick={() => {
-          onClose();
-        }}
-        sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
-      />
-      <Typography variant="h6" mb={2}>
-        Student Details
-      </Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        Name : {editData?.firstName || `${editData?.lastName}` || `${editData?.middleName}` || '-'}
-      </Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        Class : {editData?.standard?.name}
-      </Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        Parent Name : {editData?.fatherDetails.name || '-'}
-      </Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        Contact :{editData?.parentContactNumber || '-'}
-      </Typography>
+    <>
+      <DialogScrollContent>
+        <Typography variant="subtitle2" color="text.secondary">
+          Name :{' '}
+          {editData?.firstName || `${editData?.lastName}` || `${editData?.middleName}` || '-'}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Class : {editData?.standard?.name}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Parent Name : {editData?.fatherDetails.name || '-'}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          Contact : {editData?.primaryContactNumber || '-'}
+        </Typography>
 
-      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-      <EntranceExamSections editData={editData} />
-      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-      <DocumentsSections editData={editData} />
-      <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-      {tabValue === RegistrationStatusType.Pending && (
-        <>
-          <Button
-            fullWidth
-            variant="soft"
-            color="success"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Approved,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Approve Application
-          </Button>
-          <Button
-            fullWidth
-            variant="soft"
-            color="error"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Rejected,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Reject Application
-          </Button>
-        </>
-      )}
+        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        <EntranceExamSections editData={editData} />
+        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        <DocumentsSections editData={editData} />
+        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        {tabValue === RegistrationStatusType.Pending && (
+          <>
+            <Button
+              fullWidth
+              variant="soft"
+              color="success"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Approved,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Approve Application
+            </Button>
+            <Button
+              fullWidth
+              variant="soft"
+              color="error"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Rejected,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Reject Application
+            </Button>
+          </>
+        )}
 
-      {tabValue === RegistrationStatusType.Approved && (
-        <>
-          <Button
-            fullWidth
-            variant="soft"
-            color="error"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Rejected,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Reject Application
-          </Button>
-          <Button
-            fullWidth
-            variant="soft"
-            color="info"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Pending,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Pending{' '}
-          </Button>
-        </>
-      )}
+        {tabValue === RegistrationStatusType.Approved && (
+          <>
+            <Button
+              fullWidth
+              variant="soft"
+              color="error"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Rejected,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Reject Application
+            </Button>
+            <Button
+              fullWidth
+              variant="soft"
+              color="info"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Pending,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Pending{' '}
+            </Button>
+          </>
+        )}
 
-      {tabValue === RegistrationStatusType.Rejected && (
-        <>
-          <Button
-            fullWidth
-            variant="soft"
-            color="success"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Approved,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Approve Application
-          </Button>
-          <Button
-            fullWidth
-            variant="soft"
-            color="info"
-            sx={{ mt: 2 }}
-            onClick={async () => {
-              await changeStatus({
-                approvalStatus: RegistrationStatusType.Pending,
-                body: [editData.id],
-              }).unwrap();
-              onClose();
-            }}
-          >
-            Pending
-          </Button>
-        </>
-      )}
+        {tabValue === RegistrationStatusType.Rejected && (
+          <>
+            <Button
+              fullWidth
+              variant="soft"
+              color="success"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Approved,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Approve Application
+            </Button>
+            <Button
+              fullWidth
+              variant="soft"
+              color="info"
+              sx={{ mt: 2 }}
+              onClick={async () => {
+                await changeStatus({
+                  approvalStatus: RegistrationStatusType.Pending,
+                  body: [editData.id],
+                }).unwrap();
+                onClose();
+              }}
+            >
+              Pending
+            </Button>
+          </>
+        )}
 
-      <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
-
-      <Button
-        fullWidth
-        variant="contained"
-        startIcon={<Iconify icon={GlobalIcons.submit} />}
-        sx={{ position: 'sticky', bottom: 0 }}
-        onClick={async () => {
-          // await changeStatus({
-          //   approvalStatus: RegistrationStatusType.Rejected,
-          //   body: [editData.id],
-          // }).unwrap();
-          onClose();
-        }}
-      >
-        Save
-      </Button>
-    </Box>
+        <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={async () => {
+            onClose();
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={async () => {
+            onClose();
+          }}
+        >
+          Save
+        </Button>
+      </DialogActions>
+    </>
   );
 };
 
@@ -1182,7 +1146,7 @@ const EntranceExamSections = ({ editData }: any) => {
     examData.status as EntranceExamStatusType
   ] as LabelColor;
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1}>
       <Stack
         direction="row"
         alignItems="center"
@@ -1198,7 +1162,7 @@ const EntranceExamSections = ({ editData }: any) => {
       </Stack>
 
       {exam.value && (
-        <Stack spacing={3} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
+        <Stack spacing={2} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
               Status

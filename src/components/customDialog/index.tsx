@@ -1,13 +1,23 @@
 import type { RootState } from 'src/redux/store';
-import type { PaperProps, DialogProps } from '@mui/material';
+import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Close } from '@mui/icons-material';
-import { Box, Dialog, Divider, useTheme, IconButton, Typography } from '@mui/material';
+import {
+  Box,
+  Dialog,
+  Divider,
+  useTheme,
+  IconButton,
+  Typography,
+  DialogContent,
+} from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
+import { Scrollbar } from '../scrollbar';
 
 type CustomDialogProps = Omit<DialogProps, 'title'> & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
@@ -78,3 +88,17 @@ const CustomDialog = ({
   );
 };
 export default CustomDialog;
+
+export const DialogScrollContent = ({
+  children,
+  ...props
+}: { children: React.ReactNode } & DialogContentProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <Scrollbar ref={ref}>
+      <DialogContent ref={ref} sx={{ p: 2 }} {...props}>
+        {children}
+      </DialogContent>
+    </Scrollbar>
+  );
+};

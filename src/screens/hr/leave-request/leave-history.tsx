@@ -394,9 +394,7 @@ const LeaveHistory = (props: any) => {
         {editData ? (
           <LeaveRequestForm editData={editData} />
         ) : (
-          <Box>
-            <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
-          </Box>
+          <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
         )}
       </CustomDialog>
       {editData?.type && (

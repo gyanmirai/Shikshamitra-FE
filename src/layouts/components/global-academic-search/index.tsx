@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { useTheme, TextField, Autocomplete } from '@mui/material';
+import { useTheme, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
@@ -57,39 +57,39 @@ const GlobalAcademicSearch = () => {
     return mergedData || [];
   }, [boardData?.items, years?.items]);
 
-  // Effect to handle academic selection updates
-  useEffect(() => {
-    if (!isYearLoading && !isBoardLoading && allData.length && currentMedium?.id) {
-      const findValues = (items: any[], id: string): any =>
-        items.find(
-          (item: any) =>
-            item.id === id ||
-            ((item?.boards || item?.educationMediums)?.length &&
-              findValues(item?.boards || item?.educationMediums, id))
-        );
+  // // Effect to handle academic selection updates
+  // useEffect(() => {
+  //   if (!isYearLoading && !isBoardLoading && allData.length && currentMedium?.id) {
+  //     const findValues = (items: any[], id: string): any =>
+  //       items.find(
+  //         (item: any) =>
+  //           item.id === id ||
+  //           ((item?.boards || item?.educationMediums)?.length &&
+  //             findValues(item?.boards || item?.educationMediums, id))
+  //       );
 
-      const values = findValues(allData, currentMedium?.id);
+  //     const values = findValues(allData, currentMedium?.id);
 
-      if (values) {
-        const { boards, ...year } = values;
-        const selectedBoard = boards.find((item: any) =>
-          item.educationMediums.find((i: any) => i.id === currentMedium?.id)
-        );
-        dispatch(setCurrentYear(year));
-        dispatch(setCurrentBoard(selectedBoard));
-      } else {
-        dispatch(setCurrentYear(null));
-        dispatch(setCurrentBoard(null));
-        dispatch(setCurrentMedium(null));
-      }
-    }
-  }, [allData, currentMedium, dispatch, isBoardLoading, isYearLoading]);
+  //     if (values) {
+  //       const { boards, ...year } = values;
+  //       const selectedBoard = boards.find((item: any) =>
+  //         item.educationMediums.find((i: any) => i.id === currentMedium?.id)
+  //       );
+  //       dispatch(setCurrentYear(year));
+  //       dispatch(setCurrentBoard(selectedBoard));
+  //     } else {
+  //       dispatch(setCurrentYear(null));
+  //       dispatch(setCurrentBoard(null));
+  //       dispatch(setCurrentMedium(null));
+  //     }
+  //   }
+  // }, [allData, currentMedium, dispatch, isBoardLoading, isYearLoading]);
 
   /**
    * Generates options for the division autocomplete
    * @returns Array of division options with formatted labels
    */
-  const getDivisionOptions = (): GlobalAcademicSearchOption[] => {
+  const getDivisionOptions = useCallback((): GlobalAcademicSearchOption[] => {
     const options: GlobalAcademicSearchOption[] = [];
     allData.forEach((year: AcademicYear & { boards: Board[] }) => {
       year.boards.forEach((board: Board) => {
@@ -105,16 +105,23 @@ const GlobalAcademicSearch = () => {
       });
     });
     return options;
-  };
+  }, [allData]);
 
   // State for selected division in autocomplete
-  const [selectedDivision, setSelectedDivision] = React.useState<null | GlobalAcademicSearchOption>(
-    null
-  );
+  const [selectedDivision, setSelectedDivision] = React.useState<
+    undefined | GlobalAcademicSearchOption
+  >(undefined);
+  const options = getDivisionOptions();
 
   // Effect to update selected division when current selections change
   useEffect(() => {
     if (currentYear?.id && currentBoard?.id && currentMedium?.id) {
+      console.log(
+        '🚀 ~ GlobalAcademicSearch ~ currentYear, currentBoard, currentMedium:',
+        currentYear,
+        currentBoard,
+        currentMedium
+      );
       setSelectedDivision({
         label: `${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name}`,
         value: `${currentYear?.id}-${currentBoard?.id}-${currentMedium?.id}`,
@@ -125,14 +132,17 @@ const GlobalAcademicSearch = () => {
     }
   }, [currentBoard, currentMedium, currentYear]);
 
-  return (
+  return isYearLoading || isBoardLoading ? (
+    <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
+  ) : (
     <Autocomplete
-      options={getDivisionOptions()}
+      options={options}
       getOptionLabel={(option) => option.label}
-      value={selectedDivision || undefined}
+      value={selectedDivision}
       loading={isYearLoading || isBoardLoading}
       clearIcon={false}
       disableClearable
+      size="small"
       onChange={(event, newValue) => {
         dispatch(setCurrentYear(newValue?.academicYear));
         dispatch(setCurrentBoard(newValue?.board));
@@ -145,10 +155,10 @@ const GlobalAcademicSearch = () => {
           variant="filled"
           size="small"
           label="Academic Year, Board and Medium"
-          placeholder="Select a academic year, board and medium"
+          // placeholder="Select a academic year, board and medium"
         />
       )}
-      sx={{ minWidth: '300px', width: '100%' }}
+      sx={{ minWidth: '250px', width: '100%', '& *': { fontSize: '14px !important' } }}
     />
   );
 };

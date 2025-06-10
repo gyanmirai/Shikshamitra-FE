@@ -214,7 +214,7 @@ export const CommunicationForm = ({
     validationSchema: Yup.object({
       msg: Yup.string().required('Message is required'),
       status: Yup.string().required('Status is required'),
-      dueDate: Yup.string().required('Due Date is required'),
+      dueDate: Yup.string(),
     }),
     enableReinitialize: true,
     onSubmit: async (values) => {

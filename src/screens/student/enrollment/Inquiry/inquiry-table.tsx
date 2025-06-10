@@ -118,7 +118,7 @@ const InquiryTable = ({
           align: 'left',
           filterType: 'date',
         },
-        { id: 'ageValue', label: 'Age', align: 'left' },
+        { id: 'ageValue', label: 'Age', align: 'left', minWidth: '120px' },
         {
           id: 'doiValue',
           label: 'Inquiry Date',
@@ -165,10 +165,10 @@ const InquiryTable = ({
         },
         {
           id: 'followUpStatusType',
-          label: 'Follow Up Status',
+          label: 'Status',
           filterType: 'enum',
           enumOptions: FollowUpStatusTypeOptions,
-          minWidth: '160px',
+          minWidth: '100px',
           align: 'left',
           sticky: true,
           render(value, row) {

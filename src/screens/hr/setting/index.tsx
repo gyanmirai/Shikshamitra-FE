@@ -22,8 +22,6 @@ import {
 } from 'src/redux/document/documentApi';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -31,6 +29,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 const HrSetting = () => {
   const dialog = useBoolean();
@@ -206,9 +205,9 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
   });
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={3}>
+    <>
+      <DialogScrollContent>
+        <Stack spacing={2}>
           <ShakingTextField error={touched.title && Boolean(errors.title)}>
             <TextField
               fullWidth
@@ -236,12 +235,14 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
             />
           </ShakingTextField>
         </Stack>
-      </Scrollbar>
-      <DialogActions>
+      </DialogScrollContent>
+
+      <DialogActions sx={{ p: 2 }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
           onClick={handleClose}
+          size="small"
         >
           Cancel
         </Button>
@@ -249,11 +250,12 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isLoading || isUpdateLoading}
           variant="contained"
-          type="submit"
+          onClick={(e: any) => handleSubmit(e)}
+          size="small"
         >
           Submit
         </LoadingButton>
       </DialogActions>
-    </form>
+    </>
   );
 };

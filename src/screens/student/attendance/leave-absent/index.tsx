@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
@@ -26,7 +26,6 @@ import {
   Typography,
   Autocomplete,
   DialogActions,
-  DialogContent,
   FormControlLabel,
 } from '@mui/material';
 
@@ -54,11 +53,11 @@ import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
@@ -355,8 +354,6 @@ const uploadProps = {
   accept: { 'image/*': [] },
 };
 const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -515,189 +512,186 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
     });
   return (
     <>
-      <Scrollbar ref={scrollRef}>
-        <DialogContent ref={scrollRef} sx={{ overflowY: 'hidden' }}>
-          <Box display="flex" my={2} gap={2} flexWrap="wrap">
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={organization}
-              onChange={(val) => setOrganization(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!medium}
-            />
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClass(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!organization}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-            <Autocomplete
-              loading={false}
-              noOptionsText="No Student Found"
-              sx={{ maxWidth: '250px', width: '100%' }}
-              value={student}
-              onChange={(e, value: any) => {
-                setStudent(value);
-              }}
-              options={StudentsData?.items || []}
-              getOptionLabel={(option: any) =>
-                `${option?.firstName || ''} ${option?.lastName || ''}`
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  label="Student"
-                  placeholder="Search  Student"
-                  fullWidth
-                />
-              )}
-              renderOption={(prop: any, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.firstName || ''} {option.lastName || ''}
-                </li>
-              )}
-            />
-          </Box>
+      <DialogScrollContent>
+        <Box display="flex" my={2} gap={2} flexWrap="wrap">
+          <CustomSelect
+            options={allOrganization}
+            label="Organization"
+            value={organization}
+            onChange={(val) => setOrganization(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            disabled={!medium}
+          />
+          <CustomSelect
+            options={allClass}
+            label="Class"
+            value={classes}
+            onChange={(val) => setClass(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            disabled={!organization}
+          />
+          <CustomSelect
+            options={allDivision}
+            label="Division"
+            value={division}
+            onChange={(val) => setDivision(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            disabled={!classes}
+          />
+          <Autocomplete
+            loading={false}
+            noOptionsText="No Student Found"
+            sx={{ maxWidth: '250px', width: '100%' }}
+            value={student}
+            onChange={(e, value: any) => {
+              setStudent(value);
+            }}
+            options={StudentsData?.items || []}
+            getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size="small"
+                label="Student"
+                placeholder="Search  Student"
+                fullWidth
+              />
+            )}
+            renderOption={(prop: any, option: any) => (
+              <li {...prop} key={option.id}>
+                {option.firstName || ''} {option.lastName || ''}
+              </li>
+            )}
+          />
+        </Box>
 
-          {student?.id && (
-            <Box component="form">
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    name="leaveType"
-                    select
-                    fullWidth
-                    label="Leave Type"
-                    size="small"
-                    value={values.leaveType}
-                    onChange={(e) => setFieldValue('leaveType', e.target.value)}
-                    error={touched.leaveType && Boolean(errors.leaveType)}
-                    helperText={touched.leaveType && errors.leaveType}
-                  >
-                    {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                      <MenuItem
-                        key={option.type}
-                        value={option.id}
-                        sx={{ bgcolor: `${option.color}20` }}
-                      >
-                        {option.type}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    textAlign="right"
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => {
-                      dialog.onTrue();
-                    }}
-                  >
-                    Add Leave Type ?
-                  </Typography>
-                  <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
-                    <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
-                  </CustomDialog>
-                </Grid>
-                <Grid item xs={4}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="isHalfDay"
-                        checked={values.isHalfDay}
-                        onChange={(e) => {
-                          setFieldValue('isHalfDay', e.target.checked);
-                          if (e.target.checked) {
-                            setFieldValue('endDate', null);
-                          }
-                        }}
-                      />
-                    }
-                    label="Half Day"
-                  />
-                </Grid>
+        {student?.id && (
+          <Box component="form">
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  name="leaveType"
+                  select
+                  fullWidth
+                  label="Leave Type"
+                  size="small"
+                  value={values.leaveType}
+                  onChange={(e) => setFieldValue('leaveType', e.target.value)}
+                  error={touched.leaveType && Boolean(errors.leaveType)}
+                  helperText={touched.leaveType && errors.leaveType}
+                >
+                  {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
+                    <MenuItem
+                      key={option.type}
+                      value={option.id}
+                      sx={{ bgcolor: `${option.color}20` }}
+                    >
+                      {option.type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  textAlign="right"
+                  color="primary.main"
+                  fontSize={12}
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    dialog.onTrue();
+                  }}
+                >
+                  Add Leave Type ?
+                </Typography>
+                <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
+                  <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
+                </CustomDialog>
+              </Grid>
+              <Grid item xs={4}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="isHalfDay"
+                      checked={values.isHalfDay}
+                      onChange={(e) => {
+                        setFieldValue('isHalfDay', e.target.checked);
+                        if (e.target.checked) {
+                          setFieldValue('endDate', null);
+                        }
+                      }}
+                    />
+                  }
+                  label="Half Day"
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <DateTimePicker
+                  label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                  onChange={(value) => setFieldValue('startDate', value)}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      helperText: touched.startDate && errors.startDate,
+                      error: touched.startDate && Boolean(errors.startDate),
+                    },
+                  }}
+                />
+              </Grid>
+              {!values.isHalfDay && (
                 <Grid item xs={4}>
                   <DateTimePicker
-                    label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
-                    onChange={(value) => setFieldValue('startDate', value)}
+                    label="End Date and Time"
+                    onChange={(value) => setFieldValue('endDate', value)}
                     slotProps={{
                       textField: {
                         size: 'small',
-                        helperText: touched.startDate && errors.startDate,
-                        error: touched.startDate && Boolean(errors.startDate),
+                        helperText: touched.endDate && errors.endDate,
+                        error: touched.endDate && Boolean(errors.endDate),
                       },
                     }}
                   />
                 </Grid>
-                {!values.isHalfDay && (
-                  <Grid item xs={4}>
-                    <DateTimePicker
-                      label="End Date and Time"
-                      onChange={(value) => setFieldValue('endDate', value)}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          helperText: touched.endDate && errors.endDate,
-                          error: touched.endDate && Boolean(errors.endDate),
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-                <Grid item xs={6}>
-                  <Upload
-                    {...uploadProps}
-                    thumbnail
-                    value={values.docs}
-                    onDrop={(acceptedFiles) => {
-                      const file = acceptedFiles[0];
-                      const reader = new FileReader();
-                      reader.readAsDataURL(file);
-                      reader.onload = () => {
-                        const base64String = reader.result;
-                        setFieldValue('docs', base64String);
-                      };
-                    }}
-                    multiple={false}
-                    onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
-                    onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <Editor
-                    onChange={(value) => {
-                      setFieldValue('description', value);
-                    }}
-                    placeholder="Leave description"
-                    error={touched.description && Boolean(errors.description)}
-                    helperText={touched.description && errors.description}
-                  />
-                </Grid>
+              )}
+              <Grid item xs={6}>
+                <Upload
+                  {...uploadProps}
+                  thumbnail
+                  value={values.docs}
+                  onDrop={(acceptedFiles) => {
+                    const file = acceptedFiles[0];
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                      const base64String = reader.result;
+                      setFieldValue('docs', base64String);
+                    };
+                  }}
+                  multiple={false}
+                  onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
+                  onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                />
               </Grid>
-            </Box>
-          )}
-        </DialogContent>
-      </Scrollbar>
+              <Grid item xs={6}>
+                <Editor
+                  onChange={(value) => {
+                    setFieldValue('description', value);
+                  }}
+                  placeholder="Leave description"
+                  error={touched.description && Boolean(errors.description)}
+                  helperText={touched.description && errors.description}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+      </DialogScrollContent>
+
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
