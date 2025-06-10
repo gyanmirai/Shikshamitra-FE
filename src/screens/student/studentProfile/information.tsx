@@ -110,10 +110,12 @@ export function StudentInformation(props: StudentTabsComponentType) {
       <BackPopUpChecked initialValues={initialValues} currentValues={formik.values}>
         <Box component="form" onSubmit={formik.handleSubmit}>
           <Card
-            sx={{
-              px: 1,
-              '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-            }}
+            sx={
+              {
+                // px: 1,
+                // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+              }
+            }
           >
             <CustomTabs
               value={tabs.value}

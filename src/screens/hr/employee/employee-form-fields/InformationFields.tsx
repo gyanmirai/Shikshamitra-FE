@@ -162,8 +162,14 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           </Grid>
           <Grid item xs={12} md={4}>
             <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-              <FormControl fullWidth>
-                <FormLabel id="gender-radio-group" sx={{ color: 'black' }}>
+              <FormControl
+                fullWidth
+                sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <FormLabel
+                  id="gender-radio-group"
+                  sx={{ color: (theme) => theme.palette.common.black }}
+                >
                   Gender
                 </FormLabel>
                 <RadioGroup

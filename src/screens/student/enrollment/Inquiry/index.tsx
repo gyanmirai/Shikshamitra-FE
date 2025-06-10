@@ -101,6 +101,7 @@ export interface IInquiryData {
   onboardingProgressState: number;
   groupMembership: IGroupMembership;
   formNo: string;
+  lastClassPassed: string;
 }
 
 export interface ParentBankDetails {

@@ -152,6 +152,7 @@ const RegisterForm = ({
               apparId: values.apparId,
               panNo: values.panNo,
               userId: editData?.userId,
+              lastClassPassed: values.lastClassPassed,
             },
           }).unwrap();
           if (isComeFromIssueForm) {
@@ -197,6 +198,7 @@ const RegisterForm = ({
             village: values.village,
             apparId: values.apparId,
             panNo: values.panNo,
+            lastClassPassed: values.lastClassPassed,
           }).unwrap();
           formik.setFieldValue('id', resp?.id);
         }

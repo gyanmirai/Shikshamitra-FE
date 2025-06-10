@@ -300,6 +300,7 @@ const LeaveHistory = (props: any) => {
           {
             label: 'Remarks',
             id: 'rejectionReason',
+            align: 'left',
             minWidth: '200px',
             align: 'left',
             render(value, row) {

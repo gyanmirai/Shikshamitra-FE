@@ -149,7 +149,7 @@ const HrEventsAndHolidaysScreen = () => {
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
-          label="Select Month Year"
+          label="Month Year"
           value={date}
           onChange={(newValue) => {
             setDate(newValue);
@@ -204,6 +204,7 @@ const HrEventsAndHolidaysScreen = () => {
           columns={[
             { id: 'sDate', label: 'Start Date', filterType: 'date' },
             { id: 'eDate', label: 'End Date', filterType: 'date' },
+            { id: 'totalDays', label: 'Total days' },
             { id: 'reason', label: 'Description' },
             {
               id: 'title',
@@ -246,6 +247,7 @@ const HrEventsAndHolidaysScreen = () => {
               sDate: dayjs(item.startDate).format('DD-MM-YYYY'),
               eDate: dayjs(item.endDate).format('DD-MM-YYYY'),
               title: item.isHoliday ? 'Holiday' : 'Event',
+              totalDays: dayjs(item.endDate).diff(dayjs(item.startDate), 'day'),
             })) || []
           }
           // rowProps={(row) => ({
