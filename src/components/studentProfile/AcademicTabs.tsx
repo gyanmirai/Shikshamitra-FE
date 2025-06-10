@@ -21,7 +21,7 @@ const TABS = [
 const AcademicTabs = () => {
   const tabs = useTabs('timetable');
   return (
-    <Card sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}>
+    <Card sx={{}}>
       <CustomTabs
         value={tabs.value}
         onChange={tabs.onChange}

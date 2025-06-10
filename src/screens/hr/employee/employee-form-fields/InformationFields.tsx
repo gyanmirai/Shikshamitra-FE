@@ -166,7 +166,12 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 fullWidth
                 sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
               >
-                <FormLabel id="gender-radio-group">Gender</FormLabel>
+                <FormLabel
+                  id="gender-radio-group"
+                  sx={{ color: (theme) => theme.palette.common.black }}
+                >
+                  Gender
+                </FormLabel>
                 <RadioGroup
                   row
                   aria-labelledby="gender-radio-group"
@@ -505,7 +510,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Area/Locality/Road Name"
+            label="Street/Road Name *"
             {...formik.getFieldProps('addressLine2')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -524,7 +529,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Landmark"
+            label="Area/Locality/Landmark *"
             {...formik.getFieldProps('addressLine3')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -617,7 +622,6 @@ export const InformationFields: FieldsType[] = [
     type: 'text',
     label: ' ',
     name: ' ',
-    placeholder: ' ',
     gridProps: { xs: 12, md: 12 },
     renderComp: (props) => <InformationAllFields {...props} />,
   },

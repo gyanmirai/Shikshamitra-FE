@@ -153,7 +153,7 @@ const LeaveHistory = (props: any) => {
     <>
       <Box sx={{ display: 'flex', gap: 2, my: 2, pl: 1, justifyContent: 'space-between' }}>
         <DatePicker
-          label="Date"
+          label="Month Year"
           format="MMM-YYYY"
           value={date}
           views={['month', 'year']}
@@ -209,7 +209,6 @@ const LeaveHistory = (props: any) => {
         isLoading={isLoading}
         tableId="leave-history-table"
         searchFieldProps={{
-          placeholder: 'Search by Name, Status..',
           label: 'Search by Name, Status...',
           sx: {
             maxWidth: '300px',
@@ -299,8 +298,9 @@ const LeaveHistory = (props: any) => {
             id: 'description',
           },
           {
-            label: 'Rejection Reason',
+            label: 'Remarks',
             id: 'rejectionReason',
+            align: 'left',
             minWidth: '200px',
             render(value, row) {
               return value || '-';
@@ -417,7 +417,6 @@ const LeaveHistory = (props: any) => {
               multiline
               rows={4}
               label="Remarks"
-              placeholder="Enter your remarks or reason for approval/rejection"
               onChange={(e) => {
                 setRejectionReason(e.target.value);
               }}

@@ -89,7 +89,7 @@ const LeaveCalender = (props: TabComponentType) => {
 export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => (
-  <Grid container spacing={2} bgcolor="background.neutral" m={0} p={2}>
+  <Grid container spacing={3} bgcolor="background.neutral" m={0} p={1}>
     <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2"> Employee</Typography>
     </Grid>
@@ -145,6 +145,12 @@ export const LeaveRequestForm = ({ editData }: any) => (
     </Grid>
     <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
       <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
+    </Grid>
+    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2"> Total Days</Typography>
+    </Grid>
+    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
+      <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.totalDays }} />
     </Grid>
     {editData?.rejectionReason && (
       <>

@@ -99,7 +99,6 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
       </Box> */}
       <CustomizableTable
         searchFieldProps={{
-          placeholder: 'Search by Name, Type, Late Threshold...',
           label: 'Search by Name, Type, Late Threshold...',
           sx: {
             maxWidth: '350px',

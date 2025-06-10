@@ -21,20 +21,23 @@ export function UploadPlaceholder({ onBrowseClick, ...other }: UploadPlaceholder
       <UploadIllustration hideBackground sx={{ width: 200 }} />
 
       <Stack>
-        <Box
-          component="span"
-          onClick={(e) => {
-            e.stopPropagation(); // prevent dropzone interference
-            onBrowseClick?.();
-          }}
-          sx={{
-            // mx: 0.5,
-            color: 'primary.main',
-            textDecoration: 'underline',
-            cursor: 'pointer',
-          }}
-        >
-          Upload Document
+        <Box component="span">
+          Drag & drop or{' '}
+          <Box
+            component="span"
+            onClick={(e) => {
+              e.stopPropagation(); // prevent dropzone interference
+              onBrowseClick?.();
+            }}
+            sx={{
+              color: 'primary.main',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            upload
+          </Box>{' '}
+          your file
         </Box>
       </Stack>
     </Box>

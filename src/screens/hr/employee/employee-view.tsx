@@ -2,7 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useEffect } from 'react';
 
-import { Tab, Box, Card, Tabs, Paper, Avatar, Typography } from '@mui/material';
+import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -139,6 +139,7 @@ export function EmployeeCard({ employee }: any) {
                 {employee?.employeeName}
               </Typography>
             </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
                 Employee Code
@@ -147,6 +148,7 @@ export function EmployeeCard({ employee }: any) {
                 {employee?.employeeCode}
               </Typography>
             </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
             <Box>
               <Typography variant="caption" color="text.secondary">
                 Role

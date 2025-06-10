@@ -28,9 +28,9 @@ const personalInformationValidationSchema = Yup.object({
   qualification: Yup.string(),
   role: Yup.string().required('Role is required'),
   //   identificationMark1: Yup.string().required('Identification mark is required'),
-  addressLine1: Yup.string(),
-  addressLine2: Yup.string(),
-  addressLine3: Yup.string(),
+  addressLine1: Yup.string().required('Building/Flat/House No is required'),
+  addressLine2: Yup.string().required('Street/Road Name is required'),
+  addressLine3: Yup.string().required('Area/Locality/Landmark is required'),
   country: Yup.object()
     .shape({ name: Yup.string().required('Country is required') })
     .default(() => ({ name: '' }))

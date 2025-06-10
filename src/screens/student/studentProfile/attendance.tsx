@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
-import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
+import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Card,
@@ -28,7 +28,6 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -88,12 +87,6 @@ const Attendance = (props: StudentTabsComponentType) => {
     <Box
       sx={{
         mt: 1,
-        '& *': {
-          fontSize: '12px !important',
-        },
-        '& svg': {
-          fontSize: '18px !important',
-        },
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center">
@@ -103,8 +96,8 @@ const Attendance = (props: StudentTabsComponentType) => {
             p: 2,
             // textAlign: 'center',
             typography: 'h4',
-            maxWidth: '300px',
-            width: '100%',
+            // maxWidth: '300px',
+            // width: '100%',
           }}
         >
           <Stack
@@ -113,7 +106,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           >
             <Stack>
               <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
-                Overall Attendance Percentage &nbsp;
+                Overall Attendance&nbsp;
                 <Label variant="soft" color="success">
                   90%
                 </Label>
@@ -136,44 +129,20 @@ const Attendance = (props: StudentTabsComponentType) => {
         </Card>
       </Stack>
       <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-        <CustomSelect
-          label="Year"
-          options={[
-            { value: '2025', label: '2025' },
-            { value: '2024', label: '2024' },
-            { value: '2023', label: '2023' },
-            { value: '2022', label: '2022' },
-          ]}
-          onChange={(val) => {
-            setMonth(val as string);
+        <DatePicker
+          format="MMM-YYYY"
+          views={['year', 'month']}
+          label="Select Month Year"
+          value={dayjs(new Date())}
+          onChange={(newValue) => {}}
+          sx={{
+            maxWidth: '300px',
+            width: '100%',
           }}
-          value={year}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
-          }}
-        />
-        <CustomSelect
-          label="Month"
-          options={[
-            { value: '01', label: 'January' },
-            { value: '02', label: 'February' },
-            { value: '03', label: 'March' },
-            { value: '04', label: 'April' },
-            { value: '05', label: 'May' },
-            { value: '06', label: 'June' },
-            { value: '07', label: 'July' },
-            { value: '08', label: 'August' },
-            { value: '09', label: 'September' },
-            { value: '10', label: 'October' },
-            { value: '11', label: 'November' },
-            { value: '12', label: 'December' },
-          ]}
-          onChange={(val) => {
-            setMonth(val as string);
-          }}
-          value={month}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '200px' },
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
           }}
         />
       </Box>
@@ -186,7 +155,7 @@ const Attendance = (props: StudentTabsComponentType) => {
               <AttendanceChart
                 title={
                   <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
-                    <Typography variant="h5">Attendance progress</Typography>
+                    <Typography variant="subtitle1">Attendance progress</Typography>
                     <ButtonGroup
                       color="inherit"
                       variant="outlined"
@@ -230,7 +199,7 @@ const Attendance = (props: StudentTabsComponentType) => {
               <YearlyAttendance
                 title={
                   <Box display="flex" alignItems="center" gap={1} justifyContent="space-between">
-                    <Typography variant="h5">Attendance progress</Typography>
+                    <Typography variant="subtitle1">Attendance progress</Typography>
                     <ButtonGroup
                       color="inherit"
                       variant="outlined"
@@ -269,15 +238,28 @@ const Attendance = (props: StudentTabsComponentType) => {
                     alpha(theme.palette.primary.main, 0.8),
                     alpha(theme.palette.error.main, 0.8),
                   ],
-                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                  categories: [
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec',
+                  ],
                   series: [
                     {
                       name: 'Present',
-                      data: [43, 33, 22, 37, 67, 68, 37, 24, 55],
+                      data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30],
                     },
                     {
                       name: 'Absent',
-                      data: [51, 70, 47, 67, 40, 37, 24, 70, 24],
+                      data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0],
                     },
                   ],
                 }}
@@ -309,10 +291,10 @@ const Attendance = (props: StudentTabsComponentType) => {
                   const { day, today } = prop;
                   console.log('day----', day);
 
-                  const absent = day.format('DD-MM-YYYY') === '01-04-2025';
+                  const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;
-                  const isHalfDay = day.format('DD-MM-YYYY') === '04-04-2025';
-                  const isHoliday = day.format('DD-MM-YYYY') === '03-04-2025';
+                  const isHalfDay = day.format('DD-MM-YYYY') === '11-06-2025';
+                  const isHoliday = day.format('DD-MM-YYYY') === '09-06-2025';
 
                   const disabled = isSunday || isHoliday || prop.disabled;
                   let toolTipTitle = '';

@@ -285,7 +285,7 @@ function SpouseAddressComponent(props: any) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      {/* <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
           control={
@@ -308,7 +308,7 @@ function SpouseAddressComponent(props: any) {
           }
           label="Same as Father Address"
         />
-      </Grid>
+      </Grid> */}
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <ShakingTextField
@@ -463,7 +463,8 @@ const FamilyMemberSection = ({
             <TextField
               name={`${type}Name`}
               value={formik.values[`${type}Name`]}
-              label={`${capitalizedType} Name `}
+              label={` Name `}
+              // placeholder={`Enter ${capitalizedType} Name `}
               onChange={(e) => {
                 const value = capitalize(e.target.value);
                 formik.setFieldValue(`${type}Name`, value);
@@ -482,7 +483,7 @@ const FamilyMemberSection = ({
           <TextField
             name={`${type}Occupation`}
             value={formik.values[`${type}Occupation`]}
-            label={`${capitalizedType} Occupation`}
+            label={` Occupation`}
             onChange={(e) => {
               const value = capitalize(e.target.value);
               formik.setFieldValue(`${type}Occupation`, value);
@@ -505,10 +506,11 @@ const FamilyMemberSection = ({
             <PhoneInput
               name={`${type}ContactNo`}
               value={formik.values[`${type}ContactNo`]}
-              label={`${capitalizedType} Contact No.`}
+              label={` Contact No.`}
               onChange={(value) => {
                 formik.setFieldValue(`${type}ContactNo`, value);
               }}
+              // placeholder={`Enter ${capitalizedType} Contact No.`}
               error={
                 formik.touched[`${type}ContactNo`] && Boolean(formik.errors[`${type}ContactNo`])
               }

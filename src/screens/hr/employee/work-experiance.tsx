@@ -56,7 +56,7 @@ const WorkExperiences = (props: any) => {
             {index + 1}
           </Box>
 
-          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ width: '200px' }}>
               <TextField
                 fullWidth
@@ -69,6 +69,34 @@ const WorkExperiences = (props: any) => {
                   setFieldValue(`experiences.${index}.organizationName`, val);
                 }}
                 disabled={!!disabled}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.department`}
+                label="Department"
+                value={experience.department}
+                disabled={!!disabled}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.department`, val);
+                }}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.designation`}
+                label="Designation"
+                value={experience.designation}
+                disabled={!!disabled}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  setFieldValue(`experiences.${index}.designation`, val);
+                }}
               />
             </Box>
             <Box sx={{ width: '200px' }}>
@@ -134,34 +162,6 @@ const WorkExperiences = (props: any) => {
 
                     fullWidth: true,
                   },
-                }}
-              />
-            </Box>
-            <Box sx={{ width: '200px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                name={`experiences.${index}.department`}
-                label="Department"
-                value={experience.department}
-                disabled={!!disabled}
-                onChange={(event) => {
-                  const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.department`, val);
-                }}
-              />
-            </Box>
-            <Box sx={{ width: '200px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                name={`experiences.${index}.designation`}
-                label="Designation"
-                value={experience.designation}
-                disabled={!!disabled}
-                onChange={(event) => {
-                  const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.designation`, val);
                 }}
               />
             </Box>

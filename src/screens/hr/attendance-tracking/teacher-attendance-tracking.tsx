@@ -150,7 +150,9 @@ const TeacherAttendanceTracking = ({
 
           { id: 'timeIn', label: 'In-time' },
           { id: 'timeOut', label: 'Out-time' },
-          { id: 'totalHoursWorked', label: 'Total Time' },
+          { id: 'employeeCode', label: 'Employee Code' },
+          { id: 'contacrNo.', label: 'Contact No.' },
+          { id: 'totalHoursWorked', label: 'Hours Worked' },
           {
             id: 'status',
             label: 'Status',

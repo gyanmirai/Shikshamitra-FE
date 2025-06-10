@@ -8,17 +8,7 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Tab,
-  Card,
-  Tabs,
-  Paper,
-  Divider,
-  TextField,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
+import { Box, Tab, Card, Tabs, Divider, TextField, Typography, Autocomplete } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -62,7 +52,7 @@ const AttendanceTrackingScreen = () => {
   ];
   const role = employee?.role?.name;
   return (
-    <Paper sx={{ p: 1 }}>
+    <Box sx={{ p: 1 }}>
       <CustomBreadcrumbs
         heading="Attendance Tracking"
         links={[
@@ -91,7 +81,7 @@ const AttendanceTrackingScreen = () => {
               ))}
             </CustomTabs>
           </Card>
-          <Box p={2}>
+          <Box>
             {searchParams.tab === 'dateWise' ? (
               <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
             ) : (
@@ -100,7 +90,7 @@ const AttendanceTrackingScreen = () => {
           </Box>
         </>
       )}
-    </Paper>
+    </Box>
   );
 };
 
@@ -154,16 +144,19 @@ const DateWise = ({
 
   const counts = useMemo(
     () => ({
-      all: attendanceData?.items.length,
-      Present: attendanceData?.items.filter(
-        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
-      ).length,
-      Absent: attendanceData?.items.filter(
-        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
-      ).length,
-      'Half-Day': attendanceData?.items.filter(
-        (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
-      ).length,
+      all: attendanceData?.items.length || 24,
+      Present:
+        attendanceData?.items.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
+        ).length || 10,
+      Absent:
+        attendanceData?.items.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
+        ).length || 8,
+      'Half-Day':
+        attendanceData?.items.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
+        ).length || 6,
     }),
     [attendanceData?.items]
   );
@@ -223,7 +216,7 @@ const DateWise = ({
           setSearchParams({ date: value?.format('DD-MM-YYYY') });
           // setDate(value);
         }}
-        sx={{ mb: 2 }}
+        sx={{ m: 2, ml: 0 }}
         slotProps={{
           textField: {
             size: 'small',
@@ -237,6 +230,11 @@ const DateWise = ({
           mb: 2,
           '& .MuiTabs-flexContainer': { gap: 2 },
           flexGrow: 1,
+          p: 1,
+          pl: 2,
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
         }}
       >
         {TABS.map((tab) => (
@@ -264,7 +262,6 @@ const DateWise = ({
       <CustomizableTable
         noDataText={<>No Data Availabel For Attendance </>}
         searchFieldProps={{
-          placeholder: 'Search by Name, In Time, Out time...',
           label: 'Search by Name, In Time, Out time....',
           sx: {
             maxWidth: '400px',
@@ -316,6 +313,8 @@ const DateWise = ({
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
+          { id: 'employeeCode', label: 'Employee Code', align: 'left' },
+          { id: 'contactNo.', label: 'Contact No.', align: 'left' },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
           // {
           //   id: 'status',
@@ -360,7 +359,7 @@ const DateWise = ({
             attendanceDate: '2024-03-01',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9 hrs',
+            totalHoursWorked: '9h 0m',
             status: 'Present',
             employeeName: 'Kumar Rajesh Mohan',
           },
@@ -369,7 +368,7 @@ const DateWise = ({
             attendanceDate: '2024-03-02',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',
-            totalHoursWorked: '8 hrs',
+            totalHoursWorked: '8h 0m',
             status: 'Present',
             employeeName: 'Sharma Priya Raj',
           },
@@ -378,7 +377,7 @@ const DateWise = ({
             attendanceDate: '2024-03-03',
             timeIn: '-',
             timeOut: '-',
-            totalHoursWorked: '0 hrs',
+            totalHoursWorked: '0h 0m',
             status: 'Leave',
             employeeName: 'Patel Amit Naresh',
           },
@@ -387,7 +386,7 @@ const DateWise = ({
             attendanceDate: '2024-03-04',
             timeIn: '09:15 AM',
             timeOut: '02:15 PM',
-            totalHoursWorked: '5 hrs',
+            totalHoursWorked: '5h 0m',
             status: 'Half day',
             employeeName: 'Gupta Sneha Ramesh',
           },
@@ -396,7 +395,7 @@ const DateWise = ({
             attendanceDate: '2024-03-05',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9 hrs',
+            totalHoursWorked: '9h 0m',
             status: 'Present',
             employeeName: 'Singh Vikram Pratap',
           },
@@ -405,7 +404,7 @@ const DateWise = ({
             attendanceDate: '2024-03-06',
             timeIn: '09:45 AM',
             timeOut: '06:45 PM',
-            totalHoursWorked: '9 hrs',
+            totalHoursWorked: '9h 0m',
             status: 'Present',
             employeeName: 'Verma Neha Suresh',
           },
@@ -414,7 +413,7 @@ const DateWise = ({
             attendanceDate: '2024-03-07',
             timeIn: '-',
             timeOut: '-',
-            totalHoursWorked: '0 hrs',
+            totalHoursWorked: '0h 0m',
             status: 'Leave',
             employeeName: 'Joshi Arun Kumar',
           },
@@ -423,7 +422,7 @@ const DateWise = ({
             attendanceDate: '2024-03-08',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9 hrs',
+            totalHoursWorked: '9h 0m',
             status: 'Present',
             employeeName: 'Reddy Meera Krishna',
           },
@@ -432,7 +431,7 @@ const DateWise = ({
             attendanceDate: '2024-03-09',
             timeIn: '09:30 AM',
             timeOut: '02:30 PM',
-            totalHoursWorked: '5 hrs',
+            totalHoursWorked: '5h 0m',
             status: 'Half day',
             employeeName: 'Malhotra Rahul Dinesh',
           },
@@ -441,7 +440,7 @@ const DateWise = ({
             attendanceDate: '2024-03-10',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9 hrs',
+            totalHoursWorked: '9h 0m',
             status: 'Present',
             employeeName: 'Desai Anita Mahesh',
           },
@@ -524,7 +523,7 @@ const EmployeeWise = ({
   );
   return (
     <>
-      <Box display="flex" gap={1} mb={2}>
+      <Box display="flex" gap={2} m={2} ml={0}>
         <Autocomplete
           options={employees?.items || []}
           getOptionLabel={(option: any) =>
@@ -537,7 +536,7 @@ const EmployeeWise = ({
               placeholder="Search Employee"
               size="small"
               fullWidth
-              sx={{ width: '100%', minWidth: '250px' }}
+              sx={{ width: '100%', minWidth: 268 }}
             />
           )}
           onChange={(e, value) => {
@@ -546,7 +545,7 @@ const EmployeeWise = ({
             // formik.setFieldValue('examType', value?.id);
           }}
         />
-        &nbsp;
+
         <DatePicker
           format="DD-MM-YYYY"
           label="Start Date"
@@ -555,13 +554,14 @@ const EmployeeWise = ({
             setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {
               size: 'small',
             },
           }}
         />
-        &nbsp;
+
         <DatePicker
           format="DD-MM-YYYY"
           label="End Date"
@@ -570,6 +570,7 @@ const EmployeeWise = ({
             setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {
               size: 'small',
@@ -578,7 +579,7 @@ const EmployeeWise = ({
         />
       </Box>
       {searchParams?.employeeId && (
-        <Box display="flex" gap={2} mb={2}>
+        <Box display="flex" gap={2} m={2} ml={0}>
           <Card
             sx={{
               maxWidth: 280,
@@ -720,7 +721,9 @@ const EmployeeWise = ({
 
             { id: 'timeIn', label: 'In-time' },
             { id: 'timeOut', label: 'Out-time' },
-            { id: 'totalHoursWorked', label: 'Total Time' },
+            { id: 'employeeCode', label: 'Employee Code' },
+            { id: 'contacrNo.', label: 'Contact No.' },
+            { id: 'totalHoursWorked', label: 'Hours Worked' },
             {
               id: 'status',
               label: 'Status',
@@ -759,7 +762,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-01',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9 hrs',
+              totalHoursWorked: '9h 0m',
               status: 'Present',
               employeeName: 'Rajesh Kumar',
             },
@@ -768,7 +771,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-02',
               timeIn: '09:30 AM',
               timeOut: '05:30 PM',
-              totalHoursWorked: '8 hrs',
+              totalHoursWorked: '8h 0m',
               status: 'Present',
               employeeName: 'Priya Sharma',
             },
@@ -777,7 +780,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-03',
               timeIn: '-',
               timeOut: '-',
-              totalHoursWorked: '0 hrs',
+              totalHoursWorked: '0h 0m',
               status: 'Leave',
               employeeName: 'Amit Patel',
             },
@@ -786,7 +789,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-04',
               timeIn: '09:15 AM',
               timeOut: '02:15 PM',
-              totalHoursWorked: '5 hrs',
+              totalHoursWorked: '5h 0m',
               status: 'Half day',
               employeeName: 'Sneha Gupta',
             },
@@ -795,7 +798,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-05',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9 hrs',
+              totalHoursWorked: '9h 0m',
               status: 'Present',
               employeeName: 'Vikram Singh',
             },
@@ -804,7 +807,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-06',
               timeIn: '09:45 AM',
               timeOut: '06:45 PM',
-              totalHoursWorked: '9 hrs',
+              totalHoursWorked: '9h 0m',
               status: 'Present',
               employeeName: 'Neha Verma',
             },
@@ -813,7 +816,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-07',
               timeIn: '-',
               timeOut: '-',
-              totalHoursWorked: '0 hrs',
+              totalHoursWorked: '0h 0m',
               status: 'Leave',
               employeeName: 'Arun Joshi',
             },
@@ -822,7 +825,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-08',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9 hrs',
+              totalHoursWorked: '9h 0m',
               status: 'Present',
               employeeName: 'Meera Reddy',
             },
@@ -831,7 +834,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-09',
               timeIn: '09:30 AM',
               timeOut: '02:30 PM',
-              totalHoursWorked: '5 hrs',
+              totalHoursWorked: '5h 0m',
               status: 'Half day',
               employeeName: 'Rahul Malhotra',
             },
@@ -840,7 +843,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-10',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9 hrs',
+              totalHoursWorked: '9h 0m',
               status: 'Present',
               employeeName: 'Anita Desai',
             },

@@ -8,8 +8,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Tab, Card, Tabs, Paper, Button, Avatar, Dialog, Typography } from '@mui/material';
+import { Box, Tab, Card, Tabs, Paper, Avatar, Dialog, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -24,6 +23,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -239,18 +239,6 @@ export function StudentProfile() {
           isBack
           onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
           description="View and manage comprehensive student information including academics, attendance, finance and more."
-          // action={
-          //   currentStudent && (
-          //     <Button
-          //       size="small"
-          //       variant="soft"
-          //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
-          //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
-          //     >
-          //       Back To Student list
-          //     </Button>
-          //   )
-          // }
         />
       ) : (
         <CustomBreadcrumbs
@@ -262,18 +250,6 @@ export function StudentProfile() {
           ]}
           sx={{ px: 1, mb: 2 }}
           description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
-          // action={
-          //   currentStudent && (
-          //     <Button
-          //       size="small"
-          //       variant="soft"
-          //       onClick={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
-          //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
-          //     >
-          //       Back To Student list
-          //     </Button>
-          //   )
-          // }
         />
       )}
 
@@ -364,11 +340,10 @@ export function StudentProfile() {
               //     );
               //   },
               // },
-              { id: 'rollNo', label: 'Roll No', render: (value, row) => value || '-' },
-              { id: 'grNoRecord', label: 'Gr No', render: (value, row) => value || '-' },
               {
                 id: 'name',
                 label: 'Student Name',
+                sticky: true,
                 render: (value, row) => (
                   <Box style={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar
@@ -382,6 +357,26 @@ export function StudentProfile() {
                   </Box>
                 ),
               },
+              {
+                id: 'rollNo',
+                label: 'Roll No',
+                render: (value, row) =>
+                  value || (
+                    <Label variant="soft" color="default">
+                      Not Assigned
+                    </Label>
+                  ),
+              },
+              {
+                id: 'grNoRecord',
+                label: 'Gr No',
+                render: (value, row) =>
+                  value || (
+                    <Label variant="soft" color="default">
+                      Not Assigned
+                    </Label>
+                  ),
+              },
 
               // { id: 'organization', label: 'Organization' },
               // { id: 'class', label: 'Class' },
@@ -394,19 +389,19 @@ export function StudentProfile() {
                 isFilter: false,
                 sticky: true,
                 minWidth: 80,
+                align: 'left',
                 render: (value, row) => (
-                  <Button
-                    onClick={() => {
+                  <ThreeDotsActions
+                    showViewIcon
+                    showThreeDots={false}
+                    handleViewClick={() => {
                       setSearchParams({
                         student: `${row.id}`,
                         isSearch: 'false',
                         searchValue: row.name,
                       });
                     }}
-                    sx={{ justifyContent: 'start' }}
-                  >
-                    <VisibilityIcon sx={{ fontSize: '18px' }} />
-                  </Button>
+                  />
                 ),
               },
             ]}
@@ -449,21 +444,50 @@ export function StudentProfile() {
                   src={convertBase64Format(currentStudent?.profilePicture as string)}
                   sx={{ width: 64, height: 64 }}
                 />
-                <Label color="primary" sx={{ fontSize: '12px' }}>
-                  {currentStudent?.name || '-'}
-                </Label>
-                <Label color="info" sx={{ fontSize: '12px' }}>
-                  Gr No {currentStudent?.grNoRecord || '-'}
-                </Label>
-                <Label color="secondary" sx={{ fontSize: '12px' }}>
-                  Roll No {currentStudent?.rollNo || '-'}
-                </Label>
-                <Label color="warning" sx={{ fontSize: '12px' }}>
-                  {currentStudent?.standard?.name}-{currentStudent?.division?.name}
-                </Label>
-                <Label color="error" sx={{ fontSize: '12px' }}>
-                  {currentStudent?.educationMedium?.name || '-'}
-                </Label>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Name
+                  </Typography>
+                  <Typography fontWeight={500} variant="body2">
+                    {currentStudent?.name || '-'}
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Gr No.
+                  </Typography>
+                  <Typography fontWeight={500} variant="body2">
+                    {currentStudent?.grNoRecord || '-'}
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Roll No.
+                  </Typography>
+                  <Typography fontWeight={500} variant="body2">
+                    {currentStudent?.rollNo || '-'}
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Class
+                  </Typography>
+                  <Typography fontWeight={500} variant="body2">
+                    {currentStudent?.standard?.name}-{currentStudent?.division?.name}
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Medium
+                  </Typography>
+                  <Typography fontWeight={500} variant="body2">
+                    {currentStudent?.educationMedium?.name || '-'}
+                  </Typography>
+                </Box>
               </Box>
               {/* <Box display="flex" gap={2} alignItems="center">
                 <Button

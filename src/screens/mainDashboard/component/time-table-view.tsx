@@ -255,47 +255,45 @@ const TimeTableView = (props: TabComponentType) => {
   const [isVisibleGrid, setIsVisibleGrid] = useState(true);
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
-        <Paper elevation={2} sx={{ flexGrow: 1 }}>
-          <TableContainer>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
-                  {weekDays.map((day) => (
-                    <TableCell key={day} align="center">
-                      {day}
-                    </TableCell>
+    <Box sx={{ display: 'flex', gap: 2 }}>
+      <Paper elevation={2} sx={{ flexGrow: 1 }}>
+        <TableContainer>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
+                {weekDays.map((day) => (
+                  <TableCell key={day} align="center">
+                    {day}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {timeSlots.map((timeSlot, timeSlotIndex) => (
+                <TableRow key={timeSlot}>
+                  <TableCell>{timeSlot}</TableCell>
+                  {weekDays.map((day, dayIndex) => (
+                    <TimeTableCell
+                      key={`${timeSlot}-${day}`}
+                      timeSlot={timeSlot}
+                      day={day}
+                      isThreeDots={false}
+                      slotData={timetable[timeSlotIndex][dayIndex]}
+                      isBreak={isBreak(timeSlot)}
+                      onDrop={() => {}}
+                      onTeacherSelect={handleTeacherSelect}
+                      onRoomSelect={handleRoomSelect}
+                      onDeleteSlot={() => {}}
+                      selectedRoom="101"
+                    />
                   ))}
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {timeSlots.map((timeSlot, timeSlotIndex) => (
-                  <TableRow key={timeSlot}>
-                    <TableCell>{timeSlot}</TableCell>
-                    {weekDays.map((day, dayIndex) => (
-                      <TimeTableCell
-                        key={`${timeSlot}-${day}`}
-                        timeSlot={timeSlot}
-                        day={day}
-                        isThreeDots={false}
-                        slotData={timetable[timeSlotIndex][dayIndex]}
-                        isBreak={isBreak(timeSlot)}
-                        onDrop={() => {}}
-                        onTeacherSelect={handleTeacherSelect}
-                        onRoomSelect={handleRoomSelect}
-                        onDeleteSlot={() => {}}
-                        selectedRoom="101"
-                      />
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </Box>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </Box>
   );
 };

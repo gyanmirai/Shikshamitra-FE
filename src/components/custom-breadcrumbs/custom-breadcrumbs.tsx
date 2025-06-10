@@ -38,7 +38,7 @@ export function CustomBreadcrumbs({
   const renderHeading = (
     <Typography
       variant="h4"
-      sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2, ...slotProps?.heading }}
+      sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, ...slotProps?.heading }}
     >
       {isBack && (
         <IconButton onClick={onBack}>

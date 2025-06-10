@@ -290,7 +290,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="email"
                   size="small"
-                  label="Email"
+                  label="Primary Email"
                   name="email"
                   value={formik.values.email}
                   onBlur={formik.handleBlur}
@@ -725,6 +725,25 @@ export const generalFormFields: FieldsType[] = [
                   onBlur={formik.handleBlur}
                   error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}
                   helperText={formik.touched.previousSchool && formik.errors.previousSchool}
+                  fullWidth
+                  onChange={formik.handleChange}
+                  disabled={!disabled}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <ShakingTextField
+                error={formik.touched.lastClassPassed && Boolean(formik.errors.lastClassPassed)}
+              >
+                <TextField
+                  key="lastClassPassed"
+                  size="small"
+                  label="Last Class Passed"
+                  name="lastClassPassed"
+                  value={formik.values.lastClassPassed}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.lastClassPassed && Boolean(formik.errors.lastClassPassed)}
+                  helperText={formik.touched.lastClassPassed && formik.errors.lastClassPassed}
                   fullWidth
                   onChange={formik.handleChange}
                   disabled={!disabled}
