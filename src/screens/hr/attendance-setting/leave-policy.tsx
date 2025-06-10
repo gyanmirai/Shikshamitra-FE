@@ -131,7 +131,6 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
       </Box> */}
       <CustomizableTable
         searchFieldProps={{
-          placeholder: 'Search by Leave Type, Leave Days...',
           label: 'Search by Leave Type, Leave Days...',
           sx: {
             maxWidth: '350px',

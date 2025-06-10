@@ -184,7 +184,6 @@ const HrEmployee = () => {
                 </>
               }
               searchFieldProps={{
-                placeholder: 'Search by Employee Name, Code...',
                 label: 'Search by Employee Name, Code....',
                 sx: {
                   maxWidth: '350px',

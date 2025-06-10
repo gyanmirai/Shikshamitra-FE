@@ -264,7 +264,6 @@ const DateWise = ({
       <CustomizableTable
         noDataText={<>No Data Availabel For Attendance </>}
         searchFieldProps={{
-          placeholder: 'Search by Name, In Time, Out time...',
           label: 'Search by Name, In Time, Out time....',
           sx: {
             maxWidth: '400px',
@@ -316,6 +315,8 @@ const DateWise = ({
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
+          { id: 'employeeCode', label: 'Employee Code', align: 'left' },
+          { id: 'contactNo.', label: 'Contact No.', align: 'left' },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
           // {
           //   id: 'status',
@@ -720,7 +721,9 @@ const EmployeeWise = ({
 
             { id: 'timeIn', label: 'In-time' },
             { id: 'timeOut', label: 'Out-time' },
-            { id: 'totalHoursWorked', label: 'Total Time' },
+            { id: 'employeeCode', label: 'Employee Code' },
+            { id: 'contacrNo.', label: 'Contact No.' },
+            { id: 'totalHoursWorked', label: 'Hours Worked' },
             {
               id: 'status',
               label: 'Status',

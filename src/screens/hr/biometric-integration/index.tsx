@@ -77,7 +77,6 @@ const BiometricIntegrationScreen = () => {
         // isLoading={isLoading}
         noDataText={<>No Biometric Integration Data Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Name, Hours Worked...',
           label: 'Search by Name, Hours Worked...',
           sx: {
             maxWidth: '300px',
@@ -90,6 +89,8 @@ const BiometricIntegrationScreen = () => {
           { id: 'hoursWorked', label: 'Hours Worked', minWidth: '8vw', align: 'left' },
           { id: 'timeIn', label: 'In-time', align: 'left' },
           { id: 'timeOut', label: 'Out-time', align: 'left' },
+          { id: 'employeeCode', label: 'Employee Code', align: 'left' },
+          { id: 'contacrNo.', label: 'Contact No.', align: 'left' },
           {
             id: 'status',
             label: 'Status',

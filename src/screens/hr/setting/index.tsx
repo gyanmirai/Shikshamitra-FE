@@ -100,7 +100,6 @@ const HrSetting = () => {
           </>
         }
         searchFieldProps={{
-          placeholder: 'Search by Document Name, Document Type..',
           label: 'Search by Document Name, Document Type..',
           sx: {
             maxWidth: '400px',
@@ -120,7 +119,7 @@ const HrSetting = () => {
             },
           },
           {
-            label: 'Action',
+            label: 'Actions',
             id: 'action',
             isSort: false,
             isFilter: false,

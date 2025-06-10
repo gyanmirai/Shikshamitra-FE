@@ -117,8 +117,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
       <CustomizableTable
         noDataText={<>No Certificate Found </>}
         searchFieldProps={{
-          placeholder: 'Search by Document Type, Name...',
-          label: 'Search by Document Type, Name...',
+          label: 'Search by Document Type And Name',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -136,6 +135,9 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
           {
             id: 'statusVal',
             label: 'Status',
+            minWidth: '80px',
+            align: 'left',
+            isSort: false,
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
             render(value, row) {
@@ -162,10 +164,19 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             id: 'upload',
             label: 'Upload',
             isFilter: false,
+            minWidth: '80px',
+            align: 'left',
             isSort: false,
             render(value, row) {
               return (
                 <UploadButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    paddingLeft: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
                   onChange={async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
@@ -215,9 +226,17 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             id: 'view',
             label: 'View',
             isFilter: false,
+            isSort: false,
             render(value, row) {
               return (
                 <IconButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    paddingLeft: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
                   disabled={!row.uploadDocument}
                   onClick={() => {
                     setDocId(row.uploadDocument.id);
