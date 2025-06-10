@@ -159,12 +159,13 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
       alignItems="center"
       onClick={search.onTrue}
       sx={{
-        pr: { sm: 1 },
+        p: { sm: '5px' },
         borderRadius: { sm: 1.5 },
         cursor: { sm: 'pointer' },
         bgcolor: { sm: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
         fontSize: 12,
         width: '100%',
+        height: '100%',
         ...sx,
       }}
       {...other}
@@ -178,17 +179,19 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
           />
         </SvgIcon>
       </IconButton>
-      <Typography variant="subtitle2">Search Module</Typography>
+      <Typography variant="subtitle2" fontSize="12px">
+        Search Module &nbsp;
+      </Typography>
       <Label
         sx={{
-          fontSize: 12,
+          fontSize: '12px',
           color: 'grey.800',
           bgcolor: 'common.white',
           boxShadow: theme.customShadows.z1,
           display: { xs: 'none', sm: 'inline-flex' },
         }}
       >
-        (ctrl + shift + K)
+        (Ctrl + Shift + K)
       </Label>
     </Box>
   );

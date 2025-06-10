@@ -10,9 +10,9 @@ import {
   Box,
   Stack,
   Button,
-  Tooltip,
+  MenuItem,
+  MenuList,
   TextField,
-  IconButton,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -41,6 +41,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IGroup } from './type';
@@ -59,8 +60,7 @@ const GroupManagement = ({
     MaxResultCount: 10,
     Sorting: 'name ASC',
   });
-  // State to manage dialog for assigning group leaders
-  const assignLeaderAsDivisionDialog = useBoolean();
+
   // State to manage dialog for assigning students
   const assignStudentDialog = useBoolean();
   // Dialog state for add/edit form
@@ -78,7 +78,7 @@ const GroupManagement = ({
   // State to manage group data
   const isRemoveLeader = useBoolean();
   // State to manage group data
-  const isRemovestudetToHouse = useBoolean();
+  const isRemoveStudentToHouse = useBoolean();
 
   // State to store group data being edited
   const [editData, setEditData] = useState<null | IInquiryData>(null);
@@ -240,9 +240,9 @@ const GroupManagement = ({
         }
       />
       <ConfirmDialog
-        open={isRemovestudetToHouse.value}
+        open={isRemoveStudentToHouse.value}
         onClose={() => {
-          isRemovestudetToHouse.onFalse();
+          isRemoveStudentToHouse.onFalse();
           setEditData(null);
         }}
         title="Remove Student from house"
@@ -267,7 +267,7 @@ const GroupManagement = ({
                 shikshaMitraToast.success({
                   message: 'Removed Student From House Successfully',
                 });
-                isRemovestudetToHouse.onFalse();
+                isRemoveStudentToHouse.onFalse();
               } catch (error) {
                 console.log(error);
               }
@@ -361,13 +361,14 @@ const GroupManagement = ({
         isLoading={isLoading}
         columns={[
           // { id: 'srNo', label: 'Sr. No.' },
-          { id: 'grNoRecord', label: 'GR No.', align: 'left', minWidth: '110px' },
+          { id: 'name', label: 'Name', align: 'left', minWidth: '160px', sticky: true },
           { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '120px' },
-          { id: 'name', label: 'Name', align: 'left', minWidth: '160px' },
+          { id: 'grNoRecord', label: 'GR No.', align: 'left', minWidth: '110px' },
           {
             id: 'groupMembership.groupName',
             label: 'House Name',
             minWidth: '160px',
+            align: 'left',
             render(value, row) {
               return (
                 <Box
@@ -379,32 +380,6 @@ const GroupManagement = ({
                   }}
                 >
                   {value ? <Label color="info">{value} House</Label> : <Box />}
-                  <Box>
-                    <Tooltip title="Change House">
-                      <IconButton
-                        sx={{ color: 'info.main' }}
-                        onClick={() => {
-                          setEditData(row as IInquiryData);
-                          assignStudentDialog.onTrue();
-                        }}
-                      >
-                        <Iconify icon="mage:exchange-a" />
-                      </IconButton>
-                    </Tooltip>
-                    {value && (
-                      <Tooltip
-                        title="Remove from House"
-                        onClick={() => {
-                          setEditData(row as IInquiryData);
-                          isRemovestudetToHouse.onTrue();
-                        }}
-                      >
-                        <IconButton sx={{ color: 'error.main' }}>
-                          <Iconify icon="jam:user-remove" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
                 </Box>
               );
             },
@@ -413,6 +388,7 @@ const GroupManagement = ({
             id: 'groupMembership.isDivisionLeader',
             label: 'Division Leader',
             minWidth: '160px',
+            align: 'left',
             render(value, row) {
               return (
                 <Box
@@ -424,37 +400,6 @@ const GroupManagement = ({
                   }}
                 >
                   {value ? <Label color="success">Yes</Label> : <Box />}
-                  <Box>
-                    {!value ? (
-                      <Tooltip title="Assign Division Leader">
-                        <IconButton
-                          sx={{ color: 'info.main' }}
-                          onClick={() => {
-                            if (!row.groupMembership) {
-                              shikshaMitraToast.error({ message: 'Please assign house first' });
-                              return;
-                            }
-                            setEditData(row as IInquiryData);
-                            isConfirmForDivisionLeader.onTrue();
-                          }}
-                        >
-                          <Iconify icon="fluent-mdl2:party-leader" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Remove from Division Leader">
-                        <IconButton
-                          sx={{ color: 'error.main' }}
-                          onClick={() => {
-                            setEditData(row as IInquiryData);
-                            isRemoveFromDivisionLeader.onTrue();
-                          }}
-                        >
-                          <Iconify icon="material-symbols:group-remove-outline" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
                 </Box>
               );
             },
@@ -463,6 +408,7 @@ const GroupManagement = ({
             id: 'groupMembership.isLeader',
             label: 'House Leader',
             minWidth: '160px',
+            align: 'left',
             render(value, row) {
               return (
                 <Box
@@ -474,38 +420,106 @@ const GroupManagement = ({
                   }}
                 >
                   {value ? <Label color="success">Yes</Label> : <Box />}
-                  <Box>
-                    {!value ? (
-                      <Tooltip title=" Assign House Leader">
-                        <IconButton
-                          sx={{ color: 'info.main' }}
+                </Box>
+              );
+            },
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            minWidth: '80px',
+            align: 'left',
+            sticky: true,
+            isFilter: false,
+            isSort: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={({ popover }) => (
+                    <MenuList>
+                      {row?.groupMembership?.groupName ? (
+                        <MenuItem
+                          onClick={() => {
+                            setEditData(row as IInquiryData);
+                            isRemoveStudentToHouse.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="bi:house-x" />
+                          Remove From House
+                        </MenuItem>
+                      ) : (
+                        <MenuItem
+                          onClick={() => {
+                            setEditData(row as IInquiryData);
+                            assignStudentDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="uil:house-user" />
+                          Assign House
+                        </MenuItem>
+                      )}
+                      {row?.groupMembership?.isDivisionLeader ? (
+                        <MenuItem
+                          onClick={() => {
+                            setEditData(row as IInquiryData);
+                            isRemoveFromDivisionLeader.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="jam:user-remove" />
+                          Remove Division Leader
+                        </MenuItem>
+                      ) : (
+                        <MenuItem
                           onClick={() => {
                             if (!row.groupMembership) {
                               shikshaMitraToast.error({ message: 'Please assign house first' });
                               return;
                             }
                             setEditData(row as IInquiryData);
-                            isConfirmForMainLeader.onTrue();
+                            isConfirmForDivisionLeader.onTrue();
+                            popover.onClose();
                           }}
                         >
                           <Iconify icon="fluent-mdl2:party-leader" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Remove from  Leader">
-                        <IconButton
-                          sx={{ color: 'error.main' }}
+                          Assign Division Leader
+                        </MenuItem>
+                      )}
+
+                      {row?.groupMembership?.isLeader ? (
+                        <MenuItem
                           onClick={() => {
                             setEditData(row as IInquiryData);
                             isRemoveLeader.onTrue();
+                            popover.onClose();
                           }}
                         >
-                          <Iconify icon="material-symbols:group-remove-outline" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                </Box>
+                          Remove House Leader
+                        </MenuItem>
+                      ) : (
+                        <MenuItem
+                          onClick={() => {
+                            if (!row.groupMembership) {
+                              shikshaMitraToast.error({ message: 'Please assign house first' });
+                              popover.onClose();
+
+                              return;
+                            }
+                            setEditData(row as IInquiryData);
+                            isConfirmForMainLeader.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="iconoir:leaderboard-star" />
+                          Assign House Leader
+                        </MenuItem>
+                      )}
+                    </MenuList>
+                  )}
+                />
               );
             },
           },
@@ -619,6 +633,7 @@ const GroupManagement = ({
         handleClose={() => {
           assignStudentDialog.onFalse();
           setEditData(null);
+          dispatch(StudentApi.util.invalidateTags(['Student']));
         }}
         title="Assign House"
       >

@@ -51,7 +51,7 @@ export function LayoutSection({
       <Box
         id="root__layout"
         className={layoutClasses.root}
-        sx={{ background: (theme) => varAlpha(theme.palette.grey['400Channel'], 0.08), ...sx }}
+        sx={{ background: (theme) => varAlpha(theme.palette.grey['300Channel'], 0.08), ...sx }}
       >
         {sidebarSection ? (
           <>

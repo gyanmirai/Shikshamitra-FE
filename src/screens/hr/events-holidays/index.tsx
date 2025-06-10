@@ -40,14 +40,13 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { eventAndHolidayInitialValues } from './initialValue';
@@ -401,9 +400,9 @@ export const HrEventsAndHolidaysForm = ({
     },
   });
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2 }}>
+    <>
+      <DialogScrollContent>
+        <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <ShakingTextField
@@ -478,29 +477,29 @@ export const HrEventsAndHolidaysForm = ({
               />
             </Grid>
           </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button
-            size="small"
-            onClick={handleClose}
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Cancel
-          </Button>
+        </BackPopUpChecked>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button
+          size="small"
+          onClick={handleClose}
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
 
-          <LoadingButton
-            size="small"
-            disabled={isCalenderPreview}
-            loading={isUpdatePFLoading || isLoading}
-            variant="contained"
-            type="submit"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Box>
-    </BackPopUpChecked>
+        <LoadingButton
+          size="small"
+          disabled={isCalenderPreview}
+          loading={isUpdatePFLoading || isLoading}
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };

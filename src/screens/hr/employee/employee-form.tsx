@@ -423,6 +423,67 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     [updateEmployee]
   );
 
+  const handleSave = useCallback(
+    async (
+      isLastStep: boolean,
+      values: any,
+      formik: any,
+      setIsLoading: (val: boolean) => void,
+      isSaveButton: boolean = false
+    ) => {
+      const isChanged = isEqual(values, initialValues);
+
+      if (isChanged) {
+        setActiveStep(activeStep + 1);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        if (editData && activeStep === 0) {
+          await handelUpdateEmployee(values, formik, editData.id);
+          shikshaMitraToast.success({ message: 'Employee updated successfully' });
+        } else if (activeStep === 0) {
+          if (values.employeeId) {
+            await handelUpdateEmployee(values, formik, values.employeeId);
+            shikshaMitraToast.success({ message: 'Employee updated successfully' });
+          } else {
+            await handleBasicInformation(values, formik);
+            shikshaMitraToast.success({ message: 'Employee added successfully' });
+          }
+        } else if (activeStep === 1) {
+          await handleFamilyInformation(values, formik);
+          shikshaMitraToast.success({ message: 'Family information updated successfully' });
+        } else if (activeStep === 3) {
+          await handleWorkExperience(values, formik);
+          shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+        } else if (activeStep === 4) {
+          await handleBankDetailsInformation(values, formik);
+          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+        }
+        if (!isSaveButton) {
+          setActiveStep(activeStep + 1);
+        }
+      } catch (error) {
+        console.log(error, '============================');
+      }
+      setIsLoading(false);
+      if (isLastStep) {
+        handleClose();
+      }
+    },
+    [
+      activeStep,
+      editData,
+      handelUpdateEmployee,
+      handleBankDetailsInformation,
+      handleBasicInformation,
+      handleClose,
+      handleFamilyInformation,
+      handleWorkExperience,
+      initialValues,
+    ]
+  );
+
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}
@@ -438,45 +499,18 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
       }}
       validateOnChange
-      handleNext={async (isLastStep, values, formik, setIsLoading) => {
-        const isChanged = isEqual(values, initialValues);
-
-        if (isChanged) {
-          setActiveStep(activeStep + 1);
-          return;
-        }
-        try {
-          setIsLoading(true);
-          if (editData && activeStep === 0) {
-            await handelUpdateEmployee(values, formik, editData.id);
-            shikshaMitraToast.success({ message: 'Employee updated successfully' });
-          } else if (activeStep === 0) {
-            if (values.employeeId) {
-              await handelUpdateEmployee(values, formik, values.employeeId);
-              shikshaMitraToast.success({ message: 'Employee updated successfully' });
-            } else {
-              await handleBasicInformation(values, formik);
-              shikshaMitraToast.success({ message: 'Employee added successfully' });
-            }
-          } else if (activeStep === 1) {
-            await handleFamilyInformation(values, formik);
-            shikshaMitraToast.success({ message: 'Family information updated successfully' });
-          } else if (activeStep === 3) {
-            await handleWorkExperience(values, formik);
-            shikshaMitraToast.success({ message: 'Work experience updated successfully' });
-          } else if (activeStep === 4) {
-            await handleBankDetailsInformation(values, formik);
-            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
-          }
-          setActiveStep(activeStep + 1);
-        } catch (error) {
-          console.log(error, '============================');
-        }
-        setIsLoading(false);
-        if (isLastStep) {
-          handleClose();
-        }
-      }}
+      handleNext={(
+        isLastStep: boolean,
+        value: any,
+        formik: any,
+        setIsLoading: (val: boolean) => void
+      ) => handleSave(isLastStep, value, formik, setIsLoading)}
+      onSave={(
+        isLastStep: boolean,
+        value: any,
+        formik: any,
+        setIsLoading: (val: boolean) => void
+      ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
       renderItem={({ activeStep: step, formik }: any) => (
         // <FormikDetectChanges values={formik.values} initialValues={initialValues}>
 

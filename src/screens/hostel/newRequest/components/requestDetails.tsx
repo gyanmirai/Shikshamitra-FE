@@ -78,20 +78,16 @@ const RequestDetails = ({ hostelRequest }: any) => (
         value={hostelRequest?.alternateContactDetails}
       />
       <DetailRow
-        label="Building / Flat / House No"
+        label="Building No./Flat/House No."
         icon="mdi:map-marker"
         value={hostelRequest?.addressLine1}
       />
       <DetailRow
-        label="Street / Road Name"
+        label="Area/Locality/Road Name"
         icon="mdi:map-marker"
         value={hostelRequest?.addressLine2}
       />
-      <DetailRow
-        label="Area / Locality / Landmark"
-        icon="mdi:map-marker"
-        value={hostelRequest?.addressLine3}
-      />
+      <DetailRow label="Landmark" icon="mdi:map-marker" value={hostelRequest?.addressLine3} />
       <DetailRow label="Village" icon="mdi:home-group" value={hostelRequest?.village} />
       <DetailRow label="City" icon="mdi:city" value={hostelRequest?.city} />
       <DetailRow label="State" icon="mdi:map" value={hostelRequest?.state?.name} />

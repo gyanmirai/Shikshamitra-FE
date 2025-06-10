@@ -41,8 +41,8 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
               <Box>
                 <Typography variant="h6">From</Typography>
                 <Typography>School Name</Typography>
-                <Typography>Building / Flat / House No</Typography>
-                <Typography>Street / Road Name</Typography>
+                <Typography>Building No./Flat/House No.</Typography>
+                <Typography>Area/Locality/Road Name</Typography>
               </Box>
             </Grid>
             <Grid item xs={6}>

@@ -20,6 +20,7 @@ import {
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
 
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -43,7 +44,7 @@ import type { IInquiryData } from '../Inquiry';
 const steps = [
   'General',
   'Documents',
-  'Family Information',
+  'Family',
   'Communication',
   // 'Account Detail',
   'Additional Details',
@@ -416,6 +417,64 @@ const RegisterForm = ({
     [editData?.id, updateAdditionDetails]
   );
 
+  const handleSave = useCallback(
+    async (
+      isLastStep: boolean,
+      values: any,
+      formik: any,
+      setIsLoading: (val: boolean) => void,
+      isSaveButton: boolean = false
+    ) => {
+      setIsLoading(true);
+      try {
+        if (activeStep === 0) {
+          await handleGeneralFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Student details updated successfully' });
+        } else if (activeStep === 2) {
+          await handleFamilyFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Family details updated successfully' });
+        } else if (activeStep === 3) {
+          await handleCommunicationFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Communication details updated successfully' });
+        } else if (activeStep === 4) {
+          await handleAdditionalDetailsFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+        } else if (activeStep === 5) {
+          await handleMedicalFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Medical details updated successfully' });
+        } else if (activeStep === 6) {
+          await handlePreviousSchoolFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
+        } else if (activeStep === 7) {
+          await handleBankDetailsFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+        }
+        if (!isLastStep) {
+          if (!isSaveButton) {
+            setActiveStep(activeStep + 1);
+          }
+        } else {
+          handleClose(null, true);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      activeStep,
+      handleAdditionalDetailsFormSubmit,
+      handleBankDetailsFormSubmit,
+      handleClose,
+      handleCommunicationFormSubmit,
+      handleFamilyFormSubmit,
+      handleGeneralFormSubmit,
+      handleMedicalFormSubmit,
+      handlePreviousSchoolFormSubmit,
+    ]
+  );
+
   return (
     <CustomStepperWithFormik
       onStepClick={(index) => {
@@ -441,35 +500,18 @@ const RegisterForm = ({
         setActiveStep(activeStep - 1);
       }}
       validationSchema={validationSchemas[activeStep]}
-      handleNext={async (isLastStep, values, formik, setIsLoading) => {
-        setIsLoading(true);
-        try {
-          if (activeStep === 0) {
-            await handleGeneralFormSubmit(values, formik);
-          } else if (activeStep === 2) {
-            await handleFamilyFormSubmit(values, formik);
-          } else if (activeStep === 3) {
-            await handleCommunicationFormSubmit(values, formik);
-          } else if (activeStep === 4) {
-            await handleAdditionalDetailsFormSubmit(values, formik);
-          } else if (activeStep === 5) {
-            await handleMedicalFormSubmit(values, formik);
-          } else if (activeStep === 6) {
-            await handlePreviousSchoolFormSubmit(values, formik);
-          } else if (activeStep === 7) {
-            await handleBankDetailsFormSubmit(values, formik);
-          }
-          if (!isLastStep) {
-            setActiveStep(activeStep + 1);
-          } else {
-            handleClose(null, true);
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setIsLoading(false);
-        }
-      }}
+      handleNext={(
+        isLastStep: boolean,
+        value: any,
+        formik: any,
+        setIsLoading: (val: boolean) => void
+      ) => handleSave(isLastStep, value, formik, setIsLoading)}
+      onSave={(
+        isLastStep: boolean,
+        value: any,
+        formik: any,
+        setIsLoading: (val: boolean) => void
+      ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
       renderItem={({ activeStep: step, formik, isBackClick }: any) => (
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <FormSlider step={step} steps={steps} isBackClick={isBackClick}>

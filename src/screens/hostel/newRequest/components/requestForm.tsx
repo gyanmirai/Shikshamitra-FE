@@ -357,14 +357,14 @@ const HostelRequestForm: React.FC<{
                 >
                   <TextField
                     name="addressLine1"
-                    label="Building / Flat / House No"
+                    label="Building No./Flat/House No."
                     disabled={disabled}
                     value={formik.values.addressLine1}
                     onChange={formik.handleChange}
                     error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
                     helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
                     fullWidth
-                    placeholder="Enter Building / Flat / House No"
+                    placeholder="Enter Building No./Flat/House No."
                     size="small"
                   />
                 </ShakingTextField>
@@ -375,14 +375,14 @@ const HostelRequestForm: React.FC<{
                 >
                   <TextField
                     name="addressLine2"
-                    label="Street / Road Name"
+                    label="Area/Locality/Road Name"
                     disabled={disabled}
                     value={formik.values.addressLine2}
                     onChange={formik.handleChange}
                     error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
                     helperText={(formik.touched.addressLine2 && formik.errors.addressLine2) || ''}
                     fullWidth
-                    placeholder="Enter Street / Road Name"
+                    placeholder="Enter Area/Locality/Road Name"
                     size="small"
                   />
                 </ShakingTextField>
@@ -393,14 +393,14 @@ const HostelRequestForm: React.FC<{
                 >
                   <TextField
                     name="addressLine3"
-                    label="Area / Locality / Landmark"
+                    label="Landmark"
                     disabled={disabled}
                     value={formik.values.addressLine3}
                     onChange={formik.handleChange}
                     error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
                     helperText={(formik.touched.addressLine3 && formik.errors.addressLine3) || ''}
                     fullWidth
-                    placeholder="Enter Area / Locality / Landmark"
+                    placeholder="Enter Landmark"
                     size="small"
                   />
                 </ShakingTextField>

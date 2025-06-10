@@ -54,11 +54,11 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
@@ -384,6 +384,7 @@ const EntranceExamScreen = () => {
               id: 'percentage',
               label: 'Percentage',
               filterType: 'number',
+              sticky: true,
               align: 'left',
               render(value, row) {
                 return `${value}%`;
@@ -577,7 +578,6 @@ export const ExamForm = ({
       console.log(values);
     },
   });
-  console.log('🚀 ~ formik:', formik.values);
 
   const handleGetAllStudentCount = useCallback(
     async (date: string) => {
@@ -906,14 +906,8 @@ const ResultForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar
-        sx={{
-          p: 3,
-          bgcolor: 'background.neutral',
-          //   height: 'calc(100vh - 150px)',
-        }}
-      >
+    <>
+      <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Box display="flex" flexDirection="column" gap={2}>
             <TextField
@@ -960,8 +954,8 @@ const ResultForm = ({
             </Box>
           </Box>
         </BackPopUpChecked>
-      </Scrollbar>
-      <DialogActions sx={{ flexShrink: 0 }}>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2 }}>
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -974,7 +968,7 @@ const ResultForm = ({
         <LoadingButton
           size="small"
           loading={isLoading}
-          type="submit"
+          onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           style={{ marginTop: '1rem' }}
@@ -982,6 +976,6 @@ const ResultForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };

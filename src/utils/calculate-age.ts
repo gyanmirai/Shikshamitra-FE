@@ -11,7 +11,7 @@ const calculateAge = (dob: string) => {
     months += 12;
   }
   // Return age in year.month format
-  return `${years}.${months}`;
+  return `${years} years ${months} months`;
 };
 
 export default calculateAge;

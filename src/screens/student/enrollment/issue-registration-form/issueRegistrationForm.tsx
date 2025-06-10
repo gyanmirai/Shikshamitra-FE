@@ -143,6 +143,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}
                 variant="outlined"
                 onClick={handleClose}
+                size="small"
               >
                 Cancel
               </Button>
@@ -151,6 +152,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                 loading={isUpdateLoading}
                 type="submit"
                 variant="contained"
+                size="small"
               >
                 Submit
               </LoadingButton>

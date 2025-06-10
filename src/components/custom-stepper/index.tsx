@@ -15,6 +15,10 @@ import {
   stepConnectorClasses,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
+
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 
@@ -52,6 +56,12 @@ interface CustomStepperWithFormikProps {
     setIsLoading: (val: boolean) => void
   ) => void;
   handleBack: () => void;
+  onSave?: (
+    isLastStep: boolean,
+    value: any,
+    formik: any,
+    setIsLoading: (val: boolean) => void
+  ) => void;
   validationSchema: any;
   renderItem: ({
     formik,
@@ -114,9 +124,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   onStepClick = () => {},
   errors = [],
   validateOnChange = false,
+  onSave = () => {},
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isSaveLoading = useBoolean();
   const formik = useFormik({
     initialValues,
     validationSchema,
@@ -211,20 +223,49 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           >
             Back
           </Button>
-          <LoadingButton
-            variant="contained"
-            // color="primary"
-            type="submit"
-            size="small"
-            loading={isLoading}
-            endIcon={
-              activeStep === steps.length - 1 ? undefined : (
-                <Iconify icon="ic:round-arrow-forward" width={20} />
-              )
-            }
-          >
-            {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-          </LoadingButton>
+          <Box display="flex" gap={2}>
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              loading={isSaveLoading.value}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={async () => {
+                const error = await formik.validateForm();
+                console.log('🚀 ~ onClick={ ~ error:', error);
+
+                if (Object.keys(error).length <= 0) {
+                  onSave?.(
+                    activeStep === steps.length - 1,
+                    formik.values,
+                    formik,
+                    isSaveLoading.setValue
+                  );
+                } else {
+                  const allTouched: Record<string, any> = {};
+                  Object.keys(error).forEach((field) => {
+                    allTouched[field as keyof typeof allTouched] = true;
+                  });
+                  formik.setTouched(allTouched);
+                }
+              }}
+            >
+              Save
+            </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              // color="primary"
+              type="submit"
+              size="small"
+              loading={isLoading}
+              endIcon={
+                activeStep === steps.length - 1 ? undefined : (
+                  <Iconify icon="ic:round-arrow-forward" width={20} />
+                )
+              }
+            >
+              {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}
+            </LoadingButton>
+          </Box>
         </Box>
       </Box>
     </Box>

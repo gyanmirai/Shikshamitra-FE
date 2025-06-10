@@ -30,7 +30,7 @@ function FatherAddressComponent(props: any) {
         >
           <TextField
             name="fatherAddress1"
-            label="Building No / Flat / House No"
+            label="Building No./Flat/House No."
             value={formik.values.fatherAddress1}
             onChange={formik.handleChange}
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
@@ -173,7 +173,7 @@ function MotherAddressComponent(props: any) {
         >
           <TextField
             name="motherAddress1"
-            label="Building No / Flat / House No"
+            label="Building No./Flat/House No."
             value={formik.values.motherAddress1}
             onChange={formik.handleChange}
             error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
@@ -316,7 +316,7 @@ function SpouseAddressComponent(props: any) {
         >
           <TextField
             name="spouseAddress1"
-            label="Building No / Flat / House No"
+            label="Building No./Flat/House No."
             value={formik.values.spouseAddress1}
             onChange={formik.handleChange}
             error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
