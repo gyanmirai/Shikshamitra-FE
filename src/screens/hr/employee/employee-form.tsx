@@ -76,6 +76,7 @@ export const personalInformationInitialValues = (editData: any) => ({
 export const familyInformationInitialValues = (editData: any) => ({
   sameAsFatherAddressForMother: false,
   sameAsFatherAddressForSpouse: false,
+  sameAsEmployeeAddressForFather: false,
   fatherName: editData ? editData.fatherDetails.name : '',
   fatherOccupation: editData ? editData.fatherDetails.occupation : '',
   fatherContactNo: editData ? editData.fatherDetails.contactNo : '',
@@ -83,13 +84,13 @@ export const familyInformationInitialValues = (editData: any) => ({
   fatherAddress2: editData ? editData.fatherDetails.address2 : '',
   fatherAddress3: editData ? editData.fatherDetails.address3 : '',
 
-  fatherCountry: editData
+  fatherCountry: editData?.fatherDetails?.countryName
     ? {
         name: editData?.fatherDetails?.countryName,
         isoCode: editData?.fatherDetails?.countryIsoCode,
       }
     : { name: 'India', isoCode: 'IN' },
-  fatherState: editData
+  fatherState: editData?.fatherDetails?.stateName
     ? {
         name: editData?.fatherDetails?.stateName,
         isoCode: editData?.fatherDetails?.stateIsoCode,
@@ -105,19 +106,21 @@ export const familyInformationInitialValues = (editData: any) => ({
   motherAddress2: editData ? editData.motherDetails.address2 : '',
   motherAddress3: editData ? editData.motherDetails.address3 : '',
 
-  motherCountry: editData
+  motherCountry: editData?.motherDetails?.countryName
     ? {
         name: editData?.motherDetails?.countryName,
         isoCode: editData?.motherDetails?.countryIsoCode,
       }
     : { name: 'India', isoCode: 'IN' },
-  motherState: editData
+  motherState: editData?.motherDetails?.stateName
     ? {
         name: editData?.motherDetails?.stateName,
         isoCode: editData?.motherDetails?.stateIsoCode,
       }
     : { name: '', isoCode: '' },
-  motherCity: editData ? { name: editData?.motherDetails?.city } : { name: '' },
+  motherCity: editData?.motherDetails?.city
+    ? { name: editData?.motherDetails?.city }
+    : { name: '' },
 
   motherPinCode: editData ? editData?.motherDetails?.pinCode : '',
   spouseName: editData ? editData.spouseDetails.name : '',
@@ -128,19 +131,21 @@ export const familyInformationInitialValues = (editData: any) => ({
   spouseAddress2: editData ? editData.spouseDetails.address2 : '',
   spouseAddress3: editData ? editData.spouseDetails.address3 : '',
 
-  spouseCountry: editData
+  spouseCountry: editData?.spouseDetails?.countryName
     ? {
         name: editData?.spouseDetails?.countryName,
         isoCode: editData?.spouseDetails?.countryIsoCode,
       }
     : { name: 'India', isoCode: 'IN' },
-  spouseState: editData
+  spouseState: editData?.spouseDetails?.stateName
     ? {
         name: editData?.spouseDetails?.stateName,
         isoCode: editData?.spouseDetails?.stateIsoCode,
       }
     : { name: '', isoCode: '' },
-  spouseCity: editData ? { name: editData?.spouseDetails?.city } : { name: '' },
+  spouseCity: editData?.spouseDetails?.city
+    ? { name: editData?.spouseDetails?.city }
+    : { name: '' },
 
   spousePinCode: editData ? editData?.spouseDetails?.pinCode : '',
 });
@@ -498,6 +503,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           setActiveStep(step);
         }
       }}
+      isDisabledLabel={!editData}
       validateOnChange
       handleNext={(
         isLastStep: boolean,

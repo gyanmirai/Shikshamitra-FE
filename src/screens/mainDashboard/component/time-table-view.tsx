@@ -50,7 +50,7 @@ const dummySubjects: any[] = [
 ];
 
 const dummyRooms = ['101', '102', '103', '104', '105'];
-const singleTeacher = 'Mr. Smith';
+const singleTeacher = '';
 
 const TimeTableView = (props: TabComponentType) => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -135,8 +135,8 @@ const TimeTableView = (props: TabComponentType) => {
 
             return {
               subject: dummySubjects[(rowIndex + colIndex) % dummySubjects.length],
-              teacher: singleTeacher,
-              room: dummyRooms[(rowIndex + colIndex) % dummyRooms.length],
+              teacher: '',
+              room: `Class ${Math.floor(Math.random() * 5) + 1}`,
             };
           })
       )

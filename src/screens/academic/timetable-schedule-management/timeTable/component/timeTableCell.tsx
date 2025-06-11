@@ -224,8 +224,8 @@ const TimeTableCell = ({
               </Box>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              {slotData.room ? slotData.room : 'No Room'} /{' '}
-              {slotData.teacher ? slotData.teacher : 'No Teacher'}
+              {slotData.room ? slotData.room : 'No Room'}
+              {slotData.teacher ? ` / ${slotData.teacher}` : ''}
             </Typography>
           </Paper>
 

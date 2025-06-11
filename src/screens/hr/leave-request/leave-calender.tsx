@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 
-import { Grid, useTheme, Typography } from '@mui/material';
+import { Box, Grid, useTheme, Typography } from '@mui/material';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
@@ -89,90 +89,110 @@ const LeaveCalender = (props: TabComponentType) => {
 export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => (
-  <Grid container spacing={3} bgcolor="background.neutral" m={0} p={1}>
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Employee</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2">
-        {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
-      </Typography>
-    </Grid>
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Leave Type</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      {editData?.leavePolicy?.leaveType && (
-        <Typography
-          variant="body2"
-
-          // color={editData?.leavePolicy?.color}
-        >
-          {editData?.leavePolicy?.leaveType}
+  <Box sx={{ p: 2 }} bgcolor="background.neutral">
+    <Grid container spacing={3}>
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Employee
         </Typography>
-      )}
-    </Grid>
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Half Day</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
-    </Grid>
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Start Date</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2">
-        {' '}
-        {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
-      </Typography>
-    </Grid>
-    {!editData?.halfDay && (
-      <>
-        {' '}
-        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-          <Typography variant="body2"> End Date</Typography>
-        </Grid>
-        <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-          <Typography variant="body2">
-            {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
+      </Grid>
+      <Grid item xs={8}>
+        <Typography variant="body2">
+          {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
+        </Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Leave Type
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        {editData?.leavePolicy?.leaveType && (
+          <Typography
+            variant="body2"
+
+            // color={editData?.leavePolicy?.color}
+          >
+            {editData?.leavePolicy?.leaveType}
           </Typography>
-        </Grid>{' '}
-      </>
-    )}
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Description</Typography>
+        )}
+      </Grid>
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Half Day
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Start Date
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        <Typography variant="body2">
+          {' '}
+          {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
+        </Typography>
+      </Grid>
+      {!editData?.halfDay && (
+        <>
+          {' '}
+          <Grid item xs={4}>
+            <Typography variant="body2" fontWeight={600}>
+              {' '}
+              End Date
+            </Typography>
+          </Grid>
+          <Grid item xs={8}>
+            <Typography variant="body2">
+              {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
+            </Typography>
+          </Grid>{' '}
+        </>
+      )}
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Description
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
+      </Grid>
+      {editData?.rejectionReason && (
+        <>
+          <Grid item xs={4}>
+            <Typography variant="body2" fontWeight={600}>
+              {' '}
+              Rejection Reason
+            </Typography>
+          </Grid>
+          <Grid item xs={8}>
+            <Typography variant="body2"> {editData.rejectionReason}</Typography>
+          </Grid>
+        </>
+      )}
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Status
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        <Label
+          color={
+            EmployeeLeaveStatusTypeColor[editData?.status as EmployeeLeaveStatusType] as LabelColor
+          }
+        >
+          {EmployeeLeaveStatusType[editData?.status]}
+        </Label>
+      </Grid>
     </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
-    </Grid>
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Total Days</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.totalDays }} />
-    </Grid>
-    {editData?.rejectionReason && (
-      <>
-        <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-          <Typography variant="body2"> Rejection Reason</Typography>
-        </Grid>
-        <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-          <Typography variant="body2"> {editData.rejectionReason}</Typography>
-        </Grid>
-      </>
-    )}
-    <Grid item xs={4} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Typography variant="body2"> Status</Typography>
-    </Grid>
-    <Grid item xs={8} sx={{ borderBottom: '1.5px dashed #ccc' }}>
-      <Label
-        color={
-          EmployeeLeaveStatusTypeColor[editData?.status as EmployeeLeaveStatusType] as LabelColor
-        }
-      >
-        {EmployeeLeaveStatusType[editData?.status]}
-      </Label>
-    </Grid>
-  </Grid>
+  </Box>
 );
