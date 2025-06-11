@@ -5,6 +5,10 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Add, RemoveCircle } from '@mui/icons-material';
 import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+
 const WorkExperiences = (props: any) => {
   const { formik, disabled } = props;
   const { values, setFieldValue } = formik;
@@ -23,6 +27,9 @@ const WorkExperiences = (props: any) => {
               {
                 organizationName: '',
                 organizationAddress: '',
+                organizationCountry: { name: 'India', isoCode: 'IN' },
+                organizationState: { name: '', isoCode: '' },
+                organizationCity: { name: '' },
                 fromDate: null,
                 toDate: null,
                 department: '',
@@ -56,7 +63,7 @@ const WorkExperiences = (props: any) => {
             {index + 1}
           </Box>
 
-          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 3 }}>
             <Box sx={{ width: '200px' }}>
               <TextField
                 fullWidth
@@ -100,7 +107,31 @@ const WorkExperiences = (props: any) => {
               />
             </Box>
             <Box sx={{ width: '200px' }}>
-              <TextField
+              <CountryComponent
+                value={experience.organizationCountry}
+                onChange={(e, value) => {
+                  setFieldValue(`experiences.${index}.organizationCountry`, value);
+                }}
+                disabled={!!disabled}
+                textFieldProps={{
+                  label: 'Country',
+                }}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <StateComponent
+                value={experience.organizationState}
+                onChange={(e, value) => {
+                  setFieldValue(`experiences.${index}.organizationState`, value);
+                  setFieldValue(`experiences.${index}.organizationCity`, { name: '' });
+                }}
+                disabled={!!disabled || !experience.organizationCountry}
+                countryValue={experience.organizationCountry}
+                textFieldProps={{
+                  label: 'State',
+                }}
+              />
+              {/* <TextField
                 fullWidth
                 size="small"
                 name={`experiences.${index}.organizationState`}
@@ -111,10 +142,21 @@ const WorkExperiences = (props: any) => {
                   setFieldValue(`experiences.${index}.organizationState`, val);
                 }}
                 disabled={!!disabled}
-              />
+              /> */}
             </Box>
             <Box sx={{ width: '200px' }}>
-              <TextField
+              <CityComponent
+                value={experience.organizationCity}
+                onChange={(e, value) => {
+                  setFieldValue(`experiences.${index}.organizationCity`, value);
+                }}
+                disabled={!!disabled || !experience.organizationState}
+                stateValue={experience.organizationState}
+                textFieldProps={{
+                  label: 'City',
+                }}
+              />
+              {/* <TextField
                 fullWidth
                 size="small"
                 name={`experiences.${index}.organizationCity`}
@@ -125,7 +167,7 @@ const WorkExperiences = (props: any) => {
                   setFieldValue(`experiences.${index}.organizationCity`, val);
                 }}
                 disabled={!!disabled}
-              />
+              /> */}
             </Box>
             <Box sx={{ width: '200px' }}>
               <DatePicker

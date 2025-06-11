@@ -19,10 +19,12 @@ const ChangeStatusForm = ({
   handleClose,
   employeeId,
   status,
+  employeeName,
 }: {
   handleClose: () => void;
   employeeId: string;
   status: EmployeeStatusType;
+  employeeName: string;
 }) => {
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -39,7 +41,9 @@ const ChangeStatusForm = ({
           id: employeeId,
           employeeStatusType: values.status,
         }).unwrap();
-        shikshaMitraToast.success({ message: 'Status updated successfully' });
+        shikshaMitraToast.success({
+          message: `Status of ${employeeName} has been updated successfully.`,
+        });
         handleClose();
       } catch (error) {
         console.log(error);

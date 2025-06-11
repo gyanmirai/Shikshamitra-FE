@@ -74,9 +74,10 @@ interface CustomStepperWithFormikProps {
   }) => any;
   onStepClick?: (index: number, label: string, formik: any) => void;
   errors?: boolean[];
+  isDisabledLabel?: boolean;
 }
 
-const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
+const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: any) => ({
   '& .MuiStepLabel-iconContainer': {
     color: error ? theme.palette.error.main : theme.palette.primary.main,
   },
@@ -84,9 +85,15 @@ const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
     color: error ? theme.palette.error.main : theme.palette.text.primary,
     fontWeight: error ? 'bold' : 'normal',
   },
+  '& .MuiStepLabel-iconContainer.Mui-disabled': {
+    cursor: isDisabledLabel ? 'no-drop' : 'pointer !important',
+  },
 }));
 
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
+  '&.Mui-disabled': {
+    cursor: 'pointer !important',
+  },
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
     top: 10,
     left: 'calc(-50% + 16px)',
@@ -125,6 +132,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   errors = [],
   validateOnChange = false,
   onSave = () => {},
+  isDisabledLabel = false,
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,6 +173,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             <CustomStepLabel
               error={errors[index]}
               sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
+              // @ts-ignore
+              isDisabledLabel={isDisabledLabel}
             >
               {label}
             </CustomStepLabel>

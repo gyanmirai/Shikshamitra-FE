@@ -24,6 +24,30 @@ function FatherAddressComponent(props: any) {
 
   return (
     <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <FormControlLabel
+          disabled={!!disabled}
+          control={
+            <Checkbox
+              checked={formik.values.sameAsEmployeeAddressForFather}
+              onChange={(e) => {
+                formik.setFieldValue('sameAsEmployeeAddressForFather', e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue('fatherAddress1', formik.values.address1);
+                  formik.setFieldValue('fatherAddress2', formik.values.address2);
+                  formik.setFieldValue('fatherAddress3', formik.values.address3);
+                  formik.setFieldValue('fatherCountry', formik.values.country);
+                  formik.setFieldValue('fatherState', formik.values.fatherState);
+                  formik.setFieldValue('fatherCity', formik.values.city);
+                  formik.setFieldValue('fatherPinCode', formik.values.pincode);
+                }
+              }}
+              name="sameAsEmployeeAddressForFather"
+            />
+          }
+          label="Same as Employee Address"
+        />
+      </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <ShakingTextField
           error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}

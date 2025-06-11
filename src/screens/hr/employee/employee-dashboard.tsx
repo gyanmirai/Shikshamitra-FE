@@ -189,14 +189,14 @@ const EmployeeDashboard = () => {
             </Stack>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" mb={2}>
               Activity Heatmap
             </Typography>
-            {/* <Chart options={heatmapOptions} series={heatmapSeries} type="heatmap" height={200} /> */}
+            <Chart options={heatmapOptions} series={heatmapSeries} type="heatmap" height={200} />
           </Card>
-        </Grid>
+        </Grid> */}
 
         {/* Leaderboard, Smart Suggestions, and Productivity */}
         <Grid item xs={12} md={4}>
@@ -242,19 +242,19 @@ const EmployeeDashboard = () => {
             </Stack>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <Card sx={{ p: 2 }}>
             <Typography variant="h6" mb={2}>
               Personal Productivity
             </Typography>
-            {/* <Chart
+            <Chart
               options={productivityOptions}
               series={productivitySeries}
               type="bar"
               height={200}
-            /> */}
+            />
           </Card>
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );

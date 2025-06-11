@@ -123,11 +123,11 @@ const HrEmployee = () => {
       {open ? (
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <CustomBreadcrumbs
-            heading={editData ? 'Update Employee' : 'Add Employee'}
+            heading="Employee List"
             links={[
               { name: 'HR/Staff', href: '/hr/dashboard/' },
-              { name: 'Employee List', onClick: handleClose },
-              { name: editData ? 'Update Employee' : 'Add Employee' },
+              { name: 'Employee', href: '/hr/employee/' },
+              { name: 'Employee List', href: '/hr/employee/' },
             ]}
             isBack
             onBack={handleClose}
@@ -357,6 +357,7 @@ const HrEmployee = () => {
               <ChangeStatusForm
                 handleClose={handleCloseStatus}
                 employeeId={editData?.id}
+                employeeName={editData?.fullName}
                 status={editData?.employeeStatusType}
               />
             </CustomDialog>
