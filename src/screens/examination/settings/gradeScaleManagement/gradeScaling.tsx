@@ -3,17 +3,13 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -23,13 +19,11 @@ import GradeForm from './gradeScaleForm';
 
 import type { IGrade } from './type';
 
-const GradingScale = () => {
+const GradingScale = ({ addGradeScalingDialog }: any) => {
   // State for tracking edit mode
   const [isEdit, setIsEdit] = useState(false);
   // State for storing currently selected grade
   const [selectedGrade, setSelectedGrade] = useState<IGrade | null>(null);
-  // Dialog control for main grade form
-  const dialog = useBoolean();
   // Dialog control for viewing grade details
   const viewDialog = useBoolean();
   // Dialog control for delete confirmation
@@ -46,7 +40,7 @@ const GradingScale = () => {
   const handleCloseDialog = () => {
     setSelectedGrade(null);
     setIsEdit(false);
-    dialog.onFalse();
+    addGradeScalingDialog.onFalse();
     deleteConfirmDialog.onFalse();
   };
 
@@ -70,12 +64,12 @@ const GradingScale = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       viewDialog.onFalse();
-      dialog.onFalse();
+      addGradeScalingDialog.onFalse();
       dispatch(setIsChanges(false));
       setSelectedGrade(null);
     } else if (!isChanges) {
       viewDialog.onFalse();
-      dialog.onFalse();
+      addGradeScalingDialog.onFalse();
       setSelectedGrade(null);
     }
   };
@@ -88,11 +82,11 @@ const GradingScale = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Add />}
           onClick={() => {
-            dialog.onTrue();
+            addGradeScalingDialog.onTrue();
           }}
           size="small"
           variant="contained"
@@ -102,15 +96,15 @@ const GradingScale = () => {
         >
           Grade Scale
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         tableId="gradesTable"
         searchFieldProps={{
-          placeholder: 'Search by Grade Scale Title, Total Marks...',
+          // placeholder: 'Search by Grade Scale Title, Total Marks...',
           label: 'Search by Grade Scale Title, Total Marks...',
           sx: {
             width: '100%',
-            maxWidth: '400px',
+            maxWidth: '350px',
           },
         }}
         noDataText={
@@ -118,7 +112,7 @@ const GradingScale = () => {
             No Grade Scaling Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                addGradeScalingDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -143,6 +137,7 @@ const GradingScale = () => {
             isSort: false,
             sticky: true,
             minWidth: 90,
+            align: 'left',
             isFilter: false,
             render(value, row) {
               return (
@@ -164,7 +159,7 @@ const GradingScale = () => {
                   handleEditClick={() => {
                     setSelectedGrade(row as any);
                     setIsEdit(true);
-                    dialog.onTrue();
+                    addGradeScalingDialog.onTrue();
                   }}
                 />
               );
@@ -175,9 +170,9 @@ const GradingScale = () => {
       />
 
       <CustomDialog
-        open={dialog.value}
+        open={addGradeScalingDialog.value}
         handleClose={() => {
-          dialog.onFalse();
+          addGradeScalingDialog.onFalse();
           setSelectedGrade(null);
         }}
         title={selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
@@ -219,7 +214,7 @@ const GradingScale = () => {
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               if (selectedGrade) {
                 handleDelete(selectedGrade);

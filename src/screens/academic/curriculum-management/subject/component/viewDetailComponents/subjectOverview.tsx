@@ -16,7 +16,6 @@ import {
 
 import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 
@@ -28,7 +27,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
       <Grid item xs={12} md={8}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography
+            {/* <Typography
               variant="subtitle1"
               gutterBottom
               sx={{ display: 'flex', alignItems: 'center' }}
@@ -39,9 +38,9 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
               />
               Basic Information
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2 }} /> */}
 
-            <DetailRow label="Subject Code" value={subject?.subjectCode} icon="bi:file-code" />
+            <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
             <DetailRow
               label="Description"
               value={subject?.description}
@@ -60,15 +59,15 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
       <Grid item xs={12} md={4}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography
+            {/* <Typography
               variant="subtitle1"
               gutterBottom
               sx={{ display: 'flex', alignItems: 'center' }}
             >
               <Iconify icon="mdi:account-group" sx={{ mr: 1, height: '22px', width: '22px' }} />
               Teachers
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+            </Typography> */}
+            {/* <Divider sx={{ mb: 2 }} /> */}
             <Scrollbar sx={{ height: '270px' }}>
               {/* Primary Teacher */}
               <Box sx={{ mb: 1 }}>
@@ -77,13 +76,13 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <ListItem
-                    disablePadding
                     sx={{
                       borderRadius: '8px',
                       p: 1,
-                      boxShadow: 3,
-                      my: 1,
-                      bgcolor: 'background.neutral',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: 1,
+                      // mb: 1,
                     }}
                   >
                     <ListItemAvatar>
@@ -118,19 +117,20 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
 
               {/* Secondary Teachers */}
               <Typography variant="subtitle2" gutterBottom>
-                Secondary Teachers
+                Secondary Teacher
               </Typography>
 
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
                 subject?.secondaryTeacher.map((teacher: string, idx: number) => (
                   <ListItem
                     key={idx}
-                    disablePadding
+                    // disablePadding
                     sx={{
-                      backgroundColor: 'background.paper',
                       borderRadius: '8px',
                       p: 1,
-                      boxShadow: 3,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: 1,
                       my: 1,
                     }}
                   >
@@ -176,7 +176,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
 export default SubjectOverview;
 
 interface TeacherProfile {
-  name: string;
+  name?: string;
   avatarUrl?: string;
   designation?: string;
   department?: string;
@@ -189,7 +189,7 @@ interface TeacherProfile {
 }
 
 export const TeacherHoverProfile: React.FC<{
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   avatarComp: ReactElement<any, any>;
 }> = ({ teacher, avatarComp }: any) => (
   <CustomTooltip

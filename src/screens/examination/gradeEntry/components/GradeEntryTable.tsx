@@ -24,7 +24,7 @@ const GradeEntryTable = ({
     tableId="grade-entry-table"
     noDataText={<>No Student Found For Grading</>}
     searchFieldProps={{
-      placeholder: 'Search by Gr No, Student Name, Marks...',
+      // placeholder: 'Search by Gr No, Student Name, Marks...',
       label: 'Search by Gr No, Student Name, Marks...',
       sx: {
         maxWidth: '500px',
@@ -46,8 +46,8 @@ const GradeEntryTable = ({
       //     />
       //   ),
       // },
-      { id: 'GrNo', label: 'Gr No.' },
-      { id: 'studentName', label: 'Student Name' },
+      { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
+      { id: 'GrNo', label: 'Gr No.', align: 'left' },
       { id: 'marks', label: 'Marks', filterType: 'number' },
       {
         id: 'grade',
@@ -79,7 +79,7 @@ const GradeEntryTable = ({
       },
       {
         id: 'status',
-        label: 'Status',
+        label: 'Marks Status',
         align: 'left',
         sticky: true,
         filterType: 'enum',

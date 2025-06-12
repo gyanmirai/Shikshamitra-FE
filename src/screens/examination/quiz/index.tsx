@@ -9,8 +9,6 @@ import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import quizTableData from 'src/json/academic/examination/quizTableData.json';
 import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
@@ -190,12 +188,16 @@ const QuizManagement = (props: TabComponentType) => {
           setSelectedQuiz(null);
         }}
         title="Delete"
-        content="Are you sure you want to Delete Quiz?"
+        content={
+          <>
+            Are you sure you want to delete the quiz <strong>{selectedQuiz?.quizTitle}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedQuiz?.id);
             }}

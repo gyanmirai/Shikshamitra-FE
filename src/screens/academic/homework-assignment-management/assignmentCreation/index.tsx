@@ -217,13 +217,18 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           deleteAssignmentDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to Delete Assignment ?"
+        content={
+          <>
+            Are you sure you want to delete assignment <strong>{selectedAssignment?.title}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              // delete logic here
+            }}
           >
             Yes
           </Button>
@@ -237,12 +242,19 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           setSelectedAssignment(null);
         }}
         title="Publish"
-        content="Are you sure want to Publish Assignment ?"
+        content={
+          <>
+            Are you sure you want to publish assignment <strong>{selectedAssignment?.title}</strong>
+            ?
+          </>
+        }
         action={
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
+            onClick={() => {
+              // publish logic here
+            }}
           >
             Publish
           </Button>
@@ -250,7 +262,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       />
 
       <CustomDialog
-        title={selectedAssignment?.title || 'Assignment Submission'}
+        title={selectedAssignment?.title || ''}
         open={viewAssignmentSubmissionDialog.value}
         handleClose={() => {
           viewAssignmentSubmissionDialog.onFalse();
@@ -264,7 +276,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       </CustomDialog>
 
       <CustomDialog
-        title={selectedAssignment?.title || 'Assignment Details'}
+        title={selectedAssignment?.title || ''}
         open={viewAssignmentDetails.value}
         handleClose={() => {
           viewAssignmentDetails.onFalse();

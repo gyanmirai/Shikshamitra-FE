@@ -266,7 +266,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
       {/* View subject details dialog */}
       <CustomDialog
-        title={selectedHomework?.title || 'Homework Details'}
+        title={selectedHomework?.title || ''}
         open={viewHomeworkDetailDialog.value}
         handleClose={() => {
           viewHomeworkDetailDialog.onFalse();

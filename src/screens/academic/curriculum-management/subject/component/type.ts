@@ -70,6 +70,7 @@ export interface ISubjectCardProps {
   subject: ISubject;
   isCore: boolean;
   isPublished: boolean;
+  // isPublishing: boolean;
   teacherOptions: any;
   onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
 }

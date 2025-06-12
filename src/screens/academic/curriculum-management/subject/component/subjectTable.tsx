@@ -66,8 +66,6 @@ const SubjectTable = ({
         });
       }
     }
-    console.log('rows---', rows);
-
     return rows;
   }
 
@@ -75,10 +73,10 @@ const SubjectTable = ({
     <CustomizableTable
       tableId="subject-table"
       searchFieldProps={{
-        placeholder: 'Search by Subject Name, Code, Type...',
-        label: 'Search by Subject Name, Code, Type...',
+        // placeholder: 'Search by Subject Name, Code, Type...',
+        label: 'Search in Table',
         sx: {
-          maxWidth: '350px',
+          maxWidth: '310px',
           width: '100%',
         },
       }}
@@ -130,7 +128,7 @@ const SubjectTable = ({
                       backgroundColor: row.subjectColor,
                     }}
                   />
-                  <Typography variant="body2">
+                  <Typography variant="caption">
                     {value} ({row.subjectCode})
                   </Typography>
                 </Box>
@@ -154,7 +152,7 @@ const SubjectTable = ({
                           backgroundColor: subjectColor,
                         }}
                       />
-                      <Typography variant="body2">
+                      <Typography variant="caption">
                         {subjectName} ({subjectCode})
                       </Typography>
                     </Box>
@@ -170,7 +168,7 @@ const SubjectTable = ({
                       backgroundColor: row.subjectColor,
                     }}
                   />
-                  <Typography variant="body2">
+                  <Typography variant="caption">
                     {value} ({row.subjectCode})
                   </Typography>
                 </Box>
@@ -215,7 +213,7 @@ const SubjectTable = ({
         {
           id: 'status',
           label: 'Publish/Draft',
-          align: 'center',
+          align: 'left',
           minWidth: 100,
           isFilter: false,
           sticky: true,
@@ -234,8 +232,8 @@ const SubjectTable = ({
                   <Iconify
                     icon={GlobalIcons.tick}
                     sx={{
-                      width: 25,
-                      height: 25,
+                      width: 20,
+                      height: 20,
                       cursor: 'pointer',
                       color: statusColor,
                     }}
@@ -249,6 +247,7 @@ const SubjectTable = ({
           id: 'action',
           label: 'Actions',
           minWidth: 100,
+          align: 'left',
           sticky: true,
           isFilter: false,
           isSort: false,

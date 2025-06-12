@@ -7,12 +7,9 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,9 +19,9 @@ import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
 
-const ExamTypeSettings = () => {
+const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
   // Dialog state for managing the create/edit exam type form.
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // State for storing and managing the exam type table data.
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
   // Dialog state for confirming the publish/unpublish status change.
@@ -91,7 +88,7 @@ const ExamTypeSettings = () => {
       setExamTypeTable([...examTypeTable, values]);
     }
     // Close the dialog after submission.
-    dialog.onFalse();
+    addExamTypeDialog.onFalse();
     // Reset the edit state.
     setIsEdit(false);
     // Clear the selected exam type.
@@ -101,12 +98,12 @@ const ExamTypeSettings = () => {
   // Function to handle closing of the dialog
   const handleClose = (e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      addExamTypeDialog.onFalse();
       dispatch(setIsChanges(false));
       setIsEdit(false);
       setSelectedExamType(null);
     } else if (!isChanges) {
-      dialog.onFalse();
+      addExamTypeDialog.onFalse();
       setIsEdit(false);
       setSelectedExamType(null);
     }
@@ -114,13 +111,13 @@ const ExamTypeSettings = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button
           startIcon={<Iconify icon="mdi:plus" />}
           variant="contained"
           size="small"
           onClick={() => {
-            dialog.onTrue();
+            addExamTypeDialog.onTrue();
           }}
           sx={{
             width: '150px',
@@ -128,14 +125,14 @@ const ExamTypeSettings = () => {
         >
           Exam Type
         </Button>
-      </Box>
+      </Box> */}
       <CustomizableTable
         tableId="examTypeTable"
         searchFieldProps={{
-          placeholder: 'Search by Exam Type, Description, Status...',
-          label: 'Search by Exam Type, Description, Status...',
+          // placeholder: 'Search by Exam Type, Description, Status...',
+          label: 'Search by Exam Type, Description...',
           sx: {
-            maxWidth: '500px',
+            maxWidth: '300px',
             width: '100%',
           },
         }}
@@ -144,7 +141,7 @@ const ExamTypeSettings = () => {
             No Exam Type Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                addExamTypeDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -165,9 +162,10 @@ const ExamTypeSettings = () => {
           { id: 'description', label: 'Description' },
           {
             id: 'actions',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
+            align: 'left',
             minWidth: 90,
             sticky: true,
             render(value, row) {
@@ -183,7 +181,7 @@ const ExamTypeSettings = () => {
                     setSelectedExamType(row);
                   }}
                   handleEditClick={() => {
-                    dialog.onTrue();
+                    addExamTypeDialog.onTrue();
                     setSelectedExamType(row);
                     setIsEdit(true);
                   }}
@@ -197,8 +195,8 @@ const ExamTypeSettings = () => {
 
       <CustomDialog
         title={isEdit ? 'Update Exam Type' : 'Add Exam Type'}
-        open={dialog.value}
-        handleClose={dialog.onFalse}
+        open={addExamTypeDialog.value}
+        handleClose={addExamTypeDialog.onFalse}
       >
         <ExamTypeForm
           onClose={handleClose}
@@ -215,12 +213,16 @@ const ExamTypeSettings = () => {
           setSelectedExamType(null);
         }}
         title="Delete"
-        content="Are you sure you want to Delete Exam Type ?"
+        content={
+          <>
+            Are you sure you want to delete exam type <strong>{selectedExamType?.examType}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExamType);
             }}

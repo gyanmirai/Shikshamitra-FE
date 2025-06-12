@@ -64,15 +64,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} p={1}>
+    <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '350px' }}>
             <Card
               key={document.id}
               sx={{
-                p: 2,
-                mb: 2,
                 border: '1px solid',
                 borderColor: 'divider',
                 display: 'flex',
@@ -112,7 +110,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                     label="Total Marks"
                     fullWidth
                     name="totalMarks"
-                    disabled
+                    // disabled
                     size="small"
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}
@@ -124,7 +122,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
                   <TextField
-                    placeholder="Enter Marks"
+                    // placeholder="Enter Marks"
                     label="Marks"
                     fullWidth
                     name="marks"
@@ -142,7 +140,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
                   <TextField
-                    placeholder="Enter Feedback"
+                    // placeholder="Enter Feedback"
                     label="Feedback"
                     multiline
                     size="small"
@@ -165,6 +163,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               onClick={() => {
                 onClose(null, false);
               }}
+              size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
               Cancel
@@ -172,6 +171,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
             <Button
               variant="contained"
               type="submit"
+              size="small"
               onClick={() => {
                 formik.handleSubmit();
               }}

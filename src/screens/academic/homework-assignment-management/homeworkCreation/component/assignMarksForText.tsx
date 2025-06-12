@@ -53,7 +53,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
                   <TextField
-                    placeholder="Enter Feedback"
+                    // placeholder="Enter Feedback"
                     label="Feedback"
                     multiline
                     size="small"
@@ -73,6 +73,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           <DialogActions>
             <Button
               variant="outlined"
+              size="small"
               onClick={() => {
                 onClose(null, false);
               }}
@@ -82,6 +83,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
             </Button>
             <Button
               variant="contained"
+              size="small"
               type="submit"
               onClick={() => {
                 formik.handleSubmit();

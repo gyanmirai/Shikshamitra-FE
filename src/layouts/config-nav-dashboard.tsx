@@ -818,13 +818,13 @@ const academicModule = {
               shortcutKey: 'Alt+A+H+3',
               shortcutKeyName: 'Alt+A+H+3',
             },
-            {
-              title: 'My Submission',
-              path: '/academic/mySubmission',
-              _action: 'homework-assignment-management-mySubmission',
-              shortcutKey: 'Alt+A+H+4',
-              shortcutKeyName: 'Alt+A+H+4',
-            },
+            // {
+            //   title: 'My Submission',
+            //   path: '/academic/mySubmission',
+            //   _action: 'homework-assignment-management-mySubmission',
+            //   shortcutKey: 'Alt+A+H+4',
+            //   shortcutKeyName: 'Alt+A+H+4',
+            // },
             {
               title: 'Setting',
               path: '/academic/homeworkSettings',

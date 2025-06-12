@@ -1,19 +1,15 @@
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
-  PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -29,34 +25,43 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   dialog,
   onViewSubmission,
 }) => {
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {row.status === 1 ? (
-          <MenuItem
-            onClick={() => {
-              onSwitchToggle(row as IAssignment);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.publish} />
-            Publish
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              onViewSubmission(row as IAssignment);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} />
-            View Submission
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [onSwitchToggle, onViewSubmission]
-  );
+  // Get the theme object from MUI theme provider
+  const theme = useTheme();
+
+  // Memoized callback function to render action menu items
+  // Returns different menu items based on assignment status
+  // const actions = useCallback(
+  //   ({ popover: pop, row }: any) => (
+  //     <MenuList>
+  //       {/* Show Publish option if status is Draft (1) */}
+  //       {row.status === 1 ? (
+  //         <MenuItem
+  //           onClick={() => {
+  //             // Toggle publish status and close popover
+  //             onSwitchToggle(row as IAssignment);
+  //             pop.onClose();
+  //           }}
+  //         >
+  //           <Iconify icon={GlobalIcons.publish} />
+  //           Publish
+  //         </MenuItem>
+  //       ) : (
+  //         // Show View Submission option if status is Published (0)
+  //         <MenuItem
+  //           onClick={() => {
+  //             // View submission details and close popover
+  //             onViewSubmission(row as IAssignment);
+  //             pop.onClose();
+  //           }}
+  //         >
+  //           <Iconify icon={GlobalIcons.eye} />
+  //           View Submission
+  //         </MenuItem>
+  //       )}
+  //     </MenuList>
+  //   ),
+  //   [onSwitchToggle, onViewSubmission] // Dependencies for useCallback
+  // );
   return (
     <CustomizableTable
       tableId="assignment-management"
@@ -87,13 +92,13 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
       columns={[
         {
           id: 'title',
-          label: 'Assignment Title',
+          label: 'Title',
           align: 'left',
           filterType: 'string',
         },
         {
           id: 'assignmentType',
-          label: 'Assignment Type',
+          label: 'Type',
           align: 'left',
           filterType: 'string',
         },
@@ -127,31 +132,58 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
         },
         {
           id: 'status',
-          label: 'Status',
+          label: 'Publish/Draft',
           align: 'left',
-          filterType: 'enum',
           isFilter: false,
           sticky: true,
           isSort: false,
+          filterType: 'enum',
           enumOptions: PublishUnpublishStatusOptions,
           render(value, row) {
-            const color = PublishUnpublishStatusTypeColors[
-              value as PublishUnpublishStatusType
-            ] as LabelColor;
-            return <Label color={color}>{PublishUnpublishStatusType[value]}</Label>;
+            const statusColor =
+              value === PublishUnpublishStatusType.Published
+                ? theme.palette.success.main
+                : theme.palette.text.secondary;
+
+            return (
+              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
+                <IconButton
+                  onClick={() => {
+                    // Only allow click action when status is draft (1)
+                    if (value === PublishUnpublishStatusType.Draft) {
+                      onSwitchToggle(row as IAssignment);
+                    }
+                  }}
+                  disabled={value === PublishUnpublishStatusType.Published}
+                >
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      cursor:
+                        value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                      color: statusColor,
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+            );
           },
         },
         {
           id: 'action',
-          label: 'Action',
+          label: 'Actions',
           isSort: false,
+          align: 'left',
           isFilter: false,
           sticky: true,
           minWidth: 100,
           render: (value, row) => (
             <ThreeDotsActions
               placement="right-top"
-              actions={(prop) => actions({ ...prop, row })}
+              // actions={(prop) => actions({ ...prop, row })}
+              showThreeDots={false}
               showViewIcon
               showEditIcon
               showDeleteIcon

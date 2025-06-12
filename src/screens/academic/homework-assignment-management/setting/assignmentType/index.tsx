@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,11 +9,8 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -23,9 +19,9 @@ import AssignmentTypeTable from './assignmentTypeTable';
 
 import type { IAssignmentType } from './type';
 
-const AssignmentTypeCreation = (props: TabComponentType) => {
+const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
   // Dialog control for add/edit form
-  const addAssignmentTypeDialog = useBoolean();
+  // const addAssignmentTypeDialog = useBoolean();
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
   // State to control modal visibility (unused)
@@ -100,10 +96,15 @@ const AssignmentTypeCreation = (props: TabComponentType) => {
           deleteDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete Assignment Type?"
+        content={
+          <>
+            Are you sure you want to delete assignment type{' '}
+            <strong>{selectedData?.assignmentTypeName}</strong>?
+          </>
+        }
         action={
           <Button
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             variant="contained"
             color="error"
             onClick={() => {}}

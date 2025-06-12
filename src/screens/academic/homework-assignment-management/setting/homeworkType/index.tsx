@@ -7,11 +7,8 @@ import { Box, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -109,11 +106,16 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
           deleteDialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure want to delete Homework Type?"
+        content={
+          <>
+            Are you sure you want to delete Homework Type{' '}
+            <strong>{selectedData?.homeworkTypeName}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {}}
           >

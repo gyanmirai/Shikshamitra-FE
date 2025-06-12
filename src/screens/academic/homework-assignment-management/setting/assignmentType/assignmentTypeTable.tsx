@@ -27,7 +27,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({ data, onDele
       },
       {
         id: 'action',
-        label: 'Action',
+        label: 'Actions',
         minWidth: 50,
         isSort: false,
         sticky: true,

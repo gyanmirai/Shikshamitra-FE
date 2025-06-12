@@ -43,37 +43,28 @@ import type { ITeacherOption, ISubjectFormProps, ISubjectFormValues } from './ty
 const subjectOptions = [
   // Core subjects
   { label: 'Mathematics', value: 'Mathematics', type: 'Core' },
-  { label: 'Physics', value: 'Physics', type: 'Core' },
-  { label: 'Biology', value: 'Biology', type: 'Core' },
+  { label: 'Science', value: 'Science', type: 'Core' },
+  { label: 'Social Science', value: 'Social Science', type: 'Core' },
+  { label: 'English', value: 'English', type: 'Core' },
+  { label: 'Gujarati', value: 'Gujarati', type: 'Core' },
+
   // Elective subject groups
   {
-    label: 'Science Electives',
-    value: 'Science Electives',
+    label: 'Elective Subject 1',
+    value: 'Elective Subject 1',
     type: 'Elective',
     subjects: [
-      { name: 'Chemistry', code: 'CHEM101' },
-      { name: 'Earth Science', code: 'ESCI101' },
-      { name: 'Astronomy', code: 'ASTR101' },
+      { name: 'Computer', code: 'COMP101' },
+      { name: 'Physical Training', code: 'PT101' },
     ],
   },
   {
-    label: 'Language Electives',
-    value: 'Language Electives',
+    label: 'Elective Subject 2',
+    value: 'Elective Subject 2',
     type: 'Elective',
     subjects: [
-      { name: 'French', code: 'FREN101' },
-      { name: 'Spanish', code: 'SPAN101' },
-      { name: 'German', code: 'GERM101' },
-    ],
-  },
-  {
-    label: 'Arts Electives',
-    value: 'Arts Electives',
-    type: 'Elective',
-    subjects: [
-      { name: 'Music', code: 'MUS101' },
-      { name: 'Visual Arts', code: 'ARTS101' },
-      { name: 'Drama', code: 'DRAM101' },
+      { name: 'Sanskrit', code: 'SNSK101' },
+      { name: 'Hindi', code: 'HIND101' },
     ],
   },
 ];

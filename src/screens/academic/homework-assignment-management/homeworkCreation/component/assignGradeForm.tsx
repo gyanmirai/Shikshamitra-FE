@@ -102,7 +102,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
                   <TextField
-                    placeholder="Enter Feedback"
+                    // placeholder="Enter Feedback"
                     label="Feedback"
                     multiline
                     size="small"
@@ -125,6 +125,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               onClick={() => {
                 onClose(null, false);
               }}
+              size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
               Cancel
@@ -132,6 +133,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
             <Button
               variant="contained"
               type="submit"
+              size="small"
               onClick={() => {
                 formik.handleSubmit();
               }}

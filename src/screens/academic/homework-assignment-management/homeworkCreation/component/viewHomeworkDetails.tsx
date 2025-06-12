@@ -2,18 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState } from 'react';
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Chip,
-  Divider,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Tab, Tabs, Chip, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -131,52 +120,38 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
 
         {/* Subject Accordion - Single Subject */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
-          {homework?.subject ? (
-            <Accordion
-              expanded={isSubjectExpanded}
-              onChange={handleAccordionChange}
+          {homework ? (
+            <Box
               sx={{
                 border: '1px solid #e0e0e0',
                 borderRadius: 2,
-                boxShadow: 'none',
-                '&:before': {
-                  display: 'none',
-                },
+                p: 2,
                 mb: 2,
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {homework.subject}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Tabs
-                  value={tabs.value}
-                  onChange={tabs.onChange}
-                  sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-                  role="tablist"
-                >
-                  {HOMEWORK_TABS.map((tab) => (
-                    <Tab
-                      key={tab.value}
-                      value={tab.value}
-                      icon={tab.icon}
-                      label={tab.label}
-                      role="tab"
-                      sx={{ fontSize: '12px' }}
-                    />
-                  ))}
-                </Tabs>
-                <Divider sx={{ mb: 2 }} />
+              <Tabs
+                value={tabs.value}
+                onChange={tabs.onChange}
+                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+                role="tablist"
+              >
+                {HOMEWORK_TABS.map((tab) => (
+                  <Tab
+                    key={tab.value}
+                    value={tab.value}
+                    icon={tab.icon}
+                    label={tab.label}
+                    role="tab"
+                    sx={{ fontSize: '12px' }}
+                  />
+                ))}
+              </Tabs>
+              <Divider sx={{ my: 2 }} />
 
-                {currentActiveComponent?.component && (
-                  <currentActiveComponent.component tabs={tabs} homework={homework} />
-                )}
-              </AccordionDetails>
-            </Accordion>
+              {currentActiveComponent?.component && (
+                <currentActiveComponent.component tabs={tabs} homework={homework} />
+              )}
+            </Box>
           ) : (
             <Box
               sx={{
@@ -187,7 +162,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                No subject assigned to this homework
+                No homework details available
               </Typography>
             </Box>
           )}

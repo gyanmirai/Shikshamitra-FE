@@ -1,5 +1,7 @@
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
+
 import {
   Box,
   Grid,
@@ -19,11 +21,11 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
+import { TeacherHoverProfile } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/subjectOverview';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import UserHoverProfile from 'src/components/student-popover';
 
 import type { IAssignment } from '../type';
 
@@ -33,8 +35,15 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
       <Grid item xs={12} md={8}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              <Iconify icon="mdi:information-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
+            <Typography
+              variant="subtitle1"
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <Iconify
+                icon="mdi:information-outline"
+                sx={{ mr: 1, height: '22px', width: '22px' }}
+              />
               Assignment Details
             </Typography>
             <Divider sx={{ mb: 2 }} />
@@ -48,14 +57,12 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
             <DetailRow label="Class" value={assignment?.class} icon="mdi:school-outline" />
 
             {/* Divisions */}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:account-group-outline" />
-                <Typography variant="subtitle1" className="text-gray-600 mb-1">
-                  Divisions
-                </Typography>
+                <Typography variant="subtitle2">Divisions</Typography>
               </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+              <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
                 {assignment?.division && assignment.division.length > 0 ? (
                   assignment.division.map((div, index) => (
                     <Chip key={index} label={div} size="small" variant="outlined" />
@@ -85,14 +92,12 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
             />
 
             {/* Status with color */}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:information" />
-                <Typography variant="subtitle1" className="text-gray-600 mb-1">
-                  Status
-                </Typography>
+                <Typography variant="subtitle2">Status</Typography>
               </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+              <Box sx={{ display: 'flex', pb: 2, pl: 3.5, gap: 1 }}>
                 <Label
                   color={
                     PublishUnpublishStatusTypeColors[
@@ -107,13 +112,11 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
 
             {/* {assignment?.isScheduled && (
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                   <Iconify icon="mdi:calendar-clock" />
-                  <Typography variant="body2" sx={{ minWidth: 120, fontWeight: 500 }}>
-                    Scheduled:
-                  </Typography>
+                  <Typography variant="subtitle2">Scheduled</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', pb: 2, pl: 4.5, gap: 1 }}>
+                <Box sx={{ display: 'flex', pb: 2, pl: 3.5, gap: 1 }}>
                   <Chip label="Yes" size="small" color="info" variant="outlined" />
                 </Box>
               </Box>
@@ -126,25 +129,46 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
         <Card sx={{ height: '100%' }}>
           <Scrollbar sx={{ height: '100%' }}>
             <CardContent sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                <Iconify icon="mdi:clock-outline" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <Iconify icon="mdi:clock-outline" sx={{ mr: 1, height: '22px', width: '22px' }} />
                 Timeline & Dates
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
-              {/* <Box sx={{ mb: 2 }}>
+              {/* Due Date */}
+              <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Due Date
+                  Start Date Time
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Iconify icon="mdi:calendar-alert" color="error.main" />
-                  <Typography variant="body1" fontWeight={500}>
-                    {dayjs(assignment?.dueDate).format('DD MMM YYYY')}
+                  <Typography variant="body2">
+                    {dayjs(assignment?.startDate).format('DD MMM YYYY hh:mm')}
                   </Typography>
                 </Box>
               </Box>
 
-              {assignment?.isScheduled && assignment?.scheduleDate && (
+              {/* End Date */}
+              {assignment?.endDate && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    End Date Time
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Iconify icon="mdi:calendar-end" color="warning.main" />
+                    <Typography variant="body2">
+                      {dayjs(assignment.endDate).format('DD MMM YYYY')}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
+              {/* Schedule Date */}
+              {/* {homework?.isScheduled && homework?.scheduleDate && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     Scheduled Date
@@ -152,21 +176,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="mdi:calendar-clock" color="info.main" />
                     <Typography variant="body1" fontWeight={500}>
-                      {dayjs(assignment?.scheduleDate).format('DD MMM YYYY')}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-
-              {assignment?.todaysDate && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Today&apos;s Date
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Iconify icon="mdi:calendar-today" color="success.main" />
-                    <Typography variant="body1" fontWeight={500}>
-                      {dayjs(assignment?.todaysDate).format('DD MMM YYYY')}
+                      {dayjs(homework?.dueDate).format('DD MMM YYYY')}
                     </Typography>
                   </Box>
                 </Box>
@@ -175,8 +185,12 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
               <Divider sx={{ my: 2 }} />
 
               {/* Created By */}
-              <Typography variant="h6" gutterBottom>
-                <Iconify icon="mdi:account" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+              >
+                <Iconify icon="mdi:account" sx={{ mr: 1, height: '22px', width: '22px' }} />
                 Created By
               </Typography>
 
@@ -192,7 +206,28 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                   }}
                 >
                   <ListItemAvatar>
-                    <UserHoverProfile
+                    <TeacherHoverProfile
+                      avatarComp={
+                        <Avatar
+                          src={assignment?.createdBy}
+                          alt={assignment?.createdBy}
+                          sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                        />
+                      }
+                      teacher={{
+                        name: assignment?.createdBy,
+                        designation: 'Senior Teacher',
+                        department: 'CSE',
+                        class: '10',
+                        division: 'A',
+                        email: 'aisha.sharma@example.com',
+                        experience: '12 Years',
+                        qualification: 'M.Tech (CSE)',
+                        subjects: ['Mathematics', 'Physics'],
+                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                      }}
+                    />
+                    {/* <UserHoverProfile
                       avatarComp={
                         <Avatar
                           sx={{
@@ -202,24 +237,24 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment | null }) 
                             cursor: 'pointer',
                           }}
                         >
-                          {assignment?.createdBy
+                          {homework?.createdBy
                             ?.split(' ')
                             .map((n) => n[0])
                             .join('') || 'T'}
                         </Avatar>
                       }
                       user={{
-                        name: assignment?.createdBy || 'Teacher',
+                        name: homework?.createdBy || 'Teacher',
                         avatarUrl: '/assets/images/avatars/avatar_1.jpg',
                         role: 'Teacher',
                         email: 'teacher@example.com',
-                        class: assignment?.class,
-                        division: assignment?.division?.join(', '),
+                        class: homework?.class,
+                        division: homework?.division?.join(', '),
                         board: 'CBSE',
                         medium: 'English',
                         organization: 'Higher Secondary',
                       }}
-                    />
+                    /> */}
                   </ListItemAvatar>
                   <ListItemText
                     primary={<Typography variant="subtitle2">{assignment?.createdBy}</Typography>}

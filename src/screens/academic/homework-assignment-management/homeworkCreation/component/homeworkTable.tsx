@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
 
-import { Box, Tooltip, MenuItem, MenuList, useTheme, Typography } from '@mui/material';
+import { Box, Tooltip, MenuItem, MenuList, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -116,13 +116,13 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
       columns={[
         {
           id: 'title',
-          label: 'Homework Title',
+          label: 'Title',
           align: 'left',
           filterType: 'string',
         },
         {
           id: 'homeworkType',
-          label: 'Homework Type',
+          label: 'Type',
           align: 'left',
           filterType: 'string',
         },
@@ -156,7 +156,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         {
           id: 'status',
           label: 'Publish/Draft',
-          align: 'center',
+          align: 'left',
           isFilter: false,
           sticky: true,
           isSort: false,
@@ -170,15 +170,26 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
 
             return (
               <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
-                <Iconify
-                  icon={GlobalIcons.tick}
-                  sx={{
-                    width: 25,
-                    height: 25,
-                    cursor: 'pointer',
-                    color: statusColor,
+                <IconButton
+                  onClick={() => {
+                    // Only allow click action when status is draft (1)
+                    if (value === PublishUnpublishStatusType.Draft) {
+                      handleSwitchChange(row as IHomework);
+                    }
                   }}
-                />
+                  disabled={value === PublishUnpublishStatusType.Published}
+                >
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      cursor:
+                        value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                      color: statusColor,
+                    }}
+                  />
+                </IconButton>
               </Tooltip>
             );
           },
@@ -194,7 +205,8 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           render: (value, row) => (
             <ThreeDotsActions
               placement="right-top"
-              actions={(prop) => actions({ ...prop, row })}
+              showThreeDots={false}
+              // actions={(prop) => actions({ ...prop, row })}
               showViewIcon
               showEditIcon
               showDeleteIcon

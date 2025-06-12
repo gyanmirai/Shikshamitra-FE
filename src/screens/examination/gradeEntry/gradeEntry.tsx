@@ -31,7 +31,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '1',
     GrNo: '2024001',
-    studentName: 'Aarav Sharma',
+    studentName: 'Sharma Aarav Rajesh',
     assignments: 'Assignment 1, Assignment 2',
     subject: 'Mathematics',
     marks: 78,
@@ -44,7 +44,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '2',
     GrNo: '2024002',
-    studentName: 'Kiara Mehta',
+    studentName: 'Mehta Kiara Nikhil',
     assignments: 'Assignment 1, Quiz 1',
     subject: 'Science',
     marks: 92,
@@ -57,7 +57,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '3',
     GrNo: '2024003',
-    studentName: 'Dev Patel',
+    studentName: 'Patel Dev Mihir',
     assignments: 'Assignment 1',
     subject: 'English',
     marks: 0,
@@ -70,7 +70,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '4',
     GrNo: '2024004',
-    studentName: 'Ishita Reddy',
+    studentName: 'Reddy Ishita Krishna',
     assignments: 'Project, Assignment 2',
     subject: 'Social Studies',
     marks: 85,
@@ -83,7 +83,7 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
   {
     id: '5',
     GrNo: '2024005',
-    studentName: 'Rohan Gupta',
+    studentName: 'Gupta Rohan Anil',
     assignments: 'Assignment 3, Quiz 2',
     subject: 'Computer Science',
     marks: 98,
@@ -94,7 +94,6 @@ const studentExamGradeEntries: IStudentExamGradeEntry[] = [
     status: 1,
   },
 ];
-
 const GradeEntry = (props: TabComponentType) => {
   // Dialog control for showing/hiding modal
   const dialog = useBoolean();
@@ -278,7 +277,7 @@ const GradeEntry = (props: TabComponentType) => {
           <Button
             variant="contained"
             size="small"
-            startIcon={<Iconify icon="material-symbols:upload" />}
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               publishMarksDialog.onTrue();
             }}

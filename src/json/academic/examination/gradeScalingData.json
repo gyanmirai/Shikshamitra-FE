@@ -1,7 +1,7 @@
 [
     {
       "id": 1,
-      "name" : "Grade Scale 1",
+      "name": "Standard Academic Scale",
       "totalMarks": 80,
       "gradingScale": [
         { "minMarks": 72, "maxMarks": 80, "grade": "A+" },
@@ -12,6 +12,33 @@
         { "minMarks": 32, "maxMarks": 39, "grade": "C" },
         { "minMarks": 0, "maxMarks": 31, "grade": "F" }
       ]
+    },
+    {
+      "id": 2,
+      "name": "Competitive Examination Scale",
+      "totalMarks": 100,
+      "gradingScale": [
+        { "minMarks": 90, "maxMarks": 100, "grade": "A+" },
+        { "minMarks": 80, "maxMarks": 89, "grade": "A" },
+        { "minMarks": 70, "maxMarks": 79, "grade": "B+" },
+        { "minMarks": 60, "maxMarks": 69, "grade": "B" },
+        { "minMarks": 50, "maxMarks": 59, "grade": "C+" },
+        { "minMarks": 40, "maxMarks": 49, "grade": "C" },
+        { "minMarks": 0, "maxMarks": 39, "grade": "F" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Elementary Level Scale",
+      "totalMarks": 50,
+      "gradingScale": [
+        { "minMarks": 45, "maxMarks": 50, "grade": "A+" },
+        { "minMarks": 40, "maxMarks": 44, "grade": "A" },
+        { "minMarks": 35, "maxMarks": 39, "grade": "B+" },
+        { "minMarks": 30, "maxMarks": 34, "grade": "B" },
+        { "minMarks": 25, "maxMarks": 29, "grade": "C+" },
+        { "minMarks": 20, "maxMarks": 24, "grade": "C" },
+        { "minMarks": 0, "maxMarks": 19, "grade": "F" }
+      ]
     }
-  ]
-  
+]

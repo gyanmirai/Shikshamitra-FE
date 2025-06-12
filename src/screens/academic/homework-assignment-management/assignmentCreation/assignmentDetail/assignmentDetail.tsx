@@ -1,28 +1,19 @@
-import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
-import type { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 
 import React, { useMemo, useState } from 'react';
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Chip,
-  Divider,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Tab, Tabs, Chip, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { PublishUnpublishStatusTypeColors } from 'src/enums/publishUnpublish-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusTypeColors,
+} from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Label, type LabelColor } from 'src/components/label';
 
 import AssignmentOverview from './assignmentOverview';
 import AssignmentDocuments from './assignmentDocuments';
@@ -74,7 +65,7 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
 
   return (
     <Box sx={{ p: 2, height: '100%' }}>
-      <Scrollbar sx={{ height: '700px' }}>
+      <Scrollbar sx={{ height: '600px' }}>
         {/* Assignment Header */}
         <Box>
           <Box
@@ -96,18 +87,29 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
                   variant="outlined"
                   sx={{ fontSize: '0.9rem' }}
                 />
-                <Chip
-                  label="Status : Published"
-                  variant="outlined"
+                <Label
+                  variant="soft"
                   color={
                     PublishUnpublishStatusTypeColors[
                       assignment?.status as PublishUnpublishStatusType
                     ] as LabelColor
                   }
-                  sx={{
-                    fontSize: '0.9rem',
-                  }}
-                />
+                  sx={
+                    {
+                      // p: 1.8,
+                      // fontSize: '1rem',
+                      // fontWeight: 500,
+                      // minWidth: '100px',
+                      // textAlign: 'center',
+                    }
+                  }
+                >
+                  {
+                    PublishUnpublishStatusType[
+                      assignment?.status as PublishUnpublishStatusType
+                    ] as string
+                  }
+                </Label>
               </Box>
             </Box>
           </Box>
@@ -115,6 +117,54 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
 
         {/* Subjects Accordions - Multiple Subjects */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
+          {assignment ? (
+            <Box
+              sx={{
+                border: '1px solid #e0e0e0',
+                borderRadius: 2,
+                p: 2,
+                mb: 2,
+              }}
+            >
+              <Tabs
+                value={tabs.value}
+                onChange={tabs.onChange}
+                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+                role="tablist"
+              >
+                {ASSIGNMENT_TABS.map((tab) => (
+                  <Tab
+                    key={tab.value}
+                    value={tab.value}
+                    icon={tab.icon}
+                    label={tab.label}
+                    role="tab"
+                    sx={{ fontSize: '12px' }}
+                  />
+                ))}
+              </Tabs>
+              <Divider sx={{ my: 2 }} />
+
+              {currentActiveComponent?.component && (
+                <currentActiveComponent.component tabs={tabs} assignment={assignment} />
+              )}
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 4,
+                border: '1px dashed #ccc',
+                borderRadius: 2,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                No Assignment details available
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        {/* <Box sx={{ borderColor: 'divider', mb: 2 }}>
           {assignment?.subjects ? (
             <Accordion
               expanded={isSubjectExpanded}
@@ -175,7 +225,7 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
               </Typography>
             </Box>
           )}
-        </Box>
+        </Box> */}
       </Scrollbar>
     </Box>
   );

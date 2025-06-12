@@ -5,9 +5,13 @@ import type { Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
-import { Box, Grid, TextField, Typography } from '@mui/material';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { Box, Grid, Chip, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { TeacherListPopover } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -49,7 +53,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType) || false}>
+          <ShakingTextField error={formik.touched.examType && Boolean(formik.errors.examType)}>
             <CustomSelect
               options={[
                 { value: 'Mid', label: 'Mid' },
@@ -62,12 +66,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }}
               label="Exam Type *"
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              error={!!(formik.touched.examType && formik.errors.examType)}
-              helperText={
-                formik.touched.examType && formik.errors.examType
-                  ? formik.errors.examType
-                  : undefined
-              }
+              error={formik.touched.examType && Boolean(formik.errors.examType)}
+              helperText={(formik.touched.examType && formik.errors.examType) as string}
+              // error={!!(formik.touched.examType && formik.errors.examType)}
+              // helperText={
+              //   formik.touched.examType && formik.errors.examType
+              //     ? formik.errors.examType
+              //     : undefined
+              // }
             />
           </ShakingTextField>
           <Box mt={1} display="flex" justifyContent="flex-end">
@@ -102,7 +108,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               fullWidth
               label="Exam Name *"
               name="examName"
-              placeholder="Enter Exam Name"
+              // placeholder="Enter Exam Name"
               value={formik.values.examName}
               onChange={formik.handleChange}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
@@ -164,17 +170,26 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
         <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects) || false}>
-            <CustomSelect
+            <Autocomplete
+              multiple
+              disabled={formik.values.divisions.length === 0}
               options={[
                 { value: 'Math', label: 'Math' },
                 { value: 'English', label: 'English' },
                 { value: 'Science', label: 'Science' },
               ]}
-              value={formik.values.subjects.map((sub: ISubjectDetail) => sub.subjectName)} // Extract names
-              onChange={(val) => {
-                const updatedSubjects = val.map((subject, index) => ({
+              disableCloseOnSelect
+              getOptionLabel={(option: { value: string; label: string }) => option.label}
+              value={
+                formik.values.subjects.map((sub: ISubjectDetail) => ({
+                  value: sub.subjectName,
+                  label: sub.subjectName,
+                })) || []
+              }
+              onChange={(event, newValue: Array<{ value: string; label: string }>) => {
+                const updatedSubjects = newValue.map((item, index) => ({
                   id: index,
-                  subjectName: subject,
+                  subjectName: item.value,
                   examDate: null,
                   examTime: null,
                   examDuration: 0,
@@ -185,18 +200,46 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 }));
                 formik.setFieldValue('subjects', updatedSubjects);
               }}
-              multiple
-              disabled={formik.values.divisions.length === 0}
-              label="Subjects *"
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              error={!!(formik.touched.subjects && formik.errors.subjects)}
-              helperText={
-                formik.touched.subjects && formik.errors.subjects
-                  ? Array.isArray(formik.errors.subjects)
-                    ? formik.errors.subjects.join(', ') // Join array into a single string
-                    : formik.errors.subjects // Directly use the string
-                  : undefined
-              }
+              isOptionEqualToValue={(option, value) => option.value === value.value}
+              renderOption={(prop, option, { selected }) => (
+                <li {...prop}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon />}
+                    checkedIcon={<CheckBoxIcon />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.label}
+                </li>
+              )}
+              renderTags={(value: Array<{ value: string; label: string }>) => {
+                if (value.length === 0) return null;
+                const first = value[0].label;
+                const remainingCount = value.length - 1;
+                return [
+                  <Chip key={first} label={first} sx={{ ml: 1 }} size="small" variant="soft" />,
+                  remainingCount > 0 && (
+                    <TeacherListPopover
+                      key="more-count"
+                      data={value.slice(1)}
+                      count={remainingCount}
+                    />
+                  ),
+                ];
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Subjects *"
+                  size="small"
+                  error={!!(formik.touched.subjects && formik.errors.subjects)}
+                  helperText={
+                    Array.isArray(formik.errors.subjects)
+                      ? formik.errors.subjects.join(', ')
+                      : (formik.touched.subjects && formik.errors.subjects) || undefined
+                  }
+                />
+              )}
             />
           </ShakingTextField>
         </Grid>

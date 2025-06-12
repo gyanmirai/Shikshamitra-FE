@@ -27,7 +27,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({ data, onDelete, 
       },
       {
         id: 'action',
-        label: 'Action',
+        label: 'Actions',
         minWidth: 50,
         isSort: false,
         sticky: true,
