@@ -74,7 +74,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubject }) => (
           sx={{
             mb: 2,
             borderRadius: 1, // optional, round corners
-            boxShadow: 4, // optional, adds shadow
+            boxShadow: 3, // optional, adds shadow
           }}
         >
           <AccordionSummary

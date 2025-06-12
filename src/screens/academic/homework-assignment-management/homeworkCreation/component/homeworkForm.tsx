@@ -107,6 +107,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     onSubmit: (values) => {},
   });
 
+  console.log('formik.values---', formik.values.attachments);
+
   const handleDrop = (acceptedFiles: File[]) => {
     formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
   };

@@ -20,6 +20,7 @@ import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectDat
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -67,6 +68,7 @@ const Subject = (props: TabComponentType) => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  console.log('selected subject-----', selectedSubject);
 
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
@@ -120,6 +122,9 @@ const Subject = (props: TabComponentType) => {
       setSubjectTableData(subjectTableData.filter((subject) => subject.id !== selectedSubject.id));
       deleteConfirmDialog.onFalse();
       setSelectedSubject(null);
+      shikshaMitraToast.success({
+        message: `Subject ${selectedSubject.subjectName} deleted successfully`,
+      });
     }
   };
 
@@ -187,7 +192,7 @@ const Subject = (props: TabComponentType) => {
               options={allClass}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { maxWidth: '310px', width: '100%' } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 setClasses(value as string);
@@ -269,7 +274,6 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
-            // size='small'
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={handleDelete}
           >
@@ -314,8 +318,13 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
-            // size='small'
+            onClick={() => {
+              const status = selectedSubject?.status === 0 ? 'Draft' : 'Published';
+              shikshaMitraToast.success({
+                message: `Subject ${selectedSubject?.subjectName} ${status}ed successfully`,
+              });
+              confirmPublishDialog.onFalse();
+            }}
           >
             {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
           </Button>

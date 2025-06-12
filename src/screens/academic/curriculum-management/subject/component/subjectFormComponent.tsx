@@ -7,16 +7,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
-import {
-  Box,
-  Grid,
-  Chip,
-  Button,
-  TextField,
-  Typography,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -42,20 +33,19 @@ import type { ITeacherOption, ISubjectFormProps, ISubjectFormValues } from './ty
 // Enhanced subject options with Core and Elective groups
 const subjectOptions = [
   // Core subjects
-  { label: 'Mathematics', value: 'Mathematics', type: 'Core' },
-  { label: 'Science', value: 'Science', type: 'Core' },
-  { label: 'Social Science', value: 'Social Science', type: 'Core' },
-  { label: 'English', value: 'English', type: 'Core' },
-  { label: 'Gujarati', value: 'Gujarati', type: 'Core' },
-
+  { label: 'Mathematics', value: 'Mathematics', type: 'Core', subjectColor: '#DEB887' },
+  { label: 'Science', value: 'Science', type: 'Core', subjectColor: '#00CED1' },
+  { label: 'Social Science', value: 'Social Science', type: 'Core', subjectColor: '#B22222' },
+  { label: 'English', value: 'English', type: 'Core', subjectColor: '#4682B4' },
+  { label: 'Gujarati', value: 'Gujarati', type: 'Core', subjectColor: '#3CB371' },
   // Elective subject groups
   {
     label: 'Elective Subject 1',
     value: 'Elective Subject 1',
     type: 'Elective',
     subjects: [
-      { name: 'Computer', code: 'COMP101' },
-      { name: 'Physical Training', code: 'PT101' },
+      { name: 'Computer', code: 'COMP101', subjectColor: '#4169E1' },
+      { name: 'Physical Training', code: 'PT101', subjectColor: '#FF69B4' },
     ],
   },
   {
@@ -63,42 +53,173 @@ const subjectOptions = [
     value: 'Elective Subject 2',
     type: 'Elective',
     subjects: [
-      { name: 'Sanskrit', code: 'SNSK101' },
-      { name: 'Hindi', code: 'HIND101' },
+      { name: 'Sanskrit', code: 'SNSK101', subjectColor: '#DA70D6' },
+      { name: 'Hindi', code: 'HIND101', subjectColor: '#FF4500' },
     ],
   },
 ];
 
 const teacherOptions: ITeacherOption[] = [
+  // Existing entries
   {
-    value: 't1',
+    value: 'Sharma Riya Kumar',
     label: 'Sharma Riya Kumar',
     department: 'Mathematics Department',
     avatar: 'https://yourcdn.com/riya.png',
   },
   {
-    value: 't2',
+    value: 'Patel Ankit Rajesh',
     label: 'Patel Ankit Rajesh',
     department: 'Science Department',
     avatar: 'https://yourcdn.com/ankit.png',
   },
   {
-    value: 't3',
+    value: 'Desai Priya Mahesh',
     label: 'Desai Priya Mahesh',
     department: 'English Department',
     avatar: 'https://yourcdn.com/priya.png',
   },
   {
-    value: 't4',
+    value: 'Singh Rahul Vikram',
     label: 'Singh Rahul Vikram',
     department: 'Social Studies Department',
     avatar: 'https://yourcdn.com/rahul.png',
   },
   {
-    value: 't5',
+    value: 'Mehta Neha Suresh',
     label: 'Mehta Neha Suresh',
     department: 'Hindi Department',
     avatar: 'https://yourcdn.com/neha.png',
+  },
+
+  // New entries from your list:
+  {
+    value: 'Atre Harshita Bhanudas',
+    label: 'Atre Harshita Bhanudas',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/harshita.png',
+  },
+  {
+    value: 'Patel Priyanka Ramesh',
+    label: 'Patel Priyanka Ramesh',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/priyanka.png',
+  },
+  {
+    value: 'Kumar Ankit Mahesh',
+    label: 'Kumar Ankit Mahesh',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/ankitk.png',
+  },
+  {
+    value: 'Johnson Robert Alan',
+    label: 'Johnson Robert Alan',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/robert.png',
+  },
+  {
+    value: 'Williams Thomas James',
+    label: 'Williams Thomas James',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/thomas.png',
+  },
+  {
+    value: 'Anderson Michael David',
+    label: 'Anderson Michael David',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/michael.png',
+  },
+  {
+    value: 'Ahir Dharmik Ganesh',
+    label: 'Ahir Dharmik Ganesh',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/dharmik.png',
+  },
+  {
+    value: 'Ahir Jignesh Ganesh',
+    label: 'Ahir Jignesh Ganesh',
+    department: 'Secondary Department',
+    avatar: 'https://yourcdn.com/jignesh.png',
+  },
+  {
+    value: 'Patel Robert Taylor',
+    label: 'Patel Robert Taylor',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/robertt.png',
+  },
+
+  // The remaining single names (no secondaryTeacher arrays):
+  {
+    value: 'Atre Prerna Bhanudas',
+    label: 'Atre Prerna Bhanudas',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/prerna.png',
+  },
+  {
+    value: 'Badgujar Sweta Ramesh',
+    label: 'Badgujar Sweta Ramesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/sweta.png',
+  },
+  {
+    value: 'Sharma Anita Hitesh',
+    label: 'Sharma Anita Hitesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/anita.png',
+  },
+  {
+    value: 'Patel Sunita Hitesh',
+    label: 'Patel Sunita Hitesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/sunita.png',
+  },
+  {
+    value: 'Vadher Yagnik Jethabhai',
+    label: 'Vadher Yagnik Jethabhai',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/yagnik.png',
+  },
+  {
+    value: 'Patel Ramesh Santosh',
+    label: 'Patel Ramesh Santosh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/ramesh.png',
+  },
+  {
+    value: 'Patel Kajal Vikas',
+    label: 'Patel Kajal Vikas',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/kajal.png',
+  },
+  {
+    value: 'Joshi Bhavesh Ramesh',
+    label: 'Joshi Bhavesh Ramesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/bhavesh.png',
+  },
+  {
+    value: 'Vyas Harsh Suresh',
+    label: 'Vyas Harsh Suresh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/harshv.png',
+  },
+  {
+    value: 'Desai Sunita Darshan',
+    label: 'Desai Sunita Darshan',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/sunited.png',
+  },
+  {
+    value: 'Trivedi Amit Jignesh',
+    label: 'Trivedi Amit Jignesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/amit.png',
+  },
+  {
+    value: 'Mehta Kavita Mahesh',
+    label: 'Mehta Kavita Mahesh',
+    department: 'Primary Department',
+    avatar: 'https://yourcdn.com/kavita.png',
   },
 ];
 
@@ -210,7 +331,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         isExpanded: true,
         learningGoal: '',
         prerequisites: '',
-        subjectColor: '#1976d2',
+        subjectColor: newValue.subjectColor,
         scheduleDate: null,
         status: 'Unpublish',
       };
@@ -229,7 +350,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         description: '',
         learningGoal: '',
         prerequisites: '',
-        subjectColor: '#1976d2',
+        subjectColor: subject.subjectColor,
         scheduleDate: null,
         status: 'Unpublish',
       }));
@@ -248,6 +369,8 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
+  console.log('formik-values----', formik.values);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -255,13 +378,13 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Class selection */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
                   <CustomSelect
                     options={allClass}
-                    label="Class"
+                    label="Class *"
                     value={formik.values.className || selectedClass}
                     labelKey="name"
                     valueKey="id"
@@ -286,7 +409,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
               </Grid>
 
               {/* Subject/Group selection */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <ShakingTextField
                   error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
                 >
@@ -318,7 +441,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Subject Name"
+                        label="Core/Elective Subject *"
                         name="subjectName"
                         error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                         helperText={formik.touched.subjectName && formik.errors.subjectName}
@@ -326,7 +449,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     )}
                   />
                 </ShakingTextField>
-                <Box display="flex" justifyContent="space-between">
+                {/* <Box display="flex" justifyContent="space-between">
                   <Box sx={{ display: 'inline-block' }}>
                     <Typography
                       variant="body2"
@@ -351,7 +474,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       Add Elective Group
                     </Typography>
                   </Box>
-                </Box>
+                </Box> */}
 
                 <CustomDialog
                   open={addSubjectDialog.value}

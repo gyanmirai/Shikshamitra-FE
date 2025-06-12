@@ -81,7 +81,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                       p: 1,
                       border: '1px solid',
                       borderColor: 'divider',
-                      boxShadow: 1,
+                      boxShadow: 3,
                       // mb: 1,
                     }}
                   >
@@ -130,7 +130,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                       p: 1,
                       border: '1px solid',
                       borderColor: 'divider',
-                      boxShadow: 1,
+                      boxShadow: 3,
                       my: 1,
                     }}
                   >
