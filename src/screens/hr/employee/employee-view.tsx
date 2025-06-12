@@ -103,6 +103,7 @@ export function EmployeeCard({ employee }: any) {
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
           boxShadow: 'var(--shadows-4)',
+          mt: 2,
         }}
       >
         <Paper
@@ -129,6 +130,7 @@ export function EmployeeCard({ employee }: any) {
               sx={{
                 width: 64,
                 height: 64,
+                border: (theme) => `1px solid ${theme.palette.grey[400]}`,
               }}
             />
             <Box>
@@ -163,7 +165,7 @@ export function EmployeeCard({ employee }: any) {
           value={tabs.value}
           onChange={tabs.onChange}
           sx={{
-            px: 2,
+            px: 1.5,
             '& .MuiTabs-flexContainer': {
               gap: 1.5,
             },

@@ -235,7 +235,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                     onChange={(val) => {
                       formik.setFieldValue('createDate', val);
                     }}
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     slotProps={{
                       textField: {
                         size: 'small',

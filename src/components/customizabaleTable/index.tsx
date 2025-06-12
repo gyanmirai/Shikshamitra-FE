@@ -158,7 +158,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const getStickyStyle = (col: IColumn): React.CSSProperties => {
     const base: React.CSSProperties = {
       position: col.sticky ? 'sticky' : 'static',
-      background: col.sticky ? theme.palette.background.paper : undefined,
+      // background: col.sticky ? theme.palette.background.paper : undefined,
     };
 
     const colId = col.id as string;
@@ -535,7 +535,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
         {isSearch && (
           <TextField
-            label="Search"
             variant="outlined"
             size="small"
             value={searchValue}
@@ -555,6 +554,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 </>
               ),
             }}
+            label="Search in Table"
             {...searchFieldProps}
           />
         )}
@@ -892,6 +892,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
                                 ...getStickyStyle(column),
+                                // '&:hover': {
+                                //   background: 'var(--palette-action-hover)',
+                                // },
                               }}
                             >
                               {column.render

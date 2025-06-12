@@ -166,7 +166,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => {
             setDate(val);
           }}
-          format="DD/MM/YYYY"
+          format="DD-MM-YYYY"
           slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
         />
 

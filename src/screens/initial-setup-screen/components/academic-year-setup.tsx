@@ -40,7 +40,7 @@ const AcademicYearSetup: React.FC<AcademicYearSetupProps> = ({
           label="Start Date"
           value={values.academicYear.startDate ? values.academicYear.startDate : null}
           onChange={(newValue) => setFieldValue('academicYear.startDate', newValue)}
-          format="DD/MM/YYYY"
+          format="DD-MM-YYYY"
           slotProps={{
             textField: {
               size: 'small',
@@ -56,7 +56,7 @@ const AcademicYearSetup: React.FC<AcademicYearSetupProps> = ({
       <Grid item xs={12} md={3}>
         <DatePicker
           label="End Date"
-          format="DD/MM/YYYY"
+          format="DD-MM-YYYY"
           value={values.academicYear.endDate ? values.academicYear.endDate : null}
           onChange={(newValue) => setFieldValue('academicYear.endDate', newValue)}
           slotProps={{

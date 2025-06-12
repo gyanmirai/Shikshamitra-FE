@@ -123,7 +123,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 >
                   <DatePicker
                     label="Chapter Start Date Time *"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     value={formik.values.startTime}
                     onChange={(newValue) => {
                       formik.setFieldValue('startTime', newValue);
@@ -149,7 +149,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 >
                   <DatePicker
                     label="Chapter End Date Time *"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     value={formik.values.endTime}
                     onChange={(newValue) => {
                       formik.setFieldValue('endTime', newValue);

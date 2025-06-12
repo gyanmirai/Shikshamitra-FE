@@ -47,14 +47,6 @@ export default VerifyPayrollComponent;
 const Attendance = ({ formik }: any) => (
   <CustomizableTable
     noDataText={<>No Data Found For Payroll</>}
-    searchFieldProps={{
-      placeholder: 'Search by Employee Code, Name...',
-      label: 'Search by Employee Code, Name....',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
     tableId="employee-table"
     columns={[
       { id: 'employeeCode', label: 'Employee Code', minWidth: '180px', align: 'left' },
@@ -177,14 +169,6 @@ const Attendance = ({ formik }: any) => (
 const Salary = ({ formik }: any) => (
   <CustomizableTable
     noDataText={<>No Data Found For Payroll</>}
-    searchFieldProps={{
-      placeholder: 'Search by Employee Code, Name...',
-      label: 'Search by Employee Code, Name....',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
     tableId="employee-salary-table"
     columns={[
       {

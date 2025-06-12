@@ -106,14 +106,6 @@ const PF = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Name, Code...',
-          label: 'Search by Name, Code....',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="pf-table"
         isLoading={isLoading}
         columns={[

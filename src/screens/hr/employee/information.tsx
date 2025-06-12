@@ -388,7 +388,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                       label={field.label}
                       name={field.name}
                       value={formik.values[field.name as keyof typeof formik.values]}
-                      format="DD/MM/YYYY"
+                      format="DD-MM-YYYY"
                       onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
                       sx={{
                         ...((field?.sx as any) || {}),

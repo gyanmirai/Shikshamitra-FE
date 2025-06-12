@@ -279,7 +279,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                 label="Insurance Expiry Date"
                 name="insuranceExpiryDate"
                 value={formik.values.insuranceExpiryDate}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
                 onChange={() => {}}
                 slotProps={{
                   textField: {

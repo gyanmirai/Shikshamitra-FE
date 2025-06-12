@@ -434,7 +434,7 @@ const InquiryForm = ({
                     label="Date of Birth *"
                     name="dateOfBirth"
                     value={values.dateOfBirth}
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       const date = newValue?.format();
                       if (date) {
@@ -504,7 +504,7 @@ const InquiryForm = ({
                     label="Date of Inquiry"
                     name="dateOfInquiry"
                     value={values.dateOfInquiry}
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
                       setFieldTouched('dateOfInquiry', true);

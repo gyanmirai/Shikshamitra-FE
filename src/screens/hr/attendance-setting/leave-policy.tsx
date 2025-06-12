@@ -130,13 +130,6 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
         </Button>
       </Box> */}
       <CustomizableTable
-        searchFieldProps={{
-          label: 'Search by Leave Type, Leave Days...',
-          sx: {
-            maxWidth: '350px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Leave Policy Found{' '}

@@ -6,7 +6,7 @@ const personalInformationValidationSchema = Yup.object({
   //   code: Yup.string().required('Code is required'),
   lastName: Yup.string().required('Last name is required'),
   firstName: Yup.string().required('First name is required'),
-  middleName: Yup.string().required('Middle name is required'),
+  middleName: Yup.string(),
   shortName: Yup.string(),
   employeeStatusType: Yup.number().required('Employee status type is required'),
   //   subject: Yup.array().required('Subject is required'),

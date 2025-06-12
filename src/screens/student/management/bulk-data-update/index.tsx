@@ -184,7 +184,7 @@ const RenderDynamicField = ({ value, row, selectedSubCategory, onChange }: any) 
       label={selectedSubCategory.label}
       name={selectedSubCategory.name}
       value={value}
-      format="DD/MM/YYYY"
+      format="DD-MM-YYYY"
       onChange={(newValue) => onChange(newValue)}
       slotProps={{
         textField: {

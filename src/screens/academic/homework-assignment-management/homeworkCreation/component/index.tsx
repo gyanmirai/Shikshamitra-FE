@@ -152,7 +152,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             onChange={(val) => {
               setDate(val);
             }}
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             sx={{ minWidth: '250px' }}
           />
         </Box>

@@ -56,12 +56,14 @@ function FatherAddressComponent(props: any) {
             name="fatherAddress1"
             label="Building No./Flat/House No."
             value={formik.values.fatherAddress1}
+            // InputLabelProps={{ shrink: !!formik.values.fatherAddress1 }}
             onChange={formik.handleChange}
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
             helperText={formik.touched.fatherAddress1 && formik.errors.fatherAddress1}
             fullWidth
             size="small"
             disabled={!!disabled}
+            InputLabelProps={{ shrink: true }}
           />
         </ShakingTextField>
       </Grid>
@@ -530,7 +532,7 @@ const FamilyMemberSection = ({
             <PhoneInput
               name={`${type}ContactNo`}
               value={formik.values[`${type}ContactNo`]}
-              label={` Contact No.`}
+              label="Mobile No."
               onChange={(value) => {
                 formik.setFieldValue(`${type}ContactNo`, value);
               }}

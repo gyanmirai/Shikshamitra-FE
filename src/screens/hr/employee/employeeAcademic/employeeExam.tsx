@@ -177,11 +177,6 @@ const DummyScheduledExamTable = () => {
 
       <CustomizableTable
         tableId="dummy-schedule-exam-table"
-        searchFieldProps={{
-          placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
-          label: 'Search by Class, Division, Exam Type, Subject Name...',
-          sx: { maxWidth: '500px', width: '100%' },
-        }}
         noDataText={<>No Exam Data Found</>}
         columns={[
           { id: 'className', label: 'Class', align: 'left' },

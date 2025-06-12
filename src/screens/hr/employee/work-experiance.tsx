@@ -171,9 +171,9 @@ const WorkExperiences = (props: any) => {
             </Box>
             <Box sx={{ width: '200px' }}>
               <DatePicker
-                label="From Date"
+                label="Start Date"
                 name={`experiences.${index}.fromDate`}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
                 value={experience.fromDate}
                 onChange={(date) => {
                   setFieldValue(`experiences.${index}.fromDate`, date);
@@ -190,9 +190,9 @@ const WorkExperiences = (props: any) => {
             </Box>
             <Box sx={{ width: '200px' }}>
               <DatePicker
-                label="To Date"
+                label="End Date"
                 name={`experiences.${index}.toDate`}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
                 value={experience.toDate}
                 onChange={(date) => {
                   setFieldValue(`experiences.${index}.toDate`, date);
@@ -208,7 +208,7 @@ const WorkExperiences = (props: any) => {
               />
             </Box>
           </Box>
-          <Box sx={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+          <Box sx={{}}>
             <IconButton
               disabled={!!disabled}
               onClick={() => {

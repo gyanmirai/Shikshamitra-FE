@@ -159,13 +159,8 @@ const LeaveHistory = (props: any) => {
           views={['month', 'year']}
           slotProps={{
             textField: {
-              fullWidth: true,
               size: 'small',
             },
-          }}
-          sx={{
-            maxWidth: '300px',
-            width: '100%',
           }}
           onChange={(newDate) => {
             setDate(newDate);
@@ -208,13 +203,6 @@ const LeaveHistory = (props: any) => {
         showCheckbox={selectedStudents.length !== 0}
         isLoading={isLoading}
         tableId="leave-history-table"
-        searchFieldProps={{
-          label: 'Search by Name, Status...',
-          sx: {
-            maxWidth: '300px',
-            width: '100%',
-          },
-        }}
         columns={[
           // {
           //   id: 'checkBox',

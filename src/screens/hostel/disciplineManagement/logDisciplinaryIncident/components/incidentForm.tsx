@@ -199,7 +199,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 >
                   <DatePicker
                     label="Incident Date *"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     value={formik.values.incidentDate}
                     onChange={(val) => formik.setFieldValue('incidentDate', val)}
                     slotProps={{

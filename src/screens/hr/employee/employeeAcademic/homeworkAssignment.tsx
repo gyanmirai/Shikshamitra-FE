@@ -23,14 +23,6 @@ const HomeworkAssignment = () => (
         </Box>
         <CustomizableTable
           tableId="homework-assignment-management"
-          searchFieldProps={{
-            placeholder: 'Search by Homework Title, Type , Start Date Time...',
-            label: 'Search by Homework Title, Type, Start Date Time...',
-            sx: {
-              maxWidth: '500px',
-              width: '100%',
-            },
-          }}
           // Custom no data message with action to create new homework
           noDataText={
             <>
@@ -153,11 +145,6 @@ const HomeworkAssignment = () => (
         <Typography variant="h6">Assignments</Typography>
         <CustomizableTable
           tableId="assignment-management"
-          searchFieldProps={{
-            placeholder: 'Search by Assignment Title, Type, Start Date Time...',
-            label: 'Search by Assignment Title, Type, Start Date Time...',
-            sx: { maxWidth: 500, width: '100%' },
-          }}
           noDataText={
             <>
               No Assignments Created

@@ -147,7 +147,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 >
                   <DatePicker
                     label="Incident Date"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     disabled
                     value={formik.values.incidentDate}
                     onChange={(val) => formik.setFieldValue('incidentDate', val)}

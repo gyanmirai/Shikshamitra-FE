@@ -115,14 +115,6 @@ const ProfessionalTax = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Gender, Tax Amount...',
-          label: 'Search by Gender, Tax Amount...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="professional-table"
         isLoading={isLoading}
         columns={[

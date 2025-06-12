@@ -7,8 +7,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { DatePicker } from '@mui/x-date-pickers';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -39,27 +38,21 @@ const BiometricIntegrationScreen = () => {
           { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
           { name: 'Import Attendance' },
         ]}
-        sx={{ px: 1, mb: 3 }}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1, pl: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1, pl: 1, mt: 2 }}>
         <DatePicker
           label="Date"
           value={date}
           onChange={(newValue) => {
             setDate(newValue);
           }}
-          format="DD/MM/YYYY"
+          format="DD-MM-YYYY"
           disableFuture
           slotProps={{
             textField: {
               size: 'small',
-              fullWidth: true,
             },
-          }}
-          sx={{
-            maxWidth: '300px',
-            width: '100%',
           }}
         />
 
@@ -76,21 +69,14 @@ const BiometricIntegrationScreen = () => {
       <CustomizableTable
         // isLoading={isLoading}
         noDataText={<>No Biometric Integration Data Found </>}
-        searchFieldProps={{
-          label: 'Search by Name, Hours Worked...',
-          sx: {
-            maxWidth: '300px',
-            width: '100%',
-          },
-        }}
         tableId="biometric-integration-table"
         columns={[
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
-          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '8vw', align: 'left' },
-          { id: 'timeIn', label: 'In-time', align: 'left' },
-          { id: 'timeOut', label: 'Out-time', align: 'left' },
-          { id: 'employeeCode', label: 'Employee Code', align: 'left' },
-          { id: 'contactNo.', label: 'Contact No.', align: 'left' },
+          { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
+          { id: 'contactNo', label: 'Mobile No.', align: 'left', minWidth: '8vw' },
+          { id: 'timeIn', label: 'In-time', align: 'left', minWidth: '6vw' },
+          { id: 'timeOut', label: 'Out-time', align: 'left', minWidth: '7vw' },
+          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '10vw', align: 'left' },
           {
             id: 'status',
             label: 'Status',
@@ -143,93 +129,93 @@ const BiometricIntegrationScreen = () => {
         data={[
           {
             employeeName: 'Kumar Rajesh Prakash',
-            hoursWorked: '8h 30m',
+            hoursWorked: '8H 30M',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
             employeeCode: 'EMP001',
-            contactNo: '9876543210',
+            contactNo: '+91 98765 43210',
           },
           {
             employeeName: 'Sharma Priya Rajesh',
-            hoursWorked: '7h 30m',
+            hoursWorked: '7H 30M',
             timeIn: '09:30 AM',
             timeOut: '05:00 PM',
             status: 'Present',
             employeeCode: 'EMP002',
-            contactNo: '9876543211',
+            contactNo: '+91 98765 43211',
           },
           {
             employeeName: 'Patel Amit Naresh',
-            hoursWorked: '0h 0m',
+            hoursWorked: '0H 0M',
             timeIn: '-',
             timeOut: '-',
             status: 'Leave',
             employeeCode: 'EMP003',
-            contactNo: '9876543212',
+            contactNo: '+91 98765 43212',
           },
           {
             employeeName: 'Gupta Neha Ramesh',
-            hoursWorked: '4h 0m',
+            hoursWorked: '4H 0M',
             timeIn: '09:00 AM',
             timeOut: '01:00 PM',
             status: 'Half Day',
             employeeCode: 'EMP004',
-            contactNo: '9876543213',
+            contactNo: '+91 98765 43213',
           },
           {
             employeeName: 'Verma Suresh Kumar',
-            hoursWorked: '8h 0m',
+            hoursWorked: '8H 0M',
             timeIn: '09:15 AM',
             timeOut: '05:15 PM',
             status: 'Present',
             employeeCode: 'EMP005',
-            contactNo: '9876543214',
+            contactNo: '+91 98765 43214',
           },
           {
             employeeName: 'Singh Anita Raj',
-            hoursWorked: '8h 15m',
+            hoursWorked: '8H 15M',
             timeIn: '09:00 AM',
             timeOut: '05:15 PM',
             status: 'Present',
             employeeCode: 'EMP006',
-            contactNo: '9876543215',
+            contactNo: '+91 98765 43215',
           },
           {
             employeeName: 'Mishra Deepak Shyam',
-            hoursWorked: '0h 0m',
+            hoursWorked: '0H 0M',
             timeIn: '-',
             timeOut: '-',
             status: 'Leave',
             employeeCode: 'EMP007',
-            contactNo: '9876543216',
+            contactNo: '+91 98765 43216',
           },
           {
             employeeName: 'Reddy Meera Krishna',
-            hoursWorked: '4h 30m',
+            hoursWorked: '4H 30M',
             timeIn: '09:00 AM',
             timeOut: '01:30 PM',
             status: 'Half Day',
             employeeCode: 'EMP008',
-            contactNo: '9876543217',
+            contactNo: '+91 98765 43217',
           },
           {
             employeeName: 'Malhotra Vikram Singh',
-            hoursWorked: '8h 30m',
+            hoursWorked: '8H 30M',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
             employeeCode: 'EMP009',
-            contactNo: '9876543218',
+            contactNo: '+91 98765 43218',
           },
           {
             employeeName: 'Iyer Pooja Venkat',
-            hoursWorked: '8h 0m',
+            hoursWorked: '8H 0M',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',
             status: 'Present',
             employeeCode: 'EMP010',
-            contactNo: '9876543219',
+            contactNo: '+91 98765 43219',
           },
         ]}
       />
@@ -298,10 +284,11 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
               error={formik.touched.name && Boolean(formik.errors.name)}
               helperText={(formik.touched.name && formik.errors.name) as string}
               size="small"
+              disabled
             />
           </ShakingTextField>
           <ShakingTextField error={formik.touched.inTime && Boolean(formik.errors.inTime)}>
-            <TimePicker
+            <MobileTimePicker
               label="In Time"
               value={formik.values.inTime}
               onChange={(value) => formik.setFieldValue('inTime', value)}
@@ -317,7 +304,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
           </ShakingTextField>
 
           <ShakingTextField error={formik.touched.outTime && Boolean(formik.errors.outTime)}>
-            <TimePicker
+            <MobileTimePicker
               label="Out Time"
               value={formik.values.outTime}
               onChange={(value) => formik.setFieldValue('outTime', value)}

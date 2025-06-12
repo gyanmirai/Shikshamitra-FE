@@ -174,7 +174,7 @@ export const generalFormFields: FieldsType[] = [
                       name="dob"
                       value={formik.values.dob}
                       disabled={!disabled}
-                      format="DD/MM/YYYY"
+                      format="DD-MM-YYYY"
                       slotProps={{
                         textField: {
                           fullWidth: true,

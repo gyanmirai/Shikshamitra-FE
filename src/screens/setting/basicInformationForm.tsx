@@ -5,6 +5,7 @@
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
@@ -410,6 +411,9 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
  * Displays a table of institutes and allows creating/editing institute details
  */
 const BasicInformation = () => {
+  const store = useSelector((state: any) => state.auth);
+  const isSuperAdmin = !store?.user?.profile.tenantid;
+  console.log('🚀 ~ store:', store);
   // Toggle form visibility
   const form = useBoolean();
   // Toggle view dialog for assets
@@ -418,6 +422,16 @@ const BasicInformation = () => {
   const [currentAsset, setCurrentAsset] = useState<null | string[]>(null);
   // State to store data for editing an institute
   const [editData, setEditData] = useState<any>(null);
+
+  // const { data: tenantDetail, isLoading: isTenantLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetTenantByIdQuery,
+  //   params: store?.user?.profile.tenantid,
+  //   options: {
+  //     skip: !store?.user?.profile.tenantid,
+  //   },
+  // });
+  // console.log('🚀 ~ BasicInformation ~ tenantDetail:', tenantDetail);
 
   /**
    * Handles closing the form and resetting edit data
@@ -433,6 +447,9 @@ const BasicInformation = () => {
   const { data: tenants } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllTenantsQuery,
+    options: {
+      skip: !isSuperAdmin,
+    },
   });
 
   return (
@@ -442,141 +459,153 @@ const BasicInformation = () => {
         description="Manage and create tenant information for schools, including institute details, contact information, and assets like logos and banners."
         links={[{ name: 'Institute Setup' }, { name: 'Basic Information' }]}
         sx={{ px: 1 }}
+        isBack={isSuperAdmin ? form.value : false}
+        onBack={() => {
+          form.onFalse();
+          setEditData(null);
+        }}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={form.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            onClick={form.value ? handleClose : form.onTrue}
-          >
-            {form.value ? 'Back' : 'Institute'}
-          </Button>
+          isSuperAdmin && (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={form.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
+              onClick={form.value ? handleClose : form.onTrue}
+            >
+              {form.value ? 'Back' : 'Institute'}
+            </Button>
+          )
         }
       />
-      {form.value ? (
-        <BasicInformationForm handleClose={handleClose} editData={editData} />
+
+      {isSuperAdmin ? (
+        form.value ? (
+          <BasicInformationForm handleClose={handleClose} editData={editData} />
+        ) : (
+          <CustomizableTable
+            noDataText={
+              <>
+                No Institute have been added yet.{' '}
+                <Box
+                  onClick={() => {
+                    form.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Add Institute
+                </Box>
+              </>
+            }
+            tableId="institute-setup"
+            searchFieldProps={{
+              placeholder: 'Search Institute',
+              label: 'Search Institute',
+              sx: {
+                maxWidth: '400px',
+                width: '100%',
+              },
+            }}
+            columns={[
+              { label: 'Institute Name', id: 'name' },
+              {
+                label: 'Institute Logo',
+                id: 'extraProperties.Logo',
+                render(value, row) {
+                  return (
+                    <IconButton
+                      disabled={!value}
+                      onClick={() => {
+                        viewDialog.onTrue();
+                        setCurrentAsset(value);
+                      }}
+                    >
+                      <Iconify
+                        icon="carbon:view-filled"
+                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                      />
+                    </IconButton>
+                  );
+                },
+              },
+              {
+                label: 'Institute Banner',
+                id: 'extraProperties.Banner',
+                render(value, row) {
+                  return (
+                    <IconButton
+                      disabled={!value}
+                      onClick={() => {
+                        viewDialog.onTrue();
+                        setCurrentAsset(value);
+                      }}
+                    >
+                      <Iconify
+                        icon="carbon:view-filled"
+                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                      />
+                    </IconButton>
+                  );
+                },
+              },
+              {
+                label: 'Principle Sign',
+                id: 'extraProperties.PrincipleSign',
+                render(value, row) {
+                  return (
+                    <IconButton
+                      disabled={!value}
+                      onClick={() => {
+                        viewDialog.onTrue();
+                        setCurrentAsset(value);
+                      }}
+                    >
+                      <Iconify
+                        icon="carbon:view-filled"
+                        sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                      />
+                    </IconButton>
+                  );
+                },
+              },
+              { label: 'Address', id: 'extraProperties.Address1' },
+              { label: 'Country', id: 'extraProperties.Country.name' },
+              { label: 'State', id: 'extraProperties.State.name' },
+              { label: 'City', id: 'extraProperties.City' },
+              { label: 'ZIP/Postal Code', id: 'extraProperties.PostalCode' },
+              { label: 'Contact Number', id: 'extraProperties.ContactNumber' },
+              {
+                label: 'Action',
+                id: 'action',
+                sticky: true,
+                isSort: false,
+                isFilter: false,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      showEditIcon
+                      handleEditClick={() => {
+                        setEditData(row);
+                        form.onTrue();
+                      }}
+                      showThreeDots={false}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tenants?.items || []}
+          />
+        )
       ) : (
-        <CustomizableTable
-          noDataText={
-            <>
-              No Institute have been added yet.{' '}
-              <Box
-                onClick={() => {
-                  form.onTrue();
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Add Institute
-              </Box>
-            </>
-          }
-          tableId="institute-setup"
-          searchFieldProps={{
-            placeholder: 'Search Institute',
-            label: 'Search Institute',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
-          columns={[
-            { label: 'Institute Name', id: 'name' },
-            {
-              label: 'Institute Logo',
-              id: 'extraProperties.Logo',
-              render(value, row) {
-                return (
-                  <IconButton
-                    disabled={!value}
-                    onClick={() => {
-                      viewDialog.onTrue();
-                      setCurrentAsset(value);
-                    }}
-                  >
-                    <Iconify
-                      icon="carbon:view-filled"
-                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                    />
-                  </IconButton>
-                );
-              },
-            },
-            {
-              label: 'Institute Banner',
-              id: 'extraProperties.Banner',
-              render(value, row) {
-                return (
-                  <IconButton
-                    disabled={!value}
-                    onClick={() => {
-                      viewDialog.onTrue();
-                      setCurrentAsset(value);
-                    }}
-                  >
-                    <Iconify
-                      icon="carbon:view-filled"
-                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                    />
-                  </IconButton>
-                );
-              },
-            },
-            {
-              label: 'Principle Sign',
-              id: 'extraProperties.PrincipleSign',
-              render(value, row) {
-                return (
-                  <IconButton
-                    disabled={!value}
-                    onClick={() => {
-                      viewDialog.onTrue();
-                      setCurrentAsset(value);
-                    }}
-                  >
-                    <Iconify
-                      icon="carbon:view-filled"
-                      sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-                    />
-                  </IconButton>
-                );
-              },
-            },
-            { label: 'Address', id: 'extraProperties.Address1' },
-            { label: 'Country', id: 'extraProperties.Country.name' },
-            { label: 'State', id: 'extraProperties.State.name' },
-            { label: 'City', id: 'extraProperties.City' },
-            { label: 'ZIP/Postal Code', id: 'extraProperties.PostalCode' },
-            { label: 'Contact Number', id: 'extraProperties.ContactNumber' },
-            {
-              label: 'Action',
-              id: 'action',
-              sticky: true,
-              isSort: false,
-              isFilter: false,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    showEditIcon
-                    handleEditClick={() => {
-                      setEditData(row);
-                      form.onTrue();
-                    }}
-                    showThreeDots={false}
-                  />
-                );
-              },
-            },
-          ]}
-          data={tenants?.items || []}
-        />
+        <BasicInformationForm handleClose={handleClose} editData={editData} />
       )}
       {viewDialog.value && (
         <ImageSlider

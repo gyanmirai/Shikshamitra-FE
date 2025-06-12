@@ -1,20 +1,8 @@
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
 
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  FormHelperText,
-  CircularProgress,
-} from '@mui/material';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
+import { Select, MenuItem, InputLabel, FormControl, FormHelperText } from '@mui/material';
 
 import ShakingTextField from 'src/components/shaking-text-field';
 
@@ -24,18 +12,7 @@ interface RenderOrganizationProps {
 }
 
 export const RenderOrganization = ({ formik, disabled }: RenderOrganizationProps) => {
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetOrganizationQuery,
-  });
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  console.log('🚀 ~ RenderOrganization ~ medium:', medium);
-
-  const organizationOptions = useMemo(
-    () => data?.items?.filter((org: Organization) => org.educationMediumId === medium?.id) || [],
-    [data?.items, medium?.id]
-  );
 
   return (
     <ShakingTextField error={!!formik.errors.organization && formik.touched.organization}>
@@ -52,17 +29,13 @@ export const RenderOrganization = ({ formik, disabled }: RenderOrganizationProps
           id="Roles-select"
           value={formik.values.organization}
           label="Organization *"
-          disabled={isLoading || !!disabled}
+          disabled={!!disabled}
           name="organization"
           size="small"
           onChange={formik.handleChange}
         >
-          {isLoading ? (
-            <MenuItem value="">
-              <CircularProgress size={24} />
-            </MenuItem>
-          ) : organizationOptions.length ? (
-            organizationOptions?.map((org: any) => (
+          {medium?.educationMediumStages.length ? (
+            medium?.educationMediumStages?.map((org: any) => (
               <MenuItem key={org.id} value={org.id}>
                 {org.name}
               </MenuItem>

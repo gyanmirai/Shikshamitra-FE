@@ -28,14 +28,6 @@ const EventsAndHolidaysRequest = () => (
     />
     <CustomizableTable
       noDataText={<>No Leave Requet Found </>}
-      searchFieldProps={{
-        placeholder: 'Search by Start Date, End Date..',
-        label: 'Search by Start Date, End Date...',
-        sx: {
-          maxWidth: '400px',
-          width: '100%',
-        },
-      }}
       tableId="event-holiday-request"
       columns={[
         { id: 'createdBy', label: 'Created By' },

@@ -41,7 +41,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             return (
               <DatePicker
                 value={value ? dayjs(value) : null}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
                 onChange={(newTime) => {
                   const updatedSchedules = [...examSchedules];
                   updatedSchedules[row.id].examDate = newTime;
