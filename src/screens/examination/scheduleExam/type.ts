@@ -17,6 +17,8 @@ export interface IScheduledExam {
 export interface ISubjectDetail {
   id: number;
   subjectName: string;
+  subjectColor: string;
+  subjectCode?: string;
   examDate: string | Dayjs | null;
   startTime: string | Dayjs | null;
   endTime: string | Dayjs | null;

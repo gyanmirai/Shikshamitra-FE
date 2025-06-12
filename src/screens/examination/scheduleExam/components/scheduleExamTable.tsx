@@ -15,7 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import ViewTimetableComp from './viewTimetableComp';
 
-import type { ISubjectDetail, IExamFormValues, IScheduledExamTableProps } from '../type';
+import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
 const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   openDialog,
@@ -127,7 +127,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       <CustomizableTable
         tableId="schedule-exam-table"
         searchFieldProps={{
-          placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
+          // placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
           label: 'Search by Class, Division, Exam Type,  Subject Name...',
           sx: {
             maxWidth: '500px',
@@ -167,7 +167,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           },
           {
             id: 'divisions',
-            label: 'Division',
+            label: 'Divisions',
             align: 'left',
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -178,27 +178,33 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             ),
           },
           { id: 'examType', label: 'Exam Type', align: 'left' },
-          {
-            id: 'subjects',
-            label: 'Subjects',
-            align: 'left',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((subject: ISubjectDetail) => (
-                  <Chip
-                    key={subject.id}
-                    label={subject.subjectName}
-                    size="small"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            ),
-          },
+          // {
+          //   id: 'subjects',
+          //   label: 'Subjects',
+          //   align: 'left',
+          //   render: (value, row) => (
+          //     <Box sx={{ display: 'flex', gap: 1 }}>
+          //       {value.map((subject: ISubjectDetail) => (
+          //         <Box key={subject.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          //           <Box
+          //             sx={{
+          //               width: 4,
+          //               height: 18,
+          //               borderRadius: 1,
+          //               backgroundColor: subject.subjectColor,
+          //             }}
+          //           />
+          //           <Typography variant="body2">{subject.subjectName}</Typography>
+          //         </Box>
+          //       ))}
+          //     </Box>
+          //   ),
+          // },
           {
             id: 'action',
             label: 'Actions',
-            minWidth: 100,
+            minWidth: 80,
+            align: 'left',
             isSort: false,
             sticky: true,
             isFilter: false,

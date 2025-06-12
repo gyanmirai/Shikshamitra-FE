@@ -90,7 +90,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           '&:before': {
             display: 'none', // remove default divider line at top
           },
-          mb: 2, // optional margin between accordions
+          mb: 2,
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -285,7 +285,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 <TextField
                   fullWidth
                   multiline
-                  rows={9.3}
+                  rows={9.7}
                   label="Description"
                   // placeholder="Enter Description"
                   size="small"

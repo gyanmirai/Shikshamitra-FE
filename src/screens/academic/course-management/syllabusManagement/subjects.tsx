@@ -162,7 +162,8 @@ const Subjects = (props: TabComponentType) => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addChapterDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
+          // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
+          heading="Chapters Management"
           description={
             selectedChapter
               ? 'Update existing chapter information including title, content, learning objectives, and associated materials. Make necessary modifications to keep the curriculum current and aligned with educational goals.'
@@ -173,7 +174,7 @@ const Subjects = (props: TabComponentType) => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
             { name: 'Chapters Management' },
-            { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
+            // { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
           ]}
           isBack
           onBack={() => {
@@ -234,11 +235,11 @@ const Subjects = (props: TabComponentType) => {
               />
               <CustomSelect
                 options={[
-                  { value: 'math', label: 'Mathematics' },
-                  { value: 'science', label: 'Science' },
-                  { value: 'english', label: 'English' },
-                  { value: 'history', label: 'History' },
-                  { value: 'geography', label: 'Geography' },
+                  { value: 'Mathematics', label: 'Mathematics' },
+                  { value: 'Science', label: 'Science' },
+                  { value: 'English', label: 'English' },
+                  { value: 'History', label: 'History' },
+                  { value: 'Geography', label: 'Geography' },
                 ]}
                 value={subject}
                 disabled={!classes}

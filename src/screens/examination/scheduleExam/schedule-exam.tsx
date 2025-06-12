@@ -9,12 +9,9 @@ import { Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
 import examTableData from 'src/json/examination/examTableData.json';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -135,12 +132,16 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           setSelectedExam(null);
         }}
         title="Delete"
-        content="Are you sure you want to Delete Exam ?"
+        content={
+          <>
+            Are you sure you want to delete exam <strong>{selectedExam?.examName}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExam?.id);
             }}

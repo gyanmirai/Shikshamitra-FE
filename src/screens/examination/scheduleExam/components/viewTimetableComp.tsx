@@ -1,6 +1,8 @@
 import React from 'react';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 
-import { Box, Button } from '@mui/material';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -17,12 +19,37 @@ interface ViewTimetableCompProps {
   examData: IExamFormValues | null;
 }
 
+dayjs.extend(utc);
+
 const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   const publishExamDialog = useBoolean();
   if (!examData) return null;
 
   return (
-    <Box>
+    <Card sx={{ p: 2, boxShadow: '3px', width: '100%' }}>
+      <Box display="flex" justifyContent="flex-end" gap={2}>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.download} />}
+          onClick={() => {
+            // Implement print or download functionality here
+          }}
+          variant="outlined"
+        >
+          Print Timetable
+        </Button>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.publish} />}
+          size="small"
+          onClick={() => {
+            publishExamDialog.onTrue();
+            // Implement publish functionality here
+          }}
+          variant="contained"
+        >
+          Publish
+        </Button>
+      </Box>
       <Scrollbar>
         <CustomizableTable
           tableId="subjects-table"
@@ -35,47 +62,74 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
               id: 'subjectName',
               label: 'Subject Name',
               align: 'left',
-              minWidth: 150,
               isFilter: true,
               isSort: true,
+              render(value, row) {
+                return (
+                  <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 4,
+                        height: 18,
+                        borderRadius: 1,
+                        backgroundColor: row.subjectColor,
+                      }}
+                    />
+                    <Typography variant="caption">
+                      {value} ({row.subjectCode})
+                    </Typography>
+                  </Box>
+                );
+              },
             },
             {
               id: 'examDate',
               label: 'Date',
               align: 'left',
-              minWidth: 110,
               isFilter: true,
+              filterType: 'date',
               isSort: true,
+              render: (value) => (
+                <Typography variant="caption" gutterBottom>
+                  {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+                </Typography>
+              ),
             },
             {
               id: 'startTime',
               label: 'Start Time',
               align: 'left',
-              minWidth: 110,
               isFilter: true,
               isSort: true,
+              // render: (value) => (
+              //   <Typography variant="caption" gutterBottom>
+              //     {value ? dayjs(value).local().format('hh:mm A') : '-'}
+              //   </Typography>
+              // ),
             },
             {
               id: 'endTime',
               label: 'End Time',
               align: 'left',
-              minWidth: 110,
               isFilter: true,
               isSort: true,
+              // render: (value) => (
+              //   <Typography fontSize="12px" gutterBottom>
+              //     {value ? dayjs(value).format('hh:mm A') : '-'}
+              //   </Typography>
+              // ),
             },
             {
               id: 'totalMarks',
               label: 'Total Marks',
-              align: 'center',
-              minWidth: 160,
+              align: 'left',
               isFilter: true,
               isSort: true,
             },
             {
               id: 'passingMarks',
               label: 'Passing Marks',
-              align: 'center',
-              minWidth: 150,
+              align: 'left',
               isFilter: true,
               isSort: true,
             },
@@ -83,28 +137,6 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           data={examData.subjects || []}
         />
       </Scrollbar>
-
-      <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.download} />}
-          onClick={() => {
-            // Implement print or download functionality here
-          }}
-          variant="outlined"
-        >
-          Print Timetable
-        </Button>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.publish} />}
-          onClick={() => {
-            publishExamDialog.onTrue();
-            // Implement publish functionality here
-          }}
-          variant="contained"
-        >
-          Publish
-        </Button>
-      </Box>
 
       <ConfirmDialog
         open={publishExamDialog.value}
@@ -124,7 +156,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           </Button>
         }
       />
-    </Box>
+    </Card>
   );
 };
 

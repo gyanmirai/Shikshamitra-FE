@@ -45,7 +45,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
                     size="small"
                     name="homeworkTypeName"
                     label="Homework Type Name *"
-                    placeholder="Enter Homework Type Name"
+                    // placeholder="Enter Homework Type Name"
                     value={formik.values.homeworkTypeName}
                     onChange={formik.handleChange}
                     error={
@@ -63,6 +63,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}
               variant="outlined"
+              size="small"
             >
               Cancel
             </Button>
@@ -70,6 +71,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               type="submit"
               variant="contained"
+              size="small"
             >
               Submit
             </Button>

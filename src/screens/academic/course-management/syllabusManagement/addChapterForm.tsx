@@ -175,7 +175,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     formik.setFieldValue('content', value);
                   }}
                   placeholder="Chapter Description"
-                  sx={{ width: '100%', height: '100px' }}
+                  sx={{ width: '100%' }}
                 />
               </Grid>
               {/* Document Upload Section */}
@@ -190,7 +190,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             </Grid>
           </Scrollbar>
           {/* Form Actions */}
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               variant="outlined"
               onClick={() => {

@@ -8,7 +8,6 @@ import {
   Box,
   Tab,
   Tabs,
-  Chip,
   Divider,
   Accordion,
   Typography,
@@ -101,44 +100,44 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
               mb: 1,
             }}
           >
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box display="flex" flexDirection="column" gap={0.5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip
-                      label={`Type : ${subject?.subjectType}`}
-                      variant="outlined"
-                      sx={{ fontSize: '0.9rem' }}
-                    />
-                    <Chip
-                      label={`Class : ${subject?.className}`}
-                      variant="outlined"
-                      sx={{ fontSize: '0.9rem' }}
-                    />
-                    <Label
-                      variant="soft"
-                      color={
-                        PublishUnpublishStatusTypeColors[
-                          subject?.status as PublishUnpublishStatusType
-                        ] as LabelColor
-                      }
-                      sx={
-                        {
-                          // p: 1.8,
-                          // fontSize: '1rem',
-                          // fontWeight: 500,
-                          // minWidth: '100px',
-                          // textAlign: 'center',
-                        }
-                      }
-                    >
-                      {
-                        PublishUnpublishStatusType[
-                          subject?.status as PublishUnpublishStatusType
-                        ] as string
-                      }
-                    </Label>
-                    {/* <Label
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography>
+                  <strong>Type : </strong>
+                </Typography>
+                <Typography mt={0.3}>{subject?.subjectType}</Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
+                <Typography>
+                  <strong>Class : </strong>
+                </Typography>
+                <Typography>{subject?.className}</Typography>
+              </Box>
+              <Label
+                variant="soft"
+                color={
+                  PublishUnpublishStatusTypeColors[
+                    subject?.status as PublishUnpublishStatusType
+                  ] as LabelColor
+                }
+                sx={
+                  {
+                    // p: 1.8,
+                    // fontSize: '1rem',
+                    // fontWeight: 500,
+                    // minWidth: '100px',
+                    // textAlign: 'center',
+                  }
+                }
+              >
+                {
+                  PublishUnpublishStatusType[
+                    subject?.status as PublishUnpublishStatusType
+                  ] as string
+                }
+              </Label>
+              {/* <Label
                       label={`Status : ${subject?.status === 1 ? 'Draft' : 'Published'}`}
                       variant="outlined"
                       sx={{
@@ -153,9 +152,6 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                           ],
                       }}
                     /> */}
-                  </Box>
-                </Box>
-              </Box>
             </Box>
           </Box>
         </Box>

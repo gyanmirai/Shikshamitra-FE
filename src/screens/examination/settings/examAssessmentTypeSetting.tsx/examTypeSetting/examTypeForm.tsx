@@ -52,7 +52,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     label="Exam Type *"
                     name="examType"
                     size="small"
-                    placeholder="Enter Exam Type"
+                    // placeholder="Enter Exam Type"
                     value={formik.values.examType}
                     onChange={formik.handleChange}
                     error={formik.touched.examType && Boolean(formik.errors.examType)}
@@ -72,7 +72,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     size="small"
                     rows={4}
                     multiline
-                    placeholder="Enter Description"
+                    // placeholder="Enter Description"
                     value={formik.values.description}
                     onChange={formik.handleChange}
                     error={formik.touched.description && Boolean(formik.errors.description)}

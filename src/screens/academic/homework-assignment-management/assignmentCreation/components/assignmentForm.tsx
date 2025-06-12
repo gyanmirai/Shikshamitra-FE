@@ -122,7 +122,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
-          <Scrollbar sx={{ p: 2, height: '600px' }}>
+          <Scrollbar sx={{ p: 2, height: '400px' }}>
             <Grid container spacing={3}>
               {/* Class Selection */}
               <Grid item xs={12} md={6}>
@@ -130,14 +130,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <CustomSelect
                     label="Class *"
                     options={classData?.items || []}
-                    value={classes}
+                    value={formik.values.class}
                     isLoading={isLoading}
-                    disabled={!!classes}
+                    // disabled={!!classes}
                     labelKey="name"
                     valueKey="id"
                     onChange={(val) => {
                       const selectedClass = classData?.items?.find((i: Standards) => i.id === val);
-                      formik.setFieldValue('class', selectedClass?.name || '');
+                      formik.setFieldValue('class', val);
                     }}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={!!(formik.touched.class && formik.errors.class) || false}
@@ -204,7 +204,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <TextField
                     fullWidth
                     label="Assignment Title *"
-                    placeholder="Enter Assignment Title"
+                    // placeholder="Enter Assignment Title"
                     name="title"
                     size="small"
                     value={formik.values.title}
@@ -301,48 +301,44 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       formik.setFieldValue('description', value);
                     }}
                     placeholder="Assignment Description"
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', height: '200px' }}
                   />
                 </ShakingTextField>
               </Grid>
 
               {/* File Upload */}
-              <Grid item xs={12}>
-                <SectionCard title="Assignment Attachments">
-                  <Upload
-                    multiple
-                    value={formik.values.attachments || []}
-                    onDrop={handleDrop}
-                    onRemove={handleRemove}
-                    sx={{
-                      p: 2,
-                    }}
-                  />
-                </SectionCard>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom color="primary.main">
+                  Assignment Attachments
+                </Typography>
+                <Upload
+                  multiple
+                  value={formik.values.attachments || []}
+                  onDrop={handleDrop}
+                  onRemove={handleRemove}
+                />
               </Grid>
 
-              <Grid item xs={12}>
-                <SectionCard title="Assignment Rubric">
-                  <Upload
-                    // {...uploadProps}
-                    thumbnail
-                    value={formik.values.rubric}
-                    onDrop={(acceptedFiles) => {
-                      const file = acceptedFiles[0];
-                      console.log('file', file);
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom color="primary.main">
+                  Assignment Rubric
+                </Typography>{' '}
+                <Upload
+                  // {...uploadProps}
+                  thumbnail
+                  value={formik.values.rubric}
+                  onDrop={(acceptedFiles) => {
+                    const file = acceptedFiles[0];
+                    console.log('file', file);
 
-                      if (!file) return;
+                    if (!file) return;
 
-                      formik.setFieldValue('rubric', file);
-                    }}
-                    multiple={false}
-                    onDelete={() => handleRemoveFile(formik.setFieldValue)}
-                    onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
-                    sx={{
-                      p: 2,
-                    }}
-                  />
-                </SectionCard>
+                    formik.setFieldValue('rubric', file);
+                  }}
+                  multiple={false}
+                  onDelete={() => handleRemoveFile(formik.setFieldValue)}
+                  onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
+                />
               </Grid>
 
               {/* Schedule Assignment */}
@@ -444,33 +440,22 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           <DialogActions>
             <Button
               variant="outlined"
-              onClick={() => {
-                if (editData) {
-                  onClose(null, false);
-                } else {
-                  formik.setFieldValue('status', 'draft');
-                  formik.handleSubmit();
-                }
-              }}
-              startIcon={
-                editData ? (
-                  <Iconify icon={GlobalIcons.cancel} />
-                ) : (
-                  <Iconify icon={GlobalIcons.draftIcon} />
-                )
-              }
+              size="small"
+              onClick={() => onClose(null, false)}
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
-              {editData ? 'Cancel' : 'Save Draft'}
+              Cancel
             </Button>
             <Button
+              size="small"
               variant="contained"
               onClick={() => {
-                formik.setFieldValue('status', 'publish');
+                // formik.setFieldValue('status', 1);
                 formik.handleSubmit();
               }}
-              startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.publish} />}
+              startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
             >
-              {editData ? 'Update' : 'Publish'}
+              {editData ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

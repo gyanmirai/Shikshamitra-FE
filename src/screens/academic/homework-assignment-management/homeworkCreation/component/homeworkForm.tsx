@@ -10,16 +10,21 @@ import React, { useState, useEffect } from 'react';
 
 import { Create } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
   Grid,
+  Chip,
   Radio,
   Paper,
   Button,
+  Checkbox,
   TextField,
   RadioGroup,
   Typography,
   FormControl,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -37,6 +42,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -127,14 +133,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <CustomSelect
                     label="Class *" // Select class from dropdown
                     options={classData?.items || []}
-                    value={formik.values.class || classes}
-                    disabled={!!classes}
+                    value={formik.values.class}
+                    // disabled={!!classes}
                     isLoading={isLoading}
                     labelKey="name"
                     valueKey="id"
                     onChange={(val) => {
                       const selectedClass = classData?.items?.find((i: Standards) => i.id === val);
-                      formik.setFieldValue('class', selectedClass?.name || '');
+                      formik.setFieldValue('class', val);
                       setDivisionOptions(selectedClass?.divisions || []);
                     }}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -157,10 +163,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     options={allDivision}
                     value={formik.values.division}
                     onChange={(val) => {
-                      const selectedDivisions = allDivision
-                        .filter((i) => (val as string[]).includes(i.id))
-                        .map((div) => div.id);
-                      formik.setFieldValue('division', selectedDivisions);
+                      // const selectedDivisions = allDivision
+                      //   .filter((i) => (val as string[]).includes(i.id))
+                      //   .map((div) => div.id);
+                      formik.setFieldValue('division', val);
                     }}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={!!(formik.touched.division && formik.errors.division) || false}
@@ -201,25 +207,79 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <ShakingTextField
                   error={!!(formik.touched.chapters && formik.errors.chapters) || false}
                 >
-                  <CustomSelect
-                    size="small"
-                    fullWidth
-                    disabled={!formik.values.subject}
-                    label="Chapter *" // Select chapter from dropdown
-                    name="chapters"
+                  <Autocomplete
                     multiple
+                    disabled={!formik.values.subject}
                     options={[
-                      { value: 'chapter1', label: 'chapter1' },
-                      { value: 'chapter2', label: 'chapter2' },
+                      { value: 'numbers', label: 'Numbers and Number Systems' },
+                      { value: 'algebra', label: 'Algebra' },
+                      { value: 'geometry', label: 'Geometry' },
+                      { value: 'mensuration', label: 'Mensuration' },
+                      { value: 'statistics', label: 'Statistics and Probability' },
+                      { value: 'trigonometry', label: 'Trigonometry' },
+                      { value: 'coordinate', label: 'Coordinate Geometry' },
+                      { value: 'sets', label: 'Sets and Relations' },
                     ]}
-                    value={formik.values.chapters || []}
-                    onChange={(val) => formik.setFieldValue('chapters', val)}
-                    error={!!(formik.touched.chapters && formik.errors.chapters) || false}
-                    helperText={
-                      Array.isArray(formik.errors.chapters)
-                        ? formik.errors.chapters.join(', ')
-                        : (formik.touched.chapters && formik.errors.chapters) || undefined
+                    disableCloseOnSelect
+                    getOptionLabel={(option: { value: string; label: string }) => option.label}
+                    value={
+                      formik.values.chapters?.map((chapter) => ({
+                        value: chapter,
+                        label: chapter,
+                      })) || []
                     }
+                    onChange={(event, newValue: Array<{ value: string; label: string }>) => {
+                      formik.setFieldValue(
+                        'chapters',
+                        newValue.map((item) => item.value)
+                      );
+                    }}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          icon={<CheckBoxOutlineBlankIcon />}
+                          checkedIcon={<CheckBoxIcon />}
+                          style={{ marginRight: 8 }}
+                          checked={selected}
+                        />
+                        {option.label}
+                      </li>
+                    )}
+                    renderTags={(value: Array<{ value: string; label: string }>) => {
+                      if (value.length === 0) return null;
+                      const first = value[0].label;
+                      const remainingCount = value.length - 1;
+                      return [
+                        <Chip
+                          key={first}
+                          label={first}
+                          sx={{ ml: 1 }}
+                          size="small"
+                          variant="soft"
+                        />,
+                        remainingCount > 0 && (
+                          <TeacherListPopover
+                            key="more-count"
+                            data={value.slice(1)}
+                            count={remainingCount}
+                          />
+                        ),
+                      ];
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Chapter *" // Select chapter from dropdown
+                        size="small"
+                        error={!!(formik.touched.chapters && formik.errors.chapters)}
+                        helperText={
+                          Array.isArray(formik.errors.chapters)
+                            ? formik.errors.chapters.join(', ')
+                            : (formik.touched.chapters && formik.errors.chapters) || undefined
+                        }
+                      />
+                    )}
                   />
                 </ShakingTextField>
               </Grid>
@@ -308,9 +368,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   value={formik.values.attachments || []}
                   onDrop={handleDrop}
                   onRemove={handleRemove}
-                  sx={{
-                    p: 2,
-                  }}
+                  // sx={{
+                  //   p: 1,
+                  // }}
                 />
               </Grid>
 
@@ -408,6 +468,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <DialogActions>
             <Button
               variant="outlined"
+              size="small"
               onClick={() => onClose(null, false)}
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
@@ -415,6 +476,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             </Button>
             <Button
               variant="contained"
+              size="small"
               onClick={() => {
                 // formik.setFieldValue('status', 1);
                 formik.handleSubmit();
@@ -441,4 +503,26 @@ export const SectionCard = ({ title, children }: { title: string; children: Reac
       {children}
     </Grid>
   </Paper>
+);
+
+export const TeacherListPopover = ({
+  data,
+  count,
+}: {
+  data: Record<string, string>[];
+  count: number;
+}) => (
+  <CustomTooltip
+    title={
+      <Box sx={{ display: 'flex', flexDirection: 'column', p: 1, maxWidth: 230, borderRadius: 1 }}>
+        {data.map((value) => (
+          <Chip key={value.value} variant="soft" label={value.label} sx={{ mb: 1 }} size="small" />
+        ))}
+      </Box>
+    }
+    placement="bottom-start"
+    arrow
+  >
+    <Chip label={`+${count}`} sx={{ ml: 0.5, cursor: 'pointer' }} size="small" variant="soft" />
+  </CustomTooltip>
 );

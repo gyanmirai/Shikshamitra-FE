@@ -141,8 +141,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
         searchFieldProps={{
-          placeholder: 'Search by Gr No, Student Name, Homework...',
-          label: 'Search by Gr No, Student Name, Homework...',
+          placeholder: 'Search by Gr No, Student Name, Title...',
+          label: 'Search by Gr No, Student Name, Title...',
           sx: {
             maxWidth: '400px',
             width: '100%',
@@ -150,10 +150,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         }}
         noDataText="No Submission Data Found"
         columns={[
+          {
+            id: 'studentName',
+            label: 'Student Name',
+            align: 'left',
+            sticky: true,
+            minWidth: 170,
+          },
           { id: 'grNo', label: 'Gr No' },
-          { id: 'studentName', label: 'Student Name', align: 'left' },
-          { id: 'homework', label: 'Homework' },
-          { id: 'homeworkType', label: 'Homework Type' },
+          { id: 'homework', label: 'Title' },
+          { id: 'homeworkType', label: 'Type' },
           {
             id: 'submissionType',
             label: 'Submission Type',
@@ -241,7 +247,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: '1',
             grNo: 'GR001',
-            studentName: 'Aarav Mehta',
+            studentName: 'Mehta Aarav Kumar',
             homework: 'Math Assignment 1',
             homeworkType: 'Assignment',
             submissionType: 'online_text',
@@ -255,7 +261,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: '2',
             grNo: 'GR002',
-            studentName: 'Nisha Patel',
+            studentName: 'Patel Nisha Rajesh',
             homework: 'Science Homework',
             homeworkType: 'Homework',
             submissionType: 'file_upload',
@@ -269,7 +275,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: '3',
             grNo: 'GR003',
-            studentName: 'Ravi Shah',
+            studentName: 'Shah Ravi Mukesh',
             homework: 'English Essay',
             homeworkType: 'Essay',
             submissionType: 'online_text',
@@ -283,7 +289,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: '4',
             grNo: 'GR004',
-            studentName: 'Sneha Desai',
+            studentName: 'Desai Sneha Prakash',
             homework: 'History Worksheet',
             homeworkType: 'Worksheet',
             submissionType: 'file_upload',

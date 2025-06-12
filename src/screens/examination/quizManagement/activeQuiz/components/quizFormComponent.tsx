@@ -8,6 +8,8 @@ import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
 
 import { Add } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
   Chip,
@@ -18,12 +20,14 @@ import {
   Switch,
   Button,
   TableRow,
+  Checkbox,
   TextField,
   TableHead,
   TableCell,
   TableBody,
   IconButton,
   Typography,
+  Autocomplete,
   DialogActions,
   TableContainer,
   FormHelperText,
@@ -33,6 +37,8 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
+
+import { TeacherListPopover } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import { Editor } from 'src/components/editor';
 import { Upload } from 'src/components/upload';
@@ -182,7 +188,7 @@ const QuizInformation = ({ formik }: any) => {
             <TextField
               fullWidth
               label="Quiz Title *"
-              placeholder="Enter Quiz Title"
+              // placeholder="Enter Quiz Title"
               name="quizTitle"
               value={formik.values.quizTitle}
               onChange={formik.handleChange}
@@ -262,25 +268,73 @@ const QuizInformation = ({ formik }: any) => {
 
         <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter) || false}>
-            <CustomSelect
-              label="Chapter *"
-              options={[
-                { value: 'chapter1', label: 'chapter1' },
-                { value: 'chapter2', label: 'chapter2' },
-                { value: 'chapter3', label: 'chapter3' },
-              ]}
-              name="chapter"
+            <Autocomplete
               multiple
               disabled={!formik.values.subject}
-              value={formik.values.chapter}
-              onChange={(val) => formik.setFieldValue('chapter', val)}
-              error={!!(formik.touched.chapter && formik.errors.chapter) || false}
-              helperText={
-                Array.isArray(formik.errors.chapter)
-                  ? formik.errors.chapter.join(', ')
-                  : (formik.touched.chapter && formik.errors.chapter) || undefined
+              options={[
+                { value: 'numbers', label: 'Numbers and Number Systems' },
+                { value: 'algebra', label: 'Algebra' },
+                { value: 'geometry', label: 'Geometry' },
+                { value: 'mensuration', label: 'Mensuration' },
+                { value: 'statistics', label: 'Statistics and Probability' },
+                { value: 'trigonometry', label: 'Trigonometry' },
+                { value: 'coordinate', label: 'Coordinate Geometry' },
+                { value: 'sets', label: 'Sets and Relations' },
+              ]}
+              disableCloseOnSelect
+              getOptionLabel={(option: { value: string; label: string }) => option.label}
+              value={
+                formik.values.chapter?.map((chapter: any) => ({
+                  value: chapter,
+                  label: chapter,
+                })) || []
               }
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              onChange={(event, newValue: Array<{ value: string; label: string }>) => {
+                formik.setFieldValue(
+                  'chapter',
+                  newValue.map((item) => item.value)
+                );
+              }}
+              isOptionEqualToValue={(option, value) => option.value === value.value}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon />}
+                    checkedIcon={<CheckBoxIcon />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.label}
+                </li>
+              )}
+              renderTags={(value: Array<{ value: string; label: string }>) => {
+                if (value.length === 0) return null;
+                const first = value[0].label;
+                const remainingCount = value.length - 1;
+                return [
+                  <Chip key={first} label={first} sx={{ ml: 1 }} size="small" variant="soft" />,
+                  remainingCount > 0 && (
+                    <TeacherListPopover
+                      key="more-count"
+                      data={value.slice(1)}
+                      count={remainingCount}
+                    />
+                  ),
+                ];
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Chapter *"
+                  size="small"
+                  error={!!(formik.touched.chapter && formik.errors.chapter)}
+                  helperText={
+                    Array.isArray(formik.errors.chapter)
+                      ? formik.errors.chapter.join(', ')
+                      : (formik.touched.chapter && formik.errors.chapter) || undefined
+                  }
+                />
+              )}
             />
           </ShakingTextField>
         </Grid>
@@ -292,7 +346,7 @@ const QuizInformation = ({ formik }: any) => {
             <TextField
               fullWidth
               label="Total Marks *"
-              placeholder="Enter Total Marks"
+              // placeholder="Enter Total Marks"
               name="totalMarks"
               value={formik.values.totalMarks}
               onChange={formik.handleChange}
@@ -310,7 +364,7 @@ const QuizInformation = ({ formik }: any) => {
             <TextField
               fullWidth
               label="Passing Marks *"
-              placeholder="Enter Passing Marks"
+              // placeholder="Enter Passing Marks"
               name="passingMarks"
               value={formik.values.passingMarks}
               onChange={formik.handleChange}
@@ -328,7 +382,7 @@ const QuizInformation = ({ formik }: any) => {
             <TextField
               fullWidth
               label="Duration (In Minutes) *"
-              placeholder="Enter Duration"
+              // placeholder="Enter Duration"
               name="quizDuration"
               value={formik.values.quizDuration}
               onChange={formik.handleChange}
@@ -388,6 +442,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: '50px' }} />
+              <TableCell sx={{ width: '70px', fontWeight: 'bold' }}>Sr No.</TableCell>
               <TableCell sx={{ width: '40%', fontWeight: 'bold' }}>Question</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
               <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
@@ -421,6 +476,9 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             <IconButton size="small" sx={{ cursor: 'grab' }}>
                               <Iconify icon="mdi:drag" />
                             </IconButton>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{index + 1}</Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2">{question.question}</Typography>
@@ -499,7 +557,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             onDeleteQuestion(index);
                             deleteQuestionDialog.onFalse();
                           }}
-                          startIcon={<Iconify icon={GlobalIcons.delete} />}
+                          // startIcon={<Iconify icon={GlobalIcons.delete} />}
                         >
                           Yes
                         </Button>
@@ -748,7 +806,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <ShakingTextField error={!!(errors.questionType && errors.questionType) || false}>
@@ -795,7 +853,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
               <TextField
                 label="Time (Minutes) *"
                 type="number"
-                placeholder="Enter Time in minutes"
+                // placeholder="Enter Time in minutes"
                 value={questionTime}
                 onChange={(e) => setQuestionTime(e.target.value)}
                 size="small"
@@ -840,7 +898,7 @@ const QuestionForm = ({ onSave, initialData = null, onCancel }: any) => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
                         label={`Option ${index + 1}`}
-                        placeholder="Enter option"
+                        // placeholder="Enter option"
                         value={option}
                         onChange={(e) => handleOptionChange(index, e.target.value)}
                         size="small"

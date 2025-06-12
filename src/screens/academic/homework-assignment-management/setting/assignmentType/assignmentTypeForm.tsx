@@ -46,7 +46,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
                     size="small"
                     name="assignmentTypeName"
                     label="Assignment Type Name *"
-                    placeholder="Enter Assignment Type Name"
+                    // placeholder="Enter Assignment Type Name"
                     value={formik.values.assignmentTypeName}
                     onChange={formik.handleChange}
                     error={
@@ -66,6 +66,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}
               variant="outlined"
+              size="small"
             >
               Cancel
             </Button>
@@ -73,6 +74,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               type="submit"
               variant="contained"
+              size="small"
             >
               Submit
             </Button>

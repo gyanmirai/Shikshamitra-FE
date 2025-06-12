@@ -4,7 +4,7 @@ import type { IQuizData } from 'src/screens/examination/quiz/type';
 import React, { useMemo } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Chip, Tabs, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Chip, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -163,7 +163,7 @@ const QuizTable = ({
       <CustomizableTable
         tableId="quiz-table"
         searchFieldProps={{
-          placeholder: 'Search by Class, Division, Subject...',
+          // placeholder: 'Search by Class, Division, Subject...',
           label: 'Search by Class, Division, Subject...',
           sx: {
             maxWidth: '400px',
@@ -197,7 +197,7 @@ const QuizTable = ({
                 { id: 'class', label: 'Class', align: 'left', filterType: 'string' },
                 {
                   id: 'division',
-                  label: 'Division',
+                  label: 'Divisions',
                   align: 'left',
                   filterType: 'string',
                   render(value, row) {
@@ -212,7 +212,30 @@ const QuizTable = ({
                     );
                   },
                 },
-                { id: 'subject', label: 'Subject', align: 'left', filterType: 'string' },
+                {
+                  id: 'subject',
+                  label: 'Subject',
+                  align: 'left',
+                  minWidth: 160,
+                  filterType: 'string',
+                  render(value, row) {
+                    return (
+                      <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                          sx={{
+                            width: 4,
+                            height: 18,
+                            borderRadius: 1,
+                            backgroundColor: row.subjectColor,
+                          }}
+                        />
+                        <Typography variant="caption">
+                          {value} ({row.subjectCode})
+                        </Typography>
+                      </Box>
+                    );
+                  },
+                },
                 {
                   id: 'quizTitle',
                   label: 'Quiz Title',
@@ -268,12 +291,12 @@ const QuizTable = ({
                   filterType: 'number',
                 },
                 {
-                  id: 'actions',
-                  label: 'Action',
+                  id: 'action',
+                  label: 'Actions',
                   isSort: false,
                   sticky: true,
                   isFilter: false,
-                  align: 'center',
+                  align: 'left',
                   minWidth: 100,
                   render(value, row) {
                     return (
@@ -297,7 +320,7 @@ const QuizTable = ({
                 { id: 'class', label: 'Class', align: 'left', filterType: 'string' },
                 {
                   id: 'division',
-                  label: 'Division',
+                  label: 'Divisions',
                   align: 'left',
                   filterType: 'string',
                   render(value, row) {
@@ -312,7 +335,30 @@ const QuizTable = ({
                     );
                   },
                 },
-                { id: 'subject', label: 'Subject', align: 'left', filterType: 'string' },
+                {
+                  id: 'subject',
+                  label: 'Subject',
+                  align: 'left',
+                  minWidth: 160,
+                  filterType: 'string',
+                  render(value, row) {
+                    return (
+                      <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                          sx={{
+                            width: 4,
+                            height: 18,
+                            borderRadius: 1,
+                            backgroundColor: row.subjectColor,
+                          }}
+                        />
+                        <Typography variant="caption">
+                          {value} ({row.subjectCode})
+                        </Typography>
+                      </Box>
+                    );
+                  },
+                },
                 {
                   id: 'quizTitle',
                   label: 'Quiz Title',
@@ -367,12 +413,12 @@ const QuizTable = ({
                   align: 'left',
                   filterType: 'number',
                 },
-                {
-                  id: 'obtainedMarks',
-                  label: 'Obtained Marks',
-                  align: 'left',
-                  filterType: 'number',
-                },
+                // {
+                //   id: 'obtainedMarks',
+                //   label: 'Obtained Marks',
+                //   align: 'left',
+                //   filterType: 'number',
+                // },
                 {
                   id: 'marksStatus',
                   label: 'Marks Status',
@@ -393,8 +439,8 @@ const QuizTable = ({
                   isSort: false,
                   sticky: true,
                   isFilter: false,
-                  align: 'center',
-                  minWidth: 50,
+                  align: 'left',
+                  minWidth: 60,
                   render(value, row) {
                     return (
                       <ThreeDotsActions

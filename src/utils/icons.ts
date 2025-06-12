@@ -18,7 +18,7 @@ export const GlobalIcons = {
   sendNotification: 'mynaui:send',
   alertIcon: 'fluent:alert-on-24-regular',
   resetIcon: 'ix:reset',
-  publish: 'material-symbols-light:publish-sharp',
+  publish: 'mdi:publish',
   draftIcon: 'ri:draft-line',
   resignIcon: 'material-symbols-light:edit-document-outline-sharp',
   eye: 'carbon:view-filled',

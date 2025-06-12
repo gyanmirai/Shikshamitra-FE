@@ -4,30 +4,38 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Save, RestartAlt } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { Box, Chip, Button, Avatar, Checkbox, TextField, Autocomplete } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Button,
+  Avatar,
+  Checkbox,
+  TextField,
+  Typography,
+  Autocomplete,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import teacherTableData from 'src/json/academic/curriculum/teacherTableData.json';
 
-import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
-import TeacherReassign from './teacherReassignForm';
 import { TeacherListPopover } from '../../subject/component/subjectCardComponent';
 
-import type { ITeacher } from './type';
 import type { ITeacherOption } from '../../subject/component/type';
 
 const Teacher = ({
@@ -37,14 +45,67 @@ const Teacher = ({
   searchParams?: Record<string, string>;
   setSearchParams?: (obj: Record<string, any>) => void;
 }) => {
-  // Query hook to fetch class data from the API
+  // Dialog control states for reset and save confirmations
+  const resetConfirmDialog = useBoolean();
+  // Dialog state for save confirmation popup
+  const saveConfirmDialog = useBoolean();
+
+  const teacherOptions: ITeacherOption[] = [
+    {
+      value: 't1',
+      label: 'Sharma Riya Kumar',
+      department: 'Mathematics Department',
+      avatar: 'https://yourcdn.com/riya.png',
+    },
+    {
+      value: 't2',
+      label: 'Patel Ankit Rajesh',
+      department: 'Science Department',
+      avatar: 'https://yourcdn.com/ankit.png',
+    },
+    {
+      value: 't3',
+      label: 'Desai Priya Mahesh',
+      department: 'English Department',
+      avatar: 'https://yourcdn.com/priya.png',
+    },
+    {
+      value: 't4',
+      label: 'Singh Rahul Vikram',
+      department: 'Social Studies Department',
+      avatar: 'https://yourcdn.com/rahul.png',
+    },
+    {
+      value: 't5',
+      label: 'Mehta Neha Suresh',
+      department: 'Hindi Department',
+      avatar: 'https://yourcdn.com/neha.png',
+    },
+  ];
+
+  // Get global state values from Redux store
+  // currentBoard - Selected board (e.g. CBSE, ICSE)
+  // medium - Selected medium of instruction (e.g. English, Hindi)
+  // setMedium - Function to update the selected medium
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+  // State for managing class data
+  const [allClass, setAllClass] = useState<Standards[]>([]); // Stores list of all available classes
+  const [classes, setClasses] = useState<string>(''); // Currently selected class
+
+  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // State to store the table data with division and subject-teacher mappings
-  const [tableData, setTableData] = useState([
+  // Initial mock data structure for teacher assignments
+  // Each object represents a division with subject-teacher mappings
+  // Empty strings indicate unassigned teachers
+  const initialTableData = [
     {
       division: 'A',
       subjects: {
@@ -87,59 +148,18 @@ const Teacher = ({
         Biology: 'teacher3',
       },
     },
-  ]);
-
-  // Array of available teachers with their IDs and names for selection
-  const teacherOptions: ITeacherOption[] = [
-    {
-      value: 't1',
-      label: 'Sharma Riya Kumar',
-      department: 'Mathematics Department',
-      avatar: 'https://yourcdn.com/riya.png',
-    },
-    {
-      value: 't2',
-      label: 'Patel Ankit Rajesh',
-      department: 'Science Department',
-      avatar: 'https://yourcdn.com/ankit.png',
-    },
-    {
-      value: 't3',
-      label: 'Desai Priya Mahesh',
-      department: 'English Department',
-      avatar: 'https://yourcdn.com/priya.png',
-    },
-    {
-      value: 't4',
-      label: 'Singh Rahul Vikram',
-      department: 'Social Studies Department',
-      avatar: 'https://yourcdn.com/rahul.png',
-    },
-    {
-      value: 't5',
-      label: 'Mehta Neha Suresh',
-      department: 'Hindi Department',
-      avatar: 'https://yourcdn.com/neha.png',
-    },
   ];
-  // State to store the selected division
-  const [division, setDivision] = useState<string>('');
 
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
+  const [tableData, setTableData] = useState(initialTableData);
+  const [originalTableData, setOriginalTableData] = useState(initialTableData);
 
-  // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  // Check if there are any changes in the table data
+  const hasChanges = useMemo(
+    () => JSON.stringify(tableData) !== JSON.stringify(originalTableData),
+    [tableData, originalTableData]
+  );
 
-  // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
@@ -147,48 +167,52 @@ const Teacher = ({
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // State to store the selected teacher for reassignment
-  const [selectedTeacher, setSelectedTeacher] = useState<any | null>([]);
+  // Get modified subjects
+  const getModifiedSubjects = () => {
+    const modifiedSubjects = new Set<string>();
 
-  // State to store and manage the teacher assignment data
-  const [teacherData, setTeacherData] = useState<ITeacher[]>(teacherTableData);
+    tableData.forEach((division, divIndex) => {
+      Object.entries(division.subjects).forEach(([subject, teachers]) => {
+        if (
+          JSON.stringify(teachers) !==
+          JSON.stringify(
+            originalTableData[divIndex].subjects[subject as keyof typeof division.subjects]
+          )
+        ) {
+          modifiedSubjects.add(subject);
+        }
+      });
+    });
 
-  // Boolean state to control dialog visibility
-  const dialog = useBoolean();
+    return Array.from(modifiedSubjects);
+  };
 
-  const sendInstantNotificationDialogValue = useBoolean();
+  const handleReset = () => {
+    setTableData(originalTableData);
+    resetConfirmDialog.onFalse();
+    shikshaMitraToast.success({ message: 'Teachers assignment reset successfully' });
+  };
 
-  /**
-   * Handles the reassignment of teachers to a selected subject/class
-   * @param values Object containing array of assigned teacher names
-   * @description Updates the teacher data when teachers are reassigned to a subject.
-   * If a teacher is selected, finds and updates their assignment in the data array,
-   * then closes the dialog and resets the selection.
-   */
-  const handleTeacherReassignment = (values: { assignedTeacher: string[] }) => {
-    if (selectedTeacher) {
-      const updatedData = teacherData.map((row) =>
-        row.id === selectedTeacher.id ? { ...row, assignedTeacher: values.assignedTeacher } : row
-      );
-      setTeacherData(updatedData);
-      dialog.onFalse();
-      setSelectedTeacher(null);
-      shikshaMitraToast.success({ message: 'Teachar added successfully' });
-    }
+  const handleSave = () => {
+    setOriginalTableData(tableData);
+    saveConfirmDialog.onFalse();
+    shikshaMitraToast.success({ message: 'Teachers assignment saved successfully' });
   };
 
   const subjectList = [
-    'math',
-    'english',
-    'science',
-    'history',
-    'geography',
-    'computer',
-    'physics',
-    'chemistry',
-    'biology',
+    { name: 'math', code: 'MTH', color: '#FF5733' },
+    { name: 'english', code: 'ENG', color: '#33FF57' },
+    { name: 'science', code: 'SCI', color: '#3357FF' },
+    { name: 'social science', code: 'SST', color: '#FF33F5' },
+    { name: 'computer', code: 'COM', color: '#33FFF5' },
+    { name: 'gujarati', code: 'GUJ', color: '#FFB533' },
+    { name: 'hindi', code: 'HIN', color: '#FF3333' },
+    { name: 'marathi', code: 'MAR', color: '#33FF33' },
+    { name: 'sanskrit', code: 'SNS', color: '#3333FF' },
   ];
   const divisionList = ['A', 'B', 'C'];
+
+  // Rest of your code remains the same until the buttons section
 
   return (
     <Box>
@@ -218,14 +242,31 @@ const Teacher = ({
           />
         </Box>
         <Box display="flex" gap={2} justifyContent="flex-end">
-          <Button variant="outlined" startIcon={<RestartAlt />} onClick={() => {}} size="small">
+          <Button
+            variant="outlined"
+            startIcon={<RestartAlt />}
+            onClick={() => {
+              resetConfirmDialog.onTrue();
+            }}
+            size="small"
+            disabled={!hasChanges}
+          >
             Reset
           </Button>
-          <Button startIcon={<Save />} variant="contained" size="small">
+          <Button
+            startIcon={<Save />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              saveConfirmDialog.onTrue();
+            }}
+            disabled={!hasChanges}
+          >
             Save
           </Button>
         </Box>
       </Box>
+
       <CustomizableTable
         tableId="teacher-table"
         noDataText={<>No Teachers Data Found Select Class and Division</>}
@@ -237,8 +278,23 @@ const Teacher = ({
             label: 'Subject',
             filterType: 'string',
             align: 'left',
-            minWidth: '100px',
+            minWidth: '150px',
             sticky: true,
+            render: (value: string, row: any) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box
+                  sx={{
+                    width: 4,
+                    height: 18,
+                    borderRadius: 1,
+                    backgroundColor: row.subjectColor,
+                  }}
+                />
+                <Typography variant="caption">
+                  {value} ({row.subjectCode})
+                </Typography>
+              </Box>
+            ),
           },
           ...divisionList.map((div) => ({
             id: div,
@@ -248,6 +304,7 @@ const Teacher = ({
             render: (value: any, row: any) => (
               <Autocomplete
                 multiple
+                disableCloseOnSelect
                 options={teacherOptions}
                 getOptionLabel={(option) => option.label}
                 value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.value)) : []}
@@ -268,7 +325,7 @@ const Teacher = ({
                   setTableData(updatedTableData);
                 }}
                 renderInput={(params) => (
-                  <TextField label="Assign Teachers" {...params} variant="outlined" size="small" />
+                  <TextField label="Select Teachers" {...params} variant="outlined" size="small" />
                 )}
                 renderOption={(props, option, { selected }) => (
                   <li {...props}>
@@ -281,7 +338,7 @@ const Teacher = ({
                     {option.label}
                   </li>
                 )}
-                sx={{ width: '100%', minWidth: '350px' }}
+                sx={{ width: '100%', minWidth: '330px' }}
                 renderTags={(val) => {
                   if (val.length === 0) return null;
                   const first = val[0];
@@ -309,9 +366,13 @@ const Teacher = ({
           })),
         ]}
         data={subjectList.map((subject) => {
-          const formattedSubject = subject.charAt(0).toUpperCase() + subject.slice(1);
+          const formattedSubject = subject.name.charAt(0).toUpperCase() + subject.name.slice(1);
 
-          const row: any = { subject: formattedSubject };
+          const row: any = {
+            subject: formattedSubject,
+            subjectCode: subject.code,
+            subjectColor: subject.color,
+          };
 
           divisionList.forEach((div) => {
             const divisionData = tableData.find((d) => d.division === div);
@@ -322,24 +383,50 @@ const Teacher = ({
           return row;
         })}
       />
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedTeacher}
-        />
-      )}
-      <CustomDialog
-        title="Reassign Teacher"
-        open={dialog.value}
-        handleClose={() => {
-          dialog.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <TeacherReassign selectedTeacher={selectedTeacher} onSubmit={handleTeacherReassignment} />
-      </CustomDialog>
+
+      <ConfirmDialog
+        title="Reset"
+        open={resetConfirmDialog.value}
+        onClose={resetConfirmDialog.onFalse}
+        content="Are you sure you want to reset all changes?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        title="Save"
+        open={saveConfirmDialog.value}
+        onClose={saveConfirmDialog.onFalse}
+        content={
+          <Box>
+            <Typography>Are you sure you want to save the following changes?</Typography>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2">Modified Subjects:</Typography>
+              {getModifiedSubjects().map((subject) => (
+                <Typography key={subject} variant="body2" sx={{ ml: 2 }}>
+                  • {subject}
+                </Typography>
+              ))}
+            </Box>
+          </Box>
+        }
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        }
+      />
     </Box>
   );
 };

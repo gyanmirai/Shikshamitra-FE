@@ -33,7 +33,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                 <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
                   <TextField
                     label="Marks *"
-                    placeholder="Enter Marks"
+                    // placeholder="Enter Marks"
                     name="marks"
                     type="number"
                     value={formik.values.marks}
@@ -55,7 +55,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                 >
                   <TextField
                     label="Feedback"
-                    placeholder="Enter Feedback"
+                    // placeholder="Enter Feedback"
                     multiline
                     rows={3}
                     fullWidth

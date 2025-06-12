@@ -67,7 +67,6 @@ const Subject = (props: TabComponentType) => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
-  console.log('selected subject-----', selectedSubject);
 
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
@@ -174,7 +173,13 @@ const Subject = (props: TabComponentType) => {
         <>
           {/* Class selection dropdown */}
           <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 1,
+              ml: 1,
+            }}
           >
             <CustomSelect
               label="Class"
@@ -182,7 +187,7 @@ const Subject = (props: TabComponentType) => {
               options={allClass}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { maxWidth: '360px', width: '100%' } }}
+              formControlProps={{ sx: { maxWidth: '310px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 setClasses(value as string);
@@ -264,6 +269,7 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            // size='small'
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={handleDelete}
           >
@@ -309,6 +315,7 @@ const Subject = (props: TabComponentType) => {
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {}}
+            // size='small'
           >
             {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
           </Button>
