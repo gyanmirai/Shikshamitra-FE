@@ -176,14 +176,6 @@ const CourseProgress = () => {
           </Typography>
           {/* Table showing chapter-wise progress details */}
           <CustomizableTable
-            searchFieldProps={{
-              placeholder: 'Search by Chapter Name, Progress, Deadline...',
-              label: 'Search by Chapter Name, Progress, Deadline...',
-              sx: {
-                maxWidth: '450px',
-                width: '100%',
-              },
-            }}
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[

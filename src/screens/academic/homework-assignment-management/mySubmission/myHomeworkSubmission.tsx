@@ -157,7 +157,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
           onChange={(val) => {
             setDate(val);
           }}
-          format="DD/MM/YYYY"
+          format="DD-MM-YYYY"
           sx={{ maxWidth: '250px' }}
         />
         <Tabs

@@ -112,14 +112,6 @@ const PayrollSummary = ({ employee }: any) => {
           <Typography variant="h5">Earning Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Earning Section </>}
-            searchFieldProps={{
-              placeholder: 'Search by Employee Type...',
-              label: 'Search by Employee Type....',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             tableId="earning-section"
             columns={[
               { id: 'employeeType', label: 'Employee Type' },
@@ -152,14 +144,6 @@ const PayrollSummary = ({ employee }: any) => {
           <Typography variant="h5">Deductions Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Deduction </>}
-            searchFieldProps={{
-              placeholder: 'Search by Deduction Type...',
-              label: 'Search by Deduction Type....',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             tableId="deduction-section"
             columns={[
               { id: 'deductionType', label: 'Deduction Type' },

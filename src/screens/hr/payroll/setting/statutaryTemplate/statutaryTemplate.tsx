@@ -75,14 +75,6 @@ const StatutoryTemplate = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Template Name, Type...',
-          label: 'Search by Template Name, Type....',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="Statutory-template-table"
         // isLoading={isLoading}
         columns={[

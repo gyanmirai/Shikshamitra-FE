@@ -148,7 +148,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 value={formik.values.dob}
                 onChange={(value) => formik.setFieldValue('dob', value)}
                 disabled={disabled}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -391,7 +391,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             label="Date of Joining *"
             value={formik.values.dateOfJoining}
             onChange={(value) => formik.setFieldValue('dateOfJoining', value)}
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             disabled={disabled}
             slotProps={{
               textField: {

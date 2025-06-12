@@ -98,13 +98,6 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         </Button>
       </Box> */}
       <CustomizableTable
-        searchFieldProps={{
-          label: 'Search by Name, Type, Late Threshold...',
-          sx: {
-            maxWidth: '350px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Attendance Rule Found{' '}

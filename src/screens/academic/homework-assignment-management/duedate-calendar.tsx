@@ -29,7 +29,7 @@ const DueDateCalendar = (props: TabComponentType) => {
               <DatePicker
                 label="Due Date"
                 slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-                format="DD/MM/YYYY"
+                format="DD-MM-YYYY"
               />
 
               <CustomSelect

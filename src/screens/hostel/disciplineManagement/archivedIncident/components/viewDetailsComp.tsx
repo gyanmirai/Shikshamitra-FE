@@ -113,7 +113,7 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
               <Grid item xs={12} md={6}>
                 <DatePicker
                   label="Incident Date"
-                  format="DD/MM/YYYY"
+                  format="DD-MM-YYYY"
                   disabled
                   value={formik.values.incidentDate}
                   onChange={(val) => formik.setFieldValue('incidentDate', val)}

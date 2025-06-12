@@ -186,7 +186,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
                 <DatePicker
                   label="Last Date"
                   name="repeatUntil"
-                  format="DD/MM/YYYY"
+                  format="DD-MM-YYYY"
                   value={formik.values.repeatUntil}
                   onChange={(newValue) => {
                     formik.setFieldValue('repeatUntil', newValue);
@@ -292,7 +292,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
                 <DatePicker
                   label="Meeting Date"
                   name="meetingDate"
-                  format="DD/MM/YYYY"
+                  format="DD-MM-YYYY"
                   value={formik.values.meetingDate}
                   onChange={(newValue) => {
                     formik.setFieldValue('meetingDate', newValue);
@@ -681,7 +681,7 @@ const AddNewMeeting: React.FC<AddNewMeetingProps> = ({
                     <DatePicker
                       label="Meeting Date"
                       name="meetingDate"
-                      format="DD/MM/YYYY"
+                      format="DD-MM-YYYY"
                       value={formik.values.meetingDate}
                       onChange={(newValue) => {
                         formik.setFieldValue('meetingDate', newValue);

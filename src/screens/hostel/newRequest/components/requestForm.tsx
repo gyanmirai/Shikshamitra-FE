@@ -253,7 +253,7 @@ const HostelRequestForm: React.FC<{
                     label="Date of Birth *"
                     disabled={disabled}
                     name="dateOfBirth"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     value={formik.values.dateOfBirth}
                     onChange={(val) => {
                       formik.setFieldValue('dateOfBirth', val);
@@ -554,7 +554,7 @@ const HostelRequestForm: React.FC<{
                   <DatePicker
                     label="Schedule Date *"
                     name="scheduleDate"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     disabled
                     value={formik.values.scheduleDate}
                     onChange={formik.handleChange}
@@ -578,7 +578,7 @@ const HostelRequestForm: React.FC<{
                   <DatePicker
                     label="Join Date *"
                     name="joinDate"
-                    format="DD/MM/YYYY"
+                    format="DD-MM-YYYY"
                     value={formik.values.joinDate}
                     disabled={disabled}
                     onChange={formik.handleChange}

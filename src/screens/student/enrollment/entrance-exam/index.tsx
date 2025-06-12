@@ -258,7 +258,7 @@ const EntranceExamScreen = () => {
         <Box display="flex" gap={2}>
           <DatePicker
             label="Start Date"
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             slotProps={{
               textField: {
                 sx: { width: '100%', maxWidth: '200px' },
@@ -271,7 +271,7 @@ const EntranceExamScreen = () => {
           />
           <DatePicker
             label="End Date"
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             slotProps={{
               textField: {
                 sx: { width: '100%', maxWidth: '200px' },

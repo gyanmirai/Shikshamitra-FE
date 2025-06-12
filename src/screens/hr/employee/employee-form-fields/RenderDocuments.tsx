@@ -116,13 +116,6 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
     <>
       <CustomizableTable
         noDataText={<>No Certificate Found </>}
-        searchFieldProps={{
-          label: 'Search by Document Type And Name',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading || isEmployeeDocLoading}
         tableId="documents"
         columns={[

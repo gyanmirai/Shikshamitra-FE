@@ -108,7 +108,9 @@ const HrEmployee = () => {
     roleValue: item?.role?.name || 'Not Assigned',
     statusValue: item?.employeeStatusType,
     fullName: `${item?.lastName} ${item?.firstName} ${item?.middleName}`,
+    shiftName: `${item?.shift?.shiftName} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
     // employeeType: EmployeeGroupType[item?.employeeGroup],
+    organization: item?.educationMediumStage?.name,
   }));
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -183,13 +185,6 @@ const HrEmployee = () => {
                   </Box>
                 </>
               }
-              searchFieldProps={{
-                label: 'Search by Employee Name, Code....',
-                sx: {
-                  maxWidth: '350px',
-                  width: '100%',
-                },
-              }}
               onSendNotification={handlerSendNotification}
               showCheckbox={selectedStudents.length !== 0}
               isLoading={isLoading}
@@ -248,7 +243,11 @@ const HrEmployee = () => {
                         <Avatar
                           alt={value}
                           src={convertBase64Format(row.profilePicture)}
-                          sx={{ height: 32, width: 32 }}
+                          sx={{
+                            height: 32,
+                            width: 32,
+                            border: (theme) => `1px solid ${theme.palette.grey[400]}`,
+                          }}
                         />{' '}
                         {value}
                       </Box>
@@ -276,7 +275,7 @@ const HrEmployee = () => {
                   align: 'left',
                 },
                 { id: 'email', label: 'Email', align: 'left' },
-                { id: 'mobileNo', label: 'Mobile No', minWidth: 150, align: 'left' },
+                { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
                 {
                   id: 'employeeGroup',
                   label: 'Employee Group',
@@ -287,6 +286,17 @@ const HrEmployee = () => {
                   render(value, row) {
                     return EmployeeGroupType[row?.employeeGroup];
                   },
+                },
+                {
+                  id: 'shiftName',
+                  label: 'Shift',
+                  align: 'left',
+                  minWidth: '150px',
+                },
+                {
+                  id: 'organization',
+                  label: 'Organization',
+                  align: 'left',
                 },
                 {
                   id: 'roleValue',

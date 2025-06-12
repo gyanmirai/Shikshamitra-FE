@@ -191,14 +191,6 @@ const HrEventsAndHolidaysScreen = () => {
               </Box>
             </>
           }
-          searchFieldProps={{
-            placeholder: 'Search by Start Date, End Date..',
-            label: 'Search by Start Date, End Date..',
-            sx: {
-              maxWidth: '300px',
-              width: '100%',
-            },
-          }}
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[

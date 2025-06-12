@@ -57,13 +57,14 @@ const ThreeDotsActions = ({
   const popover = usePopover();
 
   return (
-    <Box display="flex" gap={0.5} alignItems="center" {...props}>
+    <Box display="flex" gap={1.5} alignItems="center" {...props}>
       {showViewIcon && (
         <IconButton
           onClick={(e) => {
             e.stopPropagation();
             handleViewClick(e);
           }}
+          sx={{ p: 0 }}
         >
           <Iconify
             icon="carbon:view-filled"
@@ -77,6 +78,7 @@ const ThreeDotsActions = ({
             e.stopPropagation();
             handleEditClick(e);
           }}
+          sx={{ p: 0 }}
         >
           <Iconify
             icon="solar:pen-bold"
@@ -90,6 +92,7 @@ const ThreeDotsActions = ({
             e.stopPropagation();
             handleDeleteClick(e);
           }}
+          sx={{ p: 0 }}
         >
           <Iconify
             icon="solar:trash-bin-trash-bold"
@@ -105,6 +108,7 @@ const ThreeDotsActions = ({
             popover.onOpen(e as any);
             onClickThreeDots?.(e);
           }}
+          sx={{ p: 0 }}
         >
           <Iconify
             icon="eva:more-vertical-fill"

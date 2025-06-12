@@ -506,6 +506,13 @@ const hrModule = {
               shortcutKey: 'Alt+H+E+2',
               shortcutKeyName: 'Alt+H+E+2',
             },
+            {
+              title: 'Setting',
+              path: '/hr/setting',
+              _action: 'hr-setting',
+              shortcutKey: 'Alt+H+S',
+              shortcutKeyName: 'Alt+H+S',
+            },
           ],
         },
         {
@@ -631,13 +638,6 @@ const hrModule = {
           _action: 'hr-notification',
           disabled: true,
           caption: 'Coming Soon',
-        },
-        {
-          title: 'Setting',
-          path: '/hr/setting',
-          _action: 'hr-setting',
-          shortcutKey: 'Alt+H+S',
-          shortcutKeyName: 'Alt+H+S',
         },
       ],
     },

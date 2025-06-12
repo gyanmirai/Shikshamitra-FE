@@ -651,7 +651,7 @@ const PreviewAndPublish = ({ formik }: any) => {
             label="Start Date"
             name="startDate"
             value={formik.values.startDate}
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
             slotProps={{
               textField: {
@@ -668,7 +668,7 @@ const PreviewAndPublish = ({ formik }: any) => {
             label="End Date"
             name="endDate"
             value={formik.values.endDate}
-            format="DD/MM/YYYY"
+            format="DD-MM-YYYY"
             onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
             slotProps={{
               textField: {

@@ -446,24 +446,36 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         setIsLoading(true);
         if (editData && activeStep === 0) {
           await handelUpdateEmployee(values, formik, editData.id);
-          shikshaMitraToast.success({ message: 'Employee updated successfully' });
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+          }
         } else if (activeStep === 0) {
           if (values.employeeId) {
             await handelUpdateEmployee(values, formik, values.employeeId);
-            shikshaMitraToast.success({ message: 'Employee updated successfully' });
+            if (isSaveButton) {
+              shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+            }
           } else {
             await handleBasicInformation(values, formik);
-            shikshaMitraToast.success({ message: 'Employee added successfully' });
+            if (isSaveButton) {
+              shikshaMitraToast.success({ message: 'Employee added successfully' });
+            }
           }
         } else if (activeStep === 1) {
           await handleFamilyInformation(values, formik);
-          shikshaMitraToast.success({ message: 'Family information updated successfully' });
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Family information updated successfully' });
+          }
         } else if (activeStep === 3) {
           await handleWorkExperience(values, formik);
-          shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+          }
         } else if (activeStep === 4) {
           await handleBankDetailsInformation(values, formik);
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          }
         }
         if (!isSaveButton) {
           setActiveStep(activeStep + 1);
@@ -585,7 +597,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                             label={field.label}
                             name={field.name}
                             value={formik.values[field.name]}
-                            format="DD/MM/YYYY"
+                            format="DD-MM-YYYY"
                             onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
                             // sx={{ ...(field?.sx || {}) }}
                             sx={{

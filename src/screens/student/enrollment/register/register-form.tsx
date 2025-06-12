@@ -532,7 +532,7 @@ const RegisterForm = ({
                         label={field.label}
                         name={field.name}
                         value={formik.values[field.name]}
-                        format="DD/MM/YYYY"
+                        format="DD-MM-YYYY"
                         onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
                         slotProps={{
                           textField: {

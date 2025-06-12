@@ -71,7 +71,7 @@ const Setting = (props: TabComponentType) => (
                 </Typography>
                 <DatePicker
                   label="Select the Default Deadline"
-                  format="DD/MM/YYYY"
+                  format="DD-MM-YYYY"
                   sx={{ maxWidth: '250px' }}
                   slotProps={{ textField: { size: 'small' } }}
                 />
