@@ -1179,7 +1179,7 @@ const ColumnFilterMenu: React.FC<{
               onChange={(e) => setFilterValue(e.target.value as string)}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
               label={anchorEl?.column.label}
-              placeholder={anchorEl?.column.label}
+              // placeholder={anchorEl?.column.label}
             />
           ))}
 

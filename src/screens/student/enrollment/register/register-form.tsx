@@ -49,7 +49,7 @@ const steps = [
   // 'Account Detail',
   'Additional Details',
   'Medical Records',
-  'Previous School Details',
+  'Prev. School Details',
   'Bank Details',
 ];
 

@@ -57,7 +57,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   fullWidth
                   size="small"
-                  label="Form No"
+                  label="Form No.*"
                   name="formNo"
                   value={formik.values.formNo}
                   onChange={formik.handleChange}
@@ -196,41 +196,41 @@ export const generalFormFields: FieldsType[] = [
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={4}>
-                  <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-                    <FormControl
-                      fullWidth
-                      error={formik.touched.gender && Boolean(formik.errors.gender)}
-                      disabled={!disabled}
+                <Grid item xs={12} md={6}>
+                  <Box display="flex" alignItems="center">
+                    <FormLabel
+                      sx={{
+                        color: 'black',
+                        marginRight: 2,
+                        whiteSpace: 'nowrap',
+                        '&.Mui-focused': { color: 'black' },
+                        '&.Mui-error': { color: 'error.main' },
+                      }}
                     >
-                      <FormLabel
-                        id="gender-radio-group"
-                        error={formik.touched.gender && Boolean(formik.errors.gender)}
-                      >
-                        Gender *
-                      </FormLabel>
-                      <RadioGroup
-                        row
-                        aria-labelledby="gender-radio-group"
-                        name="gender"
-                        value={formik.values.gender}
-                        onChange={formik.handleChange}
-                      >
-                        {GenderTypeArray.map((i, index) => (
-                          <FormControlLabel
-                            key={i}
-                            value={index}
-                            control={<Radio size="small" />}
-                            label={GenderType[index]}
-                            disabled={!disabled}
-                          />
-                        ))}
-                      </RadioGroup>
-                      <FormHelperText error>
-                        {formik.touched.gender && formik.errors.gender}
-                      </FormHelperText>
-                    </FormControl>
-                  </ShakingTextField>
+                      Gender *
+                    </FormLabel>
+
+                    <RadioGroup
+                      row
+                      name="gender"
+                      value={formik.values.gender}
+                      onChange={formik.handleChange}
+                    >
+                      {GenderTypeArray.map((i, index) => (
+                        <FormControlLabel
+                          key={i}
+                          value={index}
+                          control={<Radio size="small" />}
+                          label={GenderType[index]}
+                          disabled={!disabled}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </Box>
+
+                  <FormHelperText error>
+                    {formik.touched.gender && formik.errors.gender}
+                  </FormHelperText>
                 </Grid>
               </Grid>
             </Grid>
@@ -321,7 +321,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="adharNo"
                   size="small"
-                  label="Aadhar No"
+                  label="Aadhar No."
                   name="adharNo"
                   type="text"
                   value={formik.values.adharNo}
@@ -367,7 +367,7 @@ export const generalFormFields: FieldsType[] = [
                 <TextField
                   key="panNo"
                   size="small"
-                  label="Pan No"
+                  label="Pan No."
                   name="panNo"
                   value={formik.values.panNo}
                   onBlur={formik.handleBlur}
@@ -425,9 +425,9 @@ export const generalFormFields: FieldsType[] = [
                 error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
               >
                 <TextField
-                  key="familyCast"
+                  key="familyCast *"
                   size="small"
-                  label="Family Cast"
+                  label="Family Cast *"
                   name="familyCast"
                   value={formik.values.familyCast}
                   onBlur={formik.handleBlur}

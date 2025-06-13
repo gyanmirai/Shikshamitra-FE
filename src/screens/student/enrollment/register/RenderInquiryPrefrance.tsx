@@ -18,7 +18,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
   return (
     <>
       <CustomSelect
-        label="Inquiry Prefrance"
+        label="Inquiry Preference"
         name="inquiryPreference"
         isLoading={inquiryPrefrenceLoading}
         options={inquiryPreference?.items || []}
