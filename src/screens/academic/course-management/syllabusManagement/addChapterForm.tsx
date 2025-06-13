@@ -5,15 +5,19 @@ import { useFormik } from 'formik';
 
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, useTheme, TextField, Typography, DialogActions } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { fileData } from 'src/components/file-thumbnail';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Upload, SingleFilePreview } from 'src/components/upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from './validationSchema';
@@ -33,9 +37,18 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
+  const theme = useTheme();
+
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   // State for managing rich text editor content
   const [editorContent, setEditorContent] = useState('');
+  const [previewFile, setPreviewFile] = useState<File | string | null>(null);
+  const previewDialog = useBoolean();
+
+  const handleView = (file: File | string) => {
+    setPreviewFile(file);
+    previewDialog.onTrue();
+  };
 
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
@@ -67,6 +80,19 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     formik.setFieldValue('documents', updatedDocuments);
   };
 
+  const uploadProps = {
+    multiple: true,
+    accept: {
+      'image/*': [],
+      'application/pdf': [],
+      'video/*': [], // Added video file support
+      'application/vnd.ms-powerpoint': [], // PPT
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': [], // PPTX
+      'application/msword': [], // DOC
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [], // DOCX
+    },
+  };
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -74,11 +100,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Chapter Number Input */}
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth disabled size="small" label="Class" value={className} />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField fullWidth disabled size="small" label="Subject" value={subject} />
+              <Grid item xs={12}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Class : </strong>
+                    {className}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Subject : </strong>
+                    {subject}
+                  </Typography>
+                </Box>
               </Grid>
               <Grid item xs={12} md={6}>
                 <ShakingTextField
@@ -122,8 +154,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   error={!!(formik.touched.startTime && formik.errors.startTime) || false}
                 >
                   <DatePicker
-                    label="Chapter Start Date Time *"
-                    format="DD-MM-YYYY"
+                    label="Chapter Start Date *"
+                    format="DD/MM/YYYY"
                     value={formik.values.startTime}
                     onChange={(newValue) => {
                       formik.setFieldValue('startTime', newValue);
@@ -145,11 +177,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               {/* End Time DatePicker */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+                  error={!!(formik.touched.endTime && formik.errors.endTime) || false}
                 >
                   <DatePicker
-                    label="Chapter End Date Time *"
-                    format="DD-MM-YYYY"
+                    label="Chapter End Date *"
+                    format="DD/MM/YYYY"
                     value={formik.values.endTime}
                     onChange={(newValue) => {
                       formik.setFieldValue('endTime', newValue);
@@ -175,24 +207,40 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     formik.setFieldValue('content', value);
                   }}
                   placeholder="Chapter Description"
-                  sx={{ width: '100%' }}
+                  sx={{
+                    height: '200px',
+                    border: `1px solid ${theme.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                    ...(!!formik.errors.content && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                  }}
                 />
               </Grid>
               {/* Document Upload Section */}
               <Grid item xs={12} md={6}>
                 <Upload
+                  {...uploadProps}
                   multiple
                   value={formik.values.documents}
                   onDrop={handleDrop}
                   onRemove={handleRemove}
+                  onView={handleView}
+                  sx={{ mb: 1 }}
                 />
               </Grid>
             </Grid>
           </Scrollbar>
+
           {/* Form Actions */}
+
           <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               variant="outlined"
+              size="small"
               onClick={() => {
                 onClose(null, false);
               }}
@@ -203,11 +251,26 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             <Button
               startIcon={initialValues ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
               type="submit"
+              size="small"
               variant="contained"
             >
               {initialValues ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
+
+          <CustomDialog
+            open={previewDialog.value}
+            handleClose={() => {
+              setPreviewFile(null);
+              previewDialog.onFalse();
+            }}
+            title={previewFile ? fileData(previewFile).name : ''}
+            maxWidth="sm"
+          >
+            <Scrollbar sx={{ height: 600, maxHeight: '100%' }}>
+              {previewFile && <SingleFilePreview file={previewFile} />}
+            </Scrollbar>
+          </CustomDialog>
         </Box>
       </form>
     </BackPopUpChecked>

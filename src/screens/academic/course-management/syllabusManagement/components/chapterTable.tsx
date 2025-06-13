@@ -1,6 +1,7 @@
 // components/ChapterTable.tsx
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -17,14 +18,6 @@ const ChapterTable = ({
 }: IChapterTableProps) => (
   <CustomizableTable
     tableId="chapterTable"
-    searchFieldProps={{
-      placeholder: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
-      label: 'Search by Chapter No, Chapter Name, Start Date, End Date...',
-      sx: {
-        maxWidth: '505px',
-        width: '100%',
-      },
-    }}
     noDataText={
       <>
         No Chapters Found{' '}
@@ -51,7 +44,8 @@ const ChapterTable = ({
       {
         id: 'chapterNo',
         label: 'Chapter No.',
-        align: 'center',
+        align: 'left',
+        sticky: true,
         minWidth: 120,
         filterType: 'number',
       },
@@ -78,6 +72,23 @@ const ChapterTable = ({
         label: 'Description',
         align: 'left',
         filterType: 'string',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       // {
       //   id: 'viewMaterial',
@@ -127,10 +138,10 @@ const ChapterTable = ({
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: 70,
+        minWidth: 90,
         isSort: false,
         isFilter: false,
-        align: 'center',
+        align: 'left',
         sticky: true,
         render(value, row) {
           return (

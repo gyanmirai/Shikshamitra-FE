@@ -1,27 +1,27 @@
 [
   {
     "subjectName": "Mathematics",
-    "subjectColor": "#FF5733",
+    "subjectColor": "#00B96B",
     "createdBy": "Patel Jeena Rajeshbhai"
   },
   {
     "subjectName": "Science", 
-    "subjectColor": "#33C1FF",
+    "subjectColor": "#8E24AA",
     "createdBy": "Shah Meena Prakashbhai"
   },
   {
     "subjectName": "Social Science",
-    "subjectColor": "#8B0000",
+    "subjectColor": "#00BCD4",
     "createdBy": "Desai Teena Mahendrabhai"
   },
   {
     "subjectName": "Gujarati",
-    "subjectColor": "#00B894",
+    "subjectColor": "#0D47A1",
     "createdBy": "Prajapati Mahesh Kantibhai"
   },
   {
     "subjectName": "English",
-    "subjectColor": "#2F80ED",
+    "subjectColor": "#4CAF50",
     "createdBy": "Williams Linda Marie"
   }
 ]

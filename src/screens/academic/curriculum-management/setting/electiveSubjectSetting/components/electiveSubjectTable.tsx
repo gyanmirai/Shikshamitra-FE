@@ -2,10 +2,11 @@
 
 import React from 'react';
 
-import { Box, Chip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { IElectiveSubject, IElectiveSubjectTableProps } from '../type';
 
@@ -21,14 +22,14 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
 }) => (
   <CustomizableTable
     tableId="elective-subject-data-table"
-    searchFieldProps={{
-      placeholder: 'Search by Elective Group, Subjects...',
-      label: 'Search by Elective Group, Subjects...',
-      sx: {
-        maxWidth: '450px',
-        width: '100%',
-      },
-    }}
+    // searchFieldProps={{
+    //   placeholder: 'Search by Elective Group, Subjects...',
+    //   label: 'Search by Elective Group, Subjects...',
+    //   sx: {
+    //     maxWidth: '450px',
+    //     width: '100%',
+    //   },
+    // }}
     noDataText={
       <>
         No Elective Subject Found{' '}
@@ -59,8 +60,13 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         align: 'left',
         render: (value) => (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {value.map((subject: { name: string }) => (
-              <Chip key={subject.name} label={subject.name} size="small" variant="outlined" />
+            {value.map((subject: { name: string; subjectColor: string }) => (
+              <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={subject.subjectColor} />
+                <Typography variant="caption" fontSize="13px">
+                  {subject.name}
+                </Typography>
+              </Box>
             ))}
           </Box>
         ),
@@ -72,24 +78,16 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         isFilter: false,
         isSort: false,
         render(value, row) {
-          return (
-            <Box
-              sx={{
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                backgroundColor: row.subjectColor,
-              }}
-            />
-          );
+          return <SubjectColorIndicator color={value} />;
         },
       },
       { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 50,
+        minWidth: 70,
         isSort: false,
+        align: 'left',
         sticky: true,
         isFilter: false,
         render(value, row) {

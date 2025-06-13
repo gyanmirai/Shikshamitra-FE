@@ -8,7 +8,7 @@ import DocumentCard from 'src/components/preview-document/DocumentCard';
 
 import type { ISubject } from '../type';
 
-const documentsList = [
+export const documentsList = [
   {
     path: './lecture_notes.pdf',
     relativePath: './lecture_notes.pdf',

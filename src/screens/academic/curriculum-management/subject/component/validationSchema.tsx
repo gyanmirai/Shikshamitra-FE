@@ -16,8 +16,8 @@ export const validationSchema = Yup.object().shape({
             /^[A-Z0-9]*$/,
             'Only uppercase letters and numbers allowed, no special characters'
           )
-          .min(3, 'Min 3 characters')
-          .max(10, 'Max 10 characters'),
+          .min(3, 'Min 3 characters Required')
+          .max(10, 'Max 10 characters Required'),
         subjectName: Yup.string().required('Subject Name is required'),
         subjectColor: Yup.string().required('Subject Color is required'),
       })

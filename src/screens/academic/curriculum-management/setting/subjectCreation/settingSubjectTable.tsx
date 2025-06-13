@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
@@ -20,18 +21,10 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
   onEdit,
 }) => (
   <CustomizableTable
-    tableId="hostel-incident-data-table"
-    searchFieldProps={{
-      placeholder: 'Search by Subject Name, Color...',
-      label: 'Search by Subject Name, Color...',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
+    tableId="hostel-subject-data-table"
     noDataText={
       <>
-        No Incident Data Found{' '}
+        No Subject Data Found{' '}
         <Box
           onClick={() => {
             onAddSubject.onTrue();
@@ -47,7 +40,7 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
             },
           }}
         >
-          Log Visitor
+          Subject
         </Box>
       </>
     }
@@ -59,23 +52,15 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
         isFilter: false,
         isSort: false,
         render(value, row) {
-          return (
-            <Box
-              sx={{
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                backgroundColor: row.subjectColor,
-              }}
-            />
-          );
+          return <SubjectColorIndicator color={value} />;
         },
       },
       { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 50,
+        minWidth: 70,
+        align: 'left',
         isSort: false,
         sticky: true,
         isFilter: false,

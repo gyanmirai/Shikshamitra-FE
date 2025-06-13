@@ -148,11 +148,11 @@ const CourseProgress = (props: TabComponentType) => {
     <Box>
       {/* Custom breadcrumbs navigation component */}
       <CustomBreadcrumbs
-        heading="Chapter Progress"
+        heading="Chapters Progress"
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
           { name: 'Class Management', href: '/classManagement/dashboard' },
-          { name: 'Chapter Progress' },
+          { name: 'Chapters Progress' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -189,18 +189,22 @@ const CourseProgress = (props: TabComponentType) => {
           </Typography>
           {/* Table showing chapter-wise progress details */}
           <CustomizableTable
-            searchFieldProps={{
-              placeholder: 'Search by Chapter Name, Progress, Deadline...',
-              label: 'Search by Chapter Name, Progress, Deadline...',
-              sx: {
-                maxWidth: '450px',
-                width: '100%',
-              },
-            }}
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+
+              {
+                id: 'timeLine',
+                label: 'Deadline',
+                align: 'left',
+                filterType: 'date',
+                render: (value, row) => (
+                  <Typography fontSize="12px" gutterBottom>
+                    {dayjs(value).format('DD-MM-YYYY')}
+                  </Typography>
+                ),
+              },
               {
                 id: 'progress',
                 label: 'Progress',
@@ -235,19 +239,8 @@ const CourseProgress = (props: TabComponentType) => {
                 },
               },
               {
-                id: 'timeLine',
-                label: 'Deadline',
-                align: 'left',
-                filterType: 'date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD-MM-YYYY')}
-                  </Typography>
-                ),
-              },
-              {
                 id: 'actions',
-                label: 'Actions',
+                label: 'Action',
                 minWidth: 50,
                 align: 'left',
                 sticky: true,
