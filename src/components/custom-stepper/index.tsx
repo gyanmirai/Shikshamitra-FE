@@ -241,7 +241,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             Back
           </Button>
           <Box display="flex" gap={2}>
-            <LoadingButton
+            {/* <LoadingButton
               variant="outlined"
               size="small"
               loading={isSaveLoading.value}
@@ -263,7 +263,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               }}
             >
               Save
-            </LoadingButton>
+            </LoadingButton> */}
             <LoadingButton
               variant="contained"
               type="submit"
