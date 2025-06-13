@@ -4,7 +4,7 @@ import { Box, Tooltip, useTheme, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { SubjectTypeOptions } from 'src/enums/subject-type';
+import { SubjectType, SubjectTypeOptions } from 'src/enums/subject-type';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
@@ -13,6 +13,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { ISubject, ISubjectFormValues, ISubjectTableProps } from './type';
 
@@ -44,7 +45,7 @@ const SubjectTable = ({
             subjectColor: subject.subjectColor || '#1976d2',
             status: formData.status,
             secondaryTeacher: subject.secondaryTeacher || [],
-            subjectType: formData.subjectType,
+            subjectType: formData.subjectType && 0,
           });
         });
       } else if (formData.subjectType === 'Elective') {
@@ -62,7 +63,7 @@ const SubjectTable = ({
           status: formData.status,
           description: (formData.subjects || []).map((s) => s.description),
           isSubjectOpen: false,
-          subjectType: formData.subjectType,
+          subjectType: formData.subjectType && 1,
         });
       }
     }
@@ -72,14 +73,6 @@ const SubjectTable = ({
   return (
     <CustomizableTable
       tableId="subject-table"
-      searchFieldProps={{
-        // placeholder: 'Search by Subject Name, Code, Type...',
-        label: 'Search in Table',
-        sx: {
-          maxWidth: '310px',
-          width: '100%',
-        },
-      }}
       noDataText={
         <>
           No Subject Found{' '}
@@ -111,6 +104,7 @@ const SubjectTable = ({
           minWidth: 130,
           enumOptions: SubjectTypeOptions,
           sticky: true,
+          render: (value, row) => <Typography variant="caption">{SubjectType[value]}</Typography>,
         },
         {
           id: 'subjectName',
@@ -120,14 +114,7 @@ const SubjectTable = ({
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
               {row.subjectType === 'Core' ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box
-                    sx={{
-                      width: 4,
-                      height: 18,
-                      borderRadius: 1,
-                      backgroundColor: row.subjectColor,
-                    }}
-                  />
+                  <SubjectColorIndicator color={row.subjectColor} />
                   <Typography variant="caption">
                     {value} ({row.subjectCode})
                   </Typography>
@@ -144,14 +131,7 @@ const SubjectTable = ({
 
                   return (
                     <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Box
-                        sx={{
-                          width: 4,
-                          height: 18,
-                          borderRadius: 1,
-                          backgroundColor: subjectColor,
-                        }}
-                      />
+                      <SubjectColorIndicator color={subjectColor} />
                       <Typography variant="caption">
                         {subjectName} ({subjectCode})
                       </Typography>
@@ -160,14 +140,7 @@ const SubjectTable = ({
                 })
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box
-                    sx={{
-                      width: 4,
-                      height: 18,
-                      borderRadius: 1,
-                      backgroundColor: row.subjectColor,
-                    }}
-                  />
+                  <SubjectColorIndicator color={row.subjectColor} />
                   <Typography variant="caption">
                     {value} ({row.subjectCode})
                   </Typography>

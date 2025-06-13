@@ -21,11 +21,16 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { fileData } from 'src/components/file-thumbnail';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Upload, SingleFilePreview } from 'src/components/upload';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { ITeacherOption, ISubjectCardProps } from './type';
 
@@ -42,6 +47,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
 
   // State to control accordion expansion, initialized with subject's isSubjectOpen or false
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
+  const [previewFile, setPreviewFile] = useState<File | string | null>(null);
+  const previewDialog = useBoolean();
 
   const uploadProps = {
     multiple: true,
@@ -78,6 +85,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     handleChange('documents', updatedDocuments);
   };
 
+  const handleView = (file: File | string) => {
+    setPreviewFile(file);
+    previewDialog.onTrue();
+  };
+
   return (
     <Scrollbar sx={{ height: 'auto' }}>
       <Accordion
@@ -94,8 +106,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box display="flex" gap={2}>
-            <Box
+          <Box display="flex" gap={0.5}>
+            {/* <Box
               sx={{
                 width: 16,
                 height: 16,
@@ -103,15 +115,18 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 mt: 0.5,
                 backgroundColor: subject.subjectColor,
               }}
-            />
+            /> */}
+            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <SubjectColorIndicator color={subject?.subjectColor} />
 
-            <Typography variant="subtitle1" fontWeight={600}>
-              {subject.subjectName || 'CHEMISTRY'}
-            </Typography>
-            {subject.subjectCode && (
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mr: 1 }}>
+                {subject.subjectName || 'CHEMISTRY'}
+              </Typography>
+            </Box>
+            {isExpanded && subject.subjectCode && (
               <Chip label={`Code : ${subject.subjectCode}`} size="small" variant="outlined" />
             )}
-            {subject.primaryTeacher && (
+            {isExpanded && subject.primaryTeacher && (
               <Chip
                 label={`Primary Teacher : ${subject.primaryTeacher}`}
                 size="small"
@@ -131,7 +146,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   // placeholder="Enter Subject Code"
                   size="small"
                   value={subject.subjectCode || ''}
-                  onChange={(e) => handleChange('subjectCode', e.target.value)}
+                  onChange={(e) => {
+                    const rawValue = e.target.value;
+                    const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''); // removes special chars except dash and underscore
+                    handleChange('subjectCode', uppercaseValue);
+                  }}
+                  // onChange={(e) => handleChange('subjectCode', e.target.value)}
                   disabled={isPublished}
                   error={!!getError('subjectCode')}
                   helperText={getError('subjectCode')}
@@ -143,14 +163,15 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
                   options={teacherOptions.filter(
-                    (teacher: ITeacherOption) => !subject.secondaryTeacher?.includes(teacher.value)
+                    (teacher: ITeacherOption) =>
+                      !(subject.secondaryTeacher || []).includes(teacher.value)
                   )}
                   getOptionLabel={(option: ITeacherOption) => option.label}
                   value={teacherOptions.find(
                     (opt: ITeacherOption) => opt.value === subject.primaryTeacher
                   )}
                   onChange={(event, newValue: ITeacherOption | null) =>
-                    handleChange('primaryTeacher', newValue?.label || '')
+                    handleChange('primaryTeacher', newValue?.value || '')
                   }
                   disabled={isPublished}
                   isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -245,6 +266,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     />
                   )}
                 />
+
                 <FormHelperText>
                   {Array.isArray(getError('secondaryTeacher'))
                     ? getError('secondaryTeacher').join(', ')
@@ -259,7 +281,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 <Editor
                   onChange={(value) => handleChange('learningGoal', value)}
                   value={subject.learningGoal || ''}
-                  placeholder="Enter Learning Goal"
+                  placeholder="Learning Goal"
                   error={!!getError('learningGoal')}
                   helperText={getError('learningGoal')}
                   sx={{ height: '200px' }}
@@ -272,7 +294,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 <Editor
                   onChange={(value) => handleChange('prerequisites', value)}
                   value={subject.prerequisites || ''}
-                  placeholder="Enter Prerequisites"
+                  placeholder="Prerequisites"
                   error={!!getError('prerequisites')}
                   helperText={getError('prerequisites')}
                   sx={{ height: '200px' }}
@@ -305,11 +327,25 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 value={subject.documents}
                 onDrop={handleDrop}
                 onRemove={handleRemove}
+                onView={handleView}
               />
             </Grid>
           </Grid>
         </AccordionDetails>
       </Accordion>
+      <CustomDialog
+        open={previewDialog.value}
+        handleClose={() => {
+          setPreviewFile(null);
+          previewDialog.onFalse();
+        }}
+        title={previewFile ? fileData(previewFile).name : ''}
+        maxWidth="sm"
+      >
+        <Scrollbar sx={{ height: 600, maxHeight: '100%' }}>
+          {previewFile && <SingleFilePreview file={previewFile} />}
+        </Scrollbar>
+      </CustomDialog>
     </Scrollbar>
   );
 };

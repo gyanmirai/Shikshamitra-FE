@@ -1,20 +1,16 @@
 import { useState } from 'react';
 
 import Box from '@mui/material/Box';
+import { Button, Tooltip } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
-import { varAlpha } from 'src/theme/styles';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 
 import { Iconify } from '../../iconify';
-import { SingleFilePreview } from './preview-single-file';
 import { fileData, FileThumbnail } from '../../file-thumbnail';
 
 import type { MultiFilePreviewProps } from '../types';
@@ -28,9 +24,12 @@ export function MultiFilePreview({
   thumbnail,
   slotProps,
   firstNode,
+  onView,
   files = [],
 }: MultiFilePreviewProps) {
-  const viewDialog = useBoolean();
+  const [visibleCount, setVisibleCount] = useState(2);
+  const visibleFiles = files.slice(0, visibleCount);
+  const dialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
 
   const renderFirstNode = firstNode && (
@@ -58,102 +57,148 @@ export function MultiFilePreview({
     </Box>
   );
 
+  const remainingFiles = files.slice(visibleCount);
+
   return (
-    <Box
-      component="ul"
-      sx={{
-        gap: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        ...(thumbnail && {
-          flexWrap: 'wrap',
-          flexDirection: 'row',
-        }),
-        ...sx,
-      }}
-    >
-      {renderFirstNode}
+    <>
+      <Box
+        component="ul"
+        sx={{
+          gap: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          ...(thumbnail && {
+            flexWrap: 'wrap',
+            flexDirection: 'row',
+          }),
+          ...sx,
+        }}
+      >
+        {renderFirstNode}
 
-      {files.map((file) => {
-        const { name } = fileData(file);
-        console.log('🚀 ~ {files.map ~ name:', name);
-
-        if (thumbnail) {
+        {visibleFiles.map((file) => {
+          const { name } = fileData(file);
           return (
-            <Box component="li" key={name} sx={{ display: 'inline-flex' }}>
-              <FileThumbnail
-                tooltip
-                imageView
-                file={file}
-                onRemove={() => onRemove?.(file)}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  border: (theme) =>
-                    `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
-                }}
-                slotProps={{ icon: { width: 36, height: 36 } }}
-                {...slotProps?.thumbnail}
-              />
-            </Box>
-          );
-        }
-
-        return (
-          <Box
-            component="li"
-            key={name}
-            sx={{
-              py: 1,
-              pr: 1,
-              pl: 1.5,
-              gap: 1.5,
-              display: 'flex',
-              borderRadius: 1,
-              alignItems: 'center',
-              border: (theme) =>
-                `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
-            }}
-          >
-            <FileThumbnail file={file} {...slotProps?.thumbnail} />
-
-            <ListItemText
-              primary={name}
-              // secondary={fData(size)}
-              secondaryTypographyProps={{ component: 'span', typography: 'caption' }}
-            />
-
-            <IconButton
-              size="small"
-              onClick={() => {
-                viewDialog.onTrue();
-                setPreviewFile(file);
+            <Box
+              key={name}
+              component="li"
+              sx={{
+                border: 1,
+                borderColor: 'grey.300',
+                p: 2,
+                gap: 1,
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: 2,
               }}
             >
-              <Iconify icon={GlobalIcons.eye} width={18} />
-            </IconButton>
+              <FileThumbnail
+                file={file}
+                {...slotProps?.thumbnail}
+                sx={{ height: '25px', width: '25px' }}
+              />
 
-            {onRemove && (
-              <IconButton size="small" onClick={() => onRemove(file)}>
-                <Iconify icon="mingcute:close-line" width={16} />
-              </IconButton>
-            )}
+              <ListItemText
+                primaryTypographyProps={{ variant: 'body2' }}
+                primary={name}
+                sx={{ flex: 1, ml: thumbnail ? 2 : 0 }}
+              />
+              <Box sx={{ display: 'flex' }}>
+                <Tooltip title="Preview">
+                  <IconButton size="small" onClick={() => onView?.(file)}>
+                    <Iconify icon="mdi:eye" width={16} height={16} />
+                  </IconButton>
+                </Tooltip>
 
-            <CustomDialog
-              open={!!previewFile}
-              handleClose={() => setPreviewFile(null)}
-              title={previewFile ? fileData(previewFile).name : ''}
-              maxWidth="sm"
-            >
-              <Scrollbar sx={{ height: 600, maxHeight: '100%' }}>
-                {previewFile && <SingleFilePreview file={previewFile} />}
-              </Scrollbar>
-            </CustomDialog>
+                {onRemove && (
+                  <Tooltip title="Remove">
+                    <IconButton size="small" onClick={() => onRemove(file)}>
+                      <Iconify icon="mingcute:close-line" width={16} height={16} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            </Box>
+          );
+        })}
+
+        {files.length > visibleCount && (
+          <Button size="small" onClick={dialog.onTrue}>
+            Show more ({files.length - visibleCount} more)
+          </Button>
+        )}
+
+        {visibleCount > 2 && (
+          <Button size="small" onClick={() => setVisibleCount(2)}>
+            Show less
+          </Button>
+        )}
+
+        {renderLastNode}
+      </Box>
+
+      <CustomDialog
+        title="Remaining Files"
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        maxWidth="sm"
+        fullWidth
+      >
+        <Scrollbar sx={{ maxHeight: 400 }}>
+          <Box sx={{ p: 3 }}>
+            {remainingFiles.map((file) => {
+              const { name } = fileData(file);
+              return (
+                <Box
+                  key={name}
+                  sx={{
+                    border: 1,
+                    borderColor: 'grey.300',
+                    p: 2,
+                    mb: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderRadius: 2,
+                    gap: 1,
+                  }}
+                >
+                  <FileThumbnail
+                    file={file}
+                    {...slotProps?.thumbnail}
+                    sx={{ height: '25px', width: '25px' }}
+                  />
+
+                  <ListItemText
+                    primaryTypographyProps={{ variant: 'body2' }}
+                    primary={name}
+                    sx={{ flex: 1, ml: thumbnail ? 2 : 0 }}
+                  />
+                  <Box sx={{ display: 'flex' }}>
+                    <IconButton size="small" onClick={() => onView?.(file)}>
+                      <Iconify icon="mdi:eye" width={16} height={16} />
+                    </IconButton>
+
+                    {onRemove && (
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          onRemove(file);
+                          // Close dialog if this is the last remaining file
+                          if (remainingFiles.length === 1) {
+                            dialog.onFalse();
+                          }
+                        }}
+                      >
+                        <Iconify icon="mingcute:close-line" width={16} height={16} />
+                      </IconButton>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
           </Box>
-        );
-      })}
-
-      {renderLastNode}
-    </Box>
+        </Scrollbar>
+      </CustomDialog>
+    </>
   );
 }

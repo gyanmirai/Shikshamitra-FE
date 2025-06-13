@@ -29,6 +29,7 @@ export function Upload({
   onRemoveAll,
   multiple = false,
   isPreview = true,
+  onView,
   ...other
 }: UploadProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections, open } =
@@ -67,13 +68,15 @@ export function Upload({
       > */}
       <input {...getInputProps()} />
 
+      {/* </Box> */}
+
       {hasFile ? (
         <>
           <SingleFilePreview file={value as File} />
           <DeleteButton onClick={onDelete} />
         </>
       ) : hasFiles ? (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
           <Button
             variant="contained"
             size="small"
@@ -86,35 +89,24 @@ export function Upload({
       ) : (
         <UploadPlaceholder onBrowseClick={open} />
       )}
-      {/* </Box> */}
-
       {/* Preview List */}
       {hasFiles && (
-        <Box sx={{ mt: 3 }}>
-          <Scrollbar sx={{ height: 130 }}>
-            <MultiFilePreview files={value} thumbnail={thumbnail} onRemove={onRemove} />
-          </Scrollbar>
-          {/* <Stack direction="row" justifyContent="flex-end" spacing={1.5} sx={{ mt: 1 }}>
-            {onRemoveAll && (
-              <Button variant="outlined" size="small" onClick={onRemoveAll}>
-                Remove All
-              </Button>
-            )}
-            {onUpload && (
-              <Button variant="contained" size="small" onClick={onUpload}>
-                Upload
-              </Button>
-            )}
-          </Stack> */}
-        </Box>
+        <Scrollbar sx={{ height: 180 }}>
+          <MultiFilePreview
+            files={value}
+            thumbnail={thumbnail}
+            onRemove={onRemove}
+            onView={onView}
+          />
+        </Scrollbar>
       )}
 
+      {/* {helperText && shikshaMitraToast.error({ message: helperText })} */}
       {helperText && (
-        <FormHelperText error={!!error} sx={{ px: 2 }}>
+        <FormHelperText error sx={{ mt: 1 }}>
           {helperText}
         </FormHelperText>
       )}
-
       <RejectionFiles files={[...fileRejections]} />
     </Card>
   );

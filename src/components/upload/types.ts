@@ -19,6 +19,7 @@ export type MultiFilePreviewProps = {
   lastNode?: React.ReactNode;
   firstNode?: React.ReactNode;
   onRemove: UploadProps['onRemove'];
+  onView?: (file: File | string) => void;
   thumbnail: UploadProps['thumbnail'];
   slotProps?: {
     thumbnail?: Omit<FileThumbnailProps, 'file'>;
@@ -32,6 +33,7 @@ export type UploadProps = DropzoneOptions & {
   title?: string;
   onDelete?: () => void;
   onUpload?: () => void;
+  onView?: (file: File | string) => void;
   onRemoveAll?: () => void;
   helperText?: React.ReactNode;
   placeholder?: React.ReactNode;

@@ -4,8 +4,6 @@ import Divider from '@mui/material/Divider';
 import { varAlpha } from 'src/theme/styles';
 
 import { editorClasses } from './classes';
-import { LinkBlock } from './components/link-block';
-import { ImageBlock } from './components/image-block';
 import { ToolbarItem } from './components/toolbar-item';
 import { HeadingBlock } from './components/heading-block';
 
@@ -93,7 +91,7 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
       </Stack>
 
       {/* Text align */}
-      <Stack direction="row" spacing={0.5}>
+      {/* <Stack direction="row" spacing={0.5}>
         <ToolbarItem
           aria-label="Align left"
           active={editor.isActive({ textAlign: 'left' })}
@@ -122,10 +120,10 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
           icon={<path d="M3 4H21V6H3V4ZM3 19H21V21H3V19ZM3 14H21V16H3V14ZM3 9H21V11H3V9Z" />}
         />
-      </Stack>
+      </Stack> */}
 
       {/* Code - Code block */}
-      {fullItem && (
+      {/* {fullItem && (
         <Stack direction="row" spacing={0.5}>
           <ToolbarItem
             aria-label="Align justify"
@@ -146,10 +144,10 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             }
           />
         </Stack>
-      )}
+      )} */}
 
       {/* Blockquote - Hr line */}
-      {fullItem && (
+      {/* {fullItem && (
         <Stack direction="row" spacing={0.5}>
           <ToolbarItem
             aria-label="Blockquote"
@@ -167,16 +165,16 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             icon={<path d="M2 11H4V13H2V11ZM6 11H18V13H6V11ZM20 11H22V13H20V11Z" />}
           />
         </Stack>
-      )}
+      )} */}
 
       {/* Link - Image */}
-      <Stack direction="row" spacing={0.5}>
+      {/* <Stack direction="row" spacing={0.5}>
         <LinkBlock editor={editor} />
         <ImageBlock editor={editor} />
-      </Stack>
+      </Stack> */}
 
       {/* HardBreak - Clear */}
-      <Stack direction="row" spacing={0.5}>
+      {/* <Stack direction="row" spacing={0.5}>
         <ToolbarItem
           aria-label="HardBreak"
           onClick={() => editor.chain().focus().setHardBreak().run()}
@@ -193,10 +191,10 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             <path d="M12.6512 14.0654L11.6047 20H9.57389L10.9247 12.339L3.51465 4.92892L4.92886 3.51471L20.4852 19.0711L19.071 20.4853L12.6512 14.0654ZM11.7727 7.53009L12.0425 5.99999H10.2426L8.24257 3.99999H19.9999V5.99999H14.0733L13.4991 9.25652L11.7727 7.53009Z" />
           }
         />
-      </Stack>
+      </Stack> */}
 
       {/* Undo - Redo */}
-      {fullItem && (
+      {/* {fullItem && (
         <Stack direction="row" spacing={0.5}>
           <ToolbarItem
             aria-label="Undo"
@@ -217,9 +215,9 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             }
           />
         </Stack>
-      )}
+      )} */}
 
-      <Stack direction="row" spacing={0.5}>
+      {/* <Stack direction="row" spacing={0.5}>
         <ToolbarItem
           aria-label="Fullscreen"
           className={editorClasses.toolbar.fullscreen}
@@ -232,7 +230,7 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             )
           }
         />
-      </Stack>
+      </Stack> */}
     </Stack>
   );
 }

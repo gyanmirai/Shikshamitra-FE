@@ -25,6 +25,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
@@ -157,7 +158,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
         </Box>
 
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
-          {subject?.subjects?.map((sub) => (
+          {subject?.subjects?.map((sub, index) => (
             <Accordion
               key={sub.subjectCode}
               expanded={expandedSubject === sub.subjectCode}
@@ -173,18 +174,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box display="flex" gap={2}>
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      mt: 0.5,
-                      backgroundColor: sub?.subjectColor,
-                      p: 0,
-                    }}
-                  />
-                  <Typography variant="subtitle1" fontWeight={600}>
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={sub?.subjectColor} />
+
+                  <Typography variant="subtitle1" fontWeight={600} sx={{ mr: 1 }}>
                     {sub.subjectName || 'CHEMISTRY'}
                   </Typography>
                 </Box>
