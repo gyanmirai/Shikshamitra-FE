@@ -104,7 +104,11 @@ const SubjectTable = ({
           minWidth: 130,
           enumOptions: SubjectTypeOptions,
           sticky: true,
-          render: (value, row) => <Typography variant="caption">{SubjectType[value]}</Typography>,
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {SubjectType[value]}
+            </Typography>
+          ),
         },
         {
           id: 'subjectName',
@@ -115,7 +119,7 @@ const SubjectTable = ({
               {row.subjectType === 'Core' ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <SubjectColorIndicator color={row.subjectColor} />
-                  <Typography variant="caption">
+                  <Typography variant="caption" fontSize="13px">
                     {value} ({row.subjectCode})
                   </Typography>
                 </Box>
@@ -132,7 +136,7 @@ const SubjectTable = ({
                   return (
                     <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <SubjectColorIndicator color={subjectColor} />
-                      <Typography variant="caption">
+                      <Typography variant="caption" fontSize="13px">
                         {subjectName} ({subjectCode})
                       </Typography>
                     </Box>
@@ -141,7 +145,7 @@ const SubjectTable = ({
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <SubjectColorIndicator color={row.subjectColor} />
-                  <Typography variant="caption">
+                  <Typography variant="caption" fontSize="13px">
                     {value} ({row.subjectCode})
                   </Typography>
                 </Box>
@@ -219,7 +223,7 @@ const SubjectTable = ({
         {
           id: 'action',
           label: 'Actions',
-          minWidth: 100,
+          minWidth: 90,
           align: 'left',
           sticky: true,
           isFilter: false,

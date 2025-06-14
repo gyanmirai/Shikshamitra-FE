@@ -8,6 +8,7 @@ import { Tab, Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -18,11 +19,13 @@ const TABS = [
   {
     value: 'subjectSetting',
     label: 'Subject Creation',
+    icon: <Iconify icon="mdi:text-subject" width={20} />,
     component: (props: any) => <SubjectCreation {...props} />,
   },
   {
     value: 'electiveSubjectSetting',
     label: 'Elective Group Creation',
+    icon: <Iconify icon="mdi:format-list-group" width={20} />,
     component: (props: any) => <ElectiveSubjectSetting {...props} />,
   },
 ];
@@ -89,7 +92,7 @@ const CurriculumSetting = () => {
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>

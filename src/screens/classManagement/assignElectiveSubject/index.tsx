@@ -6,8 +6,8 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Save, RestartAlt } from '@mui/icons-material';
 import { Box, Button, useTheme } from '@mui/material';
+import { Save, RestartAlt } from '@mui/icons-material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -95,7 +95,15 @@ const AssignElectiveSubject = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+          ml: 1,
+        }}
+      >
         {/* Left side - Selects */}
         <Box sx={{ display: 'flex', gap: 2 }}>
           <CustomSelect
@@ -150,14 +158,6 @@ const AssignElectiveSubject = () => {
       <CustomizableTable
         tableId="elective-subject-table"
         noDataText={<>No Students Found</>}
-        searchFieldProps={{
-          placeholder: 'Search by Sr. No, GR No, Student Name...',
-          label: 'Search by Sr. No, GR No, Student Name...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
           { id: 'grNo', label: 'GR No.', minWidth: '120px', align: 'left' },

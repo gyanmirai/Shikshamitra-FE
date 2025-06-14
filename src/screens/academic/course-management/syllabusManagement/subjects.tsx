@@ -28,6 +28,7 @@ import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -153,6 +154,9 @@ const Subjects = (props: TabComponentType) => {
     if (selectedChapter) {
       setChapterData(chapterData.filter((ch) => ch.id !== id));
       deleteDialog.onFalse();
+      shikshaMitraToast.success({
+        message: `Chapter ${selectedChapter?.chapterName} deleted successfully`,
+      });
       setSelectedChapter(null);
     }
   };
@@ -220,14 +224,14 @@ const Subjects = (props: TabComponentType) => {
               justifyContent: 'space-between',
             }}
           >
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
               <CustomSelect
                 label="Class"
                 name="class"
                 options={allClass}
-                valueKey="name"
+                valueKey="id"
                 labelKey="name"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
                 value={classes}
                 onChange={(value) => {
                   setClasses(value as string);
@@ -250,7 +254,7 @@ const Subjects = (props: TabComponentType) => {
                 valueKey="value"
                 labelKey="label"
                 isLoading={isLoading}
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
               />
             </Box>
             <Button
@@ -316,7 +320,7 @@ const Subjects = (props: TabComponentType) => {
         handleClose={() => {
           viewDocumentDialog.onFalse();
         }}
-        title={`${selectedChapter?.chapterName} Documents`}
+        title="Documents"
       >
         <ChapterDocuments documents={selectedChapter?.documents} />
       </CustomDialog>

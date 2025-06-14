@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
@@ -80,15 +81,21 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
         data={[
           {
             title: 'Elective Group 1',
-            subjects: [{ name: 'Programming' }, { name: 'Physical Training' }],
-            subjectColor: '#1E90FF', // You can customize this color
-            createdBy: 'Anita Verma',
+            subjectColor: '#1E90FF',
+            subjects: [
+              { name: 'Computer', subjectColor: '#4169E1' },
+              { name: 'Physical Training', subjectColor: '#FF69B4' },
+            ],
+            createdBy: 'Patel Jeena Rajeshbhai',
           },
           {
             title: 'Elective Group 2',
-            subjects: [{ name: 'Hindi' }, { name: 'Sanskrit' }],
-            subjectColor: '#FF4500', // You can change this too
-            createdBy: 'Rakesh Mehta',
+            subjectColor: '#FF4500',
+            subjects: [
+              { name: 'Hindi', subjectColor: '#FF4500' },
+              { name: 'Sanskrit', subjectColor: '#DA70D6' },
+            ],
+            createdBy: 'Shah Meena Prakashbhai',
           },
         ]}
       />
@@ -126,6 +133,10 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
             color="error"
             onClick={() => {
               // handle delete
+              deleteDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Subject ${selected?.title} deleted successfully`,
+              });
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
