@@ -114,7 +114,7 @@ const HrAttendanceSettingScreen = () => {
       {attendanceRuleDialog.value && (
         <CustomDialog
           title={
-            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Add Rule</Typography>
               <Tooltip
                 arrow
@@ -146,7 +146,7 @@ const HrAttendanceSettingScreen = () => {
             leaveTypeDialog.onFalse();
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Leave Type</Typography>
               <Tooltip
                 arrow

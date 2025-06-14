@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState } from 'react';
 
-import { Box, Grid, useTheme, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
@@ -33,9 +33,8 @@ import type { TabComponentType } from '.';
 
 const LeaveCalender = (props: TabComponentType) => {
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
-  const theme = useTheme();
 
-  const { user, employee } = useSelector((state: any) => state.auth);
+  const { employee } = useSelector((state: any) => state.auth);
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -51,7 +50,7 @@ const LeaveCalender = (props: TabComponentType) => {
         end: i.endDate,
         allDay: false,
         textColor: i.leavePolicy.color,
-        title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}]`,
+        title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}] ${EmployeeLeaveStatusType[i?.status]}`,
         description: i.description.replace(/<[^>]+>/g, ''),
         viewStartDate: i.startDate,
         viewEndDate: i.endDate,
@@ -101,6 +100,15 @@ export const LeaveRequestForm = ({ editData }: any) => (
         <Typography variant="body2">
           {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
         </Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography variant="body2" fontWeight={600}>
+          {' '}
+          Organization
+        </Typography>
+      </Grid>
+      <Grid item xs={8}>
+        <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
       </Grid>
       <Grid item xs={4}>
         <Typography variant="body2" fontWeight={600}>

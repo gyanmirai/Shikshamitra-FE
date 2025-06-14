@@ -86,14 +86,6 @@ const InquiryTable = ({
           </Box>
         </>
       }
-      searchFieldProps={{
-        placeholder: 'Search by Inquiry number, Class, Student Name...',
-        label: 'Search by Inquiry number, Class, Student Name...',
-        sx: {
-          maxWidth: '400px',
-          width: '100%',
-        },
-      }}
       columns={[
         {
           id: 'inquiryNumber',
@@ -113,17 +105,17 @@ const InquiryTable = ({
         { id: 'standard.name', label: 'Class', align: 'left' },
         {
           id: 'dobValue',
-          label: 'DOB',
-          minWidth: '120px',
+          label: 'Date of Birth',
+          minWidth: '8vw',
           align: 'left',
           filterType: 'date',
         },
         { id: 'ageValue', label: 'Age', align: 'left', minWidth: '120px' },
         {
           id: 'doiValue',
-          label: 'Inquiry Date',
+          label: 'Date of Inquiry',
           filterType: 'date',
-          minWidth: '120px',
+          minWidth: '10vw',
           align: 'left',
           isDateRangeFilter: true,
         },
@@ -152,8 +144,8 @@ const InquiryTable = ({
         { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
         {
           id: 'inquiryPreference.preferenceName',
-          label: 'Inquiry Prefrance',
-          minWidth: '130px',
+          label: 'Inquiry Preference',
+          minWidth: '11vw',
           align: 'left',
         },
         {

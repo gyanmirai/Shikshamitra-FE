@@ -122,7 +122,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
           { id: 'documentName', label: 'Name' },
           {
             id: 'docType',
-            label: 'Document Type',
+            label: 'Document Format',
             isSort: false,
           },
           {

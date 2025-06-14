@@ -8,13 +8,12 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tab, Card, Tabs, Divider, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Tab, Card, Tabs, TextField, Autocomplete } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
-import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -60,7 +59,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 1, mb: 3 }}
+        sx={{ px: 1, mb: 2 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
@@ -208,57 +207,64 @@ const DateWise = ({
   return (
     <>
       {' '}
-      <DatePicker
-        format="DD-MM-YYYY"
-        label="Date"
-        value={dateValue}
-        onChange={(value) => {
-          setSearchParams({ date: value?.format('DD-MM-YYYY') });
-          // setDate(value);
-        }}
-        sx={{ m: 2, ml: 0 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
-      />
-      <Tabs
-        value={tabs.value}
-        onChange={handleTabChange}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
-          mb: 2,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
           p: 1,
-          pl: 2,
+
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
+          my: 2,
         }}
       >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            // icon={tab.icon}
-            label={
-              <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                {tab.label}{' '}
-                <Label
-                  variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                  color={(tab?.color as LabelColor) || 'default'}
-                >
-                  {tab.count}
-                </Label>
-              </Box>
-            }
-            // icon={tab.icon}
-            value={tab.value}
-          />
-        ))}
-      </Tabs>
-      <Divider />
+        <DatePicker
+          format="DD-MM-YYYY"
+          label="Date"
+          value={dateValue}
+          onChange={(value) => {
+            setSearchParams({ date: value?.format('DD-MM-YYYY') });
+            // setDate(value);
+          }}
+          sx={{ ml: 0 }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },
+            flexGrow: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              // icon={tab.icon}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label
+                    variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
+                    color={(tab?.color as LabelColor) || 'default'}
+                  >
+                    {tab.count}
+                  </Label>
+                </Box>
+              }
+              // icon={tab.icon}
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
+      </Box>
       <CustomizableTable
         noDataText={<>No Data Availabel For Attendance </>}
         onSendNotification={handlerSendNotification}
@@ -306,8 +312,22 @@ const DateWise = ({
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left' },
           { id: 'contactNo', label: 'Contact No.', align: 'left' },
-          { id: 'timeIn', label: 'In-time', align: 'left' },
-          { id: 'timeOut', label: 'Out-time', align: 'left' },
+          {
+            id: 'timeIn',
+            label: 'In-Time',
+            align: 'left',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
+          {
+            id: 'timeOut',
+            label: 'Out-Time',
+            align: 'left',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
           // {
           //   id: 'status',
@@ -372,8 +392,8 @@ const DateWise = ({
           {
             id: 3,
             attendanceDate: '2024-03-03',
-            timeIn: '-',
-            timeOut: '-',
+            timeIn: '',
+            timeOut: '',
             totalHoursWorked: '0H 0M',
             status: 'Leave',
             employeeName: 'Patel Amit Naresh',
@@ -416,8 +436,8 @@ const DateWise = ({
           {
             id: 7,
             attendanceDate: '2024-03-07',
-            timeIn: '-',
-            timeOut: '-',
+            timeIn: '',
+            timeOut: '',
             totalHoursWorked: '0H 0M',
             status: 'Leave',
             employeeName: 'Joshi Arun Kumar',
@@ -491,6 +511,8 @@ const EmployeeWise = ({
     [searchParams.endDate]
   );
 
+  const tabs = useTabs(EmployeeAttendanceStatus.All);
+
   // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -501,6 +523,62 @@ const EmployeeWise = ({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
+
+  const counts = useMemo(
+    () => ({
+      all: data?.items?.length || 24,
+      Present:
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
+        ).length || 10,
+      Absent:
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
+        ).length || 8,
+      'Half-Day':
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
+        ).length || 6,
+    }),
+    [data?.items]
+  );
+  const TABS = useMemo(
+    () => [
+      {
+        value: EmployeeAttendanceStatus.All,
+        label: 'All',
+        count: counts.all || 0,
+        color: 'default',
+      },
+      {
+        value: EmployeeAttendanceStatus.Present,
+        label: 'Present',
+        count: counts.Present || 0,
+        color: 'success',
+        // icon: <Iconify icon="oui:check-in-circle-empty" />,
+      },
+      {
+        value: EmployeeAttendanceStatus.FullDayLeave,
+        label: 'Absent',
+        count: counts.Absent || 0,
+        color: 'error',
+        // icon: <Iconify icon="mdi:cross-circle-outline" />,
+      },
+      {
+        value: EmployeeAttendanceStatus.HalfDayLeave,
+        label: 'Half-Day',
+        count: counts['Half-Day'] || 0,
+        color: 'warning',
+        // icon: <Iconify icon="radix-icons:half-2" />,
+      },
+    ],
+    [counts]
+  );
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+    tabs.onChange(event, newValue);
+    setSelectedStudents([]);
+  };
 
   useEffect(() => {
     if (searchParams?.employeeId && startDate) {
@@ -536,11 +614,21 @@ const EmployeeWise = ({
   );
   return (
     <>
-      <Box display="flex" gap={2} m={2} ml={0}>
+      <Box
+        display="flex"
+        gap={2}
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+        }}
+      >
         <Autocomplete
           options={employees?.items || []}
           getOptionLabel={(option: any) =>
-            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''}`
+            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
           }
           renderInput={(params) => (
             <TextField
@@ -592,6 +680,43 @@ const EmployeeWise = ({
         />
       </Box>
       {searchParams?.employeeId && (
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+            borderRadius: '8px',
+            bgcolor: 'background.paper',
+            boxShadow: 'var(--shadows-3)',
+            mb: 2,
+            p: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              // icon={tab.icon}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label
+                    variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
+                    color={(tab?.color as LabelColor) || 'default'}
+                  >
+                    {tab.count}
+                  </Label>
+                </Box>
+              }
+              // icon={tab.icon}
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
+      )}
+
+      {/* {searchParams?.employeeId && (
         <Box display="flex" gap={2} m={2} ml={0}>
           <Card
             sx={{
@@ -670,7 +795,7 @@ const EmployeeWise = ({
             <Iconify icon={GlobalIcons.reject} width={32} />
           </Card>
         </Box>
-      )}
+      )} */}
       {searchParams?.employeeId && (
         <CustomizableTable
           noDataText={<>No Data Availabel For Attendance </>}
@@ -725,8 +850,20 @@ const EmployeeWise = ({
                 return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
               },
             },
-            { id: 'timeIn', label: 'In-time' },
-            { id: 'timeOut', label: 'Out-time' },
+            {
+              id: 'timeIn',
+              label: 'In-time',
+              render(value, row) {
+                return value || `__ __`;
+              },
+            },
+            {
+              id: 'timeOut',
+              label: 'Out-time',
+              render(value, row) {
+                return value || `__ __`;
+              },
+            },
             { id: 'totalHoursWorked', label: 'Hours Worked' },
             {
               id: 'status',
@@ -786,8 +923,8 @@ const EmployeeWise = ({
             {
               id: 3,
               attendanceDate: '2024-03-03',
-              timeIn: '-',
-              timeOut: '-',
+              timeIn: '',
+              timeOut: '',
               totalHoursWorked: '0H 0M',
               status: 'Leave',
               employeeName: 'Patel Amit Naresh',
@@ -830,8 +967,8 @@ const EmployeeWise = ({
             {
               id: 7,
               attendanceDate: '2024-03-07',
-              timeIn: '-',
-              timeOut: '-',
+              timeIn: '',
+              timeOut: '',
               totalHoursWorked: '0H 0M',
               status: 'Leave',
               employeeName: 'Joshi Arun Kumar',

@@ -269,32 +269,17 @@ const InquiryScreen = () => {
     }
   };
 
-  const links = inquiryDialog.value
-    ? [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
-        { name: 'Inquiry', href: '/student/enrollment/inquiry' },
-        { name: editData ? 'Update Inquiry' : 'Add Inquiry' },
-      ]
-    : [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
-        { name: 'Inquiry' },
-      ];
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading={
-          inquiryDialog.value && editData
-            ? 'Update Inquiry'
-            : inquiryDialog.value
-              ? 'Add Inquiry'
-              : 'Inquiry'
-        }
+        heading="Inquiry"
         description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
-        links={links}
-        sx={{ px: 1, mb: 2 }}
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
+          { name: 'Inquiry' },
+        ]}
+        sx={{ mb: 2 }}
         isBack={inquiryDialog.value}
         onBack={() => handleClose()}
         action={

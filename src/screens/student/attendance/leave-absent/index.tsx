@@ -150,14 +150,6 @@ const LeaveAndAbsentScreen = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Student, Medium, Organization, Class...',
-          label: 'Search by Student, Medium, Organization, Class...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           // {
           //   id: 'checkBox',
@@ -301,7 +293,7 @@ const LeaveAndAbsentScreen = () => {
         open={dialog.value}
         handleClose={dialog.onFalse}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Leave Request</Typography>
             <Tooltip
               arrow

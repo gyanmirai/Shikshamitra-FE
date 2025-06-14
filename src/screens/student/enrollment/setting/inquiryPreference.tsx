@@ -114,14 +114,6 @@ const InquiryPreference = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Preference Name',
-          label: 'Search by Preference Name',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           { id: 'preferenceName', label: 'Preference Name' },
@@ -160,7 +152,7 @@ const InquiryPreference = () => {
           setEditData(null);
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Inquiry Preference</Typography>
             <Tooltip arrow placement="right" title="?.">
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

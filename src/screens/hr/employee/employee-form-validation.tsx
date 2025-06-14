@@ -6,7 +6,7 @@ const personalInformationValidationSchema = Yup.object({
   //   code: Yup.string().required('Code is required'),
   lastName: Yup.string().required('Last name is required'),
   firstName: Yup.string().required('First name is required'),
-  middleName: Yup.string(),
+  middleName: Yup.string().required('Middle name is required'),
   shortName: Yup.string(),
   employeeStatusType: Yup.number().required('Employee status type is required'),
   //   subject: Yup.array().required('Subject is required'),
@@ -30,7 +30,7 @@ const personalInformationValidationSchema = Yup.object({
   //   identificationMark1: Yup.string().required('Identification mark is required'),
   addressLine1: Yup.string().required('Building/Flat/House No is required'),
   addressLine2: Yup.string().required('Street/Road Name is required'),
-  addressLine3: Yup.string().required('Area/Locality/Landmark is required'),
+  addressLine3: Yup.string(),
   country: Yup.object()
     .shape({ name: Yup.string().required('Country is required') })
     .default(() => ({ name: '' }))
@@ -111,10 +111,42 @@ const familyInformationValidationSchema = Yup.object({
     .nullable(),
 });
 
+export const workExperienceValidationSchema = Yup.array().of(
+  Yup.object({
+    organizationName: Yup.string().required('Organization name is required'),
+    organizationAddress: Yup.string(),
+    organizationCountry: Yup.object().shape({
+      name: Yup.string(),
+      isoCode: Yup.string(),
+    }),
+    organizationState: Yup.object().shape({
+      name: Yup.string(),
+      isoCode: Yup.string(),
+    }),
+    organizationCity: Yup.object().shape({
+      name: Yup.string(),
+    }),
+    fromDate: Yup.date().nullable().required('Start date is required'),
+    toDate: Yup.date()
+      .nullable()
+      .min(Yup.ref('fromDate'), 'End date must be after start date')
+      .test('toDate', 'End date is required if currently not working', function (value) {
+        // Skip validation if currently working (toDate can be null)
+        if (this.parent.currentlyWorking) {
+          return true;
+        }
+        // Require toDate if not currently working
+        return value !== null;
+      }),
+    department: Yup.string(),
+    designation: Yup.string().required('Designation is required'),
+  })
+);
+
 export const validations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,
   Yup.object({}),
-  Yup.object({}),
+  workExperienceValidationSchema,
   Yup.object({}),
 ];

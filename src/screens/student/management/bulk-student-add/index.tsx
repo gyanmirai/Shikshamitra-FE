@@ -96,14 +96,6 @@ const BulkStudentAddScreen = () => {
       <CustomizableTable
         tableId="bulk-student-add"
         noDataText="No Bulk Student Added"
-        searchFieldProps={{
-          placeholder: 'Search by Name, Roll No, Board, Medium...',
-          label: 'Search by Name, Roll No, Board, Medium...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'rollNo', label: 'Roll No' },

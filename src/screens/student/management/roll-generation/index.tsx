@@ -214,14 +214,6 @@ const RollNoGenerationScreen = ({
             showCheckbox={selectedStudents.length !== 0}
             noDataText={<>No Roll Genaration Data Found </>}
             tableId="roll-no-generation-table"
-            searchFieldProps={{
-              placeholder: 'Search by GR No, Name, Roll No',
-              label: 'Search by GR No, Name, Roll No',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             columns={[
               // {
               //   id: 'checkBox',

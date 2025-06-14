@@ -16,7 +16,6 @@ import {
   Divider,
   FormLabel,
   TextField,
-  Typography,
   RadioGroup,
   FormControl,
   DialogActions,
@@ -279,7 +278,7 @@ const InquiryForm = ({
         >
           <Scrollbar
             sx={{
-              p: 2,
+              px: 1,
               height: '100%',
             }}
           >
@@ -458,7 +457,10 @@ const InquiryForm = ({
               </Grid>
               <Grid item xs={12} md={4}>
                 <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
-                  <FormControl fullWidth>
+                  <FormControl
+                    fullWidth
+                    sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}
+                  >
                     <FormLabel id="gender-radio-group">Gender</FormLabel>
                     <RadioGroup
                       row
@@ -523,7 +525,7 @@ const InquiryForm = ({
               <Grid item xs={12} md={4}>
                 <ShakingTextField>
                   <CustomSelect
-                    label="Inquiry Prefrance"
+                    label="Inquiry Preference"
                     name="inquiryPreferences"
                     isLoading={inquiryPrefrenceLoading}
                     options={inquiryPreference?.items || []}
@@ -540,21 +542,10 @@ const InquiryForm = ({
                         maxWidth: 'unset',
                       },
                     }}
+                    addOtherItemOnClick={dialog.onTrue}
+                    addOtherItemText="add Inquiry Preference"
                   />
                 </ShakingTextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    dialog.onTrue();
-                  }}
-                >
-                  add Inquiry Prefrance
-                </Typography>
               </Grid>
             </SectionCard>
 

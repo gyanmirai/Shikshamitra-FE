@@ -79,7 +79,9 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 {...formik.getFieldProps('firstName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
-                  formik.setFieldValue('firstName', newName);
+                  if (/^[A-Za-z ]*$/.test(newName)) {
+                    formik.setFieldValue('firstName', newName);
+                  }
                 }}
                 error={formik.touched.firstName && Boolean(formik.errors.firstName)}
                 helperText={formik.touched.firstName && formik.errors.firstName}
@@ -96,13 +98,17 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 size="small"
                 label="Middle Name *"
                 {...formik.getFieldProps('middleName')}
+                name="middleName"
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
-                  formik.setFieldValue('middleName', newName);
+                  if (/^[A-Za-z ]*$/.test(newName)) {
+                    formik.setFieldValue('middleName', newName);
+                  }
                 }}
                 error={formik.touched.middleName && Boolean(formik.errors.middleName)}
                 helperText={formik.touched.middleName && formik.errors.middleName}
                 disabled={disabled}
+                onBlur={formik.handleBlur}
               />
             </ShakingTextField>
           </Grid>
@@ -115,7 +121,9 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 {...formik.getFieldProps('lastName')}
                 onChange={(e) => {
                   const newName = capitalize(e.target.value);
-                  formik.setFieldValue('lastName', newName);
+                  if (/^[A-Za-z ]*$/.test(newName)) {
+                    formik.setFieldValue('lastName', newName);
+                  }
                 }}
                 error={formik.touched.lastName && Boolean(formik.errors.lastName)}
                 helperText={formik.touched.lastName && formik.errors.lastName}
@@ -144,9 +152,12 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <Grid item xs={12} md={4}>
             <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
               <DatePicker
-                label="DOB *"
+                label="Date of Birth *"
                 value={formik.values.dob}
-                onChange={(value) => formik.setFieldValue('dob', value)}
+                onChange={(value) => {
+                  formik.setFieldValue('dob', value);
+                  formik.setFieldTouched('dob', true);
+                }}
                 disabled={disabled}
                 format="DD-MM-YYYY"
                 slotProps={{
@@ -168,7 +179,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               >
                 <FormLabel
                   id="gender-radio-group"
-                  sx={{ color: (theme) => theme.palette.common.black }}
+                  sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
                 >
                   Gender
                 </FormLabel>
@@ -377,6 +388,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
             disabled={disabled}
             helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+            onBlur={formik.handleBlur}
           />
         </ShakingTextField>
       </Grid>
@@ -408,33 +420,33 @@ const InformationAllFields = ({ formik, disabled }: any) => (
         <ShakingTextField
           error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
         >
-          <Autocomplete
-            options={EmployeeGroupTypeArray.map((item, index) => ({
-              id: index,
-              label: EmployeeGroupType[index],
-            }))}
-            getOptionLabel={(option) => option.label}
+          <FormControl
+            fullWidth
             disabled={disabled}
-            value={
-              EmployeeGroupTypeArray.map((_, index) => ({
-                id: index,
-                label: EmployeeGroupType[index],
-              })).find((item) => item.id === formik.values.employeeGroup) || null
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Employee Group *"
-                size="small"
-                fullWidth
-                error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
-                helperText={formik.touched.employeeGroup && formik.errors.employeeGroup}
-              />
+            error={!!formik.errors.employeeGroup && formik.touched.employeeGroup}
+          >
+            <InputLabel id="employee-group-label" size="small">
+              Employee Group *
+            </InputLabel>
+            <Select
+              labelId="employee-group-label"
+              id="employeeGroup"
+              value={formik.values.employeeGroup}
+              onChange={formik.handleChange}
+              size="small"
+              label="Employee Group *"
+              name="employeeGroup"
+            >
+              {EmployeeGroupTypeArray.map((item, index) => (
+                <MenuItem key={item} value={index}>
+                  {EmployeeGroupType[index]}
+                </MenuItem>
+              ))}
+            </Select>
+            {formik.touched.employeeGroup && formik.errors.employeeGroup && (
+              <FormHelperText>{formik.errors.employeeGroup}</FormHelperText>
             )}
-            onChange={(e, value) => {
-              formik.setFieldValue('employeeGroup', value?.id);
-            }}
-          />
+          </FormControl>
         </ShakingTextField>
       </Grid>
       <Grid item xs={12} md={4}>
@@ -491,7 +503,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Building No./Flat/House No."
+            label="Building No./Flat/House No. *"
             {...formik.getFieldProps('addressLine1')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -529,7 +541,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <TextField
             fullWidth
             size="small"
-            label="Landmark *"
+            label="Landmark"
             {...formik.getFieldProps('addressLine3')}
             onChange={(e) => {
               const newName = capitalize(e.target.value);
@@ -546,15 +558,16 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <CountryComponent
             value={formik.values.country}
             onChange={(_e: any, value: any) => {
-              formik.setFieldValue('state', null);
-              formik.setFieldValue('country', value);
+              formik.setFieldValue('state', { name: '', isoCode: '' });
+              formik.setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
             }}
             error={formik.touched.country && Boolean(formik.errors.country?.name)}
             helperText={formik.touched.country && formik.errors.country?.name}
             textFieldProps={{
-              label: 'Country ',
+              label: 'Country *',
             }}
             disabled={disabled}
+            onBlur={formik.handleBlur}
           />
         </ShakingTextField>
       </Grid>
@@ -564,12 +577,20 @@ const InformationAllFields = ({ formik, disabled }: any) => (
             value={formik.values.state}
             countryValue={formik.values.country}
             onChange={(_e: any, value: any) => {
-              formik.setFieldValue('state', value);
-              formik.setFieldValue('city', null);
+              formik.setFieldValue('state', {
+                ...(value || {}),
+                name: value?.name,
+                isoCode: value?.isoCode,
+              });
+              formik.setFieldValue('city', { name: '' });
             }}
             error={formik.touched.state && Boolean(formik.errors?.state?.name)}
             helperText={formik.touched.state && formik.errors?.state?.name}
             disabled={disabled}
+            textFieldProps={{
+              label: 'State *',
+            }}
+            onBlur={formik.handleBlur}
           />
         </ShakingTextField>
       </Grid>
@@ -578,12 +599,16 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           <CityComponent
             value={formik.values.city}
             onChange={(_e: any, value: any) => {
-              formik.setFieldValue('city', value);
+              formik.setFieldValue('city', { name: value?.name });
             }}
             stateValue={formik.values.state}
             error={formik.touched.city && Boolean(formik.errors.city?.name)}
             helperText={formik.touched.city && formik.errors.city?.name}
             disabled={disabled}
+            textFieldProps={{
+              label: 'City *',
+            }}
+            onBlur={formik.handleBlur}
           />
         </ShakingTextField>
       </Grid>

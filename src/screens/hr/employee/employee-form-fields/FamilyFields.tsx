@@ -23,7 +23,7 @@ function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -37,7 +37,7 @@ function FatherAddressComponent(props: any) {
                   formik.setFieldValue('fatherAddress2', formik.values.address2);
                   formik.setFieldValue('fatherAddress3', formik.values.address3);
                   formik.setFieldValue('fatherCountry', formik.values.country);
-                  formik.setFieldValue('fatherState', formik.values.fatherState);
+                  formik.setFieldValue('fatherState', formik.values.state);
                   formik.setFieldValue('fatherCity', formik.values.city);
                   formik.setFieldValue('fatherPinCode', formik.values.pincode);
                 }
@@ -114,6 +114,7 @@ function FatherAddressComponent(props: any) {
           error={formik.touched.fatherCountry && Boolean(formik.errors.fatherCountry)}
           helperText={formik.touched.fatherCountry && formik.errors.fatherCountry}
           textFieldProps={{ label: 'Country' }}
+          disabled={!!disabled}
         />
       </Grid>
 
@@ -167,7 +168,7 @@ function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={3}>
       <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
@@ -310,8 +311,8 @@ function SpouseAddressComponent(props: any) {
   const { formik, disabled } = props;
 
   return (
-    <Grid container spacing={2}>
-      {/* <Grid item xs={12}>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
         <FormControlLabel
           disabled={!!disabled}
           control={
@@ -320,21 +321,21 @@ function SpouseAddressComponent(props: any) {
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
                 if (e.target.checked) {
-                  formik.setFieldValue('spouseAddress1', formik.values.fatherAddress1);
-                  formik.setFieldValue('spouseAddress2', formik.values.fatherAddress2);
-                  formik.setFieldValue('spouseAddress3', formik.values.fatherAddress3);
-                  formik.setFieldValue('spouseCountry', formik.values.fatherCountry);
-                  formik.setFieldValue('spouseState', formik.values.fatherState);
-                  formik.setFieldValue('spouseCity', formik.values.fatherCity);
-                  formik.setFieldValue('spousePinCode', formik.values.fatherPinCode);
+                  formik.setFieldValue('spouseAddress1', formik.values.address1);
+                  formik.setFieldValue('spouseAddress2', formik.values.address2);
+                  formik.setFieldValue('spouseAddress3', formik.values.address3);
+                  formik.setFieldValue('spouseCountry', formik.values.country);
+                  formik.setFieldValue('spouseState', formik.values.state);
+                  formik.setFieldValue('spouseCity', formik.values.city);
+                  formik.setFieldValue('spousePinCode', formik.values.pincode);
                 }
               }}
               name="sameAsFatherAddressForSpouse"
             />
           }
-          label="Same as Father Address"
+          label="Same as Employee Address"
         />
-      </Grid> */}
+      </Grid>
 
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <ShakingTextField
@@ -480,7 +481,7 @@ const FamilyMemberSection = ({
         {title}
       </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         {/* Name Field */}
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <ShakingTextField
@@ -489,11 +490,13 @@ const FamilyMemberSection = ({
             <TextField
               name={`${type}Name`}
               value={formik.values[`${type}Name`]}
-              label={` Name `}
+              label={`Full Name `}
               // placeholder={`Enter ${capitalizedType} Name `}
               onChange={(e) => {
                 const value = capitalize(e.target.value);
-                formik.setFieldValue(`${type}Name`, value);
+                if (/^[A-Za-z ]*$/.test(value)) {
+                  formik.setFieldValue(`${type}Name`, value);
+                }
               }}
               error={formik.touched[`${type}Name`] && Boolean(formik.errors[`${type}Name`])}
               helperText={formik.touched[`${type}Name`] && formik.errors[`${type}Name`]}
@@ -512,7 +515,9 @@ const FamilyMemberSection = ({
             label={` Occupation`}
             onChange={(e) => {
               const value = capitalize(e.target.value);
-              formik.setFieldValue(`${type}Occupation`, value);
+              if (/^[A-Za-z ]*$/.test(value)) {
+                formik.setFieldValue(`${type}Occupation`, value);
+              }
             }}
             error={
               formik.touched[`${type}Occupation`] && Boolean(formik.errors[`${type}Occupation`])
@@ -561,7 +566,7 @@ function RenderFamilyInformation(props: any) {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Stack spacing={2}>
+      <Stack spacing={3}>
         <FamilyMemberSection
           type="father"
           title="Father Details"

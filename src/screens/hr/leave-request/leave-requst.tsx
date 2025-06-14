@@ -37,10 +37,10 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import UploadButton from 'src/components/upload-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -249,9 +249,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
               {addLeaveTypeDialog.value && (
                 <CustomDialog
-                  maxWidth="md"
                   title={
-                    <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+                    <Box display="flex" flexDirection="row" gap={1} alignItems="center">
                       <Typography variant="h5">Leave Policy</Typography>
                       <Tooltip
                         arrow
@@ -355,7 +354,79 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <Upload
+              <UploadButton
+                onChange={(e) => {
+                  const file = e?.target?.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+                  reader.onload = () => {
+                    const base64String = reader.result;
+                    setFieldValue('docs', base64String);
+                  };
+                }}
+                fileInputProps={{
+                  accept: 'image/*,.pdf',
+                }}
+                variant="outlined"
+                fullWidth
+                disabled={editData}
+              >
+                Upload Document
+              </UploadButton>
+              {values.docs && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    height: 70,
+                    width: 70,
+                    borderRadius: 1,
+                    boxShadow: 'var(--shadows-2)',
+                    gap: 1,
+                    mt: 1,
+                    position: 'relative',
+                  }}
+                >
+                  <Box height="100%" width="100%">
+                    {values.docs.includes('data:image') ? (
+                      <img
+                        src={values.docs}
+                        alt="imagefile"
+                        style={{ height: '100%', width: '100%' }}
+                      />
+                    ) : (
+                      <Iconify
+                        icon="mdi:file-pdf"
+                        sx={{
+                          color: 'error.main',
+                          cursor: 'pointer',
+                          width: '100%',
+                          height: '100%',
+                        }}
+                        onClick={() => {
+                          window.open(values.docs, '_blank');
+                        }}
+                      />
+                    )}
+                  </Box>
+                  <Iconify
+                    icon="mdi:close"
+                    width={16}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      cursor: 'pointer',
+                      color: 'grey.600',
+                    }}
+                    onClick={() => handleRemoveFile(setFieldValue)}
+                  />
+                </Box>
+              )}
+
+              {/* <Upload
                 {...uploadProps}
                 thumbnail
                 value={values.docs}
@@ -372,7 +443,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 onDelete={() => handleRemoveFile(setFieldValue)}
                 onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
                 disabled={editData}
-              />
+              /> */}
             </Grid>
           </Grid>
         </BackPopUpChecked>
@@ -388,7 +459,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         >
           Cancel
         </Button>
-        {!editData && <SubmitButton loading={isLoading} />}
+        {!editData && (
+          <SubmitButton
+            loading={isLoading}
+            onClick={() => {
+              handleSubmit();
+            }}
+          />
+        )}
 
         {values.status === EmployeeLeaveStatusType.Rejected && (
           <LoadingButton

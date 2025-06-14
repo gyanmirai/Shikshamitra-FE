@@ -137,14 +137,6 @@ const RegistrationFormScreen = () => {
           isLoading={isLoading}
           noDataText={<>No Registration Form Issued Data Found </>}
           tableId="student-registration-form-table"
-          searchFieldProps={{
-            placeholder: 'Search by Form No, Inquiry number, Class, Student name...',
-            label: 'Search by Form No, Inquiry number, Class, Student name...',
-            sx: {
-              maxWidth: '470px',
-              width: '100%',
-            },
-          }}
           columns={[
             {
               id: 'studentName',
@@ -209,7 +201,7 @@ const RegistrationFormScreen = () => {
             },
             {
               id: 'inquiryPreference.preferenceName',
-              label: 'Inquiry Prefrance',
+              label: 'Inquiry Preference',
               minWidth: '130px',
               align: 'left',
             },

@@ -176,7 +176,7 @@ const ProfessionalTax = () => {
         open={dialog.value}
         handleClose={handleClose}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Create New Tax Range</Typography>
             <Tooltip
               arrow

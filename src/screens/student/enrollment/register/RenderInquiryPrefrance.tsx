@@ -18,7 +18,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
   return (
     <>
       <CustomSelect
-        label="Inquiry Prefrance"
+        label="Inquiry Preference"
         name="inquiryPreference"
         isLoading={inquiryPrefrenceLoading}
         options={inquiryPreference?.items || []}
@@ -45,7 +45,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
           dialog.onTrue();
         }}
       >
-        Add Inquiry Prefrance
+        Add Inquiry Preference
       </Typography> */}
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />

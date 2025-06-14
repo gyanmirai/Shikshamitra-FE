@@ -127,14 +127,6 @@ const StudentDocumentType = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Document name, Type...',
-          label: 'Search by Document name, Type...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           { id: 'documentName', label: 'Document' },
@@ -180,7 +172,7 @@ const StudentDocumentType = () => {
           setEditData(null);
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Document</Typography>
             <Tooltip
               arrow

@@ -27,7 +27,6 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
           <TextField
             {...params}
             label="Role *"
-            placeholder="Search Role *"
             size="small"
             fullWidth
             sx={{ width: '100%', minWidth: '200px' }}

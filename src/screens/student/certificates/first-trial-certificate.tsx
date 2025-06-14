@@ -57,10 +57,6 @@ const FirstTrialCertificate = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Medium, Organization, Class...',
-          label: 'Search by Medium, Organization, Class...',
-        }}
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },

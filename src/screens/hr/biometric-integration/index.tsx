@@ -74,8 +74,24 @@ const BiometricIntegrationScreen = () => {
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
           { id: 'contactNo', label: 'Mobile No.', align: 'left', minWidth: '8vw' },
-          { id: 'timeIn', label: 'In-time', align: 'left', minWidth: '6vw' },
-          { id: 'timeOut', label: 'Out-time', align: 'left', minWidth: '7vw' },
+          {
+            id: 'timeIn',
+            label: 'In-Time',
+            align: 'left',
+            minWidth: '6vw',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
+          {
+            id: 'timeOut',
+            label: 'Out-Time',
+            align: 'left',
+            minWidth: '7vw',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
           { id: 'hoursWorked', label: 'Hours Worked', minWidth: '10vw', align: 'left' },
           {
             id: 'status',
@@ -148,8 +164,8 @@ const BiometricIntegrationScreen = () => {
           {
             employeeName: 'Patel Amit Naresh',
             hoursWorked: '0H 0M',
-            timeIn: '-',
-            timeOut: '-',
+            timeIn: '',
+            timeOut: '',
             status: 'Leave',
             employeeCode: 'EMP003',
             contactNo: '+91 98765 43212',
@@ -184,8 +200,8 @@ const BiometricIntegrationScreen = () => {
           {
             employeeName: 'Mishra Deepak Shyam',
             hoursWorked: '0H 0M',
-            timeIn: '-',
-            timeOut: '-',
+            timeIn: '',
+            timeOut: '',
             status: 'Leave',
             employeeCode: 'EMP007',
             contactNo: '+91 98765 43216',

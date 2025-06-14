@@ -19,14 +19,6 @@ const EnrollmentStatusTrackingScreen = () => (
     />
     <CustomizableTable
       tableId="enrollment-status-tracking"
-      searchFieldProps={{
-        placeholder: 'Search by name, organization, medium, class...',
-        label: 'Search by name, organization, medium, class...',
-        sx: {
-          maxWidth: '400px',
-          width: '100%',
-        },
-      }}
       columns={[
         { id: 'name', label: 'Name' },
         { id: 'organization', label: 'Organization' },

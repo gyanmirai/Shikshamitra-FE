@@ -53,10 +53,6 @@ const HostelRoomMate = (props: StudentTabsComponentType) => {
         tableId="student-list"
         isShowedDense={false}
         noDataText={<>No Student Data Found </>}
-        searchFieldProps={{
-          placeholder: 'Search Name, Roll No...',
-          label: 'Search Name, Roll No...',
-        }}
         data={[
           {
             id: 1,

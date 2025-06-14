@@ -153,14 +153,6 @@ const RegistrationTable = ({
           </>
         }
         isLoading={isLoading}
-        searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry number, Class..',
-          label: 'Search by  Form No, Inquiry number, Class..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           // {
           //   id: 'checkBox',
@@ -250,7 +242,7 @@ const RegistrationTable = ({
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Prefrance',
+            label: 'Inquiry Preference',
             minWidth: '130px',
             align: 'left',
           },

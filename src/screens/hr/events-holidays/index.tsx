@@ -63,6 +63,7 @@ export interface IEventHoliday {
   endDate: string;
   reason: string;
   isHoliday: boolean;
+  name: string;
 }
 const HrEventsAndHolidaysScreen = () => {
   // Dialog state for managing form visibility
@@ -149,14 +150,10 @@ const HrEventsAndHolidaysScreen = () => {
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
-          label="Month Year"
+          label="Month-Year"
           value={date}
           onChange={(newValue) => {
             setDate(newValue);
-          }}
-          sx={{
-            maxWidth: '300px',
-            width: '100%',
           }}
           slotProps={{
             textField: {
@@ -194,13 +191,25 @@ const HrEventsAndHolidaysScreen = () => {
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
-            { id: 'sDate', label: 'Start Date', filterType: 'date' },
-            { id: 'eDate', label: 'End Date', filterType: 'date' },
-            { id: 'totalDays', label: 'Total days' },
+            { id: 'reason', label: 'Name', filterType: 'date' },
+            {
+              id: 'sDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              minWidth: '8vw',
+            },
+            { id: 'eDate', label: 'End Date', filterType: 'date', align: 'left', minWidth: '8vw' },
+            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '8vw' },
             { id: 'reason', label: 'Description' },
             {
               id: 'title',
               label: 'Type',
+              filterType: 'enum',
+              enumOptions: [
+                { value: 'Event', label: 'Event' },
+                { value: 'Holiday', label: 'Holiday' },
+              ],
               render: (value) => (
                 <Label variant="soft" color={value === 'Holiday' ? 'error' : 'success'}>
                   {value}
@@ -214,6 +223,7 @@ const HrEventsAndHolidaysScreen = () => {
               minWidth: 60,
               sticky: true,
               isSort: false,
+              align: 'left',
               render(value, row) {
                 return (
                   <ThreeDotsActions
@@ -239,7 +249,7 @@ const HrEventsAndHolidaysScreen = () => {
               sDate: dayjs(item.startDate).format('DD-MM-YYYY'),
               eDate: dayjs(item.endDate).format('DD-MM-YYYY'),
               title: item.isHoliday ? 'Holiday' : 'Event',
-              totalDays: dayjs(item.endDate).diff(dayjs(item.startDate), 'day'),
+              totalDays: dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1,
             })) || []
           }
           // rowProps={(row) => ({
@@ -365,13 +375,18 @@ export const HrEventsAndHolidaysForm = ({
               endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
               reason: value.reason,
               isHoliday: value.isHoliday,
+              name: value.name,
             },
           }).unwrap();
-          shikshaMitraToast.success({
-            message: value.isHoliday
-              ? 'Holiday updated successfully'
-              : 'Event updated successfully',
-          });
+          if (value.isHoliday) {
+            shikshaMitraToast.success({
+              message: 'Holiday updated successfully',
+            });
+          } else {
+            shikshaMitraToast.success({
+              message: 'Event updated successfully',
+            });
+          }
         } else {
           // If creating new event, add it with provided values
           await addHoliday({
@@ -379,12 +394,17 @@ export const HrEventsAndHolidaysForm = ({
             endDate: dateConvertor(dayjs(value.endDate, 'DD-MM-YYYY').format(dateFormat)) || '',
             reason: value.reason,
             isHoliday: value.isHoliday,
+            name: value.name,
           }).unwrap();
-          shikshaMitraToast.success({
-            message: value.isHoliday
-              ? 'Holiday created successfully'
-              : 'Event created successfully',
-          });
+          if (value.isHoliday) {
+            shikshaMitraToast.success({
+              message: 'Holiday created successfully',
+            });
+          } else {
+            shikshaMitraToast.success({
+              message: 'Event created successfully',
+            });
+          }
         }
         // Close form after successful submission
         handleClose(null, true);
@@ -398,6 +418,20 @@ export const HrEventsAndHolidaysForm = ({
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Name *"
+                  name="name"
+                  value={formik.values.name}
+                  onChange={(e) => formik.setFieldValue('name', e.target.value)}
+                  error={formik.touched.name && Boolean(formik.errors.name)}
+                  helperText={formik.touched.name && formik.errors.name}
+                />
+              </ShakingTextField>
+            </Grid>
             <Grid item xs={12}>
               <ShakingTextField
                 error={formik.touched.startDate && Boolean(formik.errors.startDate)}
@@ -442,7 +476,6 @@ export const HrEventsAndHolidaysForm = ({
               <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                 <TextField
                   label="Description *"
-                  placeholder="Enter Description"
                   value={formik.values.reason}
                   size="small"
                   name="reason"

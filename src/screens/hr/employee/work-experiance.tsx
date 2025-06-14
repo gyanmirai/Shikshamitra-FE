@@ -69,13 +69,51 @@ const WorkExperiences = (props: any) => {
                 fullWidth
                 size="small"
                 name={`experiences.${index}.organizationName`}
-                label="Organization Name"
+                label="Organization Name *"
                 value={experience.organizationName}
                 onChange={(event) => {
                   const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.organizationName`, val);
+                  if (/^[A-Za-z ]*$/.test(val)) {
+                    setFieldValue(`experiences.${index}.organizationName`, val);
+                  }
                 }}
+                error={
+                  formik?.touched?.experiences &&
+                  formik?.touched?.experiences?.[index] &&
+                  formik?.errors?.experiences?.[index]
+                }
+                helperText={
+                  formik?.touched?.experiences &&
+                  formik?.touched?.experiences?.[index]?.organizationName &&
+                  formik?.errors?.experiences?.[index]?.organizationName
+                }
                 disabled={!!disabled}
+              />
+            </Box>
+            <Box sx={{ width: '200px' }}>
+              <TextField
+                fullWidth
+                size="small"
+                name={`experiences.${index}.designation`}
+                label="Designation *"
+                value={experience.designation}
+                disabled={!!disabled}
+                onChange={(event) => {
+                  const val = capitalize(event.target.value);
+                  if (/^[A-Za-z ]*$/.test(val)) {
+                    setFieldValue(`experiences.${index}.designation`, val);
+                  }
+                }}
+                error={
+                  formik?.touched?.experiences &&
+                  formik?.touched?.experiences?.[index]?.designation &&
+                  formik?.errors?.experiences?.[index]?.designation
+                }
+                helperText={
+                  formik?.touched?.experiences &&
+                  formik?.touched?.experiences?.[index]?.designation &&
+                  formik?.errors?.experiences?.[index]?.designation
+                }
               />
             </Box>
             <Box sx={{ width: '200px' }}>
@@ -88,24 +126,13 @@ const WorkExperiences = (props: any) => {
                 disabled={!!disabled}
                 onChange={(event) => {
                   const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.department`, val);
+                  if (/^[A-Za-z ]*$/.test(val)) {
+                    setFieldValue(`experiences.${index}.department`, val);
+                  }
                 }}
               />
             </Box>
-            <Box sx={{ width: '200px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                name={`experiences.${index}.designation`}
-                label="Designation"
-                value={experience.designation}
-                disabled={!!disabled}
-                onChange={(event) => {
-                  const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.designation`, val);
-                }}
-              />
-            </Box>
+
             <Box sx={{ width: '200px' }}>
               <CountryComponent
                 value={experience.organizationCountry}
@@ -171,7 +198,7 @@ const WorkExperiences = (props: any) => {
             </Box>
             <Box sx={{ width: '200px' }}>
               <DatePicker
-                label="Start Date"
+                label="Start Date *"
                 name={`experiences.${index}.fromDate`}
                 format="DD-MM-YYYY"
                 value={experience.fromDate}
@@ -208,7 +235,7 @@ const WorkExperiences = (props: any) => {
               />
             </Box>
           </Box>
-          <Box sx={{}}>
+          <Box>
             <IconButton
               disabled={!!disabled}
               onClick={() => {

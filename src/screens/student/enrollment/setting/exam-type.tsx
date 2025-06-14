@@ -112,14 +112,6 @@ const ExamType = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by exam type',
-          label: 'Search by exam type',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         // isLoading={isLoading}
         columns={[
           { id: 'examType', label: 'Exam Type' },

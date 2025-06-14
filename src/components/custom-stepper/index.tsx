@@ -241,7 +241,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={async () => {
                 const error = await formik.validateForm();
-                console.log('🚀 ~ onClick={ ~ error:', error);
+                formik.setTouched({});
+                console.log('🚀 ~ onClick={ ~ error:', formik);
 
                 if (Object.keys(error).length <= 0) {
                   onSave?.(
@@ -251,11 +252,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                     isSaveLoading.setValue
                   );
                 } else {
-                  const allTouched: Record<string, any> = {};
-                  Object.keys(error).forEach((field) => {
-                    allTouched[field as keyof typeof allTouched] = true;
-                  });
-                  formik.setTouched(allTouched);
+                  formik.handleSubmit();
                 }
               }}
             >
