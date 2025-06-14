@@ -145,7 +145,7 @@ const BiometricIntegrationScreen = () => {
         data={[
           {
             employeeName: 'Kumar Rajesh Prakash',
-            hoursWorked: '8H 30M',
+            hoursWorked: '08H 30M',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
@@ -154,7 +154,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Sharma Priya Rajesh',
-            hoursWorked: '7H 30M',
+            hoursWorked: '07H 30M',
             timeIn: '09:30 AM',
             timeOut: '05:00 PM',
             status: 'Present',
@@ -163,7 +163,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Patel Amit Naresh',
-            hoursWorked: '0H 0M',
+            hoursWorked: '00H 00M',
             timeIn: '',
             timeOut: '',
             status: 'Leave',
@@ -172,7 +172,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Gupta Neha Ramesh',
-            hoursWorked: '4H 0M',
+            hoursWorked: '04H 20M',
             timeIn: '09:00 AM',
             timeOut: '01:00 PM',
             status: 'Half Day',
@@ -181,7 +181,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Verma Suresh Kumar',
-            hoursWorked: '8H 0M',
+            hoursWorked: '08H 10M',
             timeIn: '09:15 AM',
             timeOut: '05:15 PM',
             status: 'Present',
@@ -190,7 +190,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Singh Anita Raj',
-            hoursWorked: '8H 15M',
+            hoursWorked: '08H 15M',
             timeIn: '09:00 AM',
             timeOut: '05:15 PM',
             status: 'Present',
@@ -199,7 +199,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Mishra Deepak Shyam',
-            hoursWorked: '0H 0M',
+            hoursWorked: '00H 00M',
             timeIn: '',
             timeOut: '',
             status: 'Leave',
@@ -208,7 +208,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Reddy Meera Krishna',
-            hoursWorked: '4H 30M',
+            hoursWorked: '04H 30M',
             timeIn: '09:00 AM',
             timeOut: '01:30 PM',
             status: 'Half Day',
@@ -217,7 +217,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Malhotra Vikram Singh',
-            hoursWorked: '8H 30M',
+            hoursWorked: '08H 30M',
             timeIn: '09:00 AM',
             timeOut: '05:30 PM',
             status: 'Present',
@@ -226,7 +226,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Iyer Pooja Venkat',
-            hoursWorked: '8H 0M',
+            hoursWorked: '08H 00M',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',
             status: 'Present',

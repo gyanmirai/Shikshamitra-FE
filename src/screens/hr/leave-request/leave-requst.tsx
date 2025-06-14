@@ -321,7 +321,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     slotProps={{
                       textField: {
                         fullWidth: true,
-
                         size: 'small',
                         helperText: touched.endDate && errors.endDate,
                         error: touched.endDate && Boolean(errors.endDate),

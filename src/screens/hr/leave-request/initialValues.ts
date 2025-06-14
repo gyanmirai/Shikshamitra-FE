@@ -9,6 +9,8 @@ export const leaveRequestInitialValues = (editData: any) => ({
   description: editData?.description || '',
   startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
   endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
+  startTime: editData?.startTime || '',
+  endTime: editData?.endTime || '',
   isHalfDay: editData?.halfDay || false,
   rejectionReason: editData?.rejectionReason || '',
   status: editData?.status || 0,

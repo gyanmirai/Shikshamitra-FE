@@ -220,10 +220,10 @@ const HrEventsAndHolidaysScreen = () => {
               id: 'actions',
               label: 'Actions',
               isFilter: false,
+              align: 'left',
               minWidth: 60,
               sticky: true,
               isSort: false,
-              align: 'left',
               render(value, row) {
                 return (
                   <ThreeDotsActions
