@@ -302,12 +302,13 @@ export const CommunicationForm = ({
           p: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 3,
           flexDirection: 'column',
         }}
       >
         <TextField
           fullWidth
+          // sx={{ marginBottom: '10px' }}
           variant="outlined"
           placeholder="Notes"
           size="small"
@@ -326,33 +327,43 @@ export const CommunicationForm = ({
           error={!!formik.errors.msg && formik.touched.msg}
           helperText={formik.touched.msg && formik.errors.msg}
         />
-        <DatePicker
-          label="Next Reminder Date"
-          slotProps={{
-            textField: {
-              size: 'small',
-              fullWidth: true,
-              helperText:
-                formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
-              error: formik.touched.dueDate && !!formik.errors.dueDate,
-            },
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            width: '100%',
           }}
-          value={formik.values.dueDate}
-          format="DD-MM-YYYY"
-          onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
-        />
-        <CustomSelect
-          options={FollowUpStatusTypeOptions}
-          value={formik.values.status}
-          isLoading={isLoading}
-          sx={{ minWidth: 300, width: '100%' }}
-          onChange={(newValue) => {
-            formik.setFieldValue('status', newValue);
-          }}
-          size="small"
-          label="Status"
-        />
+        >
+          <DatePicker
+            label="Next Reminder Date"
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true,
+                helperText:
+                  formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
+                error: formik.touched.dueDate && !!formik.errors.dueDate,
+              },
+            }}
+            value={formik.values.dueDate}
+            format="DD-MM-YYYY"
+            onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
+          />
+          <CustomSelect
+            options={FollowUpStatusTypeOptions}
+            value={formik.values.status}
+            isLoading={isLoading}
+            sx={{ minWidth: 200, flex: 1 }}
+            onChange={(newValue) => {
+              formik.setFieldValue('status', newValue);
+            }}
+            size="small"
+            label="Status"
+          />
+        </Box>
       </Box>
+
       <DialogActions sx={{ p: 2 }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

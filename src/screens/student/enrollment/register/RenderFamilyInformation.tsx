@@ -309,7 +309,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}>
             <TextField
               name="fatherName"
-              label=" full name *"
+              label=" Full name *"
               value={formik.values.fatherName}
               autoFocus
               onChange={(e) => {
@@ -328,7 +328,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.fatherDob && Boolean(formik.errors.fatherDob)}>
             <DatePicker
               name="fatherDob"
-              label="DOB"
+              label="Date Of Birth"
               value={formik.values.fatherDob}
               onChange={(value) => {
                 formik.setFieldValue('fatherDob', value);
@@ -632,7 +632,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.motherName && Boolean(formik.errors.motherName)}>
             <TextField
               name="motherName"
-              label="full name *"
+              label="Full name *"
               disabled={!isEdit}
               value={formik.values.motherName}
               onChange={(e) => {
@@ -650,7 +650,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.motherDob && Boolean(formik.errors.motherDob)}>
             <DatePicker
               name="motherDob"
-              label="DOB"
+              label="Date Of Birth"
               disabled={!isEdit}
               value={formik.values.motherDob}
               onChange={(value) => {
@@ -857,7 +857,7 @@ function RenderFamilyInformation(props: any) {
           >
             <DatePicker
               name="guardianDob"
-              label="DOB"
+              label="Date Of Birth"
               disabled={!isEdit}
               value={formik.values.guardianDob}
               onChange={(value) => {
