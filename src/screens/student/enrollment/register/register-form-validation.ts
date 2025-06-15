@@ -6,7 +6,7 @@ import { matchIsValidTel } from 'mui-tel-input';
 
 const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
-  formNo: Yup.string().required('Form No is required'),
+  formNo: Yup.string().required('Form No. is required'),
   firstName: Yup.string().required('First Name is required'),
   lastName: Yup.string().required('Last Name is required'),
   middleName: Yup.string(),
@@ -15,7 +15,7 @@ const generalFieldValidation = Yup.object({
   gender: Yup.string().required('Gender is required'),
   adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   religion: Yup.string(),
-  familyCast: Yup.string(),
+  familyCast: Yup.string().required('Family Cast is required'),
   castCategory: Yup.string()
 
     .required('Cast Category is required'),

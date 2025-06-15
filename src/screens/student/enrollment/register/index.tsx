@@ -123,6 +123,7 @@ const RegisterScreen = () => {
           followUpDialog.onFalse();
         }}
         title="Note"
+        maxWidth="sm"
       >
         <CommunicationForm
           handleCloseDialog={() => {

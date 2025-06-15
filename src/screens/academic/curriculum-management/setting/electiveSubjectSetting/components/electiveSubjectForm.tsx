@@ -2,16 +2,18 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-import { MuiColorInput } from 'mui-color-input';
+import { capitalize } from 'lodash';
 
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
+  Chip,
   Grid,
   Button,
   Checkbox,
   TextField,
+  Typography,
   FormControl,
   Autocomplete,
   DialogActions,
@@ -20,9 +22,12 @@ import {
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { TeacherListPopover } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getElectiveSubjectInitialValues } from './initialValues';
@@ -51,7 +56,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
+          <Scrollbar sx={{ p: 2, height: '150px' }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
@@ -61,7 +66,10 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     name="title"
                     size="small"
                     value={formik.values.title}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const value = capitalize(e.target.value);
+                      formik.setFieldValue('title', value);
+                    }}
                     error={formik.touched.title && Boolean(formik.errors.title)}
                     helperText={formik.touched.title && formik.errors.title}
                   />
@@ -77,41 +85,70 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     multiple
                     id="subjects-select"
                     options={[
-                      { label: 'Mathematics', value: 'MATH' },
-                      { label: 'Physics', value: 'PHY' },
-                      { label: 'Chemistry', value: 'CHEM' },
-                      { label: 'Biology', value: 'BIO' },
-                      { label: 'Computer Science', value: 'CS' },
-                      { label: 'Economics', value: 'ECO' },
-                      { label: 'History', value: 'HIST' },
-                      { label: 'Geography', value: 'GEO' },
-                      { label: 'Literature', value: 'LIT' },
-                      { label: 'Art', value: 'ART' },
-                      { label: 'Music', value: 'MUS' },
-                      { label: 'Physical Education', value: 'PE' },
+                      { label: 'Sanskrit', value: 'Sanskrit' },
+                      { label: 'Hindi', value: 'Hindi' },
+                      { label: 'Physical Training', value: 'Physical Training' },
+                      { label: 'Computer', value: 'Computer' },
                     ]}
-                    onChange={(event, value) => {
-                      const transformed = value.map((item) => ({ name: item.value }));
-                      formik.setFieldValue('subjects', transformed);
-                    }}
                     disableCloseOnSelect
-                    getOptionLabel={(option) => option.label}
-                    renderOption={(props, option, { selected }) => {
-                      const { key, ...optionProps } = props;
-                      return (
-                        <li key={key} {...optionProps}>
-                          <Checkbox
-                            icon={<CheckBoxOutlineBlankIcon />}
-                            checkedIcon={<CheckBoxIcon />}
-                            style={{ marginRight: 8 }}
-                            checked={selected}
-                          />
-                          {option.value}
-                        </li>
+                    getOptionLabel={(option: { value: string; label: string }) => option.label}
+                    value={
+                      formik.values.subjects?.map((subject) => ({
+                        value: subject.name,
+                        label: subject.name,
+                      })) || []
+                    }
+                    onChange={(event, newValue: Array<{ value: string; label: string }>) => {
+                      formik.setFieldValue(
+                        'subjects',
+                        newValue.map((item) => ({ name: item.value }))
                       );
                     }}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          icon={<CheckBoxOutlineBlankIcon />}
+                          checkedIcon={<CheckBoxIcon />}
+                          style={{ marginRight: 8 }}
+                          checked={selected}
+                        />
+                        {option.label}
+                      </li>
+                    )}
+                    renderTags={(value: Array<{ value: string; label: string }>) => {
+                      if (value.length === 0) return null;
+                      const first = value[0].label;
+                      const remainingCount = value.length - 1;
+                      return [
+                        <Chip
+                          key={first}
+                          label={first}
+                          sx={{ ml: 1 }}
+                          size="small"
+                          variant="soft"
+                        />,
+                        remainingCount > 0 && (
+                          <TeacherListPopover
+                            key="more-count"
+                            data={value.slice(1)}
+                            count={remainingCount}
+                          />
+                        ),
+                      ];
+                    }}
                     renderInput={(params) => (
-                      <TextField {...params} label="Select Subjects *" size="small" />
+                      <TextField
+                        {...params}
+                        label="Select Subjects *"
+                        size="small"
+                        error={!!(formik.touched.subjects && formik.errors.subjects)}
+                        helperText={
+                          Array.isArray(formik.errors.subjects)
+                            ? formik.errors.subjects.join(', ')
+                            : (formik.touched.subjects && formik.errors.subjects) || undefined
+                        }
+                      />
                     )}
                   />
                   {formik.touched.subjects && formik.errors.subjects && (
@@ -128,27 +165,26 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 <ShakingTextField
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
-                  <MuiColorInput
-                    size="small"
-                    format="hex"
-                    placeholder="Elective Group Color *"
-                    value={formik.values.subjectColor}
-                    onChange={(e) => {
-                      formik.setFieldValue('subjectColor', e);
-                    }}
-                    sx={{
-                      minWidth: 180,
-                      width: '100%',
-                      '& .MuiInputBase-root': {
-                        fontSize: '0.875rem',
-                      },
-                      '& .MuiInputBase-input::placeholder': {
-                        fontSize: '0.875rem',
-                      },
-                    }}
-                    error={formik.touched.subjectColor && Boolean(formik.errors.subjectColor)}
-                    helperText={formik.touched.subjectColor && formik.errors.subjectColor}
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Elective Group Color
+                  </Typography>
+                  <ColorPickerCircle
+                    onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}
+                    initialColor={formik.values.subjectColor}
                   />
+                  {formik.touched.subjectColor && formik.errors.subjectColor && (
+                    <Typography
+                      color="error"
+                      variant="caption"
+                      sx={{
+                        mt: 0.5,
+                        fontSize: '10px',
+                        ml: '5px',
+                      }}
+                    >
+                      {formik.errors.subjectColor}
+                    </Typography>
+                  )}
                 </ShakingTextField>
               </Grid>
             </Grid>

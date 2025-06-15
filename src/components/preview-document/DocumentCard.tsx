@@ -58,21 +58,19 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
 
         <Box sx={{ ml: 1.5, flex: 1 }}>
           <Tooltip title={file.name}>
-            <Tooltip title={file.name}>
-              <Typography
-                variant="body2"
-                noWrap
-                sx={{
-                  maxWidth: 150,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                }}
-              >
-                {file.name}
-              </Typography>
-            </Tooltip>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {file.name}
+            </Typography>
           </Tooltip>
 
           <Typography variant="caption" color="text.secondary">

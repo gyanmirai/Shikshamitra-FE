@@ -666,7 +666,7 @@ const classManagementModule = {
           shortcutKeyName: 'Alt+A+C+1',
         },
         {
-          title: 'Chapter Progress',
+          title: 'Chapters Progress',
           path: '/classManagement/courseProgress',
           _action: 'course-management-courseProgress',
           shortcutKey: 'Alt+A+S+3',
@@ -741,7 +741,7 @@ const academicModule = {
               shortcutKeyName: 'Alt+A+S+2',
             },
             // {
-            //   title: 'Chapter Progress',
+            //   title: 'Chapters Progress',
             //   path: '/academic/courseProgress',
             //   _action: 'course-management-courseProgress',
             //   shortcutKey: 'Alt+A+S+3',

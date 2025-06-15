@@ -129,6 +129,9 @@ export const RenderDocuments = (props: any) => {
             label: 'Status',
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
+            minWidth: '80px',
+            isSort: false,
+            align: 'left',
             render(value, row) {
               return (
                 <Tooltip title={row.statusVal}>
@@ -149,9 +152,20 @@ export const RenderDocuments = (props: any) => {
           {
             id: 'upload',
             label: 'Upload',
+            isFilter: false,
+            minWidth: '80px',
+            align: 'left',
+            isSort: false,
             render(value, row) {
               return (
                 <UploadButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    paddingLeft: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
                   onChange={async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
@@ -189,7 +203,7 @@ export const RenderDocuments = (props: any) => {
                     );
                   }}
                 >
-                  <Iconify icon="ri:file-upload-fill" />
+                  <Iconify icon="ci:file-upload" />
                 </UploadButton>
               );
             },
@@ -197,9 +211,18 @@ export const RenderDocuments = (props: any) => {
           {
             id: 'view',
             label: 'View',
+            isFilter: false,
+            isSort: false,
             render(value, row) {
               return (
                 <IconButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    paddingLeft: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
                   disabled={!row.uploadDocument}
                   onClick={() => {
                     setDocId(row.uploadDocument.id);

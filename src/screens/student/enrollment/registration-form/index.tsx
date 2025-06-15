@@ -85,10 +85,13 @@ const RegistrationFormScreen = () => {
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),
+        secondaryContactNumber:
+          item.secondaryContactNumber && item.secondaryContactNumber !== ''
+            ? item.secondaryContactNumber
+            : '-',
       })),
     [inquiryFormData?.items]
   );
-  console.log('🚀 ~ RegistrationFormScreen ~ tableData:', tableData);
 
   return (
     <Box>
@@ -119,7 +122,7 @@ const RegistrationFormScreen = () => {
             { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
             { name: 'Registration Form Issued' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 3 }}
         />
       )}
       {registerFormDialog.value ? (
@@ -150,15 +153,15 @@ const RegistrationFormScreen = () => {
               id: 'inquiryNumber',
               label: 'Inquiry No.',
               align: 'left',
-              minWidth: '110px',
+              minWidth: '115px',
               isFilter: true,
               filterType: 'string',
             },
-            { id: 'standard.name', label: 'Class', align: 'left' },
+            { id: 'standard.name', label: 'Class', align: 'left', filterType: 'number' },
             {
               id: 'dobValue',
-              label: 'DOB',
-              minWidth: '100px',
+              label: 'Date Of Birth',
+              minWidth: '128px',
               align: 'left',
               isFilter: true,
               filterType: 'date',
@@ -166,10 +169,11 @@ const RegistrationFormScreen = () => {
             { id: 'ageValue', label: 'Age', align: 'left' },
             {
               id: 'doiValue',
-              label: 'Inquiry Date',
-              minWidth: '120px',
+              label: 'Date Of Inquiry',
+              minWidth: '145px',
               align: 'left',
               isDateRangeFilter: true,
+              filterType: 'date',
             },
             { id: 'genderValue', label: 'Gender', align: 'left' },
             {
@@ -202,7 +206,7 @@ const RegistrationFormScreen = () => {
             {
               id: 'inquiryPreference.preferenceName',
               label: 'Inquiry Preference',
-              minWidth: '130px',
+              minWidth: '170px',
               align: 'left',
             },
             // {
@@ -226,8 +230,6 @@ const RegistrationFormScreen = () => {
               sticky: true,
               minWidth: 40,
               render(value, row) {
-                console.log('🚀 ~ render ~ row:', row);
-
                 return (
                   <ThreeDotsActions
                     actions={({ popover }) => (
@@ -274,6 +276,7 @@ const RegistrationFormScreen = () => {
           followUpDialog.onFalse();
         }}
         title="Note"
+        maxWidth="sm"
       >
         <CommunicationForm
           handleCloseDialog={() => {

@@ -44,6 +44,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   index,
 }: ISubjectCardProps) => {
   const theme = useTheme();
+  console.log('subject---', subject);
 
   // State to control accordion expansion, initialized with subject's isSubjectOpen or false
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
@@ -55,6 +56,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     accept: {
       'image/*': [],
       'application/pdf': [],
+      'video/*': [], // Added video file support
+      'application/vnd.ms-powerpoint': [], // PPT
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': [], // PPTX
+      'application/msword': [], // DOC
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [], // DOCX
     },
   };
   // Handler for updating subject fields
@@ -123,10 +129,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 {subject.subjectName || 'CHEMISTRY'}
               </Typography>
             </Box>
-            {isExpanded && subject.subjectCode && (
+            {!isExpanded && subject.subjectCode && (
               <Chip label={`Code : ${subject.subjectCode}`} size="small" variant="outlined" />
             )}
-            {isExpanded && subject.primaryTeacher && (
+            {!isExpanded && subject.primaryTeacher && (
               <Chip
                 label={`Primary Teacher : ${subject.primaryTeacher}`}
                 size="small"
@@ -167,9 +173,13 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       !(subject.secondaryTeacher || []).includes(teacher.value)
                   )}
                   getOptionLabel={(option: ITeacherOption) => option.label}
-                  value={teacherOptions.find(
-                    (opt: ITeacherOption) => opt.value === subject.primaryTeacher
-                  )}
+                  value={
+                    subject.primaryTeacher
+                      ? teacherOptions.find(
+                          (opt: ITeacherOption) => opt.value === subject.primaryTeacher
+                        ) || null
+                      : null
+                  }
                   onChange={(event, newValue: ITeacherOption | null) =>
                     handleChange('primaryTeacher', newValue?.value || '')
                   }
@@ -193,7 +203,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Select Primary Teacher"
+                      label="Primary Teacher"
                       size="small"
                       error={!!getError('primaryTeacher')}
                       helperText={getError('primaryTeacher')}
@@ -258,7 +268,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Select Secondary Teacher"
+                      label="Secondary Teacher"
                       value={`${subject.secondaryTeacher?.length || 0} Teachers Selected`}
                       size="small"
                       error={!!getError('secondaryTeacher')}
@@ -284,7 +294,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   placeholder="Learning Goal"
                   error={!!getError('learningGoal')}
                   helperText={getError('learningGoal')}
-                  sx={{ height: '200px' }}
+                  sx={{
+                    height: '200px',
+                    border: `1px solid ${theme.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                    ...(!!getError('learningGoal') && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                  }}
                 />
               </ShakingTextField>
             </Grid>
@@ -297,7 +317,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   placeholder="Prerequisites"
                   error={!!getError('prerequisites')}
                   helperText={getError('prerequisites')}
-                  sx={{ height: '200px' }}
+                  sx={{
+                    height: '200px',
+                    border: `1px solid ${theme.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                    ...(!!getError('prerequisites') && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                  }}
                 />
               </ShakingTextField>
             </Grid>

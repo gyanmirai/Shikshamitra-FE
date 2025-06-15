@@ -11,6 +11,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
 
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import SettingSubjectForm from './subjectForm';
@@ -112,6 +113,10 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
             variant="contained"
             color="error"
             onClick={() => {
+              deleteSubjectDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Subject ${selectedSubject?.subjectName} deleted successfully`,
+              });
               // handle delete action
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}

@@ -59,7 +59,7 @@ export const communicationFields: FieldsType[] = [
             formik.setFieldValue('primaryContactNumber', value);
           }}
           autoFocus
-          label="Primary Contact Number"
+          label="Primary Contact No."
           error={formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)}
         />
       );
@@ -81,7 +81,7 @@ export const communicationFields: FieldsType[] = [
           onChange={(value) => {
             formik.setFieldValue('secondaryContactNumber', value);
           }}
-          label="Secondary Contact Number"
+          label="Secondary Contact No."
           error={
             formik.touched.secondaryContactNumber && Boolean(formik.errors.secondaryContactNumber)
           }
@@ -271,7 +271,7 @@ export const additionalDetailsFields: FieldsType[] = [
   },
   {
     name: 'bplCardNo',
-    label: 'BPL Card No',
+    label: 'BPL Card No.',
     type: 'text',
     otherProps: ({ formik }: any) => ({
       disabled: !formik.values.bplStudent,
@@ -313,7 +313,7 @@ export const additionalDetailsFields: FieldsType[] = [
   },
   {
     name: 'emergencyContactNo: ',
-    label: 'Emergency Contact No',
+    label: 'Emergency Contact No.',
     type: 'text',
     otherProps: {},
     renderComp(props) {
@@ -326,7 +326,7 @@ export const additionalDetailsFields: FieldsType[] = [
           onChange={(value) => {
             formik.setFieldValue('emergencyContactNo', value);
           }}
-          label="Emergency Contact No"
+          label="Emergency Contact No."
           error={formik.touched.emergencyContactNo && Boolean(formik.errors.emergencyContactNo)}
         />
       );
@@ -416,14 +416,14 @@ export const additionalDetailsFields: FieldsType[] = [
 export const medicalFields: FieldsType[] = [
   {
     name: 'weight',
-    label: 'Weight (kg)',
+    label: 'Weight (KG)',
 
     type: 'number',
     otherProps: { autoFocus: true },
   },
   {
     name: 'height',
-    label: 'Height (cm)',
+    label: 'Height (CM)',
 
     type: 'number',
     otherProps: {},
@@ -444,7 +444,7 @@ export const medicalFields: FieldsType[] = [
   },
   {
     name: 'haemoglobin',
-    label: 'Haemoglobin (hb)',
+    label: 'Haemoglobin (HB)',
 
     type: 'string',
     otherProps: {},
@@ -458,7 +458,7 @@ export const medicalFields: FieldsType[] = [
   },
   {
     name: 'covidVaccination',
-    label: 'Covid Vaccination',
+    label: 'Covid Vaccination *',
 
     type: 'text',
     otherProps: {},
@@ -482,7 +482,7 @@ export const medicalFields: FieldsType[] = [
 export const previousSchoolFields: FieldsType[] = [
   {
     name: 'schoolName',
-    label: 'Previous School Name',
+    label: ' School Name',
 
     type: 'text',
     otherProps: ({ formik }: any) => ({
@@ -495,7 +495,7 @@ export const previousSchoolFields: FieldsType[] = [
   },
   {
     name: 'schoolAddress',
-    label: 'Previous School Address',
+    label: ' School Address',
 
     type: 'text',
     otherProps: ({ formik }: any) => ({
@@ -507,14 +507,14 @@ export const previousSchoolFields: FieldsType[] = [
   },
   {
     name: 'schoolBoard',
-    label: 'Previous School Board',
+    label: ' School Board',
 
     type: 'text',
     otherProps: {},
   },
   {
     name: 'schoolMedium',
-    label: 'Previous School Medium',
+    label: ' School Medium',
 
     type: 'text',
     otherProps: ({ formik }: any) => ({
@@ -533,14 +533,14 @@ export const previousSchoolFields: FieldsType[] = [
   },
   {
     name: 'previousClass',
-    label: 'Previous Class',
+    label: ' Class',
 
     type: 'number',
     otherProps: {},
   },
   {
     name: 'percentage',
-    label: 'Percentage',
+    label: 'Percentage %',
 
     type: 'number',
     otherProps: {},
@@ -557,7 +557,7 @@ export const bankDetailsFields: FieldsType[] = [
   },
   {
     name: 'accountNo',
-    label: 'Account No',
+    label: 'Account No.',
 
     type: 'text',
     otherProps: {},

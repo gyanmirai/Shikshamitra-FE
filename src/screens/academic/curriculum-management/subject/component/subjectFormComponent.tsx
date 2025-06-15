@@ -333,7 +333,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         prerequisites: '',
         subjectColor: newValue.subjectColor,
         scheduleDate: null,
-        status: 'Unpublish',
+        status: 'Draft',
       };
       // Update subjects array in formik state
       formik.setFieldValue('subjects', [newSubject]);
@@ -352,7 +352,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         prerequisites: '',
         subjectColor: subject.subjectColor,
         scheduleDate: null,
-        status: 'Unpublish',
+        status: 'Draft',
       }));
 
       // Update subjects array in formik state
@@ -535,6 +535,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                   onClick={() => {
                     onClose(null, false);
                   }}
+                  size="small"
                 >
                   Cancel
                 </Button>
@@ -545,6 +546,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     setIsDraft(true);
                     formik.handleSubmit();
                   }}
+                  size="small"
                 >
                   Update
                 </Button>
@@ -558,6 +560,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     setIsDraft(true);
                     formik.handleSubmit();
                   }}
+                  size="small"
                 >
                   Save Draft
                 </Button>
@@ -569,6 +572,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     setIsDraft(false);
                     formik.handleSubmit();
                   }}
+                  size="small"
                 >
                   Publish
                 </Button>

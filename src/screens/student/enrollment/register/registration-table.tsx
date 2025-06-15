@@ -112,6 +112,10 @@ const RegistrationTable = ({
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),
+        secondaryContactNumber:
+          item.secondaryContactNumber && item.secondaryContactNumber !== ''
+            ? item.secondaryContactNumber
+            : '-',
       })) || [],
     [registrationData?.items]
   );
