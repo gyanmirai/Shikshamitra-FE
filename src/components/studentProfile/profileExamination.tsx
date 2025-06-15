@@ -288,14 +288,6 @@ const ProfileExamination = () => {
             <Typography variant="h6">Previous Exams</Typography>
             <CustomizableTable
               tableId="previous-exams-table"
-              searchFieldProps={{
-                placeholder: 'Search by Exam Name, Percentage, Remarks...',
-                label: 'Search by Exam Name, Percentage, Remarks...',
-                sx: {
-                  maxWidth: '400px',
-                  width: '100%',
-                },
-              }}
               columns={[
                 { id: 'examName', label: 'Exam Name', align: 'left' },
                 {

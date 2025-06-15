@@ -4,9 +4,9 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
-import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Autocomplete, LoadingButton } from '@mui/lab';
+import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
+import { Box, Chip, Stack, Button, Checkbox, TextField, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,8 +22,8 @@ import {
 } from 'src/redux/document/documentApi';
 
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -52,7 +52,7 @@ const HrSetting = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={`Are you sure you want to delete ${deleteInformation?.documentName} ?`}
         action={
           <Button
             variant="contained"
@@ -100,20 +100,14 @@ const HrSetting = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          label: 'Search by Document Name, Document Type..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="documents"
         isLoading={isLoading}
+        isFilter={false}
         columns={[
           { id: 'documentName', label: 'Documents Name' },
           {
             id: 'documentTypes',
-            label: 'Document Type',
+            label: 'Document Format',
             isSort: false,
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
@@ -147,10 +141,19 @@ const HrSetting = () => {
       />
       <CustomDialog
         open={dialog.value}
-        handleClose={dialog.onFalse}
+        handleClose={() => {
+          setEditData(null);
+          dialog.onFalse();
+        }}
         title={editData ? 'Update Document' : 'Add Document'}
       >
-        <DocumentForm handleClose={dialog.onFalse} editData={editData} />
+        <DocumentForm
+          handleClose={() => {
+            setEditData(null);
+            dialog.onFalse();
+          }}
+          editData={editData}
+        />
       </CustomDialog>
     </Box>
   );
@@ -170,11 +173,13 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
 
   const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
     title: string;
-    documentType: string[];
+    documentType: { label: string; value: number }[];
   }>({
     initialValues: {
       title: editData?.documentName || '',
-      documentType: editData?.documentTypes || [],
+      documentType:
+        editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
+        [],
     },
     validationSchema: Yup.object().shape({
       title: Yup.string().required('Document name is required'),
@@ -188,7 +193,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
           id: editData.id,
           body: {
             documentName: formikValues.title,
-            documentTypes: formikValues.documentType,
+            documentTypes: formikValues.documentType.map((item: any) => item.value),
           },
         }).unwrap();
         shikshaMitraToast.success({ message: 'Document updated successfully' });
@@ -197,7 +202,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
       }
       await addDocument({
         documentName: formikValues.title,
-        documentTypes: formikValues.documentType,
+        documentTypes: formikValues.documentType.map((item: any) => item.value),
       }).unwrap();
       shikshaMitraToast.success({ message: 'Document added successfully' });
       handleClose?.();
@@ -222,17 +227,58 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
           </ShakingTextField>
 
           <ShakingTextField error={touched.documentType && Boolean(errors.documentType)}>
-            <CustomSelect
+            <Autocomplete
+              multiple
+              options={DocumentTypeArray}
+              disableCloseOnSelect
+              getOptionLabel={(option) => option.label}
+              value={values.documentType}
+              onChange={(event, newValue) => setFieldValue('documentType', newValue || [])}
+              isOptionEqualToValue={(option, value) => option.value === value.value}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlank />}
+                    checkedIcon={<CheckBox />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option.label}
+                </li>
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    label={option.label}
+                    {...getTagProps({ index })} // 🔥 This is required for delete (close) icon
+                    key={index}
+                    variant="soft"
+                    size="small"
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Document Format *"
+                  value={`${values.documentType?.length || 0} Document Selected`}
+                  size="small"
+                  error={touched.documentType && Boolean(errors.documentType)}
+                  helperText={(touched.documentType && errors.documentType) as string}
+                />
+              )}
+            />
+            {/* <CustomSelect
               options={DocumentTypeArray}
               value={values.documentType}
               multiple
-              label="Select document Type *"
+              label="Select Document Format *"
               onChange={(value) => setFieldValue('documentType', value)}
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               error={touched.documentType && Boolean(errors.documentType)}
               // @ts-ignore
               helperText={(touched.documentType && errors.documentType) || ''}
-            />
+            /> */}
           </ShakingTextField>
         </Stack>
       </DialogScrollContent>
@@ -259,3 +305,34 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     </>
   );
 };
+export const MultiDropdownListPopover = ({ data, count }: { data: any[]; count: number }) => (
+  <CustomTooltip
+    title={
+      <Box
+        sx={{
+          p: 1,
+          maxWidth: 180,
+          borderRadius: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
+        {data.map((teacher) => (
+          <Chip
+            key={teacher.value}
+            variant="soft"
+            // avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher.label.charAt(0)}</Avatar>}
+            label={teacher.label}
+            sx={{ mb: 1 }}
+            size="small"
+          />
+        ))}
+      </Box>
+    }
+    placement="bottom-start"
+    arrow
+  >
+    <Chip label={`+${count}`} sx={{ ml: 0.5, cursor: 'pointer' }} size="small" variant="soft" />
+  </CustomTooltip>
+);

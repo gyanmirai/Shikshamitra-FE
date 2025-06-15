@@ -1,9 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import Add from '@mui/icons-material/Add';
 import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem } from '@mui/material';
@@ -16,6 +18,7 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import { GenderType } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
 import {
   EmployeeStatusType,
@@ -37,6 +40,8 @@ import { Sections } from '../payroll/structure';
 import ChangeStatusForm from './chnage-status-form';
 
 const HrEmployee = () => {
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const statusDialog = useBoolean();
   const [searchParams, setSearchParams] = useSearchParam();
   const [open, setOpen] = useState(false);
@@ -85,10 +90,19 @@ const HrEmployee = () => {
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
-  const handleClose = () => {
-    setOpen(false);
-    setEditData(null);
-  };
+  const handleClose = useCallback(
+    (_e?: any, isSubmit?: boolean) => {
+      if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+        dispatch(setIsChanges(false));
+        setOpen(false);
+        setEditData(null);
+      } else if (!isChanges) {
+        setOpen(false);
+        setEditData(null);
+      }
+    },
+    [dispatch, isChanges]
+  );
   const handleCloseStatus = (): void => {
     statusDialog.onFalse();
     setEditData(null);
@@ -261,7 +275,13 @@ const HrEmployee = () => {
                   align: 'left',
                 },
 
-                { id: 'dob', label: 'DOB', minWidth: 100, filterType: 'date', align: 'left' },
+                {
+                  id: 'dob',
+                  label: 'Date of Birth',
+                  minWidth: '8vw',
+                  filterType: 'date',
+                  align: 'left',
+                },
                 {
                   id: 'genderValue',
                   label: 'Gender',
@@ -269,7 +289,7 @@ const HrEmployee = () => {
                 },
                 {
                   id: 'doi',
-                  label: 'Joining Date',
+                  label: 'Date of Joining',
                   minWidth: 150,
                   filterType: 'date',
                   align: 'left',
@@ -291,7 +311,7 @@ const HrEmployee = () => {
                   id: 'shiftName',
                   label: 'Shift',
                   align: 'left',
-                  minWidth: '150px',
+                  minWidth: '12vw',
                 },
                 {
                   id: 'organization',

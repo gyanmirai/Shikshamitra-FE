@@ -157,7 +157,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             pincode: values.spousePinCode,
           },
         },
-      });
+      }).unwrap();
       return res;
     },
     [updateFamilyInfo]
@@ -171,7 +171,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           id,
           body: {
             // userId: res.data.id,
-
+            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
             // employeeCode: values.code,
             lastName: values.lastName,
             firstName: values.firstName,
@@ -203,14 +203,19 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             address2: values.addressLine2,
             address3: values.addressLine3,
 
-            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+            country: values?.country?.name
+              ? { name: values?.country?.name, isoCode: values?.country?.isoCode }
+              : undefined,
             city: values?.city?.name,
-            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+            state: values?.state?.name
+              ? { name: values?.state?.name, isoCode: values?.state?.isoCode }
+              : undefined,
 
             pincode: `${values.pincode}`,
             educationMediumStageId: values.organization,
+            shiftId: values.shift,
           },
-        });
+        }).unwrap();
 
         return res;
       } catch (error) {
@@ -236,7 +241,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           fromDate: i.fromDate ? i.fromDate.format('YYYY-MM-DD') : null,
           toDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
         })),
-      });
+      }).unwrap();
       return res;
     },
     [updateExperienceInfo]
@@ -254,7 +259,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           accountNumber: values.accountNumber,
           ifscCode: values.ifscCode,
         },
-      });
+      }).unwrap();
       return res;
     },
     [updateBankDetails]

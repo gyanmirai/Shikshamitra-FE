@@ -92,14 +92,6 @@ const FollowUpScreen: React.FC = () => {
       <CustomizableTable
         tableId="followUpTable"
         noDataText={<>No Follow Up Data Found </>}
-        searchFieldProps={{
-          placeholder: 'Search by Name, Board, Medium, Organization, Class..',
-          label: 'Search by Name, Board, Medium, Organization, Class..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           { id: 'name', label: 'Name' },

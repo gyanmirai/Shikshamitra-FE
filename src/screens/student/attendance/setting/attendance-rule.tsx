@@ -134,14 +134,6 @@ const AttendanceRule = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Name, Type, Threshold...',
-          label: 'Search by Name, Type, Threshold...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           { label: 'Name', id: 'name' },
@@ -212,7 +204,7 @@ const AttendanceRule = () => {
 
       <CustomDialog
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Rule</Typography>
             <Tooltip
               arrow

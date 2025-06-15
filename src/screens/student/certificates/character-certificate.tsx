@@ -64,10 +64,6 @@ const CharacterCertificate = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Medium, Organization, Class...',
-          label: 'Search by Medium, Organization, Class...',
-        }}
         columns={[
           { id: 'medium', label: 'Medium' },
           { id: 'organization', label: 'organization' },
@@ -89,7 +85,7 @@ const CharacterCertificate = () => {
       <CustomDialog
         maxWidth="lg"
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Create Character Certificate</Typography>
             <Tooltip
               arrow

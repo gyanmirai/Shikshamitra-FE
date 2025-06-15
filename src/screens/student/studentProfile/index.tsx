@@ -294,14 +294,6 @@ export function StudentProfile() {
             noDataText={<>No Student Data Found </>}
             data={tableData}
             isLoading={isLoading}
-            searchFieldProps={{
-              placeholder: 'Search by Student Name, Roll No...',
-              label: 'Search by Student Name, Roll No...',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             columns={[
               // {
               //   id: 'checkBox',

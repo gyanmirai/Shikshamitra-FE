@@ -112,14 +112,6 @@ const ChangeClassScreen = ({
           tableId="change-class-table"
           noDataText="No Student data available"
           isLoading={isLoading}
-          searchFieldProps={{
-            placeholder: 'Search by Sr. No., GR No...',
-            label: 'Search by Sr. No., GR No...',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
           columns={[
             {
               id: 'checkBox',

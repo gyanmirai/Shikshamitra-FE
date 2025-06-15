@@ -7,4 +7,5 @@ export const eventAndHolidayInitialValues = (editData: IEventHoliday | null) => 
   endDate: editData ? dayjs(editData.endDate) : null,
   reason: editData?.reason || '',
   isHoliday: editData?.isHoliday ?? false,
+  name: editData?.name || '',
 });

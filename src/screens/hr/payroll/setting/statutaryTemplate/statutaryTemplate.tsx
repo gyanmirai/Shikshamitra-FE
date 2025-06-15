@@ -136,7 +136,7 @@ const StatutoryTemplate = () => {
       <CustomDialog
         maxWidth="sm"
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Statutory Component</Typography>
             <Tooltip
               arrow

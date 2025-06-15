@@ -102,14 +102,6 @@ const ChangeDivisionScreen = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
           noDataText={<>No Student Data Found </>}
-          searchFieldProps={{
-            placeholder: 'Search by GR No. or Name...',
-            label: 'Search',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
           columns={[
             // {
             //   id: 'checkBox',

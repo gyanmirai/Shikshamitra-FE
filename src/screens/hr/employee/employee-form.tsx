@@ -275,7 +275,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           educationMediumStageId: values.organization,
           shiftId: values.shift,
         }).unwrap();
-        formik.setFieldValue('employeeId', resp.data.id);
+        formik.setFieldValue('employeeId', resp.id);
       }
     },
     [addEmployee]
@@ -436,12 +436,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       setIsLoading: (val: boolean) => void,
       isSaveButton: boolean = false
     ) => {
-      const isChanged = isEqual(values, initialValues);
-
-      if (isChanged) {
-        setActiveStep(activeStep + 1);
-        return;
-      }
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
@@ -477,7 +471,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           }
         }
-        if (!isSaveButton) {
+        if (!isSaveButton && !isLastStep) {
           setActiveStep(activeStep + 1);
         }
       } catch (error) {
@@ -485,7 +479,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }
       setIsLoading(false);
       if (isLastStep) {
-        handleClose();
+        handleClose(null, true);
       }
     },
     [
@@ -497,7 +491,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleClose,
       handleFamilyInformation,
       handleWorkExperience,
-      initialValues,
     ]
   );
 
@@ -530,10 +523,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         setIsLoading: (val: boolean) => void
       ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
       renderItem={({ activeStep: step, formik }: any) => (
-        // <FormikDetectChanges values={formik.values} initialValues={initialValues}>
-
-        <FormSlider step={step} formik={formik} />
-        // </FormikDetectChanges>
+        <FormikDetectChanges values={formik.values} initialValues={initialValues}>
+          <FormSlider step={step} formik={formik} />
+        </FormikDetectChanges>
       )}
     />
   );
@@ -544,7 +536,7 @@ export default EmployeeFrom;
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden' }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 3 }}>
       {steps.map(
         (_, index) =>
           index === step && (

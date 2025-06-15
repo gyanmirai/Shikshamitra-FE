@@ -252,7 +252,7 @@ export const RenderDocuments = (props: any) => {
         open={addDocumentDialog.value}
         handleClose={addDocumentDialog.onFalse}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Document</Typography>
             <Tooltip
               arrow

@@ -242,7 +242,7 @@ const FinanceNewFeeStructureSetting = () => {
       <CustomDialog
         maxWidth="xl"
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
             <Tooltip
               arrow

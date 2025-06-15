@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tab, Card, Tabs, Divider, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Tab, Card, Tabs, TextField, Autocomplete } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -60,7 +60,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 1, mb: 3 }}
+        sx={{ px: 1, mb: 2 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
@@ -208,57 +208,64 @@ const DateWise = ({
   return (
     <>
       {' '}
-      <DatePicker
-        format="DD-MM-YYYY"
-        label="Date"
-        value={dateValue}
-        onChange={(value) => {
-          setSearchParams({ date: value?.format('DD-MM-YYYY') });
-          // setDate(value);
-        }}
-        sx={{ m: 2, ml: 0 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
-      />
-      <Tabs
-        value={tabs.value}
-        onChange={handleTabChange}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
         sx={{
-          mb: 2,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
           p: 1,
-          pl: 2,
+
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
+          my: 2,
         }}
       >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            // icon={tab.icon}
-            label={
-              <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                {tab.label}{' '}
-                <Label
-                  variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                  color={(tab?.color as LabelColor) || 'default'}
-                >
-                  {tab.count}
-                </Label>
-              </Box>
-            }
-            // icon={tab.icon}
-            value={tab.value}
-          />
-        ))}
-      </Tabs>
-      <Divider />
+        <DatePicker
+          format="DD-MM-YYYY"
+          label="Date"
+          value={dateValue}
+          onChange={(value) => {
+            setSearchParams({ date: value?.format('DD-MM-YYYY') });
+            // setDate(value);
+          }}
+          sx={{ ml: 0 }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },
+            flexGrow: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              // icon={tab.icon}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label
+                    variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
+                    color={(tab?.color as LabelColor) || 'default'}
+                  >
+                    {tab.count}
+                  </Label>
+                </Box>
+              }
+              // icon={tab.icon}
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
+      </Box>
       <CustomizableTable
         noDataText={<>No Data Availabel For Attendance </>}
         onSendNotification={handlerSendNotification}
@@ -306,8 +313,22 @@ const DateWise = ({
           { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left' },
           { id: 'contactNo', label: 'Contact No.', align: 'left' },
-          { id: 'timeIn', label: 'In-time', align: 'left' },
-          { id: 'timeOut', label: 'Out-time', align: 'left' },
+          {
+            id: 'timeIn',
+            label: 'In-Time',
+            align: 'left',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
+          {
+            id: 'timeOut',
+            label: 'Out-Time',
+            align: 'left',
+            render(value, row) {
+              return value || `__ __`;
+            },
+          },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
           // {
           //   id: 'status',
@@ -352,7 +373,7 @@ const DateWise = ({
             attendanceDate: '2024-03-01',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Kumar Rajesh Mohan',
             contactNo: '+91 98765 43210',
@@ -363,7 +384,7 @@ const DateWise = ({
             attendanceDate: '2024-03-02',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',
-            totalHoursWorked: '8H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Sharma Priya Raj',
             contactNo: '+91 98765 43211',
@@ -372,9 +393,9 @@ const DateWise = ({
           {
             id: 3,
             attendanceDate: '2024-03-03',
-            timeIn: '-',
-            timeOut: '-',
-            totalHoursWorked: '0H 0M',
+            timeIn: '',
+            timeOut: '',
+            totalHoursWorked: '09H 00M',
             status: 'Leave',
             employeeName: 'Patel Amit Naresh',
             contactNo: '+91 98765 43212',
@@ -385,7 +406,7 @@ const DateWise = ({
             attendanceDate: '2024-03-04',
             timeIn: '09:15 AM',
             timeOut: '02:15 PM',
-            totalHoursWorked: '5H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Half day',
             employeeName: 'Gupta Sneha Ramesh',
             contactNo: '+91 98765 43213',
@@ -396,7 +417,7 @@ const DateWise = ({
             attendanceDate: '2024-03-05',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Singh Vikram Pratap',
             contactNo: '+91 98765 43214',
@@ -407,7 +428,7 @@ const DateWise = ({
             attendanceDate: '2024-03-06',
             timeIn: '09:45 AM',
             timeOut: '06:45 PM',
-            totalHoursWorked: '9H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Verma Neha Suresh',
             contactNo: '+91 98765 43215',
@@ -416,9 +437,9 @@ const DateWise = ({
           {
             id: 7,
             attendanceDate: '2024-03-07',
-            timeIn: '-',
-            timeOut: '-',
-            totalHoursWorked: '0H 0M',
+            timeIn: '',
+            timeOut: '',
+            totalHoursWorked: '09H 00M',
             status: 'Leave',
             employeeName: 'Joshi Arun Kumar',
             contactNo: '+91 98765 43216',
@@ -429,7 +450,7 @@ const DateWise = ({
             attendanceDate: '2024-03-08',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Reddy Meera Krishna',
             contactNo: '+91 98765 43217',
@@ -440,7 +461,7 @@ const DateWise = ({
             attendanceDate: '2024-03-09',
             timeIn: '09:30 AM',
             timeOut: '02:30 PM',
-            totalHoursWorked: '5H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Half day',
             employeeName: 'Malhotra Rahul Dinesh',
             contactNo: '+91 98765 43218',
@@ -451,7 +472,7 @@ const DateWise = ({
             attendanceDate: '2024-03-10',
             timeIn: '09:00 AM',
             timeOut: '06:00 PM',
-            totalHoursWorked: '9H 0M',
+            totalHoursWorked: '09H 00M',
             status: 'Present',
             employeeName: 'Desai Anita Mahesh',
             contactNo: '+91 98765 43219',
@@ -491,6 +512,8 @@ const EmployeeWise = ({
     [searchParams.endDate]
   );
 
+  const tabs = useTabs('All');
+
   // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -501,6 +524,25 @@ const EmployeeWise = ({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
+
+  const counts = useMemo(
+    () => ({
+      all: data?.items?.length || 24,
+      Present:
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
+        ).length || 10,
+      Absent:
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
+        ).length || 8,
+      'Half-Day':
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
+        ).length || 6,
+    }),
+    [data?.items]
+  );
 
   useEffect(() => {
     if (searchParams?.employeeId && startDate) {
@@ -534,13 +576,68 @@ const EmployeeWise = ({
       status: EmployeeLeaveStatusType[i.statusType],
     })) || []
   );
+
+  const TABS = useMemo(
+    () => [
+      {
+        value: 'All',
+        label: 'All',
+        count: data?.[0]?.presentDays || 19,
+        color: 'default',
+      },
+      {
+        value: 'Present',
+        label: 'Present',
+        count: data?.[0]?.presentDays || 10,
+        icon: 'fluent:person-available-16-regular',
+        color: 'success',
+      },
+      {
+        value: 'FullDayLeave',
+        label: 'Full Day Leave',
+        count: data?.[0]?.leaveDays || 2,
+        icon: 'fluent-mdl2:leave-user',
+        color: 'error',
+      },
+      {
+        value: 'HalfDayLeave',
+        label: 'Half Day Leave',
+        count: data?.[0]?.halfDayLeaves || 3,
+        icon: 'mdi:fraction-one-half',
+        color: 'warning',
+      },
+      {
+        value: 'RejectedLeave',
+        label: 'Rejected Leave',
+        count: data?.[0]?.rejectedLeaves || 4,
+        icon: GlobalIcons.reject,
+        color: 'error',
+      },
+    ],
+    [data]
+  );
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+    tabs.onChange(event, newValue);
+    setSelectedStudents([]);
+  };
   return (
     <>
-      <Box display="flex" gap={2} m={2} ml={0}>
+      <Box
+        display="flex"
+        gap={2}
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+        }}
+      >
         <Autocomplete
           options={employees?.items || []}
           getOptionLabel={(option: any) =>
-            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''}`
+            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
           }
           renderInput={(params) => (
             <TextField
@@ -591,85 +688,42 @@ const EmployeeWise = ({
           }}
         />
       </Box>
+
       {searchParams?.employeeId && (
-        <Box display="flex" gap={2} m={2} ml={0}>
-          <Card
-            sx={{
-              maxWidth: 280,
-              width: '100%',
-              // backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
-              color: (theme) => theme.palette.success.main,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 2,
-            }}
-          >
-            <Box>
-              <Typography variant="subtitle1">Total Present Days</Typography>
-
-              <Typography variant="h3">{data?.[0]?.presentDays || 10}</Typography>
-            </Box>
-
-            <Iconify icon="fluent:person-available-16-regular" width={32} />
-          </Card>
-          <Card
-            sx={{
-              maxWidth: 280,
-              p: 2,
-              width: '100%',
-              // backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
-              color: (theme) => theme.palette.error.main,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box>
-              <Typography variant="subtitle1">Full Day Leave</Typography>
-
-              <Typography variant="h3">{data?.[0]?.leaveDays || 2}</Typography>
-            </Box>
-            <Iconify icon="fluent-mdl2:leave-user" width={32} />
-          </Card>
-          <Card
-            sx={{
-              maxWidth: 280,
-              p: 2,
-              width: '100%',
-              // backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-              color: (theme) => theme.palette.warning.main,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box>
-              <Typography variant="subtitle1">Half Day Leave</Typography>
-              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 3}</Typography>
-            </Box>
-            <Iconify icon="mdi:fraction-one-half" width={32} />
-          </Card>
-
-          <Card
-            sx={{
-              maxWidth: 280,
-              p: 2,
-              width: '100%',
-              // backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-              color: (theme) => theme.palette.error.main,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box>
-              <Typography variant="subtitle1">Rejected Leave</Typography>
-              <Typography variant="h3">{data?.[0]?.halfDayLeaves || 3}</Typography>
-            </Box>
-            <Iconify icon={GlobalIcons.reject} width={32} />
-          </Card>
-        </Box>
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+            borderRadius: '8px',
+            bgcolor: 'background.paper',
+            boxShadow: 'var(--shadows-3)',
+            mb: 2,
+            p: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              // icon={tab.icon}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label
+                    variant={tab.value === 'All' ? 'filled' : 'soft'}
+                    color={(tab?.color as LabelColor) || 'default'}
+                  >
+                    {tab.count}
+                  </Label>
+                </Box>
+              }
+              // icon={tab.icon}
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
       )}
       {searchParams?.employeeId && (
         <CustomizableTable
@@ -725,8 +779,20 @@ const EmployeeWise = ({
                 return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
               },
             },
-            { id: 'timeIn', label: 'In-time' },
-            { id: 'timeOut', label: 'Out-time' },
+            {
+              id: 'timeIn',
+              label: 'In-time',
+              render(value, row) {
+                return value || `__ __`;
+              },
+            },
+            {
+              id: 'timeOut',
+              label: 'Out-time',
+              render(value, row) {
+                return value || `__ __`;
+              },
+            },
             { id: 'totalHoursWorked', label: 'Hours Worked' },
             {
               id: 'status',
@@ -764,112 +830,112 @@ const EmployeeWise = ({
             {
               id: 1,
               attendanceDate: '2024-03-01',
-              timeIn: '09:00 AM',
-              timeOut: '06:00 PM',
-              totalHoursWorked: '9H 0M',
+              timeIn: '08:30 AM',
+              timeOut: '05:30 PM',
+              totalHoursWorked: '09H 00M',
               status: 'Present',
-              employeeName: 'Kumar Rajesh Mohan',
-              contactNo: '+91 98765 43210',
-              employeeCode: 'EMP001',
+              employeeName: 'Aditya Sharma',
+              contactNo: '+91 87654 32109',
+              employeeCode: 'EMP101',
             },
             {
               id: 2,
               attendanceDate: '2024-03-02',
-              timeIn: '09:30 AM',
-              timeOut: '05:30 PM',
-              totalHoursWorked: '8H 0M',
+              timeIn: '09:15 AM',
+              timeOut: '06:15 PM',
+              totalHoursWorked: '09H 00M',
               status: 'Present',
-              employeeName: 'Sharma Priya Raj',
-              contactNo: '+91 98765 43211',
-              employeeCode: 'EMP002',
+              employeeName: 'Priya Patel',
+              contactNo: '+91 98765 43210',
+              employeeCode: 'EMP102',
             },
             {
               id: 3,
               attendanceDate: '2024-03-03',
-              timeIn: '-',
-              timeOut: '-',
-              totalHoursWorked: '0H 0M',
+              timeIn: '',
+              timeOut: '',
+              totalHoursWorked: '10H 20M',
               status: 'Leave',
-              employeeName: 'Patel Amit Naresh',
-              contactNo: '+91 98765 43212',
-              employeeCode: 'EMP003',
+              employeeName: 'Rajesh Kumar',
+              contactNo: '+91 76543 21098',
+              employeeCode: 'EMP103',
             },
             {
               id: 4,
               attendanceDate: '2024-03-04',
-              timeIn: '09:15 AM',
-              timeOut: '02:15 PM',
-              totalHoursWorked: '5H 0M',
+              timeIn: '08:45 AM',
+              timeOut: '02:45 PM',
+              totalHoursWorked: '08H 00M',
               status: 'Half day',
-              employeeName: 'Gupta Sneha Ramesh',
-              contactNo: '+91 98765 43213',
-              employeeCode: 'EMP004',
+              employeeName: 'Sneha Gupta',
+              contactNo: '+91 65432 10987',
+              employeeCode: 'EMP104',
             },
             {
               id: 5,
               attendanceDate: '2024-03-05',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9H 0M',
+              totalHoursWorked: '12H 00M',
               status: 'Present',
-              employeeName: 'Singh Vikram Pratap',
-              contactNo: '+91 98765 43214',
-              employeeCode: 'EMP005',
+              employeeName: 'Vikram Singh',
+              contactNo: '+91 54321 09876',
+              employeeCode: 'EMP105',
             },
             {
               id: 6,
               attendanceDate: '2024-03-06',
-              timeIn: '09:45 AM',
-              timeOut: '06:45 PM',
-              totalHoursWorked: '9H 0M',
+              timeIn: '08:15 AM',
+              timeOut: '05:15 PM',
+              totalHoursWorked: '09H 00M',
               status: 'Present',
-              employeeName: 'Verma Neha Suresh',
-              contactNo: '+91 98765 43215',
-              employeeCode: 'EMP006',
+              employeeName: 'Meera Reddy',
+              contactNo: '+91 43210 98765',
+              employeeCode: 'EMP106',
             },
             {
               id: 7,
               attendanceDate: '2024-03-07',
-              timeIn: '-',
-              timeOut: '-',
-              totalHoursWorked: '0H 0M',
+              timeIn: '',
+              timeOut: '',
+              totalHoursWorked: '00H 00M',
               status: 'Leave',
-              employeeName: 'Joshi Arun Kumar',
-              contactNo: '+91 98765 43216',
-              employeeCode: 'EMP007',
+              employeeName: 'Arjun Malhotra',
+              contactNo: '+91 32109 87654',
+              employeeCode: 'EMP107',
             },
             {
               id: 8,
               attendanceDate: '2024-03-08',
-              timeIn: '09:00 AM',
-              timeOut: '06:00 PM',
-              totalHoursWorked: '9H 0M',
+              timeIn: '09:30 AM',
+              timeOut: '06:30 PM',
+              totalHoursWorked: '09H 00M',
               status: 'Present',
-              employeeName: 'Reddy Meera Krishna',
-              contactNo: '+91 98765 43217',
-              employeeCode: 'EMP008',
+              employeeName: 'Neha Verma',
+              contactNo: '+91 21098 76543',
+              employeeCode: 'EMP108',
             },
             {
               id: 9,
               attendanceDate: '2024-03-09',
-              timeIn: '09:30 AM',
-              timeOut: '02:30 PM',
-              totalHoursWorked: '5H 0M',
+              timeIn: '08:45 AM',
+              timeOut: '02:45 PM',
+              totalHoursWorked: '06H 00M',
               status: 'Half day',
-              employeeName: 'Malhotra Rahul Dinesh',
-              contactNo: '+91 98765 43218',
-              employeeCode: 'EMP009',
+              employeeName: 'Karan Joshi',
+              contactNo: '+91 10987 65432',
+              employeeCode: 'EMP109',
             },
             {
               id: 10,
               attendanceDate: '2024-03-10',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
-              totalHoursWorked: '9H 0M',
+              totalHoursWorked: '09H 00M',
               status: 'Present',
-              employeeName: 'Desai Anita Mahesh',
-              contactNo: '+91 98765 43219',
-              employeeCode: 'EMP010',
+              employeeName: 'Anita Desai',
+              contactNo: '+91 09876 54321',
+              employeeCode: 'EMP110',
             },
           ]}
         />

@@ -48,14 +48,6 @@ const StudentAttendanceNotificationScreen = () => {
       />
       <CustomizableTable
         tableId="student-attendance-notification-table"
-        searchFieldProps={{
-          placeholder: 'Search by Name, Date, Recipient...',
-          label: 'Search by Name, Date, Recipient...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },

@@ -622,14 +622,6 @@ const AdmissionScreen = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
         noDataText={<>No Admission Data Found</>}
-        searchFieldProps={{
-          placeholder: 'Search by Form No, Inquiry No, Class, Division..',
-          label: 'Search by  Form No, Inquiry No, Class, Division..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           {
@@ -715,7 +707,7 @@ const AdmissionScreen = () => {
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
             id: 'inquiryPreference.preferenceName',
-            label: 'Inquiry Prefrance',
+            label: 'Inquiry Preference',
             minWidth: '200px',
             align: 'left',
           },

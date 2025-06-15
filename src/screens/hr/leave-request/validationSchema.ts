@@ -26,6 +26,7 @@ const leaveValidationSchema = (editData: any) =>
         return true;
       }),
     description: Yup.string().required('Description is required'),
+    // docs : Yup.
     status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
     rejectionReason: Yup.string().test(
       'rejectionReason',

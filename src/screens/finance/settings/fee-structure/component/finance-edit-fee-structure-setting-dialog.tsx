@@ -37,7 +37,7 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
       fullWidth
       maxWidth="xl"
       title={
-        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">
             {tabs.value === 'editable' ? 'Edit For Class 1' : 'Details For Class 1'}
           </Typography>

@@ -109,8 +109,8 @@ const LeaveHistory = (props: any) => {
     () =>
       data?.items?.map((item: any) => ({
         ...item,
-        start: dayjs(item.startDate).format('DD/MM/YYYY'),
-        end: dayjs(item.endDate).format('DD/MM/YYYY'),
+        start: dayjs(item.startDate).format('DD-MM-YYYY'),
+        end: dayjs(item.endDate).format('DD-MM-YYYY'),
         statusValue: item.status,
         viewStartDate: item.startDate,
         color: item.leavePolicy.color,
@@ -153,7 +153,7 @@ const LeaveHistory = (props: any) => {
     <>
       <Box sx={{ display: 'flex', gap: 2, my: 2, pl: 1, justifyContent: 'space-between' }}>
         <DatePicker
-          label="Month Year"
+          label="Month-Year"
           format="MMM-YYYY"
           value={date}
           views={['month', 'year']}
@@ -270,7 +270,7 @@ const LeaveHistory = (props: any) => {
           {
             label: 'Total Days',
             id: 'totalDays',
-            minWidth: '6vw',
+            minWidth: '10vw',
             align: 'left',
           },
           {
@@ -365,7 +365,7 @@ const LeaveHistory = (props: any) => {
         open={modal?.value}
         handleClose={handleClose}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
               {editData ? 'Review Leave Request' : 'Add Leave Request'}
             </Typography>

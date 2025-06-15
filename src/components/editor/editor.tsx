@@ -143,11 +143,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
             {/* </Scrollbar> */}
           </StyledRoot>
 
-          {helperText && (
-            <FormHelperText error={!!error} sx={{ px: 2 }}>
-              {helperText}
-            </FormHelperText>
-          )}
+          {helperText && <FormHelperText error={!!error}>{helperText}</FormHelperText>}
         </Stack>
       </Portal>
     );

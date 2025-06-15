@@ -293,14 +293,6 @@ const EntranceExamScreen = () => {
           showCheckbox={selectedStudents.length !== 0}
           tableId="entrance-exam-table"
           noDataText={<>No Entrance Exam Data Found </>}
-          searchFieldProps={{
-            placeholder: 'Search by Date, Student, Medium, Class, Status...',
-            label: 'Search by Date, Student, Medium, Class, Status...',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
           isLoading={isLoading}
           columns={[
             // {

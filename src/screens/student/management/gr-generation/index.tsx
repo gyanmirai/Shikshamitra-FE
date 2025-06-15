@@ -177,14 +177,6 @@ const GrNoGenerationScreen = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="gr-no-generation-table"
           noDataText={<>No GR No Data Found </>}
-          searchFieldProps={{
-            placeholder: 'Search tempGrNo, name, grNoRecord...',
-            label: 'Search tempGrNo, name, grNoRecord...',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
           columns={[
             // { id: 'srNo', label: 'Sr. No.' },
             // {

@@ -97,7 +97,7 @@ export const DialogScrollContent = ({
   return (
     <Scrollbar ref={ref}>
       <DialogContent ref={ref} sx={{ p: 2 }} {...props}>
-        {children}
+        <form>{children}</form>
       </DialogContent>
     </Scrollbar>
   );

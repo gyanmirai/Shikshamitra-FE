@@ -78,14 +78,6 @@ const AttendanceType = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Type, Color...',
-          label: 'Search by Type, Color...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         isLoading={isLoading}
         columns={[
           { id: 'type', label: 'Type' },
@@ -160,7 +152,7 @@ const AttendanceType = () => {
         open={dialog.value}
         handleClose={handleClose}
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Leave Type</Typography>
             <Tooltip
               arrow

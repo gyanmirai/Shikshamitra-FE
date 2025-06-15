@@ -543,11 +543,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               endAdornment: (
                 <>
                   {searchValue ? (
-                    <IconButton size="small" onClick={() => setSearchValue('')}>
+                    <IconButton size="small" sx={{ p: 1 }} onClick={() => setSearchValue('')}>
                       <ClearIcon />
                     </IconButton>
                   ) : (
-                    <IconButton size="small">
+                    <IconButton size="small" sx={{ p: 1 }}>
                       <SearchIcon />
                     </IconButton>
                   )}

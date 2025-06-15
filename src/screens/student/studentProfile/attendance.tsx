@@ -369,14 +369,6 @@ const Attendance = (props: StudentTabsComponentType) => {
       </Grid>
       <CustomizableTable
         tableId="student-attendance-table"
-        searchFieldProps={{
-          placeholder: 'Search by Date, Status, Reason, Remarks...',
-          label: 'Search by Date, Status, Reason, Remarks...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         data={[
           {
             date: '18/07/2024',

@@ -114,7 +114,7 @@ const StudentEnrollmentSettingScreen = () => {
             defaultDocumentTypes.onFalse();
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Document</Typography>
               <Tooltip
                 arrow
@@ -141,7 +141,7 @@ const StudentEnrollmentSettingScreen = () => {
             inquiryPreference.onFalse();
           }}
           title={
-            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Inquiry Preference</Typography>
               <Tooltip arrow placement="right" title="?.">
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -160,7 +160,7 @@ const StudentEnrollmentSettingScreen = () => {
       {entranceExamSlots.value && (
         <CustomDialog
           title={
-            <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Slots</Typography>
               <Tooltip
                 arrow

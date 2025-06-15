@@ -518,14 +518,6 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               <Grid item xs={12}>
                 <CustomizableTable
                   tableId="attendance-table"
-                  searchFieldProps={{
-                    placeholder: 'Search by Date, Status, Reason, Remarks...',
-                    label: 'Search by Date, Status, Reason, Remarks...',
-                    sx: {
-                      maxWidth: '400px',
-                      width: '100%',
-                    },
-                  }}
                   data={[
                     {
                       date: '18/07/2024',

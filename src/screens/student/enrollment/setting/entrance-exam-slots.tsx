@@ -113,14 +113,6 @@ const EntranceExamSlots = () => {
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Slot Name, Room No...',
-          label: 'Search by Slot Name, Room No...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { label: 'Slot Name', id: 'slotName' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
@@ -157,7 +149,7 @@ const EntranceExamSlots = () => {
       />
       <CustomDialog
         title={
-          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Slots</Typography>
             <Tooltip
               arrow

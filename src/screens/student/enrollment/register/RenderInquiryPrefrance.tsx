@@ -45,7 +45,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
           dialog.onTrue();
         }}
       >
-        Add Inquiry Prefrance
+        Add Inquiry Preference
       </Typography> */}
       <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
