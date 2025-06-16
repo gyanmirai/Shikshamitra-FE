@@ -45,7 +45,7 @@ jobs:
 
     environment:
       name: production
-      url: 'dev-gyanmirai-fe.azurewebsites.net'
+      url: 'https://dev-gyanmirai-fe.azurewebsites.net'
 
     steps:
       - name: Download artifact from build job
