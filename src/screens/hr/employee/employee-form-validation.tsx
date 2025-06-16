@@ -111,42 +111,48 @@ const familyInformationValidationSchema = Yup.object({
     .nullable(),
 });
 
-export const workExperienceValidationSchema = Yup.array().of(
-  Yup.object({
-    organizationName: Yup.string().required('Organization name is required'),
-    organizationAddress: Yup.string(),
-    organizationCountry: Yup.object().shape({
-      name: Yup.string(),
-      isoCode: Yup.string(),
-    }),
-    organizationState: Yup.object().shape({
-      name: Yup.string(),
-      isoCode: Yup.string(),
-    }),
-    organizationCity: Yup.object().shape({
-      name: Yup.string(),
-    }),
-    fromDate: Yup.date().nullable().required('Start date is required'),
-    toDate: Yup.date()
-      .nullable()
-      .min(Yup.ref('fromDate'), 'End date must be after start date')
-      .test('toDate', 'End date is required if currently not working', function (value) {
-        // Skip validation if currently working (toDate can be null)
-        if (this.parent.currentlyWorking) {
-          return true;
-        }
-        // Require toDate if not currently working
-        return value !== null;
+export const workExperienceValidationSchema = Yup.object({
+  experiences: Yup.array().of(
+    Yup.object({
+      organizationName: Yup.string().required('Organization name is required'),
+      organizationAddress: Yup.string(),
+      organizationCountry: Yup.object().shape({
+        name: Yup.string(),
+        isoCode: Yup.string(),
       }),
-    department: Yup.string(),
-    designation: Yup.string().required('Designation is required'),
-  })
-);
+      organizationState: Yup.object().shape({
+        name: Yup.string(),
+        isoCode: Yup.string(),
+      }),
+      organizationCity: Yup.object().shape({
+        name: Yup.string(),
+      }),
+      fromDate: Yup.date().nullable().required('Start date is required'),
+      toDate: Yup.date()
+        .nullable()
+        .test('toDate', 'End date must be greater than start date', function () {
+          const { fromDate, toDate } = this.parent as any;
+          if (fromDate && toDate) {
+            return toDate > fromDate;
+          }
+          return true;
+        }),
+      department: Yup.string(),
+      designation: Yup.string().required('Designation is required'),
+    })
+  ),
+});
 
 export const validations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,
   Yup.object({}),
+  workExperienceValidationSchema,
+  Yup.object({}),
+];
+export const infoValidations = [
+  personalInformationValidationSchema,
+  familyInformationValidationSchema,
   workExperienceValidationSchema,
   Yup.object({}),
 ];

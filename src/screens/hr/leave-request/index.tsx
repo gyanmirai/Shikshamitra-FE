@@ -2,12 +2,14 @@
 
 import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Box, Tab, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -46,6 +48,11 @@ const LeaveRequest = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
   return (
     <Box>
       <CustomBreadcrumbs
@@ -72,7 +79,16 @@ const LeaveRequest = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
           role="tablist"
         >
@@ -88,15 +104,26 @@ const LeaveRequest = () => {
           ))}
         </CustomTabs>
       </Card>
-      <Scrollbar sx={{ p: 1 }}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            searchParams={searchParams}
-            setSearchParams={setSearchParams}
-            modal={modal}
-          />
-        )}
-      </Scrollbar>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              searchParams={searchParams}
+              setSearchParams={setSearchParams}
+              modal={modal}
+            />
+          )}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

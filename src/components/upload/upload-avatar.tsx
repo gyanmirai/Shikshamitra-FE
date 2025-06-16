@@ -118,7 +118,7 @@ export function UploadAvatar({
           borderRadius: '50%',
           border: (theme) => `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
           ...(isDragActive && { opacity: 0.72 }),
-          ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
+          ...(disabled && { pointerEvents: 'none' }),
           ...(hasError && { borderColor: 'error.main' }),
           ...(hasFile && {
             ...(hasError && {

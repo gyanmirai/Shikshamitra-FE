@@ -8,6 +8,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
@@ -94,6 +95,11 @@ export function EmployeeCard({ employee }: any) {
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
   );
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
+  const [isBackClick, setIsBackClick] = React.useState(false);
   return (
     <>
       <Card
@@ -162,7 +168,15 @@ export function EmployeeCard({ employee }: any) {
         </Paper>
         <Tabs
           value={tabs.value}
-          onChange={tabs.onChange}
+          onChange={(...rest) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+            tabs.onChange(...rest);
+          }}
           sx={{
             px: 1.5,
             '& .MuiTabs-flexContainer': {
@@ -185,9 +199,22 @@ export function EmployeeCard({ employee }: any) {
           ))}
         </Tabs>
       </Card>
-      {currentActiveComponent?.component && (
-        <currentActiveComponent.component tabs={tabs} employee={employee} />
-      )}
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Box>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component tabs={tabs} employee={employee} />
+          )}
+        </Box>
+      </FormSlider>
     </>
   );
 }
@@ -216,7 +243,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   ) : (
     <>
       <CustomBreadcrumbs
-        heading="Employee"
+        heading="Employee List"
         links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee List' }]}
         isBack
         onBack={() => setSearchParams({ employee: '' })}

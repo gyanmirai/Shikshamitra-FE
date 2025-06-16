@@ -19,6 +19,7 @@ import {
   Button,
   useTheme,
   TextField,
+  Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -41,6 +42,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -169,7 +171,7 @@ const HrEventsAndHolidaysScreen = () => {
         <CustomizableTable
           noDataText={
             <>
-              No Event & Holidays Found{' '}
+              No Events & Holidays Found{' '}
               <Box
                 onClick={() => {
                   dialog.onTrue();
@@ -184,24 +186,47 @@ const HrEventsAndHolidaysScreen = () => {
                   },
                 }}
               >
-                Event & Holidayss
+                Events & Holidays
               </Box>
             </>
           }
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
-            { id: 'reason', label: 'Name', filterType: 'date' },
+            { id: 'reason', label: 'Name', minWidth: '8vw', align: 'left' },
             {
               id: 'sDate',
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
-              minWidth: '8vw',
+              minWidth: '9vw',
             },
-            { id: 'eDate', label: 'End Date', filterType: 'date', align: 'left', minWidth: '8vw' },
-            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '8vw' },
-            { id: 'reason', label: 'Description' },
+            { id: 'eDate', label: 'End Date', filterType: 'date', align: 'left', minWidth: '9vw' },
+            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '9vw' },
+            {
+              id: 'reason',
+              label: 'Description',
+              minWidth: '15vw',
+              align: 'left',
+              render(value, row) {
+                return (
+                  <CustomTooltip title={value} arrow>
+                    <Typography
+                      component="span"
+                      noWrap
+                      sx={{
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        width: '100%',
+                        fontSize: 'unset',
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  </CustomTooltip>
+                );
+              },
+            },
             {
               id: 'title',
               label: 'Type',
@@ -337,22 +362,12 @@ export const HrEventsAndHolidaysForm = ({
   const [addHoliday, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEventHolidayMutation,
-    isThrowError: true,
-    popupConfig: {
-      success: true,
-      successMessage: 'Event created successfully',
-    },
   });
 
   // Custom hook for updating an existing holiday event with success message popup
   const [updateHoliday, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEventHolidayMutation,
-    isThrowError: true,
-    popupConfig: {
-      success: true,
-      successMessage: 'Event updated successfully',
-    },
   });
 
   // Initialize formik for form handling with validation

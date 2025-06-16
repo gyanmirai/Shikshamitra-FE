@@ -78,6 +78,9 @@ interface CustomStepperWithFormikProps {
 }
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: any) => ({
+  '&.Mui-disabled': {
+    cursor: 'default !important',
+  },
   '& .MuiStepLabel-iconContainer': {
     color: error ? theme.palette.error.main : theme.palette.primary.main,
   },
@@ -87,6 +90,10 @@ const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: an
   },
   '& .MuiStepLabel-iconContainer.Mui-disabled': {
     cursor: isDisabledLabel ? 'no-drop' : 'pointer !important',
+    transition: 'all 0.3s ease-in-out',
+    '& svg:hover': {
+      opacity: isDisabledLabel ? 1 : 0.72,
+    },
   },
 }));
 
@@ -234,7 +241,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             Back
           </Button>
           <Box display="flex" gap={2}>
-            {/* <LoadingButton
+            <LoadingButton
               variant="outlined"
               size="small"
               loading={isSaveLoading.value}
@@ -242,7 +249,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               onClick={async () => {
                 const error = await formik.validateForm();
                 formik.setTouched({});
-                console.log('🚀 ~ onClick={ ~ error:', formik);
 
                 if (Object.keys(error).length <= 0) {
                   onSave?.(
@@ -257,7 +263,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               }}
             >
               Save
-            </LoadingButton> */}
+            </LoadingButton>
             <LoadingButton
               variant="contained"
               type="submit"

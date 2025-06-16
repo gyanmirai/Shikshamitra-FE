@@ -20,6 +20,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
   useGetEmployeeQuery,
   useLazyGetAttendanceByEmployeeIdQuery,
@@ -51,6 +52,8 @@ const AttendanceTrackingScreen = () => {
     },
   ];
   const role = employee?.role?.name;
+  const currentIndex = MAIN_TABS.findIndex((i) => i.value === searchParams.tab);
+  const [isBackClick, setIsBackClick] = useState<boolean>(false);
   return (
     <Box sx={{ p: 1 }}>
       <CustomBreadcrumbs
@@ -70,7 +73,11 @@ const AttendanceTrackingScreen = () => {
           <Card>
             <CustomTabs
               value={searchParams.tab}
-              onChange={(e, value) => setSearchParams({ tab: value })}
+              onChange={(e, value) => {
+                const findNewIndex = MAIN_TABS.findIndex((i) => i.value === value);
+                setIsBackClick(currentIndex > findNewIndex);
+                setSearchParams({ tab: value });
+              }}
               // variant="fullWidth"
               role="tablist"
               sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
@@ -81,13 +88,24 @@ const AttendanceTrackingScreen = () => {
               ))}
             </CustomTabs>
           </Card>
-          <Box>
-            {searchParams.tab === 'dateWise' ? (
-              <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
-            ) : (
-              <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
-            )}
-          </Box>
+          <FormSlider
+            steps={MAIN_TABS}
+            isBackClick={isBackClick}
+            step={currentIndex}
+            containerProps={{
+              sx: {
+                p: 0,
+              },
+            }}
+          >
+            <Box>
+              {searchParams.tab === 'dateWise' ? (
+                <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
+              ) : (
+                <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
+              )}
+            </Box>
+          </FormSlider>
         </>
       )}
     </Box>
@@ -854,7 +872,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-03',
               timeIn: '',
               timeOut: '',
-              totalHoursWorked: '10H 20M',
+              totalHoursWorked: '__ __',
               status: 'Leave',
               employeeName: 'Rajesh Kumar',
               contactNo: '+91 76543 21098',
@@ -898,7 +916,7 @@ const EmployeeWise = ({
               attendanceDate: '2024-03-07',
               timeIn: '',
               timeOut: '',
-              totalHoursWorked: '00H 00M',
+              totalHoursWorked: '__ __',
               status: 'Leave',
               employeeName: 'Arjun Malhotra',
               contactNo: '+91 32109 87654',

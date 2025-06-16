@@ -543,11 +543,15 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               endAdornment: (
                 <>
                   {searchValue ? (
-                    <IconButton size="small" sx={{ p: 1 }} onClick={() => setSearchValue('')}>
+                    <IconButton
+                      size="small"
+                      sx={{ mr: '-12px', p: 1 }}
+                      onClick={() => setSearchValue('')}
+                    >
                       <ClearIcon />
                     </IconButton>
                   ) : (
-                    <IconButton size="small" sx={{ p: 1 }}>
+                    <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
                       <SearchIcon />
                     </IconButton>
                   )}
@@ -555,6 +559,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               ),
             }}
             label="Search in Table"
+            sx={{ maxWidth: '249.6px', width: '100%' }}
             {...searchFieldProps}
           />
         )}

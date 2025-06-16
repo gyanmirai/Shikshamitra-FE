@@ -76,6 +76,7 @@ export const EmployeeDashboardCard = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           height: '100%',
+          p: 2,
         }}
       >
         <Box display="flex" flexDirection="column" justifyContent="space-between" height="100%">

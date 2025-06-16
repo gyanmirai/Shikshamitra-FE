@@ -354,7 +354,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
     </SectionCard>
 
     <SectionCard title="Contact Information">
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={4}>
         <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
           <TextField
             fullWidth
@@ -375,7 +375,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
           />
         </ShakingTextField>
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={4}>
         <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
           <PhoneInput
             name="mobileNo"
@@ -384,13 +384,28 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               formik.setFieldValue('mobileNo', value);
               formik.validateField('mobileNo');
             }}
-            label="Mobile No. *"
+            label="Primary Contact No. *"
             error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
             disabled={disabled}
             helperText={formik.touched.mobileNo && formik.errors.mobileNo}
             onBlur={formik.handleBlur}
           />
         </ShakingTextField>
+      </Grid>
+      <Grid item xs={12} md={4}>
+        <PhoneInput
+          name="secondaryMobileNo"
+          value={formik.values.secondaryMobileNo}
+          onChange={(value) => {
+            formik.setFieldValue('secondaryMobileNo', value);
+            formik.validateField('secondaryMobileNo');
+          }}
+          label="Secondary Contact No. "
+          error={formik.touched.secondaryMobileNo && Boolean(formik.errors.secondaryMobileNo)}
+          disabled={disabled}
+          helperText={formik.touched.secondaryMobileNo && formik.errors.secondaryMobileNo}
+          onBlur={formik.handleBlur}
+        />
       </Grid>
     </SectionCard>
 

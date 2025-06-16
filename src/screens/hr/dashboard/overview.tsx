@@ -2,13 +2,11 @@ import React from 'react';
 
 import { Grid } from '@mui/material';
 
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
 import { EmployeeDashboardCard } from './dashboard';
 
 const Overview = () => (
   <>
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
+    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
       <EmployeeDashboardCard
         title="Total Employees"
         icon="mdi:account-multiple"
@@ -22,7 +20,7 @@ const Overview = () => (
       />
     </Grid>
 
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
+    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
       <EmployeeDashboardCard
         title="Attendance Overview"
         icon="mdi:calendar-check"
@@ -47,7 +45,7 @@ const Overview = () => (
       />
     </Grid> */}
 
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
+    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
       <EmployeeDashboardCard
         title="Pending Leave Requests"
         icon="mdi:clock-alert"
@@ -57,7 +55,7 @@ const Overview = () => (
       />
     </Grid>
 
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={3}>
+    {/* <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
       <EmployeeDashboardCard
         title="Payroll Summary"
         icon="streamline:bag-dollar-solid"
@@ -66,7 +64,7 @@ const Overview = () => (
         color="info.main"
         href="/hr/payroll/pay-process"
       />
-    </Grid>
+    </Grid> */}
   </>
 );
 

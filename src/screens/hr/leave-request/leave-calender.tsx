@@ -7,6 +7,10 @@ import React, { useMemo, useState } from 'react';
 
 import { Box, Grid, Typography } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { convertBase64Format } from 'src/utils/base64Formate';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
 import {
@@ -15,6 +19,7 @@ import {
 } from 'src/enums/employee-leave-status';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 
@@ -87,120 +92,153 @@ const LeaveCalender = (props: TabComponentType) => {
 
 export default LeaveCalender;
 
-export const LeaveRequestForm = ({ editData }: any) => (
-  <Box sx={{ p: 2 }} bgcolor="background.neutral">
-    <Grid container spacing={3}>
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Employee
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Typography variant="body2">
-          {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
-        </Typography>
-      </Grid>
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Organization
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
-      </Grid>
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Leave Type
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        {editData?.leavePolicy?.leaveType && (
-          <Typography
-            variant="body2"
-
-            // color={editData?.leavePolicy?.color}
-          >
-            {editData?.leavePolicy?.leaveType}
+export const LeaveRequestForm = ({ editData }: any) => {
+  const isView = useBoolean(false);
+  return (
+    <Box sx={{ p: 2 }} bgcolor="background.neutral">
+      <Grid container spacing={3}>
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Employee
           </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Typography variant="body2">
+            {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
+          </Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Organization
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Leave Type
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          {editData?.leavePolicy?.leaveType && (
+            <Typography
+              variant="body2"
+
+              // color={editData?.leavePolicy?.color}
+            >
+              {editData?.leavePolicy?.leaveType}
+            </Typography>
+          )}
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Half Day
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
+        </Grid>
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Start Date
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Typography variant="body2">
+            {' '}
+            {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
+          </Typography>
+        </Grid>
+        {!editData?.halfDay && (
+          <>
+            {' '}
+            <Grid item xs={4}>
+              <Typography variant="body2" fontWeight={600}>
+                {' '}
+                End Date
+              </Typography>
+            </Grid>
+            <Grid item xs={8}>
+              <Typography variant="body2">
+                {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
+              </Typography>
+            </Grid>{' '}
+          </>
+        )}
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Description
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
+        </Grid>
+        {editData?.rejectionReason && (
+          <>
+            <Grid item xs={4}>
+              <Typography variant="body2" fontWeight={600}>
+                {' '}
+                Rejection Reason
+              </Typography>
+            </Grid>
+            <Grid item xs={8}>
+              <Typography variant="body2"> {editData.rejectionReason}</Typography>
+            </Grid>
+          </>
+        )}
+        <Grid item xs={4}>
+          <Typography variant="body2" fontWeight={600}>
+            {' '}
+            Status
+          </Typography>
+        </Grid>
+        <Grid item xs={8}>
+          <Label
+            color={
+              EmployeeLeaveStatusTypeColor[
+                editData?.status as EmployeeLeaveStatusType
+              ] as LabelColor
+            }
+          >
+            {EmployeeLeaveStatusType[editData?.status]}
+          </Label>
+        </Grid>
+        {editData?.attachment && (
+          <>
+            {' '}
+            <Grid item xs={4}>
+              <Typography variant="body2" fontWeight={600}>
+                {' '}
+                Document
+              </Typography>
+            </Grid>
+            <Grid item xs={8}>
+              <Iconify
+                icon="eva:eye-fill"
+                sx={{ mr: 0.5, cursor: 'pointer' }}
+                onClick={isView.onTrue}
+              />
+            </Grid>
+          </>
         )}
       </Grid>
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Half Day
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
-      </Grid>
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Start Date
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Typography variant="body2">
-          {' '}
-          {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
-        </Typography>
-      </Grid>
-      {!editData?.halfDay && (
-        <>
-          {' '}
-          <Grid item xs={4}>
-            <Typography variant="body2" fontWeight={600}>
-              {' '}
-              End Date
-            </Typography>
-          </Grid>
-          <Grid item xs={8}>
-            <Typography variant="body2">
-              {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
-            </Typography>
-          </Grid>{' '}
-        </>
-      )}
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Description
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
-      </Grid>
-      {editData?.rejectionReason && (
-        <>
-          <Grid item xs={4}>
-            <Typography variant="body2" fontWeight={600}>
-              {' '}
-              Rejection Reason
-            </Typography>
-          </Grid>
-          <Grid item xs={8}>
-            <Typography variant="body2"> {editData.rejectionReason}</Typography>
-          </Grid>
-        </>
-      )}
-      <Grid item xs={4}>
-        <Typography variant="body2" fontWeight={600}>
-          {' '}
-          Status
-        </Typography>
-      </Grid>
-      <Grid item xs={8}>
-        <Label
-          color={
-            EmployeeLeaveStatusTypeColor[editData?.status as EmployeeLeaveStatusType] as LabelColor
-          }
-        >
-          {EmployeeLeaveStatusType[editData?.status]}
-        </Label>
-      </Grid>
-    </Grid>
-  </Box>
-);
+      <CustomDialog open={isView.value} handleClose={isView.onFalse} title="Document">
+        <Box sx={{ p: 2 }} bgcolor="background.neutral">
+          <iframe
+            src={convertBase64Format(editData?.attachment)}
+            width="100%"
+            height="400px"
+            title="Document"
+          />
+        </Box>
+      </CustomDialog>
+    </Box>
+  );
+};
