@@ -19,13 +19,13 @@ const DashboardChart = () => {
     <>
       <Grid item xs={12} md={6}>
         <AppCurrentDownload
-          icon="mdi:account-group"
+          // icon="mdi:account-group"
           title="Employee Count by Group"
           subheader=""
           chart={{
             series: [
-              { label: 'Non-teaching Staff', value: 1224 },
-              { label: 'Teaching Staff', value: 53345 },
+              { label: 'Non-teaching Staff', value: 50 },
+              { label: 'Teaching Staff', value: 70 },
             ],
             colors: [theme.palette.primary.light, theme.palette.primary.darker],
           }}

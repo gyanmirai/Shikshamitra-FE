@@ -9,19 +9,17 @@ import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
+  Stack,
   Button,
-  Tooltip,
   Checkbox,
   Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -38,14 +36,12 @@ import {
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
-import UploadButton from 'src/components/upload-button';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-
-import { LeavePolicyForm } from '../attendance-setting/leave-policy';
 
 import type { TabComponentType } from '.';
 
@@ -74,7 +70,8 @@ interface FormValues {
   description: string;
   status?: number;
   rejectionReason: string;
-
+  startTime: Dayjs | null;
+  endTime: Dayjs | null;
   docs: string;
 }
 
@@ -107,30 +104,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
 
-  // Configuration for file upload component
-  const uploadProps = {
-    multiple: true,
-    accept: { 'image/*': [] },
-  };
-
   // Handler to remove a single file attachment
   const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
     setFieldValue('docs', '');
   }, []);
-
-  // Handler to remove all file attachments
-  const handleRemoveAllFiles = useCallback(
-    (values: FormValues, setFieldValue: (field: string, value: any) => void) => {
-      setFieldValue('docs', '');
-    },
-    []
-  );
-
-  const addLeaveTypeDialog = useBoolean();
-
-  const handleCloseLeavePolicy = (_e: any, isSubmit?: boolean) => {
-    addLeaveTypeDialog.onFalse();
-  };
 
   const { initialValues, errors, touched, setFieldValue, values, handleSubmit } = useFormik({
     initialValues: {
@@ -141,6 +118,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       isHalfDay: editData?.halfDay || false,
       rejectionReason: editData?.rejectionReason || '',
       status: editData?.status || 0,
+      startTime: editData?.startTime ? dayjs(editData?.startTime) : null,
+      endTime: editData?.endTime ? dayjs(editData?.endTime) : null,
 
       docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
     },
@@ -148,24 +127,31 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       leaveType: Yup.string().required('Leave type is required'),
       isHalfDay: Yup.boolean(),
       startDate: Yup.date().required('Start date is required'),
-      endDate: Yup.string()
+      startTime: Yup.date().when('isHalfDay', {
+        is: true,
+        then: (schema) => schema.required('Start time is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      endTime: Yup.date().when('isHalfDay', {
+        is: true,
+        then: (schema) => schema.required('End time is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      endDate: Yup.date()
         .nullable()
-        .test('endDate', '', function (value) {
-          const { isHalfDay } = this.parent;
-          const { startDate } = this.parent;
-          if (isHalfDay) return true;
-          if (startDate && value) {
-            const fullStartDate = dayjs(startDate);
-            const endDate = dayjs(value);
-
-            const isAfter = endDate.isAfter(fullStartDate);
-
-            return isAfter || this.createError({ message: 'End date must be after start date' });
-          }
-          if (!value && !isHalfDay) {
-            return this.createError({ message: 'End date is required' });
-          }
-          return true;
+        .when('isHalfDay', {
+          is: true,
+          then: (schema) => schema.nullable(),
+          otherwise: (schema) =>
+            schema
+              .required('End date is required')
+              .test('endDate', 'End date must be after start date', function (value) {
+                const { startDate } = this.parent;
+                if (startDate && value) {
+                  return dayjs(value).isSameOrAfter(dayjs(startDate));
+                }
+                return true;
+              }),
         }),
       description: Yup.string().required('Description is required'),
       status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
@@ -180,7 +166,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           return true;
         }
       ),
-      // color: Yup.string().required('Color is required'),
     }),
     onSubmit: async (formValues: FormValues, { resetForm }) => {
       try {
@@ -241,34 +226,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   onChange={(value) => {
                     setFieldValue('leaveType', value);
                   }}
-                  addOtherItemText="Add Leave Type"
-                  addOtherItemOnClick={() => {
-                    addLeaveTypeDialog.onTrue();
-                  }}
                 />
               </ShakingTextField>
-              {addLeaveTypeDialog.value && (
-                <CustomDialog
-                  title={
-                    <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                      <Typography variant="h5">Leave Policy</Typography>
-                      <Tooltip
-                        arrow
-                        placement="right"
-                        title="In this dialog, you can create a leave policy by setting rules for different leave types (e.g., sick, casual), leave entitlements, and approval workflows."
-                      >
-                        <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                      </Tooltip>
-                    </Box>
-                  }
-                  open={addLeaveTypeDialog.value}
-                  handleClose={() => {
-                    addLeaveTypeDialog.onFalse();
-                  }}
-                >
-                  <LeavePolicyForm handleClose={handleCloseLeavePolicy} editData={[]} />
-                </CustomDialog>
-              )}
             </Grid>
 
             <Grid item xs={12}>
@@ -278,7 +237,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     name="isHalfDay"
                     checked={values.isHalfDay}
                     disabled={editData}
-                    sx={{ py: 0, pl: 1.5 }}
+                    sx={{ p: 1 }}
                     onChange={(e: any) => {
                       setFieldValue('isHalfDay', e.target.checked);
                       if (e.target.checked) {
@@ -290,45 +249,108 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 label="Half Day"
               />
             </Grid>
-            <Grid item xs={12}>
-              <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
-                <DateTimePicker
-                  label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
-                  onChange={(value) => setFieldValue('startDate', value)}
-                  format="DD-MM-YYYY HH:mm:ss"
-                  value={values.startDate}
-                  disabled={editData}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      helperText: touched.startDate && errors.startDate,
-                      error: touched.startDate && Boolean(errors.startDate),
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-            {!values.isHalfDay && (
-              <Grid item xs={12}>
-                <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
-                  <DateTimePicker
-                    label="End Date and Time *"
-                    onChange={(value) => setFieldValue('endDate', value)}
-                    value={values.endDate}
-                    format="DD-MM-YYYY HH:mm:ss"
+            {values.isHalfDay ? (
+              <>
+                <Grid item xs={12}>
+                  <DatePicker
+                    label="Date *"
+                    onChange={(value) => setFieldValue('startDate', value)}
+                    format="DD-MM-YYYY"
+                    views={['year', 'month', 'day']}
+                    value={values.startDate}
                     disabled={editData}
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         size: 'small',
-                        helperText: touched.endDate && errors.endDate,
-                        error: touched.endDate && Boolean(errors.endDate),
+                        helperText: touched.startDate && errors.startDate,
+                        error: touched.startDate && Boolean(errors.startDate),
                       },
                     }}
                   />
-                </ShakingTextField>
-              </Grid>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <ShakingTextField error={touched.startTime && Boolean(errors.startTime)}>
+                    <MobileTimePicker
+                      label="Start time *"
+                      onChange={(value) => setFieldValue('startTime', value)}
+                      value={values.startTime}
+                      disabled={editData}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          helperText: touched.startTime && errors.startTime,
+                          error: touched.startTime && Boolean(errors.startTime),
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <ShakingTextField error={touched.endTime && Boolean(errors.endTime)}>
+                    <MobileTimePicker
+                      label="End Time *"
+                      onChange={(value) => setFieldValue('endTime', value)}
+                      format="HH:mm:ss"
+                      views={['hours', 'minutes', 'seconds']}
+                      value={values.endTime}
+                      disabled={editData}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          helperText: touched.endTime && errors.endTime,
+                          error: touched.endTime && Boolean(errors.endTime),
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              </>
+            ) : (
+              <>
+                <Grid item xs={12}>
+                  <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
+                    <DateTimePicker
+                      label="Start Date *"
+                      onChange={(value) => setFieldValue('startDate', value)}
+                      format="DD-MM-YYYY"
+                      views={['year', 'month', 'day']}
+                      value={values.startDate}
+                      disabled={editData}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          helperText: touched.startDate && errors.startDate,
+                          error: touched.startDate && Boolean(errors.startDate),
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+                <Grid item xs={12}>
+                  <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
+                    <DateTimePicker
+                      label="End Date *"
+                      onChange={(value) => setFieldValue('endDate', value)}
+                      format="DD-MM-YYYY"
+                      views={['year', 'month', 'day']}
+                      value={values.endDate}
+                      disabled={editData}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          helperText: touched.endDate && errors.endDate,
+                          error: touched.endDate && Boolean(errors.endDate),
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              </>
             )}
 
             <Grid item xs={12}>
@@ -353,9 +375,37 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <UploadButton
+              <UploadBox
+                value={values.docs}
+                disabled={editData}
+                // onRemove={() => handleRemoveFile(setFieldValue)}
+                isPreview
+                placeholder={
+                  <Stack spacing={0.5} alignItems="center">
+                    <Iconify icon="eva:cloud-upload-fill" width={40} />
+                    <Typography variant="body2">Upload Document</Typography>
+                    <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                      Please upload an image or PDF file (maximum size: 5MB)
+                    </Typography>
+                  </Stack>
+                }
+                sx={{ py: 1, flexGrow: 1, height: 'auto', width: '100%', mb: 2 }}
+                onDrop={(acceptedFiles) => {
+                  const file = acceptedFiles?.[0];
+
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+                  reader.onload = () => {
+                    const base64String = reader.result;
+                    setFieldValue('docs', base64String);
+                  };
+                }}
+              />
+              {/* <UploadButton
                 onChange={(e) => {
                   const file = e?.target?.files?.[0];
+                  console.log(file, '===========>', e);
                   if (!file) return;
                   const reader = new FileReader();
                   reader.readAsDataURL(file);
@@ -372,7 +422,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 disabled={editData}
               >
                 Upload Document
-              </UploadButton>
+              </UploadButton> */}
               {values.docs && (
                 <Box
                   sx={{

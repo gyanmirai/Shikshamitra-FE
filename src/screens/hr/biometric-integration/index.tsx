@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
+import { LoadingButton } from '@mui/lab';
 import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
@@ -26,9 +27,18 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const isDownLoadingTemplate = useBoolean();
 
   const open = useBoolean();
   const [editData, setEditData] = useState<any>(null);
+  const handleDownloadTemplate = () => {
+    isDownLoadingTemplate.onTrue();
+    const link = document.createElement('a');
+    link.href = '/templates/Employee_import_attendance.xlsx'; // relative path to public folder
+    link.download = 'Employee_import_attendance.xlsx'; // filename for download
+    link.click();
+    isDownLoadingTemplate.onFalse();
+  };
   return (
     <Box>
       <CustomBreadcrumbs
@@ -57,9 +67,15 @@ const BiometricIntegrationScreen = () => {
         />
 
         <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
-          <Button variant="outlined" size="small" startIcon={<Iconify icon="eva:download-fill" />}>
+          <LoadingButton
+            loading={isDownLoadingTemplate.value}
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="eva:download-fill" />}
+            onClick={handleDownloadTemplate}
+          >
             Download Sample File
-          </Button>
+          </LoadingButton>
           <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
             Upload File
           </Button>
@@ -163,7 +179,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Patel Amit Naresh',
-            hoursWorked: '00H 00M',
+            hoursWorked: '__ __',
             timeIn: '',
             timeOut: '',
             status: 'Leave',
@@ -199,7 +215,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             employeeName: 'Mishra Deepak Shyam',
-            hoursWorked: '00H 00M',
+            hoursWorked: '__ __',
             timeIn: '',
             timeOut: '',
             status: 'Leave',

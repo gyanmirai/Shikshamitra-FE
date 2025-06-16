@@ -11,6 +11,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
   useUpdateEmployeeMutation,
   useUpdateBankDetailsMutation,
@@ -22,7 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { validations } from './employee-form-validation';
+import { infoValidations } from './employee-form-validation';
 // import {
 //   FamilyFields,
 //   PayrollFields,
@@ -63,6 +64,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   // State to control edit mode
   const [isEdit, setIsEdit] = useState(false);
 
+  const [isBackClick, setIsBackClick] = useState(false);
+
   // Empty submit handler
   const onSubmit = (_val: any) => {};
 
@@ -75,7 +78,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       ...payrollInitialValues(editData),
     },
     // Use validation schema based on active tab
-    validationSchema: validations[activeTabIndex],
+    validationSchema: infoValidations[activeTabIndex],
     onSubmit: (values) => {
       onSubmit(values);
     },
@@ -227,6 +230,12 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for tab changes - resets edit mode when switching tabs
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    const newIndex = TABS.findIndex((tab) => tab.value === newValue);
+    if (activeTabIndex > newIndex) {
+      setIsBackClick(true);
+    } else {
+      setIsBackClick(false);
+    }
     setIsEdit(false);
     tabs.setValue(newValue);
   };
@@ -290,12 +299,39 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           </CustomTabs>
 
           <Stack direction="row" justifyContent="flex-end" sx={{ px: 2, pt: 2 }}>
+            {isEdit && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={
+                  <Iconify
+                    icon={isEdit ? GlobalIcons.cancel : 'solar:pen-bold'}
+                    sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
+                  />
+                }
+                onClick={() => {
+                  formik.resetForm({
+                    values: {
+                      ...personalInformationInitialValues(editData),
+                      ...familyInformationInitialValues(editData),
+                      ...workExperienceInitialValues(editData),
+                      ...payrollInitialValues(editData),
+                    },
+                  });
+                  setIsEdit(false);
+                  // popover.onClose();
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            &nbsp; &nbsp;
             <Button
-              variant="outlined"
+              variant="contained"
               size="small"
               startIcon={
                 <Iconify
-                  icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
+                  icon={isEdit ? GlobalIcons.submit : 'solar:pen-bold'}
                   sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
                 />
               }
@@ -320,33 +356,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             >
               {isEdit ? 'Save' : 'Edit'}
             </Button>{' '}
-            &nbsp;
-            {isEdit && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={
-                  <Iconify
-                    icon={isEdit ? GlobalIcons.submit : 'solar:pen-bold'}
-                    sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
-                  />
-                }
-                onClick={() => {
-                  formik.resetForm({
-                    values: {
-                      ...personalInformationInitialValues(editData),
-                      ...familyInformationInitialValues(editData),
-                      ...workExperienceInitialValues(editData),
-                      ...payrollInitialValues(editData),
-                    },
-                  });
-                  setIsEdit(false);
-                  // popover.onClose();
-                }}
-              >
-                Cancel
-              </Button>
-            )}
           </Stack>
           {/* <Card
             sx={{ backgroundColor: (theme) => theme.palette.background.paper, boxShadow: 'none' }}
@@ -365,94 +374,105 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                 // },
               }}
             > */}
-          <Grid container spacing={2} p={2}>
-            {' '}
-            {fields[activeTabIndex].map((field: FieldsType, index: number) => (
-              <Grid
-                item
-                xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                md={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                key={field.name}
-                {...field.gridProps}
-                mb="15px"
-              >
-                {field.renderComp ? (
-                  field.renderComp({
-                    formik,
-                    field,
-                    disabled: !isEdit,
-                  })
-                ) : field.type === 'date' ? (
-                  <ShakingTextField
-                    error={
-                      formik.touched[field.name as keyof typeof formik.values] &&
-                      Boolean(formik.errors[field.name as keyof typeof formik.values])
-                    }
-                  >
-                    <DatePicker
-                      label={field.label}
-                      name={field.name}
-                      value={formik.values[field.name as keyof typeof formik.values]}
-                      format="DD-MM-YYYY"
-                      onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                      sx={{
-                        ...((field?.sx as any) || {}),
-                      }}
-                      disabled={!isEdit}
-                      slotProps={{
-                        textField: {
-                          placeholder: field.placeholder,
-                          fullWidth: true,
-                          size: 'small',
-                          helperText:
-                            formik.touched[field.name as keyof typeof formik.values] &&
-                            formik.errors[field.name as keyof typeof formik.values]
-                              ? String(formik.errors[field.name as keyof typeof formik.values])
-                              : undefined,
-                          error:
-                            formik.touched[field.name as keyof typeof formik.values] &&
-                            Boolean(formik.errors[field.name as keyof typeof formik.values]),
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                ) : (
-                  <ShakingTextField
-                    error={
-                      formik.touched[field.name as keyof typeof formik.values] &&
-                      Boolean(formik.errors[field.name as keyof typeof formik.values])
-                    }
-                  >
-                    <TextField
-                      key={field.name}
-                      type={field.type}
-                      size="small"
-                      label={field.label}
-                      name={field.name}
-                      disabled={!isEdit}
-                      placeholder={field.placeholder}
-                      value={formik.values[field.name as keyof typeof formik.values]}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+          <FormSlider
+            steps={TABS}
+            isBackClick={isBackClick}
+            step={activeTabIndex}
+            containerProps={{
+              sx: {
+                p: 0,
+              },
+            }}
+          >
+            <Grid container spacing={2} p={2}>
+              {' '}
+              {fields[activeTabIndex].map((field: FieldsType, index: number) => (
+                <Grid
+                  item
+                  xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                  md={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                  key={field.name}
+                  {...field.gridProps}
+                  mb="15px"
+                >
+                  {field.renderComp ? (
+                    field.renderComp({
+                      formik,
+                      field,
+                      disabled: !isEdit,
+                    })
+                  ) : field.type === 'date' ? (
+                    <ShakingTextField
                       error={
                         formik.touched[field.name as keyof typeof formik.values] &&
                         Boolean(formik.errors[field.name as keyof typeof formik.values])
                       }
-                      helperText={
+                    >
+                      <DatePicker
+                        label={field.label}
+                        name={field.name}
+                        value={formik.values[field.name as keyof typeof formik.values]}
+                        format="DD-MM-YYYY"
+                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                        sx={{
+                          ...((field?.sx as any) || {}),
+                        }}
+                        disabled={!isEdit}
+                        slotProps={{
+                          textField: {
+                            placeholder: field.placeholder,
+                            fullWidth: true,
+                            size: 'small',
+                            helperText:
+                              formik.touched[field.name as keyof typeof formik.values] &&
+                              formik.errors[field.name as keyof typeof formik.values]
+                                ? String(formik.errors[field.name as keyof typeof formik.values])
+                                : undefined,
+                            error:
+                              formik.touched[field.name as keyof typeof formik.values] &&
+                              Boolean(formik.errors[field.name as keyof typeof formik.values]),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  ) : (
+                    <ShakingTextField
+                      error={
                         formik.touched[field.name as keyof typeof formik.values] &&
-                        formik.errors[field.name as keyof typeof formik.values]
-                          ? String(formik.errors[field.name as keyof typeof formik.values])
-                          : undefined
+                        Boolean(formik.errors[field.name as keyof typeof formik.values])
                       }
-                      fullWidth
-                      sx={{ ...(field?.sx || {}) }}
-                      {...(field?.otherProps || {})}
-                    />
-                  </ShakingTextField>
-                )}
-              </Grid>
-            ))}{' '}
-          </Grid>
+                    >
+                      <TextField
+                        key={field.name}
+                        type={field.type}
+                        size="small"
+                        label={field.label}
+                        name={field.name}
+                        disabled={!isEdit}
+                        placeholder={field.placeholder}
+                        value={formik.values[field.name as keyof typeof formik.values]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched[field.name as keyof typeof formik.values] &&
+                          Boolean(formik.errors[field.name as keyof typeof formik.values])
+                        }
+                        helperText={
+                          formik.touched[field.name as keyof typeof formik.values] &&
+                          formik.errors[field.name as keyof typeof formik.values]
+                            ? String(formik.errors[field.name as keyof typeof formik.values])
+                            : undefined
+                        }
+                        fullWidth
+                        sx={{ ...(field?.sx || {}) }}
+                        {...(field?.otherProps || {})}
+                      />
+                    </ShakingTextField>
+                  )}
+                </Grid>
+              ))}{' '}
+            </Grid>
+          </FormSlider>
           {/* </CardContent>
           </Card> */}
         </Card>

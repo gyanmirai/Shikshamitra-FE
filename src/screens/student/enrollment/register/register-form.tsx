@@ -1,3 +1,5 @@
+import type { BoxProps } from '@mui/material';
+
 import React, { useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -586,15 +588,18 @@ export const FormSlider = ({
   steps: allStep,
   children,
   isBackClick,
+  containerProps = {},
 }: {
   step: number;
   steps: any[];
   children?: any;
   isBackClick: boolean;
+  containerProps?: BoxProps;
 }) => {
+  const { sx = {}, ...props } = containerProps;
   const containerRef = React.useRef<HTMLElement>(null);
   return (
-    <Box ref={containerRef} sx={{ p: 2, height: '100%' }}>
+    <Box ref={containerRef} sx={{ p: 2, height: '100%', ...sx }} {...props}>
       {allStep.map(
         (_, index) =>
           index === step && (

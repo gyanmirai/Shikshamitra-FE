@@ -49,6 +49,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   maritalStatus: editData ? editData.maritalStatus : '',
   bloodGroup: editData ? editData.bloodGroup : '',
   mobileNo: editData ? editData.mobileNo : '',
+  secondaryMobileNo: editData ? editData?.secondaryMobileNo : '',
   email: editData ? editData.email : '',
   department: editData ? editData.department : '',
   designation: editData ? editData.designation : '',
@@ -156,8 +157,8 @@ export const workExperienceInitialValues = (editData: any) => ({
   experiences: editData
     ? editData.workExperiences.map((i: any) => ({
         ...i,
-        fromDate: dayjs(i.fromDate, 'YYYY-MM-DD'),
-        toDate: dayjs(i.toDate, 'YYYY-MM-DD'),
+        fromDate: i?.fromDate ? dayjs(i.fromDate, 'YYYY-MM-DD') : null,
+        toDate: i?.toDate ? dayjs(i.toDate, 'YYYY-MM-DD') : null,
       }))
     : [],
 });
@@ -471,6 +472,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           }
         }
+        if (isLastStep && !isSaveButton) {
+          shikshaMitraToast.success({
+            message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
+          });
+        }
         if (!isSaveButton && !isLastStep) {
           setActiveStep(activeStep + 1);
         }
@@ -493,7 +499,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleWorkExperience,
     ]
   );
-
+  console.log(validations[activeStep], '==================');
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}

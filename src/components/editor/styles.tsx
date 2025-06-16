@@ -19,7 +19,7 @@ type StyledRootProps = StackProps & {
 export const StyledRoot = styled(Stack, {
   shouldForwardProp: (prop) => prop !== 'error' && prop !== 'disabled' && prop !== 'fullScreen',
 })<StyledRootProps>(({ error, disabled, fullScreen, theme }) => ({
-  minHeight: 240,
+  // minHeight: 240,
   borderRadius: theme.shape.borderRadius,
   border: `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
   scrollbarWidth: 'thin',
@@ -69,6 +69,9 @@ export const StyledRoot = styled(Stack, {
   [`& .${editorClasses.content.root}`]: {
     display: 'flex',
     flex: '1 1 auto',
+    height: '100%',
+    minHeight: '150px',
+    maxHeight: '150px',
     overflowY: 'auto',
     flexDirection: 'column',
     borderBottomLeftRadius: 'inherit',
