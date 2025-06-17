@@ -1,21 +1,134 @@
 [
-    {
-      "id": 1,
-      "name": "Programming (CS-12)",
-      "progress": 60,
-      "completedChapter": 5,
-      "totalChapter": 8,
-      "color": "#0056D2",
-      "details": [
-        { "chapterName": "Introduction to Programming", "teacherName": "John Developer", "progress": 70, "pending": 30, "timeLine": "2024-10-05" },
-        { "chapterName": "Data Types & Variables", "teacherName": "John Developer", "progress": 60, "pending": 40, "timeLine": "2024-10-08" },
-        { "chapterName": "Control Structures", "teacherName": "Jane Code", "progress": 55, "pending": 45, "timeLine": "2024-10-10" },
-        { "chapterName": "Functions & Modules", "teacherName": "Jane Code", "progress": 50, "pending": 50, "timeLine": "2024-10-13" },
-        { "chapterName": "Arrays & Lists", "teacherName": "Jake Byte", "progress": 70, "pending": 30, "timeLine": "2024-10-16" },
-        { "chapterName": "OOP Basics", "teacherName": "Jake Byte", "progress": 40, "pending": 60, "timeLine": "2024-10-20" },
-        { "chapterName": "File Handling", "teacherName": "Lucy Logic", "progress": 30, "pending": 70, "timeLine": "2024-10-23" },
-        { "chapterName": "Error Handling", "teacherName": "Lucy Logic", "progress": 50, "pending": 50, "timeLine": "2024-10-25" }
-      ]
-    }   
-  ]
-  
+  {
+    "id": 1,
+    "name": "Math (MTH-12)",
+    "progress": 60,
+    "completedChapter": 5,
+    "totalChapter": 8,
+    "color": "#0056D2",
+    "details": [
+      {
+        "chapterName": "Numbers and Operations",
+        "teacherName": "John Smith",
+        "progress": 70,
+        "pending": 30,
+        "timeLine": "2024-10-05"
+      },
+      {
+        "chapterName": "Algebra Basics",
+        "teacherName": "John Smith",
+        "progress": 60,
+        "pending": 40,
+        "timeLine": "2024-10-08"
+      },
+      {
+        "chapterName": "Geometry",
+        "teacherName": "Jane Wilson",
+        "progress": 55,
+        "pending": 45,
+        "timeLine": "2024-10-10"
+      },
+      {
+        "chapterName": "Trigonometry",
+        "teacherName": "Jane Wilson",
+        "progress": 50,
+        "pending": 50,
+        "timeLine": "2024-10-13"
+      },
+      {
+        "chapterName": "Statistics",
+        "teacherName": "Jake Brown",
+        "progress": 70,
+        "pending": 30,
+        "timeLine": "2024-10-16"
+      },
+      {
+        "chapterName": "Probability",
+        "teacherName": "Jake Brown",
+        "progress": 40,
+        "pending": 60,
+        "timeLine": "2024-10-20"
+      },
+      {
+        "chapterName": "Linear Equations",
+        "teacherName": "Lucy Davis",
+        "progress": 30,
+        "pending": 70,
+        "timeLine": "2024-10-23"
+      },
+      {
+        "chapterName": "Quadratic Equations",
+        "teacherName": "Lucy Davis",
+        "progress": 50,
+        "pending": 50,
+        "timeLine": "2024-10-25"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Science (SCI-12)",
+    "progress": 55,
+    "completedChapter": 4,
+    "totalChapter": 8,
+    "color": "#28A745",
+    "details": [
+      {
+        "chapterName": "Physics Mechanics",
+        "teacherName": "Sarah Johnson",
+        "progress": 75,
+        "pending": 25,
+        "timeLine": "2024-10-07"
+      },
+      {
+        "chapterName": "Chemical Bonding",
+        "teacherName": "Sarah Johnson",
+        "progress": 65,
+        "pending": 35,
+        "timeLine": "2024-10-12"
+      },
+      {
+        "chapterName": "Cell Biology",
+        "teacherName": "Michael Chen",
+        "progress": 60,
+        "pending": 40,
+        "timeLine": "2024-10-15"
+      },
+      {
+        "chapterName": "Electricity",
+        "teacherName": "Michael Chen",
+        "progress": 45,
+        "pending": 55,
+        "timeLine": "2024-10-18"
+      },
+      {
+        "chapterName": "Organic Chemistry",
+        "teacherName": "Emily White",
+        "progress": 40,
+        "pending": 60,
+        "timeLine": "2024-10-21"
+      },
+      {
+        "chapterName": "Genetics",
+        "teacherName": "Emily White",
+        "progress": 35,
+        "pending": 65,
+        "timeLine": "2024-10-24"
+      },
+      {
+        "chapterName": "Wave Motion",
+        "teacherName": "Robert Taylor",
+        "progress": 30,
+        "pending": 70,
+        "timeLine": "2024-10-27"
+      },
+      {
+        "chapterName": "Environmental Science",
+        "teacherName": "Robert Taylor",
+        "progress": 25,
+        "pending": 75,
+        "timeLine": "2024-10-30"
+      }
+    ]
+  }
+]

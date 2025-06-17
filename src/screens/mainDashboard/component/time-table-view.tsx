@@ -32,21 +32,6 @@ const dummySubjects: any[] = [
     subjectColor: '#4ECDC4', // Teal
     subjects: [{ id: 2, name: 'Science' }],
   },
-  {
-    id: 3,
-    subjectColor: '#45B7D1', // Blue
-    subjects: [{ id: 3, name: 'English' }],
-  },
-  {
-    id: 4,
-    subjectColor: '#96CEB4', // Green
-    subjects: [{ id: 4, name: 'History' }],
-  },
-  {
-    id: 5,
-    subjectColor: '#FECA57', // Yellow
-    subjects: [{ id: 5, name: 'Geography' }],
-  },
 ];
 
 const dummyRooms = ['101', '102', '103', '104', '105'];
@@ -142,6 +127,7 @@ const TimeTableView = (props: TabComponentType) => {
       )
   );
 
+  console.log('🚀 ~ TimeTableView ~ timetable:', timetable);
   const handleDragStart = (e: any, subject: any) => {
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };

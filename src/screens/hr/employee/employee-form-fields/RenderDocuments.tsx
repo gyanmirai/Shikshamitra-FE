@@ -130,7 +130,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             label: 'Status',
             minWidth: '80px',
             align: 'left',
-            isSort: false,
+            isFilter: false,
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
             render(value, row) {
@@ -163,12 +163,19 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             render(value, row) {
               return (
                 <UploadButton
-                  style={{
+                  disableRipple
+                  disableElevation
+                  disableFocusRipple
+                  disableTouchRipple
+                  sx={{
                     textAlign: 'left',
                     marginLeft: '0px',
                     paddingLeft: '0px',
                     justifyContent: 'flex-start',
                     display: 'flex',
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
                   }}
                   onChange={async (e) => {
                     const file = e.target.files[0];
@@ -200,7 +207,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                         : uploadDocument({ id: employeeId, body: formData }),
                       {
                         loading: `Uploading Document ${row.documentName} `,
-                        success: () => `Upload Successfully!`,
+                        success: () => `${row.documentName} Uploaded Successfully!`,
                         error: 'Error',
                         closeButton: true,
                       }
@@ -226,7 +233,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                   style={{
                     textAlign: 'left',
                     marginLeft: '0px',
-                    paddingLeft: '0px',
+                    // paddingLeft: '0px',
                     justifyContent: 'flex-start',
                     display: 'flex',
                   }}

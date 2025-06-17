@@ -33,9 +33,9 @@ function FatherAddressComponent(props: any) {
               onChange={(e) => {
                 formik.setFieldValue('sameAsEmployeeAddressForFather', e.target.checked);
                 if (e.target.checked) {
-                  formik.setFieldValue('fatherAddress1', formik.values.address1);
-                  formik.setFieldValue('fatherAddress2', formik.values.address2);
-                  formik.setFieldValue('fatherAddress3', formik.values.address3);
+                  formik.setFieldValue('fatherAddress1', formik.values.addressLine1);
+                  formik.setFieldValue('fatherAddress2', formik.values.addressLine2);
+                  formik.setFieldValue('fatherAddress3', formik.values.addressLine3);
                   formik.setFieldValue('fatherCountry', formik.values.country);
                   formik.setFieldValue('fatherState', formik.values.state);
                   formik.setFieldValue('fatherCity', formik.values.city);
@@ -178,19 +178,19 @@ function MotherAddressComponent(props: any) {
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForMother', e.target.checked);
                 if (e.target.checked) {
-                  formik.setFieldValue('motherAddress1', formik.values.fatherAddress1);
-                  formik.setFieldValue('motherAddress2', formik.values.fatherAddress2);
-                  formik.setFieldValue('motherAddress3', formik.values.fatherAddress3);
-                  formik.setFieldValue('motherCountry', formik.values.fatherCountry);
-                  formik.setFieldValue('motherState', formik.values.fatherState);
-                  formik.setFieldValue('motherCity', formik.values.fatherCity);
-                  formik.setFieldValue('motherPinCode', formik.values.fatherPinCode);
+                  formik.setFieldValue('motherAddress1', formik.values.addressLine1);
+                  formik.setFieldValue('motherAddress2', formik.values.addressLine2);
+                  formik.setFieldValue('motherAddress3', formik.values.addressLine3);
+                  formik.setFieldValue('motherCountry', formik.values.country);
+                  formik.setFieldValue('motherState', formik.values.state);
+                  formik.setFieldValue('motherCity', formik.values.city);
+                  formik.setFieldValue('motherPinCode', formik.values.pincode);
                 }
               }}
               name="sameAsFatherAddressForMother"
             />
           }
-          label="Same as Father Address"
+          label="Same as Employee Address"
         />
       </Grid>
 
@@ -321,9 +321,9 @@ function SpouseAddressComponent(props: any) {
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
                 if (e.target.checked) {
-                  formik.setFieldValue('spouseAddress1', formik.values.address1);
-                  formik.setFieldValue('spouseAddress2', formik.values.address2);
-                  formik.setFieldValue('spouseAddress3', formik.values.address3);
+                  formik.setFieldValue('spouseAddress1', formik.values.addressLine1);
+                  formik.setFieldValue('spouseAddress2', formik.values.addressLine2);
+                  formik.setFieldValue('spouseAddress3', formik.values.addressLine3);
                   formik.setFieldValue('spouseCountry', formik.values.country);
                   formik.setFieldValue('spouseState', formik.values.state);
                   formik.setFieldValue('spouseCity', formik.values.city);

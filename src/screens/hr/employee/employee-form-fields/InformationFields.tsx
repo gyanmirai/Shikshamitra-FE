@@ -96,7 +96,7 @@ const InformationAllFields = ({ formik, disabled }: any) => (
               <TextField
                 fullWidth
                 size="small"
-                label="Middle Name *"
+                label="Middle Name"
                 {...formik.getFieldProps('middleName')}
                 name="middleName"
                 onChange={(e) => {
