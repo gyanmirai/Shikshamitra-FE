@@ -31,12 +31,12 @@ import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
 import SubjectDocument from './subjectDocument';
 
-import type { ISubject, IViewSubjectProps } from '../type';
+import type { ISubjectDetail, IViewSubjectProps } from '../type';
 
 // Interface for the tab panel props
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
-  subject?: ISubject;
+  subject?: ISubjectDetail;
 }
 
 const TABS = [
@@ -44,7 +44,7 @@ const TABS = [
     value: 'overview',
     label: 'Overview',
     icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubject }) => (
+    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail }) => (
       <SubjectOverview {...props} />
     ),
   },
@@ -52,7 +52,7 @@ const TABS = [
     value: 'syllabus',
     label: 'Syllabus',
     icon: <Iconify icon="solar:user-id-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubject }) => (
+    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail }) => (
       <SubjectSyllabus {...props} />
     ),
   },
@@ -60,7 +60,7 @@ const TABS = [
     value: 'documents',
     label: 'Documents',
     icon: <Iconify icon="solar:bill-list-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubject }) => (
+    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail }) => (
       <SubjectDocument {...props} />
     ),
   },
@@ -92,72 +92,38 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
   return (
     <Box sx={{ p: 2, height: '100%' }}>
       <Scrollbar sx={{ height: '600px' }}>
-        <Box sx={{ mb: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              mb: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography>
-                  <strong>Type : </strong>
-                </Typography>
-                <Typography mt={0.3}>{subject?.subjectType}</Typography>
-              </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
+            <Typography>
+              <strong>Class : </strong>
+            </Typography>
+            <Typography>{subject?.className}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography>
+              <strong>Type : </strong>
+            </Typography>
+            <Typography mt={0.3}>{subject?.subjectType}</Typography>
+          </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
-                <Typography>
-                  <strong>Class : </strong>
-                </Typography>
-                <Typography>{subject?.className}</Typography>
-              </Box>
-              <Label
-                variant="soft"
-                color={
-                  PublishUnpublishStatusTypeColors[
-                    subject?.status as PublishUnpublishStatusType
-                  ] as LabelColor
-                }
-                sx={
-                  {
-                    // p: 1.8,
-                    // fontSize: '1rem',
-                    // fontWeight: 500,
-                    // minWidth: '100px',
-                    // textAlign: 'center',
-                  }
-                }
-              >
-                {
-                  PublishUnpublishStatusType[
-                    subject?.status as PublishUnpublishStatusType
-                  ] as string
-                }
-              </Label>
-              {/* <Label
-                      label={`Status : ${subject?.status === 1 ? 'Draft' : 'Published'}`}
-                      variant="outlined"
-                      sx={{
-                        fontSize: '0.9rem',
-                        color:
-                          PublishUnpublishStatusTypeColors[
-                            subject?.status as PublishUnpublishStatusType
-                          ],
-                        borderColor:
-                          PublishUnpublishStatusTypeColors[
-                            subject?.status as PublishUnpublishStatusType
-                          ],
-                      }}
-                    /> */}
-            </Box>
+          <Box sx={{ display: 'flex', flex: 1, justifyContent: 'flex-end', mt: 0.3 }}>
+            <Label
+              variant="soft"
+              color={
+                PublishUnpublishStatusTypeColors[
+                  subject?.status as PublishUnpublishStatusType
+                ] as LabelColor
+              }
+              sx={{
+                ml: 'auto',
+              }}
+            >
+              {PublishUnpublishStatusType[subject?.status as PublishUnpublishStatusType] as string}
+            </Label>
           </Box>
         </Box>
 
-        <Box sx={{ borderColor: 'divider', mb: 2 }}>
+        <Box sx={{ borderColor: 'divider' }}>
           {subject?.subjects?.map((sub, index) => (
             <Accordion
               key={sub.subjectCode}

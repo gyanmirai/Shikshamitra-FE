@@ -101,10 +101,10 @@ const AssignTeacher = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Class Teacher"
+        heading="Class Teacher Assignment"
         links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Assign Class Teacher', href: 'academic/assignTeacher' },
+          { name: 'Class Management', href: '/classManagement/dashboard' },
+          { name: 'Class Teacher Assignment' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -120,21 +120,13 @@ const AssignTeacher = () => {
         onChange={(val) => {
           // formik.setFieldValue('organization', val);
         }}
-        formControlProps={{ sx: { maxWidth: '460px', width: '100%' } }}
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
       />
 
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
-        searchFieldProps={{
-          placeholder: 'Search by Class, Division, Assigned Teacher...',
-          label: 'Search by Class, Division, Assigned Teacher...',
-          sx: {
-            maxWidth: '450px',
-            width: '100%',
-          },
-        }}
         noDataText={<>No Division Data Found Search By Organization and Class</>}
         columns={[
           // {

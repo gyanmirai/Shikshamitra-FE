@@ -9,12 +9,12 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
   division: editData?.division || [],
   subjects: editData?.subjects || '',
   rubric: '',
-  submissionType: editData?.submissionType || 'online_text',
+  submissionType: editData?.submissionType || 0,
   // dueDate: dayjs(editData?.dueDate) || null,
   attachments: editData?.attachments || [],
-  startDate: dayjs(editData?.startDate) || null,
-  endDate: dayjs(editData?.endDate) || null,
-  createdBy: editData?.createdBy || '',
+  startDate: editData?.startDate ? dayjs(editData.startDate) : dayjs(),
+  endDate: editData?.endDate ? dayjs(editData.endDate) : null,
+  createdBy: editData?.createdBy || {},
   status: editData?.status || 0,
 
   // Assignment specific fields

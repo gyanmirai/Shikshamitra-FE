@@ -9,19 +9,20 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomDialog from 'src/components/customDialog';
 
-import { subjectGroups } from '../newTimetable';
 import CreateNoOfLecture from '../../settings/components/weeklyLectures/createWeeklyLectures';
+
+import type { Subject } from '../type';
 
 interface SubjectListProps {
   onDragStart: (e: any, subject: any) => void;
-  remainingLectures: any;
+  subjectsGroups: any;
 }
 
-const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLectures }) => {
+const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }) => {
   const weeklyLecturesDialog = useBoolean();
   return (
     <Stack spacing={1}>
-      {subjectGroups.map((subject) => (
+      {subjectsGroups.map((subject: any) => (
         <Paper
           key={subject.id}
           elevation={1}
@@ -43,14 +44,14 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, remainingLecture
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {subject.subjects.map((sub) => (
+              {subject.subjects.map((sub: Subject) => (
                 <Typography variant="body2" fontWeight="bold">
-                  {sub.name}
+                  {sub.subject}
                 </Typography>
               ))}
             </Box>
             <Typography variant="body2" fontWeight="bold">
-              ({remainingLectures[subject.id]} / {subject.noOfLecture})
+              ({subject.allocateLectures} / {subject.totalLectures})
             </Typography>
           </Box>
         </Paper>

@@ -3,14 +3,16 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
@@ -106,7 +108,24 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
           addElectiveGroupDialog.onFalse();
           setSelected(null);
         }}
-        title={selected ? 'Update Elective Group' : 'Add Elective Group'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selected ? 'Update Elective Group' : 'Add Elective Group'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selected
+                  ? 'You can update the elective group details including title, subjects and other information'
+                  : 'You can create a new elective group by entering the group title, subjects and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <SettingElectiveSubjectForm
           open={addElectiveGroupDialog}
@@ -131,9 +150,11 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               // handle delete
               deleteDialog.onFalse();
+              setSelected(null);
               shikshaMitraToast.success({
                 message: `Subject ${selected?.title} deleted successfully`,
               });

@@ -3,13 +3,16 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import HomeworkTypeForm from './homeworkTypeForm';
@@ -90,7 +93,24 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
           addHomeworkTypeDialog.onFalse();
           setSelectedData(null);
         }}
-        title={selectedData ? 'Update Homework Type' : 'Add Homework Type'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedData ? 'Update Homework Type' : 'Add Homework Type'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedData
+                  ? 'You can update the homework type details including name and other information'
+                  : 'You can create a new homework type by entering the name and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <HomeworkTypeForm
           open={addHomeworkTypeDialog}
@@ -115,9 +135,17 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
         action={
           <Button
             variant="contained"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              deleteDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Homeowork Type : ${selectedData?.homeworkTypeName} deleted successfullly`,
+              });
+
+              setSelectedData(null);
+            }}
           >
             Yes
           </Button>

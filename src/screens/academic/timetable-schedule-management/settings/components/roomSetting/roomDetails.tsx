@@ -130,14 +130,6 @@ const RoomDetails = ({ addRoomDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
-        searchFieldProps={{
-          placeholder: 'Search by Room Number, Building Name, Floor...',
-          label: 'Search by Room Number, Building Name, Floor...',
-          sx: {
-            width: '100%',
-            maxWidth: '400px',
-          },
-        }}
         noDataText={
           <>
             No Rooms Data Found{' '}
@@ -166,7 +158,8 @@ const RoomDetails = ({ addRoomDialog }: any) => {
           { id: 'capacity', label: 'Capacity', filterType: 'number' },
           {
             id: 'actions',
-            label: 'Actions',
+            label: 'Action',
+            align: 'left',
             isSort: false,
             isFilter: false,
             minWidth: '50px',

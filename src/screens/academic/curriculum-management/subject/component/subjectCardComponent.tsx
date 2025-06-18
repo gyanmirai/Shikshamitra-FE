@@ -1,5 +1,5 @@
 import { getIn } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -32,7 +32,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { Upload, SingleFilePreview } from 'src/components/upload';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
-import type { ITeacherOption, ISubjectCardProps } from './type';
+import type { TeacherProfile, ISubjectCardProps } from './type';
 
 const SubjectCard: React.FC<ISubjectCardProps> = ({
   formik,
@@ -69,6 +69,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   const handleChange = (field: string, value: any) => {
     onSubjectChange(subject.id, field, value);
   };
+
+  useEffect(() => {
+    setIsExpanded(subject.isSubjectOpen || false);
+  }, [subject.id, subject.isSubjectOpen]);
 
   // Get validation error for a specific field
   // @param field - The field name to check for errors
@@ -132,9 +136,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             {!isExpanded && subject.subjectCode && (
               <Chip label={`Code : ${subject.subjectCode}`} size="small" variant="outlined" />
             )}
-            {!isExpanded && subject.primaryTeacher && (
+            {!isExpanded && subject.primaryTeacher?.name && (
               <Chip
-                label={`Primary Teacher : ${subject.primaryTeacher}`}
+                label={`Primary Teacher : ${subject.primaryTeacher?.name}`}
                 size="small"
                 variant="outlined"
               />
@@ -155,7 +159,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   onChange={(e) => {
                     const rawValue = e.target.value;
                     const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''); // removes special chars except dash and underscore
-                    handleChange('subjectCode', uppercaseValue);
+                    formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
+
+                    // handleChange('subjectCode', uppercaseValue);
                   }}
                   // onChange={(e) => handleChange('subjectCode', e.target.value)}
                   disabled={isPublished}
@@ -168,24 +174,22 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             <Grid item xs={12} md={4}>
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
-                  options={teacherOptions.filter(
-                    (teacher: ITeacherOption) =>
-                      !(subject.secondaryTeacher || []).includes(teacher.value)
-                  )}
-                  getOptionLabel={(option: ITeacherOption) => option.label}
-                  value={
-                    subject.primaryTeacher
-                      ? teacherOptions.find(
-                          (opt: ITeacherOption) => opt.value === subject.primaryTeacher
-                        ) || null
-                      : null
+                  options={
+                    teacherOptions?.filter(
+                      (option) =>
+                        !subject.secondaryTeacher?.some(
+                          (secondary: any) => secondary.id === option.id
+                        )
+                    ) || []
                   }
-                  onChange={(event, newValue: ITeacherOption | null) =>
-                    handleChange('primaryTeacher', newValue?.value || '')
+                  getOptionLabel={(option: any) => option.name || ''}
+                  value={subject.primaryTeacher}
+                  onChange={(event, newValue) =>
+                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue)
                   }
                   disabled={isPublished}
-                  isOptionEqualToValue={(option, value) => option.value === value.value}
-                  renderOption={(props, option) => <li {...props}>{option.label}</li>}
+                  // isOptionEqualToValue={(option, value) => option.value === value.value}
+                  renderOption={(props, option: any) => <li {...props}>{option.name || ''}</li>}
                   renderTags={(value: any) => {
                     if (!value) return null;
                     return (
@@ -217,21 +221,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
                   multiple
-                  options={teacherOptions.filter(
-                    (teacher: ITeacherOption) => teacher.value !== subject.primaryTeacher
-                  )}
-                  disableCloseOnSelect
-                  getOptionLabel={(option) => option.label}
-                  value={teacherOptions.filter((opt: ITeacherOption) =>
-                    (subject.secondaryTeacher || []).includes(opt.value)
-                  )}
-                  onChange={(event, newValue) =>
-                    handleChange(
-                      'secondaryTeacher',
-                      newValue.map((item) => item.value)
-                    )
+                  options={
+                    teacherOptions?.filter((option) => subject.primaryTeacher?.id !== option.id) ||
+                    []
                   }
-                  isOptionEqualToValue={(option, value) => option.value === value.value}
+                  disableCloseOnSelect
+                  getOptionLabel={(option) => option.name || ''}
+                  value={subject.secondaryTeacher || []}
+                  onChange={(event, newValue) =>
+                    formik.setFieldValue(`subjects.${index}.secondaryTeacher`, newValue)
+                  }
+                  // isOptionEqualToValue={(option, value) => option.value === value.value}
                   renderOption={(props, option, { selected }) => (
                     <li {...props}>
                       <Checkbox
@@ -240,7 +240,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         style={{ marginRight: 8 }}
                         checked={selected}
                       />
-                      {option.label}
+                      {option.name}
                     </li>
                   )}
                   renderTags={(value) => {
@@ -249,9 +249,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     const remainingCount = value.length - 1;
                     return [
                       <Chip
-                        key={first.value}
-                        avatar={<Avatar>{first.label.charAt(0)}</Avatar>}
-                        label={first.label}
+                        key={first.name}
+                        avatar={<Avatar>{first?.name?.charAt(0)}</Avatar>}
+                        label={first.name}
                         sx={{ ml: 1 }}
                         size="small"
                         variant="soft"
@@ -387,7 +387,7 @@ export const TeacherListPopover = ({
   teachers,
   count,
 }: {
-  teachers: ITeacherOption[];
+  teachers: TeacherProfile[];
   count: number;
 }) => (
   <CustomTooltip
@@ -395,11 +395,11 @@ export const TeacherListPopover = ({
       <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
         {teachers.map((teacher) => (
           <Chip
-            key={teacher.value}
+            key={teacher.name}
             variant="soft"
-            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher.label.charAt(0)}</Avatar>}
-            label={teacher.label}
-            sx={{ mb: 1 }}
+            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.name?.charAt(0)}</Avatar>}
+            label={teacher.name}
+            sx={{ ml: 0.5, height: 24, fontSize: 12, mb: 1 }}
             size="small"
           />
         ))}
@@ -408,6 +408,11 @@ export const TeacherListPopover = ({
     placement="bottom-start"
     arrow
   >
-    <Chip label={`+${count}`} sx={{ ml: 0.5, cursor: 'pointer' }} size="small" variant="soft" />
+    <Chip
+      label={`+${count}`}
+      sx={{ ml: 0.5, height: 24, fontSize: 12, cursor: 'pointer' }}
+      size="small"
+      variant="soft"
+    />
   </CustomTooltip>
 );

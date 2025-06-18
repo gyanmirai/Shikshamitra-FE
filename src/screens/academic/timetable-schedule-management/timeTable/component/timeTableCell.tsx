@@ -25,21 +25,22 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import AssignRoom from './assignRoomDialog';
 import AssignTeacher from './assignTeacherDialog';
 
-import type { TSubject } from '../type';
-import type { ITimeTableCellProps } from './type';
-
 const TimeTableCell = ({
   timeSlot,
   day,
   slotData,
   isBreak,
-  selectedRoom,
   onDrop,
+  rowIndex,
+  colIndex,
+  item,
   onTeacherSelect,
   onRoomSelect,
   onDeleteSlot,
   isThreeDots = true,
-}: ITimeTableCellProps) => {
+}: any) => {
+  console.log('slotData----', slotData);
+
   /**
    * Dialog state hooks for managing teacher and room assignment dialogs
    */
@@ -59,9 +60,9 @@ const TimeTableCell = ({
    * @param e - The drag over event object
    */
   const handleDragOver = (e: any) => {
-    if (!isBreak && !slotData) {
-      e.preventDefault();
-    }
+    // if (!isBreak && !slotData) {
+    e.preventDefault();
+    // }
   };
 
   /**
@@ -71,9 +72,9 @@ const TimeTableCell = ({
    * @param e - The drop event object
    */
   const handleDrop = (e: any) => {
-    if (!isBreak && !slotData) {
+    if (!isBreak && (!slotData || !slotData.subjects?.length)) {
       e.preventDefault();
-      onDrop(e, timeSlot, day);
+      onDrop(e, item, rowIndex, colIndex);
     }
   };
 
@@ -84,19 +85,11 @@ const TimeTableCell = ({
    * @param e - The drag start event object
    */
   const handleDragStart = (e: any) => {
-    if (!isBreak && slotData) {
-      e.dataTransfer.setData('subject', JSON.stringify(slotData.subject));
-      e.dataTransfer.setData('sourceTimeSlot', timeSlot);
-      e.dataTransfer.setData('sourceDay', day);
+    if (!isBreak && slotData?.subjects?.length) {
+      e.dataTransfer.setData('subject', JSON.stringify(slotData));
+      e.dataTransfer.setData('rowIndex', rowIndex.toString());
+      e.dataTransfer.setData('colIndex', colIndex.toString());
     }
-  };
-
-  /**
-   * Handles the delete confirmation and calls onDeleteSlot if confirmed
-   */
-  const handleDelete = () => {
-    onDeleteSlot(timeSlot, day);
-    deleteDialog.onFalse();
   };
 
   /**
@@ -107,6 +100,7 @@ const TimeTableCell = ({
   if (isBreak) {
     return (
       <TableCell
+        colSpan={6}
         sx={{
           bgcolor: 'grey.100',
           width: '14%',
@@ -125,23 +119,25 @@ const TimeTableCell = ({
       sx={{
         height: 90,
         width: '14%',
-        '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
+        // '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
+
+        // '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
         padding: '4px',
         cursor: slotData ? 'grab' : 'default',
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      draggable={!!slotData}
+      draggable={!!slotData?.subjects?.length}
       onDragStart={handleDragStart}
     >
-      {slotData && (
+      {slotData?.subjects?.length ? (
         <>
           <Paper
             elevation={0}
             sx={{
               p: 1,
               height: '90%',
-              bgcolor: alpha(slotData?.subject.subjectColor, 0.2),
+              bgcolor: alpha(slotData?.subjectColor, 0.2),
               position: 'relative',
               '& .action-menu': {
                 opacity: 0,
@@ -161,7 +157,7 @@ const TimeTableCell = ({
               }}
             >
               <Typography variant="subtitle2" fontWeight="medium">
-                {slotData.subject.subjects.map((sub: TSubject) => sub.name).join(', ')}
+                {slotData.subjects.map((sub: any) => sub.subject).join('/')}
               </Typography>
               <Box className="action-menu">
                 {isThreeDots && (
@@ -223,10 +219,18 @@ const TimeTableCell = ({
                 )}
               </Box>
             </Box>
-            <Typography variant="caption" color="text.secondary">
-              {slotData.room ? slotData.room : 'No Room'}
-              {slotData.teacher ? ` / ${slotData.teacher}` : ''}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="caption" color="text.secondary">
+                {slotData?.subjects?.length
+                  ? slotData.subjects.map((sub: any) => sub?.room || 'No Room').join('/')
+                  : 'No Room'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {slotData?.subjects?.length
+                  ? slotData.subjects.map((sub: any) => sub?.teacher || 'No Teacher').join('/')
+                  : 'No Teacher'}
+              </Typography>
+            </Box>
           </Paper>
 
           <CustomDialog
@@ -236,10 +240,10 @@ const TimeTableCell = ({
             maxWidth="sm"
           >
             <AssignTeacher
-              slotData={slotData.subject}
+              slotData={slotData}
               teacherDialog={teacherDialog}
               onTeacherSelect={(value) => {
-                onTeacherSelect(value, timeSlot, day);
+                onTeacherSelect(value, rowIndex, colIndex);
                 teacherDialog.onFalse();
               }}
             />
@@ -253,10 +257,9 @@ const TimeTableCell = ({
           >
             <AssignRoom
               roomDialog={roomDialog}
-              slotData={slotData.subject}
-              selectedRoom={selectedRoom}
+              slotData={slotData}
               onRoomSelect={(value) => {
-                onRoomSelect(value, timeSlot, day);
+                onRoomSelect(value, rowIndex, colIndex);
                 roomDialog.onFalse();
               }}
             />
@@ -273,7 +276,10 @@ const TimeTableCell = ({
               <Button
                 variant="contained"
                 color="error"
-                onClick={() => {}}
+                onClick={() => {
+                  onDeleteSlot(rowIndex, colIndex);
+                  deleteDialog.onFalse();
+                }}
                 // startIcon={<Iconify icon={GlobalIcons.delete} />}
               >
                 Yes
@@ -281,7 +287,7 @@ const TimeTableCell = ({
             }
           />
         </>
-      )}
+      ) : null}
     </TableCell>
   );
 };

@@ -10,14 +10,6 @@ import type { IAssignmentType, IAssignmentTypeTableProps } from './type';
 const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({ data, onDelete, onEdit }) => (
   <CustomizableTable
     tableId="assignment-type-data-table"
-    searchFieldProps={{
-      placeholder: 'Search by Assignment Type Name...',
-      label: 'Search by Assignment Type Name...',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
     noDataText="No Assignment Type Data Found"
     columns={[
       {

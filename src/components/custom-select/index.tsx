@@ -94,6 +94,7 @@ const CustomSelect = <T extends string, J extends boolean>({
                     <Chip
                       key={val}
                       size="small"
+                      variant="soft"
                       label={options.find((option) => option[valueKey] === val)?.[labelKey]}
                       onDelete={() => handleDelete(val)}
                       onMouseDown={(event) => {

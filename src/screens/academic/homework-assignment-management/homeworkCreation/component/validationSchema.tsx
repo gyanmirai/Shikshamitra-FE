@@ -2,12 +2,12 @@ import * as Yup from 'yup';
 
 export const getValidationSchema = (view: string) =>
   Yup.object().shape({
-    title: Yup.string().required('Title is required'),
+    title: Yup.string().required('Homework Title is required'),
     description: Yup.string().required('Description is required'),
     class: Yup.string().required('Class is required'),
     division: Yup.array().min(1, 'At least one division is required'),
-    subjects: Yup.array().min(1, 'At least one subject is required'),
-    submissionType: Yup.string().required('Submission type is required'),
+    subject: Yup.string().required('Subject is required'),
+    submissionType: Yup.number().required('Submission type is required'),
 
     // Homework-specific validations
     ...(view === 'homework' && {

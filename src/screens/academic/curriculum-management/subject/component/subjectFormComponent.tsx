@@ -19,6 +19,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -28,7 +29,7 @@ import { getSubjectInitialValues } from './initialValues';
 import SettingSubjectForm from '../../setting/subjectCreation/subjectForm';
 import SettingElectiveSubjectForm from '../../setting/electiveSubjectSetting/components/electiveSubjectForm';
 
-import type { ITeacherOption, ISubjectFormProps, ISubjectFormValues } from './type';
+import type { TeacherProfile, ISubjectFormProps, ISubjectFormValues } from './type';
 
 // Enhanced subject options with Core and Elective groups
 const subjectOptions = [
@@ -59,167 +60,216 @@ const subjectOptions = [
   },
 ];
 
-const teacherOptions: ITeacherOption[] = [
-  // Existing entries
+const teacherProfiles: TeacherProfile[] = [
   {
-    value: 'Sharma Riya Kumar',
-    label: 'Sharma Riya Kumar',
+    id: 1,
+    name: 'Sharma Riya Kumar',
+    avatarUrl: 'https://yourcdn.com/riya.png',
+    designation: 'Senior Mathematics Teacher',
     department: 'Mathematics Department',
-    avatar: 'https://yourcdn.com/riya.png',
+    class: '8',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'riya.sharma@example.com',
+    experience: '10 years',
+    qualification: 'M.Sc. Mathematics, B.Ed',
+    subjects: ['Algebra', 'Geometry'],
   },
   {
-    value: 'Patel Ankit Rajesh',
-    label: 'Patel Ankit Rajesh',
+    id: 2,
+    name: 'Patel Ankit Rajesh',
+    avatarUrl: 'https://yourcdn.com/ankit.png',
+    designation: 'Science Teacher',
     department: 'Science Department',
-    avatar: 'https://yourcdn.com/ankit.png',
+    class: '9',
+    division: 'B',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'ankit.patel@example.com',
+    experience: '7 years',
+    qualification: 'M.Sc. Physics, B.Ed',
+    subjects: ['Physics', 'Chemistry'],
   },
   {
-    value: 'Desai Priya Mahesh',
-    label: 'Desai Priya Mahesh',
+    id: 3,
+    name: 'Desai Priya Mahesh',
+    avatarUrl: 'https://yourcdn.com/priya.png',
+    designation: 'English Lecturer',
     department: 'English Department',
-    avatar: 'https://yourcdn.com/priya.png',
+    class: '10',
+    division: 'C',
+    status: 'Active',
+    dailyStatus: 'On Leave',
+    email: 'priya.desai@example.com',
+    experience: '5 years',
+    qualification: 'M.A. English, B.Ed',
+    subjects: ['Literature', 'Grammar'],
   },
   {
-    value: 'Singh Rahul Vikram',
-    label: 'Singh Rahul Vikram',
+    id: 4,
+    name: 'Singh Rahul Vikram',
+    avatarUrl: 'https://yourcdn.com/rahul.png',
+    designation: 'History Teacher',
     department: 'Social Studies Department',
-    avatar: 'https://yourcdn.com/rahul.png',
+    class: '7',
+    division: 'B',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'rahul.singh@example.com',
+    experience: '8 years',
+    qualification: 'M.A. History, B.Ed',
+    subjects: ['History', 'Civics'],
   },
   {
-    value: 'Mehta Neha Suresh',
-    label: 'Mehta Neha Suresh',
+    id: 5,
+    name: 'Mehta Neha Suresh',
+    avatarUrl: 'https://yourcdn.com/neha.png',
+    designation: 'Hindi Teacher',
     department: 'Hindi Department',
-    avatar: 'https://yourcdn.com/neha.png',
+    class: '6',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'neha.mehta@example.com',
+    experience: '6 years',
+    qualification: 'M.A. Hindi, B.Ed',
+    subjects: ['Hindi'],
   },
-
-  // New entries from your list:
   {
-    value: 'Atre Harshita Bhanudas',
-    label: 'Atre Harshita Bhanudas',
+    id: 6,
+    name: 'Atre Harshita Bhanudas',
+    avatarUrl: 'https://yourcdn.com/harshita.png',
+    designation: 'Subject Coordinator',
     department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/harshita.png',
+    class: '10',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'harshita.atre@example.com',
+    experience: '9 years',
+    qualification: 'M.Ed, B.Sc',
+    subjects: ['Mathematics', 'Physics'],
   },
   {
-    value: 'Patel Priyanka Ramesh',
-    label: 'Patel Priyanka Ramesh',
+    id: 7,
+    name: 'Patel Priyanka Ramesh',
+    avatarUrl: 'https://yourcdn.com/priyanka.png',
+    designation: 'Science Teacher',
     department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/priyanka.png',
+    class: '8',
+    division: 'C',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'priyanka.patel@example.com',
+    experience: '6 years',
+    qualification: 'M.Sc Biology, B.Ed',
+    subjects: ['Biology'],
   },
   {
-    value: 'Kumar Ankit Mahesh',
-    label: 'Kumar Ankit Mahesh',
+    id: 8,
+    name: 'Kumar Ankit Mahesh',
+    avatarUrl: 'https://yourcdn.com/ankitk.png',
+    designation: 'Secondary Teacher',
     department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/ankitk.png',
+    class: '7',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'ankit.kumar@example.com',
+    experience: '4 years',
+    qualification: 'B.Sc, B.Ed',
+    subjects: ['Science'],
   },
   {
-    value: 'Johnson Robert Alan',
-    label: 'Johnson Robert Alan',
+    id: 9,
+    name: 'Johnson Robert Alan',
+    avatarUrl: 'https://yourcdn.com/robert.png',
+    designation: 'English Teacher',
     department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/robert.png',
+    class: '6',
+    division: 'C',
+    status: 'Active',
+    dailyStatus: 'On Leave',
+    email: 'robert.johnson@example.com',
+    experience: '11 years',
+    qualification: 'M.Ed, M.A. English',
+    subjects: ['English Literature'],
   },
   {
-    value: 'Williams Thomas James',
-    label: 'Williams Thomas James',
+    id: 10,
+    name: 'Ahir Dharmik Ganesh',
+    avatarUrl: 'https://yourcdn.com/dharmik.png',
+    designation: 'Computer Teacher',
     department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/thomas.png',
+    class: '9',
+    division: 'B',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'dharmik.ahir@example.com',
+    experience: '3 years',
+    qualification: 'MCA, B.Ed',
+    subjects: ['Computer Science'],
   },
   {
-    value: 'Anderson Michael David',
-    label: 'Anderson Michael David',
-    department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/michael.png',
-  },
-  {
-    value: 'Ahir Dharmik Ganesh',
-    label: 'Ahir Dharmik Ganesh',
-    department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/dharmik.png',
-  },
-  {
-    value: 'Ahir Jignesh Ganesh',
-    label: 'Ahir Jignesh Ganesh',
-    department: 'Secondary Department',
-    avatar: 'https://yourcdn.com/jignesh.png',
-  },
-  {
-    value: 'Patel Robert Taylor',
-    label: 'Patel Robert Taylor',
+    id: 11,
+    name: 'Atre Prerna Bhanudas',
+    avatarUrl: 'https://yourcdn.com/prerna.png',
+    designation: 'Primary Class Teacher',
     department: 'Primary Department',
-    avatar: 'https://yourcdn.com/robertt.png',
-  },
-
-  // The remaining single names (no secondaryTeacher arrays):
-  {
-    value: 'Atre Prerna Bhanudas',
-    label: 'Atre Prerna Bhanudas',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/prerna.png',
-  },
-  {
-    value: 'Badgujar Sweta Ramesh',
-    label: 'Badgujar Sweta Ramesh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/sweta.png',
+    class: '2',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'prerna.atre@example.com',
+    experience: '4 years',
+    qualification: 'B.Ed, D.El.Ed',
+    subjects: ['All Subjects'],
   },
   {
-    value: 'Sharma Anita Hitesh',
-    label: 'Sharma Anita Hitesh',
+    id: 12,
+    name: 'Vadher Yagnik Jethabhai',
+    avatarUrl: 'https://yourcdn.com/yagnik.png',
+    designation: 'Primary Teacher',
     department: 'Primary Department',
-    avatar: 'https://yourcdn.com/anita.png',
+    class: '3',
+    division: 'B',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'yagnik.vadher@example.com',
+    experience: '2 years',
+    qualification: 'B.Ed',
+    subjects: ['EVS', 'Gujarati'],
   },
   {
-    value: 'Patel Sunita Hitesh',
-    label: 'Patel Sunita Hitesh',
+    id: 13,
+    name: 'Trivedi Amit Jignesh',
+    avatarUrl: 'https://yourcdn.com/amit.png',
+    designation: 'Primary Science Teacher',
     department: 'Primary Department',
-    avatar: 'https://yourcdn.com/sunita.png',
+    class: '4',
+    division: 'C',
+    status: 'Active',
+    dailyStatus: 'On Duty',
+    email: 'amit.trivedi@example.com',
+    experience: '5 years',
+    qualification: 'B.Sc, B.Ed',
+    subjects: ['Science'],
   },
   {
-    value: 'Vadher Yagnik Jethabhai',
-    label: 'Vadher Yagnik Jethabhai',
+    id: 14,
+    name: 'Mehta Kavita Mahesh',
+    avatarUrl: 'https://yourcdn.com/kavita.png',
+    designation: 'Art & Craft Teacher',
     department: 'Primary Department',
-    avatar: 'https://yourcdn.com/yagnik.png',
-  },
-  {
-    value: 'Patel Ramesh Santosh',
-    label: 'Patel Ramesh Santosh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/ramesh.png',
-  },
-  {
-    value: 'Patel Kajal Vikas',
-    label: 'Patel Kajal Vikas',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/kajal.png',
-  },
-  {
-    value: 'Joshi Bhavesh Ramesh',
-    label: 'Joshi Bhavesh Ramesh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/bhavesh.png',
-  },
-  {
-    value: 'Vyas Harsh Suresh',
-    label: 'Vyas Harsh Suresh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/harshv.png',
-  },
-  {
-    value: 'Desai Sunita Darshan',
-    label: 'Desai Sunita Darshan',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/sunited.png',
-  },
-  {
-    value: 'Trivedi Amit Jignesh',
-    label: 'Trivedi Amit Jignesh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/amit.png',
-  },
-  {
-    value: 'Mehta Kavita Mahesh',
-    label: 'Mehta Kavita Mahesh',
-    department: 'Primary Department',
-    avatar: 'https://yourcdn.com/kavita.png',
+    class: '1',
+    division: 'A',
+    status: 'Active',
+    dailyStatus: 'Present',
+    email: 'kavita.mehta@example.com',
+    experience: '3 years',
+    qualification: 'Diploma in Fine Arts',
+    subjects: ['Art', 'Craft'],
   },
 ];
 
@@ -248,8 +298,17 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       const submitData = {
         ...values,
         id: data?.id || Date.now(),
-        status: isDraft ? 'Unpublish' : 'Publish',
+        status: isDraft ? 'Draft' : 'Publish',
       };
+      if (isDraft) {
+        shikshaMitraToast.success({
+          message: `${values.subjectName} Draft Successfully to Class ${selectedClass}`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `${values.subjectName} Published Successfully to Class ${selectedClass}`,
+        });
+      }
 
       // Pass the data to the parent component's handler
       // onSubmit(submitData);
@@ -325,10 +384,10 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         subjectName: newValue.value,
         className: formik.values.className || '',
         subjectCode: '',
-        primaryTeacher: '',
+        primaryTeacher: {},
         secondaryTeacher: [],
         description: '',
-        isExpanded: true,
+        isSubjectOpen: true,
         learningGoal: '',
         prerequisites: '',
         subjectColor: newValue.subjectColor,
@@ -345,8 +404,9 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         subjectName: subject.name,
         className: formik.values.className || '',
         subjectCode: '',
-        primaryTeacher: '',
+        primaryTeacher: {},
         secondaryTeacher: [],
+        isSubjectOpen: true,
         description: '',
         learningGoal: '',
         prerequisites: '',
@@ -369,7 +429,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
-  console.log('formik-values----', formik.values);
+  console.log('formik.values-----', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -387,7 +447,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     label="Class *"
                     value={formik.values.className || selectedClass}
                     labelKey="name"
-                    valueKey="id"
+                    valueKey="name"
                     // placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
@@ -516,7 +576,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       subject={subject}
                       isCore={formik.values.subjectType === 'Core'}
                       isPublished={isPublished}
-                      teacherOptions={teacherOptions}
+                      teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}
                     />
                   ))}

@@ -20,37 +20,15 @@ const data = [
   },
 ];
 
-const AssignRoom: React.FC<IAssignRoomProps> = ({
-  roomDialog,
-  selectedRoom,
-  slotData,
-  onRoomSelect,
-}) => {
-  // State to store the selected room value, initialized with selectedRoom prop or empty string
-  const [room, setRoom] = useState<string>(selectedRoom || '');
-  console.log('slotData', slotData);
-
-  // State to store and manage the table data, initialized with default subject data
-  const [tableData, setTableData] = useState(data);
+const AssignRoom: React.FC<IAssignRoomProps> = ({ roomDialog, slotData, onRoomSelect }) => {
+  // State to store and manage the table data, initialized with slotData subjects
+  const [tableData, setTableData] = useState(slotData.subjects);
 
   /**
-   * Handles form submission by calling onRoomSelect callback with selected room value
+   * Handles form submission by calling onRoomSelect callback with updated table data
    */
   const handleSubmit = () => {
-    onRoomSelect(room);
-  };
-
-  /**
-   * Updates the teacher assignment for a specific subject in the table data
-   * @param subjectName - The name of the subject to update
-   * @param newTeacherId - The ID of the newly assigned teacher
-   */
-  const handleTeacherChange = (subjectName: string, newTeacherId: any) => {
-    setTableData((prev) =>
-      prev.map((row) =>
-        row.subjectName === subjectName ? { ...row, teacherName: newTeacherId } : row
-      )
-    );
+    onRoomSelect({ ...slotData, subjects: tableData });
   };
 
   return (
@@ -63,71 +41,47 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
             isPagination={false}
             isSearch={false}
             noDataText={<>No Bulk Update Data Found </>}
-            searchFieldProps={{
-              placeholder: 'Search by Sr. No, GR No, Name',
-              label: 'Search by Sr. No, GR No, Name',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             columns={[
               {
-                id: 'subjectName',
-                label: 'Subject Name',
+                id: 'subject',
+                label: 'Subject',
                 minWidth: '200px',
                 align: 'left',
                 isFilter: false,
               },
               {
-                id: 'classRoom',
+                id: 'room',
                 label: 'Class Room',
                 isSort: false,
                 minWidth: '200px',
                 align: 'left',
                 isFilter: false,
-                // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
-                // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
                 render: (value, row: any) => (
                   <CustomSelect
                     label="Class Room"
                     labelKey="name"
                     valueKey="id"
                     options={[
-                      { id: '1', name: 'Room 101' },
-                      { id: '2', name: 'Room 102' },
-                      { id: '3', name: 'Room 103' },
-                      { id: '4', name: 'Room 104' },
-                      { id: '5', name: 'Room 105' },
+                      { id: '101', name: 'Room 101' },
+                      { id: '102', name: 'Room 102' },
+                      { id: '103', name: 'Room 103' },
+                      { id: '104', name: 'Room 104' },
+                      { id: '105', name: 'Room 105' },
                     ]}
-                    value={row.teacherName}
-                    onChange={(val) => handleTeacherChange(row.subjectName, val)}
+                    value={row.room || ''}
+                    onChange={(val) => {
+                      setTableData((prev: any) =>
+                        prev.map((subject: any) =>
+                          subject.subject === row.subject ? { ...subject, room: val } : subject
+                        )
+                      );
+                    }}
                     formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
                   />
                 ),
-
-                // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
               },
             ]}
-            data={
-              slotData.subjects.length > 1
-                ? [
-                    {
-                      subjectName: 'English',
-                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
-                    },
-                    {
-                      subjectName: 'Hindi',
-                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
-                    },
-                  ]
-                : [
-                    {
-                      subjectName: 'Math',
-                      classRoom: '', // You can map this to a default teacher ID or leave it blank for selection
-                    },
-                  ]
-            }
+            data={tableData}
           />
         </Scrollbar>
         <DialogActions>
@@ -135,6 +89,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
             onClick={() => {
               roomDialog.onFalse();
             }}
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
           >
@@ -143,6 +98,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
           <Button
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={handleSubmit}
+            size="small"
             variant="contained"
           >
             Save

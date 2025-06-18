@@ -1,6 +1,8 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import type { TeacherProfile } from '../../curriculum-management/subject/component/type';
+
 export interface UploadedFile {
   name: string;
   size: number;
@@ -16,9 +18,9 @@ export interface IHomework {
   subject: string;
   chapters: string[];
   homeworkType: string;
-  submissionType: string;
+  submissionType: number;
   attachments?: File[];
-  createdBy: string;
+  createdBy: TeacherProfile;
   status: number;
   // isDailyTask: boolean;
   startDate: Dayjs | null | string;
@@ -52,7 +54,6 @@ export interface IAssignGradeProps {
  */
 export interface IHomeWorkCreationFormProps {
   classes: string;
-  division: string;
   subject: string;
   dialog: UseBooleanReturn;
   onClose: (e: any, isSubmit: boolean) => void;

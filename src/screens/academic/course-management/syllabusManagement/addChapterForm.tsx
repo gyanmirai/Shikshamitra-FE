@@ -16,6 +16,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { fileData } from 'src/components/file-thumbnail';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Upload, SingleFilePreview } from 'src/components/upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -57,11 +58,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     onSubmit: (values) => {
       onSubmit({
         ...values,
-        startTime: values.startTime,
-        endTime: values.endTime,
-        timeLine: values.timeLine,
+        startDate: values.startDate,
+        endDate: values.endDate,
         // documents,
       });
+      shikshaMitraToast.success({ message: 'Chapter added successfully !' });
       onClose(null, true);
     },
   });
@@ -141,7 +142,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     // placeholder="Enter Chapter Name"
                     name="chapterName"
                     value={formik.values.chapterName}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .split(' ')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                      formik.setFieldValue('chapterName', value);
+                    }}
                     size="small"
                     error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
                     helperText={formik.touched.chapterName && formik.errors.chapterName}
@@ -151,14 +158,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               {/* Start Time DatePicker */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+                  error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                 >
                   <DatePicker
                     label="Chapter Start Date *"
                     format="DD/MM/YYYY"
-                    value={formik.values.startTime}
+                    value={formik.values.startDate}
                     onChange={(newValue) => {
-                      formik.setFieldValue('startTime', newValue);
+                      formik.setFieldValue('startDate', newValue);
                     }}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
@@ -166,8 +173,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         fullWidth: true,
                         size: 'small',
                         // placeholder: 'Select Start Date',
-                        helperText: formik.touched.startTime && (formik.errors.startTime as string),
-                        error: formik.touched.startTime && Boolean(formik.errors.startTime),
+                        helperText: formik.touched.startDate && (formik.errors.startDate as string),
+                        error: formik.touched.startDate && Boolean(formik.errors.startDate),
                       },
                     }}
                   />
@@ -177,22 +184,22 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               {/* End Time DatePicker */}
               <Grid item xs={12} md={6}>
                 <ShakingTextField
-                  error={!!(formik.touched.endTime && formik.errors.endTime) || false}
+                  error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                 >
                   <DatePicker
                     label="Chapter End Date *"
                     format="DD/MM/YYYY"
-                    value={formik.values.endTime}
+                    value={formik.values.endDate}
                     onChange={(newValue) => {
-                      formik.setFieldValue('endTime', newValue);
+                      formik.setFieldValue('endDate', newValue);
                     }}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {
                         size: 'small',
                         // placeholder: 'Select End Date',
-                        error: !!(formik.touched.endTime && formik.errors.endTime) || false,
-                        helperText: formik.touched.endTime && formik.errors.endTime,
+                        error: !!(formik.touched.endDate && formik.errors.endDate) || false,
+                        helperText: formik.touched.endDate && formik.errors.endDate,
                       },
                     }}
                   />

@@ -16,7 +16,6 @@ import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesT
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -25,7 +24,6 @@ import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
 
 import type { ICreateNoOfLectureProps } from './type';
-import type { TSubject } from '../../../timeTable/type';
 
 const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, disabled }) => {
   // State to store all classes/standards for the selected organization
@@ -112,7 +110,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                       label: 'Subjects',
                       render: (value) => (
                         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                          {value.map((subject: TSubject) => (
+                          {value.map((subject: any) => (
                             <Chip
                               key={subject.name}
                               label={subject.name}
@@ -150,17 +148,27 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               onClick={() => {
                 onClose?.(null, false);
               }}
+              size="small"
               variant="outlined"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
               Cancel
             </Button>
-            <SubmitButton disabled={disabled} />
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              type="submit"
+              size="small"
+              variant="contained"
+            >
+              Submit
+              {/* {isEdit ? 'Update' : 'Submit'} */}
+            </Button>
+            {/* <SubmitButton size="small" disabled={disabled} /> */}
           </DialogActions>
         </form>
       </Box>

@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
-import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
@@ -193,17 +192,17 @@ const CourseProgress = (props: TabComponentType) => {
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterName', label: 'Chapter Name', align: 'left' },
-
               {
-                id: 'timeLine',
-                label: 'Deadline',
+                id: 'startDate',
+                label: 'Start Date',
                 align: 'left',
                 filterType: 'date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD-MM-YYYY')}
-                  </Typography>
-                ),
+              },
+              {
+                id: 'timeLine',
+                label: 'End Date',
+                align: 'left',
+                filterType: 'date',
               },
               {
                 id: 'progress',
