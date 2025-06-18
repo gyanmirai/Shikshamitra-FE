@@ -7,6 +7,7 @@ import {
   Grid,
   Card,
   Chip,
+  Badge,
   Avatar,
   Divider,
   ListItem,
@@ -16,6 +17,7 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
+import { SubmissionType } from 'src/enums/submission_type';
 import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
 import {
   PublishUnpublishStatusType,
@@ -35,19 +37,6 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
       <Grid item xs={12} md={8}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ p: 2 }}>
-            <Typography
-              variant="subtitle1"
-              gutterBottom
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <Iconify
-                icon="mdi:information-outline"
-                sx={{ mr: 1, height: '22px', width: '22px' }}
-              />
-              Homework Details
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
             <DetailRow label="Title" value={homework?.title} icon="mdi:bookmark-outline" />
             <DetailRow
               label="Description"
@@ -58,9 +47,9 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
             <DetailRow label="Class" value={homework?.class} icon="mdi:school-outline" />
 
             {/* Divisions */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Iconify icon="mdi:account-group-outline" />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Iconify icon="mdi:account-group-outline" sx={{ mt: 0.4 }} />
                 <Typography variant="subtitle2">Divisions</Typography>
               </Box>
               <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
@@ -77,9 +66,9 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
             </Box>
 
             {/* Chapters */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1, mb: 1 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Iconify icon="mdi:book-multiple-outline" />
+                <Iconify icon="mdi:book-multiple-outline" sx={{ mt: 0.4 }} />
                 <Typography variant="subtitle2">Chapters</Typography>
               </Box>
               <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
@@ -102,14 +91,14 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
             />
             <DetailRow
               label="Submission Type"
-              value={homework?.submissionType}
+              value={SubmissionType[homework.submissionType]}
               icon="mdi:upload"
               color="error"
               sx={{ backgroundColor: '#FFEBEE' }}
             />
 
             {/* Status with color */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, gap: 0.5 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Iconify icon="mdi:information" />
                 <Typography variant="subtitle2">Status</Typography>
@@ -160,7 +149,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
                 <Iconify icon="mdi:clock-outline" sx={{ mr: 1, height: '22px', width: '22px' }} />
                 Timeline & Dates
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 1 }} />
 
               {/* Due Date */}
               <Box sx={{ mb: 2 }}>
@@ -219,73 +208,68 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => (
 
               <Box sx={{ mb: 2 }}>
                 <ListItem
-                  disablePadding
                   sx={{
-                    backgroundColor: 'background.paper',
                     borderRadius: '8px',
                     p: 1,
-                    boxShadow: 2,
-                    my: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    boxShadow: 3,
+                    // mb: 1,
                   }}
                 >
                   <ListItemAvatar>
                     <TeacherHoverProfile
                       avatarComp={
-                        <Avatar
-                          src={homework?.createdBy}
-                          alt={homework?.createdBy}
-                          sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                        />
+                        <Badge
+                          key={homework?.createdBy?.status}
+                          overlap="circular"
+                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                          badgeContent={
+                            <Box
+                              sx={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: '50%',
+                                border: '2px solid #fff',
+                                bgcolor:
+                                  homework?.createdBy?.status === 'Active'
+                                    ? 'success.main'
+                                    : homework?.createdBy?.status === 'Inactive'
+                                      ? 'warning.main'
+                                      : homework?.createdBy?.status === 'Left'
+                                        ? 'error.main'
+                                        : homework?.createdBy?.status === 'Retired'
+                                          ? 'grey.500'
+                                          : 'grey.300',
+                              }}
+                            />
+                          }
+                        >
+                          <Avatar
+                            src={homework?.createdBy?.name}
+                            alt={homework?.createdBy?.name}
+                            sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                          />
+                        </Badge>
                       }
                       teacher={{
-                        name: homework?.createdBy,
-                        designation: 'Senior Teacher',
-                        department: 'CSE',
-                        class: '10',
-                        division: 'A',
-                        email: 'aisha.sharma@example.com',
-                        experience: '12 Years',
-                        qualification: 'M.Tech (CSE)',
-                        subjects: ['Mathematics', 'Physics'],
-                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                        name: homework?.createdBy?.name,
+                        avatarUrl: homework?.createdBy?.avatarUrl,
+                        designation: homework?.createdBy?.designation,
+                        department: homework?.createdBy?.department,
+                        class: homework?.createdBy?.class,
+                        status: homework?.createdBy?.status,
+                        division: homework?.createdBy?.division,
+                        dailyStatus: homework?.createdBy?.dailyStatus,
+                        email: homework?.createdBy?.email,
+                        experience: homework?.createdBy?.experience,
+                        qualification: homework?.createdBy?.qualification,
+                        subjects: homework?.createdBy?.subjects,
                       }}
                     />
-                    {/* <UserHoverProfile
-                      avatarComp={
-                        <Avatar
-                          sx={{
-                            bgcolor: 'primary.main',
-                            width: 36,
-                            height: 36,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {homework?.createdBy
-                            ?.split(' ')
-                            .map((n) => n[0])
-                            .join('') || 'T'}
-                        </Avatar>
-                      }
-                      user={{
-                        name: homework?.createdBy || 'Teacher',
-                        avatarUrl: '/assets/images/avatars/avatar_1.jpg',
-                        role: 'Teacher',
-                        email: 'teacher@example.com',
-                        class: homework?.class,
-                        division: homework?.division?.join(', '),
-                        board: 'CBSE',
-                        medium: 'English',
-                        organization: 'Higher Secondary',
-                      }}
-                    /> */}
                   </ListItemAvatar>
                   <ListItemText
-                    primary={<Typography variant="subtitle2">{homework?.createdBy}</Typography>}
-                    secondary={
-                      <Typography variant="caption" color="text.secondary">
-                        Teacher
-                      </Typography>
-                    }
+                    primary={<Typography variant="body2">{homework?.createdBy?.name}</Typography>}
                   />
                 </ListItem>
               </Box>

@@ -42,10 +42,13 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addWeeklyLectureDialog.onFalse();
       dispatch(setIsChanges(false));
+      setIsEdit(false);
     }
     // Close dialog if no unsaved changes
     else if (!isChanges) {
       addWeeklyLectureDialog.onFalse();
+      dispatch(setIsChanges(false));
+      setIsEdit(false);
     }
   };
 
@@ -63,14 +66,6 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
-        searchFieldProps={{
-          placeholder: 'Search by Class, Total Lectures...',
-          label: 'Search by Class, Total Lectures...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Create Number Of Lectures Found{' '}
@@ -100,6 +95,7 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
             label: 'Actions',
             minWidth: 70,
             sticky: true,
+            align: 'left',
             isSort: false,
             isFilter: false,
             render(value, row) {
@@ -150,8 +146,11 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
       <CustomDialog
         title={isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
         open={addWeeklyLectureDialog.value}
-        handleClose={addWeeklyLectureDialog.onFalse}
-        maxWidth="md"
+        handleClose={() => {
+          addWeeklyLectureDialog.onFalse();
+          setIsEdit(false);
+        }}
+        maxWidth="sm"
       >
         <CreateNoOfLecture
           // onSave={handleSave}
@@ -167,7 +166,7 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
         title="View Number of Lectures"
         open={viewWeeklyLecturesDialog.value}
         handleClose={viewWeeklyLecturesDialog.onFalse}
-        maxWidth="md"
+        maxWidth="sm"
       >
         <CreateNoOfLecture
           disabled={disabled}

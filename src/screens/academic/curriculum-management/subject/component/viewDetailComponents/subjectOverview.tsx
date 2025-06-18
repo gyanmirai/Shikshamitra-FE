@@ -5,6 +5,7 @@ import {
   Grid,
   Card,
   Chip,
+  Badge,
   Avatar,
   Divider,
   ListItem,
@@ -19,9 +20,9 @@ import { DetailRow } from 'src/screens/communication/announcement/components/det
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 
-import type { ISubject } from '../type';
+import type { ISubjectDetail } from '../type';
 
-const SubjectOverview = ({ subject }: { subject: ISubject }) => (
+const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%' }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={8}>
@@ -88,28 +89,58 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                     <ListItemAvatar>
                       <TeacherHoverProfile
                         avatarComp={
-                          <Avatar
-                            src={subject?.primaryTeacher}
-                            alt={subject?.primaryTeacher}
-                            sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                          />
+                          <Badge
+                            key={subject?.primaryTeacher?.status}
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  border: '2px solid #fff',
+                                  bgcolor:
+                                    subject?.primaryTeacher?.status === 'Active'
+                                      ? 'success.main'
+                                      : subject?.primaryTeacher?.status === 'Inactive'
+                                        ? 'warning.main'
+                                        : subject?.primaryTeacher?.status === 'Left'
+                                          ? 'error.main'
+                                          : subject?.primaryTeacher?.status === 'Retired'
+                                            ? 'grey.500'
+                                            : 'grey.300',
+                                }}
+                              />
+                            }
+                          >
+                            <Avatar
+                              src={subject.primaryTeacher.name}
+                              alt={subject.primaryTeacher.name}
+                              sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                            />
+                          </Badge>
                         }
                         teacher={{
-                          name: subject?.primaryTeacher,
-                          designation: 'Senior Teacher',
-                          department: 'CSE',
-                          class: '10',
-                          division: 'A',
-                          email: 'aisha.sharma@example.com',
-                          experience: '12 Years',
-                          qualification: 'M.Tech (CSE)',
-                          subjects: ['Mathematics', 'Physics'],
-                          avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                          name: subject?.primaryTeacher?.name,
+                          avatarUrl: subject?.primaryTeacher?.avatarUrl,
+                          designation: subject?.primaryTeacher?.designation,
+                          department: subject?.primaryTeacher?.department,
+                          class: subject?.primaryTeacher?.class,
+                          status: subject?.primaryTeacher?.status,
+                          division: subject?.primaryTeacher?.division,
+                          dailyStatus: subject?.primaryTeacher?.dailyStatus,
+                          email: subject?.primaryTeacher?.email,
+                          experience: subject?.primaryTeacher?.experience,
+                          qualification: subject?.primaryTeacher?.qualification,
+                          subjects: subject?.primaryTeacher?.subjects,
                         }}
                       />
                     </ListItemAvatar>
                     <ListItemText
-                      primary={<Typography variant="body2">{subject?.primaryTeacher}</Typography>}
+                      primary={
+                        <Typography variant="body2">{subject?.primaryTeacher?.name}</Typography>
+                      }
                     />
                   </ListItem>
                 </Box>
@@ -121,7 +152,7 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
               </Typography>
 
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
-                subject?.secondaryTeacher.map((teacher: string, idx: number) => (
+                subject?.secondaryTeacher.map((teacher: TeacherProfile, idx: number) => (
                   <ListItem
                     key={idx}
                     // disablePadding
@@ -137,27 +168,57 @@ const SubjectOverview = ({ subject }: { subject: ISubject }) => (
                     <ListItemAvatar>
                       <TeacherHoverProfile
                         avatarComp={
-                          <Avatar
-                            src={teacher}
-                            alt={teacher}
-                            sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                          />
+                          <Badge
+                            key={teacher.status}
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  border: '2px solid #fff',
+                                  bgcolor:
+                                    teacher.status === 'Active'
+                                      ? 'success.main'
+                                      : teacher.status === 'Inactive'
+                                        ? 'warning.main'
+                                        : teacher.status === 'Left'
+                                          ? 'error.main'
+                                          : teacher.status === 'Retired'
+                                            ? 'grey.500'
+                                            : 'grey.300',
+                                }}
+                              />
+                            }
+                          >
+                            <Avatar
+                              src={teacher.name}
+                              alt={teacher.name}
+                              sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                            />
+                          </Badge>
                         }
                         teacher={{
-                          name: teacher,
-                          designation: 'Senior Teacher',
-                          department: 'CSE',
-                          class: '10',
-                          division: 'A',
-                          email: 'aisha.sharma@example.com',
-                          experience: '12 Years',
-                          qualification: 'M.Tech (CSE)',
-                          subjects: ['Mathematics', 'Physics'],
-                          avatarUrl: '/assets/images/avatars/avatar_1.jpg',
+                          name: teacher.name,
+                          avatarUrl: teacher.avatarUrl,
+                          designation: teacher.designation,
+                          department: teacher.department,
+                          class: teacher.class,
+                          status: teacher.status,
+                          division: teacher.division,
+                          dailyStatus: teacher.dailyStatus,
+                          email: teacher.email,
+                          experience: teacher.experience,
+                          qualification: teacher.qualification,
+                          subjects: teacher.subjects,
                         }}
                       />
                     </ListItemAvatar>
-                    <ListItemText primary={<Typography variant="body2">{teacher}</Typography>} />
+                    <ListItemText
+                      primary={<Typography variant="body2">{teacher.name}</Typography>}
+                    />
                   </ListItem>
                 ))
               ) : (
@@ -181,7 +242,9 @@ interface TeacherProfile {
   designation?: string;
   department?: string;
   class?: string;
+  status?: string;
   division?: string;
+  dailyStatus?: string;
   email?: string;
   experience?: string;
   qualification?: string;
@@ -201,7 +264,51 @@ export const TeacherHoverProfile: React.FC<{
         {/* Add padding and min width for better layout */}
         {/* Header: Avatar + Name */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-          <Avatar src={teacher.avatarUrl} alt={teacher.name} sx={{ width: 56, height: 56 }} />
+          <Badge
+            key={teacher.status}
+            overlap="circular"
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            badgeContent={
+              <CustomTooltip
+                title={
+                  <Typography variant="caption">
+                    {teacher.status === 'Active'
+                      ? 'Active'
+                      : teacher.status === 'Inactive'
+                        ? 'Inactive'
+                        : teacher.status === 'Left'
+                          ? 'Left'
+                          : teacher.status === 'Retired'
+                            ? 'Retired'
+                            : 'Unknown Status'}
+                  </Typography>
+                }
+                arrow
+              >
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    border: '2px solid #fff',
+                    bgcolor:
+                      teacher.status === 'Active'
+                        ? 'success.main'
+                        : teacher.status === 'Inactive'
+                          ? 'warning.main'
+                          : teacher.status === 'Left'
+                            ? 'error.main'
+                            : teacher.status === 'Retired'
+                              ? 'grey.500'
+                              : 'grey.300',
+                    cursor: 'pointer',
+                  }}
+                />
+              </CustomTooltip>
+            }
+          >
+            <Avatar src={teacher.avatarUrl} alt={teacher.name} sx={{ width: 56, height: 56 }} />
+          </Badge>
           <Box>
             <Typography variant="subtitle1" color="text.primary">
               {teacher.name}
@@ -241,7 +348,7 @@ export const TeacherHoverProfile: React.FC<{
               size="small"
               color="success"
               variant="outlined"
-              sx={{ height: 20, fontSize: '0.75rem', mt: 0.5 }}
+              sx={{ height: 20, fontSize: '0.75rem' }}
             />
           </Box>
 

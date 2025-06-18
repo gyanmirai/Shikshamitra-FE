@@ -1,20 +1,20 @@
 [
   {
     "id": 1,
-    "name": "Programming (CS-12)",
+    "name": "Programming (CS-12)", 
     "progress": 60,
     "completedChapter": 5,
     "totalChapter": 8,
     "color": "#0056D2",
     "details": [
-      { "chapterName": "Introduction to Programming", "teacherName": "John Developer", "progress": 70, "pending": 30, "timeLine": "2024-10-05" },
-      { "chapterName": "Data Types & Variables", "teacherName": "John Developer", "progress": 60, "pending": 40, "timeLine": "2024-10-08" },
-      { "chapterName": "Control Structures", "teacherName": "Jane Code", "progress": 55, "pending": 45, "timeLine": "2024-10-10" },
-      { "chapterName": "Functions & Modules", "teacherName": "Jane Code", "progress": 50, "pending": 50, "timeLine": "2024-10-13" },
-      { "chapterName": "Arrays & Lists", "teacherName": "Jake Byte", "progress": 70, "pending": 30, "timeLine": "2024-10-16" },
-      { "chapterName": "OOP Basics", "teacherName": "Jake Byte", "progress": 40, "pending": 60, "timeLine": "2024-10-20" },
-      { "chapterName": "File Handling", "teacherName": "Lucy Logic", "progress": 30, "pending": 70, "timeLine": "2024-10-23" },
-      { "chapterName": "Error Handling", "teacherName": "Lucy Logic", "progress": 50, "pending": 50, "timeLine": "2024-10-25" }
+      { "chapterName": "Introduction to Programming", "teacherName": "John Developer", "progress": 70, "pending": 30, "timeLine": "05-10-2024", "startDate": "05-09-2024" },
+      { "chapterName": "Data Types & Variables", "teacherName": "John Developer", "progress": 60, "pending": 40, "timeLine": "08-10-2024", "startDate": "08-09-2024" },
+      { "chapterName": "Control Structures", "teacherName": "Jane Code", "progress": 55, "pending": 45, "timeLine": "10-10-2024", "startDate": "10-09-2024" },
+      { "chapterName": "Functions & Modules", "teacherName": "Jane Code", "progress": 50, "pending": 50, "timeLine": "13-10-2024", "startDate": "13-09-2024" },
+      { "chapterName": "Arrays & Lists", "teacherName": "Jake Byte", "progress": 70, "pending": 30, "timeLine": "16-10-2024", "startDate": "16-09-2024" },
+      { "chapterName": "OOP Basics", "teacherName": "Jake Byte", "progress": 40, "pending": 60, "timeLine": "20-10-2024", "startDate": "20-09-2024" },
+      { "chapterName": "File Handling", "teacherName": "Lucy Logic", "progress": 30, "pending": 70, "timeLine": "23-10-2024", "startDate": "23-09-2024" },
+      { "chapterName": "Error Handling", "teacherName": "Lucy Logic", "progress": 50, "pending": 50, "timeLine": "25-10-2024", "startDate": "25-09-2024" }
     ]
   },
   {
@@ -25,13 +25,13 @@
     "totalChapter": 7,
     "color": "#E77DC1",
     "details": [
-      { "chapterName": "Fitness Introduction", "teacherName": "Coach Sam", "progress": 90, "pending": 10, "timeLine": "2024-09-01" },
-      { "chapterName": "Yoga & Meditation", "teacherName": "Coach Sam", "progress": 85, "pending": 15, "timeLine": "2024-09-05" },
-      { "chapterName": "Endurance Training", "teacherName": "Coach Leo", "progress": 75, "pending": 25, "timeLine": "2024-09-09" },
-      { "chapterName": "Strength Building", "teacherName": "Coach Leo", "progress": 60, "pending": 40, "timeLine": "2024-09-12" },
-      { "chapterName": "Flexibility", "teacherName": "Coach Ana", "progress": 70, "pending": 30, "timeLine": "2024-09-15" },
-      { "chapterName": "Team Sports", "teacherName": "Coach Ana", "progress": 95, "pending": 5, "timeLine": "2024-09-18" },
-      { "chapterName": "Diet & Nutrition", "teacherName": "Coach Ana", "progress": 60, "pending": 40, "timeLine": "2024-09-20" }
+      { "chapterName": "Fitness Introduction", "teacherName": "Coach Sam", "progress": 90, "pending": 10, "timeLine": "01-09-2024", "startDate": "01-08-2024" },
+      { "chapterName": "Yoga & Meditation", "teacherName": "Coach Sam", "progress": 85, "pending": 15, "timeLine": "05-09-2024", "startDate": "05-08-2024" },
+      { "chapterName": "Endurance Training", "teacherName": "Coach Leo", "progress": 75, "pending": 25, "timeLine": "09-09-2024", "startDate": "09-08-2024" },
+      { "chapterName": "Strength Building", "teacherName": "Coach Leo", "progress": 60, "pending": 40, "timeLine": "12-09-2024", "startDate": "12-08-2024" },
+      { "chapterName": "Flexibility", "teacherName": "Coach Ana", "progress": 70, "pending": 30, "timeLine": "15-09-2024", "startDate": "15-08-2024" },
+      { "chapterName": "Team Sports", "teacherName": "Coach Ana", "progress": 95, "pending": 5, "timeLine": "18-09-2024", "startDate": "18-08-2024" },
+      { "chapterName": "Diet & Nutrition", "teacherName": "Coach Ana", "progress": 60, "pending": 40, "timeLine": "20-09-2024", "startDate": "20-08-2024" }
     ]
   },
   {
@@ -42,14 +42,14 @@
     "totalChapter": 8,
     "color": "#E74C3C",
     "details": [
-      { "chapterName": "काव्य परिचय", "teacherName": "श्री. शर्मा", "progress": 70, "pending": 30, "timeLine": "2024-08-10" },
-      { "chapterName": "निबंध लेखन", "teacherName": "श्री. शर्मा", "progress": 60, "pending": 40, "timeLine": "2024-08-12" },
-      { "chapterName": "पत्र लेखन", "teacherName": "श्रीमती रेखा", "progress": 55, "pending": 45, "timeLine": "2024-08-14" },
-      { "chapterName": "कहानी: ‘दो बैलों की कथा’", "teacherName": "श्रीमती रेखा", "progress": 80, "pending": 20, "timeLine": "2024-08-16" },
-      { "chapterName": "व्याकरण भाग", "teacherName": "श्री. राज", "progress": 50, "pending": 50, "timeLine": "2024-08-18" },
-      { "chapterName": "संधि व समास", "teacherName": "श्री. राज", "progress": 70, "pending": 30, "timeLine": "2024-08-20" },
-      { "chapterName": "मुहावरे व लोकोक्तियाँ", "teacherName": "श्री. राज", "progress": 60, "pending": 40, "timeLine": "2024-08-22" },
-      { "chapterName": "पुनरावृत्ति", "teacherName": "श्री. राज", "progress": 30, "pending": 70, "timeLine": "2024-08-24" }
+      { "chapterName": "काव्य परिचय", "teacherName": "श्री. शर्मा", "progress": 70, "pending": 30, "timeLine": "10-08-2024", "startDate": "10-07-2024" },
+      { "chapterName": "निबंध लेखन", "teacherName": "श्री. शर्मा", "progress": 60, "pending": 40, "timeLine": "12-08-2024", "startDate": "12-07-2024" },
+      { "chapterName": "पत्र लेखन", "teacherName": "श्रीमती रेखा", "progress": 55, "pending": 45, "timeLine": "14-08-2024", "startDate": "14-07-2024" },
+      { "chapterName": "कहानी: 'दो बैलों की कथा'", "teacherName": "श्रीमती रेखा", "progress": 80, "pending": 20, "timeLine": "16-08-2024", "startDate": "16-07-2024" },
+      { "chapterName": "व्याकरण भाग", "teacherName": "श्री. राज", "progress": 50, "pending": 50, "timeLine": "18-08-2024", "startDate": "18-07-2024" },
+      { "chapterName": "संधि व समास", "teacherName": "श्री. राज", "progress": 70, "pending": 30, "timeLine": "20-08-2024", "startDate": "20-07-2024" },
+      { "chapterName": "मुहावरे व लोकोक्तियाँ", "teacherName": "श्री. राज", "progress": 60, "pending": 40, "timeLine": "22-08-2024", "startDate": "22-07-2024" },
+      { "chapterName": "पुनरावृत्ति", "teacherName": "श्री. राज", "progress": 30, "pending": 70, "timeLine": "24-08-2024", "startDate": "24-07-2024" }
     ]
   },
   {
@@ -60,14 +60,14 @@
     "totalChapter": 8,
     "color": "#D9A066",
     "details": [
-      { "chapterName": "Number Systems", "teacherName": "Mr. Kumar", "progress": 80, "pending": 20, "timeLine": "2024-09-10" },
-      { "chapterName": "Linear Equations", "teacherName": "Ms. Meera", "progress": 75, "pending": 25, "timeLine": "2024-09-12" },
-      { "chapterName": "Polynomials", "teacherName": "Mr. Singh", "progress": 60, "pending": 40, "timeLine": "2024-09-14" },
-      { "chapterName": "Coordinate Geometry", "teacherName": "Ms. Meera", "progress": 70, "pending": 30, "timeLine": "2024-09-16" },
-      { "chapterName": "Trigonometry", "teacherName": "Mr. Arjun", "progress": 65, "pending": 35, "timeLine": "2024-09-18" },
-      { "chapterName": "Mensuration", "teacherName": "Mr. Arjun", "progress": 85, "pending": 15, "timeLine": "2024-09-20" },
-      { "chapterName": "Statistics", "teacherName": "Mr. Arjun", "progress": 90, "pending": 10, "timeLine": "2024-09-22" },
-      { "chapterName": "Probability", "teacherName": "Ms. Meera", "progress": 50, "pending": 50, "timeLine": "2024-09-24" }
+      { "chapterName": "Number Systems", "teacherName": "Mr. Kumar", "progress": 80, "pending": 20, "timeLine": "10-09-2024", "startDate": "10-08-2024" },
+      { "chapterName": "Linear Equations", "teacherName": "Ms. Meera", "progress": 75, "pending": 25, "timeLine": "12-09-2024", "startDate": "12-08-2024" },
+      { "chapterName": "Polynomials", "teacherName": "Mr. Singh", "progress": 60, "pending": 40, "timeLine": "14-09-2024", "startDate": "14-08-2024" },
+      { "chapterName": "Coordinate Geometry", "teacherName": "Ms. Meera", "progress": 70, "pending": 30, "timeLine": "16-09-2024", "startDate": "16-08-2024" },
+      { "chapterName": "Trigonometry", "teacherName": "Mr. Arjun", "progress": 65, "pending": 35, "timeLine": "18-09-2024", "startDate": "18-08-2024" },
+      { "chapterName": "Mensuration", "teacherName": "Mr. Arjun", "progress": 85, "pending": 15, "timeLine": "20-09-2024", "startDate": "20-08-2024" },
+      { "chapterName": "Statistics", "teacherName": "Mr. Arjun", "progress": 90, "pending": 10, "timeLine": "22-09-2024", "startDate": "22-08-2024" },
+      { "chapterName": "Probability", "teacherName": "Ms. Meera", "progress": 50, "pending": 50, "timeLine": "24-09-2024", "startDate": "24-08-2024" }
     ]
   },
   {
@@ -78,14 +78,14 @@
     "totalChapter": 8,
     "color": "#00C9A7",
     "details": [
-      { "chapterName": "Matter and Its Properties", "teacherName": "Dr. Patel", "progress": 90, "pending": 10, "timeLine": "2024-08-10" },
-      { "chapterName": "Laws of Motion", "teacherName": "Mr. Rao", "progress": 85, "pending": 15, "timeLine": "2024-08-13" },
-      { "chapterName": "Acids, Bases and Salts", "teacherName": "Ms. Iyer", "progress": 70, "pending": 30, "timeLine": "2024-08-16" },
-      { "chapterName": "Electricity", "teacherName": "Mr. Rao", "progress": 60, "pending": 40, "timeLine": "2024-08-19" },
-      { "chapterName": "Life Processes", "teacherName": "Dr. Patel", "progress": 95, "pending": 5, "timeLine": "2024-08-21" },
-      { "chapterName": "Light: Reflection & Refraction", "teacherName": "Ms. Iyer", "progress": 75, "pending": 25, "timeLine": "2024-08-24" },
-      { "chapterName": "Carbon Compounds", "teacherName": "Ms. Iyer", "progress": 65, "pending": 35, "timeLine": "2024-08-27" },
-      { "chapterName": "Environmental Chemistry", "teacherName": "Mr. Rao", "progress": 50, "pending": 50, "timeLine": "2024-08-30" }
+      { "chapterName": "Matter and Its Properties", "teacherName": "Dr. Patel", "progress": 90, "pending": 10, "timeLine": "10-08-2024", "startDate": "10-07-2024" },
+      { "chapterName": "Laws of Motion", "teacherName": "Mr. Rao", "progress": 85, "pending": 15, "timeLine": "13-08-2024", "startDate": "13-07-2024" },
+      { "chapterName": "Acids, Bases and Salts", "teacherName": "Ms. Iyer", "progress": 70, "pending": 30, "timeLine": "16-08-2024", "startDate": "16-07-2024" },
+      { "chapterName": "Electricity", "teacherName": "Mr. Rao", "progress": 60, "pending": 40, "timeLine": "19-08-2024", "startDate": "19-07-2024" },
+      { "chapterName": "Life Processes", "teacherName": "Dr. Patel", "progress": 95, "pending": 5, "timeLine": "21-08-2024", "startDate": "21-07-2024" },
+      { "chapterName": "Light: Reflection & Refraction", "teacherName": "Ms. Iyer", "progress": 75, "pending": 25, "timeLine": "24-08-2024", "startDate": "24-07-2024" },
+      { "chapterName": "Carbon Compounds", "teacherName": "Ms. Iyer", "progress": 65, "pending": 35, "timeLine": "27-08-2024", "startDate": "27-07-2024" },
+      { "chapterName": "Environmental Chemistry", "teacherName": "Mr. Rao", "progress": 50, "pending": 50, "timeLine": "30-08-2024", "startDate": "30-07-2024" }
     ]
   },
   {
@@ -96,14 +96,14 @@
     "totalChapter": 8,
     "color": "#8B0000",
     "details": [
-      { "chapterName": "The French Revolution", "teacherName": "Ms. Thomas", "progress": 80, "pending": 20, "timeLine": "2024-09-01" },
-      { "chapterName": "Indian National Movement", "teacherName": "Mr. Bose", "progress": 70, "pending": 30, "timeLine": "2024-09-04" },
-      { "chapterName": "Resources & Development", "teacherName": "Ms. Roy", "progress": 65, "pending": 35, "timeLine": "2024-09-07" },
-      { "chapterName": "Democratic Politics", "teacherName": "Mr. Mehta", "progress": 60, "pending": 40, "timeLine": "2024-09-10" },
-      { "chapterName": "Globalization", "teacherName": "Ms. Roy", "progress": 85, "pending": 15, "timeLine": "2024-09-13" },
-      { "chapterName": "Economics: Development", "teacherName": "Mr. Bose", "progress": 50, "pending": 50, "timeLine": "2024-09-16" },
-      { "chapterName": "Climate and Weather", "teacherName": "Ms. Thomas", "progress": 75, "pending": 25, "timeLine": "2024-09-19" },
-      { "chapterName": "Working of Institutions", "teacherName": "Mr. Mehta", "progress": 45, "pending": 55, "timeLine": "2024-09-22" }
+      { "chapterName": "The French Revolution", "teacherName": "Ms. Thomas", "progress": 80, "pending": 20, "timeLine": "01-09-2024", "startDate": "01-08-2024" },
+      { "chapterName": "Indian National Movement", "teacherName": "Mr. Bose", "progress": 70, "pending": 30, "timeLine": "04-09-2024", "startDate": "04-08-2024" },
+      { "chapterName": "Resources & Development", "teacherName": "Ms. Roy", "progress": 65, "pending": 35, "timeLine": "07-09-2024", "startDate": "07-08-2024" },
+      { "chapterName": "Democratic Politics", "teacherName": "Mr. Mehta", "progress": 60, "pending": 40, "timeLine": "10-09-2024", "startDate": "10-08-2024" },
+      { "chapterName": "Globalization", "teacherName": "Ms. Roy", "progress": 85, "pending": 15, "timeLine": "13-09-2024", "startDate": "13-08-2024" },
+      { "chapterName": "Economics: Development", "teacherName": "Mr. Bose", "progress": 50, "pending": 50, "timeLine": "16-09-2024", "startDate": "16-08-2024" },
+      { "chapterName": "Climate and Weather", "teacherName": "Ms. Thomas", "progress": 75, "pending": 25, "timeLine": "19-09-2024", "startDate": "19-08-2024" },
+      { "chapterName": "Working of Institutions", "teacherName": "Mr. Mehta", "progress": 45, "pending": 55, "timeLine": "22-09-2024", "startDate": "22-08-2024" }
     ]
   },
   {
@@ -114,14 +114,14 @@
     "totalChapter": 8,
     "color": "#00B894",
     "details": [
-      { "chapterName": "વાર્તા લેખન", "teacherName": "શ્રી દવે", "progress": 80, "pending": 20, "timeLine": "2024-08-05" },
-      { "chapterName": "નિબંધ લેખન", "teacherName": "શ્રીમતી પટેલ", "progress": 70, "pending": 30, "timeLine": "2024-08-07" },
-      { "chapterName": "નાટક પરિચય", "teacherName": "શ્રી દવે", "progress": 60, "pending": 40, "timeLine": "2024-08-10" },
-      { "chapterName": "કાવ્ય પાઠ", "teacherName": "શ્રીમતી પટેલ", "progress": 90, "pending": 10, "timeLine": "2024-08-12" },
-      { "chapterName": "વ્યાકરણ", "teacherName": "શ્રી દવે", "progress": 50, "pending": 50, "timeLine": "2024-08-14" },
-      { "chapterName": "મહુાવરા અને લોખૂક્તિ", "teacherName": "શ્રી દવે", "progress": 70, "pending": 30, "timeLine": "2024-08-16" },
-      { "chapterName": "સાંસ્કૃતિક વારસો", "teacherName": "શ્રીમતી પટેલ", "progress": 60, "pending": 40, "timeLine": "2024-08-18" },
-      { "chapterName": "પુનરાવર્તન", "teacherName": "શ્રીમતી પટેલ", "progress": 40, "pending": 60, "timeLine": "2024-08-20" }
+      { "chapterName": "વાર્તા લેખન", "teacherName": "શ્રી દવે", "progress": 80, "pending": 20, "timeLine": "05-08-2024", "startDate": "05-07-2024" },
+      { "chapterName": "નિબંધ લેખન", "teacherName": "શ્રીમતી પટેલ", "progress": 70, "pending": 30, "timeLine": "07-08-2024", "startDate": "07-07-2024" },
+      { "chapterName": "નાટક પરિચય", "teacherName": "શ્રી દવે", "progress": 60, "pending": 40, "timeLine": "10-08-2024", "startDate": "10-07-2024" },
+      { "chapterName": "કાવ્ય પાઠ", "teacherName": "શ્રીમતી પટેલ", "progress": 90, "pending": 10, "timeLine": "12-08-2024", "startDate": "12-07-2024" },
+      { "chapterName": "વ્યાકરણ", "teacherName": "શ્રી દવે", "progress": 50, "pending": 50, "timeLine": "14-08-2024", "startDate": "14-07-2024" },
+      { "chapterName": "મહુાવરા અને લોખૂક્તિ", "teacherName": "શ્રી દવે", "progress": 70, "pending": 30, "timeLine": "16-08-2024", "startDate": "16-07-2024" },
+      { "chapterName": "સાંસ્કૃતિક વારસો", "teacherName": "શ્રીમતી પટેલ", "progress": 60, "pending": 40, "timeLine": "18-08-2024", "startDate": "18-07-2024" },
+      { "chapterName": "પુનરાવર્તન", "teacherName": "શ્રીમતી પટેલ", "progress": 40, "pending": 60, "timeLine": "20-08-2024", "startDate": "20-07-2024" }
     ]
   },
   {
@@ -132,14 +132,14 @@
     "totalChapter": 8,
     "color": "#2F80ED",
     "details": [
-      { "chapterName": "Prose: The Last Lesson", "teacherName": "Ms. Linda", "progress": 85, "pending": 15, "timeLine": "2024-07-30" },
-      { "chapterName": "Poem: My Mother at Sixty-Six", "teacherName": "Mr. George", "progress": 80, "pending": 20, "timeLine": "2024-08-02" },
-      { "chapterName": "Letter Writing", "teacherName": "Ms. Linda", "progress": 70, "pending": 30, "timeLine": "2024-08-05" },
-      { "chapterName": "Report Writing", "teacherName": "Mr. George", "progress": 75, "pending": 25, "timeLine": "2024-08-08" },
-      { "chapterName": "Reading Comprehension", "teacherName": "Ms. Linda", "progress": 65, "pending": 35, "timeLine": "2024-08-11" },
-      { "chapterName": "Debate & Speech", "teacherName": "Mr. George", "progress": 90, "pending": 10, "timeLine": "2024-08-14" },
-      { "chapterName": "Grammar Revision", "teacherName": "Ms. Linda", "progress": 60, "pending": 40, "timeLine": "2024-08-17" },
-      { "chapterName": "Creative Writing", "teacherName": "Mr. George", "progress": 55, "pending": 45, "timeLine": "2024-08-20" }
+      { "chapterName": "Prose: The Last Lesson", "teacherName": "Ms. Linda", "progress": 85, "pending": 15, "timeLine": "30-07-2024", "startDate": "30-06-2024" },
+      { "chapterName": "Poem: My Mother at Sixty-Six", "teacherName": "Mr. George", "progress": 80, "pending": 20, "timeLine": "02-08-2024", "startDate": "02-07-2024" },
+      { "chapterName": "Letter Writing", "teacherName": "Ms. Linda", "progress": 70, "pending": 30, "timeLine": "05-08-2024", "startDate": "05-07-2024" },
+      { "chapterName": "Report Writing", "teacherName": "Mr. George", "progress": 75, "pending": 25, "timeLine": "08-08-2024", "startDate": "08-07-2024" },
+      { "chapterName": "Reading Comprehension", "teacherName": "Ms. Linda", "progress": 65, "pending": 35, "timeLine": "11-08-2024", "startDate": "11-07-2024" },
+      { "chapterName": "Debate & Speech", "teacherName": "Mr. George", "progress": 90, "pending": 10, "timeLine": "14-08-2024", "startDate": "14-07-2024" },
+      { "chapterName": "Grammar Revision", "teacherName": "Ms. Linda", "progress": 60, "pending": 40, "timeLine": "17-08-2024", "startDate": "17-07-2024" },
+      { "chapterName": "Creative Writing", "teacherName": "Mr. George", "progress": 55, "pending": 45, "timeLine": "20-08-2024", "startDate": "20-07-2024" }
     ]
   }        
 ]

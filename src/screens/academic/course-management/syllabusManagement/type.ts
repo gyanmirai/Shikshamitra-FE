@@ -15,7 +15,6 @@ export interface IChapter {
   chapterName: string;
   startDate: string; // Format: YYYY-MM-DD
   endDate: string; // Format: YYYY-MM-DD
-  assignedTeacher: string[];
   viewMaterial: {
     videos: number;
     pdfs: number;
@@ -27,11 +26,9 @@ export interface IChapter {
 export interface IChapterFormValues {
   chapterNo: number;
   chapterName: string;
-  assignedTeacher: string;
   content: string;
-  startTime: Dayjs | null;
-  endTime: Dayjs | null;
-  timeLine: Dayjs | null;
+  startDate: Dayjs | null;
+  endDate: Dayjs | null;
   documents?: File[];
 }
 

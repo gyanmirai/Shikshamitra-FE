@@ -348,9 +348,9 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
           homeworkSubmissionDialog.onFalse();
           setSelectedHomework(null);
         }}
-        maxWidth={selectedHomework?.submissionType === 'file_upload' ? 'sm' : 'md'}
+        maxWidth={selectedHomework?.submissionType === 1 ? 'sm' : 'md'}
       >
-        {selectedHomework?.submissionType === 'file_upload' ? (
+        {selectedHomework?.submissionType === 1 ? (
           <SubmitHomeworkFile selectedHomework={selectedHomework} onClose={handleClose} />
         ) : (
           <SubmitHomeworkContent selectedHomework={selectedHomework} onClose={handleClose} />
@@ -366,7 +366,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
         title="View Submission"
         maxWidth="sm"
       >
-        {selectedHomework?.submissionType === 'file_upload' ? (
+        {selectedHomework?.submissionType === 1 ? (
           <AssignGrade isEdit={false} data={null} onClose={handleClose} />
         ) : (
           <AssignMarksForText isEdit={false} data={null} onClose={handleClose} />

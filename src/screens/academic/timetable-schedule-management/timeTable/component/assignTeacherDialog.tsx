@@ -11,6 +11,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import type { Subject } from '../type';
 import type { IAssignTeacherProps } from './type';
 
 const AssignTeacher: React.FC<IAssignTeacherProps> = ({
@@ -18,85 +19,72 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
   slotData,
   onTeacherSelect,
 }) => {
-  // State to store selected teacher value
-  const [teacher, setTeacher] = useState<string>('');
+  // Initialize with subject data from slotData
+  const [tableData, setTableData] = useState(slotData.subjects || []);
 
-  // Handler function to submit selected teacher
+  // Handler function to submit updated teacher assignments
   const handleSubmit = () => {
-    onTeacherSelect(teacher);
+    onTeacherSelect({ ...slotData, subjects: tableData });
   };
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '25s0px' }}>
+        <Scrollbar sx={{ p: 2, height: '200px' }}>
           <CustomizableTable
-            tableId="Elective-subject-table"
+            tableId="assign-teacher-table"
             isFilter={false}
             isPagination={false}
             isSearch={false}
-            noDataText={<>No Bulk Update Data Found </>}
-            searchFieldProps={{
-              placeholder: 'Search by Sr. No, GR No, Name',
-              label: 'Search by Sr. No, GR No, Name',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
+            noDataText={<>No Data Found</>}
             columns={[
               {
-                id: 'subjectName',
-                label: 'Subject Name',
+                id: 'subject',
+                label: 'Subject',
                 minWidth: '200px',
                 align: 'left',
                 isFilter: false,
               },
               {
-                id: 'teacherName',
+                id: 'teacher',
                 label: 'Teacher',
                 isSort: false,
                 minWidth: '200px',
                 align: 'left',
                 isFilter: false,
-                // renderColumn: (row: any) => <TextField size="small" label={headerLabel || 'hello'} />,
-                // render: (value, row: any) => renderDynamicField({ value, row , selectedSubCategory}),
                 render: (value, row: any) => (
                   <CustomSelect
                     label="Teacher"
                     labelKey="name"
                     valueKey="id"
                     options={[
-                      { id: '1', name: 'John Smith' },
-                      { id: '2', name: 'Mary Johnson' },
-                      { id: '3', name: 'David Williams' },
-                      { id: '4', name: 'Sarah Brown' },
-                      { id: '5', name: 'Michael Davis' },
+                      { id: 'John Smith', name: 'John Smith' },
+                      { id: 'Mary Johnson', name: 'Mary Johnson' },
+                      { id: 'David Williams', name: 'David Williams' },
+                      { id: 'Sarah Brown', name: 'Sarah Brown' },
+                      { id: 'Michael Davis', name: 'Michael Davis' },
                     ]}
-                    value={row.teacherName}
-                    onChange={(val) => {}}
+                    value={row.teacher || ''}
+                    onChange={(val) => {
+                      setTableData((prev: Subject) =>
+                        prev.map((subject: Subject) =>
+                          subject.subject === row.subject ? { ...subject, teacher: val } : subject
+                        )
+                      );
+                    }}
                     formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
                   />
                 ),
-
-                // render: (row: any) => <TextField size="small" label={selectedSubCategory?.name} />,
               },
             ]}
-            data={
-              slotData.subjects.length > 1
-                ? [
-                    { id: 1, subjectName: 'English', teacherName: '1' },
-                    { id: 2, subjectName: 'Hindi', teacherName: '2' },
-                  ]
-                : [{ id: 1, subjectName: 'Math', teacherName: '1' }]
-            }
-          />{' '}
+            data={tableData}
+          />
         </Scrollbar>
+
         <DialogActions>
           <Button
-            onClick={() => {
-              teacherDialog.onFalse();
-            }}
+            onClick={teacherDialog.onFalse}
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
           >
@@ -104,6 +92,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
           </Button>
           <Button
             onClick={handleSubmit}
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             variant="contained"
           >

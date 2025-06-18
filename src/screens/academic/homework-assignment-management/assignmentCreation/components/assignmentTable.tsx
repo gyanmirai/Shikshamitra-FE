@@ -5,6 +5,7 @@ import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { SubmissionType, SubmissionTypeOptions } from 'src/enums/submission_type';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
@@ -65,11 +66,6 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   return (
     <CustomizableTable
       tableId="assignment-management"
-      searchFieldProps={{
-        placeholder: 'Search by Assignment Title, Type, Start Date Time...',
-        label: 'Search by Assignment Title, Type, Start Date Time...',
-        sx: { maxWidth: 500, width: '100%' },
-      }}
       noDataText={
         <>
           No Assignments Created
@@ -109,7 +105,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           filterType: 'date',
           render: (value: string | Date | undefined) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
             </Typography>
           ),
         },
@@ -120,7 +116,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           filterType: 'date',
           render: (value: string | Date | undefined) => (
             <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
+              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
             </Typography>
           ),
         },
@@ -128,11 +124,17 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           id: 'submissionType',
           label: 'Submission Type',
           align: 'left',
-          filterType: 'string',
+          filterType: 'enum',
+          enumOptions: SubmissionTypeOptions,
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {SubmissionType[value]}
+            </Typography>
+          ),
         },
         {
           id: 'status',
-          label: 'Publish/Draft',
+          label: 'Status',
           align: 'left',
           isFilter: false,
           sticky: true,
@@ -178,7 +180,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           align: 'left',
           isFilter: false,
           sticky: true,
-          minWidth: 100,
+          minWidth: 80,
           render: (value, row) => (
             <ThreeDotsActions
               placement="right-top"

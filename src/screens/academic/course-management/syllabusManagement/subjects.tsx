@@ -147,7 +147,7 @@ const Subjects = (props: TabComponentType) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
   const handleDelete = (id: string | undefined) => {
@@ -155,7 +155,11 @@ const Subjects = (props: TabComponentType) => {
       setChapterData(chapterData.filter((ch) => ch.id !== id));
       deleteDialog.onFalse();
       shikshaMitraToast.success({
-        message: `Chapter ${selectedChapter?.chapterName} deleted successfully`,
+        message: (
+          <>
+            Chapter: <strong>{selectedChapter?.chapterName}</strong> deleted successfully
+          </>
+        ),
       });
       setSelectedChapter(null);
     }
@@ -229,7 +233,7 @@ const Subjects = (props: TabComponentType) => {
                 label="Class"
                 name="class"
                 options={allClass}
-                valueKey="id"
+                valueKey="name"
                 labelKey="name"
                 formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
                 value={classes}
@@ -304,6 +308,7 @@ const Subjects = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedChapter?.id);

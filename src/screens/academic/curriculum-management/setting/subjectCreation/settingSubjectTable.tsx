@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -45,16 +45,20 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
       </>
     }
     columns={[
-      { id: 'subjectName', label: 'Subject Name', align: 'left' },
       {
-        id: 'subjectColor',
-        label: 'Subject Color',
-        isFilter: false,
-        isSort: false,
-        render(value, row) {
-          return <SubjectColorIndicator color={value} />;
-        },
+        id: 'subjectName',
+        label: 'Subject Name',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.subjectColor} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
       },
+
       { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',

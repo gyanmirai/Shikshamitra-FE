@@ -3,15 +3,17 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import SettingSubjectForm from './subjectForm';
@@ -85,7 +87,24 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
           addSubjectDialog.onFalse();
           setSelectedSubject(null);
         }}
-        title={selectedSubject ? 'Update Subject' : 'Add Subject'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedSubject ? 'Update Subject' : 'Add Subject'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedSubject
+                  ? 'You can update the subject details including name, code and other information'
+                  : 'You can create a new subject by entering the subject name, code and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <SettingSubjectForm
           open={addSubjectDialog}
@@ -112,8 +131,10 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               deleteSubjectDialog.onFalse();
+              setSelectedSubject(null);
               shikshaMitraToast.success({
                 message: `Subject ${selectedSubject?.subjectName} deleted successfully`,
               });

@@ -53,13 +53,25 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       </>
     }
     columns={[
-      { id: 'title', label: 'Elective Group', align: 'left' },
+      {
+        id: 'title',
+        label: 'Elective Group',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.subjectColor} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
       {
         id: 'subjects',
         label: 'Subjects List',
         align: 'left',
         render: (value) => (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {value.map((subject: { name: string; subjectColor: string }) => (
               <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <SubjectColorIndicator color={subject.subjectColor} />
@@ -71,16 +83,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           </Box>
         ),
       },
-      {
-        id: 'subjectColor',
-        label: 'Elective Group Color',
-        align: 'center',
-        isFilter: false,
-        isSort: false,
-        render(value, row) {
-          return <SubjectColorIndicator color={value} />;
-        },
-      },
+
       { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',

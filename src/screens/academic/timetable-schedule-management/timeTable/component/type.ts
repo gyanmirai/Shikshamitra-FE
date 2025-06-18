@@ -1,21 +1,29 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import type { DayData } from '../type';
+
 export interface ITimeTableCellProps {
   timeSlot: string;
-  day: string;
+  day: any;
   slotData: any;
   isBreak: boolean;
-  selectedRoom: string;
-  onDrop: (e: any, timeSlot: string, day: string) => void;
-  onTeacherSelect: (teacher: string, timeSlot: string, day: string) => void;
-  onRoomSelect: (room: string, timeSlot: string, day: string) => void;
-  onDeleteSlot: (timeSlot: string, day: string) => void;
+  rowIndex: any;
+  colIndex: any;
+  item: any;
+  onDrop: (
+    e: React.DragEvent<HTMLDivElement>,
+    item: DayData,
+    rowIndex: number,
+    colIndex: number
+  ) => void;
+  onTeacherSelect: (teacher: string, rowIndex: number, colIndex: number) => void;
+  onRoomSelect: (room: string, rowIndex: number, colIndex: number) => void;
+  onDeleteSlot: (rowIndex: number, colIndex: number) => void;
   isThreeDots?: boolean;
 }
 
 export interface IAssignRoomProps {
   roomDialog: UseBooleanReturn;
-  selectedRoom: string;
   slotData: any;
   onRoomSelect: (value: string) => void;
 }

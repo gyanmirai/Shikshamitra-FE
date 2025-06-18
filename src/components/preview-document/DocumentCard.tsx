@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Box, Card, Tooltip, Typography, IconButton } from '@mui/material';
+import { Box, Card, Button, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -9,7 +9,9 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
+import { shikshaMitraToast } from '../toast';
 import { SingleFilePreview } from '../upload';
+import { ConfirmDialog } from '../confirm-dialog';
 import { fileData, FileThumbnail } from '../file-thumbnail';
 
 interface DocumentCardProps {
@@ -18,6 +20,8 @@ interface DocumentCardProps {
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
   const viewDialog = useBoolean();
+  const deleteDialog = useBoolean();
+
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
 
   // const handleDownload = () => {
@@ -50,6 +54,20 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
         },
       }}
     >
+      <IconButton
+        size="small"
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 2,
+        }}
+        onClick={() => {
+          deleteDialog.onTrue();
+        }}
+      >
+        <Iconify icon="basil:cross-solid" />
+      </IconButton>
+
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <FileThumbnail
           file={normalizeFileForThumbnail(file)}
@@ -118,6 +136,40 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
           {previewFile && <SingleFilePreview file={normalizeFileForThumbnail(previewFile)} />}
         </Scrollbar>
       </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          deleteDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete document <strong>{file?.name}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deleteDialog.onFalse();
+              shikshaMitraToast.success({
+                message: (
+                  <>
+                    Document: <strong>{file?.name}</strong> deleted successfully
+                  </>
+                ),
+              });
+              // handle delete action
+            }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Card>
   );
 };

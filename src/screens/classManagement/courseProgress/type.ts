@@ -6,6 +6,7 @@ export interface ICourseDetail {
   teacherName: string; // Name of the teacher assigned to the chapter
   progress: number; // Progress percentage completed for the chapter
   pending: number; // Remaining percentage to be completed
+  startDate: Dayjs | string | null;
   timeLine: Dayjs | string | null; // Timeline/deadline for the chapter completion
 }
 

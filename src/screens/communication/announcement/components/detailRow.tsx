@@ -16,7 +16,7 @@ export const DetailRow = ({ label, value, icon, color = '' }: any) => (
             icon={icon}
             sx={{
               color,
-              mt: 0.1,
+              mt: 0.4,
               // fontSize: '1.2rem',
             }}
           />

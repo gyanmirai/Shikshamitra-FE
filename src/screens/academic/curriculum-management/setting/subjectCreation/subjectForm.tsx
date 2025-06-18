@@ -62,32 +62,27 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                 <ShakingTextField
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1 }}
+                    color={
+                      formik.touched.subjectColor && formik.errors.subjectColor
+                        ? 'error.main'
+                        : 'text.primary'
+                    }
+                  >
                     Subject Color
                   </Typography>
                   <ColorPickerCircle
                     onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}
                     initialColor={formik.values.subjectColor}
                   />
-                  {formik.touched.subjectColor && formik.errors.subjectColor && (
-                    <Typography
-                      color="error"
-                      variant="caption"
-                      sx={{
-                        mt: 0.5,
-                        fontSize: '10px',
-                        ml: '5px',
-                      }}
-                    >
-                      {formik.errors.subjectColor}
-                    </Typography>
-                  )}
                 </ShakingTextField>
               </Grid>
             </Grid>
           </Scrollbar>
 
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}

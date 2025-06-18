@@ -6,8 +6,8 @@ import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,6 +19,7 @@ import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-tab
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import HomeworkForm from './homeworkForm';
@@ -67,13 +68,13 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClass(allClasses[0]?.id || '');
+    setClass(allClasses[0]?.name || '');
   }, [medium]);
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
   }, [allClass, classes]);
 
   // Controls form visibility
@@ -104,59 +105,58 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} justifyContent="space-between" mb={1}>
-        <Box display="flex" gap={2}>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClass(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-          />
-          <CustomSelect
-            options={allDivision}
-            label="Division"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            disabled={!classes}
-          />
-          <CustomSelect
-            options={[
-              { id: '1', name: 'Mathematics' },
-              { id: '2', name: 'Science' },
-              { id: '3', name: 'English' },
-              { id: '4', name: 'History' },
-              { id: '5', name: 'Geography' },
-              { id: '6', name: 'Physics' },
-              { id: '7', name: 'Chemistry' },
-              { id: '8', name: 'Biology' },
-            ]}
-            label="Subject"
-            value={subject}
-            onChange={(val) => setSubject(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            disabled={!division}
-          />
-          <DatePicker
-            label="Homework Date"
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            name="date"
-            value={date}
-            onChange={(val) => {
-              setDate(val);
-            }}
-            format="DD-MM-YYYY"
-            sx={{ minWidth: '250px' }}
-          />
-        </Box>
-        {/* <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" gap={2} ml={1}>
+        <CustomSelect
+          options={allClass}
+          label="Class"
+          value={classes}
+          onChange={(val) => setClass(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+        />
+        <CustomSelect
+          options={allDivision}
+          label="Division"
+          value={division}
+          onChange={(val) => setDivision(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!classes}
+        />
+        <CustomSelect
+          options={[
+            { id: '1', name: 'Mathematics' },
+            { id: '2', name: 'Science' },
+            { id: '3', name: 'English' },
+            { id: '4', name: 'History' },
+            { id: '5', name: 'Geography' },
+            { id: '6', name: 'Physics' },
+            { id: '7', name: 'Chemistry' },
+            { id: '8', name: 'Biology' },
+          ]}
+          label="Subject"
+          value={subject}
+          onChange={(val) => setSubject(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!division}
+        />
+        <DatePicker
+          label="Homework Date"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          name="date"
+          value={date}
+          onChange={(val) => {
+            setDate(val);
+          }}
+          format="DD-MM-YYYY"
+          sx={{ maxWidth: '250px' }}
+        />
+      </Box>
+      {/* <Box display="flex" justifyContent="flex-end">
           <Button
             variant="contained"
             onClick={addHomeworkDialog.onTrue}
@@ -167,7 +167,6 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             Homework
           </Button>
         </Box> */}
-      </Box>
 
       <CustomDialog
         open={addHomeworkDialog.value}
@@ -175,12 +174,28 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           addHomeworkDialog.onFalse();
           setSelectedHomework(null);
         }}
-        title={selectedHomework ? 'Edit Homework' : 'Add Homework'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedHomework ? 'Update Homework' : 'Add Homework'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedHomework
+                  ? 'You can update the homework details including title, description and other information'
+                  : 'You can create a new homework by entering the title, description and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
       >
         <HomeworkForm
           classes={classes}
-          division={division}
           subject={subject}
           dialog={addHomeworkDialog}
           onClose={() => {
@@ -235,6 +250,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
             onClick={() => {}}
+            size="small"
           >
             Yes
           </Button>
@@ -258,6 +274,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {}}
+            size="small"
           >
             Publish
           </Button>

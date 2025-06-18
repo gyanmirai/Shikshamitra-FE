@@ -58,7 +58,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
             </Grid>
           </Scrollbar>
 
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}

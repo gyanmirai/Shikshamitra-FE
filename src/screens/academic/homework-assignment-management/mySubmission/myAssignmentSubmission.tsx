@@ -350,9 +350,9 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
           assignmentSubmissionDialog.onFalse();
           setSelectedAssignment(null);
         }}
-        maxWidth={selectedAssignment?.submissionType === 'file_upload' ? 'sm' : 'md'}
+        maxWidth={selectedAssignment?.submissionType === 1 ? 'sm' : 'md'}
       >
-        {selectedAssignment?.submissionType === 'file_upload' ? (
+        {selectedAssignment?.submissionType === 1 ? (
           <SubmitAssignmentFile selectedAssignment={selectedAssignment} onClose={handleClose} />
         ) : (
           <SubmitAssignmentContent selectedAssignment={selectedAssignment} onClose={handleClose} />
@@ -368,7 +368,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
         title="View Submission"
         maxWidth="sm"
       >
-        {selectedAssignment?.submissionType === 'file_upload' ? (
+        {selectedAssignment?.submissionType === 1 ? (
           <AssignGrade isEdit={false} data={null} onClose={handleClose} />
         ) : (
           <AssignMarksForText isEdit={false} data={null} onClose={handleClose} />

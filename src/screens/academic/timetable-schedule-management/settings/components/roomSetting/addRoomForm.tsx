@@ -134,12 +134,13 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               startIcon={<Close />}
               onClick={() => {
                 onClose(null, false);
               }}
+              size="small"
               variant="outlined"
             >
               Cancel
@@ -147,6 +148,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             <Button
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               type="submit"
+              size="small"
               variant="contained"
             >
               {isEdit ? 'Update' : 'Submit'}

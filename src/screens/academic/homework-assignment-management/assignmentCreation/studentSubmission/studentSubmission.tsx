@@ -304,7 +304,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={selectedStudent ? 'Edit Marks' : 'Add Marks'}
         maxWidth="sm"
       >
-        {selectedAssignment?.submissionType === 'file_upload' ? (
+        {selectedAssignment?.submissionType === 1 ? (
           <AssignGrade data={selectedStudent} onClose={handleClose} isEdit />
         ) : (
           <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />

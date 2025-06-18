@@ -10,7 +10,7 @@ export const getSubjectInitialValues = (
     className: selectedClass,
     status: 1,
     subjects: [],
-    subjectType: 'core',
+    subjectType: 'Core',
   };
 
   // If no edit data, return default values

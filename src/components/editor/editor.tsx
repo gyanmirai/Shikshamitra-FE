@@ -42,6 +42,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
     ref
   ) => {
     const [fullScreen, setFullScreen] = useState(false);
+    const [showToolbar, setShowToolbar] = useState(false);
 
     const handleToggleFullScreen = useCallback(() => {
       setFullScreen((prev) => !prev);
@@ -132,6 +133,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               onToggleFullScreen={handleToggleFullScreen}
             />
 
+            {/* <Scrollbar sx={{ height: '200px' }}> */}
             <EditorContent
               ref={ref}
               spellCheck="false"
@@ -140,6 +142,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               editor={editor}
               className={editorClasses.content.root}
             />
+
+            {/* </Scrollbar> */}
           </StyledRoot>
 
           {helperText && <FormHelperText error={!!error}>{helperText}</FormHelperText>}

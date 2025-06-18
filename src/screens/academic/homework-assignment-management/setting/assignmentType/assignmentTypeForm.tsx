@@ -61,7 +61,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
             </Grid>
           </Scrollbar>
 
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}

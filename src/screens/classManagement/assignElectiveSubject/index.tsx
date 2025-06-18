@@ -87,11 +87,11 @@ const AssignElectiveSubject = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Elective Subject"
+        heading="Student Elective Assignment"
         description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
         links={[
           { name: 'Class Management', href: '/classManagement/dashboard' },
-          { name: 'Assign Elective Subject' },
+          { name: 'Student Elective Assignment' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

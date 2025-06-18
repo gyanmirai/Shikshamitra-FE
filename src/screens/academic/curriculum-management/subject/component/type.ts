@@ -15,12 +15,42 @@ export interface ISubject {
   isSubjectOpen?: boolean;
 }
 
+export interface TeacherProfile {
+  id?: number;
+  name?: string;
+  avatarUrl?: string;
+  designation?: string;
+  department?: string;
+  class?: string;
+  status?: string;
+  division?: string;
+  dailyStatus?: string;
+  email?: string;
+  experience?: string;
+  qualification?: string;
+  subjects?: string[];
+}
+
+export interface ISubjectDetail {
+  id: number;
+  subjectName: string;
+  subjectCode: string;
+  subjectColor?: string;
+  primaryTeacher: TeacherProfile;
+  secondaryTeacher: TeacherProfile[] | null;
+  documents?: File[];
+  prerequisites: string;
+  learningGoal: string;
+  description: string;
+  isSubjectOpen?: boolean;
+}
+
 export interface ISubjectFormValues {
   id?: number;
   status: number;
   className: string;
   subjectName: string;
-  subjects?: ISubject[];
+  subjects?: ISubjectDetail[];
   subjectType?: string;
 }
 
@@ -59,7 +89,7 @@ export interface IDocument {
 // Available teachers for selection
 export interface ITeacherOption {
   value: string;
-  label: string;
+  name: string;
   department: string;
   avatar: string;
 }
@@ -67,11 +97,11 @@ export interface ITeacherOption {
 export interface ISubjectCardProps {
   index: number; // add index to access nested Formik data
   formik: FormikProps<ISubjectFormValues>;
-  subject: ISubject;
+  subject: ISubjectDetail;
   isCore: boolean;
   isPublished: boolean;
   // isPublishing: boolean;
-  teacherOptions: any;
+  teacherOptions: TeacherProfile[];
   onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
 }
 

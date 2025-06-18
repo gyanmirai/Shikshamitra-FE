@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import type { TStudentGrade } from '../homeworkCreation/type';
+import type { TeacherProfile } from '../../curriculum-management/subject/component/type';
 
 export interface IAssignment {
   title: string;
@@ -9,12 +10,12 @@ export interface IAssignment {
   class: string;
   division: string[];
   subjects: string;
-  submissionType: string;
+  submissionType: number;
   // dueDate: Dayjs | null | string;
   startDate: Dayjs | null | string;
   endDate: Dayjs | null | string;
   attachments: File[];
-  createdBy: string;
+  createdBy: TeacherProfile;
   status: number;
   assignmentType: string;
   // isScheduled: boolean;

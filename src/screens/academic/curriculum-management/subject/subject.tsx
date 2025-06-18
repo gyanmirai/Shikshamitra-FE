@@ -55,7 +55,7 @@ const Subject = (props: TabComponentType) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    setClasses(allClasses[0]?.name || '');
   }, [medium]);
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
@@ -123,7 +123,29 @@ const Subject = (props: TabComponentType) => {
       deleteConfirmDialog.onFalse();
       setSelectedSubject(null);
       shikshaMitraToast.success({
-        message: `Subject ${selectedSubject.subjectName} deleted successfully`,
+        message:
+          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+            <>
+              Subject :{' '}
+              <strong>
+                {selectedSubject.subjectName
+                  .map((name: any, index: any) => {
+                    const code = selectedSubject.subjectCode?.[index] || '';
+                    return `${name} (${code})`;
+                  })
+                  .join(' , ')}
+              </strong>{' '}
+              removed successfully!
+            </>
+          ) : (
+            <>
+              Subject :{' '}
+              <strong>
+                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+              </strong>{' '}
+              removed successfully!
+            </>
+          ),
       });
     }
   };
@@ -190,7 +212,7 @@ const Subject = (props: TabComponentType) => {
               label="Class"
               name="class"
               options={allClass}
-              valueKey="id"
+              valueKey="name"
               labelKey="name"
               formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
               value={classes}
@@ -245,28 +267,28 @@ const Subject = (props: TabComponentType) => {
       <ConfirmDialog
         open={deleteConfirmDialog.value}
         onClose={handleCloseDialog}
-        title="Delete"
+        title="Remove"
         content={
           selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
             <>
-              Are you sure you want to Delete{' '}
+              Are you sure you want to Remove{' '}
               <strong>
                 {selectedSubject.subjectName
                   .map((name: any, index: any) => {
                     const code = selectedSubject.subjectCode?.[index] || '';
                     return `${name} (${code})`;
                   })
-                  .join(', ')}
+                  .join(' , ')}
               </strong>{' '}
-              subject?
+              from Class {classes} ?
             </>
           ) : (
             <>
-              Are you sure you want to Delete{' '}
+              Are you sure you want to Remove{' '}
               <strong>
                 {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
               </strong>{' '}
-              subject?
+              from Class {classes} ?
             </>
           )
         }
@@ -274,6 +296,7 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={handleDelete}
           >
@@ -317,11 +340,34 @@ const Subject = (props: TabComponentType) => {
         action={
           <Button
             variant="contained"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               const status = selectedSubject?.status === 0 ? 'Draft' : 'Published';
               shikshaMitraToast.success({
-                message: `Subject ${selectedSubject?.subjectName} ${status}ed successfully`,
+                message:
+                  selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+                    <>
+                      Subject :{' '}
+                      <strong>
+                        {selectedSubject.subjectName
+                          .map((name: any, index: any) => {
+                            const code = selectedSubject.subjectCode?.[index] || '';
+                            return `${name} (${code})`;
+                          })
+                          .join(' , ')}
+                      </strong>{' '}
+                      move to {status} successfully!
+                    </>
+                  ) : (
+                    <>
+                      Subject :{' '}
+                      <strong>
+                        {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+                      </strong>{' '}
+                      move to {status} successfully!
+                    </>
+                  ),
               });
               confirmPublishDialog.onFalse();
             }}
