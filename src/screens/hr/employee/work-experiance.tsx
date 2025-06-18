@@ -12,8 +12,6 @@ import CountryComponent from 'src/components/stardard-address/country-component'
 
 const WorkExperiences = (props: any) => {
   const { formik, disabled } = props;
-  console.log('🚀 ~ WorkExperiences ~ formik:', formik);
-
   const { values, setFieldValue } = formik;
 
   return (
@@ -70,9 +68,7 @@ const WorkExperiences = (props: any) => {
             <Box sx={{ width: '200px' }}>
               <ShakingTextField
                 error={
-                  formik?.touched?.experiences &&
-                  formik?.touched?.experiences?.[index] &&
-                  formik?.errors?.experiences?.[index]
+                  formik?.touched?.experiences?.[index] && formik?.errors?.experiences?.[index]
                 }
               >
                 <TextField
@@ -88,12 +84,10 @@ const WorkExperiences = (props: any) => {
                     }
                   }}
                   error={
-                    formik?.touched?.experiences &&
-                    formik?.touched?.experiences?.[index] &&
-                    formik?.errors?.experiences?.[index]
+                    formik?.touched?.experiences?.[index]?.organizationName &&
+                    formik?.errors?.experiences?.[index]?.organizationName
                   }
                   helperText={
-                    formik?.touched?.experiences &&
                     formik?.touched?.experiences?.[index]?.organizationName &&
                     formik?.errors?.experiences?.[index]?.organizationName
                   }
@@ -104,7 +98,6 @@ const WorkExperiences = (props: any) => {
             <Box sx={{ width: '200px' }}>
               <ShakingTextField
                 error={
-                  formik?.touched?.experiences &&
                   formik?.touched?.experiences?.[index]?.designation &&
                   formik?.errors?.experiences?.[index]?.designation
                 }
@@ -123,12 +116,10 @@ const WorkExperiences = (props: any) => {
                     }
                   }}
                   error={
-                    formik?.touched?.experiences &&
                     formik?.touched?.experiences?.[index]?.designation &&
                     formik?.errors?.experiences?.[index]?.designation
                   }
                   helperText={
-                    formik?.touched?.experiences &&
                     formik?.touched?.experiences?.[index]?.designation &&
                     formik?.errors?.experiences?.[index]?.designation
                   }
@@ -218,7 +209,6 @@ const WorkExperiences = (props: any) => {
             <Box sx={{ width: '200px' }}>
               <ShakingTextField
                 error={
-                  formik?.touched?.experiences &&
                   formik?.touched?.experiences?.[index]?.fromDate &&
                   formik?.errors?.experiences?.[index]?.fromDate
                 }
@@ -236,11 +226,9 @@ const WorkExperiences = (props: any) => {
                     textField: {
                       size: 'small',
                       error:
-                        formik?.touched?.experiences &&
                         formik?.touched?.experiences?.[index]?.fromDate &&
                         formik?.errors?.experiences?.[index]?.fromDate,
                       helperText:
-                        formik?.touched?.experiences &&
                         formik?.touched?.experiences?.[index]?.fromDate &&
                         formik?.errors?.experiences?.[index]?.fromDate,
                       fullWidth: true,
@@ -252,7 +240,6 @@ const WorkExperiences = (props: any) => {
             <Box sx={{ width: '200px' }}>
               <ShakingTextField
                 error={
-                  formik?.touched?.experiences &&
                   formik?.touched?.experiences?.[index]?.toDate &&
                   formik?.errors?.experiences?.[index]?.toDate
                 }
@@ -270,11 +257,9 @@ const WorkExperiences = (props: any) => {
                     textField: {
                       size: 'small',
                       error:
-                        formik?.touched?.experiences &&
                         formik?.touched?.experiences?.[index]?.toDate &&
                         formik?.errors?.experiences?.[index]?.toDate,
                       helperText:
-                        formik?.touched?.experiences &&
                         formik?.touched?.experiences?.[index]?.toDate &&
                         formik?.errors?.experiences?.[index]?.toDate,
                       fullWidth: true,

@@ -11,7 +11,6 @@ import {
   Box,
   Grid,
   Button,
-  Tooltip,
   Checkbox,
   TextField,
   Typography,
@@ -39,6 +38,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -199,13 +199,13 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Rule</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="Define the criteria for half-day and late attendance by creating rules here. "
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={attendanceRuleDialog.value}

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { MobileTimePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -24,6 +24,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -151,13 +152,13 @@ const EntranceExamSlots = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Slots</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={dialog.value}

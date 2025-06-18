@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Switch, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -15,6 +15,7 @@ import initialData from 'src/json/finance/settings/fee-structure/feeStructureDat
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -244,13 +245,13 @@ const FinanceNewFeeStructureSetting = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This is the detailed fee structure for Class 1, applicable to all students of that class except for specific scenarios."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={finanveViewFeeStructureDialog.value}

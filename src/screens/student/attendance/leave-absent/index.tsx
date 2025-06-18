@@ -18,7 +18,6 @@ import {
   Stack,
   Button,
   Avatar,
-  Tooltip,
   Checkbox,
   MenuItem,
   TextField,
@@ -55,6 +54,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -295,13 +295,13 @@ const LeaveAndAbsentScreen = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Leave Request</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="Create a student leave request here by filling below fields."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >

@@ -9,7 +9,6 @@ import {
   Box,
   Grid,
   Button,
-  Tooltip,
   MenuList,
   MenuItem,
   TextField,
@@ -24,6 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -138,13 +138,13 @@ const StatutoryTemplate = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Statutory Component</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This section allows you to create and manage statutory templates for compliance with legal requirements. You can configure templates for tax calculations, deductions, benefits, and other statutory obligations as per the applicable laws."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         handleClose={dialog.onFalse}

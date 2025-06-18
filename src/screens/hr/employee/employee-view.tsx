@@ -104,7 +104,7 @@ export function EmployeeCard({ employee }: any) {
     <>
       <Card
         sx={{
-          mb: 3,
+          mb: 2,
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
           boxShadow: 'var(--shadows-4)',
@@ -166,6 +166,8 @@ export function EmployeeCard({ employee }: any) {
             </Box>
           </Box>
         </Paper>
+      </Card>
+      <Card sx={{ mb: 2, p: 1 }}>
         <Tabs
           value={tabs.value}
           onChange={(...rest) => {
@@ -179,6 +181,7 @@ export function EmployeeCard({ employee }: any) {
           }}
           sx={{
             px: 1.5,
+
             '& .MuiTabs-flexContainer': {
               gap: 1.5,
             },
@@ -199,6 +202,7 @@ export function EmployeeCard({ employee }: any) {
           ))}
         </Tabs>
       </Card>
+
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}

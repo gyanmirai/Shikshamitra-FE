@@ -9,7 +9,6 @@ import {
   Table,
   Stack,
   Button,
-  Tooltip,
   Checkbox,
   TableRow,
   Collapse,
@@ -49,6 +48,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -198,13 +198,13 @@ const RoleScreen = () => {
         title={
           <Box display="flex" alignItems="center" gap={1}>
             {editData ? 'Update Role' : 'Create Role'}{' '}
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="Roles help assign specific permissions to users based on their responsibilities, ensuring secure and efficient access control within the system"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>{' '}
+            </CustomTooltip>{' '}
           </Box>
         }
         handleClose={handleClose}

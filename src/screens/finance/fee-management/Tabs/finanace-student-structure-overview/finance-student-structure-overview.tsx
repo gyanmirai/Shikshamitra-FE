@@ -8,7 +8,7 @@ import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-st
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Tooltip, Checkbox, Typography } from '@mui/material';
+import { Box, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -21,6 +21,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -376,13 +377,13 @@ const FinanceStudentFeeManagement = () => {
               <Typography variant="h5">
                 {`Fee Details for ${selectedStudent.name} , Standard: ${selectedStudent.grade} -A `}
               </Typography>
-              <Tooltip
+              <CustomTooltip
                 arrow
                 placement="right"
                 title="This dialog displays the fee details of a student, where you can find a complete overview of their fee information."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
           open={open}

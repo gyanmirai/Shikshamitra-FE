@@ -4,7 +4,7 @@ import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-st
 
 import React, { useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -15,6 +15,7 @@ import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structur
 
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -154,13 +155,13 @@ const FinanceFeeStructureOverviewComponent = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Detail Fee Structure Of Class 1</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This is the detailed fee structure for class 1, applicable to all students of that class except for specific scenarios."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={detaiFeeStructure.value}

@@ -13,7 +13,6 @@ import {
   Grid,
   Button,
   Switch,
-  Tooltip,
   TextField,
   Typography,
   Autocomplete,
@@ -40,6 +39,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -226,13 +226,13 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Leave Policy</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="In this dialog, you can create a leave policy by setting rules for different leave types (e.g., sick, casual), leave entitlements, and approval workflows."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={dialog.value}

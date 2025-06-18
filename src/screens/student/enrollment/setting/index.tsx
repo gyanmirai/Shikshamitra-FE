@@ -3,7 +3,7 @@
 import React from 'react';
 
 import AddIcon from '@mui/icons-material/Add';
-import { Tab, Box, Card, Button, Tooltip, Typography } from '@mui/material';
+import { Tab, Box, Card, Button, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -11,6 +11,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentDocumentType, { DocumentForm } from './document-type';
@@ -116,13 +117,13 @@ const StudentEnrollmentSettingScreen = () => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Document</Typography>
-              <Tooltip
+              <CustomTooltip
                 arrow
                 placement="right"
                 title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
         >
@@ -143,9 +144,9 @@ const StudentEnrollmentSettingScreen = () => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Inquiry Preference</Typography>
-              <Tooltip arrow placement="right" title="?.">
+              <CustomTooltip arrow placement="right" title="?.">
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
         >
@@ -162,13 +163,13 @@ const StudentEnrollmentSettingScreen = () => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Slots</Typography>
-              <Tooltip
+              <CustomTooltip
                 arrow
                 placement="right"
                 title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
           open={entranceExamSlots.value}

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 
 import { Add as AddIcon } from '@mui/icons-material';
-import { Tab, Box, Button, Tooltip, Typography } from '@mui/material';
+import { Tab, Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -12,6 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AttendanceRule, { AttendanceRuleForm } from './attendance-rule';
@@ -116,13 +117,13 @@ const HrAttendanceSettingScreen = () => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Add Rule</Typography>
-              <Tooltip
+              <CustomTooltip
                 arrow
                 placement="right"
                 title="Define the criteria for half-day and late attendance by creating rules here."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
           open={attendanceRuleDialog.value}
@@ -148,13 +149,13 @@ const HrAttendanceSettingScreen = () => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">Leave Type</Typography>
-              <Tooltip
+              <CustomTooltip
                 arrow
                 placement="right"
                 title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
           }
         >

@@ -1,12 +1,13 @@
 import React from 'react';
 
-import { Box, Tab, Tooltip, Typography } from '@mui/material';
+import { Box, Tab, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
 import { feestructureDummyData } from '../data/fee-structure-data';
@@ -41,13 +42,13 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
           <Typography variant="h5">
             {tabs.value === 'editable' ? 'Edit For Class 1' : 'Details For Class 1'}
           </Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title="You can edit and modify the existing fee structure for Class 1. While making edits, if you want to track the changes you've made, you can view the details in the Reference Table."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       open={dialogValue}

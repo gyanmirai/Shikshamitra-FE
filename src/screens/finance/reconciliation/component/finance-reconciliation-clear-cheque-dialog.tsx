@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 
@@ -12,6 +12,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -50,7 +51,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
           <Typography variant="h5">
             {fromClearCheck ? 'Clearing Cheque' : 'Bounce Cheque'}
           </Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title={
@@ -60,7 +61,7 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
             }
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       // title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}

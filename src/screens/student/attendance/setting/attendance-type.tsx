@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { MuiColorInput } from 'mui-color-input';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -21,6 +21,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -154,13 +155,13 @@ const AttendanceType = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Leave Type</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >
