@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, TextField, Typography, DialogActions } from '@mui/material';
 
 import capitalizeWords from 'src/utils/capitalizeText';
 import { formatNumber } from 'src/utils/formate_number';
@@ -9,6 +9,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -95,11 +96,11 @@ const AdditionalDiscountDialog: React.FC<Props> = ({ dialogValue, onClose, stude
       open={dialogValue}
       handleClose={onClose}
       title={
-        <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" alignItems="center" gap={1}>
           <Typography variant="h5">Additional Discount</Typography>
-          <Tooltip title="Set student-specific additional discount per fee head.">
+          <CustomTooltip title="Set student-specific additional discount per fee head.">
             <Iconify icon="lucide:info" color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       maxWidth="xl"

@@ -26,6 +26,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { DocumentForm } from '../setting/document-type';
@@ -254,13 +255,13 @@ export const RenderDocuments = (props: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Document</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >

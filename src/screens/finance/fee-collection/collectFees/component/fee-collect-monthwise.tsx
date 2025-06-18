@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import React, { useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -14,6 +14,7 @@ import TemplatesOneFeeReceipt from 'src/screens/finance/viewReceipt/Templates/Te
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
 import type { IFeeCollectionMonthWiseProps } from './fee-collection-monthwise-interface';
@@ -178,13 +179,13 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Fee Collection</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="To collect the fee, please select the term. The pending fee will automatically appear in the due amount input under Fee-wise. Enter the received amount in the Received Amount input field."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={dialogValue}

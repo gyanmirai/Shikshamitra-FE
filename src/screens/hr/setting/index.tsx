@@ -68,7 +68,11 @@ const HrSetting = () => {
       />
       <CustomBreadcrumbs
         heading="Setting"
-        links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Setting' }]}
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'Employee', href: '/hr/employee/' },
+          { name: 'Setting' },
+        ]}
         sx={{ px: 1, mb: 2 }}
         description="Add, Update and Delete Documents from employee"
         action={
@@ -104,10 +108,10 @@ const HrSetting = () => {
         isLoading={isLoading}
         isFilter={false}
         columns={[
-          { id: 'documentName', label: 'Documents Name' },
+          { id: 'documentName', label: 'Document Name' },
           {
             id: 'documentTypes',
-            label: 'Document Format',
+            label: 'Accepted Format',
             isSort: false,
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
@@ -260,7 +264,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Select Document Format *"
+                  label="Accepted Format *"
                   value={`${values.documentType?.length || 0} Document Selected`}
                   size="small"
                   error={touched.documentType && Boolean(errors.documentType)}

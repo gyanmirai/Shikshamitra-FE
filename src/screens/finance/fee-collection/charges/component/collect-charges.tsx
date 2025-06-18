@@ -5,16 +5,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Button,
-  Tooltip,
-  Checkbox,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -27,6 +18,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -90,13 +82,13 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">Charges Collection</Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title="These charges include any late fees and bounced check charges, if applicable; otherwise, the amount will be 0.You can select multiple charges and collect them together."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       open={dialogValue}

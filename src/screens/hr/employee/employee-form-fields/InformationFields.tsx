@@ -271,7 +271,8 @@ const InformationAllFields = ({ formik, disabled }: any) => (
                 label="Family Cast *"
                 {...formik.getFieldProps('familyCast')}
                 onChange={(e) => {
-                  const newName = capitalize(e.target.value);
+                  // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
+                  const newName = e.target.value[0].toUpperCase() + e.target.value.slice(1);
                   formik.setFieldValue('familyCast', newName);
                 }}
                 error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}

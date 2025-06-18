@@ -3,11 +3,12 @@
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
+import { IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
-import { Tooltip, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import CustomTooltip from '../custom-tooltip';
 import { BreadcrumbsLink } from './breadcrumb-link';
 
 import type { CustomBreadcrumbsProps } from './types';
@@ -48,9 +49,9 @@ export function CustomBreadcrumbs({
       )}
       {heading}{' '}
       {description && (
-        <Tooltip arrow placement="right" title={description} {...tooltipProps}>
+        <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
           <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-        </Tooltip>
+        </CustomTooltip>
       )}
     </Typography>
   );

@@ -2,7 +2,15 @@ import React from 'react';
 import { useFormik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Button,
+  TextField,
+  IconButton,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -12,8 +20,8 @@ import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const ChangeStatusForm = ({
   handleClose,
@@ -26,20 +34,28 @@ const ChangeStatusForm = ({
   status: EmployeeStatusType;
   employeeName: string;
 }) => {
+  const options = EmployeeStatusTypeArray.map((item, index) => ({
+    label: EmployeeStatusType[index],
+    value: index,
+    description: 'hello', // Helper function to get status description
+  }));
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeStatusMutation,
   });
-  const formik = useFormik({
+  const formik = useFormik<{
+    status: { label: EmployeeStatusType | string; value: number; description: string };
+    remarks: string;
+  }>({
     initialValues: {
-      status: status || EmployeeStatusType.Active,
+      status: { label: EmployeeStatusType[status || 0], value: status, description: '' },
       remarks: '',
     },
     onSubmit: async (values) => {
       try {
         const res = await updateStatus({
           id: employeeId,
-          employeeStatusType: values.status,
+          employeeStatusType: values.status.value,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Status of ${employeeName} has been updated successfully.`,
@@ -55,22 +71,39 @@ const ChangeStatusForm = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Stack spacing={2}>
-          <CustomSelect
-            options={EmployeeStatusTypeArray.map((item, index) => ({
-              label: EmployeeStatusType[index],
-              value: index,
-            }))}
+          <Autocomplete
+            options={options}
             value={formik.values.status}
-            onChange={(val) => {
-              formik.setFieldValue('status', val);
+            onChange={(_, newValue) => {
+              formik.setFieldValue('status', newValue || 0);
             }}
-            label="Select Status"
-            formControlProps={{
-              fullWidth: true,
-              sx: {
-                maxWidth: 'unset',
-              },
-            }}
+            size="small"
+            disableClearable
+            getOptionLabel={(option) => String(option.label)}
+            renderOption={(props, option) => (
+              <Box
+                component="li"
+                {...props}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  width: '100%',
+                }}
+              >
+                {option.label}
+                <Box sx={{ marginLeft: 'auto' }}>
+                  <CustomTooltip title={option.description} placement="right">
+                    <IconButton size="small">
+                      <Iconify icon="mdi:information" width={20} />
+                    </IconButton>
+                  </CustomTooltip>
+                </Box>
+              </Box>
+            )}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Select Status" fullWidth />
+            )}
           />
           <TextField
             fullWidth

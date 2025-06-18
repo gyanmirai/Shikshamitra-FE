@@ -8,15 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import {
-  Box,
-  Button,
-  Tooltip,
-  TextField,
-  Typography,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
+import { Box, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -26,6 +18,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const LeavingCertificate = () => {
@@ -89,13 +82,13 @@ const LeavingCertificate = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Create Leaving Certificate</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This certificate is issued to students upon leaving the institution, confirming their enrollment period and academic details."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         open={dialog.value}

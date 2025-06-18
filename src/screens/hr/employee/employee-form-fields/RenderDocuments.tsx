@@ -120,11 +120,11 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
         tableId="documents"
         columns={[
           { id: 'documentName', label: 'Name' },
-          {
-            id: 'docType',
-            label: 'Document Format',
-            isSort: false,
-          },
+          // {
+          //   id: 'docType',
+          //   label: 'Document Format',
+          //   isSort: false,
+          // },
           {
             id: 'statusVal',
             label: 'Status',
@@ -227,6 +227,8 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             label: 'View',
             isFilter: false,
             isSort: false,
+            minWidth: '6vw',
+            align: 'left',
             render(value, row) {
               return (
                 <IconButton

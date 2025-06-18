@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
@@ -122,13 +123,13 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">Fee Refund Approval</Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title="This is the Approval Dialog, where you can approve a refund request by entering the refund amount for the student. You can also view the requested amount in the Ask for Refund column."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       open={dialogValue}

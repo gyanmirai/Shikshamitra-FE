@@ -1,11 +1,12 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { libraryAddCategoryValidationSchema } from './validationSchema';
@@ -29,13 +30,13 @@ const LibraryAddCategoryDialog: React.FC<IAddCategoryDialogProps> = ({ open, onC
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">Add Category</Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title="Create and manage book categories here. When adding a new book you can select a category from this list."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       open={open}

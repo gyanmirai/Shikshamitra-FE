@@ -11,7 +11,6 @@ import {
   Stack,
   Switch,
   Button,
-  Tooltip,
   TextField,
   Typography,
   DialogActions,
@@ -36,6 +35,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -174,13 +174,13 @@ const StudentDocumentType = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Document</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >

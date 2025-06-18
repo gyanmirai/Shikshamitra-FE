@@ -16,7 +16,6 @@ import {
   Stack,
   Button,
   Select,
-  Tooltip,
   MenuList,
   MenuItem,
   useTheme,
@@ -51,6 +50,7 @@ import { BoardForm } from './board-setup';
 import { ClassForm } from './class-setup';
 import CustomDialog from '../customDialog';
 import { MediumForm } from './medium-setup';
+import CustomTooltip from '../custom-tooltip';
 import { DivisionForm } from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import { ComponentBlock } from '../component-block';
@@ -121,13 +121,13 @@ const BoardActions = (data: Board & { parentsData: OrgChartListProps['parentsDat
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Create Medium{' '}
-              <Tooltip
+              <CustomTooltip
                 title="An Education Medium in a School ERP refers to the language or mode of instruction used for teaching, such as English, Hindi, or regional languages."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography variant="subtitle2" color="text.secondary">
               {' '}
@@ -220,13 +220,13 @@ const MediumActions = (data: Medium & { parentsData: OrgChartListProps['parentsD
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Create Organization{' '}
-              <Tooltip
+              <CustomTooltip
                 title="An Organization in a School ERP represents the classification of education levels, such as Primary, Secondary, or Higher Secondary, to structure the academic framework."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -244,13 +244,13 @@ const MediumActions = (data: Medium & { parentsData: OrgChartListProps['parentsD
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Update Medium{' '}
-              <Tooltip
+              <CustomTooltip
                 title="An Education Medium in a School ERP refers to the language or mode of instruction used for teaching, such as English, Hindi, or regional languages."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -351,13 +351,13 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Create Division{' '}
-              <Tooltip
+              <CustomTooltip
                 title="A Division in a School ERP refers to the subdivision of a standard (class) to manage students in smaller groups, such as Division A, B, or C, for better organization."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -375,13 +375,13 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Update Standard{' '}
-              <Tooltip
+              <CustomTooltip
                 title="A Standard in a School ERP refers to a specific grade or class level, such as Grade 1, Grade 2, or Grade 10, defining the curriculum and subjects for students."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -483,13 +483,13 @@ const DivisionActions = (data: Division & { parentsData: OrgChartListProps['pare
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Update Division{' '}
-              <Tooltip
+              <CustomTooltip
                 title="A Division in a School ERP refers to the subdivision of a standard (class) to manage students in smaller groups, such as Division A, B, or C, for better organization."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -583,13 +583,13 @@ const OrganizationActions = (
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Create Standard{' '}
-              <Tooltip
+              <CustomTooltip
                 title="A Standard in a School ERP refers to a specific grade or class level, such as Grade 1, Grade 2, or Grade 10, defining the curriculum and subjects for students."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -607,13 +607,13 @@ const OrganizationActions = (
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Update Organization{' '}
-              <Tooltip
+              <CustomTooltip
                 title="An Organization in a School ERP represents the classification of education levels, such as Primary, Secondary, or Higher Secondary, to structure the academic framework."
                 placement="right"
                 arrow
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </Tooltip>
+              </CustomTooltip>
             </Box>
             <Typography display="inline-block" variant="subtitle2" color="text.secondary">
               {' '}
@@ -912,13 +912,13 @@ const YearSetup = () => {
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {editData ? 'Update Academic Year' : 'Create Academic Year'}{' '}
-            <Tooltip
+            <CustomTooltip
               title="An Academic Year in a School ERP is a structured timeframe that manages student enrollment, classes, exams, fees, and promotions for a specific session."
               placement="right"
               arrow
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         handleClose={onCloseDialog}
@@ -930,13 +930,13 @@ const YearSetup = () => {
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             Create Education Board
-            <Tooltip
+            <CustomTooltip
               title="An Education Board in a School ERP defines the governing authority that sets academic policies, curriculum, exams, and regulations for affiliated institutions."
               placement="right"
               arrow
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         handleClose={boardDialog.onFalse}

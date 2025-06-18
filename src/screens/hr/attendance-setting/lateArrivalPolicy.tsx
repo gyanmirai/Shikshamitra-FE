@@ -13,7 +13,6 @@ import {
   Box,
   Grid,
   Button,
-  Tooltip,
   MenuList,
   MenuItem,
   Checkbox,
@@ -30,6 +29,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -168,13 +168,13 @@ const LateArrivalPolicy = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Leave Arrival Policy</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="In this dialog, you can create a late arrival policy by setting rules for how late arrivals are handled, including permissible time, penalties."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >

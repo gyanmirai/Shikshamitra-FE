@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Button, Tooltip, Typography, DialogActions } from '@mui/material';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -11,6 +11,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import FeeRefundPaymentDialog from './fee-refund-payment-dialog';
@@ -100,13 +101,13 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
       title={
         <Box display="flex" flexDirection="row" gap={1} alignItems="center">
           <Typography variant="h5">Fee Refund</Typography>
-          <Tooltip
+          <CustomTooltip
             arrow
             placement="right"
             title="Refunds can be processed only after approval of the student's refund request. You can view the requested refund amount, the approved amount, and any remarks. Please review the remarks carefully before initiating the refund process."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </Tooltip>
+          </CustomTooltip>
         </Box>
       }
       open={dialogValue}

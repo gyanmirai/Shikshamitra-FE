@@ -14,7 +14,6 @@ import {
   Paper,
   Table,
   Button,
-  Tooltip,
   useTheme,
   TableRow,
   MenuList,
@@ -40,6 +39,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -368,13 +368,13 @@ const TimeTableGrid = (props: TabComponentType) => {
         title={
           <Box display="flex" alignItems="center" gap={1}>
             {isEdit ? 'Update Timetable' : 'Create Timetable'}{' '}
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="Create or update timetable schedules for classes and divisions to organize daily academic activities"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>{' '}
+            </CustomTooltip>{' '}
           </Box>
         }
         handleClose={() => {

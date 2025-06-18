@@ -9,7 +9,6 @@ import {
   Box,
   Grid,
   Button,
-  Tooltip,
   Checkbox,
   TextField,
   Typography,
@@ -34,6 +33,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -197,13 +197,13 @@ const SalaryComponent = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Salary Component</Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title="In this section, you can define various salary components such as basic salary, allowances, bonuses, deductions, and more. These components are used to calculate the employee's total salary.."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
         handleClose={handleClose}

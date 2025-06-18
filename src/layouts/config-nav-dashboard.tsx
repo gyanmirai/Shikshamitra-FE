@@ -75,7 +75,7 @@ export const settingMenu = {
   _action: 'setting',
 };
 
-const studentModule = {
+const studentModule = (isDdvs: boolean) => ({
   [studentPath]: [
     {
       subheader: '',
@@ -195,7 +195,7 @@ const studentModule = {
               title: 'Student I-Card',
               path: '/student/student-i-card',
               _action: 'student-i-card',
-              disabled: true,
+              disabled: !isDdvs,
               caption: 'Coming Soon',
               shortcutKey: 'Alt+S+R+3',
               shortcutKeyName: 'Alt+S+R+3',
@@ -275,7 +275,7 @@ const studentModule = {
       ],
     },
   ],
-};
+});
 const securityModule = {
   [securityPath]: [
     {
@@ -469,7 +469,7 @@ const settingModule = {
   ],
 };
 
-const hrModule = {
+const hrModule = (isDdvs: boolean) => ({
   [hrPath]: [
     {
       subheader: '',
@@ -480,7 +480,7 @@ const hrModule = {
           _action: 'dashboard',
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
         },
         {
@@ -501,7 +501,7 @@ const hrModule = {
               title: 'I-card',
               path: '/hr/i-card',
               _action: 'i-card',
-              disabled: true,
+              disabled: !isDdvs,
               caption: 'Coming Soon',
               shortcutKey: 'Alt+H+E+2',
               shortcutKeyName: 'Alt+H+E+2',
@@ -521,7 +521,7 @@ const hrModule = {
           _action: 'payroll-management',
           shortcutKey: 'Alt+H+P',
           shortcutKeyName: 'Alt+H+P',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
           children: [
             {
@@ -595,7 +595,7 @@ const hrModule = {
           title: 'Professional Management',
           path: '/hr/professional-management',
           _action: 'professional-management',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
           shortcutKey: 'Alt+H+M',
           shortcutKeyName: 'Alt+H+M',
@@ -606,7 +606,7 @@ const hrModule = {
           _action: 'reports',
           shortcutKey: 'Alt+H+R',
           shortcutKeyName: 'Alt+H+R',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
         },
         {
@@ -636,13 +636,13 @@ const hrModule = {
           title: 'Notification',
           path: '/hr/hr-notification',
           _action: 'hr-notification',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
         },
       ],
     },
   ],
-};
+});
 
 const classManagementModule = {
   [classPath]: [
@@ -677,7 +677,7 @@ const classManagementModule = {
   ],
 };
 
-const academicModule = {
+const academicModule = (isDdvs: boolean) => ({
   [academicPath]: [
     {
       subheader: '',
@@ -688,7 +688,7 @@ const academicModule = {
           _action: 'dashboard',
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
-          disabled: true,
+          disabled: !isDdvs,
           caption: 'Coming Soon',
         },
         {
@@ -753,7 +753,7 @@ const academicModule = {
               _action: 'student-enrollment-reports',
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
-              disabled: true,
+              disabled: !isDdvs,
               caption: 'Coming Soon',
             },
             {
@@ -785,7 +785,7 @@ const academicModule = {
               _action: 'timetable-schedule-management',
               shortcutKey: 'Alt+A+T+3',
               shortcutKeyName: 'Alt+A+T+3',
-              disabled: true,
+              disabled: !isDdvs,
               caption: 'Coming Soon',
             },
             {
@@ -883,7 +883,7 @@ const academicModule = {
           path: '',
           caption: 'Coming Soon',
           _action: 'group-management',
-          disabled: true,
+          disabled: !isDdvs,
           shortcutKey: 'Alt+A+G',
           shortcutKeyName: 'Alt+A+G',
           children: [
@@ -922,7 +922,7 @@ const academicModule = {
           path: '/academic/learning-management-system',
           _action: 'learning-management-system',
           caption: 'Coming Soon',
-          disabled: true,
+          disabled: !isDdvs,
           shortcutKey: 'Alt+A+L',
           shortcutKeyName: 'Alt+A+L',
           children: [
@@ -973,7 +973,7 @@ const academicModule = {
       ],
     },
   ],
-};
+});
 
 const communicationModule = {
   [communicationPath]: [
@@ -2034,7 +2034,7 @@ export const navData = (isDdvs: boolean) => [
         _action: 'student',
         shortcutKey: 'Alt+S',
         shortcutKeyName: 'Alt+S',
-        submodule: studentModule[studentPath].flatMap((list) => list.items),
+        submodule: studentModule(isDdvs)[studentPath].flatMap((list) => list.items),
       },
       {
         title: 'Academics',
@@ -2043,7 +2043,7 @@ export const navData = (isDdvs: boolean) => [
         _action: 'academic',
         shortcutKey: 'Alt+A',
         shortcutKeyName: 'Alt+A',
-        submodule: academicModule[academicPath].flatMap((list) => list.items),
+        submodule: academicModule(isDdvs)[academicPath].flatMap((list) => list.items),
       },
       {
         title: 'Class Management',
@@ -2061,7 +2061,7 @@ export const navData = (isDdvs: boolean) => [
         _action: 'hr',
         shortcutKey: 'Alt+H',
         shortcutKeyName: 'Alt+H',
-        submodule: hrModule[hrPath].flatMap((list) => list.items),
+        submodule: hrModule(isDdvs)[hrPath].flatMap((list) => list.items),
       },
       {
         title: 'Finance',
@@ -2142,11 +2142,11 @@ export const navData = (isDdvs: boolean) => [
   },
 ];
 export const navSubData = (isDdvs: boolean) => ({
-  ...studentModule,
+  ...studentModule(isDdvs),
   ...securityModule,
   ...settingModule,
-  ...hrModule,
-  ...academicModule,
+  ...hrModule(isDdvs),
+  ...academicModule(isDdvs),
   ...hostelModule,
   ...financeModule,
   ...transportModule,

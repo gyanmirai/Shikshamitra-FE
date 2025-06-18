@@ -7,7 +7,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, Tooltip, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -27,6 +27,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -369,13 +370,13 @@ const LeaveHistory = (props: any) => {
             <Typography variant="h5">
               {editData ? 'Review Leave Request' : 'Add Leave Request'}
             </Typography>
-            <Tooltip
+            <CustomTooltip
               arrow
               placement="right"
               title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </Tooltip>
+            </CustomTooltip>
           </Box>
         }
       >
