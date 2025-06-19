@@ -16,7 +16,11 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/employee/employeeApi';
-import { EmployeeStatusType, EmployeeStatusTypeArray } from 'src/enums/employee-status-type';
+import {
+  EmployeeStatusType,
+  EmployeeStatusTypeArray,
+  EmployeeStatusTypeInformation,
+} from 'src/enums/employee-status-type';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -37,7 +41,7 @@ const ChangeStatusForm = ({
   const options = EmployeeStatusTypeArray.map((item, index) => ({
     label: EmployeeStatusType[index],
     value: index,
-    description: 'hello', // Helper function to get status description
+    description: EmployeeStatusTypeInformation[item as keyof typeof EmployeeStatusTypeInformation], // Helper function to get status description
   }));
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',

@@ -16,6 +16,7 @@ import Backdrop from '@mui/material/Backdrop';
 import FormHelperText from '@mui/material/FormHelperText';
 
 import { Toolbar } from './toolbar';
+import { Iconify } from '../iconify';
 import { StyledRoot } from './styles';
 import { editorClasses } from './classes';
 import { CodeHighlightBlock } from './components/code-highlight-block';
@@ -43,9 +44,22 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
   ) => {
     const [fullScreen, setFullScreen] = useState(false);
     const [showToolbar, setShowToolbar] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
 
     const handleToggleFullScreen = useCallback(() => {
       setFullScreen((prev) => !prev);
+    }, []);
+
+    const handleToggleToolbar = useCallback(() => {
+      setShowToolbar((prev) => !prev);
+    }, []);
+
+    const handleMouseEnter = useCallback(() => {
+      setIsHovering(true);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+      setIsHovering(false);
     }, []);
 
     const lowlight = createLowlight(common);
@@ -118,7 +132,15 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       <Portal disablePortal={!fullScreen}>
         {fullScreen && <Backdrop open sx={{ zIndex: (theme) => theme.zIndex.modal - 1 }} />}
 
-        <Stack sx={{ ...(!editable && { cursor: 'not-allowed' }), ...slotProps?.wrap }}>
+        <Stack
+          sx={{
+            ...(!editable && { cursor: 'not-allowed' }),
+            ...slotProps?.wrap,
+            position: 'relative',
+          }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <StyledRoot
             error={!!error}
             disabled={!editable}
@@ -126,12 +148,36 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
             className={editorClasses.root}
             sx={sx}
           >
-            <Toolbar
-              editor={editor}
-              fullItem={fullItem}
-              fullScreen={fullScreen}
-              onToggleFullScreen={handleToggleFullScreen}
-            />
+            {isHovering && (
+              <div
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleToggleToolbar();
+                  }
+                }}
+                onClick={handleToggleToolbar}
+                style={{
+                  position: 'absolute',
+                  bottom: 8,
+                  right: 8,
+                  cursor: 'pointer',
+                  zIndex: 1,
+                }}
+              >
+                <Iconify icon="fluent:text-edit-style-24-regular" />
+              </div>
+            )}
+
+            {showToolbar && (
+              <Toolbar
+                editor={editor}
+                fullItem={fullItem}
+                fullScreen={fullScreen}
+                onToggleFullScreen={handleToggleFullScreen}
+              />
+            )}
 
             {/* <Scrollbar sx={{ height: '200px' }}> */}
             <EditorContent

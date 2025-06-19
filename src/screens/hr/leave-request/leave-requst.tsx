@@ -9,17 +9,8 @@ import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
+import { Grid, Button, DialogActions } from '@mui/material';
 import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Stack,
-  Button,
-  Checkbox,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -36,9 +27,9 @@ import {
 
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -230,14 +221,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox
                     name="isHalfDay"
                     checked={values.isHalfDay}
                     disabled={editData}
-                    sx={{ p: 1 }}
+                    sx={{ p: 0 }}
                     onChange={(e: any) => {
                       setFieldValue('isHalfDay', e.target.checked);
                       if (e.target.checked) {
@@ -248,7 +239,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 }
                 label="Half Day"
               />
-            </Grid>
+            </Grid> */}
             {values.isHalfDay ? (
               <>
                 <Grid item xs={12}>
@@ -314,9 +305,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
                       label="Start Date *"
+                      disablePast
                       onChange={(value) => setFieldValue('startDate', value)}
-                      format="DD-MM-YYYY"
-                      views={['year', 'month', 'day']}
+                      format="DD-MM-YYYY HH:mm:ss"
+                      // views={['year', 'month', 'day']}
                       value={values.startDate}
                       disabled={editData}
                       slotProps={{
@@ -334,9 +326,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                     <DateTimePicker
                       label="End Date *"
+                      disablePast
                       onChange={(value) => setFieldValue('endDate', value)}
-                      format="DD-MM-YYYY"
-                      views={['year', 'month', 'day']}
+                      format="DD-MM-YYYY HH:mm:ss"
+                      // views={['year', 'month', 'day']}
                       value={values.endDate}
                       disabled={editData}
                       slotProps={{
@@ -375,7 +368,24 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
             <Grid item xs={12}>
-              <UploadBox
+              <FileUploader
+                disabled={editData}
+                // @ts-ignore
+                value={values.docs}
+                multiple={false}
+                onChange={(value) => {
+                  // const reader = new FileReader();
+                  setFieldValue('docs', value);
+                  // reader.readAsDataURL(value as File);
+                  // reader.readAsDataURL(value as File);
+                  // reader.onload = () => {
+                  //   const base64String = reader.result;
+                  // };
+                }}
+                primaryText="Please Upload Your File"
+                secondaryText="Maximum file size is 5MB"
+              />
+              {/* <UploadBox
                 value={values.docs}
                 disabled={editData}
                 // onRemove={() => handleRemoveFile(setFieldValue)}
@@ -401,7 +411,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     setFieldValue('docs', base64String);
                   };
                 }}
-              />
+              /> */}
               {/* <UploadButton
                 onChange={(e) => {
                   const file = e?.target?.files?.[0];
@@ -423,7 +433,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               >
                 Upload Document
               </UploadButton> */}
-              {values.docs && (
+              {/* {values.docs && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -473,7 +483,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     onClick={() => handleRemoveFile(setFieldValue)}
                   />
                 </Box>
-              )}
+              )} */}
 
               {/* <Upload
                 {...uploadProps}
@@ -497,7 +507,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           </Grid>
         </BackPopUpChecked>
       </DialogScrollContent>
-      <DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           variant="outlined"
           size="small"

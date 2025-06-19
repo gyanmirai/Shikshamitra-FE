@@ -2,6 +2,8 @@ import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -246,11 +248,17 @@ const LeaveHistory = (props: any) => {
             label: 'Name',
             sticky: true,
             id: 'employee.firstName',
-            minWidth: '8vw',
+            minWidth: '12vw',
             align: 'left',
             render(value, row) {
               return `${value} ${row.employee.lastName}`;
             },
+          },
+          {
+            label: 'Employee Code',
+            id: 'employee.employeeCode',
+            minWidth: '9.5vw',
+            align: 'left',
           },
           {
             label: 'Start Date',
@@ -271,7 +279,7 @@ const LeaveHistory = (props: any) => {
           {
             label: 'Total Days',
             id: 'totalDays',
-            minWidth: '10vw',
+            minWidth: '7vw',
             align: 'left',
           },
           {
@@ -285,12 +293,14 @@ const LeaveHistory = (props: any) => {
           {
             label: 'Description',
             id: 'description',
+            align: 'left',
+            minWidth: '14vw',
           },
           {
             label: 'Remarks',
             id: 'rejectionReason',
             align: 'left',
-            minWidth: '200px',
+            minWidth: '12vw',
             render(value, row) {
               return value || '-';
             },
@@ -400,55 +410,14 @@ const LeaveHistory = (props: any) => {
               : 'Approve Leave Request'
           }
         >
-          <Box sx={{ p: 2 }}>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Remarks"
-              onChange={(e) => {
-                setRejectionReason(e.target.value);
-              }}
-              value={rejectionReason}
-              sx={{ mb: 2 }}
-            />
-            <Box display="flex" justifyContent="flex-end" gap={2}>
-              <Button
-                variant="outlined"
-                onClick={handleClose}
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              >
-                Cancel
-              </Button>
-              <LoadingButton
-                variant="contained"
-                loading={isChangeStatusLoading}
-                startIcon={
-                  <Iconify
-                    icon={
-                      editData.type === EmployeeLeaveStatusType.Rejected
-                        ? GlobalIcons.reject
-                        : GlobalIcons.approvedIcon
-                    }
-                  />
-                }
-                onClick={async () => {
-                  await changeStatus({
-                    id: editData?.id,
-                    body: {
-                      status: editData.type,
-                      rejectionReason,
-                    },
-                  });
-                  approveOrRejectConfirmation?.onFalse();
-                  setRejectionReason('');
-                  setEditData(null);
-                }}
-              >
-                {editData.type === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
-              </LoadingButton>
-            </Box>
-          </Box>
+          <ApproveRejectForm
+            handleClose={() => {
+              approveOrRejectConfirmation?.onFalse();
+              setRejectionReason('');
+              setEditData(null);
+            }}
+            editData={editData}
+          />
         </CustomDialog>
       )}
     </>
@@ -456,3 +425,81 @@ const LeaveHistory = (props: any) => {
 };
 
 export default LeaveHistory;
+
+const ApproveRejectForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: () => void;
+  editData: any;
+}) => {
+  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+  });
+  const { values, handleChange, errors, touched, handleSubmit } = useFormik({
+    initialValues: {
+      rejectionReason: '',
+    },
+    validationSchema: Yup.object({
+      rejectionReason:
+        editData.type === EmployeeLeaveStatusType.Rejected
+          ? Yup.string().required('Remarks is required')
+          : Yup.string(),
+    }),
+    onSubmit: async (formikValues) => {
+      try {
+        await changeStatus({
+          id: editData?.id,
+          body: {
+            status: editData.type,
+            rejectionReason: formikValues.rejectionReason,
+          },
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  });
+  return (
+    <Box component="form" sx={{ p: 2 }} onSubmit={handleSubmit}>
+      <TextField
+        fullWidth
+        multiline
+        rows={4}
+        label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
+        onChange={handleChange}
+        value={values.rejectionReason}
+        error={touched.rejectionReason && !!errors.rejectionReason}
+        helperText={touched.rejectionReason && errors.rejectionReason}
+        sx={{ mb: 2 }}
+      />
+      <Box display="flex" justifyContent="flex-end" gap={2}>
+        <Button
+          variant="outlined"
+          onClick={handleClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          variant="contained"
+          loading={isChangeStatusLoading}
+          type="submit"
+          startIcon={
+            <Iconify
+              icon={
+                editData.type === EmployeeLeaveStatusType.Rejected
+                  ? GlobalIcons.reject
+                  : GlobalIcons.approvedIcon
+              }
+            />
+          }
+        >
+          {editData.type === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
+        </LoadingButton>
+      </Box>
+    </Box>
+  );
+};

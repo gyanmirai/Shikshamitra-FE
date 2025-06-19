@@ -10,7 +10,7 @@ export const documentApi = createApi({
   tagTypes: ['Document'],
   endpoints: (builder) => ({
     getDocuments: builder.query({
-      query: () => ({ url: '/app/document-setting' }),
+      query: () => ({ url: '/app/document-setting?Sorting=documentName' }),
       providesTags: ['Document'],
     }),
     addDocument: builder.mutation({

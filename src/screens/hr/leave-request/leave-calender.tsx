@@ -1,11 +1,12 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,6 +23,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import type { TabComponentType } from '.';
 
@@ -37,14 +39,19 @@ import type { TabComponentType } from '.';
 // }
 
 const LeaveCalender = (props: TabComponentType) => {
+  const [organization, setOrganization] = useState<string | null>(null);
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
-
+  const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
   });
+
+  const handleChange = (event: any) => {
+    setOrganization(event?.target?.value);
+  };
 
   const calendarData = useMemo(
     () =>
@@ -69,7 +76,10 @@ const LeaveCalender = (props: TabComponentType) => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const onChangeView = useCallback((newView: any) => {
+    setOrganization(newView);
+  }, []);
   return (
     <>
       <CommonCalender
@@ -78,6 +88,37 @@ const LeaveCalender = (props: TabComponentType) => {
         onDateClick={(arg) => {
           setCurrentDateClick(arg);
         }}
+        initialView="dayGridMonth"
+        formate="MMM YYYY"
+        views={{
+          timeGridWeek: {
+            dayHeaderFormat: { weekday: 'short', day: '2-digit' }, // Sun, 01
+          },
+          dayGridMonth: {
+            titleFormat: { year: 'numeric', month: 'long' }, // June 2025
+          },
+          dayGridDay: {
+            titleFormat: { day: '2-digit', month: 'long', year: 'numeric' }, // 18 June 2025
+          },
+        }}
+        allDaySlot={false}
+        viewOptions={[
+          { value: 'dayGridMonth', label: 'Month', icon: 'mingcute:calendar-month-line' },
+          { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
+          { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
+        ]}
+        // renderCompToHeader={
+        //   <Button
+        //     size="small"
+        //     color="inherit"
+        //     onClick={popover.onOpen}
+        //     // startIcon={<Iconify icon={selectedItem.icon} />}
+        //     endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
+        //     sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
+        //   >
+        //     {organization || 'Organization'}
+        //   </Button>
+        // }
       />
       <CustomDialog
         open={!!currentDateClick}
@@ -86,6 +127,28 @@ const LeaveCalender = (props: TabComponentType) => {
       >
         <LeaveRequestForm editData={editData} />
       </CustomDialog>
+
+      <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={popover.onClose}
+        slotProps={{ arrow: { placement: 'top-left' } }}
+      >
+        <MenuList>
+          {medium?.educationMediumStages?.map((org: any) => (
+            <MenuItem
+              key={org.id}
+              value={org.id}
+              onClick={() => {
+                popover.onClose();
+                onChangeView(org.name);
+              }}
+            >
+              {org.name}
+            </MenuItem>
+          ))}
+        </MenuList>
+      </CustomPopover>
     </>
   );
 };

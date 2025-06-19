@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
 
@@ -8,7 +9,19 @@ import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tab, Card, Tabs, TextField, Autocomplete } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Card,
+  Tabs,
+  Select,
+  MenuItem,
+  Skeleton,
+  TextField,
+  InputLabel,
+  FormControl,
+  Autocomplete,
+} from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -30,6 +43,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -121,7 +135,7 @@ const DateWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  // const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const dateValue = useMemo(
     () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
     [searchParams.date]
@@ -175,6 +189,10 @@ const DateWise = ({
         attendanceData?.items.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
         ).length || 6,
+      'Rejected Leave':
+        attendanceData?.items.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.RejectedLeave
+        ).length || 4,
     }),
     [attendanceData?.items]
   );
@@ -207,6 +225,12 @@ const DateWise = ({
         color: 'warning',
         // icon: <Iconify icon="radix-icons:half-2" />,
       },
+      {
+        value: EmployeeAttendanceStatus.RejectedLeave,
+        label: 'Rejected Leave',
+        count: counts['Rejected Leave'] || 0,
+        color: 'error',
+      },
     ],
     [counts]
   );
@@ -223,6 +247,17 @@ const DateWise = ({
     setSelectedStudents([]);
   };
 
+  const [organization, setOrganization] = useState('');
+  const handleChange = (event: any) => {
+    setOrganization(event.target.value);
+  };
+
+  useEffect(() => {
+    if (medium?.educationMediumStages?.[0]) {
+      setOrganization(medium?.educationMediumStages?.[0]?.id);
+    }
+  }, [medium?.educationMediumStages]);
+
   return (
     <>
       {' '}
@@ -232,13 +267,39 @@ const DateWise = ({
         alignItems="center"
         sx={{
           p: 1,
-
+          gap: 2,
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           my: 2,
         }}
       >
+        <FormControl sx={{ maxWidth: '268px', width: '100%' }}>
+          <InputLabel id="Roles-select-label" size="small">
+            Organization
+          </InputLabel>
+          <Select
+            labelId="Roles-select-label"
+            id="Roles-select"
+            value={organization || ''}
+            name="organization"
+            size="small"
+            onChange={handleChange}
+            label="Organization"
+          >
+            {medium?.educationMediumStages.length ? (
+              medium?.educationMediumStages.map((org: any) => (
+                <MenuItem key={org.id} value={org.id}>
+                  {org.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="">
+                <em>No Organization Found</em>
+              </MenuItem>
+            )}
+          </Select>
+        </FormControl>
         <DatePicker
           format="DD-MM-YYYY"
           label="Date"
@@ -374,6 +435,9 @@ const DateWise = ({
             id: 'status',
             label: 'Status',
             sticky: true,
+            isSort: false,
+            isFilter: false,
+            align: 'left',
             render(value, row) {
               return (
                 <Label
@@ -402,7 +466,7 @@ const DateWise = ({
             attendanceDate: '2024-03-02',
             timeIn: '09:30 AM',
             timeOut: '05:30 PM',
-            totalHoursWorked: '09H 00M',
+            totalHoursWorked: '08H 00M',
             status: 'Present',
             employeeName: 'Sharma Priya Raj',
             contactNo: '+91 98765 43211',
@@ -424,7 +488,7 @@ const DateWise = ({
             attendanceDate: '2024-03-04',
             timeIn: '09:15 AM',
             timeOut: '02:15 PM',
-            totalHoursWorked: '09H 00M',
+            totalHoursWorked: '05H 00M',
             status: 'Half day',
             employeeName: 'Gupta Sneha Ramesh',
             contactNo: '+91 98765 43213',
@@ -479,7 +543,7 @@ const DateWise = ({
             attendanceDate: '2024-03-09',
             timeIn: '09:30 AM',
             timeOut: '02:30 PM',
-            totalHoursWorked: '09H 00M',
+            totalHoursWorked: '05H 00M',
             status: 'Half day',
             employeeName: 'Malhotra Rahul Dinesh',
             contactNo: '+91 98765 43218',
@@ -517,6 +581,7 @@ const EmployeeWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const startDate = useMemo(
     () =>
       searchParams.startDate
@@ -558,6 +623,10 @@ const EmployeeWise = ({
         data?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
         ).length || 6,
+      'Rejected Leave':
+        data?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.RejectedLeave
+        ).length || 4,
     }),
     [data?.items]
   );
@@ -612,14 +681,14 @@ const EmployeeWise = ({
       },
       {
         value: 'FullDayLeave',
-        label: 'Full Day Leave',
-        count: data?.[0]?.leaveDays || 2,
+        label: 'Leave',
+        count: data?.[0]?.leaveDays || 6,
         icon: 'fluent-mdl2:leave-user',
         color: 'error',
       },
       {
         value: 'HalfDayLeave',
-        label: 'Half Day Leave',
+        label: 'Half Day',
         count: data?.[0]?.halfDayLeaves || 3,
         icon: 'mdi:fraction-one-half',
         color: 'warning',
@@ -639,6 +708,20 @@ const EmployeeWise = ({
     tabs.onChange(event, newValue);
     setSelectedStudents([]);
   };
+  const employeeValue = useMemo(
+    () => employees?.items?.find((i: any) => i.id === searchParams.employeeId) || null,
+    [employees?.items, searchParams.employeeId]
+  );
+  const [organization, setOrganization] = useState('');
+  const handleChange = (event: any) => {
+    setOrganization(event.target.value);
+  };
+
+  useEffect(() => {
+    if (medium?.educationMediumStages?.[0]) {
+      setOrganization(medium?.educationMediumStages?.[0]?.id);
+    }
+  }, [medium?.educationMediumStages]);
   return (
     <>
       <Box
@@ -650,29 +733,71 @@ const EmployeeWise = ({
           boxShadow: 'var(--shadows-3)',
           my: 2,
           p: 1,
+          flexWrap: 'wrap',
         }}
       >
-        <Autocomplete
-          options={employees?.items || []}
-          getOptionLabel={(option: any) =>
-            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
+        <FormControl sx={{ maxWidth: '268px', width: '100%' }}>
+          <InputLabel id="Roles-select-label" size="small">
+            Organization
+          </InputLabel>
+          <Select
+            labelId="Roles-select-label"
+            id="Roles-select"
+            value={organization || ''}
+            name="organization"
+            size="small"
+            onChange={handleChange}
+            label="Organization" // ✅ Needed to link with InputLabel
+          >
+            {medium?.educationMediumStages.length ? (
+              medium?.educationMediumStages.map((org: any) => (
+                <MenuItem key={org.id} value={org.id}>
+                  {org.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="">
+                <em>No Organization Found</em>
+              </MenuItem>
+            )}
+          </Select>
+        </FormControl>
+        <CustomTooltip
+          placement="top"
+          title={
+            employeeValue
+              ? `${employeeValue.firstName || ''} ${employeeValue.middleName || ''} ${employeeValue.lastName || ''} (${employeeValue.employeeCode || ''})`
+              : undefined
           }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Employee"
-              placeholder="Search Employee"
-              size="small"
-              fullWidth
-              sx={{ width: '100%', minWidth: 268 }}
+        >
+          {isLoading ? (
+            <Box sx={{ width: '100%', maxWidth: 268 }}>
+              <Skeleton height={40} width="100%" />
+            </Box>
+          ) : (
+            <Autocomplete
+              options={employees?.items || []}
+              getOptionLabel={(option: any) =>
+                `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Employee"
+                  size="small"
+                  fullWidth
+                  sx={{ width: '100%', minWidth: 268 }}
+                  disabled={!organization}
+                />
+              )}
+              value={employeeValue}
+              onChange={(e, value) => {
+                setSearchParams({ employeeId: value?.id as string });
+                // formik.setFieldValue('examType', value?.id);
+              }}
             />
           )}
-          onChange={(e, value) => {
-            console.log('value----in autocomplete---', value);
-            setSearchParams({ employeeId: value?.id as string });
-            // formik.setFieldValue('examType', value?.id);
-          }}
-        />
+        </CustomTooltip>
 
         <DatePicker
           format="DD-MM-YYYY"
@@ -798,8 +923,15 @@ const EmployeeWise = ({
               },
             },
             {
+              id: 'day',
+              label: 'Day',
+              minWidth: '6vw',
+              align: 'left',
+            },
+            {
               id: 'timeIn',
               label: 'In-time',
+              minWidth: '6vw',
               render(value, row) {
                 return value || `__ __`;
               },
@@ -807,11 +939,13 @@ const EmployeeWise = ({
             {
               id: 'timeOut',
               label: 'Out-time',
+              minWidth: '8vw',
               render(value, row) {
                 return value || `__ __`;
               },
             },
-            { id: 'totalHoursWorked', label: 'Hours Worked' },
+            { id: 'totalHoursWorked', label: 'Hours Worked', minWidth: '10vw' },
+            { id: 'description', label: 'Description' },
             {
               id: 'status',
               label: 'Status',
@@ -848,6 +982,7 @@ const EmployeeWise = ({
             {
               id: 1,
               attendanceDate: '2024-03-01',
+              day: 'Friday',
               timeIn: '08:30 AM',
               timeOut: '05:30 PM',
               totalHoursWorked: '09H 00M',
@@ -859,6 +994,7 @@ const EmployeeWise = ({
             {
               id: 2,
               attendanceDate: '2024-03-02',
+              day: 'Saturday',
               timeIn: '09:15 AM',
               timeOut: '06:15 PM',
               totalHoursWorked: '09H 00M',
@@ -870,6 +1006,7 @@ const EmployeeWise = ({
             {
               id: 3,
               attendanceDate: '2024-03-03',
+              day: 'Sunday',
               timeIn: '',
               timeOut: '',
               totalHoursWorked: '__ __',
@@ -877,10 +1014,12 @@ const EmployeeWise = ({
               employeeName: 'Rajesh Kumar',
               contactNo: '+91 76543 21098',
               employeeCode: 'EMP103',
+              description: 'Medical emergency - Family member hospitalized',
             },
             {
               id: 4,
               attendanceDate: '2024-03-04',
+              day: 'Monday',
               timeIn: '08:45 AM',
               timeOut: '02:45 PM',
               totalHoursWorked: '08H 00M',
@@ -888,10 +1027,12 @@ const EmployeeWise = ({
               employeeName: 'Sneha Gupta',
               contactNo: '+91 65432 10987',
               employeeCode: 'EMP104',
+              description: 'Doctor appointment in afternoon',
             },
             {
               id: 5,
               attendanceDate: '2024-03-05',
+              day: 'Tuesday',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
               totalHoursWorked: '12H 00M',
@@ -903,6 +1044,7 @@ const EmployeeWise = ({
             {
               id: 6,
               attendanceDate: '2024-03-06',
+              day: 'Wednesday',
               timeIn: '08:15 AM',
               timeOut: '05:15 PM',
               totalHoursWorked: '09H 00M',
@@ -914,6 +1056,7 @@ const EmployeeWise = ({
             {
               id: 7,
               attendanceDate: '2024-03-07',
+              day: 'Thursday',
               timeIn: '',
               timeOut: '',
               totalHoursWorked: '__ __',
@@ -921,10 +1064,12 @@ const EmployeeWise = ({
               employeeName: 'Arjun Malhotra',
               contactNo: '+91 32109 87654',
               employeeCode: 'EMP107',
+              description: 'Personal leave - Family function',
             },
             {
               id: 8,
               attendanceDate: '2024-03-08',
+              day: 'Friday',
               timeIn: '09:30 AM',
               timeOut: '06:30 PM',
               totalHoursWorked: '09H 00M',
@@ -936,6 +1081,7 @@ const EmployeeWise = ({
             {
               id: 9,
               attendanceDate: '2024-03-09',
+              day: 'Saturday',
               timeIn: '08:45 AM',
               timeOut: '02:45 PM',
               totalHoursWorked: '06H 00M',
@@ -943,10 +1089,12 @@ const EmployeeWise = ({
               employeeName: 'Karan Joshi',
               contactNo: '+91 10987 65432',
               employeeCode: 'EMP109',
+              description: 'Left early due to personal emergency',
             },
             {
               id: 10,
               attendanceDate: '2024-03-10',
+              day: 'Sunday',
               timeIn: '09:00 AM',
               timeOut: '06:00 PM',
               totalHoursWorked: '09H 00M',
