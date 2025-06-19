@@ -87,7 +87,7 @@ const BiometricIntegrationScreen = () => {
         noDataText={<>No Biometric Integration Data Found </>}
         tableId="biometric-integration-table"
         columns={[
-          { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
+          { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
           { id: 'contactNo', label: 'Mobile No.', align: 'left', minWidth: '8vw' },
           {
@@ -115,7 +115,7 @@ const BiometricIntegrationScreen = () => {
             filterType: 'enum',
             sticky: true,
             align: 'left',
-            minWidth: '8vw',
+            minWidth: '6vw',
             enumOptions: EmployeeAttendanceStatusOptions,
             render(value, row) {
               return (
@@ -131,7 +131,7 @@ const BiometricIntegrationScreen = () => {
             id: 'action',
             label: 'Action',
             isFilter: false,
-            minWidth: '4vw',
+            minWidth: '3vw',
             align: 'left',
             sticky: true,
             isSort: false,

@@ -4,6 +4,7 @@ export enum EmployeeAttendanceStatus {
   FullDayLeave,
   All,
   Late,
+  RejectedLeave,
 }
 
 export const EmployeeAttendanceStatusOptions = [
@@ -26,6 +27,10 @@ export const EmployeeAttendanceStatusOptions = [
   {
     label: 'Late',
     value: EmployeeAttendanceStatus.Late,
+  },
+  {
+    label: 'RejectedLeave',
+    value: EmployeeAttendanceStatus.RejectedLeave,
   },
 ];
 

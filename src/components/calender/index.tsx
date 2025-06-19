@@ -29,6 +29,13 @@ type CommonCalenderProps = CalendarOptions & {
   onEventResize?: (eventData: Partial<ICalendarEvent>) => void;
   onDateClick?: (arg: EventClickArg) => void;
   showCalendarToolbar?: boolean;
+  formate?: string;
+  viewOptions?: {
+    value: string;
+    label: string;
+    icon: string;
+  }[];
+  renderCompToHeader?: React.ReactNode;
 };
 
 const CommonCalender = ({
@@ -40,6 +47,9 @@ const CommonCalender = ({
   showCalendarToolbar = true,
   initialView,
   initialDate,
+  formate,
+  viewOptions,
+  renderCompToHeader = null,
   ...props
 }: CommonCalenderProps) => {
   const theme = useTheme();
@@ -86,7 +96,7 @@ const CommonCalender = ({
         <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
           {showCalendarToolbar && (
             <CalendarToolbar
-              date={fDate(date)}
+              date={fDate(date, formate)}
               view={view}
               canReset
               loading={isLoading}
@@ -95,6 +105,8 @@ const CommonCalender = ({
               onToday={onDateToday}
               onChangeView={onChangeView}
               onOpenFilters={() => {}}
+              viewOptions={viewOptions as any}
+              renderCompToHeader={renderCompToHeader}
             />
           )}
 

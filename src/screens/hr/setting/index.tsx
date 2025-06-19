@@ -42,7 +42,7 @@ const HrSetting = () => {
     currentQueryAndMutation: useGetDocumentsQuery,
   });
 
-  const [deleteDocument] = useQueryAndMutation({
+  const [deleteDocument, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteDocumentMutation,
   });
@@ -54,16 +54,21 @@ const HrSetting = () => {
         title="Delete"
         content={`Are you sure you want to delete ${deleteInformation?.documentName} ?`}
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             onClick={async () => {
               await deleteDocument(deleteInformation?.id);
+              shikshaMitraToast.success({
+                message: `${deleteInformation?.documentName} Document deleted successfully`,
+              });
+              setDeleteInformation(null);
               confirm.onFalse();
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
       <CustomBreadcrumbs

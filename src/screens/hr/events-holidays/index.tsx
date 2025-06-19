@@ -164,7 +164,7 @@ const HrEventsAndHolidaysScreen = () => {
           }}
         />
         <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
-          Event & Holidays
+          Event & Holiday
         </Button>
       </Box>
       {view === 'list' ? (
@@ -193,7 +193,7 @@ const HrEventsAndHolidaysScreen = () => {
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
-            { id: 'reason', label: 'Name', minWidth: '8vw', align: 'left' },
+            { id: 'name', label: 'Name', minWidth: '10vw', align: 'left' },
             {
               id: 'sDate',
               label: 'Start Date',
@@ -202,7 +202,7 @@ const HrEventsAndHolidaysScreen = () => {
               minWidth: '9vw',
             },
             { id: 'eDate', label: 'End Date', filterType: 'date', align: 'left', minWidth: '9vw' },
-            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '9vw' },
+            { id: 'totalDays', label: 'Total Days', align: 'left', minWidth: '8vw' },
             {
               id: 'reason',
               label: 'Description',
@@ -231,6 +231,9 @@ const HrEventsAndHolidaysScreen = () => {
               id: 'title',
               label: 'Type',
               filterType: 'enum',
+              sticky: true,
+              align: 'left',
+              minWidth: '6vw',
               enumOptions: [
                 { value: 'Event', label: 'Event' },
                 { value: 'Holiday', label: 'Holiday' },
@@ -305,7 +308,7 @@ const HrEventsAndHolidaysScreen = () => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={`Are you sure you want to delete ${editData?.name} ${editData?.isHoliday ? 'Holiday' : 'Event'}?`}
         action={
           <LoadingButton
             variant="contained"
@@ -313,7 +316,11 @@ const HrEventsAndHolidaysScreen = () => {
             color="error"
             onClick={async () => {
               await deleteEventHoliday(editData?.id || '');
-
+              shikshaMitraToast.success({
+                message: editData?.isHoliday
+                  ? `${editData?.name || ''} holiday deleted successfully`
+                  : `${editData?.name || ''} event  deleted successfully`,
+              });
               confirm.onFalse();
               setEditData(null);
             }}
@@ -339,7 +346,21 @@ const HrEventsAndHolidaysScreen = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={(e) => handleClose(e)}
-        title={editData ? 'Update Event or Holiday' : 'Create Event or Holiday'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Update Event or Holiday' : 'Create Event or Holiday'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Create events for special occasions, meetings, or activities. Mark holidays to indicate non-working days. Set start/end dates, add descriptions, and toggle between events and holidays as needed."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        // title={editData ? 'Update Event or Holiday' : 'Create Event or Holiday'}
       >
         <HrEventsAndHolidaysForm handleClose={handleClose} editData={editData} />
       </CustomDialog>

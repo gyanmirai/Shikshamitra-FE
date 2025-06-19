@@ -12,7 +12,7 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
   '& .fc': {
     '--fc-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
     '--fc-now-indicator-color': theme.vars.palette.error.main,
-    '--fc-today-bg-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+    '--fc-today-bg-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
     '--fc-page-bg-color': theme.vars.palette.background.default,
     '--fc-neutral-bg-color': theme.vars.palette.background.neutral,
     '--fc-list-event-hover-bg-color': theme.vars.palette.action.hover,

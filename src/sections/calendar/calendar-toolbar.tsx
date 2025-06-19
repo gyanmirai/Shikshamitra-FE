@@ -1,6 +1,7 @@
 import type { IDateValue } from 'src/types/common';
 import type { ICalendarView } from 'src/types/calendar';
 
+import { Box } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import MenuList from '@mui/material/MenuList';
@@ -33,6 +34,8 @@ type Props = {
   onPrevDate: () => void;
   onOpenFilters: () => void;
   onChangeView: (newView: ICalendarView) => void;
+  viewOptions?: typeof VIEW_OPTIONS;
+  renderCompToHeader?: React.ReactNode;
 };
 
 export function CalendarToolbar({
@@ -45,6 +48,8 @@ export function CalendarToolbar({
   onPrevDate,
   onChangeView,
   onOpenFilters,
+  viewOptions = VIEW_OPTIONS,
+  renderCompToHeader = null,
 }: Props) {
   const popover = usePopover();
 
@@ -58,17 +63,19 @@ export function CalendarToolbar({
         justifyContent="space-between"
         sx={{ p: 2.5, pr: 2, position: 'relative' }}
       >
-        <Button
-          size="small"
-          color="inherit"
-          onClick={popover.onOpen}
-          startIcon={<Iconify icon={selectedItem.icon} />}
-          endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-          sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
-        >
-          {selectedItem.label}
-        </Button>
-
+        <Box display="flex" gap={2}>
+          <Button
+            size="small"
+            color="inherit"
+            onClick={popover.onOpen}
+            startIcon={<Iconify icon={selectedItem.icon} />}
+            endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
+            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+          >
+            {selectedItem.label}
+          </Button>
+          {renderCompToHeader}
+        </Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <IconButton onClick={onPrevDate}>
             <Iconify icon="eva:arrow-ios-back-fill" />
@@ -115,7 +122,7 @@ export function CalendarToolbar({
         slotProps={{ arrow: { placement: 'top-left' } }}
       >
         <MenuList>
-          {VIEW_OPTIONS.map((viewOption) => (
+          {viewOptions.map((viewOption) => (
             <MenuItem
               key={viewOption.value}
               selected={viewOption.value === view}
