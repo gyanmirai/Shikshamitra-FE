@@ -53,31 +53,31 @@ const Teacher = ({
   const teacherOptions: ITeacherOption[] = [
     {
       value: 't1',
-      label: 'Sharma Riya Kumar',
+      name: 'Sharma Riya Kumar',
       department: 'Mathematics Department',
       avatar: 'https://yourcdn.com/riya.png',
     },
     {
       value: 't2',
-      label: 'Patel Ankit Rajesh',
+      name: 'Patel Ankit Rajesh',
       department: 'Science Department',
       avatar: 'https://yourcdn.com/ankit.png',
     },
     {
       value: 't3',
-      label: 'Desai Priya Mahesh',
+      name: 'Desai Priya Mahesh',
       department: 'English Department',
       avatar: 'https://yourcdn.com/priya.png',
     },
     {
       value: 't4',
-      label: 'Singh Rahul Vikram',
+      name: 'Singh Rahul Vikram',
       department: 'Social Studies Department',
       avatar: 'https://yourcdn.com/rahul.png',
     },
     {
       value: 't5',
-      label: 'Mehta Neha Suresh',
+      name: 'Mehta Neha Suresh',
       department: 'Hindi Department',
       avatar: 'https://yourcdn.com/neha.png',
     },
@@ -210,7 +210,7 @@ const Teacher = ({
     { name: 'marathi', code: 'MAR', color: '#33FF33' },
     { name: 'sanskrit', code: 'SNS', color: '#3333FF' },
   ];
-  const divisionList = ['A', 'B', 'C'];
+  const divisionList = ['A', 'B', 'C', 'D', 'E'];
 
   // Rest of your code remains the same until the buttons section
 
@@ -220,8 +220,7 @@ const Teacher = ({
         heading="Teachers Assignment"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
         links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Teachers Assignment' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -306,7 +305,7 @@ const Teacher = ({
                 multiple
                 disableCloseOnSelect
                 options={teacherOptions}
-                getOptionLabel={(option) => option.label}
+                getOptionLabel={(option) => option.name}
                 value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.value)) : []}
                 onChange={(_, newValue) => {
                   const updatedTableData = tableData.map((divisionData) => {
@@ -335,10 +334,10 @@ const Teacher = ({
                       style={{ marginRight: 8 }}
                       checked={selected}
                     />
-                    {option.label}
+                    {option.name}
                   </li>
                 )}
-                sx={{ width: '100%', minWidth: '330px' }}
+                sx={{ width: '100%', minWidth: '330px' }} // Removed pr: 0 and reduced minWidth
                 renderTags={(val) => {
                   if (val.length === 0) return null;
                   const first = val[0];
@@ -347,8 +346,8 @@ const Teacher = ({
                     <Chip
                       key={first.value}
                       variant="soft"
-                      avatar={<Avatar>{first.label.charAt(0)}</Avatar>}
-                      label={first.label}
+                      avatar={<Avatar>{first.name.charAt(0)}</Avatar>}
+                      label={first.name}
                       sx={{ ml: 1 }}
                       size="small"
                     />,
@@ -394,6 +393,7 @@ const Teacher = ({
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={handleReset}
+            size="small"
           >
             Reset
           </Button>
@@ -405,20 +405,14 @@ const Teacher = ({
         open={saveConfirmDialog.value}
         onClose={saveConfirmDialog.onFalse}
         content={
-          <Box>
-            <Typography>Are you sure you want to save the following changes?</Typography>
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2">Modified Subjects:</Typography>
-              {getModifiedSubjects().map((subject) => (
-                <Typography key={subject} variant="body2" sx={{ ml: 2 }}>
-                  • {subject}
-                </Typography>
-              ))}
-            </Box>
-          </Box>
+          <>
+            Are you sure you want to save the <strong>{getModifiedSubjects().join(', ')}</strong>{' '}
+            changes?
+          </>
         }
         action={
           <Button
+            size="small"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={handleSave}

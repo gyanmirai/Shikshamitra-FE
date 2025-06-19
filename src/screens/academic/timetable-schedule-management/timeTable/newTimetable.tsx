@@ -5,6 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -49,17 +50,18 @@ import SubjectList from './component/subjectList';
 import TimeTableCell from './component/timeTableCell';
 import CreateSlotsForm from '../settings/components/lectureSlots/createSlotsForm';
 
-import type { TSubjectGroup, TRemainingLectures } from './type';
+import type { DayData, Subject, TimetableSlot, TSubjectGroup } from './type';
 
-export const subjectGroups: TSubjectGroup[] = [
+export const subjectGroupsData: TSubjectGroup[] = [
   {
     subjectName: 'Core Subjects',
     subjectColor: '#ef5350',
-    noOfLecture: 7,
+    allocateLectures: 7,
+    totalLectures: 7,
     subjectType: 'core',
     subjects: [
       {
-        name: 'Math',
+        subject: 'Math',
         teachers: ['Mr. Smith', 'Mrs. Johnson'],
       },
     ],
@@ -68,15 +70,16 @@ export const subjectGroups: TSubjectGroup[] = [
   {
     subjectName: 'Language Subjects',
     subjectColor: '#42a5f5',
-    noOfLecture: 7,
+    allocateLectures: 7,
+    totalLectures: 7,
     subjectType: 'Elective',
     subjects: [
       {
-        name: 'English',
+        subject: 'English',
         teachers: ['Ms. Wilson', 'Mr. Brown'],
       },
       {
-        name: 'Hindi',
+        subject: 'Hindi',
         teachers: ['Mr. Mehta', 'Mrs. Kapoor'],
       },
     ],
@@ -84,9 +87,71 @@ export const subjectGroups: TSubjectGroup[] = [
   },
 ];
 
+const timetableData: TimetableSlot[] = [
+  {
+    startTime: '08:00',
+    endTime: '09:00',
+    isBreak: false,
+    dayData: [
+      { day: 'Mon', subjects: [], subjectColor: '' },
+      { day: 'Tue', subjects: [], subjectColor: '' },
+      { day: 'Wed', subjects: [], subjectColor: '' },
+      { day: 'Thu', subjects: [], subjectColor: '' },
+      { day: 'Fri', subjects: [], subjectColor: '' },
+      { day: 'Sat', subjects: [], subjectColor: '' },
+    ],
+  },
+  {
+    startTime: '09:00',
+    endTime: '10:00',
+    isBreak: false,
+    dayData: [
+      { day: 'Mon', subjects: [], subjectColor: '' },
+      { day: 'Tue', subjects: [], subjectColor: '' },
+      { day: 'Wed', subjects: [], subjectColor: '' },
+      { day: 'Thu', subjects: [], subjectColor: '' },
+      { day: 'Fri', subjects: [], subjectColor: '' },
+      { day: 'Sat', subjects: [], subjectColor: '' },
+    ],
+  },
+  {
+    startTime: '10:00',
+    endTime: '10:15',
+    isBreak: true,
+    dayData: [],
+  },
+  {
+    startTime: '10:15',
+    endTime: '11:15',
+    isBreak: false,
+    dayData: [
+      { day: 'Mon', subjects: [], subjectColor: '' },
+      { day: 'Tue', subjects: [], subjectColor: '' },
+      { day: 'Wed', subjects: [], subjectColor: '' },
+      { day: 'Thu', subjects: [], subjectColor: '' },
+      { day: 'Fri', subjects: [], subjectColor: '' },
+      { day: 'Sat', subjects: [], subjectColor: '' },
+    ],
+  },
+  {
+    startTime: '11:15',
+    endTime: '12:15',
+    isBreak: false,
+    dayData: [
+      { day: 'Mon', subjects: [], subjectColor: '' },
+      { day: 'Tue', subjects: [], subjectColor: '' },
+      { day: 'Wed', subjects: [], subjectColor: '' },
+      { day: 'Thu', subjects: [], subjectColor: '' },
+      { day: 'Fri', subjects: [], subjectColor: '' },
+      { day: 'Sat', subjects: [], subjectColor: '' },
+    ],
+  },
+];
+
 const TimeTableGrid = (props: TabComponentType) => {
   // Dialog state for creating time slots modal
   const createSlotsDialog = useBoolean();
+  const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
   // Dialog state for publishing marks modal (currently unused)
   const publishTimetableDialog = useBoolean();
   // State to store all classes/standards for the selected organization
@@ -135,15 +200,6 @@ const TimeTableGrid = (props: TabComponentType) => {
   const theme = useTheme();
 
   // Initialize remaining lectures count for each subject
-  const [remainingLectures, setRemainingLectures] = useState<TRemainingLectures>(() =>
-    subjectGroups.reduce(
-      (acc, subject) => ({
-        ...acc,
-        [subject.id]: subject.noOfLecture,
-      }),
-      {}
-    )
-  );
 
   // Define time slots for the timetable
   const timeSlots = [
@@ -157,19 +213,7 @@ const TimeTableGrid = (props: TabComponentType) => {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Initialize timetable as an array of arrays
-  const [timetable, setTimetable] = useState<
-    Array<
-      Array<{
-        subject?: TSubjectGroup;
-        teacher?: string;
-        room?: string;
-      } | null>
-    >
-  >(() =>
-    Array(timeSlots.length)
-      .fill(null)
-      .map(() => Array(weekDays.length).fill(null))
-  );
+  const [timetable, setTimetable] = useState<TimetableSlot[]>(timetableData);
 
   // Handle the start of a drag operation for a subject
   const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubjectGroup) => {
@@ -178,124 +222,187 @@ const TimeTableGrid = (props: TabComponentType) => {
   };
 
   // Handle dropping a subject into a timetable slot
-  const handleDrop = (e: React.DragEvent<HTMLElement>, timeSlot: string, day: string) => {
-    e.preventDefault();
-    // Get the subject data from the drag event
-    const subject = JSON.parse(e.dataTransfer.getData('subject'));
-    // Get source location if moving an existing slot
-    const sourceTimeSlot = e.dataTransfer.getData('sourceTimeSlot');
-    const sourceDay = e.dataTransfer.getData('sourceDay');
+  // const handleDrop = (e: React.DragEvent<HTMLElement>, timeSlot: string, day: string) => {
+  //   e.preventDefault();
+  //   // Get the subject data from the drag event
+  //   const subject = JSON.parse(e.dataTransfer.getData('subject'));
+  //   // Get source location if moving an existing slot
+  //   const sourceTimeSlot = e.dataTransfer.getData('sourceTimeSlot');
+  //   const sourceDay = e.dataTransfer.getData('sourceDay');
 
-    // Convert time slot and day to array indices
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  //   // Convert time slot and day to array indices
+  //   const timeSlotIndex = timeSlots.indexOf(timeSlot);
+  //   const dayIndex = weekDays.indexOf(day);
 
-    // Prevent dropping into an occupied slot
-    if (timetable[timeSlotIndex][dayIndex] !== null) {
-      return;
-    }
+  //   // Prevent dropping into an occupied slot
+  //   if (timetable[timeSlotIndex][dayIndex] !== null) {
+  //     return;
+  //   }
 
-    // Handle new subject placement (not moving existing)
-    if (!sourceTimeSlot && !sourceDay) {
-      // Check if there are any remaining lectures for this subject
-      if (remainingLectures[subject.id] <= 0) {
+  //   // Handle new subject placement (not moving existing)
+  //   if (!sourceTimeSlot && !sourceDay) {
+  //     // Check if there are any remaining lectures for this subject
+  //     if (remainingLectures[subject.id] <= 0) {
+  //       return;
+  //     }
+
+  //     // Decrease the count of remaining lectures for this subject
+  //     setRemainingLectures((prev: TRemainingLectures) => ({
+  //       ...prev,
+  //       [subject.id]: prev[subject.id] - 1,
+  //     }));
+  //   }
+
+  //   // Update the timetable with the new subject placement
+  //   setTimetable((prev : any) => {
+  //     // Create a deep copy of the timetable
+  //     const newTimetable = prev.map((row : any) => [...row]);
+
+  //     // Handle moving an existing slot
+  //     if (sourceTimeSlot && sourceDay) {
+  //       // Get indices for the source location
+  //       const sourceTimeSlotIndex = timeSlots.indexOf(sourceTimeSlot);
+  //       const sourceDayIndex = weekDays.indexOf(sourceDay);
+  //       // Store the source slot data before clearing it
+  //       const sourceSlotData = newTimetable[sourceTimeSlotIndex][sourceDayIndex];
+  //       // Clear the source slot
+  //       newTimetable[sourceTimeSlotIndex][sourceDayIndex] = null;
+  //       // Place the subject in the new slot with existing teacher and room
+  //       newTimetable[timeSlotIndex][dayIndex] = {
+  //         subject,
+  //         teacher: sourceSlotData?.teacher,
+  //         room: sourceSlotData?.room || subject.room,
+  //       };
+  //     } else {
+  //       // Place new subject in the slot with default values
+  //       newTimetable[timeSlotIndex][dayIndex] = {
+  //         subject,
+  //         teacher: '',
+  //         room: subject.room || classroom,
+  //       };
+  //     }
+
+  //     return newTimetable;
+  //   });
+  // };
+
+  const handleDrop = (e: any, item: DayData, rowIndex: number, colIndex: number) => {
+    const subjectData = e.dataTransfer.getData('subject');
+    if (subjectData) {
+      const subject = JSON.parse(subjectData);
+      const droppedSubjectGroup = JSON.parse(subjectData);
+
+      const cloneTimeTableData = cloneDeep(timetable);
+      const cloneSubjectGroups = cloneDeep(subjectsGroups);
+      const existingDayData = cloneTimeTableData[rowIndex].dayData[colIndex];
+      if (existingDayData?.subjects?.length > 0) {
         return;
       }
-
-      // Decrease the count of remaining lectures for this subject
-      setRemainingLectures((prev: TRemainingLectures) => ({
-        ...prev,
-        [subject.id]: prev[subject.id] - 1,
+      const cleanedSubjects = (subject.subjects || []).map((s: Subject) => ({
+        subject: s.subject,
+        teacher: '',
+        room: '',
       }));
-    }
 
-    // Update the timetable with the new subject placement
-    setTimetable((prev) => {
-      // Create a deep copy of the timetable
-      const newTimetable = prev.map((row) => [...row]);
+      cloneTimeTableData[rowIndex].dayData[colIndex] = {
+        day: weekDays[colIndex],
+        subjectColor: subject.subjectColor,
+        subjects: cleanedSubjects,
+      };
 
-      // Handle moving an existing slot
-      if (sourceTimeSlot && sourceDay) {
-        // Get indices for the source location
-        const sourceTimeSlotIndex = timeSlots.indexOf(sourceTimeSlot);
-        const sourceDayIndex = weekDays.indexOf(sourceDay);
-        // Store the source slot data before clearing it
-        const sourceSlotData = newTimetable[sourceTimeSlotIndex][sourceDayIndex];
-        // Clear the source slot
-        newTimetable[sourceTimeSlotIndex][sourceDayIndex] = null;
-        // Place the subject in the new slot with existing teacher and room
-        newTimetable[timeSlotIndex][dayIndex] = {
-          subject,
-          teacher: sourceSlotData?.teacher,
-          room: sourceSlotData?.room || subject.room,
-        };
-      } else {
-        // Place new subject in the slot with default values
-        newTimetable[timeSlotIndex][dayIndex] = {
-          subject,
-          teacher: '',
-          room: subject.room || classroom,
-        };
+      const firstSubject = cleanedSubjects[0];
+      const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
+        g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
+      );
+
+      if (group) {
+        group.allocateLectures = Math.max(0, group.allocateLectures - 1);
       }
 
-      return newTimetable;
-    });
+      console.log('cloneTimeTableData---', cloneTimeTableData);
+
+      setTimetable(cloneTimeTableData);
+      setSubjectsGroups(cloneSubjectGroups);
+    }
   };
 
   // Handles deletion of a subject from a time slot and updates remaining lectures count
-  const handleDeleteSlot = (timeSlot: string, day: string) => {
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  const handleDeleteSlot = (rowIndex: number, colIndex: number) => {
+    const cloneTimeTableData = cloneDeep(timetable);
+    const cloneSubjectGroups = cloneDeep(subjectsGroups);
+    const cleanedSubjects = cloneTimeTableData[rowIndex]?.dayData?.[colIndex]?.subjects || [];
 
-    setTimetable((prev) => {
-      const deletedSubject = prev[timeSlotIndex][dayIndex]?.subject;
-      if (deletedSubject) {
-        // Increment the remaining lectures count for the deleted subject
-        setRemainingLectures((pre: TRemainingLectures) => ({
-          ...pre,
-          [deletedSubject.id]: pre[deletedSubject.id] + 1,
-        }));
-      }
+    cloneTimeTableData[rowIndex].dayData[colIndex] = {
+      day: weekDays[colIndex],
+      subjectColor: '',
+      subjects: [],
+    };
+    const firstSubject = cleanedSubjects[0];
+    const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
+      g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
+    );
 
-      // Create Manage Timetable with the slot cleared
-      const newTimetable = prev.map((row) => [...row]);
-      newTimetable[timeSlotIndex][dayIndex] = null;
-      return newTimetable;
-    });
+    if (group) {
+      group.allocateLectures = Math.max(0, group.allocateLectures + 1);
+    }
+    setTimetable(cloneTimeTableData);
+    setSubjectsGroups(cloneSubjectGroups);
   };
 
   // Handles assigning a teacher to a specific time slot
-  const handleTeacherSelect = (teacher: string, timeSlot: string, day: string) => {
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  const handleTeacherSelect = (
+    updatedSlotData: any, // Contains the updated subjects array with teachers
+    rowIndex: number,
+    colIndex: number
+  ) => {
+    setTimetable((prev: any) => {
+      const newTimetable = [...prev]; // clone outer array
+      const dayData = newTimetable[rowIndex].dayData[colIndex];
 
-    setTimetable((prev) => {
-      const newTimetable = prev.map((row) => [...row]);
-      if (newTimetable[timeSlotIndex][dayIndex]) {
-        // Update the teacher for the selected time slot while preserving other data
-        newTimetable[timeSlotIndex][dayIndex] = {
-          ...newTimetable[timeSlotIndex][dayIndex]!,
-          teacher,
+      if (dayData && Array.isArray(dayData.subjects)) {
+        // Merge updated teacher values per subject
+        const updatedSubjects = dayData.subjects.map((subjectItem: any) => {
+          const updated = updatedSlotData.subjects.find(
+            (s: any) => s.subject === subjectItem.subject
+          );
+          return updated ? { ...subjectItem, teacher: updated.teacher } : subjectItem;
+        });
+
+        newTimetable[rowIndex].dayData[colIndex] = {
+          ...dayData,
+          subjects: updatedSubjects,
         };
       }
+
       return newTimetable;
     });
   };
 
   // Handles assigning a room to a specific time slot
-  const handleRoomSelect = (room: string, timeSlot: string, day: string) => {
-    const timeSlotIndex = timeSlots.indexOf(timeSlot);
-    const dayIndex = weekDays.indexOf(day);
+  const handleRoomSelect = (
+    updatedSlotData: any, // Contains the updated subjects array with rooms
+    rowIndex: number,
+    colIndex: number
+  ) => {
+    setTimetable((prev: any) => {
+      const newTimetable = [...prev]; // clone outer array
+      const dayData = newTimetable[rowIndex].dayData[colIndex];
 
-    setTimetable((prev) => {
-      const newTimetable = prev.map((row) => [...row]);
-      if (newTimetable[timeSlotIndex][dayIndex]) {
-        // Update the room for the selected time slot while preserving other data
-        newTimetable[timeSlotIndex][dayIndex] = {
-          ...newTimetable[timeSlotIndex][dayIndex]!,
-          room,
+      if (dayData && Array.isArray(dayData.subjects)) {
+        // Merge updated room values per subject
+        const updatedSubjects = dayData.subjects.map((subjectItem: any) => {
+          const updated = updatedSlotData.subjects.find(
+            (s: any) => s.subject === subjectItem.subject
+          );
+          return updated ? { ...subjectItem, room: updated.room } : subjectItem;
+        });
+
+        newTimetable[rowIndex].dayData[colIndex] = {
+          ...dayData,
+          subjects: updatedSubjects,
         };
       }
+
       return newTimetable;
     });
   };
@@ -446,7 +553,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                 <Typography variant="h6">Subjects</Typography>
               </Box>
               <Box sx={{ p: 1 }}>
-                <SubjectList onDragStart={handleDragStart} remainingLectures={remainingLectures} />
+                <SubjectList onDragStart={handleDragStart} subjectsGroups={subjectsGroups} />
               </Box>
             </Paper>
             {timeSlots.length > 0 ? (
@@ -464,7 +571,7 @@ const TimeTableGrid = (props: TabComponentType) => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {timeSlots.map((timeSlot, timeSlotIndex) => (
+                      {/* {timeSlots.map((timeSlot, timeSlotIndex) => (
                         <TableRow key={timeSlot}>
                           <TableCell>{timeSlot}</TableCell>
                           {weekDays.map((day, dayIndex) => (
@@ -481,6 +588,32 @@ const TimeTableGrid = (props: TabComponentType) => {
                               onDeleteSlot={handleDeleteSlot}
                             />
                           ))}
+                        </TableRow>
+                      ))} */}
+                      {timetable.map((timeTableItem, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {timeTableItem.startTime} - {timeTableItem.endTime}
+                          </TableCell>
+                          {(timeTableItem.isBreak ? [''] : timeTableItem.dayData).map(
+                            (dayItem, ind) => (
+                              <TimeTableCell
+                                key={ind}
+                                timeSlot={`${timeTableItem.startTime} - ${timeTableItem.endTime}`}
+                                day={typeof dayItem === 'string' ? dayItem : dayItem.day}
+                                item={timeTableItem}
+                                rowIndex={index}
+                                colIndex={ind}
+                                slotData={dayItem}
+                                isBreak={timeTableItem.isBreak}
+                                onDrop={handleDrop}
+                                // selectedRoom={timetable[timeSlotIndex][dayIndex]?.room || classroom}
+                                onTeacherSelect={handleTeacherSelect}
+                                onRoomSelect={handleRoomSelect}
+                                onDeleteSlot={handleDeleteSlot}
+                              />
+                            )
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>

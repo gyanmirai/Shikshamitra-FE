@@ -2,7 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Tab, Tabs, Chip, Divider, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -77,16 +77,19 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
           >
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                <Chip
-                  label={`Class : ${assignment?.class}`}
-                  variant="outlined"
-                  sx={{ fontSize: '0.9rem' }}
-                />
-                <Chip
-                  label={`Type : ${assignment?.assignmentType}`}
-                  variant="outlined"
-                  sx={{ fontSize: '0.9rem' }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography>
+                    <strong>Type : </strong>
+                  </Typography>
+                  <Typography mt={0.3}>{assignment?.assignmentType}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography mt={0.3}>
+                    <strong>Class : </strong>
+                  </Typography>
+                  <Typography mt={0.3}>{assignment?.class}</Typography>
+                </Box>
+
                 <Label
                   variant="soft"
                   color={
@@ -110,6 +113,11 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
                     ] as string
                   }
                 </Label>
+                {/* {homework?.isDailyTask && (
+                  <Label color="warning" sx={{ fontSize: '0.875rem' }}>
+                    Daily Task
+                  </Label>
+                )} */}
               </Box>
             </Box>
           </Box>
@@ -143,7 +151,7 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
                   />
                 ))}
               </Tabs>
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ mb: 2 }} />
 
               {currentActiveComponent?.component && (
                 <currentActiveComponent.component tabs={tabs} assignment={assignment} />

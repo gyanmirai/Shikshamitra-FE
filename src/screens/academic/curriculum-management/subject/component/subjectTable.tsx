@@ -1,6 +1,9 @@
 // SubjectTable.tsx
 
-import { Box, Tooltip, useTheme, IconButton, Typography } from '@mui/material';
+import { useCallback } from 'react';
+
+import { RemoveCircle } from '@mui/icons-material';
+import { Box, Tooltip, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -15,7 +18,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
-import type { ISubject, ISubjectFormValues, ISubjectTableProps } from './type';
+import type { ISubjectDetail, ISubjectFormValues, ISubjectTableProps } from './type';
 
 const SubjectTable = ({
   addSubjectDialog,
@@ -38,7 +41,7 @@ const SubjectTable = ({
     for (const formData of formDataArray) {
       if (formData.subjectType === 'Core') {
         // Each subject is a row
-        (formData.subjects || []).forEach((subject: ISubject) => {
+        (formData.subjects || []).forEach((subject: ISubjectDetail) => {
           rows.push({
             ...subject,
             id: formData.id,
@@ -69,6 +72,28 @@ const SubjectTable = ({
     }
     return rows;
   }
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {/* Show Add Timetable option for Pending status */}
+
+          <MenuItem
+            onClick={() => {
+              onDelete(row as ISubjectFormValues);
+              pop.onClose();
+            }}
+          >
+            <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} />
+            Remove
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [onDelete]
+  );
 
   return (
     <CustomizableTable
@@ -189,7 +214,7 @@ const SubjectTable = ({
         // },
         {
           id: 'status',
-          label: 'Publish/Draft',
+          label: 'Status',
           align: 'left',
           minWidth: 100,
           isFilter: false,
@@ -233,10 +258,10 @@ const SubjectTable = ({
             return (
               <ThreeDotsActions
                 placement="right-top"
+                actions={(prop) => actions({ ...prop, row })}
                 showViewIcon
                 showEditIcon
-                showDeleteIcon
-                showThreeDots={false}
+                // showThreeDots={false}
                 handleViewClick={() => {
                   const originalFormData = data.find((item) => item.id === row.id);
                   if (originalFormData) {
@@ -249,7 +274,7 @@ const SubjectTable = ({
                     onEdit(originalFormData);
                   }
                 }}
-                handleDeleteClick={() => onDelete(row as ISubjectFormValues)}
+                // handleDeleteClick={() => onDelete(row as ISubjectFormValues)}
               />
             );
           },

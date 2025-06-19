@@ -84,9 +84,9 @@ const TimeTableView = (props: TabComponentType) => {
   }, [classData, classes, setSearchParams]);
 
   const timeSlots = [
-    '8:00 - 8:45',
-    '8:45 - 9:30',
-    '9:30 - 10:15',
+    '08:00 - 08:45',
+    '08:45 - 09:30',
+    '09:30 - 10:15',
     '10:15 - 10:30', // Break
     '10:30 - 11:15',
     '11:15 - 12:00',
@@ -121,7 +121,7 @@ const TimeTableView = (props: TabComponentType) => {
             return {
               subject: dummySubjects[(rowIndex + colIndex) % dummySubjects.length],
               teacher: '',
-              room: `Class ${Math.floor(Math.random() * 5) + 1}`,
+              room: `${Math.floor(Math.random() * 5) + 1} - A`,
             };
           })
       )
@@ -247,7 +247,7 @@ const TimeTableView = (props: TabComponentType) => {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: '8%' }}>Time Slot</TableCell>
+                <TableCell sx={{ width: '10%' }}>Time Slot</TableCell>
                 {weekDays.map((day) => (
                   <TableCell key={day} align="center">
                     {day}

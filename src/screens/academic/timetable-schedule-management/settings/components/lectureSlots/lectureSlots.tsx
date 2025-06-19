@@ -75,14 +75,6 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
-        searchFieldProps={{
-          placeholder: 'Search by Class, Period Slots, Break Slots...',
-          label: 'Search by Class, Period Slots, Break Slots...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Lecture Slots Found{' '}
@@ -112,9 +104,10 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
             id: 'actions',
             label: 'Actions',
             sticky: true,
+            align: 'left',
             isSort: false,
             isFilter: false,
-            minWidth: '100px',
+            minWidth: '80px',
             render(value, row) {
               return (
                 <ThreeDotsActions

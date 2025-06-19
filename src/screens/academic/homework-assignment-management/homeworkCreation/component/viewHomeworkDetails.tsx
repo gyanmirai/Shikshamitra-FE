@@ -2,7 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Tab, Tabs, Chip, Divider, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -64,56 +64,56 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
     <Box sx={{ p: 2, height: '100%' }}>
       <Scrollbar sx={{ height: '600px' }}>
         {/* Homework Header */}
-        <Box>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-            }}
-          >
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                <Chip
-                  label={`Type : ${homework?.homeworkType}`}
-                  variant="outlined"
-                  sx={{ fontSize: '0.9rem' }}
-                />
-                <Chip
-                  label={`Class : ${homework?.class}`}
-                  variant="outlined"
-                  sx={{ fontSize: '0.9rem' }}
-                />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography>
+                  <strong>Type : </strong>
+                </Typography>
+                <Typography mt={0.3}>{homework?.homeworkType}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography mt={0.3}>
+                  <strong>Class : </strong>
+                </Typography>
+                <Typography mt={0.3}>{homework?.class}</Typography>
+              </Box>
 
-                <Label
-                  variant="soft"
-                  color={
-                    PublishUnpublishStatusTypeColors[
-                      homework?.status as PublishUnpublishStatusType
-                    ] as LabelColor
-                  }
-                  sx={
-                    {
-                      // p: 1.8,
-                      // fontSize: '1rem',
-                      // fontWeight: 500,
-                      // minWidth: '100px',
-                      // textAlign: 'center',
-                    }
-                  }
-                >
+              <Label
+                variant="soft"
+                color={
+                  PublishUnpublishStatusTypeColors[
+                    homework?.status as PublishUnpublishStatusType
+                  ] as LabelColor
+                }
+                sx={
                   {
-                    PublishUnpublishStatusType[
-                      homework?.status as PublishUnpublishStatusType
-                    ] as string
+                    // p: 1.8,
+                    // fontSize: '1rem',
+                    // fontWeight: 500,
+                    // minWidth: '100px',
+                    // textAlign: 'center',
                   }
-                </Label>
-                {/* {homework?.isDailyTask && (
+                }
+              >
+                {
+                  PublishUnpublishStatusType[
+                    homework?.status as PublishUnpublishStatusType
+                  ] as string
+                }
+              </Label>
+              {/* {homework?.isDailyTask && (
                   <Label color="warning" sx={{ fontSize: '0.875rem' }}>
                     Daily Task
                   </Label>
                 )} */}
-              </Box>
             </Box>
           </Box>
         </Box>
@@ -146,7 +146,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
                   />
                 ))}
               </Tabs>
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ mb: 2 }} />
 
               {currentActiveComponent?.component && (
                 <currentActiveComponent.component tabs={tabs} homework={homework} />

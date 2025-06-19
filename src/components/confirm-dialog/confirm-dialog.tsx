@@ -1,8 +1,9 @@
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
+import { Close } from '@mui/icons-material';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import { Box, Divider, useTheme, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -20,18 +21,40 @@ export function ConfirmDialog({
   onClose,
   ...other
 }: ConfirmDialogProps) {
+  const theme = useTheme();
+
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose} {...other}>
-      <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle>
+      <Box display="flex" justifyContent="space-between">
+        <Typography variant="h6" pl={3} pt={1}>
+          {title}
+        </Typography>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            color: theme.palette.grey[500],
+            pr: 1,
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Box>
+      {/* <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle> */}
 
-      {content && <DialogContent sx={{ typography: 'body2' }}> {content} </DialogContent>}
+      <Divider />
+      {content && (
+        <DialogContent sx={{ typography: 'body2', mt: 2, mb: 2 }}> {content} </DialogContent>
+      )}
+      {/* <Divider /> */}
 
-      <DialogActions>
+      <DialogActions sx={{ flexShrink: 0, p: 1.5 }}>
         <Button
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           color="inherit"
           onClick={onClose}
+          size="small"
         >
           Cancel
         </Button>

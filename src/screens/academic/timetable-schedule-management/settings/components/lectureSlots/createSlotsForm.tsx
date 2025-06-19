@@ -4,11 +4,11 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Add } from '@mui/icons-material';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -17,7 +17,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -66,17 +65,21 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
    * Creates empty time slots based on the total slots entered
    * Initializes each slot with default values
    */
-  const handleCreateSlots = () => {
-    const slotsCount = parseInt(formik.values.totalSlots, 10);
+  const handleCreateSlots = (e: any) => {
+    const inputValue = e.target.value;
+    formik.setFieldValue('totalSlots', inputValue);
+    const slotsCount = parseInt(inputValue, 10);
+
     if (slotsCount > 0) {
       const newSlots = Array(slotsCount)
         .fill(null)
         .map((_, index) => ({
           id: index,
-          startTime: null,
-          endTime: null,
+          startTime: index === 0 ? dayjs('2024-01-01T07:00') : null,
+          endTime: index === slotsCount - 1 ? dayjs('2024-01-01T12:30') : null,
           slotType: 'period',
         }));
+
       setTimeSlots(newSlots);
       setShowTable(true);
     }
@@ -142,7 +145,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={3}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     options={allClass}
@@ -163,7 +166,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={3}>
                 <ShakingTextField
                   error={!!(formik.touched.schoolHours && formik.errors.schoolHours)}
                 >
@@ -171,7 +174,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     fullWidth
                     label="School Hours *"
                     name="schoolHours"
-                    value={formik.values.schoolHours}
+                    value={formik.values.schoolHours || '07:00 - 12:30'}
                     onChange={formik.handleChange}
                     error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
                     helperText={formik.touched.schoolHours && formik.errors.schoolHours}
@@ -181,7 +184,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={3}>
                 <ShakingTextField
                   error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
                 >
@@ -207,7 +210,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={3}>
                 <ShakingTextField error={!!(formik.touched.totalSlots && formik.errors.totalSlots)}>
                   <TextField
                     fullWidth
@@ -216,25 +219,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     name="totalSlots"
                     type="number"
                     value={formik.values.totalSlots}
-                    onChange={(e) => formik.setFieldValue('totalSlots', e.target.value)}
+                    onChange={(e) => {
+                      handleCreateSlots(e);
+                    }}
                     error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
                     helperText={formik.touched.totalSlots && formik.errors.totalSlots}
                     size="small"
                     disabled={disabled}
                   />
                 </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Button
-                  startIcon={<Add />}
-                  size="small"
-                  variant="contained"
-                  onClick={handleCreateSlots}
-                  disabled={disabled}
-                >
-                  Create Slots
-                </Button>
               </Grid>
             </Grid>
 
@@ -330,16 +323,26 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
             )}
           </Scrollbar>
 
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               type="submit"
               startIcon={<Iconify icon={GlobalIcons.eye} />}
               variant="outlined"
               disabled={disabled}
+              size="small"
             >
               Preview
             </Button>
-            <SubmitButton disabled={disabled} />
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              type="submit"
+              size="small"
+              variant="contained"
+            >
+              {/* {isEdit ? 'Update' : 'Submit'} */}
+              Submit
+            </Button>
+            {/* <SubmitButton size="small" disabled={disabled} /> */}
           </DialogActions>
         </form>
       </Box>

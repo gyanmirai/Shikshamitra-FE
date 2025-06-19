@@ -4,8 +4,6 @@ import * as Yup from 'yup';
 export const validationSchema = Yup.object({
   chapterNo: Yup.number().required('Chapter No is required'),
   chapterName: Yup.string().required('Chapter name is required'),
-  assignedTeacher: Yup.string().required('Assigned Teacher is Required'),
-  content: Yup.string().required('Chapter description is required'),
-  startTime: Yup.mixed().required('Select the Start Date for chapter'),
-  endTime: Yup.mixed().required('Select the End Date for chapter'),
+  startDate: Yup.mixed().required('Chapter Start Date is required'),
+  endDate: Yup.mixed().required('Chapter End Date is required'),
 });

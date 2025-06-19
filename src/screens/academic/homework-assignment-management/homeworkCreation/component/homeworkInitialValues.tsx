@@ -13,16 +13,16 @@ export const getHomeworkInitialValues = (
   subject: editData?.subject || '',
   chapters: editData?.chapters || [],
   homeworkType: editData?.homeworkType || '',
-  submissionType: editData?.submissionType || 'online_text',
+  submissionType: editData?.submissionType || 0,
   // dueDate: dayjs(editData?.dueDate) || null,
   attachments: editData?.attachments ?? [],
-  createdBy: editData?.createdBy || '',
+  createdBy: editData?.createdBy || {},
   status: editData?.status || 0,
 
   // Homework specific fields
   // isDailyTask: editData?.isDailyTask || false,\
-  startDate: dayjs(editData?.startDate) || null,
-  endDate: dayjs(editData?.endDate) || null,
+  startDate: editData?.startDate ? dayjs(editData.startDate) : dayjs(),
+  endDate: editData?.endDate ? dayjs(editData.endDate) : null,
 
   // // Scheduling
   // isScheduled: editData?.isScheduled || false,

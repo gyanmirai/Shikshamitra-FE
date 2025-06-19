@@ -6,8 +6,8 @@ import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -19,6 +19,7 @@ import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import AssignmentForm from './components/assignmentForm';
@@ -74,13 +75,13 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClass(allClasses[0]?.id || '');
+    setClass(allClasses[0]?.name || '');
   }, [medium]);
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
   }, [allClass, classes]);
 
   /**
@@ -101,59 +102,58 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} justifyContent="space-between" mb={1}>
-        <Box display="flex" gap={2}>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClass(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-          />
-          <CustomSelect
-            options={allDivision}
-            label="Division"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            disabled={!classes}
-          />
-          <CustomSelect
-            options={[
-              { id: '1', name: 'Mathematics' },
-              { id: '2', name: 'Science' },
-              { id: '3', name: 'English' },
-              { id: '4', name: 'History' },
-              { id: '5', name: 'Geography' },
-              { id: '6', name: 'Physics' },
-              { id: '7', name: 'Chemistry' },
-              { id: '8', name: 'Biology' },
-            ]}
-            label="Subject"
-            value={subject}
-            onChange={(val) => setSubject(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-            disabled={!division}
-          />
-          <DatePicker
-            label="Assignment Date"
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            name="date"
-            value={date}
-            onChange={(val) => {
-              setDate(val);
-            }}
-            format="DD-MM-YYYY"
-            sx={{ minWidth: '250px' }}
-          />
-        </Box>
-        {/* <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" gap={2} ml={1}>
+        <CustomSelect
+          options={allClass}
+          label="Class"
+          value={classes}
+          onChange={(val) => setClass(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+        />
+        <CustomSelect
+          options={allDivision}
+          label="Division"
+          value={division}
+          onChange={(val) => setDivision(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!classes}
+        />
+        <CustomSelect
+          options={[
+            { id: '1', name: 'Mathematics' },
+            { id: '2', name: 'Science' },
+            { id: '3', name: 'English' },
+            { id: '4', name: 'History' },
+            { id: '5', name: 'Geography' },
+            { id: '6', name: 'Physics' },
+            { id: '7', name: 'Chemistry' },
+            { id: '8', name: 'Biology' },
+          ]}
+          label="Subject"
+          value={subject}
+          onChange={(val) => setSubject(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!division}
+        />
+        <DatePicker
+          label="Assignment Date"
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          name="date"
+          value={date}
+          onChange={(val) => {
+            setDate(val);
+          }}
+          format="DD-MM-YYYY"
+          sx={{ maxWidth: '250px' }}
+        />
+      </Box>
+      {/* <Box display="flex" justifyContent="flex-end">
           <Button
             variant="contained"
             onClick={addAssignmentDialog.onTrue}
@@ -164,7 +164,6 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             Assignment
           </Button>
         </Box> */}
-      </Box>
 
       <CustomDialog
         open={addAssignmentDialog.value}
@@ -172,7 +171,24 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           addAssignmentDialog.onFalse();
           setSelectedAssignment(null);
         }}
-        title={selectedAssignment ? 'Edit Assignment' : 'Add Assignment'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedAssignment ? 'Update Assignment' : 'Add Assignment'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedAssignment
+                  ? 'You can update the assignment details including title, description, due date and other information'
+                  : 'You can create a new assignment by entering the title, description, due date and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
       >
         <AssignmentForm
@@ -226,6 +242,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               // delete logic here
             }}
@@ -251,6 +268,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         action={
           <Button
             variant="contained"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               // publish logic here

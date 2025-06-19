@@ -56,7 +56,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '150px' }}>
+          <Scrollbar sx={{ p: 2, height: '200px' }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
@@ -165,34 +165,30 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 <ShakingTextField
                   error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
                 >
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1 }}
+                    color={
+                      formik.touched.subjectColor && formik.errors.subjectColor
+                        ? 'error.main'
+                        : 'text.primary'
+                    }
+                  >
                     Elective Group Color
                   </Typography>
                   <ColorPickerCircle
                     onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}
                     initialColor={formik.values.subjectColor}
                   />
-                  {formik.touched.subjectColor && formik.errors.subjectColor && (
-                    <Typography
-                      color="error"
-                      variant="caption"
-                      sx={{
-                        mt: 0.5,
-                        fontSize: '10px',
-                        ml: '5px',
-                      }}
-                    >
-                      {formik.errors.subjectColor}
-                    </Typography>
-                  )}
                 </ShakingTextField>
               </Grid>
             </Grid>
           </Scrollbar>
 
-          <DialogActions>
+          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              size="small"
               onClick={() => {
                 onClose(null, false);
               }}
@@ -203,6 +199,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             <Button
               startIcon={<Iconify icon={editData ? GlobalIcons.edit : GlobalIcons.submit} />}
               type="submit"
+              size="small"
               variant="contained"
             >
               {editData ? 'Update' : 'Submit'}

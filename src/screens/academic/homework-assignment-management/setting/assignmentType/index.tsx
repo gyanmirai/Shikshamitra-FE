@@ -5,13 +5,16 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import AssignmentTypeForm from './assignmentTypeForm';
@@ -80,7 +83,24 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
           addAssignmentTypeDialog.onFalse();
           setSelectedData(null);
         }}
-        title={selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedData
+                  ? 'You can update the assignment type details including name and other information'
+                  : 'You can create a new assignment type by entering the name and other required details'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AssignmentTypeForm
           open={addAssignmentTypeDialog}
@@ -107,7 +127,14 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             variant="contained"
             color="error"
-            onClick={() => {}}
+            size="small"
+            onClick={() => {
+              deleteDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Assignment Type : ${selectedData?.assignmentTypeName} deleted successfullly`,
+              });
+              setSelectedData(null);
+            }}
           >
             Yes
           </Button>

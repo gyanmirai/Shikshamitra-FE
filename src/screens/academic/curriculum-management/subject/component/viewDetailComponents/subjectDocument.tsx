@@ -6,7 +6,7 @@ import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments
 
 import DocumentCard from 'src/components/preview-document/DocumentCard';
 
-import type { ISubject } from '../type';
+import type { ISubjectDetail } from '../type';
 
 export const documentsList = [
   {
@@ -56,7 +56,7 @@ export const documentsList = [
   },
 ];
 // Documents panel content
-const SubjectDocument = ({ subject }: { subject: ISubject | null }) => {
+const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
   // State to manage subject documents data
   const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
   return (

@@ -5,7 +5,6 @@
     "chapterName": "Numbers and Number Systems",
     "startDate": "01-01-2025",
     "endDate": "20-01-2025",
-    "assignedTeacher": ["Dr. Ramesh Kumar", "Ms. Priya Singh"],
     "viewMaterial": { "videos": 8, "pdfs": 4 },
     "progress": 85,
     "description": "Introduction to real numbers, rational numbers, and number systems."
@@ -16,7 +15,6 @@
     "chapterName": "Algebra Fundamentals",
     "startDate": "21-01-2025",
     "endDate": "10-02-2025",
-    "assignedTeacher": ["Mr. Suresh Patel"],
     "viewMaterial": { "videos": 10, "pdfs": 5 },
     "progress": 75,
     "description": "Basic algebraic expressions, equations, and operations."
@@ -27,7 +25,6 @@
     "chapterName": "Geometry and Mensuration",
     "startDate": "11-02-2025",
     "endDate": "05-03-2025",
-    "assignedTeacher": ["Mrs. Anjali Sharma", "Mr. Deepak Verma"],
     "viewMaterial": { "videos": 12, "pdfs": 6 },
     "progress": 70,
     "description": "Study of shapes, angles, and measurement of geometric figures."
@@ -38,7 +35,6 @@
     "chapterName": "Trigonometry",
     "startDate": "06-03-2025",
     "endDate": "25-03-2025",
-    "assignedTeacher": ["Dr. Amit Mathur"],
     "viewMaterial": { "videos": 15, "pdfs": 7 },
     "progress": 60,
     "description": "Trigonometric ratios, identities, and applications."
@@ -49,7 +45,6 @@
     "chapterName": "Coordinate Geometry",
     "startDate": "26-03-2025",
     "endDate": "15-04-2025",
-    "assignedTeacher": ["Ms. Neha Gupta", "Mr. Rajesh Iyer"],
     "viewMaterial": { "videos": 10, "pdfs": 5 },
     "progress": 50,
     "description": "Points, lines, and curves in coordinate plane."
@@ -60,7 +55,6 @@
     "chapterName": "Calculus Introduction",
     "startDate": "16-04-2025",
     "endDate": "05-05-2025",
-    "assignedTeacher": ["Dr. Sanjay Mishra"],
     "viewMaterial": { "videos": 14, "pdfs": 8 },
     "progress": 40,
     "description": "Basic concepts of limits, continuity, and differentiation."
@@ -71,7 +65,6 @@
     "chapterName": "Statistics and Probability",
     "startDate": "06-05-2025",
     "endDate": "25-05-2025",
-    "assignedTeacher": ["Mr. Vikram Shah", "Ms. Meera Reddy"],
     "viewMaterial": { "videos": 9, "pdfs": 4 },
     "progress": 30,
     "description": "Data handling, probability concepts, and statistical measures."
@@ -82,7 +75,6 @@
     "chapterName": "Matrices and Determinants",
     "startDate": "26-05-2025",
     "endDate": "15-06-2025",
-    "assignedTeacher": ["Mrs. Sunita Rao"],
     "viewMaterial": { "videos": 11, "pdfs": 6 },
     "progress": 20,
     "description": "Matrix operations, determinants, and their applications."
@@ -93,7 +85,6 @@
     "chapterName": "Vectors",
     "startDate": "16-06-2025",
     "endDate": "05-07-2025",
-    "assignedTeacher": ["Dr. Anil Kumar", "Mr. Rahul Desai"],
     "viewMaterial": { "videos": 8, "pdfs": 4 },
     "progress": 10,
     "description": "Vector algebra, operations, and applications in space."
@@ -104,7 +95,6 @@
     "chapterName": "Mathematical Reasoning",
     "startDate": "06-07-2025",
     "endDate": "25-07-2025",
-    "assignedTeacher": ["Dr. Prakash Rao"],
     "viewMaterial": { "videos": 7, "pdfs": 3 },
     "progress": 0,
     "description": "Logical reasoning, mathematical statements, and proofs."

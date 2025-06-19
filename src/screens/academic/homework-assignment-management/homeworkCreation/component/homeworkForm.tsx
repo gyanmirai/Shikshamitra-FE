@@ -10,8 +10,6 @@ import React, { useState, useEffect } from 'react';
 
 import { Create } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
   Grid,
@@ -19,12 +17,10 @@ import {
   Radio,
   Paper,
   Button,
-  Checkbox,
   TextField,
   RadioGroup,
   Typography,
   FormControl,
-  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -44,6 +40,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
@@ -54,7 +51,6 @@ import type { IHomeWorkCreationFormProps } from '../type';
 
 const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   classes,
-  division,
   subject,
   dialog,
   editData,
@@ -89,7 +85,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
   }, [allClass, classes]);
   // State to store available division options for selected class
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
@@ -130,86 +126,117 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <Scrollbar sx={{ p: 2, height: '400px' }}>
             <Grid container spacing={3}>
               {/* Class Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
-                  <CustomSelect
-                    label="Class *" // Select class from dropdown
-                    options={classData?.items || []}
-                    value={formik.values.class}
-                    // disabled={!!classes}
-                    isLoading={isLoading}
-                    labelKey="name"
-                    valueKey="id"
-                    onChange={(val) => {
-                      const selectedClass = classData?.items?.find((i: Standards) => i.id === val);
-                      formik.setFieldValue('class', val);
-                      setDivisionOptions(selectedClass?.divisions || []);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    error={!!(formik.touched.class && formik.errors.class) || false}
-                    helperText={(formik.touched.class && formik.errors.class) || ''}
-                  />
-                </ShakingTextField>
-              </Grid>
+              <Grid item xs={12}>
+                <SectionCard title="Basic Details">
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.class && formik.errors.class) || false}
+                    >
+                      <CustomSelect
+                        label="Class *" // Select class from dropdown
+                        options={classData?.items || []}
+                        value={formik.values.class || classes}
+                        // disabled={!!classes}
+                        isLoading={isLoading}
+                        labelKey="name"
+                        valueKey="name"
+                        onChange={(val) => {
+                          const selectedClass = classData?.items?.find(
+                            (i: Standards) => i.id === val
+                          );
+                          formik.setFieldValue('class', val);
+                          setDivisionOptions(selectedClass?.divisions || []);
+                        }}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                        error={!!(formik.touched.class && formik.errors.class) || false}
+                        helperText={(formik.touched.class && formik.errors.class) || ''}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Division Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.division && formik.errors.division) || false}
-                >
-                  <CustomSelect
-                    label="Division *" // Select division from dropdown
-                    labelKey="name"
-                    valueKey="id"
-                    multiple
-                    options={allDivision}
-                    value={formik.values.division}
-                    onChange={(val) => {
-                      // const selectedDivisions = allDivision
-                      //   .filter((i) => (val as string[]).includes(i.id))
-                      //   .map((div) => div.id);
-                      formik.setFieldValue('division', val);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    error={!!(formik.touched.division && formik.errors.division) || false}
-                    helperText={
-                      Array.isArray(formik.errors.division)
-                        ? formik.errors.division.join(', ')
-                        : (formik.touched.division && formik.errors.division) || undefined
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
+                  {/* Division Selection */}
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.division && formik.errors.division) || false}
+                    >
+                      <CustomSelect
+                        label="Division *" // Select division from dropdown
+                        labelKey="name"
+                        valueKey="name"
+                        multiple
+                        options={allDivision}
+                        value={formik.values.division}
+                        onChange={(val) => {
+                          // const selectedDivisions = allDivision
+                          //   .filter((i) => (val as string[]).includes(i.id))
+                          //   .map((div) => div.id);
+                          formik.setFieldValue('division', val);
+                        }}
+                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                        error={!!(formik.touched.division && formik.errors.division) || false}
+                        helperText={
+                          Array.isArray(formik.errors.division)
+                            ? formik.errors.division.join(', ')
+                            : (formik.touched.division && formik.errors.division) || undefined
+                        }
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Subject Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.subject && formik.errors.subject) || false}
-                >
-                  <CustomSelect
-                    label="Subject *" // Select subject from dropdown
-                    disabled={!formik.values.division || formik.values.division.length === 0}
-                    options={[
-                      { value: 'Mathematics', label: 'Mathematics' },
-                      { value: 'Science', label: 'Science' },
-                      { value: 'History', label: 'History' },
-                      { value: 'English', label: 'English' },
-                    ]}
-                    value={formik.values.subject}
-                    onChange={(val) => formik.setFieldValue('subject', val)}
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.subject && formik.errors.subject) || false}
-                    helperText={(formik.touched.subject && formik.errors.subject) || ''}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  {/* Subject Selection */}
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.subject && formik.errors.subject) || false}
+                    >
+                      <CustomSelect
+                        label="Subject *" // Select subject from dropdown
+                        disabled={!formik.values.division || formik.values.division.length === 0}
+                        options={[
+                          { value: 'Mathematics', label: 'Mathematics' },
+                          { value: 'Science', label: 'Science' },
+                          { value: 'History', label: 'History' },
+                          { value: 'English', label: 'English' },
+                        ]}
+                        value={formik.values.subject}
+                        onChange={(val) => formik.setFieldValue('subject', val)}
+                        formControlProps={{ fullWidth: true }}
+                        error={!!(formik.touched.subject && formik.errors.subject) || false}
+                        helperText={(formik.touched.subject && formik.errors.subject) || ''}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Chapter Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.chapters && formik.errors.chapters) || false}
-                >
-                  <Autocomplete
+                  {/* Chapter Selection */}
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.chapters && formik.errors.chapters) || false}
+                    >
+                      <ResponsiveMultiSelect
+                        label="Chapters"
+                        options={[
+                          { id: 'n1', name: 'Numbers and Number Systems' },
+                          { id: 'a1', name: 'Algebra' },
+                          { id: 'g1', name: 'Geometry' },
+                          { id: 'm1', name: 'Mensuration' },
+                          { id: 'r1', name: 'Ratio and Proportion' },
+                          { id: 'p1', name: 'Profit and Loss' },
+                          { id: 'i1', name: 'Interest' },
+                          { id: 'f1', name: 'Fractions and Decimals' },
+                          { id: 'e1', name: 'Equations' },
+                          { id: 's1', name: 'Sets' },
+                          { id: 't1', name: 'Time and Work' },
+                          { id: 'd1', name: 'Data Handling' },
+                        ]}
+                        disabled={!formik.values.subject}
+                        value={formik.values.chapters} // this should be string[] of IDs like ['m1']
+                        onChange={(val) => formik.setFieldValue('chapters', val)}
+                        getOptionLabel={(opt) => opt.name}
+                        getOptionValue={(opt) => opt.id}
+                        error={formik.touched.chapters && Boolean(formik.errors.chapters)}
+                        helperText={(formik.touched.chapters && formik.errors.chapters) as string}
+                      />
+
+                      {/* <Autocomplete
                     multiple
                     disabled={!formik.values.subject}
                     options={[
@@ -282,98 +309,110 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         }
                       />
                     )}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  /> */}
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Homework Title */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
-                  <TextField
-                    fullWidth
-                    label="Homework Title *" // Enter homework title
-                    // placeholder="Enter title for the homework"
-                    name="title"
-                    size="small"
-                    value={formik.values.title}
-                    onChange={formik.handleChange}
-                    error={formik.touched.title && Boolean(formik.errors.title)}
-                    helperText={formik.touched.title && formik.errors.title}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  {/* Homework Title */}
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.title && formik.errors.title) || false}
+                    >
+                      <TextField
+                        fullWidth
+                        label="Homework Title *" // Enter homework title
+                        // placeholder="Enter title for the homework"
+                        name="title"
+                        size="small"
+                        value={formik.values.title}
+                        onChange={formik.handleChange}
+                        error={formik.touched.title && Boolean(formik.errors.title)}
+                        helperText={formik.touched.title && formik.errors.title}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              {/* Homework Type */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
-                >
-                  <CustomSelect
-                    label="Homework Type *" // Select homework type from dropdown
-                    options={[
-                      { value: 'practice', label: 'Practice Questions' },
-                      { value: 'reading', label: 'Reading Material' },
-                      { value: 'revision', label: 'Revision' },
-                    ]}
-                    value={formik.values.homeworkType || ''}
-                    onChange={(val) => formik.setFieldValue('homeworkType', val)}
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
-                    helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
-                  />
-                </ShakingTextField>
-                <Box mt={1} display="flex" justifyContent="flex-end">
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => homeworkTypeDialog.onTrue()}
-                  >
-                    Add Homework Type
-                  </Typography>
-                </Box>
+                  {/* Homework Type */}
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
+                    >
+                      <CustomSelect
+                        label="Homework Type *" // Select homework type from dropdown
+                        options={[
+                          { value: 'practice', label: 'Practice Questions' },
+                          { value: 'reading', label: 'Reading Material' },
+                          { value: 'revision', label: 'Revision' },
+                        ]}
+                        value={formik.values.homeworkType || ''}
+                        onChange={(val) => formik.setFieldValue('homeworkType', val)}
+                        formControlProps={{ fullWidth: true }}
+                        error={
+                          !!(formik.touched.homeworkType && formik.errors.homeworkType) || false
+                        }
+                        helperText={
+                          (formik.touched.homeworkType && formik.errors.homeworkType) || ''
+                        }
+                      />
+                    </ShakingTextField>
+                    <Box mt={1} display="flex" justifyContent="flex-end">
+                      <Typography
+                        variant="body2"
+                        fontWeight={500}
+                        color="primary.main"
+                        fontSize={12}
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => homeworkTypeDialog.onTrue()}
+                      >
+                        Add Homework Type
+                      </Typography>
+                    </Box>
 
-                <CustomDialog
-                  open={homeworkTypeDialog.value}
-                  handleClose={homeworkTypeDialog.onFalse}
-                  title="Add Homework Type"
-                >
-                  <HomeworkTypeForm
-                    onClose={homeworkTypeDialog.onFalse}
-                    editData={null}
-                    open={homeworkTypeDialog}
-                  />
-                </CustomDialog>
+                    <CustomDialog
+                      open={homeworkTypeDialog.value}
+                      handleClose={homeworkTypeDialog.onFalse}
+                      title="Add Homework Type"
+                    >
+                      <HomeworkTypeForm
+                        onClose={homeworkTypeDialog.onFalse}
+                        editData={null}
+                        open={homeworkTypeDialog}
+                      />
+                    </CustomDialog>
+                  </Grid>
+                </SectionCard>
               </Grid>
 
               {/* Description */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                >
-                  <Editor
-                    value={formik.values.description}
-                    onChange={(value) => {
-                      formik.setFieldValue('description', value);
-                    }}
-                    placeholder="Enter Description" // Enter homework description
-                    sx={{ width: '100%', height: '150px' }}
-                  />
-                </ShakingTextField>
-              </Grid>
+              <Grid item xs={12}>
+                <SectionCard title="Description and Documents">
+                  <Grid item xs={12} md={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.description && formik.errors.description) || false}
+                    >
+                      <Editor
+                        value={formik.values.description}
+                        onChange={(value) => {
+                          formik.setFieldValue('description', value);
+                        }}
+                        placeholder="Description" // Enter homework description
+                        sx={{ width: '100%' }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              <Grid item xs={12} md={6}>
-                <Upload
-                  multiple
-                  value={formik.values.attachments || []}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                  // sx={{
-                  //   p: 1,
-                  // }}
-                />
+                  <Grid item xs={12} md={6}>
+                    <Upload
+                      multiple
+                      value={formik.values.attachments || []}
+                      onDrop={handleDrop}
+                      onRemove={handleRemove}
+                      // sx={{
+                      //   p: 1,
+                      // }}
+                    />
+                  </Grid>
+                </SectionCard>
               </Grid>
 
               {/* Schedule Homework Switch */}
@@ -436,21 +475,15 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     <RadioGroup
                       row
                       name="submissionType"
-                      value={formik.values.submissionType}
-                      onChange={formik.handleChange}
+                      value={formik.values.submissionType?.toString()} // Convert number to string for matching
+                      onChange={(event) =>
+                        formik.setFieldValue('submissionType', Number(event.target.value))
+                      } // Convert back to number
                     >
+                      <FormControlLabel value="0" control={<Radio />} label="Online Text" />
+                      <FormControlLabel value="1" control={<Radio />} label="File Upload" />
                       <FormControlLabel
-                        value="online_text" // Select online text submission
-                        control={<Radio />}
-                        label="Online Text"
-                      />
-                      <FormControlLabel
-                        value="file_upload" // Select file upload submission
-                        control={<Radio />}
-                        label="File Upload"
-                      />
-                      <FormControlLabel
-                        value="in_person" // Select in-person submission
+                        value="2"
                         control={<Radio />}
                         label="In-Person Submission"
                       />

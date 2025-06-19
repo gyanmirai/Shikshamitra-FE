@@ -10,14 +10,6 @@ import type { IHomeworkType, IHomeworkTypeTableProps } from './type';
 const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({ data, onDelete, onEdit }) => (
   <CustomizableTable
     tableId="homework-type-data-table"
-    searchFieldProps={{
-      placeholder: 'Search by Homework Type Name...',
-      label: 'Search by Homework Type Name...',
-      sx: {
-        maxWidth: '400px',
-        width: '100%',
-      },
-    }}
     noDataText="No Homework Type Data Found"
     columns={[
       {

@@ -6,8 +6,8 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Save, RestartAlt } from '@mui/icons-material';
 import { Box, Button, useTheme } from '@mui/material';
+import { Save, RestartAlt } from '@mui/icons-material';
 
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -87,12 +87,12 @@ const AssignElectiveSubject = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Assign Elective Subject"
+        heading="Student Elective Assignment"
         description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-          { name: 'Assign Elective Subject' },
+          { name: 'Student Elective Assignment' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />

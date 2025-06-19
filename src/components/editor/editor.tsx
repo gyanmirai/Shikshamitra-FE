@@ -179,6 +179,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               />
             )}
 
+            {/* <Scrollbar sx={{ height: '200px' }}> */}
             <EditorContent
               ref={ref}
               spellCheck="false"
@@ -187,6 +188,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               editor={editor}
               className={editorClasses.content.root}
             />
+
+            {/* </Scrollbar> */}
           </StyledRoot>
 
           {helperText && <FormHelperText error={!!error}>{helperText}</FormHelperText>}
