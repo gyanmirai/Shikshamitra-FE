@@ -458,9 +458,8 @@ export const medicalFields: FieldsType[] = [
   },
   {
     name: 'covidVaccination',
-    label: 'Covid Vaccination *',
-
-    type: 'text',
+    label: 'Covid Vaccination (DOSE)*',
+    type: 'number',
     otherProps: {},
   },
   {

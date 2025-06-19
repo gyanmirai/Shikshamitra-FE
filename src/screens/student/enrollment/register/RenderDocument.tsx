@@ -160,12 +160,19 @@ export const RenderDocuments = (props: any) => {
             render(value, row) {
               return (
                 <UploadButton
-                  style={{
+                  disableRipple
+                  disableElevation
+                  disableFocusRipple
+                  disableTouchRipple
+                  sx={{
                     textAlign: 'left',
                     marginLeft: '0px',
                     paddingLeft: '0px',
                     justifyContent: 'flex-start',
                     display: 'flex',
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
                   }}
                   onChange={async (e) => {
                     const file = e.target.files[0];

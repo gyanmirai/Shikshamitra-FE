@@ -217,7 +217,9 @@ export const SlotsForm = ({
           return true;
         })
         .required('End Time is required'),
-      studentLimit: Yup.number().min(1, 'Student Limit must be greater than 0'),
+      studentLimit: Yup.number()
+        .min(1, 'Student Limit must be greater than 0')
+        .required('Student Limit is required'),
       roomNo: Yup.string().required('Room No is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
@@ -256,7 +258,6 @@ export const SlotsForm = ({
             <TextField
               name="slotName"
               label="Slot Name *"
-              placeholder="Enter slot name"
               value={formik.values.slotName}
               onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
               onBlur={formik.handleBlur}
@@ -284,7 +285,6 @@ export const SlotsForm = ({
                   size: 'small',
                   fullWidth: true,
                   name: 'startTime',
-                  placeholder: 'Enter start time',
                   helperText:
                     formik.touched.startTime && formik.errors.startTime
                       ? String(formik.errors.startTime)
@@ -306,7 +306,6 @@ export const SlotsForm = ({
                   size: 'small',
                   fullWidth: true,
                   name: 'endTime',
-                  placeholder: 'Enter end time',
                   helperText:
                     formik.touched.endTime && formik.errors.endTime
                       ? String(formik.errors.endTime)
@@ -323,7 +322,6 @@ export const SlotsForm = ({
             <TextField
               name="studentLimit"
               label="Student Limit *"
-              placeholder="Enter student limit"
               type="number"
               value={formik.values.studentLimit}
               onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
@@ -343,7 +341,6 @@ export const SlotsForm = ({
             <TextField
               name="roomNo"
               label="Room No *"
-              placeholder="Enter room number"
               type="number"
               onBlur={formik.handleBlur}
               value={formik.values.roomNo}

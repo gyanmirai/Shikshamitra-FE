@@ -60,7 +60,6 @@ const CountryComponent = ({
             {...params}
             fullWidth
             size="small"
-            placeholder="Search  Country"
             error={error}
             helperText={helperText}
             {...textFieldProps}

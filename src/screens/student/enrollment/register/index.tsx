@@ -43,7 +43,6 @@ const RegisterScreen = () => {
         { name: 'Student', href: '/student/enrollment/dashboard/' },
         { name: 'Student Enrollment', href: '/student/enrollment/registration/' },
         { name: 'Registration' },
-        { name: 'Registration Form' },
       ]
     : [
         { name: 'Student', href: '/student/enrollment/dashboard/' },
@@ -69,8 +68,13 @@ const RegisterScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Registration"
+        description={
+          formDialog.value
+            ? 'Enter student information across the sections to complete the registration'
+            : 'View and manage student registrations. Track completion status and edit details for each record'
+        }
         links={links}
-        // sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 2 }}
         isBack={formDialog.value}
         onBack={handleClose}
         action={
@@ -112,6 +116,8 @@ const RegisterScreen = () => {
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
           studentName={`${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''} ${(editData as IInquiryData)?.lastName || ''}`.trim()}
           standardName={(editData as IInquiryData)?.standard.name || ''}
+          educationBoard={(editData as IInquiryData)?.educationBoard || { name: '' }}
+          educationMedium={(editData as IInquiryData)?.educationMedium || { name: '' }}
           handleClose={handleClose}
         />{' '}
       </CustomDialog>

@@ -42,7 +42,6 @@ const StateComponent = ({
           fullWidth
           size="small"
           label="State"
-          placeholder="Search  State"
           error={error}
           helperText={helperText}
           {...textFieldProps}

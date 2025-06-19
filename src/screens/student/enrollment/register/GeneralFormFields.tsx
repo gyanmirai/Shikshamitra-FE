@@ -49,6 +49,7 @@ export const generalFormFields: FieldsType[] = [
     gridProps: { xs: 12, md: 12 },
     renderComp(props) {
       const { formik, isEdit: disabled } = props;
+      console.log('🚀 ~ renderComp ~ values:', formik);
       return (
         <Box>
           <SectionCard title="Inquiry & Admission">
@@ -128,7 +129,7 @@ export const generalFormFields: FieldsType[] = [
                     <TextField
                       key="middleName"
                       size="small"
-                      label="Middle Name *"
+                      label="Middle Name"
                       name="middleName"
                       value={formik.values.middleName}
                       onBlur={formik.handleBlur}
@@ -238,18 +239,27 @@ export const generalFormFields: FieldsType[] = [
 
           <SectionCard title="Contact Details">
             <Grid item xs={12} md={4}>
-              <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
+              <ShakingTextField
+                error={
+                  formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)
+                }
+              >
                 <PhoneInput
-                  name="mobileNo"
+                  name="primaryContactNumber"
                   disabled={!disabled}
-                  value={formik.values.mobileNo}
+                  value={formik.values.primaryContactNumber}
                   onChange={(value) => {
-                    formik.setFieldValue('mobileNo', value);
-                    formik.setFieldTouched('mobileNo', true);
+                    formik.setFieldValue('primaryContactNumber', value);
+                    formik.setFieldTouched('primaryContactNumber', true);
                   }}
                   label="Primary Contact No *"
-                  error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
-                  helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+                  error={
+                    formik.touched.primaryContactNumber &&
+                    Boolean(formik.errors.primaryContactNumber)
+                  }
+                  helperText={
+                    formik.touched.primaryContactNumber && formik.errors.primaryContactNumber
+                  }
                   onBlur={formik.handleBlur}
                   variant="outlined"
                   size="small"
@@ -259,26 +269,25 @@ export const generalFormFields: FieldsType[] = [
             <Grid item xs={12} md={4}>
               <ShakingTextField
                 error={
-                  formik.touched.alternativeContactNumber &&
-                  Boolean(formik.errors.alternativeContactNumber)
+                  formik.touched.secondaryContactNumber &&
+                  Boolean(formik.errors.secondaryContactNumber)
                 }
               >
                 <PhoneInput
-                  name="alternativeContactNumber"
-                  value={formik.values.alternativeContactNumber}
+                  name="secondaryContactNumber"
+                  value={formik.values.secondaryContactNumber}
                   disabled={!disabled}
                   onChange={(value) => {
-                    formik.setFieldValue('alternativeContactNumber', value);
-                    formik.setFieldTouched('alternativeContactNumber', true);
+                    formik.setFieldValue('secondaryContactNumber', value);
+                    formik.setFieldTouched('secondaryContactNumber', true);
                   }}
                   label="Secondary Contact No."
                   error={
-                    formik.touched.alternativeContactNumber &&
-                    Boolean(formik.errors.alternativeContactNumber)
+                    formik.touched.secondaryContactNumber &&
+                    Boolean(formik.errors.secondaryContactNumber)
                   }
                   helperText={
-                    formik.touched.alternativeContactNumber &&
-                    formik.errors.alternativeContactNumber
+                    formik.touched.secondaryContactNumber && formik.errors.secondaryContactNumber
                   }
                   variant="outlined"
                   size="small"
@@ -369,16 +378,28 @@ export const generalFormFields: FieldsType[] = [
                   size="small"
                   label="Pan No."
                   name="panNo"
-                  value={formik.values.panNo}
+                  value={formik.values.panNo.toUpperCase()}
                   onBlur={formik.handleBlur}
                   error={formik.touched.panNo && Boolean(formik.errors.panNo)}
                   helperText={formik.touched.panNo && formik.errors.panNo}
                   fullWidth
-                  onChange={formik.handleChange}
                   disabled={!disabled}
+                  inputProps={{
+                    maxLength: 10,
+                    inputMode: 'text',
+                    pattern: '[A-Za-z0-9]{10}',
+                  }}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    const regex = /^[A-Za-z0-9]{0,10}$/;
+                    if (regex.test(value)) {
+                      formik.setFieldValue('panNo', value);
+                    }
+                  }}
                 />
               </ShakingTextField>
             </Grid>
+
             <Grid item xs={12} md={3}>
               <ShakingTextField
                 error={formik.touched.inquiryPreference && Boolean(formik.errors.inquiryPreference)}
@@ -631,9 +652,11 @@ export const generalFormFields: FieldsType[] = [
                 <CountryComponent
                   value={props.formik.values.country}
                   onChange={(e, value) => {
-                    props.formik.setFieldValue('country', value);
-                    formik.setFieldTouched('country', true);
+                    formik.setFieldValue('state', { name: '', isoCode: '' });
+                    formik.setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
                   }}
+                  name="country"
+                  onBlur={props.formik.handleBlur}
                   error={
                     props.formik.touched.country && Boolean(props.formik.errors?.country?.name)
                   }
@@ -650,13 +673,17 @@ export const generalFormFields: FieldsType[] = [
                 <StateComponent
                   value={props.formik.values.state}
                   onChange={(e, value) => {
-                    props.formik.setFieldValue('state', value);
-                    formik.setFieldTouched('state', true);
+                    formik.setFieldValue('state', {
+                      ...(value || {}),
+                      name: value?.name,
+                      isoCode: value?.isoCode,
+                    });
+                    formik.setFieldValue('city', { name: '' });
                   }}
                   countryValue={props.formik.values.country}
                   error={props.formik.touched.state && Boolean(props.formik.errors?.state?.name)}
                   helperText={props.formik.touched.state && props.formik.errors?.state?.name}
-                  disabled={!disabled}
+                  disabled={!disabled || !props.formik.values.country}
                   textFieldProps={{
                     label: 'State *',
                   }}
@@ -668,13 +695,12 @@ export const generalFormFields: FieldsType[] = [
                 <CityComponent
                   value={props.formik.values.city}
                   onChange={(e, value) => {
-                    props.formik.setFieldValue('city', value);
-                    formik.setFieldTouched('city', true);
+                    formik.setFieldValue('city', { name: value?.name });
                   }}
                   stateValue={props.formik.values.state}
                   error={props.formik.touched.city && Boolean(props.formik.errors?.city?.name)}
                   helperText={props.formik.touched.city && props.formik.errors?.city?.name}
-                  disabled={!disabled}
+                  disabled={!disabled || !props.formik.values.state}
                   textFieldProps={{
                     label: 'City *',
                   }}

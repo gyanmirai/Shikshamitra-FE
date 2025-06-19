@@ -9,7 +9,7 @@ import type { IInquiryData } from '../Inquiry';
 
 export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   inquiryNo: editData?.inquiryNumber || '',
-  formNo: editData?.formNo || '',
+  formNo: editData?.formNumber || '',
   firstName: editData?.firstName || '',
   lastName: editData?.lastName || '',
   middleName: editData?.middleName || '',
@@ -25,8 +25,8 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   birthPlace: editData?.birthPlace || '',
   temporaryGr: editData?.temporaryGr || '',
   remarks: editData?.remarks || '',
-  mobileNo: editData?.primaryContactNumber || '',
-  alternativeContactNumber: editData?.secondaryContactNumber || '',
+  primaryContactNumber: editData?.primaryContactNumber || '',
+  secondaryContactNumber: editData?.secondaryContactNumber || '',
   email: editData?.email || '',
   userId: editData?.userId || null,
   id: editData?.id || null,
@@ -39,7 +39,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   city: editData?.city ? { name: editData?.city } : { name: '' },
   state: editData?.state
     ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
-    : { name: '' },
+    : { name: '', isoCode: '' },
   country: editData?.country
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
     : { name: 'India', isoCode: 'IN' },

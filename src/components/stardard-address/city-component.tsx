@@ -49,7 +49,6 @@ const CityComponent = ({
           fullWidth
           size="small"
           label="City"
-          placeholder="Search  City"
           error={error}
           helperText={helperText}
           {...textFieldProps}

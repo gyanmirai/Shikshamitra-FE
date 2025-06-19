@@ -24,21 +24,21 @@ const generalFieldValidation = Yup.object({
   birthPlace: Yup.string(),
 
   remarks: Yup.string(),
-  mobileNo: Yup.string()
+  primaryContactNumber: Yup.string()
     .test(
       'Mobile NO',
       'mobile number is not valid',
       (value) => !!value && matchIsValidTel(value as string)
     )
     .required('Mobile number is required'),
-  alternativeContactNumber: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
+  // alternativeContactNumber: Yup.string()
+  //   .test('Mobile NO', 'mobile number is not valid', (value) =>
+  //     value ? matchIsValidTel(value as string) : true
+  //   )
 
-    .test('unique', 'Alternate contact number cannot be same as contact number', function (value) {
-      return !value || value !== this.parent.mobileNo;
-    }),
+  //   .test('unique', 'Alternate contact number cannot be same as contact number', function (value) {
+  //     return !value || value !== this.parent.mobileNo;
+  //   }),
   email: Yup.string().email('Invalid email format'),
   medium: Yup.string().required('Medium is required'),
   board: Yup.string().required('Board is required'),
@@ -210,7 +210,11 @@ const medicalDetailsValidations = Yup.object({
   pulseRate: Yup.string(),
   haemoglobin: Yup.string(),
   allergies: Yup.string(),
-  covidVaccination: Yup.number().required('Covid vaccination is required'),
+  covidVaccination: Yup.number()
+    .required('Covid vaccination is required')
+    .min(0, 'Only single digit are allowed')
+    .max(9, 'Only single digit  are allowed')
+    .typeError('Only single digit are allowed'),
   childImmunisation: Yup.boolean(),
   immunisationRemarks: Yup.string(),
 });
