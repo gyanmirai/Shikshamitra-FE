@@ -75,7 +75,7 @@ const AcademicDashboardScreen = () => {
         }
       />
       <Grid2 container spacing={3}>
-        <Grid2 xs={12} md={6}>
+        {/* <Grid2 xs={12} md={6}>
           <Card
             sx={{
               p: 3,
@@ -137,8 +137,8 @@ const AcademicDashboardScreen = () => {
               </Scrollbar>
             </Box>
           </Card>
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid2> */}
+        {/* <Grid2 xs={12} md={6}>
           <Card
             sx={{
               p: 3,
@@ -188,17 +188,8 @@ const AcademicDashboardScreen = () => {
                 </Box>
               </Scrollbar>
             </Box>
-            {/* <Box display="flex" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => router.push('/academic/homework-assignment-management')}
-              >
-                View Full Assignment
-              </Button>
-            </Box> */}
           </Card>
-        </Grid2>
+        </Grid2> */}
 
         <Grid2 xs={12}>
           <Typography component="span" variant="h6" gutterBottom>

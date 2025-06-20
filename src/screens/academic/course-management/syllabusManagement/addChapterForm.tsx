@@ -15,10 +15,11 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
+import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Upload, SingleFilePreview } from 'src/components/upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from './validationSchema';
@@ -209,34 +210,44 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               {/* Rich Text Editor for Chapter Content */}
               <Grid item xs={12} md={6}>
                 <Editor
-                  value={editorContent}
+                  value={formik.values.description}
                   onChange={(value) => {
-                    formik.setFieldValue('content', value);
+                    formik.setFieldValue('description', value);
                   }}
-                  placeholder="Chapter Description"
+                  placeholder="Description"
                   sx={{
-                    height: '200px',
                     border: `1px solid ${theme.palette.grey[500]}`,
                     borderRadius: 1,
                     '&:hover': {
                       borderColor: theme.palette.text.primary,
                     },
-                    ...(!!formik.errors.content && {
+                    ...(!!formik.errors.description && {
                       borderColor: theme.palette.error.main,
                     }),
+                    '&:focus-within': {
+                      borderColor: theme.palette.text.primary,
+                      borderWidth: 2,
+                    },
                   }}
                 />
               </Grid>
               {/* Document Upload Section */}
               <Grid item xs={12} md={6}>
-                <Upload
-                  {...uploadProps}
-                  multiple
+                <FileUploader
+                  // @ts-ignore
                   value={formik.values.documents}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                  onView={handleView}
-                  sx={{ mb: 1 }}
+                  multiple
+                  onChange={(value) => {
+                    formik.setFieldValue('documents', value);
+                    // const reader = new FileReader();
+                    // reader.readAsDataURL(value as File);
+                    // reader.readAsDataURL(value as File);
+                    // reader.onload = () => {
+                    //   const base64String = reader.result;
+                    // };
+                  }}
+                  primaryText="Please Upload Your File"
+                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
             </Grid>
@@ -244,7 +255,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
           {/* Form Actions */}
 
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               variant="outlined"
               size="small"

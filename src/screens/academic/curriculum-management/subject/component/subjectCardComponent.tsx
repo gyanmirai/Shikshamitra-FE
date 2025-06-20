@@ -26,10 +26,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Editor } from 'src/components/editor';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Upload, SingleFilePreview } from 'src/components/upload';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { TeacherProfile, ISubjectCardProps } from './type';
@@ -101,7 +102,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   };
 
   return (
-    <Scrollbar sx={{ height: 'auto' }}>
+    <>
       <Accordion
         expanded={isExpanded}
         onChange={() => setIsExpanded(!isExpanded)}
@@ -112,7 +113,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           '&:before': {
             display: 'none', // remove default divider line at top
           },
-          mb: 2,
+          mb: '2px',
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -295,14 +296,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('learningGoal')}
                   helperText={getError('learningGoal')}
                   sx={{
-                    height: '200px',
                     border: `1px solid ${theme.palette.grey[500]}`,
                     borderRadius: 1,
                     '&:hover': {
                       borderColor: theme.palette.text.primary,
                     },
+                    '&:focus-within': {
+                      borderColor: theme.palette.text.primary,
+                      borderWidth: 2,
+                    },
                     ...(!!getError('learningGoal') && {
-                      borderColor: theme.palette.error.main,
+                      borderColor: theme.palette.text.primary,
                     }),
                   }}
                 />
@@ -318,11 +322,14 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('prerequisites')}
                   helperText={getError('prerequisites')}
                   sx={{
-                    height: '200px',
                     border: `1px solid ${theme.palette.grey[500]}`,
                     borderRadius: 1,
                     '&:hover': {
                       borderColor: theme.palette.text.primary,
+                    },
+                    '&:focus-within': {
+                      borderColor: theme.palette.text.primary,
+                      borderWidth: 2,
                     },
                     ...(!!getError('prerequisites') && {
                       borderColor: theme.palette.error.main,
@@ -337,7 +344,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 <TextField
                   fullWidth
                   multiline
-                  rows={9.7}
+                  rows={7}
                   label="Description"
                   // placeholder="Enter Description"
                   size="small"
@@ -351,13 +358,21 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
             {/* Upload Document */}
             <Grid item xs={12} md={6}>
-              <Upload
-                {...uploadProps}
-                multiple
+              <FileUploader
+                // @ts-ignore
                 value={subject.documents}
-                onDrop={handleDrop}
-                onRemove={handleRemove}
-                onView={handleView}
+                multiple
+                onChange={(value) => {
+                  formik.setFieldValue(`subjects.${index}.documents`, value);
+                  // const reader = new FileReader();
+                  // reader.readAsDataURL(value as File);
+                  // reader.readAsDataURL(value as File);
+                  // reader.onload = () => {
+                  //   const base64String = reader.result;
+                  // };
+                }}
+                primaryText="Please Upload Your File"
+                secondaryText="Maximum file size is 5MB"
               />
             </Grid>
           </Grid>
@@ -376,7 +391,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           {previewFile && <SingleFilePreview file={previewFile} />}
         </Scrollbar>
       </CustomDialog>
-    </Scrollbar>
+    </>
   );
 };
 

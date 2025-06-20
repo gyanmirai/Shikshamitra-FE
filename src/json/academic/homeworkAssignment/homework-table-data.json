@@ -1,14 +1,15 @@
 [
   {
     "title": "Understanding Place Value",
-    "description": "Complete the worksheet on place value and upload it.",
-    "class": "3rd",
-    "division": ["A", "B"],
+    "description": "In this homework, students will complete a comprehensive worksheet focused on understanding place value concepts. The worksheet includes exercises on identifying ones, tens, and hundreds places in 2 and 3-digit numbers, writing numbers in expanded form, comparing numbers using place value understanding, and solving real-world problems involving place value. Students must show their work clearly and upload clear, legible photos or scans of their completed worksheet. Pay special attention to proper number formation and place value column alignment.",
+    "class": "3",
     "subject": "Mathematics",
-    "chapters": ["Place Value"],
+    "chapter": "Place Value",
     "homeworkType": "Regular",
     "submissionType": 0,
     "attachments": [],
+    "content": null,
+    "submission": null,
     "createdBy": {
       "id": 1,
       "name": "Shah Neha Manish",
@@ -24,22 +25,35 @@
       "qualification": "M.Sc. Mathematics",
       "subjects": ["Mathematics"]
     },
-    "status": 0,
-    "startDate": "2025-06-08T00:00:00.000Z",
-    "endDate": "2025-06-10T00:00:00.000Z",
-    "content": null,
-    "submission": null
+    "divisions": [
+      {
+        "divisionId": "A",
+        "createdAt": "2025-06-21T00:00:00.000Z",
+        "publishDate": "2025-06-21T00:00:00.000Z", 
+        "dueDate": "2025-06-28T00:00:00.000Z",
+        "status": 1
+      },
+      {
+        "divisionId": "B",
+        "createdAt": "2025-06-21T00:00:00.000Z",
+        "publishDate": "2025-06-21T00:00:00.000Z",
+        "dueDate": "2025-06-28T00:00:00.000Z",
+        "status": 0
+      }
+    ]
   },
   {
     "title": "Addition Word Problems",
     "description": "Solve the given word problems based on 2-digit addition.",
     "class": "2nd",
-    "division": ["C"],
     "subject": "Mathematics",
-    "chapters": ["Addition and Subtraction"],
+    "chapter": "Addition and Subtraction",
     "homeworkType": "Worksheet",
     "submissionType": 1,
     "attachments": [],
+    "content": null,
+    "submission": null,
+    "status": 1,
     "createdBy": {
       "id": 2,
       "name": "Desai Raj Malhar",
@@ -55,22 +69,28 @@
       "qualification": "B.Sc. Mathematics",
       "subjects": ["Mathematics"]
     },
-    "status": 1,
-    "startDate": "2025-06-07T00:00:00.000Z",
-    "endDate": "2025-06-09T00:00:00.000Z",
-    "content": null,
-    "submission": null
+    "divisions": [
+      {
+        "divisionId": "C",
+        "createdAt": "2025-06-21T12:00:00.000Z", 
+        "publishDate": "2025-06-22T09:00:00.000Z",
+        "dueDate": "2025-06-29T23:59:59.000Z",
+        "status": 0
+      }
+    ]
   },
   {
     "title": "Shapes and Patterns",
     "description": "Draw basic 2D shapes and identify patterns.",
     "class": "1st",
-    "division": ["A"],
     "subject": "Mathematics",
-    "chapters": ["Shapes and Patterns"],
+    "chapter": "Shapes and Patterns",
     "homeworkType": "Activity",
     "submissionType": 0,
     "attachments": [],
+    "content": null,
+    "submission": null,
+    "status": 1,
     "createdBy": {
       "id": 3,
       "name": "Patel Dhruvi Nilesh",
@@ -86,22 +106,27 @@
       "qualification": "B.Ed. Mathematics",
       "subjects": ["Mathematics"]
     },
-    "status": 1,
-    "startDate": "2025-06-06T00:00:00.000Z",
-    "endDate": "2025-06-08T00:00:00.000Z",
-    "content": null,
-    "submission": null
+    "divisions": [
+      {
+        "divisionId": "A",
+        "createdAt": "2025-06-21T00:00:00.000Z",
+        "publishDate": "2025-06-24T00:00:00.000Z",
+        "dueDate": "2025-06-28T00:00:00.000Z",
+        "status": 0
+      }
+    ]
   },
   {
     "title": "Multiplication Tables Practice",
     "description": "Type and submit tables of 2 to 10.",
     "class": "4th",
-    "division": ["B"],
     "subject": "Mathematics",
-    "chapters": ["Multiplication"],
+    "chapter": "Multiplication",
     "homeworkType": "Practice",
     "submissionType": 1,
     "attachments": [],
+    "content": null,
+    "submission": null,
     "createdBy": {
       "id": 7,
       "name": "Vadher Yagnik Jethabhai",
@@ -117,22 +142,28 @@
       "qualification": "B.A. English",
       "subjects": ["English Literature"]
     },
-    "status": 0,
-    "startDate": "2025-06-09T00:00:00.000Z",
-    "endDate": "2025-06-11T00:00:00.000Z",
-    "content": null,
-    "submission": null
+    "divisions": [
+      {
+        "divisionId": "B",
+        "createdAt": "2025-06-21T00:00:00.000Z",
+        "publishDate": "2025-06-21T00:00:00.000Z",
+        "dueDate": "2025-06-24T00:00:00.000Z",
+        "status": 0
+      }
+    ]
   },
   {
     "title": "Introduction to Fractions",
     "description": "Complete exercise 3A from the textbook and upload your answers.",
     "class": "5th",
-    "division": ["A", "C"],
     "subject": "Mathematics",
-    "chapters": ["Fractions"],
+    "chapter": "Fractions",
     "homeworkType": "Worksheet",
     "submissionType": 0,
     "attachments": [],
+    "content": null,
+    "submission": null,
+    "status": 1,
     "createdBy": {
       "id": 5,
       "name": "Trivedi Isha Rajesh",
@@ -148,10 +179,21 @@
       "qualification": "M.Sc. Mathematics",
       "subjects": ["Mathematics"]
     },
-    "status": 1,
-    "startDate": "2025-06-05T00:00:00.000Z",
-    "endDate": "2025-06-07T00:00:00.000Z",
-    "content": null,
-    "submission": null
+    "divisions": [
+      {
+        "divisionId": "A",
+        "createdAt": "2025-06-05T00:00:00.000Z",
+        "publishDate": "2025-06-05T00:00:00.000Z",
+        "dueDate": "2025-06-07T00:00:00.000Z",
+        "status": 0
+      },
+      {
+        "divisionId": "C",
+        "createdAt": "2025-06-05T00:00:00.000Z",
+        "publishDate": "2025-06-05T00:00:00.000Z",
+        "dueDate": "2025-06-07T00:00:00.000Z",
+        "status": 0
+      }
+    ]
   }
 ]

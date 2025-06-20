@@ -174,8 +174,8 @@ const Subjects = (props: TabComponentType) => {
           heading="Chapters Management"
           description={
             selectedChapter
-              ? 'Update existing chapter information including title, content, learning objectives, and associated materials. Make necessary modifications to keep the curriculum current and aligned with educational goals.'
-              : 'Create a new chapter by providing essential details such as title, content outline, and learning objectives. Add educational materials and resources to enhance student learning experience.'
+              ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
+              : 'Add a new chapter to the selected subject and class. Specify chapter details, sequence, and attach relevant learning materials to build the curriculum structure.'
           }
           links={[
             // Links for form view (adding/editing chapter)

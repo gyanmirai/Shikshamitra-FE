@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { SubmissionType, SubmissionTypeOptions } from 'src/enums/submission_type';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
@@ -16,9 +15,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IAssignment, IAssignmentTableProps } from '../type';
+import type { DivisionHomeworkMeta } from '../../homeworkCreation/type';
 
 const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   data,
+  selectedDivision,
   onSwitchToggle,
   onEdit,
   onDelete,
@@ -28,6 +29,30 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
 }) => {
   // Get the theme object from MUI theme provider
   const theme = useTheme();
+  console.log('data---', data);
+  console.log('selectedDivision---', selectedDivision);
+
+  const filteredData = useMemo(() => {
+    if (!selectedDivision) return data || [];
+
+    return (data || [])
+      .filter((hw) =>
+        hw.divisions?.some((d: DivisionHomeworkMeta) => d.divisionId === selectedDivision)
+      )
+      .map((hw) => {
+        const currentDivision = hw.divisions.find(
+          (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+        );
+        return {
+          ...hw,
+          currentDivisionId: currentDivision?.divisionId,
+          createdAt: currentDivision?.createdAt,
+          publishDate: currentDivision?.publishDate,
+          dueDate: currentDivision?.dueDate,
+          status: currentDivision?.status,
+        };
+      });
+  }, [selectedDivision, data]);
 
   // Memoized callback function to render action menu items
   // Returns different menu items based on assignment status
@@ -99,36 +124,35 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           filterType: 'string',
         },
         {
-          id: 'startDate',
-          label: 'Start Date Time',
+          id: 'createdAt',
+          label: 'Created On',
           align: 'left',
           filterType: 'date',
-          render: (value: string | Date | undefined) => (
-            <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'endDate',
-          label: 'End Date Time',
-          align: 'left',
-          filterType: 'date',
-          render: (value: string | Date | undefined) => (
-            <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'submissionType',
-          label: 'Submission Type',
-          align: 'left',
-          filterType: 'enum',
-          enumOptions: SubmissionTypeOptions,
-          render: (value, row) => (
+          render: (value) => (
             <Typography variant="caption" fontSize="13px">
-              {SubmissionType[value]}
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'publishDate',
+          label: 'Publish Date',
+          align: 'left',
+          filterType: 'date',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'dueDate',
+          label: 'Due Date',
+          align: 'left',
+          filterType: 'date',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
             </Typography>
           ),
         },
@@ -137,6 +161,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           label: 'Status',
           align: 'left',
           isFilter: false,
+          minWidth: 40,
           sticky: true,
           isSort: false,
           filterType: 'enum',
@@ -190,13 +215,22 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               showEditIcon
               showDeleteIcon
               handleEditClick={() => onEdit(row as IAssignment)}
-              handleViewClick={() => onView(row as IAssignment)}
+              handleViewClick={() => {
+                const divisionData = row.divisions?.find(
+                  (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+                );
+
+                onView({
+                  ...row,
+                  divisionMeta: divisionData,
+                } as IAssignment & { divisionMeta?: DivisionHomeworkMeta });
+              }}
               handleDeleteClick={() => onDelete(row as IAssignment)}
             />
           ),
         },
       ]}
-      data={data}
+      data={filteredData}
     />
   );
 };

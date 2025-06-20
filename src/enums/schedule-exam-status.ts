@@ -1,14 +1,26 @@
 export enum ScheduleExamStatus {
   Pending,
+  Draft,
+  Published,
+  Submitted,
+  Reviewed,
   Completed,
 }
 
 export const ScheduleExamStatusColor = {
-  [ScheduleExamStatus.Pending]: 'warning', // Orange color for pending status
-  [ScheduleExamStatus.Completed]: 'primary', // Green color for completed status
+  [ScheduleExamStatus.Pending]: 'default',
+  [ScheduleExamStatus.Draft]: 'warning',
+  [ScheduleExamStatus.Published]: 'info',
+  [ScheduleExamStatus.Submitted]: 'success',
+  [ScheduleExamStatus.Reviewed]: 'secondary',
+  [ScheduleExamStatus.Completed]: 'sucess',
 };
 
 export const ScheduleExamStatusOptions = [
-  { label: 'Pending', value: ScheduleExamStatus.Pending },
   { label: 'Completed', value: ScheduleExamStatus.Completed },
+  { label: 'Pending', value: ScheduleExamStatus.Pending },
+  { label: 'Draft', value: ScheduleExamStatus.Draft },
+  { label: 'Published', value: ScheduleExamStatus.Published },
+  { label: 'Submitted', value: ScheduleExamStatus.Submitted },
+  { label: 'Reviewed', value: ScheduleExamStatus.Reviewed },
 ];

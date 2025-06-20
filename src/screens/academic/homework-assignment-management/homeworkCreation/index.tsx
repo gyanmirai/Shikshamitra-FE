@@ -8,6 +8,7 @@ import { Tab, Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -16,13 +17,15 @@ import AssignmentCreation from '../assignmentCreation';
 
 const TABS = [
   {
+    icon: <Iconify icon="streamline-cyber:book-pencil" width={20} />,
     value: 'homeworkCreation',
-    label: 'Homework Creation',
+    label: 'Homework',
     component: (props: any) => <HomeworkCreation {...props} />,
   },
   {
+    icon: <Iconify icon="material-symbols:assignment-add-outline" width={20} />,
     value: 'assignmentCreation',
-    label: 'Assignment Creation',
+    label: 'Assignment',
     component: (props: any) => <AssignmentCreation {...props} />,
   },
 ];
@@ -72,7 +75,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
     <Box>
       {showBreadCumb && (
         <CustomBreadcrumbs
-          heading="Set Coursework"
+          heading="Learning Tasks"
           description={
             currentActiveComponent?.value === 'homeworkCreation'
               ? 'Create and manage homework assignments for students'
@@ -81,7 +84,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Homework & Assignment' },
-            { name: 'Set Coursework' },
+            { name: 'Learning Tasks' },
           ]}
           sx={{ px: 1, mb: 2 }}
           action={renderButton[searchParams?.tab as keyof typeof renderButton]}
@@ -98,11 +101,11 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
+      <Box>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
             addHomeworkDialog={addHomeworkDialog}

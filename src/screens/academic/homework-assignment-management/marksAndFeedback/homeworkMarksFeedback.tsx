@@ -13,6 +13,60 @@ import CustomSelect from 'src/components/custom-select';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
 
+const SUBJECTS = [
+  { id: '1', name: 'Mathematics' },
+  { id: '2', name: 'Science' },
+  { id: '3', name: 'English' },
+  { id: '4', name: 'History' },
+  { id: '5', name: 'Geography' },
+  { id: '6', name: 'Physics' },
+  { id: '7', name: 'Chemistry' },
+  { id: '8', name: 'Biology' },
+];
+
+const HOMEWORK_OPTIONS = [
+  {
+    value: 'Addition and Subtraction Practice',
+    label: 'Addition and Subtraction Practice',
+    submissionType: 'online_text',
+  },
+  {
+    value: 'Multiplication Tables Exercise',
+    label: 'Multiplication Tables Exercise',
+    submissionType: 'online_text',
+  },
+  {
+    value: 'Summer Vacation Project',
+    label: 'Summer Vacation Project',
+    submissionType: 'file_upload',
+  },
+  {
+    value: 'Chapter 1: Number System Assignment',
+    label: 'Chapter 1: Number System Assignment',
+    submissionType: 'file_upload',
+  },
+  {
+    value: 'Geometry Worksheet',
+    label: 'Geometry Worksheet',
+    submissionType: 'online_text',
+  },
+  {
+    value: 'Problem Solving Challenge',
+    label: 'Problem Solving Challenge',
+    submissionType: 'online_text',
+  },
+  {
+    value: 'Mental Math Quiz Preparation',
+    label: 'Mental Math Quiz Preparation',
+    submissionType: 'file_upload',
+  },
+  {
+    value: 'Real-life Math Applications',
+    label: 'Real-life Math Applications',
+    submissionType: 'file_upload',
+  },
+];
+
 const HomeworkMarksAndFeedback = (props: TabComponentType) => {
   // State to store selected subject
   const [subject, setSubject] = useState('');
@@ -28,6 +82,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
   const [homeworkType, setHomeworkType] = useState('');
   // State to store homework title
   const [homeworkTitle, setHomeworkTitle] = useState('');
+  const [selectedHomework, setSelectedHomework] = useState<any>(null);
 
   // Get current board and medium from global state
   const {
@@ -52,8 +107,18 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
   }, [allClass, classes]);
 
   return (
-    <Box>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={1}>
+    <>
+      <Box
+        display="flex"
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+          gap: 2,
+        }}
+      >
         <CustomSelect
           options={allClass}
           label="Class"
@@ -61,7 +126,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
           options={allDivision}
@@ -70,61 +135,35 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
         />
         <CustomSelect
-          options={[
-            { id: '1', name: 'Mathematics' },
-            { id: '2', name: 'Science' },
-            { id: '3', name: 'English' },
-            { id: '4', name: 'History' },
-            { id: '5', name: 'Geography' },
-            { id: '6', name: 'Physics' },
-            { id: '7', name: 'Chemistry' },
-            { id: '8', name: 'Biology' },
-          ]}
+          options={SUBJECTS}
           label="Subject"
           value={subject}
           onChange={(val) => setSubject(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
-        <CustomSelect
-          label="Homework Type"
-          disabled={!subject}
-          options={[
-            { value: 'daily', label: 'Daily Homework' },
-            { value: 'weekly', label: 'Weekly Homework' },
-            { value: 'project', label: 'Project Work' },
-          ]}
-          onChange={(val) => {
-            setHomeworkType(val as string);
-          }}
-          value={homeworkType}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
+
         <CustomSelect
           label="Homework Title"
-          disabled={!homeworkType}
-          options={[
-            { value: 'HW 1', label: 'HW 1' },
-            { value: 'HW 2', label: 'HW 2' },
-            { value: 'Holiday Project', label: 'Holiday Project' },
-            { value: 'Chapter 1 HW', label: 'Chapter 1 HW' },
-            { value: 'Worksheet A', label: 'Worksheet A' },
-          ]}
+          disabled={!subject}
+          options={HOMEWORK_OPTIONS}
           onChange={(val) => {
+            const selectedOption = HOMEWORK_OPTIONS.find((option) => option.value === val);
             setHomeworkTitle(val as string);
+            setSelectedHomework(selectedOption);
           }}
           value={homeworkTitle}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
       </Box>
-      <StudentSubmissions />
-    </Box>
+      {homeworkTitle && <StudentSubmissions selectedHomework={selectedHomework} />}
+    </>
   );
 };
 

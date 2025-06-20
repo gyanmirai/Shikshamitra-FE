@@ -819,14 +819,14 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+A+H',
           children: [
             {
-              title: 'Set Coursework',
+              title: 'Learning Tasks',
               path: '/academic/homeworkCreation',
               _action: 'homework-assignment-management-homeworkCreation',
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
             },
             {
-              title: 'Marks & Feedback',
+              title: 'Assessment & Feedback',
               path: '/academic/gradingAndFeedback',
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',

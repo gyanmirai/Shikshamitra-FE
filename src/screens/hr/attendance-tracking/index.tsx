@@ -69,7 +69,7 @@ const AttendanceTrackingScreen = () => {
   const currentIndex = MAIN_TABS.findIndex((i) => i.value === searchParams.tab);
   const [isBackClick, setIsBackClick] = useState<boolean>(false);
   return (
-    <Box sx={{ p: 1 }}>
+    <Box>
       <CustomBreadcrumbs
         heading="Attendance Tracking"
         links={[
