@@ -4,7 +4,7 @@ export const getChapterInitialValues = (editData?: any) => {
   const initialValues = {
     chapterNo: editData?.chapterNo || 0,
     chapterName: editData?.chapterName || '',
-    content: editData?.content || '',
+    description: editData?.description || '',
     startDate: editData?.startDate ? dayjs(editData.startDate, 'DD-MM-YYYY') : null,
     endDate: editData?.endDate ? dayjs(editData.endDate, 'DD-MM-YYYY') : null,
   };

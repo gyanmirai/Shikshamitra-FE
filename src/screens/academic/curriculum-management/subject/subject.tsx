@@ -18,7 +18,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -156,7 +155,7 @@ const Subject = (props: TabComponentType) => {
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
           heading="Subject Assignment"
-          description="Create or update subject details, including the name, code, and associated curriculum. Manage subjects efficiently by adding new ones or editing existing entries."
+          description="Create and manage subject assignments by specifying subject details like name, code, type (theory/practical), and curriculum mapping. Configure assessment criteria, assign teachers, and set up subject requirements to ensure comprehensive academic planning and delivery."
           isBack
           onBack={() => {
             handleClose(null, false);
@@ -173,13 +172,25 @@ const Subject = (props: TabComponentType) => {
       ) : (
         <CustomBreadcrumbs
           heading="Subject Assignment"
-          description="Manage and organize your academic subjects efficiently. View the list of subjects, add new subjects, update existing ones, or remove them as needed."
+          description={
+            showSubjectDialog.value
+              ? 'View comprehensive details of the selected subject, including subject name, code, curriculum mapping, and assessment criteria. This information helps ensure proper subject organization and academic planning.'
+              : 'Create and manage academic subjects by assigning them to specific classes, defining subject codes, and setting up curriculum requirements. This systematic approach helps maintain educational standards and streamlines the teaching-learning process.'
+          }
           links={[
             // Links when form is open
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Subject Assignment' },
+            {
+              name: 'Subject Assignment',
+              href: showSubjectDialog.value ? '/academic/curriculumSubjects' : undefined,
+            },
           ]}
+          isBack={showSubjectDialog.value}
+          onBack={() => {
+            showSubjectDialog.onFalse();
+            setSelectedSubject(null);
+          }}
           sx={{ px: 1, mb: 2 }}
         />
       )}
@@ -199,67 +210,71 @@ const Subject = (props: TabComponentType) => {
       ) : (
         <>
           {/* Class selection dropdown */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-              ml: 1,
-            }}
-          >
-            <CustomSelect
-              label="Class"
-              name="class"
-              options={allClass}
-              valueKey="name"
-              labelKey="name"
-              formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
-              value={classes}
-              onChange={(value) => {
-                setClasses(value as string);
+          {!showSubjectDialog.value && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 1,
+                ml: 1,
               }}
-            />
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={
-                addSubjectDialog.value
-                  ? () => handleClose(null, false)
-                  : () => {
-                      addSubjectDialog.onTrue();
-                      setIsEdit(false);
-                      setSelectedSubject(null);
-                    }
-              }
             >
-              Subject Assignment
-            </Button>
-          </Box>
+              <CustomSelect
+                label="Class"
+                name="class"
+                options={allClass}
+                valueKey="name"
+                labelKey="name"
+                formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
+                value={classes}
+                onChange={(value) => {
+                  setClasses(value as string);
+                }}
+              />
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={
+                  addSubjectDialog.value
+                    ? () => handleClose(null, false)
+                    : () => {
+                        addSubjectDialog.onTrue();
+                        setIsEdit(false);
+                        setSelectedSubject(null);
+                      }
+                }
+              >
+                Subject Assignment
+              </Button>
+            </Box>
+          )}
           {/* Subject table displayed when class is selected */}
 
-          <SubjectTable
-            addSubjectDialog={addSubjectDialog}
-            data={subjectTableData}
-            editData={selectedSubject}
-            setEditData={setSelectedSubject}
-            subjectTableData={subjectTableData}
-            onView={handleViewSubject}
-            onEdit={(row: ISubjectFormValues) => {
-              setSelectedSubject(row);
-              setIsEdit(true);
-              addSubjectDialog.onTrue();
-            }}
-            onDelete={(row: ISubjectFormValues) => {
-              setSelectedSubject(row);
-              deleteConfirmDialog.onTrue();
-            }}
-            onToggleStatus={(row: ISubjectFormValues) => {
-              setSelectedSubject(row);
-              confirmPublishDialog.onTrue();
-            }}
-          />
+          {!showSubjectDialog.value && (
+            <SubjectTable
+              addSubjectDialog={addSubjectDialog}
+              data={subjectTableData}
+              editData={selectedSubject}
+              setEditData={setSelectedSubject}
+              subjectTableData={subjectTableData}
+              onView={handleViewSubject}
+              onEdit={(row: ISubjectFormValues) => {
+                setSelectedSubject(row);
+                setIsEdit(true);
+                addSubjectDialog.onTrue();
+              }}
+              onDelete={(row: ISubjectFormValues) => {
+                setSelectedSubject(row);
+                deleteConfirmDialog.onTrue();
+              }}
+              onToggleStatus={(row: ISubjectFormValues) => {
+                setSelectedSubject(row);
+                confirmPublishDialog.onTrue();
+              }}
+            />
+          )}
         </>
       )}
 
@@ -378,17 +393,11 @@ const Subject = (props: TabComponentType) => {
       />
 
       {/* View subject details dialog */}
-      <CustomDialog
-        title={selectedSubject?.subjectName}
-        open={showSubjectDialog.value}
-        handleClose={() => {
-          showSubjectDialog.onFalse();
-          setSelectedSubject(null);
-        }}
-        maxWidth="md"
-      >
-        <ViewSubject subject={selectedSubject} />
-      </CustomDialog>
+      {showSubjectDialog.value && (
+        <Card>
+          <ViewSubject subject={selectedSubject} />
+        </Card>
+      )}
     </Box>
   );
 };

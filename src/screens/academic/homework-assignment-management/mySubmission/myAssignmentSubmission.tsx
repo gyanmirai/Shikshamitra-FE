@@ -62,7 +62,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
         mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Pending)
           ?.length || 0,
       completed:
-        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Completed)
+        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Submitted)
           ?.length || 0,
     }),
     []
@@ -79,7 +79,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
       },
       {
         label: 'Completed',
-        value: ScheduleExamStatus.Completed,
+        value: ScheduleExamStatus.Submitted,
         count: examCounts.completed,
         color: 'success',
       },

@@ -22,6 +22,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -83,7 +84,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         <MenuList>
           {/* Show 'Assign Grade' option only when marks are not assigned (marksStatus=0)
               but submission is completed (submissionStatus!=0) */}
-          {row.marksStatus === 0 && row.submissionStatus !== 0 && (
+          {row.status === ScheduleExamStatus.Submitted && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -96,7 +97,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               Give Feedback
             </MenuItem>
           )}
-          {row.marksStatus === 1 && row.submissionStatus === 1 && (
+          {row.status === ScheduleExamStatus.Reviewed && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -110,8 +111,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             </MenuItem>
           )}
 
-          {/* Show 'Send Reminder' option only when submission is pending (submissionStatus=0) */}
-          {row.submissionStatus === 0 && (
+          {/* Show 'Send Reminder' option only when homework is published */}
+          {row.status === ScheduleExamStatus.Published && (
             <MenuItem onClick={() => {}}>
               {' '}
               <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
@@ -140,14 +141,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
-        searchFieldProps={{
-          placeholder: 'Search by Gr No, Student Name, Title...',
-          label: 'Search by Gr No, Student Name, Title...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText="No Submission Data Found"
         columns={[
           {
@@ -157,68 +150,42 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             sticky: true,
             minWidth: 170,
           },
-          { id: 'grNo', label: 'Gr No' },
-          { id: 'homework', label: 'Title' },
-          { id: 'homeworkType', label: 'Type' },
-          {
-            id: 'submissionType',
-            label: 'Submission Type',
-            align: 'left',
-          },
+          { id: 'rollNumber', label: 'Roll No.', align: 'left', minWidth: 90 },
+          { id: 'homeworkType', label: 'Type', align: 'left' },
           {
             id: 'submissionDate',
-            label: 'Submission Date',
+            label: 'Due Date',
             align: 'left',
+            minWidth: 100,
           },
-          // {
-          //   id: 'marks',
-          //   label: 'Marks',
-          //   render: (value, row) =>
-          //     value === '' ? (
-          //       <Typography variant="subtitle2" color="textSecondary">
-          //         -
-          //       </Typography>
-          //     ) : (
-          //       <Typography variant="caption" gutterBottom>
-          //         {value}
-          //       </Typography>
-          //     ),
-          // },
-          // {
-          //   id: 'totalMarks',
-          //   label: 'Total Marks',
-          // },
           {
             id: 'feedback',
             label: 'Feedback',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
+            render: (value, row) => (
+              <CustomTooltip title={value || '-'} arrow>
+                <Typography
+                  variant="caption"
+                  fontSize="13px"
+                  noWrap
+                  sx={{
+                    maxWidth: 150,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'block',
+                  }}
+                >
+                  {value || '-'}
                 </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
+              </CustomTooltip>
+            ),
           },
           {
-            id: 'marksStatus',
-            label: 'Feedback Status',
+            id: 'status',
+            label: 'Status',
+            minWidth: 80,
             sticky: true,
             filterType: 'enum',
-            enumOptions: ScheduleExamStatusOptions,
-            align: 'left',
-            render(value, row) {
-              const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
-              return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
-            },
-          },
-          {
-            id: 'submissionStatus',
-            label: 'Submission Status',
-            filterType: 'enum',
-            sticky: true,
             enumOptions: ScheduleExamStatusOptions,
             align: 'left',
             render(value, row) {
@@ -228,10 +195,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
           {
             id: 'actions',
-            label: 'Actions',
+            label: 'Action',
+            minWidth: 40,
             isSort: false,
             isFilter: false,
-            align: 'center',
+            align: 'left',
             sticky: true,
             render(value, row) {
               return (
@@ -246,59 +214,55 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         data={[
           {
             id: '1',
-            grNo: 'GR001',
-            studentName: 'Mehta Aarav Kumar',
-            homework: 'Math Assignment 1',
-            homeworkType: 'Assignment',
-            submissionType: 'online_text',
-            submissionDate: '20-05-2025',
-            marks: 18,
-            totalMarks: 20,
-            feedback: 'Well done!',
-            marksStatus: 1,
-            submissionStatus: 1,
+            rollNumber: '1',
+            studentName: 'Sharma Priya Rajesh',
+            homework: selectedHomework?.value || '',
+            homeworkType: selectedHomework?.label || '',
+            submissionType: selectedHomework?.submissionType || 'online_text',
+            submissionDate: '22-05-2025',
+            marks: 45,
+            totalMarks: 50,
+            feedback: 'Excellent analysis!',
+            status: ScheduleExamStatus.Reviewed,
           },
           {
             id: '2',
-            grNo: 'GR002',
-            studentName: 'Patel Nisha Rajesh',
-            homework: 'Science Homework',
-            homeworkType: 'Homework',
-            submissionType: 'file_upload',
-            submissionDate: '19-05-2025',
-            marks: 30,
-            totalMarks: 35,
-            feedback: '',
-            marksStatus: 0,
-            submissionStatus: 1,
+            rollNumber: '2',
+            studentName: 'Kumar Arjun Dinesh',
+            homework: selectedHomework?.value || '',
+            homeworkType: selectedHomework?.label || '',
+            submissionType: selectedHomework?.submissionType || 'online_text',
+            submissionDate: '21-05-2025',
+            marks: 28,
+            totalMarks: 30,
+            feedback: 'Great understanding of concepts',
+            status: ScheduleExamStatus.Reviewed,
           },
           {
             id: '3',
-            grNo: 'GR003',
-            studentName: 'Shah Ravi Mukesh',
-            homework: 'English Essay',
-            homeworkType: 'Essay',
-            submissionType: 'online_text',
-            submissionDate: '18-05-2025',
-            marks: 15,
-            totalMarks: 25,
-            feedback: 'Good effort.',
-            marksStatus: 1,
-            submissionStatus: 1,
+            rollNumber: '3',
+            studentName: 'Gupta Ananya Suresh',
+            homework: selectedHomework?.value || '',
+            homeworkType: selectedHomework?.label || '',
+            submissionType: selectedHomework?.submissionType || 'online_text',
+            submissionDate: '23-05-2025',
+            marks: 0,
+            totalMarks: 40,
+            feedback: '',
+            status: ScheduleExamStatus.Submitted,
           },
           {
             id: '4',
-            grNo: 'GR004',
-            studentName: 'Desai Sneha Prakash',
-            homework: 'History Worksheet',
-            homeworkType: 'Worksheet',
-            submissionType: 'file_upload',
-            submissionDate: '',
-            marks: 0,
-            totalMarks: 30,
-            feedback: '',
-            marksStatus: 0,
-            submissionStatus: 0,
+            rollNumber: '4',
+            studentName: 'Singh Rohan Vikram',
+            homework: selectedHomework?.value || '',
+            homeworkType: selectedHomework?.label || '',
+            submissionType: selectedHomework?.submissionType || 'online_text',
+            submissionDate: '22-05-2025',
+            marks: 24,
+            totalMarks: 25,
+            feedback: 'Excellent analysis!',
+            status: ScheduleExamStatus.Reviewed,
           },
         ]}
       />

@@ -10,31 +10,48 @@ export interface UploadedFile {
   base64: string;
 }
 
+export interface DivisionHomeworkMeta {
+  divisionId: string; // ID or name of the division
+  createdAt: Dayjs | string | null; // When the homework was assigned
+  publishDate: Dayjs | string | null; // When the homework is published
+  dueDate: Dayjs | string | null; // When the homework is due
+  status: number; // 0 = Draft, 1 = Published
+}
+
 export interface IHomework {
   title: string;
   description: string;
-  class: string;
-  division: string[];
-  subject: string;
-  chapters: string[];
+  class: string; // class ID or name
+  subject: string; // subject ID or name
+  chapter: string; // list of chapter IDs or names
   homeworkType: string;
-  submissionType: number;
-  attachments?: File[];
-  createdBy: TeacherProfile;
-  status: number;
-  // isDailyTask: boolean;
-  startDate: Dayjs | null | string;
-  endDate: Dayjs | null | string;
+  submissionType: number; // 0 = Offline, 1 = Online
+  attachments?: File[]; // optional file uploads
   content?: string | null;
   submission?: string | null;
-  // isScheduled: boolean;
-  // scheduleDate: Dayjs | null | string;
-  // todaysDate: Dayjs | string;
+  createdBy: TeacherProfile; // includes name, email, avatar, etc.
+  divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
+  divisionMeta?: DivisionHomeworkMeta;
+}
+
+export interface IHomeworkDetail {
+  title: string;
+  description: string;
+  class: string; // class ID or name
+  subject: string; // subject ID or name
+  chapter: string; // list of chapter IDs or names
+  homeworkType: string;
+  submissionType: number; // 0 = Offline, 1 = Online
+  attachments?: File[]; // optional file uploads
+  content?: string | null;
+  submission?: string | null;
+  createdBy: TeacherProfile; // includes name, email, avatar, etc.
+  divisionMeta: DivisionHomeworkMeta; // ✅ Each division with its own dates
 }
 
 export interface IStudentSubmissionsProps {
   selectedStudents?: TStudentGrade[];
-  selectedHomework?: IHomework | null;
+  selectedHomework?: any | null;
   handleBulkUpdate?: (data: TStudentGrade[]) => void;
   tableData?: TStudentGrade[];
   setTableData?: React.Dispatch<React.SetStateAction<TStudentGrade[]>>;
@@ -61,14 +78,15 @@ export interface IHomeWorkCreationFormProps {
 }
 
 export interface IHomeworkTableProps {
-  filteredData: any[]; // ideally use proper type like IHomeworkAssignment[]
+  homeworkData: any[]; // ideally use proper type like IHomeworkAssignment[]
   setOpen: (open: boolean) => void;
   dialog: UseBooleanReturn;
   handleSwitchChange: (row: IHomework) => void;
   onViewDetails: (row: IHomework) => void;
   onEditDetails: (row: IHomework) => void;
   onDeleteDetails: (row: IHomework) => void;
-  onViewSubmission: (row: IHomework) => void;
+  onViewSubmission: (row: IHomeworkDetail) => void;
+  selectedDivision: string;
 }
 
 export interface TStudentGrade {

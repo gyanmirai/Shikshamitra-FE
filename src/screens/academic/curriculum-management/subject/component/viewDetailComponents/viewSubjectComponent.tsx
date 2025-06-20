@@ -3,17 +3,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState, useEffect } from 'react';
 
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Divider,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Tab, Tabs, Grid, Paper, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -90,92 +80,117 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
     };
 
   return (
-    <Box sx={{ p: 2, height: '100%' }}>
-      <Scrollbar sx={{ height: '600px' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.3 }}>
-            <Typography>
-              <strong>Class : </strong>
-            </Typography>
-            <Typography>{subject?.className}</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography>
-              <strong>Type : </strong>
-            </Typography>
-            <Typography mt={0.3}>{subject?.subjectType}</Typography>
+    <Grid container spacing={1} height="calc(100vh - 225px)">
+      <Grid item xs={3} height="100%">
+        <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {subject?.subjectType === 'Elective' && subject?.subjectName && (
+                <Typography fontWeight="bold">{subject.subjectName}</Typography>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+                  {subject?.className}- {subject?.subjectType}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', flex: 1, justifyContent: 'flex-end', mt: 0.3 }}>
+              <Label
+                variant="soft"
+                color={
+                  PublishUnpublishStatusTypeColors[
+                    subject?.status as PublishUnpublishStatusType
+                  ] as LabelColor
+                }
+                sx={{
+                  ml: 'auto',
+                }}
+              >
+                {
+                  PublishUnpublishStatusType[
+                    subject?.status as PublishUnpublishStatusType
+                  ] as string
+                }
+              </Label>
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', flex: 1, justifyContent: 'flex-end', mt: 0.3 }}>
-            <Label
-              variant="soft"
-              color={
-                PublishUnpublishStatusTypeColors[
-                  subject?.status as PublishUnpublishStatusType
-                ] as LabelColor
-              }
-              sx={{
-                ml: 'auto',
-              }}
-            >
-              {PublishUnpublishStatusType[subject?.status as PublishUnpublishStatusType] as string}
-            </Label>
-          </Box>
-        </Box>
-
-        <Box sx={{ borderColor: 'divider' }}>
-          {subject?.subjects?.map((sub, index) => (
-            <Accordion
-              key={sub.subjectCode}
-              expanded={expandedSubject === sub.subjectCode}
-              onChange={handleAccordionChange(sub.subjectCode)}
-              sx={{
-                border: '1px solid #ccc',
-                boxShadow: 'none', // optional, remove default shadow
-                '&:before': {
-                  display: 'none', // remove default divider line at top
-                },
-                borderRadius: 1, // optional, round corners
-                marginBottom: 1, // optional, add space between accordions
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
+            <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
+              {subject?.subjects?.map((sub, index) => (
+                <Box
+                  key={sub.subjectCode}
+                  onClick={() => setExpandedSubject(sub.subjectCode)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1,
+                    cursor: 'pointer',
+                    borderRadius: 1,
+                    backgroundColor:
+                      expandedSubject === sub.subjectCode ? 'action.selected' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
                   <SubjectColorIndicator color={sub?.subjectColor} />
-
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mr: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={600}>
                     {sub.subjectName || 'CHEMISTRY'}
                   </Typography>
                 </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Tabs
-                  value={tabs.value}
-                  onChange={tabs.onChange}
-                  sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-                  role="tablist"
-                >
-                  {TABS.map((tab) => (
-                    <Tab
-                      key={tab.value}
-                      value={tab.value}
-                      icon={tab.icon}
-                      label={tab.label}
-                      role="tab"
-                      sx={{ fontSize: '12px' }}
-                    />
-                  ))}
-                </Tabs>
-                <Divider sx={{ mb: 2 }} />
+              ))}
+            </Box>
+          </Scrollbar>
+        </Paper>
+      </Grid>
+      <Grid item xs={9} height="100%">
+        <Paper elevation={3} sx={{ height: '100%' }}>
+          <Scrollbar sx={{ height: 'calc(100% - 60px)', p: 1 }}>
+            {subject?.subjects?.map(
+              (sub) =>
+                expandedSubject === sub.subjectCode && (
+                  <Box key={sub.subjectCode}>
+                    <Tabs
+                      value={tabs.value}
+                      onChange={tabs.onChange}
+                      sx={{
+                        '& .MuiTabs-flexContainer': { gap: 1.5 },
+                        position: 'sticky',
+                        top: 0,
+                        backgroundColor: 'background.paper',
+                        zIndex: 1,
+                      }}
+                      role="tablist"
+                    >
+                      {TABS.map((tab) => (
+                        <Tab
+                          key={tab.value}
+                          value={tab.value}
+                          icon={tab.icon}
+                          label={tab.label}
+                          role="tab"
+                          sx={{ fontSize: '12px' }}
+                        />
+                      ))}
+                    </Tabs>
+                    <Divider sx={{ mb: 2 }} />
 
-                {currentActiveComponent?.component && (
-                  <currentActiveComponent.component tabs={tabs} subject={sub} />
-                )}
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
-      </Scrollbar>
-    </Box>
+                    {currentActiveComponent?.component && (
+                      <currentActiveComponent.component tabs={tabs} subject={sub} />
+                    )}
+                  </Box>
+                )
+            )}
+          </Scrollbar>
+        </Paper>
+      </Grid>
+    </Grid>
   );
 };

@@ -101,8 +101,19 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} ml={1}>
+    <>
+      <Box
+        display="flex"
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+          gap: 2,
+        }}
+      >
+        {' '}
         <CustomSelect
           options={allClass}
           label="Class"
@@ -204,6 +215,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       <AssignmentTable
         data={assignmentData || []}
         dialog={addAssignmentDialog}
+        selectedDivision={division}
         onSwitchToggle={(row) => {
           setSelectedAssignment(row);
           publishAssignmentDialog.onTrue();
@@ -294,7 +306,18 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       </CustomDialog>
 
       <CustomDialog
-        title={selectedAssignment?.title || ''}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assignment Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View complete details of the assignment including title, description, due date, submission status and other information"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewAssignmentDetails.value}
         handleClose={() => {
           viewAssignmentDetails.onFalse();
@@ -304,7 +327,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       >
         <ViewAssignmentDetails assignment={selectedAssignment} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

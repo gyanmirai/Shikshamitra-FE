@@ -59,7 +59,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                     label="Total Marks"
                     fullWidth
                     name="totalMarks"
-                    // disabled
+                    disabled
                     size="small"
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}

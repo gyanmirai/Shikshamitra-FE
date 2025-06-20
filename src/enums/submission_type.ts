@@ -1,26 +1,26 @@
 export enum SubmissionType {
-  ONLINE_TEXT,
-  FILE_UPLOAD,
-  IN_PERSON,
+  'Online Text',
+  'File Upload',
+  'In Person',
 }
 
 export const SubmissionTypeOptions = [
   {
     label: 'Online Text',
-    value: SubmissionType.ONLINE_TEXT,
+    value: SubmissionType['Online Text'],
   },
   {
     label: 'File Upload',
-    value: SubmissionType.FILE_UPLOAD,
+    value: SubmissionType['File Upload'],
   },
   {
     label: 'In Person',
-    value: SubmissionType.IN_PERSON,
+    value: SubmissionType['In Person'],
   },
 ];
 
 export const SubmissionTypeColors = {
-  [SubmissionType.ONLINE_TEXT]: 'primary',
-  [SubmissionType.FILE_UPLOAD]: 'secondary',
-  [SubmissionType.IN_PERSON]: 'success',
+  [SubmissionType['Online Text']]: 'primary',
+  [SubmissionType['File Upload']]: 'secondary',
+  [SubmissionType['In Person']]: 'success',
 };

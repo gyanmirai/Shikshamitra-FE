@@ -5,16 +5,16 @@ export enum PublishUnpublishStatusType {
 
 export const PublishUnpublishStatusOptions = [
   {
-    label: 'Published',
-    value: PublishUnpublishStatusType.Published,
-  },
-  {
     label: 'Draft',
     value: PublishUnpublishStatusType.Draft,
+  },
+  {
+    label: 'Published',
+    value: PublishUnpublishStatusType.Published,
   },
 ];
 
 export const PublishUnpublishStatusTypeColors = {
-  [PublishUnpublishStatusType.Published]: 'success',
   [PublishUnpublishStatusType.Draft]: 'default',
+  [PublishUnpublishStatusType.Published]: 'success',
 };

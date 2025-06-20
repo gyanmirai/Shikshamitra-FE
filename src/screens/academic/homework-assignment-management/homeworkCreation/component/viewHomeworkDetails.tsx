@@ -6,14 +6,8 @@ import { Box, Tab, Tabs, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusTypeColors,
-} from 'src/enums/publishUnpublish-status';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Label, type LabelColor } from 'src/components/label';
 
 import HomeworkOverview from './viewHomeworkDetails/homeworkOverview';
 import HomeworkDocuments from './viewHomeworkDetails/homeworkDocuments';
@@ -30,8 +24,8 @@ const HOMEWORK_TABS = [
     ),
   },
   {
-    value: 'attachments',
-    label: 'Attachments',
+    value: `attachments`,
+    label: 'Attachments (5)',
     icon: <Iconify icon="solar:bill-list-bold" width={20} />,
     component: (props: { tabs: UseTabsReturn; homework: IHomework }) => (
       <HomeworkDocuments {...props} />
@@ -40,6 +34,8 @@ const HOMEWORK_TABS = [
 ];
 
 const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
+  console.log('homework---', homework);
+
   // Custom hook to manage tab state with 'overview' as the default selected tab
   const tabs = useTabs('overview');
 
@@ -53,70 +49,66 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
     [tabs.value]
   );
 
-  // Handler for subject accordion expansion/collapse events
-  // @param _event - React synthetic event (unused)
-  // @param isExpanded - Boolean indicating if accordion should be expanded
-  const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
-    setIsSubjectExpanded(isExpanded);
-  };
-
   return (
     <Box sx={{ p: 2, height: '100%' }}>
       <Scrollbar sx={{ height: '600px' }}>
-        {/* Homework Header */}
         <Box
           sx={{
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'flex-start',
+            gap: 2,
+            mb: 1,
           }}
         >
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography>
-                  <strong>Type : </strong>
-                </Typography>
-                <Typography mt={0.3}>{homework?.homeworkType}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography mt={0.3}>
-                  <strong>Class : </strong>
-                </Typography>
-                <Typography mt={0.3}>{homework?.class}</Typography>
-              </Box>
-
-              <Label
-                variant="soft"
-                color={
-                  PublishUnpublishStatusTypeColors[
-                    homework?.status as PublishUnpublishStatusType
-                  ] as LabelColor
-                }
-                sx={
-                  {
-                    // p: 1.8,
-                    // fontSize: '1rem',
-                    // fontWeight: 500,
-                    // minWidth: '100px',
-                    // textAlign: 'center',
-                  }
-                }
-              >
-                {
-                  PublishUnpublishStatusType[
-                    homework?.status as PublishUnpublishStatusType
-                  ] as string
-                }
-              </Label>
-              {/* {homework?.isDailyTask && (
-                  <Label color="warning" sx={{ fontSize: '0.875rem' }}>
-                    Daily Task
-                  </Label>
-                )} */}
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Iconify
+              icon="mdi:book-open-page-variant"
+              sx={{
+                color: 'text.secondary',
+                width: 20,
+                height: 20,
+                mr: 0.5,
+              }}
+            />
+            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+              {homework?.subject}
+            </Typography>
           </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Iconify
+              icon="mdi:google-classroom"
+              sx={{
+                color: 'text.secondary',
+                width: 20,
+                height: 20,
+                mr: 0.5,
+              }}
+            />
+            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+              {homework?.class} - {homework?.divisionMeta?.divisionId}
+            </Typography>
+          </Box>
+
+          {homework?.chapter && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Iconify
+                icon="cil:book"
+                sx={{
+                  color: 'text.secondary',
+                  width: 18,
+                  height: 18,
+                  mr: 0.5,
+                }}
+              />
+
+              <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+                {homework?.chapter}
+              </Typography>
+            </Box>
+          )}
         </Box>
+        {/* Homework Header */}
 
         {/* Subject Accordion - Single Subject */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>

@@ -58,7 +58,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '350px' }}>
+          <Scrollbar sx={{ p: 2, height: '250px' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Card

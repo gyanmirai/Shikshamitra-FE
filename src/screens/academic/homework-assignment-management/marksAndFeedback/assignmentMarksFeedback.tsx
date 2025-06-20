@@ -16,6 +16,8 @@ import CustomSelect from 'src/components/custom-select';
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 
 const AssignmentMarksAndFeedback = (props: TabComponentType) => {
+  // State to store selected assignment data
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   // Dialog state for modal/popup control
   const [subject, setSubject] = useState('');
   // State to store all classes/standards for the selected organization
@@ -58,8 +60,19 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
   const bulkGradeDialog = useBoolean();
 
   return (
-    <Box>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={1}>
+    <>
+      <Box
+        display="flex"
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+          gap: 2,
+        }}
+      >
+        {' '}
         <CustomSelect
           options={allClass}
           label="Class"
@@ -67,7 +80,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
           options={allDivision}
@@ -76,7 +89,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
         />
         <CustomSelect
@@ -95,26 +108,12 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           onChange={(val) => setSubject(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
         <CustomSelect
-          label="Assignment Type"
-          disabled={!subject}
-          options={[
-            { value: 'homework', label: 'Homework' },
-            { value: 'quiz', label: 'Quiz' },
-            { value: 'exam', label: 'Exam' },
-          ]}
-          onChange={(val) => {
-            setAssignmentType(val as string);
-          }}
-          value={assignmentType}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
-        <CustomSelect
           label="Assignment Title"
-          disabled={!assignmentType}
+          disabled={!subject}
           options={[
             { value: 'Chapter 1 Quiz', label: 'Chapter 1 Quiz' },
             { value: 'Chapter 2 Quiz', label: 'Chapter 2 Quiz' },
@@ -126,13 +125,27 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           ]}
           onChange={(val) => {
             setAssignmentTitle(val as string);
+            // Set mock selected assignment data when title is selected
+            setSelectedAssignment({
+              id: val,
+              title: val,
+              submissionType: 1, // Default to file upload type
+            });
           }}
           value={assignmentTitle}
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
       </Box>
-      <StudentSubmissions />
-    </Box>
+      {assignmentTitle && (
+        <StudentSubmissions
+          selectedAssignment={selectedAssignment}
+          selectedStudents={[]}
+          handleBulkUpdate={() => {}}
+          tableData={[]}
+          setTableData={() => {}}
+        />
+      )}
+    </>
   );
 };
 

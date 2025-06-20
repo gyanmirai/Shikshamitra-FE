@@ -7,6 +7,7 @@ import { Tab, Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -15,11 +16,13 @@ import AssignmentTypeCreation from './assignmentType';
 
 const TABS = [
   {
+    icon: <Iconify icon="material-symbols-light:assignment-add" width={20} />,
     value: 'homeworkType',
     label: 'Homework Type',
     component: (props: any) => <HomeworkTypeCreation {...props} />,
   },
   {
+    icon: <Iconify icon="lucide:file-type" width={20} />,
     value: 'assignmentType',
     label: 'Assignment Type',
     component: (props: any) => <AssignmentTypeCreation {...props} />,
@@ -94,7 +97,7 @@ const HomeworkSetting = () => {
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
