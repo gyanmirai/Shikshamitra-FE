@@ -136,7 +136,7 @@ const RegistrationTable = ({
         tableId="student-registration-table"
         noDataText={
           <>
-            No Registration Data Found{' '}
+            i No Regstration Data Found{' '}
             <Box
               onClick={() => {
                 formDialog.onTrue();
@@ -214,8 +214,8 @@ const RegistrationTable = ({
           { id: 'standard.name', label: 'Class', align: 'left' },
           {
             id: 'dobValue',
-            label: 'DOB',
-            minWidth: '120px',
+            label: 'Date Of Birth',
+            minWidth: '130px',
             align: 'left',
             isFilter: true,
             filterType: 'date',
@@ -223,13 +223,22 @@ const RegistrationTable = ({
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'Inquiry Date',
-            minWidth: '120px',
+            label: 'Date Of Inquiry',
+            minWidth: '150px',
             align: 'left',
             filterType: 'date',
             isDateRangeFilter: true,
           },
-          { id: 'genderValue', label: 'Gender', align: 'left' },
+          {
+            id: 'genderValue',
+            label: 'Gender',
+            align: 'left',
+            filterType: 'enum',
+            enumOptions: [
+              { value: 'Male', label: 'Male' },
+              { value: 'Female', label: 'Female' },
+            ],
+          },
           { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
           {
             id: 'primaryContactNumber',
@@ -247,7 +256,7 @@ const RegistrationTable = ({
           {
             id: 'inquiryPreference.preferenceName',
             label: 'Inquiry Preference',
-            minWidth: '130px',
+            minWidth: '175px',
             align: 'left',
           },
           // {
@@ -325,6 +334,7 @@ const RegistrationTable = ({
             isSort: false,
             isFilter: false,
             minWidth: 40,
+            align: 'left',
             sticky: true,
             render(value, row) {
               return (

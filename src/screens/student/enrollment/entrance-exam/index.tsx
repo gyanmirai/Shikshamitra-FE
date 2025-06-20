@@ -54,6 +54,8 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -465,11 +467,15 @@ export default EntranceExamScreen;
 // Component for handling exam form functionality including scheduling exams and managing slots
 export const ExamForm = ({
   studentName,
+  educationBoard,
+  educationMedium,
   standardName,
   studentEnrollmentId,
   handleClose,
 }: {
   studentName: string;
+  educationBoard: { name: string };
+  educationMedium: { name: string };
   standardName: string;
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
@@ -621,17 +627,38 @@ export const ExamForm = ({
       <Paper sx={{ p: 2 }}>
         <Box display="flex" gap={4}>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" color="text.primary">
               Student Name :
             </Typography>
-            <Typography variant="subtitle2">{studentName}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">
+              {studentName}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Typography variant="subtitle2" color="text.primary">
+              Board :
+            </Typography>
+            <Typography variant="subtitle2" color="text.secondary">
+              {educationBoard?.name}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Typography variant="subtitle2" color="text.primary">
+              Medium :
+            </Typography>
+            <Typography variant="subtitle2" color="text.secondary">
+              {educationMedium?.name}
+            </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="subtitle2" color="text.secondary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle2" color="text.primary">
               Class :
             </Typography>
-            <Typography variant="subtitle2"> {standardName}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">
+              {' '}
+              {standardName}
+            </Typography>
           </Box>
         </Box>
       </Paper>
@@ -641,8 +668,8 @@ export const ExamForm = ({
           bgcolor: 'background.neutral',
         }}
       >
-        <Grid container spacing={2}>
-          <Grid xs={5}>
+        <Grid container spacing={3}>
+          <Grid xs={4}>
             <Paper>
               <DateCalendar
                 value={formik.values.examDate}
@@ -671,7 +698,7 @@ export const ExamForm = ({
               </Typography>
             )}
           </Grid>
-          <Grid xs={7}>
+          <Grid xs={8}>
             <Paper sx={{ p: 1, height: '100%' }}>
               <Grid container spacing={2}>
                 {/* <Grid xs={4}>
@@ -739,8 +766,13 @@ export const ExamForm = ({
                 </Grid> */}
                 <Grid xs={12}>
                   <Box>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle1">Slots</Typography>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      padding={2}
+                    >
+                      <Typography variant="h6">Slots</Typography>
                       <Button
                         size="small"
                         variant="outlined"
@@ -754,10 +786,13 @@ export const ExamForm = ({
                     <Grid container spacing={2}>
                       {isStudentCountLoading ? (
                         <Box className="loading" />
+                      ) : formik.values.slots.length === 0 ? (
+                        <EmptyContent title="Please select the date." />
                       ) : (
                         formik.values.slots.map((slot: any, index: number) => (
                           <Grid xs={6} key={index}>
                             <FormControlLabel
+                              sx={{ marginLeft: 1 }}
                               control={
                                 <Checkbox
                                   checked={slot.value === formik.values.slot}
@@ -812,9 +847,25 @@ export const ExamForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
-      <CustomDialog title="Slots" open={dialog.value} handleClose={dialog.onFalse}>
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6">Slot</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+      >
         <SlotsForm handleClose={dialog.onFalse} editData={null} />
       </CustomDialog>
+
       <CustomDialog
         open={addExamTypeDialog.value}
         handleClose={() => {
