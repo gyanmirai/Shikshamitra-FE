@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 
-import { Box, Tooltip, MenuItem, MenuList, useTheme, Typography, IconButton } from '@mui/material';
+import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { SubmissionType, SubmissionTypeOptions } from 'src/enums/submission_type';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
@@ -15,7 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IHomework, IHomeworkTableProps } from '../type';
+import type { IHomework, IHomeworkTableProps, DivisionHomeworkMeta } from '../type';
 
 /**
  * HomeworkTable Component - Displays a table of homework assignments with filtering and action capabilities
@@ -30,7 +29,8 @@ import type { IHomework, IHomeworkTableProps } from '../type';
  * @param {Function} props.onViewSubmission - Handler for viewing homework submissions
  */
 const HomeworkTable: React.FC<IHomeworkTableProps> = ({
-  filteredData,
+  homeworkData,
+  selectedDivision,
   setOpen,
   dialog,
   handleSwitchChange,
@@ -51,34 +51,28 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
    * @param {IHomework} params.row - Current row data
    * @returns {JSX.Element} Menu list with view submission action
    */
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {row.status === 1 ? (
-          <MenuItem
-            onClick={() => {
-              handleSwitchChange(row as IHomework);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.publish} />
-            Publish
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              onViewSubmission(row as IHomework);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} />
-            View Submission
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [handleSwitchChange, onViewSubmission]
-  );
+
+  const filteredData = useMemo(() => {
+    if (!selectedDivision) return homeworkData || [];
+
+    return (homeworkData || [])
+      .filter((hw) =>
+        hw.divisions?.some((d: DivisionHomeworkMeta) => d.divisionId === selectedDivision)
+      )
+      .map((hw) => {
+        const currentDivision = hw.divisions.find(
+          (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+        );
+        return {
+          ...hw,
+          currentDivisionId: currentDivision?.divisionId,
+          createdAt: currentDivision?.createdAt,
+          publishDate: currentDivision?.publishDate,
+          dueDate: currentDivision?.dueDate,
+          status: currentDivision?.status,
+        };
+      });
+  }, [selectedDivision, homeworkData]);
 
   return (
     <CustomizableTable
@@ -120,36 +114,35 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           filterType: 'string',
         },
         {
-          id: 'startDate',
-          label: 'Start Date Time',
+          id: 'createdAt',
+          label: 'Created On',
           align: 'left',
           filterType: 'date',
           render: (value) => (
-            <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'endDate',
-          label: 'End Date Time',
-          align: 'left',
-          filterType: 'date',
-          render: (value) => (
-            <Typography fontSize="12px" gutterBottom>
-              {value ? dayjs(value).format('DD-MM-YYYY, h:mm A') : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'submissionType',
-          label: 'Submission Type',
-          align: 'left',
-          filterType: 'enum',
-          enumOptions: SubmissionTypeOptions,
-          render: (value, row) => (
             <Typography variant="caption" fontSize="13px">
-              {SubmissionType[value]}
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'publishDate',
+          label: 'Publish Date',
+          align: 'left',
+          filterType: 'date',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'dueDate',
+          label: 'Due Date',
+          align: 'left',
+          filterType: 'date',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
             </Typography>
           ),
         },
@@ -157,6 +150,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           id: 'status',
           label: 'Status',
           align: 'left',
+          minWidth: 40,
           isFilter: false,
           sticky: true,
           isSort: false,
@@ -214,7 +208,16 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
                 onDeleteDetails(row as IHomework);
               }}
               handleEditClick={() => onEditDetails(row as IHomework)}
-              handleViewClick={() => onViewDetails(row as IHomework)}
+              handleViewClick={() => {
+                const divisionData = row.divisions?.find(
+                  (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+                );
+
+                onViewDetails({
+                  ...row,
+                  divisionMeta: divisionData,
+                } as IHomework & { divisionMeta?: DivisionHomeworkMeta });
+              }}
             />
           ),
         },

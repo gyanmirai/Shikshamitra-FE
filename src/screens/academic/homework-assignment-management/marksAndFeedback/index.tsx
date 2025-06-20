@@ -8,6 +8,7 @@ import { Tab, Box, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -16,13 +17,15 @@ import AssignmentMarksAndFeedback from './assignmentMarksFeedback';
 
 const TABS = [
   {
+    icon: <Iconify icon="streamline-plump:file-check-alternate" width={20} />,
     value: 'homeworkMarks',
-    label: 'Homework Marks Management',
+    label: 'Homework',
     component: (props: TabComponentType) => <HomeworkMarksAndFeedback {...props} />,
   },
   {
+    icon: <Iconify icon="uil:file-check-alt" width={20} />,
     value: 'assignmentMarks',
-    label: 'Assignment Marks Management',
+    label: 'Assignment',
     component: (props: TabComponentType) => <AssignmentMarksAndFeedback {...props} />,
   },
 ];
@@ -38,7 +41,7 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Marks & Feedback"
+        heading="Assessment & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
             ? 'Add and manage marks/feedback for homework assignments'
@@ -47,7 +50,7 @@ const MarksFeedbackHomeworkAssignment = () => {
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
-          { name: 'Marks & Feedback' },
+          { name: 'Assessment & Feedback' },
         ]}
         sx={{ px: 1, mb: 2 }}
       />
@@ -62,11 +65,11 @@ const MarksFeedbackHomeworkAssignment = () => {
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
+      <Box>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
             searchParams={searchParams}

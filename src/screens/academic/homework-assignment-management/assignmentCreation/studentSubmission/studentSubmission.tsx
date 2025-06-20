@@ -22,6 +22,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -40,7 +41,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   setTableData,
 }) => {
   // State to track the currently selected student for individual grading
-  const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
+  const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -78,7 +79,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       <>
         {' '}
         <MenuList>
-          {row.marksStatus === 0 && row.submissionStatus !== 0 && (
+          {row.status === ScheduleExamStatus.Submitted && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -91,7 +92,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               Assign Marks
             </MenuItem>
           )}
-          {row.marksStatus === 1 && row.submissionStatus === 1 && (
+          {row.status === ScheduleExamStatus.Reviewed && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -104,7 +105,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               Edit Marks
             </MenuItem>
           )}
-          {row.submissionStatus === 0 && (
+          {row.status === ScheduleExamStatus.Draft && (
             <MenuItem onClick={() => {}}>
               {' '}
               <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
@@ -133,29 +134,32 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
-        searchFieldProps={{
-          placeholder: 'Search by Gr No, Student Name, Assignment...',
-          label: 'Search by Gr No, Student Name, Assignment...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText="No Submission Data Found"
         columns={[
-          { id: 'studentName', label: 'Student Name', align: 'left', sticky: true, minWidth: 170 },
-          { id: 'grNo', label: 'Gr No' },
-          { id: 'assignment', label: 'Title' },
-          { id: 'assignmentType', label: 'Type' },
           {
-            id: 'submissionType',
-            label: 'Submission Type',
+            id: 'studentName',
+            label: 'Student Name',
             align: 'left',
+            sticky: true,
+            minWidth: 170,
+          },
+          {
+            id: 'rollNumber',
+            label: 'Roll No.',
+            align: 'left',
+            minWidth: 90,
+          },
+          {
+            id: 'assignmentType',
+            label: 'Type',
+            align: 'left',
+            minWidth: 100,
           },
           {
             id: 'submissionDate',
-            label: 'Submission Date',
+            label: 'Due Date',
             align: 'left',
+            minWidth: 120,
           },
           {
             id: 'marks',
@@ -174,40 +178,39 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'totalMarks',
             label: 'Total Marks',
+            align: 'left',
+            minWidth: 130,
           },
           {
             id: 'feedback',
             label: 'Feedback',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
+            render: (value, row) => (
+              <CustomTooltip title={value || '-'} arrow>
+                <Typography
+                  variant="caption"
+                  fontSize="13px"
+                  noWrap
+                  sx={{
+                    maxWidth: 150,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'block',
+                  }}
+                >
+                  {value || '-'}
                 </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
+              </CustomTooltip>
+            ),
           },
           {
-            id: 'marksStatus',
-            label: 'Marks Status',
+            id: 'status',
+            label: 'Status',
             filterType: 'enum',
             sticky: true,
             enumOptions: ScheduleExamStatusOptions,
             align: 'left',
-            render(value, row) {
-              const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
-              return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
-            },
-          },
-          {
-            id: 'submissionStatus',
-            label: 'Submission Status',
-            filterType: 'enum',
-            sticky: true,
-            enumOptions: ScheduleExamStatusOptions,
-            align: 'left',
+            minWidth: 80,
             render(value, row) {
               const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
               return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
@@ -215,7 +218,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
           {
             id: 'actions',
-            label: 'Actions',
+            label: 'Action',
             isSort: false,
             isFilter: false,
             align: 'center',
@@ -234,6 +237,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: '1',
             grNo: 'GR001',
+            rollNumber: '101',
             studentName: 'Mehta Aarav Kumar',
             assignment: 'Math Assignment 1',
             assignmentType: 'Practice',
@@ -242,26 +246,26 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             marks: 18,
             totalMarks: 20,
             feedback: 'Well done!',
-            marksStatus: 1,
-            submissionStatus: 1,
+            status: ScheduleExamStatus.Reviewed,
           },
           {
             id: '2',
             grNo: 'GR002',
+            rollNumber: '102',
             studentName: 'Patel Nisha Rajesh',
             assignment: 'Science Homework',
-            assignmentType: 'Graded',
+            assignmentType: 'Practice',
             submissionType: 'file_upload',
             submissionDate: '19-05-2025',
             marks: 30,
             totalMarks: 35,
             feedback: '',
-            marksStatus: 0,
-            submissionStatus: 1,
+            status: ScheduleExamStatus.Submitted,
           },
           {
             id: '3',
             grNo: 'GR003',
+            rollNumber: '103',
             studentName: 'Shah Ravi Mukesh',
             assignment: 'English Essay',
             assignmentType: 'Practice',
@@ -270,22 +274,21 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             marks: 15,
             totalMarks: 25,
             feedback: 'Good effort.',
-            marksStatus: 1,
-            submissionStatus: 1,
+            status: ScheduleExamStatus.Reviewed,
           },
           {
             id: '4',
             grNo: 'GR004',
+            rollNumber: '104',
             studentName: 'Desai Sneha Prakash',
             assignment: 'History Worksheet',
-            assignmentType: 'Graded',
+            assignmentType: 'Practice',
             submissionType: 'file_upload',
-            submissionDate: '',
-            marks: 0,
+            submissionDate: '18-05-2025',
+            marks: 20,
             totalMarks: 30,
             feedback: '',
-            marksStatus: 0,
-            submissionStatus: 0,
+            status: ScheduleExamStatus.Reviewed,
           },
         ]}
       />

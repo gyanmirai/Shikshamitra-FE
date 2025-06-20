@@ -49,6 +49,7 @@ const SubjectTable = ({
             status: formData.status,
             secondaryTeacher: subject.secondaryTeacher || [],
             subjectType: formData.subjectType && 0,
+            subject: formData.subjectName,
           });
         });
       } else if (formData.subjectType === 'Elective') {
@@ -67,6 +68,7 @@ const SubjectTable = ({
           description: (formData.subjects || []).map((s) => s.description),
           isSubjectOpen: false,
           subjectType: formData.subjectType && 1,
+          subject: formData.subjectName,
         });
       }
     }
@@ -149,26 +151,38 @@ const SubjectTable = ({
                   </Typography>
                 </Box>
               ) : Array.isArray(value) ? (
-                value.map((subjectName: string, index: number) => {
-                  const subjectCode = Array.isArray(row.subjectCode)
-                    ? row.subjectCode[index]
-                    : row.subjectCode;
+                <>
+                  <Typography variant="caption" fontSize="13px">
+                    ({row.subject})
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {value.map((subjectName: string, index: number) => {
+                      const subjectCode = Array.isArray(row.subjectCode)
+                        ? row.subjectCode[index]
+                        : row.subjectCode;
 
-                  const subjectColor = Array.isArray(row.subjectColor)
-                    ? row.subjectColor[index]
-                    : row.subjectColor;
+                      const subjectColor = Array.isArray(row.subjectColor)
+                        ? row.subjectColor[index]
+                        : row.subjectColor;
 
-                  return (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={subjectColor} />
-                      <Typography variant="caption" fontSize="13px">
-                        {subjectName} ({subjectCode})
-                      </Typography>
-                    </Box>
-                  );
-                })
+                      return (
+                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <SubjectColorIndicator color={subjectColor} />
+                          <Typography variant="caption" fontSize="13px">
+                            {subjectName} ({subjectCode})
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </>
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {row.subjectType === 'Elective' && (
+                    <Typography variant="caption" fontSize="13px">
+                      ({row.subject})
+                    </Typography>
+                  )}
                   <SubjectColorIndicator color={row.subjectColor} />
                   <Typography variant="caption" fontSize="13px">
                     {value} ({row.subjectCode})
@@ -216,7 +230,7 @@ const SubjectTable = ({
           id: 'status',
           label: 'Status',
           align: 'left',
-          minWidth: 100,
+          minWidth: 40,
           isFilter: false,
           sticky: true,
           isSort: false,
@@ -229,7 +243,7 @@ const SubjectTable = ({
                 : theme.palette.text.secondary;
 
             return (
-              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
+              <Tooltip title={value === 0 ? 'Published' : 'Draft'}>
                 <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
                   <Iconify
                     icon={GlobalIcons.tick}
@@ -248,7 +262,7 @@ const SubjectTable = ({
         {
           id: 'action',
           label: 'Actions',
-          minWidth: 90,
+          minWidth: 70,
           align: 'left',
           sticky: true,
           isFilter: false,

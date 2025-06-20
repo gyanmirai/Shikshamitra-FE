@@ -27,16 +27,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getAssignmentInitialValues } from './assignmentInitialValues';
@@ -69,14 +67,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
   }, [allClass, classes]);
-
-  // Fetch class data using custom query hook
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
 
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
@@ -120,165 +112,273 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} sx={{ height: '100%' }}>
-          <Scrollbar sx={{ p: 2, height: '400px' }}>
-            <Grid container spacing={3}>
-              {/* Class Selection */}
-              <Grid item xs={12}>
-                <SectionCard title="Basic Details">
-                  <Grid item xs={12} md={6}>
-                    <ShakingTextField
-                      error={!!(formik.touched.class && formik.errors.class) || false}
-                    >
-                      <CustomSelect
-                        label="Class *"
-                        options={classData?.items || []}
-                        value={formik.values.class || classes}
-                        isLoading={isLoading}
-                        // disabled={!!classes}
-                        labelKey="name"
-                        valueKey="name"
-                        onChange={(val) => {
-                          const selectedClass = classData?.items?.find(
-                            (i: Standards) => i.id === val
-                          );
-                          formik.setFieldValue('class', val);
-                        }}
-                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                        error={!!(formik.touched.class && formik.errors.class) || false}
-                        helperText={(formik.touched.class && formik.errors.class) || ''}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Division Selection */}
-                  <Grid item xs={12} md={6}>
-                    <ShakingTextField
-                      error={!!(formik.touched.division && formik.errors.division) || false}
-                    >
-                      <CustomSelect
-                        label="Division *"
-                        labelKey="name"
-                        valueKey="id"
-                        multiple
-                        options={allDivision}
-                        value={formik.values.division}
-                        onChange={(val) => {
-                          const selectedDivisions = allDivision
-                            .filter((i) => (val as string[]).includes(i.id))
-                            .map((div) => div.id);
-                          formik.setFieldValue('division', selectedDivisions);
-                        }}
-                        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                        error={!!(formik.touched.division && formik.errors.division) || false}
-                        helperText={
-                          Array.isArray(formik.errors.division)
-                            ? formik.errors.division.join(', ')
-                            : (formik.touched.division && formik.errors.division) || undefined
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Subject Selection */}
-                  <Grid item xs={12} md={6}>
-                    <ShakingTextField
-                      error={!!(formik.touched.subjects && formik.errors.subjects) || false}
-                    >
-                      <CustomSelect
-                        label="Subject *"
-                        disabled={!formik.values.division || formik.values.division.length === 0}
-                        options={[
-                          { value: 'Mathematics', label: 'Mathematics' },
-                          { value: 'Science', label: 'Science' },
-                          { value: 'History', label: 'History' },
-                          { value: 'English', label: 'English' },
-                        ]}
-                        value={formik.values.subjects}
-                        onChange={(val) => formik.setFieldValue('subjects', val)}
-                        formControlProps={{ fullWidth: true }}
-                        error={!!(formik.touched.subjects && formik.errors.subjects) || false}
-                        helperText={(formik.touched.subjects && formik.errors.subjects) || ''}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Assignment Title */}
-                  <Grid item xs={12} md={6}>
-                    <ShakingTextField
-                      error={!!(formik.touched.title && formik.errors.title) || false}
-                    >
-                      <TextField
-                        fullWidth
-                        label="Assignment Title *"
-                        // placeholder="Enter Assignment Title"
-                        name="title"
-                        size="small"
-                        value={formik.values.title}
-                        onChange={formik.handleChange}
-                        error={formik.touched.title && Boolean(formik.errors.title)}
-                        helperText={formik.touched.title && formik.errors.title}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Assignment Type */}
-                  <Grid item xs={12} md={6}>
-                    <ShakingTextField
-                      error={
-                        !!(formik.touched.assignmentType && formik.errors.assignmentType) || false
-                      }
-                    >
-                      <CustomSelect
-                        label="Assignment Type *"
-                        options={[
-                          { value: 'essay', label: 'Essay' },
-                          { value: 'project', label: 'Project' },
-                          { value: 'quiz', label: 'Quiz' },
-                          { value: 'presentation', label: 'Presentation' },
-                        ]}
-                        value={formik.values.assignmentType || ''}
-                        onChange={(val) => formik.setFieldValue('assignmentType', val)}
-                        formControlProps={{ fullWidth: true }}
-                        error={
-                          !!(formik.touched.assignmentType && formik.errors.assignmentType) || false
-                        }
-                        helperText={
-                          (formik.touched.assignmentType && formik.errors.assignmentType) || ''
-                        }
-                      />
-                    </ShakingTextField>
-                    <Box mt={1} display="flex" justifyContent="flex-end">
-                      <Typography
-                        variant="body2"
-                        fontWeight={500}
-                        color="primary.main"
-                        fontSize={12}
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => assignmentTypeDialog.onTrue()}
-                      >
-                        Add Assignment Type ?
-                      </Typography>
-                    </Box>
-
-                    <CustomDialog
-                      open={assignmentTypeDialog.value}
-                      handleClose={assignmentTypeDialog.onFalse}
-                      title="Add Assignment Type"
-                    >
-                      <AssignmentTypeForm
-                        open={assignmentTypeDialog}
-                        onClose={assignmentTypeDialog.onFalse}
-                        editData={null}
-                      />
-                    </CustomDialog>
-                  </Grid>
-                </SectionCard>
+      <Box
+        component="form"
+        sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}
+        onSubmit={formik.handleSubmit}
+      >
+        <Scrollbar
+          sx={{
+            px: 1,
+            height: '100%',
+          }}
+        >
+          {/* Basic Details Section */}
+          <Box sx={{ mb: 3 }}>
+            <SectionCard title="Basic Details">
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
+                  <CustomSelect
+                    label="Class *"
+                    options={allClass}
+                    value={formik.values.class || classes}
+                    // disabled={!!classes}
+                    labelKey="name"
+                    valueKey="name"
+                    onChange={(val) => {
+                      formik.setFieldValue('class', val);
+                    }}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    error={!!(formik.touched.class && formik.errors.class) || false}
+                    helperText={(formik.touched.class && formik.errors.class) || ''}
+                  />
+                </ShakingTextField>
               </Grid>
 
-              {/* Due Date */}
-              {/* <Grid item xs={12} md={6}>
+              {/* Division Selection */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.divisions && formik.errors.divisions) || false}
+                >
+                  <CustomSelect
+                    label="Division *" // Select division from dropdown
+                    labelKey="name"
+                    valueKey="name"
+                    multiple
+                    options={allDivision}
+                    value={formik.values.divisions.map((d) => d.divisionId)} // value = selected division IDs
+                    onChange={(val) => {
+                      const selectedDivs = val as string[];
+                      const existingDivs = formik.values.divisions || [];
+
+                      const newDivisions = selectedDivs.map((divId) => {
+                        const existing = existingDivs.find((d) => d.divisionId === divId);
+                        return (
+                          existing || {
+                            divisionId: divId,
+                            createdAt: dayjs(),
+                            publishDate: null,
+                            dueDate: null,
+                          }
+                        );
+                      });
+
+                      formik.setFieldValue('divisions', newDivisions);
+                    }}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    error={Boolean(formik.touched.divisions && formik.errors.divisions)}
+                    helperText={
+                      typeof formik.errors.divisions === 'string'
+                        ? formik.errors.divisions
+                        : undefined
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Subject Selection */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.subjects && formik.errors.subjects) || false}
+                >
+                  <CustomSelect
+                    label="Subject *"
+                    disabled={!formik.values.divisions || formik.values.divisions.length === 0}
+                    options={[
+                      { value: 'Mathematics', label: 'Mathematics' },
+                      { value: 'Science', label: 'Science' },
+                      { value: 'History', label: 'History' },
+                      { value: 'English', label: 'English' },
+                    ]}
+                    value={formik.values.subjects}
+                    onChange={(val) => formik.setFieldValue('subjects', val)}
+                    formControlProps={{ fullWidth: true }}
+                    error={!!(formik.touched.subjects && formik.errors.subjects) || false}
+                    helperText={(formik.touched.subjects && formik.errors.subjects) || ''}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Assignment Title */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
+                  <TextField
+                    fullWidth
+                    label="Assignment Title *"
+                    // placeholder="Enter Assignment Title"
+                    name="title"
+                    size="small"
+                    value={formik.values.title}
+                    onChange={formik.handleChange}
+                    error={formik.touched.title && Boolean(formik.errors.title)}
+                    helperText={formik.touched.title && formik.errors.title}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Assignment Type */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.assignmentType && formik.errors.assignmentType) || false}
+                >
+                  <CustomSelect
+                    label="Assignment Type *"
+                    options={[
+                      { value: 'essay', label: 'Essay' },
+                      { value: 'project', label: 'Project' },
+                      { value: 'quiz', label: 'Quiz' },
+                      { value: 'presentation', label: 'Presentation' },
+                    ]}
+                    value={formik.values.assignmentType || ''}
+                    onChange={(val) => formik.setFieldValue('assignmentType', val)}
+                    formControlProps={{ fullWidth: true }}
+                    error={
+                      !!(formik.touched.assignmentType && formik.errors.assignmentType) || false
+                    }
+                    helperText={
+                      (formik.touched.assignmentType && formik.errors.assignmentType) || ''
+                    }
+                  />
+                </ShakingTextField>
+                <Box mt={1} display="flex" justifyContent="flex-end">
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="primary.main"
+                    fontSize={12}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => assignmentTypeDialog.onTrue()}
+                  >
+                    Add Assignment Type ?
+                  </Typography>
+                </Box>
+
+                <CustomDialog
+                  open={assignmentTypeDialog.value}
+                  handleClose={assignmentTypeDialog.onFalse}
+                  title="Add Assignment Type"
+                >
+                  <AssignmentTypeForm
+                    open={assignmentTypeDialog}
+                    onClose={assignmentTypeDialog.onFalse}
+                    editData={null}
+                  />
+                </CustomDialog>
+              </Grid>
+
+              {/* Total Marks */}
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
+                >
+                  <TextField
+                    fullWidth
+                    label="Total Marks"
+                    name="totalMarks"
+                    size="small"
+                    type="number"
+                    value={formik.values.totalMarks}
+                    onChange={formik.handleChange}
+                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <ShakingTextField
+                  error={!!(formik.touched.students && formik.errors.students) || false}
+                >
+                  <ResponsiveMultiSelect
+                    label="Students"
+                    options={[
+                      { id: 'all', name: 'All' },
+                      { id: 'st1', name: 'Smith, John Michael' },
+                      { id: 'st2', name: 'Johnson, Emily Rose' },
+                      { id: 'st3', name: 'Williams, James Robert' },
+                      { id: 'st4', name: 'Brown, Sarah Elizabeth' },
+                      { id: 'st5', name: 'Jones, David William' },
+                      { id: 'st6', name: 'Garcia, Maria Elena' },
+                      { id: 'st7', name: 'Miller, Thomas Andrew' },
+                      { id: 'st8', name: 'Davis, Jennifer Lynn' },
+                      { id: 'st9', name: 'Rodriguez, Carlos Manuel' },
+                      { id: 'st10', name: 'Martinez, Ana Sofia' },
+                      { id: 'st11', name: 'Anderson, Michael James' },
+                      { id: 'st12', name: 'Taylor, Jessica Marie' },
+                      { id: 'st13', name: 'Thomas, Robert James' },
+                      { id: 'st14', name: 'Moore, Patricia Ann' },
+                      { id: 'st15', name: 'Jackson, William Henry' },
+                      { id: 'st16', name: 'White, Elizabeth Marie' },
+                      { id: 'st17', name: 'Harris, Joseph Charles' },
+                      { id: 'st18', name: 'Martin, Susan Jane' },
+                      { id: 'st19', name: 'Thompson, Richard Lee' },
+                      { id: 'st20', name: 'Lewis, Margaret Rose' },
+                      { id: 'st21', name: 'Lee, Christopher John' },
+                      { id: 'st22', name: 'Walker, Barbara Jean' },
+                      { id: 'st23', name: 'Hall, Kevin Michael' },
+                      { id: 'st24', name: 'Allen, Dorothy Mae' },
+                      { id: 'st25', name: 'Young, George Edward' },
+                    ]}
+                    value={formik.values.students}
+                    onChange={(val) => {
+                      if (val.includes('all')) {
+                        // If "Select All" is chosen, select all students except the "all" option
+                        const allStudentIds = [
+                          { id: 'st1', name: 'Smith, John Michael' },
+                          { id: 'st2', name: 'Johnson, Emily Rose' },
+                          { id: 'st3', name: 'Williams, James Robert' },
+                          { id: 'st4', name: 'Brown, Sarah Elizabeth' },
+                          { id: 'st5', name: 'Jones, David William' },
+                          { id: 'st6', name: 'Garcia, Maria Elena' },
+                          { id: 'st7', name: 'Miller, Thomas Andrew' },
+                          { id: 'st8', name: 'Davis, Jennifer Lynn' },
+                          { id: 'st9', name: 'Rodriguez, Carlos Manuel' },
+                          { id: 'st10', name: 'Martinez, Ana Sofia' },
+                          { id: 'st11', name: 'Anderson, Michael James' },
+                          { id: 'st12', name: 'Taylor, Jessica Marie' },
+                          { id: 'st13', name: 'Thomas, Robert James' },
+                          { id: 'st14', name: 'Moore, Patricia Ann' },
+                          { id: 'st15', name: 'Jackson, William Henry' },
+                          { id: 'st16', name: 'White, Elizabeth Marie' },
+                          { id: 'st17', name: 'Harris, Joseph Charles' },
+                          { id: 'st18', name: 'Martin, Susan Jane' },
+                          { id: 'st19', name: 'Thompson, Richard Lee' },
+                          { id: 'st20', name: 'Lewis, Margaret Rose' },
+                          { id: 'st21', name: 'Lee, Christopher John' },
+                          { id: 'st22', name: 'Walker, Barbara Jean' },
+                          { id: 'st23', name: 'Hall, Kevin Michael' },
+                          { id: 'st24', name: 'Allen, Dorothy Mae' },
+                          { id: 'st25', name: 'Young, George Edward' },
+                        ]
+                          .filter((opt) => opt.id !== 'all')
+                          .map((opt) => opt.id);
+                        formik.setFieldValue('students', allStudentIds);
+                      } else {
+                        formik.setFieldValue('students', val);
+                      }
+                    }}
+                    getOptionLabel={(opt) => opt.name}
+                    getOptionValue={(opt) => opt.id}
+                    error={formik.touched.students && Boolean(formik.errors.students)}
+                    helperText={(formik.touched.students && formik.errors.students) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </SectionCard>
+          </Box>
+
+          {/* Due Date */}
+          {/* <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}
                 >
@@ -302,8 +402,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                 </ShakingTextField>
               </Grid> */}
 
-              {/* Description */}
-              <Grid item xs={12}>
+          {/* Description Section */}
+          <Box sx={{ mb: 3 }}>
+            <SectionCard title="Description">
+              <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description) || false}
                 >
@@ -319,153 +421,164 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               </Grid>
 
               {/* File Upload */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom color="primary.main">
-                  Documents
-                </Typography>
-                <Upload
+              <Grid item xs={12} md={6} sx={{ mt: 2 }}>
+                <FileUploader
+                  // @ts-ignore
+                  value={formik.values.attachments}
                   multiple
-                  value={formik.values.attachments || []}
-                  onDrop={handleDrop}
-                  onRemove={handleRemove}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom color="primary.main">
-                  Rubric
-                </Typography>{' '}
-                <Upload
-                  // {...uploadProps}
-                  thumbnail
-                  value={formik.values.rubric}
-                  onDrop={(acceptedFiles) => {
-                    const file = acceptedFiles[0];
-                    console.log('file', file);
-
-                    if (!file) return;
-
-                    formik.setFieldValue('rubric', file);
+                  onChange={(value) => {
+                    // const reader = new FileReader();
+                    formik.setFieldValue('attachments', value);
+                    // reader.readAsDataURL(value as File);
+                    // reader.readAsDataURL(value as File);
+                    // reader.onload = () => {
+                    //   const base64String = reader.result;
+                    // };
                   }}
-                  multiple={false}
-                  onDelete={() => handleRemoveFile(formik.setFieldValue)}
-                  onRemoveAll={() => handleRemoveAllFiles(formik.setFieldValue)}
+                  primaryText="Please Upload Your File"
+                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
+            </SectionCard>
+          </Box>
 
-              {/* Schedule Assignment */}
-              <Grid item xs={12}>
-                <SectionCard title="Schedule Assignment">
-                  <Grid container spacing={2} p={2}>
+          {/* Schedule Assignment */}
+          {formik.values.divisions.length > 0 && (
+            <Grid item xs={12} sx={{ p: 0, mt: 3 }}>
+              <SectionCard title="Schedule Homework">
+                {formik.values.divisions.map((div, idx) => (
+                  <Grid container spacing={2} ml={0.2} key={div.divisionId}>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                        Div : {div.divisionId}
+                      </Typography>
+                    </Grid>
+
+                    {/* Publish Date */}
                     <Grid item xs={12} md={6}>
                       <ShakingTextField
-                        error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                        error={
+                          typeof formik.errors.divisions?.[idx] === 'object' &&
+                          !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
+                          !!formik.touched.divisions?.[idx]?.publishDate
+                        }
                       >
                         <DateTimePicker
-                          label="Start Date Time"
-                          value={dayjs(formik.values.startDate)}
-                          format="DD/MM/YYYY hh:mm"
-                          onChange={(date) => formik.setFieldValue('startDate', date)}
+                          label="Publish Date"
+                          value={div.publishDate ? dayjs(div.publishDate) : null}
+                          onChange={(val) =>
+                            formik.setFieldValue(`divisions[${idx}].publishDate`, val)
+                          }
+                          minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
                             textField: {
-                              size: 'small',
                               fullWidth: true,
-                              error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                              size: 'small',
+
+                              error:
+                                typeof formik.errors.divisions?.[idx] === 'object' &&
+                                !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
+                                !!formik.touched.divisions?.[idx]?.publishDate,
                               helperText:
-                                formik.touched.startDate &&
-                                typeof formik.errors.startDate === 'string'
-                                  ? formik.errors.startDate
-                                  : undefined,
+                                formik.touched.divisions?.[idx]?.publishDate &&
+                                typeof formik.errors.divisions?.[idx] === 'object'
+                                  ? (formik.errors.divisions?.[idx] as any)?.publishDate
+                                  : '',
                             },
                           }}
                         />
                       </ShakingTextField>
                     </Grid>
+
+                    {/* Due Date */}
                     <Grid item xs={12} md={6}>
                       <ShakingTextField
-                        error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                        error={
+                          typeof formik.errors.divisions?.[idx] === 'object' &&
+                          !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
+                          !!formik.touched.divisions?.[idx]?.dueDate
+                        }
                       >
                         <DateTimePicker
-                          label="End Date Time"
-                          value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
-                          format="DD/MM/YYYY hh:mm"
-                          onChange={(date) => formik.setFieldValue('endDate', date)}
+                          label="Due Date"
+                          value={div.dueDate ? dayjs(div.dueDate) : null}
+                          onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
+                          minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
                             textField: {
-                              size: 'small',
                               fullWidth: true,
-                              error: formik.touched.endDate && Boolean(formik.errors.endDate),
+                              size: 'small',
+                              error:
+                                typeof formik.errors.divisions?.[idx] === 'object' &&
+                                !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
+                                !!formik.touched.divisions?.[idx]?.dueDate,
                               helperText:
-                                formik.touched.endDate && typeof formik.errors.endDate === 'string'
-                                  ? formik.errors.endDate
-                                  : undefined,
+                                formik.touched.divisions?.[idx]?.dueDate &&
+                                typeof formik.errors.divisions?.[idx] === 'object'
+                                  ? (formik.errors.divisions?.[idx] as any)?.dueDate
+                                  : '',
                             },
                           }}
                         />
                       </ShakingTextField>
                     </Grid>
                   </Grid>
-                </SectionCard>
-              </Grid>
-
-              <Grid item xs={12}>
-                <SectionCard title="Submission Type">
-                  <FormControl
-                    component="fieldset"
-                    error={!!(formik.touched.submissionType && formik.errors.submissionType)}
-                    sx={{ p: 2 }}
-                  >
-                    <RadioGroup
-                      row
-                      name="submissionType"
-                      value={formik.values.submissionType?.toString()} // Convert number to string for matching
-                      onChange={(event) =>
-                        formik.setFieldValue('submissionType', Number(event.target.value))
-                      } // Convert back to number
-                    >
-                      <FormControlLabel value="0" control={<Radio />} label="Online Text" />
-                      <FormControlLabel value="1" control={<Radio />} label="File Upload" />
-                      <FormControlLabel
-                        value="2"
-                        control={<Radio />}
-                        label="In-Person Submission"
-                      />
-                    </RadioGroup>
-                    {formik.touched.submissionType && formik.errors.submissionType && (
-                      <Typography variant="caption" color="error">
-                        {formik.errors.submissionType}
-                      </Typography>
-                    )}
-                  </FormControl>
-                </SectionCard>
-              </Grid>
+                ))}
+              </SectionCard>
             </Grid>
-          </Scrollbar>
+          )}
 
-          {/* Action Buttons */}
-          <DialogActions>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => onClose(null, false)}
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => {
-                // formik.setFieldValue('status', 1);
-                formik.handleSubmit();
-              }}
-              startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
-            >
-              {editData ? 'Update' : 'Submit'}
-            </Button>
-          </DialogActions>
-        </Box>
-      </form>
+          <Grid item xs={12} mt={3} mb={1}>
+            <SectionCard title="Submission Type">
+              <FormControl
+                component="fieldset"
+                error={!!(formik.touched.submissionType && formik.errors.submissionType)}
+                sx={{ p: 2 }}
+              >
+                <RadioGroup
+                  row
+                  name="submissionType"
+                  value={formik.values.submissionType?.toString()} // Convert number to string for matching
+                  onChange={(event) =>
+                    formik.setFieldValue('submissionType', Number(event.target.value))
+                  } // Convert back to number
+                >
+                  <FormControlLabel value="0" control={<Radio />} label="Online Text" />
+                  <FormControlLabel value="1" control={<Radio />} label="File Upload" />
+                  <FormControlLabel value="2" control={<Radio />} label="In-Person Submission" />
+                </RadioGroup>
+                {formik.touched.submissionType && formik.errors.submissionType && (
+                  <Typography variant="caption" color="error">
+                    {formik.errors.submissionType}
+                  </Typography>
+                )}
+              </FormControl>
+            </SectionCard>
+          </Grid>
+        </Scrollbar>
+      </Box>
+      {/* Action Buttons */}
+      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => onClose(null, false)}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => {
+            // formik.setFieldValue('status', 1);
+            formik.handleSubmit();
+          }}
+          startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

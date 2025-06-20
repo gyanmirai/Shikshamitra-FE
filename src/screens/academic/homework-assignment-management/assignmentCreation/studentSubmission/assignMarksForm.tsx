@@ -67,41 +67,45 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '350px' }}>
-            <Card
-              key={document.id}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {getFileIconByType(document.type ?? 'txt', 32)}
-                <Box>
-                  <Typography variant="subtitle2">{document.name}</Typography>
-                  {document.size && (
-                    <Typography variant="body2" color="text.secondary">
-                      {document.size}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              <Tooltip title="Preview">
-                <IconButton
-                  edge="end"
-                  aria-label="preview"
-                  onClick={() => handleDownload(document)}
+          <Scrollbar sx={{ p: 2, height: '250px' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Card
+                  key={document.id}
+                  sx={{
+                    p: 2,
+                    mb: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    '&:hover': { bgcolor: 'action.hover' },
+                  }}
                 >
-                  <Iconify icon={GlobalIcons.eye} />
-                </IconButton>
-              </Tooltip>
-            </Card>
-            <Grid container spacing={2} mt={1}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {getFileIconByType(document.type ?? 'txt', 32)}
+                    <Box>
+                      <Typography variant="subtitle2">{document.name}</Typography>
+                      {document.size && (
+                        <Typography variant="body2" color="text.secondary">
+                          {document.size}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  <Tooltip title="Preview">
+                    <IconButton
+                      edge="end"
+                      aria-label="preview"
+                      onClick={() => handleDownload(document)}
+                    >
+                      <Iconify icon={GlobalIcons.eye} />
+                    </IconButton>
+                  </Tooltip>
+                </Card>
+              </Grid>
               <Grid item xs={12} md={6}>
                 <ShakingTextField
                   error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
@@ -110,7 +114,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                     label="Total Marks"
                     fullWidth
                     name="totalMarks"
-                    // disabled
+                    disabled
                     size="small"
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}

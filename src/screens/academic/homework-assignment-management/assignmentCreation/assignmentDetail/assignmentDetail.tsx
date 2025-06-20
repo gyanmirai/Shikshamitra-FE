@@ -6,14 +6,8 @@ import { Box, Tab, Tabs, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusTypeColors,
-} from 'src/enums/publishUnpublish-status';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Label, type LabelColor } from 'src/components/label';
 
 import AssignmentOverview from './assignmentOverview';
 import AssignmentDocuments from './assignmentDocuments';
@@ -31,7 +25,7 @@ const ASSIGNMENT_TABS = [
   },
   {
     value: 'attachments',
-    label: 'Attachments',
+    label: 'Attachments (5)',
     icon: <Iconify icon="solar:bill-list-bold" width={20} />,
     component: (props: { tabs: UseTabsReturn; assignment: IAssignment }) => (
       <AssignmentDocuments {...props} />
@@ -67,62 +61,45 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
     <Box sx={{ p: 2, height: '100%' }}>
       <Scrollbar sx={{ height: '600px' }}>
         {/* Assignment Header */}
-        <Box>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-            }}
-          >
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography>
-                    <strong>Type : </strong>
-                  </Typography>
-                  <Typography mt={0.3}>{assignment?.assignmentType}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography mt={0.3}>
-                    <strong>Class : </strong>
-                  </Typography>
-                  <Typography mt={0.3}>{assignment?.class}</Typography>
-                </Box>
 
-                <Label
-                  variant="soft"
-                  color={
-                    PublishUnpublishStatusTypeColors[
-                      assignment?.status as PublishUnpublishStatusType
-                    ] as LabelColor
-                  }
-                  sx={
-                    {
-                      // p: 1.8,
-                      // fontSize: '1rem',
-                      // fontWeight: 500,
-                      // minWidth: '100px',
-                      // textAlign: 'center',
-                    }
-                  }
-                >
-                  {
-                    PublishUnpublishStatusType[
-                      assignment?.status as PublishUnpublishStatusType
-                    ] as string
-                  }
-                </Label>
-                {/* {homework?.isDailyTask && (
-                  <Label color="warning" sx={{ fontSize: '0.875rem' }}>
-                    Daily Task
-                  </Label>
-                )} */}
-              </Box>
-            </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 2,
+            mb: 1,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Iconify
+              icon="mdi:book-open-page-variant"
+              sx={{
+                color: 'text.secondary',
+                width: 20,
+                height: 20,
+                mr: 0.5,
+              }}
+            />
+            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+              {assignment?.subjects}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Iconify
+              icon="mdi:google-classroom"
+              sx={{
+                color: 'text.secondary',
+                width: 20,
+                height: 20,
+                mr: 0.5,
+              }}
+            />
+            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+              {assignment?.class} - {assignment?.divisionMeta?.divisionId}
+            </Typography>
           </Box>
         </Box>
-
         {/* Subjects Accordions - Multiple Subjects */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
           {assignment ? (
@@ -172,68 +149,6 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
             </Box>
           )}
         </Box>
-        {/* <Box sx={{ borderColor: 'divider', mb: 2 }}>
-          {assignment?.subjects ? (
-            <Accordion
-              expanded={isSubjectExpanded}
-              onChange={handleAccordionChange}
-              sx={{
-                border: '1px solid #e0e0e0',
-                borderRadius: 2,
-                boxShadow: 'none',
-                '&:before': {
-                  display: 'none',
-                },
-                mb: 2,
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {assignment.subjects}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Tabs
-                  value={tabs.value}
-                  onChange={tabs.onChange}
-                  sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-                  role="tablist"
-                >
-                  {ASSIGNMENT_TABS.map((tab) => (
-                    <Tab
-                      key={tab.value}
-                      value={tab.value}
-                      icon={tab.icon}
-                      label={tab.label}
-                      role="tab"
-                      sx={{ fontSize: '12px' }}
-                    />
-                  ))}
-                </Tabs>
-                <Divider sx={{ mb: 2 }} />
-
-                {currentActiveComponent?.component && (
-                  <currentActiveComponent.component tabs={tabs} assignment={assignment} />
-                )}
-              </AccordionDetails>
-            </Accordion>
-          ) : (
-            <Box
-              sx={{
-                textAlign: 'center',
-                py: 4,
-                border: '1px dashed #ccc',
-                borderRadius: 2,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No subject assigned to this homework
-              </Typography>
-            </Box>
-          )}
-        </Box> */}
       </Scrollbar>
     </Box>
   );

@@ -26,7 +26,7 @@ export interface IChapter {
 export interface IChapterFormValues {
   chapterNo: number;
   chapterName: string;
-  content: string;
+  description: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   documents?: File[];

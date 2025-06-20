@@ -17,8 +17,9 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { SubmissionType } from 'src/enums/submission_type';
-import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
@@ -35,147 +36,265 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => (
   <Box sx={{ height: '100%' }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={8}>
-        <Card sx={{ height: '100%' }}>
+        <Card sx={{ height: '100%', mx: 'auto', boxShadow: 2, borderRadius: 2 }}>
           <CardContent sx={{ p: 2 }}>
-            <DetailRow label="Title" value={assignment?.title} icon="mdi:bookmark-outline" />
-            <DetailRow
-              label="Description"
-              value={assignment?.description}
-              icon="mdi:text-box-outline"
-            />
-            <DetailRow label="Class" value={assignment?.class} icon="mdi:school-outline" />
-
-            {/* Divisions */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1 }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Iconify icon="mdi:account-group-outline" />
-                <Typography variant="subtitle2">Divisions</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', pl: 3.5, gap: 1 }}>
-                {assignment?.division && assignment.division.length > 0 ? (
-                  assignment.division.map((div, index) => (
-                    <Chip key={index} label={div} size="small" variant="outlined" />
-                  ))
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Not specified
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-
-            {/* Subjects */}
-            <DetailRow label="Subject" value={assignment?.subjects} icon="mdi:book-open-variant" />
-
-            <DetailRow
-              label="Assignment Type"
-              value={assignment?.assignmentType}
-              icon="mdi:format-list-bulleted-type"
-            />
-            <DetailRow
-              label="Submission Type"
-              value={assignment.submissionType ? SubmissionType[assignment.submissionType] : ''}
-              icon="mdi:upload"
-              color="error"
-              sx={{ backgroundColor: '#FFEBEE' }}
-            />
-
-            {/* Status with color */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, gap: 0.5 }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Iconify icon="mdi:information" />
-                <Typography variant="subtitle2">Status</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', pb: 2, pl: 3.5, gap: 1 }}>
-                <Label
-                  color={
-                    PublishUnpublishStatusTypeColors[
-                      assignment?.status as PublishUnpublishStatusType
-                    ] as LabelColor
-                  }
+            {/* Main Info Row */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                {/* assignment Type */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    gap: 2,
+                  }}
                 >
-                  {PublishUnpublishStatusType[assignment?.status as PublishUnpublishStatusType]}
-                </Label>
+                  {/* Homework Type */}
+                  <Typography variant="subtitle1" component="span">
+                    {assignment?.title}
+                  </Typography>
+
+                  {/* Status Label from divisionMeta */}
+                  <Label
+                    variant="soft"
+                    color={
+                      PublishUnpublishStatusTypeColors[
+                        assignment?.divisionMeta?.status as PublishUnpublishStatusType
+                      ] as LabelColor
+                    }
+                  >
+                    {
+                      PublishUnpublishStatusType[
+                        assignment?.divisionMeta?.status as PublishUnpublishStatusType
+                      ] as string
+                    }
+                  </Label>
+                </Box>
+                {/* Description */}
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}
+                  >
+                    Description :
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{
+                      lineHeight: 1.6,
+                      letterSpacing: '0.01em',
+                    }}
+                  >
+                    {assignment?.description}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      backgroundColor: 'background.neutral',
+                      borderRadius: 1,
+                      px: 1.5,
+                      py: 0.75,
+                    }}
+                  >
+                    <Iconify
+                      icon="mdi:notebook-edit"
+                      sx={{
+                        color: 'text.secondary',
+                        width: 20,
+                        height: 20,
+                        mr: 0.5,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      component="span"
+                      sx={{ fontWeight: 600, color: 'text.secondary' }}
+                    >
+                      Type :
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {assignment.assignmentType}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      backgroundColor: 'background.neutral',
+                      borderRadius: 1,
+                      px: 1.5,
+                      py: 0.75,
+                    }}
+                  >
+                    <Iconify
+                      icon={GlobalIcons.submit}
+                      sx={{
+                        color: 'text.secondary',
+                        width: 20,
+                        height: 20,
+                        mr: 0.5,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      component="span"
+                      sx={{ fontWeight: 600, color: 'text.secondary' }}
+                    >
+                      Submit Via :
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {SubmissionType[assignment?.submissionType]}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {Boolean(assignment?.students?.length) && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}
+                    >
+                      Assigned Students:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {assignment?.students?.map((student, index) => (
+                        <Chip
+                          key={index}
+                          avatar={<Avatar alt={student} />}
+                          label={student}
+                          variant="outlined"
+                          sx={{
+                            borderRadius: 1,
+                            '& .MuiChip-avatar': {
+                              width: 24,
+                              height: 24,
+                              marginLeft: '4px',
+                            },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Class */}
+
+                {/* Subject */}
+
+                {/* Status Label from divisionMeta */}
               </Box>
             </Box>
-
-            {/* {assignment?.isScheduled && (
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Iconify icon="mdi:calendar-clock" />
-                  <Typography variant="subtitle2">Scheduled</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', pb: 2, pl: 3.5, gap: 1 }}>
-                  <Chip label="Yes" size="small" color="info" variant="outlined" />
-                </Box>
-              </Box>
-            )} */}
           </CardContent>
         </Card>
       </Grid>
 
       <Grid item xs={12} md={4}>
-        <Card sx={{ height: '100%' }}>
+        <Card sx={{ height: '100%', boxShadow: 2, borderRadius: 2 }}>
           <Scrollbar sx={{ height: '100%' }}>
             <CardContent sx={{ p: 2 }}>
               <Typography
-                variant="subtitle1"
+                variant="body1"
                 gutterBottom
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
                 <Iconify icon="mdi:clock-outline" sx={{ mr: 1, height: '22px', width: '22px' }} />
-                Timeline & Dates
+                Timeline
               </Typography>
               <Divider sx={{ mb: 1 }} />
 
               {/* Due Date */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Start Date Time
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Publish Date Time
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Iconify icon="mdi:calendar-alert" color="error.main" />
+                  <Iconify icon="mdi:calendar" />
                   <Typography variant="body2">
-                    {dayjs(assignment?.startDate).format('DD MMM YYYY hh:mm')}
+                    {dayjs(assignment?.divisionMeta?.publishDate).format('DD MMM YYYY hh:mm')}
                   </Typography>
                 </Box>
               </Box>
 
-              {/* End Date */}
-              {assignment?.endDate && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    End Date Time
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Due Date Time
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Iconify
+                    icon="mdi:calendar"
+                    sx={{
+                      color: dayjs().isAfter(assignment?.divisionMeta?.dueDate)
+                        ? 'error.main'
+                        : dayjs().add(1, 'day').isAfter(assignment?.divisionMeta?.dueDate)
+                          ? 'warning.main'
+                          : 'success.main',
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: dayjs().isAfter(assignment?.divisionMeta?.dueDate)
+                        ? 'error.main'
+                        : dayjs().add(1, 'day').isAfter(assignment?.divisionMeta?.dueDate)
+                          ? 'warning.main'
+                          : 'success.main',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {dayjs(assignment?.divisionMeta?.dueDate).format('DD MMM YYYY hh:mm')}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Iconify icon="mdi:calendar-end" color="warning.main" />
-                    <Typography variant="body2">
-                      {dayjs(assignment.endDate).format('DD MMM YYYY')}
-                    </Typography>
-                  </Box>
                 </Box>
-              )}
+              </Box>
+              <Box sx={{ mb: 1.5 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Created On
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Iconify icon="mdi:calendar" />
+                  <Typography variant="body2">
+                    {dayjs(assignment?.divisionMeta?.createdAt).format('DD MMM YYYY hh:mm')}
+                  </Typography>
+                </Box>
+              </Box>
 
               {/* Schedule Date */}
-              {/* {homework?.isScheduled && homework?.scheduleDate && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Scheduled Date
+              {/* {assignment?.isScheduled && assignment?.scheduleDate && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Scheduled Date
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Iconify icon="mdi:calendar-clock" color="info.main" />
+                  <Typography variant="body1" fontWeight={500}>
+                    {dayjs(assignment?.dueDate).format('DD MMM YYYY')}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Iconify icon="mdi:calendar-clock" color="info.main" />
-                    <Typography variant="body1" fontWeight={500}>
-                      {dayjs(homework?.dueDate).format('DD MMM YYYY')}
-                    </Typography>
-                  </Box>
                 </Box>
-              )} */}
+              </Box>
+            )} */}
 
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 1 }} />
 
               {/* Created By */}
               <Typography
-                variant="subtitle1"
+                variant="body1"
                 gutterBottom
                 sx={{ display: 'flex', alignItems: 'center' }}
               >
@@ -246,23 +365,21 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => (
                     />
                   </ListItemAvatar>
                   <ListItemText
-                    primary={<Typography variant="body2">{assignment?.createdBy?.name}</Typography>}
+                    primary={
+                      <Typography variant="body2" sx={{ mb: -1 }}>
+                        {assignment?.createdBy?.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="caption" color="text.secondary">
+                        {assignment?.createdBy?.designation}
+                      </Typography>
+                    }
                   />
                 </ListItem>
               </Box>
 
               {/* Attachments Count */}
-              {assignment?.attachments && assignment.attachments.length > 0 && (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Iconify icon="mdi:paperclip" color="text.secondary" />
-                    <Typography variant="body2" color="text.secondary">
-                      {assignment.attachments.length} attachment(s)
-                    </Typography>
-                  </Box>
-                </>
-              )}
             </CardContent>
           </Scrollbar>
         </Card>

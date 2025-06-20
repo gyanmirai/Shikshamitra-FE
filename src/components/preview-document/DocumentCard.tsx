@@ -11,6 +11,7 @@ import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
 import { shikshaMitraToast } from '../toast';
 import { SingleFilePreview } from '../upload';
+import CustomTooltip from '../custom-tooltip';
 import { ConfirmDialog } from '../confirm-dialog';
 import { fileData, FileThumbnail } from '../file-thumbnail';
 
@@ -75,7 +76,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
         />
 
         <Box sx={{ ml: 1.5, flex: 1 }}>
-          <Tooltip title={file.name}>
+          <CustomTooltip title={file.name}>
             <Typography
               variant="body2"
               noWrap
@@ -89,7 +90,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
             >
               {file.name}
             </Typography>
-          </Tooltip>
+          </CustomTooltip>
 
           <Typography variant="caption" color="text.secondary">
             {file.size || 'Unknown size'} • 12-02-2025

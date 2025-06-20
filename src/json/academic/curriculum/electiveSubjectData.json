@@ -1,9 +1,9 @@
 [
-  {
+{
     "id": 1,
     "status": 1,
-    "className": "12",
-    "subjectName": "Elective 1",
+    "className": "1", 
+    "subjectName": "Tech & Fitness Group",
     "subjectType": "Elective",
     "subjects": [
       {
@@ -11,10 +11,10 @@
         "subjectName": "Computer",
         "subjectCode": "CS-12",
         "primaryTeacher": {
-          "id" : 1,
+          "id": 1,
           "name": "Atre Prerna Bhanudas",
           "avatarUrl": "/assets/teachers/prerna.jpg",
-          "designation": "Senior Computer Teacher",
+          "designation": "Senior Computer Teacher", 
           "department": "Computer Science",
           "class": "12",
           "status": "Active",
@@ -27,12 +27,11 @@
         },
         "secondaryTeacher": [
           {
-            "id" : 2,
-
+            "id": 2,
             "name": "Atre Harshita Bhanudas",
             "avatarUrl": "/assets/teachers/harshita.jpg",
             "designation": "Computer Teacher",
-            "department": "Computer Science",
+            "department": "Computer Science", 
             "class": "12",
             "status": "Active",
             "division": "B",
@@ -43,12 +42,12 @@
             "subjects": ["Computer Science"]
           },
           {
-            "id" : 3,
+            "id": 3,
             "name": "Patel Priyanka Ramesh",
             "avatarUrl": "/assets/teachers/priyanka.jpg",
             "designation": "Assistant Teacher",
             "department": "Computer Science",
-            "class": "12",
+            "class": "12", 
             "status": "Active",
             "division": "C",
             "dailyStatus": "Present",
@@ -58,13 +57,13 @@
             "subjects": ["Computer Science"]
           },
           {
-            "id" : 4,
+            "id": 4,
             "name": "Kumar Ankit Mahesh",
             "avatarUrl": "/assets/teachers/ankit.jpg",
             "designation": "Assistant Teacher",
             "department": "Computer Science",
             "class": "12",
-            "status": "Active",
+            "status": "Active", 
             "division": "D",
             "dailyStatus": "Present",
             "email": "ankit.kumar@school.edu",
@@ -73,9 +72,9 @@
             "subjects": ["Computer Science"]
           }
         ],
-        "prerequisites": "Basic computer knowledge",
-        "learningGoal": "Learn programming fundamentals.",
-        "description": "Introduction to programming concepts and algorithms.",
+        "prerequisites": "Basic computer knowledge including familiarity with operating systems and basic software applications. Students should have basic typing skills and understanding of file management.",
+        "learningGoal": "Master programming fundamentals including variables, control structures, functions, and basic algorithms. Develop problem-solving skills through computational thinking. Learn to create simple applications and understand software development principles.",
+        "description": "A comprehensive introduction to computer programming and algorithmic thinking. The course covers fundamental programming concepts including variables, data types, control structures, functions, and basic algorithms. Students will learn practical coding skills through hands-on projects and exercises. The curriculum includes both theoretical concepts and practical implementation using modern programming languages. Special focus on developing logical thinking and problem-solving abilities through computational approaches.",
         "isSubjectOpen": true,
         "subjectColor": "#4169E1"
       },
@@ -84,7 +83,7 @@
         "subjectName": "Physical Training",
         "subjectCode": "PE-12",
         "primaryTeacher": {
-          "id" : 5,
+          "id": 5,
           "name": "Badgujar Sweta Ramesh",
           "avatarUrl": "/assets/teachers/badgujar.jpg",
           "designation": "Teacher",
@@ -97,10 +96,10 @@
           "experience": "12 years",
           "qualification": "M.Com",
           "subjects": ["Subject A", "Subject B"]
-        },        
+        },
         "secondaryTeacher": [
           {
-            "id" : 1,
+            "id": 1,
             "name": "Johnson Robert Alan",
             "avatarUrl": "/assets/teachers/johnson.jpg",
             "designation": "Senior Teacher",
@@ -115,7 +114,7 @@
             "subjects": ["Subject A", "Subject B"]
           },
           {
-            "id" : 2,
+            "id": 2,
             "name": "Williams Thomas James",
             "avatarUrl": "/assets/teachers/williams.jpg",
             "designation": "Teacher",
@@ -130,7 +129,7 @@
             "subjects": ["Subject A", "Subject B"]
           },
           {
-            "id" : 3,
+            "id": 3,
             "name": "Anderson Michael David",
             "avatarUrl": "/assets/teachers/anderson.jpg",
             "designation": "Teacher",
@@ -145,9 +144,9 @@
             "subjects": ["Subject A", "Subject B"]
           }
         ],
-        "prerequisites": "Good physical fitness",
-        "learningGoal": "Learn about sports and fitness.",
-        "description": "Study of physical fitness, sports theory, and nutrition.",
+        "prerequisites": "Basic physical fitness level required. Students should be able to participate in moderate physical activity. Medical clearance may be needed for students with health conditions. Prior experience in sports activities is beneficial but not mandatory.",
+        "learningGoal": "Develop comprehensive understanding of physical fitness, sports science, and healthy lifestyle practices. Master fundamental techniques in various sports disciplines. Learn principles of nutrition, exercise physiology, and injury prevention. Enhance teamwork and leadership skills through group activities.",
+        "description": "A comprehensive physical education program focusing on fitness development, sports skills, and health awareness. The curriculum includes both theoretical and practical components covering various sports disciplines, exercise physiology, nutrition science, and wellness concepts. Students participate in structured physical activities, learn sports techniques, and understand the importance of maintaining a healthy lifestyle. The course emphasizes both individual fitness improvement and team-based activities to develop leadership and cooperation skills.",
         "isSubjectOpen": true,
         "subjectColor": "#FF69B4"
       }
@@ -156,8 +155,8 @@
   {
     "id": 2,
     "status": 1,
-    "className": "12",
-    "subjectName": "Elective 2",
+    "className": "1",
+    "subjectName": "Language Enrichment Group",
     "subjectType": "Elective",
     "subjects": [
       {
@@ -249,7 +248,7 @@
   {
     "id": 3,
     "status": 0,
-    "className": "12",
+    "className": "1",
     "subjectName": "Mathematics",
     "subjectType": "Core",
     "subjects": [
@@ -300,7 +299,7 @@
   {
     "id": 4,
     "status": 0,
-    "className": "12",
+    "className": "1",
     "subjectName": "Science",
     "subjectType": "Core",
     "subjects": [
@@ -351,7 +350,7 @@
   {
     "id": 5,
     "status": 0,
-    "className": "12",
+    "className": "1",
     "subjectName": "Social Science",
     "subjectType": "Core",
     "subjects": [
@@ -402,7 +401,7 @@
   {
     "id": 6,
     "status": 0,
-    "className": "12",
+    "className": "1",
     "subjectName": "Gujarati",
     "subjectType": "Core",
     "subjects": [
@@ -453,7 +452,7 @@
   {
     "id": 7,
     "status": 0,
-    "className": "12",
+    "className": "1",
     "subjectName": "English",
     "subjectType": "Core",
     "subjects": [

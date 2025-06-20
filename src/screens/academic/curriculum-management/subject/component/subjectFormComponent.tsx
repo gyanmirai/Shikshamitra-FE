@@ -483,6 +483,9 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     onChange={(_, newValue) => {
                       handleSubjectChange(newValue);
                     }}
+                    ListboxProps={{
+                      style: { maxHeight: 200, overflow: 'auto' },
+                    }}
                     renderOption={(props, option) => (
                       <li {...props}>
                         <Box
@@ -586,7 +589,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
           </Scrollbar>
 
           {/* Action Buttons */}
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             {isEdit ? (
               <>
                 <Button

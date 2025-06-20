@@ -27,7 +27,7 @@ import HomeworkTable from './homeworkTable';
 import ViewHomeworkDetails from './viewHomeworkDetails';
 import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmission';
 
-import type { IHomework } from '../type';
+import type { IHomework, IHomeworkDetail } from '../type';
 
 const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   // Dialog state for adding disciplinary incidents
@@ -84,6 +84,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to track the currently selected homework assignment for editing
   const [selectedHomework, setSelectedHomework] = useState<IHomework | null>(null);
+  const [viewHomework, setViewHomework] = useState<IHomeworkDetail | null>(null);
+
   // State to store the list of homework/subject assignments
   const [homeworkData, setHomeworkData] = useState<IHomework[]>(homeworkTableData);
   // Redux dispatch
@@ -104,8 +106,19 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
-      <Box display="flex" gap={2} ml={1}>
+    <>
+      <Box
+        display="flex"
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          my: 2,
+          p: 1,
+          gap: 2,
+        }}
+      >
+        {' '}
         <CustomSelect
           options={allClass}
           label="Class"
@@ -206,7 +219,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       </CustomDialog>
 
       <HomeworkTable
-        filteredData={homeworkData || []}
+        homeworkData={homeworkData || []}
+        selectedDivision={division}
         setOpen={setOpen}
         dialog={addHomeworkDialog}
         handleSwitchChange={(row) => {
@@ -228,7 +242,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         }}
         onViewSubmission={(row) => {
           viewHomeworkSubmissionDialog.onTrue();
-          setSelectedHomework(row);
+          setViewHomework(row);
         }}
       />
 
@@ -283,7 +297,18 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
       {/* View subject details dialog */}
       <CustomDialog
-        title={selectedHomework?.title || ''}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Homework Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View complete details of the homework including title, description, due date, submission status and other information"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewHomeworkDetailDialog.value}
         handleClose={() => {
           viewHomeworkDetailDialog.onFalse();
@@ -307,7 +332,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           <StudentSubmissions selectedHomework={selectedHomework} />
         </Box>
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 
