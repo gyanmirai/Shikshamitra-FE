@@ -114,6 +114,7 @@ const HrSetting = () => {
         isFilter={false}
         columns={[
           { id: 'documentName', label: 'Document Name' },
+          { id: 'documentSize', label: 'Document Size', minWidth: '10vw', align: 'left' },
           {
             id: 'documentTypes',
             label: 'Accepted Format',
@@ -180,21 +181,30 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     currentQueryAndMutation: useUpdateDocumentMutation,
   });
 
-  const { values, setFieldValue, handleSubmit, errors, touched } = useFormik<{
+  const { values, setFieldValue, handleSubmit, errors, touched, handleChange } = useFormik<{
     title: string;
     documentType: { label: string; value: number }[];
+    documentSize: number;
   }>({
     initialValues: {
       title: editData?.documentName || '',
       documentType:
         editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
         [],
+      documentSize: editData?.documentSize || 5,
     },
+    validateOnChange: true,
+    validateOnBlur: true,
     validationSchema: Yup.object().shape({
       title: Yup.string().required('Document name is required'),
       documentType: Yup.array()
         .min(1, 'At least one document type must be selected')
         .required('Document type is required'),
+      documentSize: Yup.number()
+        .required('Document size is required')
+        .min(1, 'Document size must be greater than 1 MB')
+        .positive('Document size must be a positive number')
+        .integer('Document size must be an integer'),
     }),
     onSubmit: async (formikValues) => {
       if (editData) {
@@ -203,6 +213,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
           body: {
             documentName: formikValues.title,
             documentTypes: formikValues.documentType.map((item: any) => item.value),
+            documentSize: formikValues.documentSize,
           },
         }).unwrap();
         shikshaMitraToast.success({ message: 'Document updated successfully' });
@@ -212,6 +223,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
       await addDocument({
         documentName: formikValues.title,
         documentTypes: formikValues.documentType.map((item: any) => item.value),
+        documentSize: formikValues.documentSize,
       }).unwrap();
       shikshaMitraToast.success({ message: 'Document added successfully' });
       handleClose?.();
@@ -232,6 +244,20 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
               onChange={(e) => setFieldValue('title', e.target.value)}
               error={touched.title && Boolean(errors.title)}
               helperText={touched.title && errors.title}
+            />
+          </ShakingTextField>
+
+          <ShakingTextField error={touched.documentSize && Boolean(errors.documentSize)}>
+            <TextField
+              label="Document Size (MB) *"
+              value={values.documentSize}
+              size="small"
+              type="number"
+              name="documentSize"
+              fullWidth
+              onChange={handleChange}
+              helperText={touched.documentSize && errors.documentSize}
+              error={touched.documentSize && Boolean(errors.documentSize)}
             />
           </ShakingTextField>
 

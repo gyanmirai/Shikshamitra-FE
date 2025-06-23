@@ -1,27 +1,52 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Add, RemoveCircle } from '@mui/icons-material';
 import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
-const WorkExperiences = (props: any) => {
-  const { formik, disabled } = props;
-  const { values, setFieldValue } = formik;
+import { CardActions } from './employee-form-fields/InformationFields';
 
+const WorkExperiences = (props: any) => {
+  const { formik, isMainForm, editData } = props;
+  const { values, setFieldValue } = formik;
+  const isEditable = useBoolean(isMainForm);
+  const handleSave = () => {
+    formik.submitForm();
+  };
+  const handleCancel = () => {
+    formik.setFieldValue(
+      'experiences',
+      editData
+        ? editData.workExperiences.map((i: any) => ({
+            ...i,
+            fromDate: i?.fromDate ? dayjs(i.fromDate, 'YYYY-MM-DD') : null,
+            toDate: i?.toDate ? dayjs(i.toDate, 'YYYY-MM-DD') : null,
+          }))
+        : []
+    );
+  };
   return (
     <Box>
+      {!isMainForm && (
+        <Box display="flex" justifyContent="flex-end" p={1}>
+          <CardActions isEdit={isEditable} onSave={handleSave} onCancel={handleCancel} />
+        </Box>
+      )}
       <Box display="flex" justifyContent="flex-end">
         <Button
           variant="contained"
           size="small"
           startIcon={<Add />}
-          disabled={!!disabled}
+          disabled={!isEditable.value}
           onClick={() => {
             setFieldValue('experiences', [
               ...values.experiences,
@@ -91,7 +116,7 @@ const WorkExperiences = (props: any) => {
                     formik?.touched?.experiences?.[index]?.organizationName &&
                     formik?.errors?.experiences?.[index]?.organizationName
                   }
-                  disabled={!!disabled}
+                  disabled={!isEditable.value}
                 />
               </ShakingTextField>
             </Box>
@@ -108,7 +133,7 @@ const WorkExperiences = (props: any) => {
                   name={`experiences.${index}.designation`}
                   label="Designation *"
                   value={experience.designation}
-                  disabled={!!disabled}
+                  disabled={!isEditable.value}
                   onChange={(event) => {
                     const val = capitalize(event.target.value);
                     if (/^[A-Za-z ]*$/.test(val)) {
@@ -133,7 +158,7 @@ const WorkExperiences = (props: any) => {
                 name={`experiences.${index}.department`}
                 label="Department"
                 value={experience.department}
-                disabled={!!disabled}
+                disabled={!isEditable.value}
                 onChange={(event) => {
                   const val = capitalize(event.target.value);
                   if (/^[A-Za-z ]*$/.test(val)) {
@@ -149,7 +174,7 @@ const WorkExperiences = (props: any) => {
                 onChange={(e, value) => {
                   setFieldValue(`experiences.${index}.organizationCountry`, value);
                 }}
-                disabled={!!disabled}
+                disabled={!isEditable.value}
                 textFieldProps={{
                   label: 'Country',
                 }}
@@ -162,7 +187,7 @@ const WorkExperiences = (props: any) => {
                   setFieldValue(`experiences.${index}.organizationState`, value);
                   setFieldValue(`experiences.${index}.organizationCity`, { name: '' });
                 }}
-                disabled={!!disabled || !experience.organizationCountry}
+                disabled={!isEditable.value || !experience.organizationCountry}
                 countryValue={experience.organizationCountry}
                 textFieldProps={{
                   label: 'State',
@@ -178,7 +203,7 @@ const WorkExperiences = (props: any) => {
                   const val = capitalize(event.target.value);
                   setFieldValue(`experiences.${index}.organizationState`, val);
                 }}
-                disabled={!!disabled}
+                disabled={!isEditable.value}
               /> */}
             </Box>
             <Box sx={{ width: '200px' }}>
@@ -187,7 +212,7 @@ const WorkExperiences = (props: any) => {
                 onChange={(e, value) => {
                   setFieldValue(`experiences.${index}.organizationCity`, value);
                 }}
-                disabled={!!disabled || !experience.organizationState}
+                disabled={!isEditable.value || !experience.organizationState}
                 stateValue={experience.organizationState}
                 textFieldProps={{
                   label: 'City',
@@ -203,7 +228,7 @@ const WorkExperiences = (props: any) => {
                   const val = capitalize(event.target.value);
                   setFieldValue(`experiences.${index}.organizationCity`, val);
                 }}
-                disabled={!!disabled}
+                disabled={!isEditable.value}
               /> */}
             </Box>
             <Box sx={{ width: '200px' }}>
@@ -221,7 +246,7 @@ const WorkExperiences = (props: any) => {
                   onChange={(date) => {
                     setFieldValue(`experiences.${index}.fromDate`, date);
                   }}
-                  disabled={!!disabled}
+                  disabled={!isEditable.value}
                   slotProps={{
                     textField: {
                       size: 'small',
@@ -252,7 +277,7 @@ const WorkExperiences = (props: any) => {
                   onChange={(date) => {
                     setFieldValue(`experiences.${index}.toDate`, date);
                   }}
-                  disabled={!!disabled}
+                  disabled={!isEditable.value}
                   slotProps={{
                     textField: {
                       size: 'small',
@@ -271,7 +296,7 @@ const WorkExperiences = (props: any) => {
           </Box>
           <Box>
             <IconButton
-              disabled={!!disabled}
+              disabled={!isEditable.value}
               onClick={() => {
                 setFieldValue(
                   'experiences',

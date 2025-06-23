@@ -4,11 +4,9 @@ import { useFormik } from 'formik';
 import { useMemo, useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Card, Grid, Stack, Button, TextField } from '@mui/material';
+import { Tab, Box, Card, Grid, TextField } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-
-import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -19,8 +17,8 @@ import {
   useUpdateExperienceInformationMutation,
 } from 'src/redux/employee/employeeApi';
 
-import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { infoValidations } from './employee-form-validation';
@@ -66,24 +64,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   const [isBackClick, setIsBackClick] = useState(false);
 
-  // Empty submit handler
-  const onSubmit = (_val: any) => {};
-
-  // Initialize formik with combined initial values from all form sections
-  const formik = useFormik({
-    initialValues: {
-      ...personalInformationInitialValues(editData),
-      ...familyInformationInitialValues(editData),
-      ...workExperienceInitialValues(editData),
-      ...payrollInitialValues(editData),
-    },
-    // Use validation schema based on active tab
-    validationSchema: infoValidations[activeTabIndex],
-    onSubmit: (values) => {
-      onSubmit(values);
-    },
-  });
-
   // Custom hook for handling employee update mutation
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -111,7 +91,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateFamilyInformation
   const handleFamilyInformation = useCallback(
-    async (values: any, f: any) => {
+    async (values: any) => {
       const res = await updateFamilyInfo({
         employeeId: values.employeeId,
         body: {
@@ -168,7 +148,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateEmployee
   const handelUpdateEmployee = useCallback(
-    async (values: any, empl: any, id: any) => {
+    async (values: any, id: any) => {
       try {
         const res = await updateEmployee({
           id,
@@ -273,6 +253,42 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     },
     [updateBankDetails]
   );
+
+  // submit handler
+  const onSubmit = async (_val: any) => {
+    try {
+      if (activeTabIndex === 0) {
+        await handelUpdateEmployee(formik.values, editData?.id);
+        shikshaMitraToast.success({ message: 'Employee Details updated successfully' });
+      } else if (activeTabIndex === 1) {
+        await handleFamilyInformation(formik.values);
+        shikshaMitraToast.success({ message: 'Family Details updated successfully' });
+      } else if (activeTabIndex === 2) {
+        await handleWorkExperience(formik.values, formik);
+        shikshaMitraToast.success({ message: 'Work Experience  updated successfully' });
+      } else if (activeTabIndex === 3) {
+        await handleBankDetailsInformation(formik.values, formik);
+        shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
+      }
+    } catch (error) {
+      console.log('Error submitting form:', error);
+    }
+  };
+
+  // Initialize formik with combined initial values from all form sections
+  const formik = useFormik({
+    initialValues: {
+      ...personalInformationInitialValues(editData),
+      ...familyInformationInitialValues(editData),
+      ...workExperienceInitialValues(editData),
+      ...payrollInitialValues(editData),
+    },
+    // Use validation schema based on active tab
+    validationSchema: infoValidations[activeTabIndex],
+    onSubmit: (values) => {
+      onSubmit(values);
+    },
+  });
   return (
     <Box
     // sx={{
@@ -298,7 +314,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             ))}
           </CustomTabs>
 
-          <Stack direction="row" justifyContent="flex-end" sx={{ px: 2, pt: 2 }}>
+          {/* <Stack direction="row" justifyContent="flex-end" sx={{ px: 2, pt: 2 }}>
             {isEdit && (
               <Button
                 variant="outlined"
@@ -339,9 +355,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                 setIsEdit(!isEdit);
                 if (isEdit) {
                   if (activeTabIndex === 0) {
-                    handelUpdateEmployee(formik.values, formik, editData?.id);
+                    handelUpdateEmployee(formik.values, editData?.id);
                   } else if (activeTabIndex === 1) {
-                    handleFamilyInformation(formik.values, formik);
+                    handleFamilyInformation(formik.values);
                   } else if (activeTabIndex === 2) {
                     console.log('2');
                     handleWorkExperience(formik.values, formik);
@@ -356,7 +372,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             >
               {isEdit ? 'Save' : 'Edit'}
             </Button>{' '}
-          </Stack>
+          </Stack> */}
           {/* <Card
             sx={{ backgroundColor: (theme) => theme.palette.background.paper, boxShadow: 'none' }}
           >
@@ -399,7 +415,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                     field.renderComp({
                       formik,
                       field,
-                      disabled: !isEdit,
+                      editData,
                     })
                   ) : field.type === 'date' ? (
                     <ShakingTextField

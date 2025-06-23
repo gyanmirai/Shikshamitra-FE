@@ -589,6 +589,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                           field.renderComp({
                             formik,
                             field,
+                            isMainForm: true,
                           })
                         ) : field.type === 'date' ? (
                           <DatePicker
