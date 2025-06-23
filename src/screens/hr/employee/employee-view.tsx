@@ -114,7 +114,7 @@ export function EmployeeCard({ employee }: any) {
         <Paper
           sx={{
             p: 1,
-            borderBottom: '1px dashed',
+            // borderBottom: '1px dashed',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -249,6 +249,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
       <CustomBreadcrumbs
         heading="Employee List"
         links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee List' }]}
+        description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
         isBack
         onBack={() => setSearchParams({ employee: '' })}
         sx={{ px: 1, pb: 1 }}

@@ -1,3 +1,6 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
+import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -14,13 +17,17 @@ import {
   RadioGroup,
   InputLabel,
   Typography,
+  IconButton,
   FormControl,
   Autocomplete,
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { fileToBase64 } from 'src/utils/file-to-base64';
+import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
@@ -29,6 +36,7 @@ import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-s
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -40,623 +48,789 @@ import { RenderOrganization } from './RenderOrganization';
 
 import type { FieldsType } from './types';
 
-export const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Paper sx={{ p: 3, mb: 3 }} elevation={6}>
-    <Typography variant="h6" sx={{ mb: 2 }} color="primary.main">
-      {title}
-    </Typography>
+export const SectionCard = ({
+  title,
+  children,
+  headerContent = null,
+}: {
+  title: string;
+  children: React.ReactNode;
+  headerContent?: React.ReactNode;
+}) => (
+  <Paper sx={{ p: 2, mb: 3 }} elevation={6}>
+    <Box display="flex" justifyContent="space-between" alignItems="center" pb={2}>
+      <Typography variant="h6" color="primary.main">
+        {title}
+      </Typography>
+      {headerContent}
+    </Box>
     <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
       {children}
     </Grid>
   </Paper>
 );
 
-const InformationAllFields = ({ formik, disabled }: any) => (
-  <Box>
-    <SectionCard title="Basic Details">
-      <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
-        <UploadAvatar
-          maxSize={3145728}
-          onDrop={async (acceptedFiles: File[]) => {
-            const value = acceptedFiles[0];
-            const base64 = await fileToBase64(value);
-            formik.setFieldValue('photo', base64);
-          }}
-          value={formik.values.photo}
-          error={formik.touched.photo && Boolean(formik.errors.photo)}
-          sx={{ m: 'initial' }}
-          disabled={disabled}
-        />
-      </Grid>
-      <Grid item xs={12} md={10}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.firstName && Boolean(formik.errors.firstName)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="First Name *"
-                {...formik.getFieldProps('firstName')}
-                onChange={(e) => {
-                  const newName = capitalize(e.target.value);
-                  if (/^[A-Za-z ]*$/.test(newName)) {
-                    formik.setFieldValue('firstName', newName);
-                  }
-                }}
-                error={formik.touched.firstName && Boolean(formik.errors.firstName)}
-                helperText={formik.touched.firstName && formik.errors.firstName}
-                disabled={disabled}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField
-              error={formik.touched.middleName && Boolean(formik.errors.middleName)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                label="Middle Name"
-                {...formik.getFieldProps('middleName')}
-                name="middleName"
-                onChange={(e) => {
-                  const newName = capitalize(e.target.value);
-                  if (/^[A-Za-z ]*$/.test(newName)) {
-                    formik.setFieldValue('middleName', newName);
-                  }
-                }}
-                error={formik.touched.middleName && Boolean(formik.errors.middleName)}
-                helperText={formik.touched.middleName && formik.errors.middleName}
-                disabled={disabled}
-                onBlur={formik.handleBlur}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Last Name *"
-                {...formik.getFieldProps('lastName')}
-                onChange={(e) => {
-                  const newName = capitalize(e.target.value);
-                  if (/^[A-Za-z ]*$/.test(newName)) {
-                    formik.setFieldValue('lastName', newName);
-                  }
-                }}
-                error={formik.touched.lastName && Boolean(formik.errors.lastName)}
-                helperText={formik.touched.lastName && formik.errors.lastName}
-                disabled={disabled}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.shortName && Boolean(formik.errors.shortName)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Short Name"
-                {...formik.getFieldProps('shortName')}
-                onChange={(e) => {
-                  const newName = capitalize(e.target.value);
-                  formik.setFieldValue('shortName', newName);
-                }}
-                error={formik.touched.shortName && Boolean(formik.errors.shortName)}
-                helperText={formik.touched.shortName && formik.errors.shortName}
-                disabled={disabled}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
-              <DatePicker
-                label="Date of Birth *"
-                value={formik.values.dob}
-                onChange={(value) => {
-                  formik.setFieldValue('dob', value);
-                  formik.setFieldTouched('dob', true);
-                }}
-                disabled={disabled}
-                format="DD-MM-YYYY"
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: formik.touched.dob && Boolean(formik.errors.dob),
-                    helperText: formik.touched.dob && formik.errors.dob,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-              <FormControl
-                fullWidth
-                sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
-              >
-                <FormLabel
-                  id="gender-radio-group"
-                  sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
-                >
-                  Gender
-                </FormLabel>
-                <RadioGroup
-                  row
-                  aria-labelledby="gender-radio-group"
-                  name="gender"
-                  value={formik.values.gender}
-                  onChange={formik.handleChange}
-                >
-                  <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
-                  <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
-                </RadioGroup>
-              </FormControl>
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
-              <FormControl
-                fullWidth
-                disabled={disabled}
-                error={!!formik.errors.religion && formik.touched.religion}
-              >
-                <InputLabel id="religion-label" size="small">
-                  Religion *
-                </InputLabel>
-                <Select
-                  labelId="religion-label"
-                  id="religion"
-                  value={formik.values.religion}
-                  onChange={formik.handleChange}
-                  size="small"
-                  label="Religion *"
-                  name="religion"
-                >
-                  <MenuItem value="Hinduism">Hinduism</MenuItem>
-                  <MenuItem value="Islam">Islam</MenuItem>
-                  <MenuItem value="Christianity">Christianity</MenuItem>
-                  <MenuItem value="Sikhism">Sikhism</MenuItem>
-                  <MenuItem value="Buddhism">Buddhism</MenuItem>
-                  <MenuItem value="Jainism">Jainism</MenuItem>
-                  <MenuItem value="Judaism">Judaism</MenuItem>
-                  <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
-                </Select>
-                {formik.touched.religion && formik.errors.religion && (
-                  <FormHelperText>{formik.errors.religion}</FormHelperText>
-                )}
-              </FormControl>
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField error={formik.touched.castType && Boolean(formik.errors.castType)}>
-              <Autocomplete
-                options={EmployeeCastTypeArray.map((item, index) => ({
-                  id: index,
-                  label: EmployeeCastType[index],
-                }))}
-                getOptionLabel={(option) => option.label}
-                disabled={disabled}
-                value={
-                  EmployeeCastTypeArray.map((_, index) => ({
-                    id: index,
-                    label: EmployeeCastType[index],
-                  })).find((item) => item.id === formik.values.castType) || null
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Category *"
-                    size="small"
-                    fullWidth
-                    error={formik.touched.castType && Boolean(formik.errors.castType)}
-                    helperText={formik.touched.castType && formik.errors.castType}
-                  />
-                )}
-                onChange={(e, value) => {
-                  formik.setFieldValue('castType', value?.id);
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField
-              error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                label="Family Cast *"
-                {...formik.getFieldProps('familyCast')}
-                onChange={(e) => {
-                  // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
-                  const newName = e.target.value[0].toUpperCase() + e.target.value.slice(1);
-                  formik.setFieldValue('familyCast', newName);
-                }}
-                error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
-                helperText={formik.touched.familyCast && formik.errors.familyCast}
-                disabled={disabled}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField
-              error={formik.touched.maritalStatus && Boolean(formik.errors.maritalStatus)}
-            >
-              <FormControl
-                fullWidth
-                disabled={disabled}
-                error={!!formik.errors.maritalStatus && formik.touched.maritalStatus}
-              >
-                <InputLabel id="dropdown-label" size="small">
-                  Marital Status *
-                </InputLabel>
-                <Select
-                  labelId="dropdown-label"
-                  id="dropdown"
-                  value={formik.values.maritalStatus}
-                  onChange={formik.handleChange}
-                  size="small"
-                  label="Marital Status *"
-                  name="maritalStatus"
-                >
-                  {MaritalStatusTypeArray.map((i, index) => (
-                    <MenuItem key={i} value={index}>
-                      {MaritalStatusType[index]}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formik.touched.maritalStatus && formik.errors.maritalStatus && (
-                  <FormHelperText>{formik.errors.maritalStatus}</FormHelperText>
-                )}
-              </FormControl>
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <ShakingTextField
-              error={formik.touched.bloodGroup && Boolean(formik.errors.bloodGroup)}
-            >
-              <FormControl
-                fullWidth
-                disabled={disabled}
-                error={!!formik.errors.bloodGroup && formik.touched.bloodGroup}
-              >
-                <InputLabel id="blood-group-label" size="small">
-                  Blood Group
-                </InputLabel>
-                <Select
-                  labelId="blood-group-label"
-                  id="bloodGroup"
-                  value={formik.values.bloodGroup}
-                  onChange={formik.handleChange}
-                  size="small"
-                  label="Blood Group"
-                  name="bloodGroup"
-                >
-                  <MenuItem value="A+">A+</MenuItem>
-                  <MenuItem value="A-">A-</MenuItem>
-                  <MenuItem value="B+">B+</MenuItem>
-                  <MenuItem value="B-">B-</MenuItem>
-                  <MenuItem value="AB+">AB+</MenuItem>
-                  <MenuItem value="AB-">AB-</MenuItem>
-                  <MenuItem value="O+">O+</MenuItem>
-                  <MenuItem value="O-">O-</MenuItem>
-                </Select>
-                {formik.touched.bloodGroup && formik.errors.bloodGroup && (
-                  <FormHelperText>{formik.errors.bloodGroup}</FormHelperText>
-                )}
-              </FormControl>
-            </ShakingTextField>
-          </Grid>
-        </Grid>
-      </Grid>
-    </SectionCard>
-
-    <SectionCard title="Contact Information">
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Email *"
-            {...formik.getFieldProps('email')}
-            error={formik.touched.email && Boolean(formik.errors.email)}
-            helperText={formik.touched.email && formik.errors.email}
-            disabled={disabled}
-            InputProps={{
-              startAdornment: (
-                <>
-                  <Iconify icon="mdi-light:email" />{' '}
-                  <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                </>
-              ),
+export const CardActions = ({
+  isEdit,
+  onCancel = () => {},
+  onSave = () => {},
+}: {
+  isEdit: UseBooleanReturn;
+  onSave?: () => void;
+  onCancel?: () => void;
+}) => (
+  <Box sx={{ display: 'flex', gap: 1 }}>
+    {!isEdit.value ? (
+      <CustomTooltip title="Edit" placement="top">
+        <IconButton onClick={isEdit.onTrue} title="Edit">
+          <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} onClick={isEdit.onTrue} />
+        </IconButton>
+      </CustomTooltip>
+    ) : (
+      <>
+        <CustomTooltip title="Save" placement="top">
+          <IconButton
+            onClick={() => {
+              // Handle save logic here
+              onSave();
+              isEdit.onFalse();
             }}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
-          <PhoneInput
-            name="mobileNo"
-            value={formik.values.mobileNo}
-            onChange={(value) => {
-              formik.setFieldValue('mobileNo', value);
-              formik.validateField('mobileNo');
-            }}
-            label="Primary Contact No. *"
-            error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
-            disabled={disabled}
-            helperText={formik.touched.mobileNo && formik.errors.mobileNo}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <PhoneInput
-          name="secondaryMobileNo"
-          value={formik.values.secondaryMobileNo}
-          onChange={(value) => {
-            formik.setFieldValue('secondaryMobileNo', value);
-            formik.validateField('secondaryMobileNo');
-          }}
-          label="Secondary Contact No. "
-          error={formik.touched.secondaryMobileNo && Boolean(formik.errors.secondaryMobileNo)}
-          disabled={disabled}
-          helperText={formik.touched.secondaryMobileNo && formik.errors.secondaryMobileNo}
-          onBlur={formik.handleBlur}
-        />
-      </Grid>
-    </SectionCard>
-
-    <SectionCard title="Professional Details">
-      <Grid item xs={12} md={4}>
-        <ShakingTextField
-          error={formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining)}
-        >
-          <DatePicker
-            label="Date of Joining *"
-            value={formik.values.dateOfJoining}
-            onChange={(value) => formik.setFieldValue('dateOfJoining', value)}
-            format="DD-MM-YYYY"
-            disabled={disabled}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                error: formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining),
-                helperText: formik.touched.dateOfJoining && formik.errors.dateOfJoining,
-              },
-            }}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField
-          error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
-        >
-          <FormControl
-            fullWidth
-            disabled={disabled}
-            error={!!formik.errors.employeeGroup && formik.touched.employeeGroup}
+            title="Save Changes"
           >
-            <InputLabel id="employee-group-label" size="small">
-              Employee Group *
-            </InputLabel>
-            <Select
-              labelId="employee-group-label"
-              id="employeeGroup"
-              value={formik.values.employeeGroup}
-              onChange={formik.handleChange}
-              size="small"
-              label="Employee Group *"
-              name="employeeGroup"
-            >
-              {EmployeeGroupTypeArray.map((item, index) => (
-                <MenuItem key={item} value={index}>
-                  {EmployeeGroupType[index]}
-                </MenuItem>
-              ))}
-            </Select>
-            {formik.touched.employeeGroup && formik.errors.employeeGroup && (
-              <FormHelperText>{formik.errors.employeeGroup}</FormHelperText>
-            )}
-          </FormControl>
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.department && Boolean(formik.errors.department)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Department"
-            {...formik.getFieldProps('department')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('department', newName);
+            <Iconify icon="lets-icons:save" sx={{ cursor: 'pointer' }} />
+          </IconButton>
+        </CustomTooltip>
+        <CustomTooltip title="Cancel" placement="top">
+          <IconButton
+            onClick={() => {
+              onCancel();
+              isEdit.onFalse();
             }}
-            error={formik.touched.department && Boolean(formik.errors.department)}
-            helperText={formik.touched.department && formik.errors.department}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.designation && Boolean(formik.errors.designation)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Designation"
-            {...formik.getFieldProps('designation')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('designation', newName);
-            }}
-            error={formik.touched.designation && Boolean(formik.errors.designation)}
-            helperText={formik.touched.designation && formik.errors.designation}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid item xs={12} md={4}>
-        <RenderRole formik={formik} disabled={disabled} />
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <RenderOrganization formik={formik} disabled={disabled} />
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <RenderShift formik={formik} disabled={disabled} />
-      </Grid>
-    </SectionCard>
-
-    <SectionCard title="Address Details">
-      <Grid item xs={12} md={4}>
-        <ShakingTextField
-          error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
-        >
-          <TextField
-            fullWidth
-            size="small"
-            label="Building No./Flat/House No. *"
-            {...formik.getFieldProps('addressLine1')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('addressLine1', newName);
-            }}
-            error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
-            helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField
-          error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
-        >
-          <TextField
-            fullWidth
-            size="small"
-            label="Area/Locality/Road Name *"
-            {...formik.getFieldProps('addressLine2')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('addressLine2', newName);
-            }}
-            error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
-            helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField
-          error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
-        >
-          <TextField
-            fullWidth
-            size="small"
-            label="Landmark"
-            {...formik.getFieldProps('addressLine3')}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('addressLine3', newName);
-            }}
-            error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
-            helperText={formik.touched.addressLine3 && formik.errors.addressLine3}
-            disabled={disabled}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.country && Boolean(formik.errors.country?.name)}>
-          <CountryComponent
-            value={formik.values.country}
-            onChange={(_e: any, value: any) => {
-              formik.setFieldValue('state', { name: '', isoCode: '' });
-              formik.setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
-            }}
-            error={formik.touched.country && Boolean(formik.errors.country?.name)}
-            helperText={formik.touched.country && formik.errors.country?.name}
-            textFieldProps={{
-              label: 'Country *',
-            }}
-            disabled={disabled}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.state && Boolean(formik.errors?.state?.name)}>
-          <StateComponent
-            value={formik.values.state}
-            countryValue={formik.values.country}
-            onChange={(_e: any, value: any) => {
-              formik.setFieldValue('state', {
-                ...(value || {}),
-                name: value?.name,
-                isoCode: value?.isoCode,
-              });
-              formik.setFieldValue('city', { name: '' });
-            }}
-            error={formik.touched.state && Boolean(formik.errors?.state?.name)}
-            helperText={formik.touched.state && formik.errors?.state?.name}
-            disabled={disabled}
-            textFieldProps={{
-              label: 'State *',
-            }}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.city && Boolean(formik.errors.city?.name)}>
-          <CityComponent
-            value={formik.values.city}
-            onChange={(_e: any, value: any) => {
-              formik.setFieldValue('city', { name: value?.name });
-            }}
-            stateValue={formik.values.state}
-            error={formik.touched.city && Boolean(formik.errors.city?.name)}
-            helperText={formik.touched.city && formik.errors.city?.name}
-            disabled={disabled}
-            textFieldProps={{
-              label: 'City *',
-            }}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <ShakingTextField error={formik.touched.pincode && Boolean(formik.errors.pincode)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Pincode"
-            type="number"
-            {...formik.getFieldProps('pincode')}
-            error={formik.touched.pincode && Boolean(formik.errors.pincode)}
-            helperText={formik.touched.pincode && formik.errors.pincode}
-            disabled={disabled}
-            name="pincode"
-            onChange={(e) => {
-              const { value } = e.target;
-              if (value.length <= 6) {
-                formik.handleChange(e);
-                formik.validateField('pincode');
-              }
-            }}
-            inputProps={{
-              maxLength: 6,
-              pattern: '[0-9]*',
-            }}
-          />
-        </ShakingTextField>
-      </Grid>
-    </SectionCard>
+            title="Cancel"
+          >
+            <Iconify icon="game-icons:cancel" sx={{ cursor: 'pointer' }} />
+          </IconButton>
+        </CustomTooltip>
+      </>
+    )}
   </Box>
 );
+
+const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
+  const isBasicDetailsEditable = useBoolean(!!isMainForm);
+  const isContactDetailsEditable = useBoolean(!!isMainForm);
+  const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
+  const isAddressDetailsEditable = useBoolean(!!isMainForm);
+
+  const handleBasicDetailCancel = () => {
+    formik.setFieldValue('photo', convertBase64Format(editData.profilePicture));
+    formik.setFieldValue('firstName', editData?.firstName);
+    formik.setFieldValue('middleName', editData?.middleName);
+    formik.setFieldValue('lastName', editData?.lastName);
+    formik.setFieldValue('shortName', editData?.shortName);
+    formik.setFieldValue('dob', dayjs(editData.dateOfBirth, 'YYYY-MM-DD'));
+    formik.setFieldValue('gender', editData.genderType);
+    formik.setFieldValue('maritalStatus', editData.maritalStatus);
+    formik.setFieldValue('castType', editData?.castType);
+    formik.setFieldValue('religion', editData?.religion);
+    formik.setFieldValue('bloodGroup', editData?.bloodGroup);
+    formik.setFieldValue('familyCast', editData?.familyCast);
+  };
+
+  const handleContactDetailCancel = () => {
+    formik.setFieldValue('email', editData?.email);
+    formik.setFieldValue('mobileNo', editData?.mobileNo);
+    formik.setFieldValue('secondaryMobileNo', editData?.secondaryMobileNo);
+  };
+
+  const handleProfessionalDetailCancel = () => {
+    formik.setFieldValue(
+      'dateOfJoining',
+      editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : dayjs()
+    );
+    formik.setFieldValue('employeeGroup', editData?.employeeGroup);
+    formik.setFieldValue('department', editData.department);
+    formik.setFieldValue('designation', editData?.designation);
+    formik.setFieldValue('role', editData?.role?.id);
+    formik.setFieldValue('organization', editData?.educationMediumStageId);
+    formik.setFieldValue('shift', editData?.shift?.id);
+  };
+
+  const handleAddressDetailCancel = () => {
+    formik.setFieldValue('addressLine1', editData?.address1);
+    formik.setFieldValue('addressLine2', editData?.address2);
+    formik.setFieldValue('city', { name: editData?.city?.name });
+    formik.setFieldValue('state', {
+      name: editData?.state?.name,
+      iscCode: editData?.state?.iscCode,
+    });
+    formik.setFieldValue('country', {
+      name: editData?.country?.name,
+      iscCode: editData?.country?.iscCode,
+    });
+    formik.setFieldValue('pincode', editData?.pinCode);
+  };
+
+  const handleSave = () => {
+    formik.submitForm();
+  };
+
+  return (
+    <Box>
+      <SectionCard
+        title="Basic Details"
+        headerContent={
+          !isMainForm && (
+            <CardActions
+              isEdit={isBasicDetailsEditable}
+              onSave={handleSave}
+              onCancel={handleBasicDetailCancel}
+            />
+          )
+        }
+      >
+        <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
+          <UploadAvatar
+            maxSize={3145728}
+            onDrop={async (acceptedFiles: File[]) => {
+              const value = acceptedFiles[0];
+              const base64 = await fileToBase64(value);
+              formik.setFieldValue('photo', base64);
+            }}
+            value={formik.values.photo}
+            error={formik.touched.photo && Boolean(formik.errors.photo)}
+            sx={{ m: 'initial' }}
+            disabled={!isBasicDetailsEditable.value}
+          />
+        </Grid>
+        <Grid item xs={12} md={10}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="First Name *"
+                  {...formik.getFieldProps('firstName')}
+                  onChange={(e) => {
+                    const newName = capitalize(e.target.value);
+                    if (/^[A-Za-z ]*$/.test(newName)) {
+                      formik.setFieldValue('firstName', newName);
+                    }
+                  }}
+                  error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                  helperText={formik.touched.firstName && formik.errors.firstName}
+                  disabled={!isBasicDetailsEditable.value}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.middleName && Boolean(formik.errors.middleName)}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Middle Name"
+                  {...formik.getFieldProps('middleName')}
+                  name="middleName"
+                  onChange={(e) => {
+                    const newName = capitalize(e.target.value);
+                    if (/^[A-Za-z ]*$/.test(newName)) {
+                      formik.setFieldValue('middleName', newName);
+                    }
+                  }}
+                  error={formik.touched.middleName && Boolean(formik.errors.middleName)}
+                  helperText={formik.touched.middleName && formik.errors.middleName}
+                  disabled={!isBasicDetailsEditable.value}
+                  onBlur={formik.handleBlur}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Last Name *"
+                  {...formik.getFieldProps('lastName')}
+                  onChange={(e) => {
+                    const newName = capitalize(e.target.value);
+                    if (/^[A-Za-z ]*$/.test(newName)) {
+                      formik.setFieldValue('lastName', newName);
+                    }
+                  }}
+                  error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                  helperText={formik.touched.lastName && formik.errors.lastName}
+                  disabled={!isBasicDetailsEditable.value}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.shortName && Boolean(formik.errors.shortName)}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Short Name"
+                  {...formik.getFieldProps('shortName')}
+                  onChange={(e) => {
+                    const newName = capitalize(e.target.value);
+                    formik.setFieldValue('shortName', newName);
+                  }}
+                  error={formik.touched.shortName && Boolean(formik.errors.shortName)}
+                  helperText={formik.touched.shortName && formik.errors.shortName}
+                  disabled={!isBasicDetailsEditable.value}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
+                <DatePicker
+                  label="Date of Birth *"
+                  value={formik.values.dob}
+                  onChange={(value) => {
+                    formik.setFieldValue('dob', value);
+                    formik.setFieldTouched('dob', true);
+                  }}
+                  disabled={!isBasicDetailsEditable.value}
+                  format="DD-MM-YYYY"
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: formik.touched.dob && Boolean(formik.errors.dob),
+                      helperText: formik.touched.dob && formik.errors.dob,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
+                <FormControl
+                  fullWidth
+                  sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
+                >
+                  <FormLabel
+                    id="gender-radio-group"
+                    sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
+                  >
+                    Gender
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    aria-labelledby="gender-radio-group"
+                    name="gender"
+                    value={formik.values.gender}
+                    onChange={formik.handleChange}
+                  >
+                    <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
+                    <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
+                  </RadioGroup>
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
+                <FormControl
+                  fullWidth
+                  disabled={!isBasicDetailsEditable.value}
+                  error={!!formik.errors.religion && formik.touched.religion}
+                >
+                  <InputLabel id="religion-label" size="small">
+                    Religion *
+                  </InputLabel>
+                  <Select
+                    labelId="religion-label"
+                    id="religion"
+                    value={formik.values.religion}
+                    onChange={formik.handleChange}
+                    size="small"
+                    label="Religion *"
+                    name="religion"
+                  >
+                    <MenuItem value="Hinduism">Hinduism</MenuItem>
+                    <MenuItem value="Islam">Islam</MenuItem>
+                    <MenuItem value="Christianity">Christianity</MenuItem>
+                    <MenuItem value="Sikhism">Sikhism</MenuItem>
+                    <MenuItem value="Buddhism">Buddhism</MenuItem>
+                    <MenuItem value="Jainism">Jainism</MenuItem>
+                    <MenuItem value="Judaism">Judaism</MenuItem>
+                    <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
+                  </Select>
+                  {formik.touched.religion && formik.errors.religion && (
+                    <FormHelperText>{formik.errors.religion}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={formik.touched.castType && Boolean(formik.errors.castType)}>
+                <Autocomplete
+                  options={EmployeeCastTypeArray.map((item, index) => ({
+                    id: index,
+                    label: EmployeeCastType[index],
+                  }))}
+                  getOptionLabel={(option) => option.label}
+                  disabled={!isBasicDetailsEditable.value}
+                  value={
+                    EmployeeCastTypeArray.map((_, index) => ({
+                      id: index,
+                      label: EmployeeCastType[index],
+                    })).find((item) => item.id === formik.values.castType) || null
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Category *"
+                      size="small"
+                      fullWidth
+                      error={formik.touched.castType && Boolean(formik.errors.castType)}
+                      helperText={formik.touched.castType && formik.errors.castType}
+                    />
+                  )}
+                  onChange={(e, value) => {
+                    formik.setFieldValue('castType', value?.id);
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Family Cast *"
+                  {...formik.getFieldProps('familyCast')}
+                  onChange={(e) => {
+                    // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
+                    const newName = e.target.value[0].toUpperCase() + e.target.value.slice(1);
+                    formik.setFieldValue('familyCast', newName);
+                  }}
+                  error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
+                  helperText={formik.touched.familyCast && formik.errors.familyCast}
+                  disabled={!isBasicDetailsEditable.value}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.maritalStatus && Boolean(formik.errors.maritalStatus)}
+              >
+                <FormControl
+                  fullWidth
+                  disabled={!isBasicDetailsEditable.value}
+                  error={!!formik.errors.maritalStatus && formik.touched.maritalStatus}
+                >
+                  <InputLabel id="dropdown-label" size="small">
+                    Marital Status *
+                  </InputLabel>
+                  <Select
+                    labelId="dropdown-label"
+                    id="dropdown"
+                    value={formik.values.maritalStatus}
+                    onChange={formik.handleChange}
+                    size="small"
+                    label="Marital Status *"
+                    name="maritalStatus"
+                  >
+                    {MaritalStatusTypeArray.map((i, index) => (
+                      <MenuItem key={i} value={index}>
+                        {MaritalStatusType[index]}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.maritalStatus && formik.errors.maritalStatus && (
+                    <FormHelperText>{formik.errors.maritalStatus}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField
+                error={formik.touched.bloodGroup && Boolean(formik.errors.bloodGroup)}
+              >
+                <FormControl
+                  fullWidth
+                  disabled={!isBasicDetailsEditable.value}
+                  error={!!formik.errors.bloodGroup && formik.touched.bloodGroup}
+                >
+                  <InputLabel id="blood-group-label" size="small">
+                    Blood Group
+                  </InputLabel>
+                  <Select
+                    labelId="blood-group-label"
+                    id="bloodGroup"
+                    value={formik.values.bloodGroup}
+                    onChange={formik.handleChange}
+                    size="small"
+                    label="Blood Group"
+                    name="bloodGroup"
+                  >
+                    <MenuItem value="A+">A+</MenuItem>
+                    <MenuItem value="A-">A-</MenuItem>
+                    <MenuItem value="B+">B+</MenuItem>
+                    <MenuItem value="B-">B-</MenuItem>
+                    <MenuItem value="AB+">AB+</MenuItem>
+                    <MenuItem value="AB-">AB-</MenuItem>
+                    <MenuItem value="O+">O+</MenuItem>
+                    <MenuItem value="O-">O-</MenuItem>
+                  </Select>
+                  {formik.touched.bloodGroup && formik.errors.bloodGroup && (
+                    <FormHelperText>{formik.errors.bloodGroup}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+          </Grid>
+        </Grid>
+      </SectionCard>
+
+      <SectionCard
+        title="Contact Information"
+        headerContent={
+          !isMainForm && (
+            <CardActions
+              isEdit={isContactDetailsEditable}
+              onSave={handleSave}
+              onCancel={handleContactDetailCancel}
+            />
+          )
+        }
+      >
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Email *"
+              {...formik.getFieldProps('email')}
+              error={formik.touched.email && Boolean(formik.errors.email)}
+              helperText={formik.touched.email && formik.errors.email}
+              disabled={!isContactDetailsEditable.value}
+              InputProps={{
+                startAdornment: (
+                  <>
+                    <Iconify icon="mdi-light:email" />{' '}
+                    <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                  </>
+                ),
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
+            <PhoneInput
+              name="mobileNo"
+              value={formik.values.mobileNo}
+              onChange={(value) => {
+                formik.setFieldValue('mobileNo', value);
+                formik.validateField('mobileNo');
+              }}
+              label="Primary Contact No. *"
+              error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}
+              disabled={!isContactDetailsEditable.value}
+              helperText={formik.touched.mobileNo && formik.errors.mobileNo}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <PhoneInput
+            name="secondaryMobileNo"
+            value={formik.values.secondaryMobileNo}
+            onChange={(value) => {
+              formik.setFieldValue('secondaryMobileNo', value);
+            }}
+            label="Secondary Contact No. "
+            error={formik.touched.secondaryMobileNo && Boolean(formik.errors.secondaryMobileNo)}
+            disabled={!isContactDetailsEditable.value}
+            helperText={formik.touched.secondaryMobileNo && formik.errors.secondaryMobileNo}
+            onBlur={formik.handleBlur}
+          />
+        </Grid>
+      </SectionCard>
+
+      <SectionCard
+        title="Professional Details"
+        headerContent={
+          !isMainForm && (
+            <CardActions
+              isEdit={isProfessionalDetailsEditable}
+              onSave={handleSave}
+              onCancel={handleProfessionalDetailCancel}
+            />
+          )
+        }
+      >
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining)}
+          >
+            <DatePicker
+              label="Date of Joining *"
+              value={formik.values.dateOfJoining}
+              onChange={(value) => formik.setFieldValue('dateOfJoining', value)}
+              format="DD-MM-YYYY"
+              disabled={!isProfessionalDetailsEditable.value}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining),
+                  helperText: formik.touched.dateOfJoining && formik.errors.dateOfJoining,
+                },
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
+          >
+            <FormControl
+              fullWidth
+              disabled={!isProfessionalDetailsEditable.value}
+              error={!!formik.errors.employeeGroup && formik.touched.employeeGroup}
+            >
+              <InputLabel id="employee-group-label" size="small">
+                Employee Group *
+              </InputLabel>
+              <Select
+                labelId="employee-group-label"
+                id="employeeGroup"
+                value={formik.values.employeeGroup}
+                onChange={formik.handleChange}
+                size="small"
+                label="Employee Group *"
+                name="employeeGroup"
+              >
+                {EmployeeGroupTypeArray.map((item, index) => (
+                  <MenuItem key={item} value={index}>
+                    {EmployeeGroupType[index]}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.employeeGroup && formik.errors.employeeGroup && (
+                <FormHelperText>{formik.errors.employeeGroup}</FormHelperText>
+              )}
+            </FormControl>
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.department && Boolean(formik.errors.department)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Department"
+              {...formik.getFieldProps('department')}
+              onChange={(e) => {
+                const newName = capitalize(e.target.value);
+                formik.setFieldValue('department', newName);
+              }}
+              error={formik.touched.department && Boolean(formik.errors.department)}
+              helperText={formik.touched.department && formik.errors.department}
+              disabled={!isProfessionalDetailsEditable.value}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.designation && Boolean(formik.errors.designation)}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              label="Designation"
+              {...formik.getFieldProps('designation')}
+              onChange={(e) => {
+                const newName = capitalize(e.target.value);
+                formik.setFieldValue('designation', newName);
+              }}
+              error={formik.touched.designation && Boolean(formik.errors.designation)}
+              helperText={formik.touched.designation && formik.errors.designation}
+              disabled={!isProfessionalDetailsEditable.value}
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <RenderOrganization formik={formik} disabled={!isProfessionalDetailsEditable.value} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
+        </Grid>
+      </SectionCard>
+
+      <SectionCard
+        title="Address Details"
+        headerContent={
+          !isMainForm && (
+            <CardActions
+              isEdit={isAddressDetailsEditable}
+              onSave={handleSave}
+              onCancel={handleAddressDetailCancel}
+            />
+          )
+        }
+      >
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              label="Building No./Flat/House No. *"
+              {...formik.getFieldProps('addressLine1')}
+              onChange={(e) => {
+                const newName = capitalize(e.target.value);
+                formik.setFieldValue('addressLine1', newName);
+              }}
+              error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
+              helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
+              disabled={!isAddressDetailsEditable.value}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              label="Area/Locality/Road Name *"
+              {...formik.getFieldProps('addressLine2')}
+              onChange={(e) => {
+                const newName = capitalize(e.target.value);
+                formik.setFieldValue('addressLine2', newName);
+              }}
+              error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
+              helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
+              disabled={!isAddressDetailsEditable.value}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
+            error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              label="Landmark"
+              {...formik.getFieldProps('addressLine3')}
+              onChange={(e) => {
+                const newName = capitalize(e.target.value);
+                formik.setFieldValue('addressLine3', newName);
+              }}
+              error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
+              helperText={formik.touched.addressLine3 && formik.errors.addressLine3}
+              disabled={!isAddressDetailsEditable.value}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.country && Boolean(formik.errors.country?.name)}>
+            <CountryComponent
+              value={formik.values.country}
+              onChange={(_e: any, value: any) => {
+                formik.setFieldValue('state', { name: '', isoCode: '' });
+                formik.setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
+              }}
+              error={formik.touched.country && Boolean(formik.errors.country?.name)}
+              helperText={formik.touched.country && formik.errors.country?.name}
+              textFieldProps={{
+                label: 'Country *',
+              }}
+              disabled={!isAddressDetailsEditable.value}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.state && Boolean(formik.errors?.state?.name)}>
+            <StateComponent
+              value={formik.values.state}
+              countryValue={formik.values.country}
+              onChange={(_e: any, value: any) => {
+                formik.setFieldValue('state', {
+                  ...(value || {}),
+                  name: value?.name,
+                  isoCode: value?.isoCode,
+                });
+                formik.setFieldValue('city', { name: '' });
+              }}
+              error={formik.touched.state && Boolean(formik.errors?.state?.name)}
+              helperText={formik.touched.state && formik.errors?.state?.name}
+              disabled={!isAddressDetailsEditable.value}
+              textFieldProps={{
+                label: 'State *',
+              }}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.city && Boolean(formik.errors.city?.name)}>
+            <CityComponent
+              value={formik.values.city}
+              onChange={(_e: any, value: any) => {
+                formik.setFieldValue('city', { name: value?.name });
+              }}
+              stateValue={formik.values.state}
+              error={formik.touched.city && Boolean(formik.errors.city?.name)}
+              helperText={formik.touched.city && formik.errors.city?.name}
+              disabled={!isAddressDetailsEditable.value}
+              textFieldProps={{
+                label: 'City *',
+              }}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <ShakingTextField error={formik.touched.pincode && Boolean(formik.errors.pincode)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Pincode"
+              type="number"
+              {...formik.getFieldProps('pincode')}
+              error={formik.touched.pincode && Boolean(formik.errors.pincode)}
+              helperText={formik.touched.pincode && formik.errors.pincode}
+              disabled={!isAddressDetailsEditable.value}
+              name="pincode"
+              onChange={(e) => {
+                const { value } = e.target;
+                if (value.length <= 6) {
+                  formik.handleChange(e);
+                  formik.validateField('pincode');
+                }
+              }}
+              inputProps={{
+                maxLength: 6,
+                pattern: '[0-9]*',
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+      </SectionCard>
+    </Box>
+  );
+};
 
 export const InformationFields: FieldsType[] = [
   {

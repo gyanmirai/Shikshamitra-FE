@@ -10,7 +10,7 @@ export const classApi = createApi({
   tagTypes: ['Class'],
   endpoints: (builder) => ({
     getClass: builder.query({
-      query: () => ({ url: '/app/standard', redirect: 'follow' }),
+      query: () => ({ url: '/app/standard?Sorting=name asc', redirect: 'follow' }),
       providesTags: ['Class'],
     }),
     getClassById: builder.query({

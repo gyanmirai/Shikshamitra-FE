@@ -66,6 +66,7 @@ export interface IEventHoliday {
   reason: string;
   isHoliday: boolean;
   name: string;
+  documentSize?: number;
 }
 const HrEventsAndHolidaysScreen = () => {
   // Dialog state for managing form visibility
@@ -193,7 +194,7 @@ const HrEventsAndHolidaysScreen = () => {
           tableId="events-holidays-table"
           isLoading={isLoading}
           columns={[
-            { id: 'name', label: 'Name', minWidth: '10vw', align: 'left' },
+            { id: 'name', label: 'Title', minWidth: '10vw', align: 'left' },
             {
               id: 'sDate',
               label: 'Start Date',

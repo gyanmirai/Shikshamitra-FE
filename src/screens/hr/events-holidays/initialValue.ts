@@ -8,4 +8,5 @@ export const eventAndHolidayInitialValues = (editData: IEventHoliday | null) => 
   reason: editData?.reason || '',
   isHoliday: editData?.isHoliday ?? false,
   name: editData?.name || '',
+  documentSize: editData?.documentSize || 5,
 });

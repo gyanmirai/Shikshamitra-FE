@@ -30,4 +30,5 @@ export const eventAndHolidayValidationSchema = Yup.object().shape({
     }),
   // Validate that reason is provided
   reason: Yup.string().required('Description is required'),
+  documentSize: Yup.number().required('Document size is required'),
 });

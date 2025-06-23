@@ -10,7 +10,7 @@ export const yearApi = createApi({
   tagTypes: ['Year'],
   endpoints: (builder) => ({
     getYear: builder.query({
-      query: () => ({ url: '/app/academic-year' }),
+      query: () => ({ url: '/app/academic-year?Sorting=name' }),
       providesTags: ['Year'],
     }),
     getYearById: builder.query({
