@@ -47,11 +47,13 @@ const GradeEntryTable = ({
       //   ),
       // },
       { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
-      { id: 'GrNo', label: 'Gr No.', align: 'left' },
-      { id: 'marks', label: 'Marks', filterType: 'number' },
+      { id: 'GrNo', label: 'Gr No.', align: 'left', minWidth: 85 },
+      { id: 'marks', label: 'Marks', align: 'left', filterType: 'number', minWidth: 85 },
       {
         id: 'grade',
         label: 'Grade',
+        minWidth: 85,
+        align: 'left',
         render: (value, row) =>
           value === '' ? (
             <Typography variant="subtitle2" color="textSecondary">
@@ -66,6 +68,8 @@ const GradeEntryTable = ({
       {
         id: 'feedback',
         label: 'Feedback',
+        minWidth: 180,
+        align: 'left',
         render: (value, row) =>
           value === '' ? (
             <Typography variant="subtitle2" color="textSecondary">
@@ -81,6 +85,7 @@ const GradeEntryTable = ({
         id: 'status',
         label: 'Marks Status',
         align: 'left',
+        minWidth: 150,
         sticky: true,
         filterType: 'enum',
         enumOptions: ExamGradeStatusOptions,

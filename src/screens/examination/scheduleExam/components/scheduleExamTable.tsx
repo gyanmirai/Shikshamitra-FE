@@ -1,15 +1,22 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Chip, Tabs, Button } from '@mui/material';
+import { Box, Tab, Tabs, Button, Tooltip, MenuList, useTheme, IconButton } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
+import {
+  PublishUnpublishStatusType,
+  PublishUnpublishStatusOptions,
+} from 'src/enums/publishUnpublish-status';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -38,6 +45,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }),
     [data]
   );
+  const theme = useTheme();
 
   // Define tab configuration with labels, values, counts and colors
   const TABS = useMemo(
@@ -79,15 +87,40 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {/* Show Add Timetable option for Pending status */}
+
+          <Button
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.download} />}
+            onClick={() => {
+              // Implement print or download functionality here
+            }}
+            variant="outlined"
+          >
+            Print Timetable
+          </Button>
+        </MenuList>
+      </>
+    ),
+    []
+  );
+
   return (
     <Box>
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Box display="flex" gap={1} alignItems="flex-start" marginBottom={3}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
+            marginLeft: 1,
+            marginTop: -1,
           }}
         >
           {TABS.map((tab) => (
@@ -126,14 +159,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       </Box>
       <CustomizableTable
         tableId="schedule-exam-table"
-        searchFieldProps={{
-          // placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
-          label: 'Search by Class, Division, Exam Type,  Subject Name...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Exam Data Found{' '}
@@ -171,13 +196,44 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             align: 'left',
             render: (value) => (
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((division: string) => (
-                  <Chip key={division} label={division} size="small" variant="outlined" />
-                ))}
+                {value && value.length > 0 ? value.join(', ') : '-'}
               </Box>
             ),
           },
           { id: 'examType', label: 'Exam Type', align: 'left' },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            minWidth: 40,
+            isFilter: false,
+            sticky: true,
+            isSort: false,
+            filterType: 'enum',
+            enumOptions: PublishUnpublishStatusOptions,
+            render(value, row) {
+              const statusColor =
+                value === PublishUnpublishStatusType.Published
+                  ? theme.palette.success.main
+                  : theme.palette.text.secondary;
+
+              return (
+                <Tooltip title={value === 0 ? 'Published' : 'Draft'}>
+                  <IconButton>
+                    <Iconify
+                      icon={GlobalIcons.tick}
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        cursor: 'pointer',
+                        color: statusColor,
+                      }}
+                    />
+                  </IconButton>
+                </Tooltip>
+              );
+            },
+          },
           // {
           //   id: 'subjects',
           //   label: 'Subjects',
@@ -211,11 +267,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  showThreeDots={false}
+                  // showThreeDots={false}
                   placement="right-top"
                   // showViewIcon
                   showDeleteIcon
                   showEditIcon
+                  actions={(prop) => actions({ ...prop, row })}
                   handleDeleteClick={() => {
                     onDelete(row as IExamFormValues);
                   }}

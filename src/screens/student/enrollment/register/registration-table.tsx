@@ -214,7 +214,7 @@ const RegistrationTable = ({
           { id: 'standard.name', label: 'Class', align: 'left' },
           {
             id: 'dobValue',
-            label: 'Date Of Birth',
+            label: 'Date of Birth',
             minWidth: '130px',
             align: 'left',
             isFilter: true,
@@ -223,7 +223,7 @@ const RegistrationTable = ({
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'Date Of Inquiry',
+            label: 'Date of Inquiry',
             minWidth: '150px',
             align: 'left',
             filterType: 'date',

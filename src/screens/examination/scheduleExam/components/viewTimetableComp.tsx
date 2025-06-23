@@ -28,7 +28,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
   return (
     <Card sx={{ p: 2, boxShadow: '3px', width: '100%' }}>
       <Box display="flex" justifyContent="flex-end" gap={2}>
-        <Button
+        {/* <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.download} />}
           onClick={() => {
@@ -37,8 +37,8 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           variant="outlined"
         >
           Print Timetable
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           startIcon={<Iconify icon={GlobalIcons.publish} />}
           size="small"
           onClick={() => {
@@ -48,7 +48,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           variant="contained"
         >
           Publish
-        </Button>
+        </Button> */}
       </Box>
       <Scrollbar>
         <CustomizableTable

@@ -267,6 +267,7 @@ const GradeEntry = (props: TabComponentType) => {
     <Box>
       <CustomBreadcrumbs
         heading="Record Marks"
+        description="Hello"
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Examination', href: '/academic/scheduleExam' },
@@ -320,7 +321,7 @@ const GradeEntry = (props: TabComponentType) => {
           value={subject}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
-        <CustomSelect
+        {/* <CustomSelect
           label="Exam Type"
           disabled={!subject}
           options={[
@@ -333,7 +334,7 @@ const GradeEntry = (props: TabComponentType) => {
           }}
           value={assignmentType}
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
+        /> */}
         <CustomSelect
           label="Exam Title"
           disabled={!assignmentType}

@@ -141,6 +141,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExam?.id);
