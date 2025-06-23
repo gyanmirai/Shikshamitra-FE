@@ -341,18 +341,26 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             {/* Description */}
             <Grid item xs={12} md={6}>
               <ShakingTextField error={!!getError('description')}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={7}
-                  label="Description"
-                  // placeholder="Enter Description"
-                  size="small"
+                <Editor
+                  onChange={(value) => handleChange('description', value)}
                   value={subject.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  disabled={isPublished}
+                  placeholder="Description"
                   error={!!getError('description')}
                   helperText={getError('description')}
+                  sx={{
+                    border: `1px solid ${theme.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                    '&:focus-within': {
+                      borderColor: theme.palette.text.primary,
+                      borderWidth: 2,
+                    },
+                    ...(!!getError('description') && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                  }}
                 />
               </ShakingTextField>
             </Grid>
@@ -362,6 +370,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 // @ts-ignore
                 value={subject.documents}
                 multiple
+                showVisibleDocumentCount={1}
                 onChange={(value) => {
                   formik.setFieldValue(`subjects.${index}.documents`, value);
                   // const reader = new FileReader();

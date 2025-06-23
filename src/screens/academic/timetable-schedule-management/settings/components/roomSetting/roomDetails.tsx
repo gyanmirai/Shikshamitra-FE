@@ -5,12 +5,14 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -162,7 +164,7 @@ const RoomDetails = ({ addRoomDialog }: any) => {
             align: 'left',
             isSort: false,
             isFilter: false,
-            minWidth: '50px',
+            minWidth: '40px',
             sticky: true,
             render(value, row) {
               return (
@@ -184,7 +186,22 @@ const RoomDetails = ({ addRoomDialog }: any) => {
         data={roomData}
       />
       <CustomDialog
-        title={isEdit ? 'Update Room' : 'Create Room'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{isEdit ? 'Update Room' : 'Add Room'}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                isEdit
+                  ? 'You can update the room details including room number, building name, floor and capacity'
+                  : 'You can create a new room by specifying room number, building name, floor and capacity'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={addRoomDialog.value}
         handleClose={addRoomDialog.onFalse}
         maxWidth="sm"

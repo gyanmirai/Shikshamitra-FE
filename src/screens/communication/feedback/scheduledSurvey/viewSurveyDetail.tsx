@@ -11,7 +11,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 import { ResponseComponent } from './responseComponent';
-import { DetailRow } from '../../announcement/components/detailRow';
+import DetailRow from '../../announcement/components/detailRow';
 
 export const ViewSurveyDetail = ({ survey }: any) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>

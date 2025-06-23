@@ -19,7 +19,7 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { varAlpha } from 'src/theme/styles';
-import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
 import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
 

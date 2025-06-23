@@ -84,7 +84,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({ roomDialog, slotData, onRoomSe
             data={tableData}
           />
         </Scrollbar>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             onClick={() => {
               roomDialog.onFalse();

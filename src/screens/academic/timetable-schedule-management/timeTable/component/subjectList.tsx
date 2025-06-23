@@ -44,10 +44,13 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {subject.subjects.map((sub: Subject) => (
-                <Typography variant="body2" fontWeight="bold">
-                  {sub.subject}
-                </Typography>
+              {subject.subjects.map((sub: Subject, index: number) => (
+                <React.Fragment key={index}>
+                  <Typography variant="body2" fontWeight="bold">
+                    {sub.subject}
+                  </Typography>
+                  {index < subject.subjects.length - 1 && ','}
+                </React.Fragment>
               ))}
             </Box>
             <Typography variant="body2" fontWeight="bold">

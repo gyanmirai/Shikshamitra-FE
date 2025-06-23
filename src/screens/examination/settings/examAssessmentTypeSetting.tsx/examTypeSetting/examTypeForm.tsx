@@ -93,7 +93,13 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
             <Button
               type="submit"
               variant="contained"
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={isEdit ? 16 : 20}
+                  height={isEdit ? 16 : 20}
+                />
+              }
               onClick={(e) => {
                 // formik.handleSubmit();
               }}

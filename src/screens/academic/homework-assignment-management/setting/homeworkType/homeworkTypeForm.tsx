@@ -21,7 +21,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
       homeworkTypeName: editData?.homeworkTypeName || '',
     },
     validationSchema: Yup.object().shape({
-      homeworkTypeName: Yup.string().required('Homework type name is required'),
+      homeworkTypeName: Yup.string().required('Name is required'),
     }),
     onSubmit: (values) => {
       console.log(values);
@@ -33,28 +33,24 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <ShakingTextField
-                  error={
-                    !!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false
-                  }
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    name="homeworkTypeName"
-                    label="Homework Type Name *"
-                    // placeholder="Enter Homework Type Name"
-                    value={formik.values.homeworkTypeName}
-                    onChange={formik.handleChange}
-                    error={
-                      formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)
-                    }
-                    helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
-                  />
-                </ShakingTextField>
-              </Grid>
+            <Grid item xs={12}>
+              <ShakingTextField
+                error={
+                  !!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false
+                }
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  name="homeworkTypeName"
+                  label="Name *"
+                  // placeholder="Enter Homework Type Name"
+                  value={formik.values.homeworkTypeName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
+                  helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
+                />
+              </ShakingTextField>
             </Grid>
           </Scrollbar>
 

@@ -81,7 +81,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
           />
         </Scrollbar>
 
-        <DialogActions>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             onClick={teacherDialog.onFalse}
             size="small"

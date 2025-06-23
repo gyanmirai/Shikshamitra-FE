@@ -302,11 +302,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       };
       if (isDraft) {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Draft Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} save as draft successfully for class ${values.className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Published Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} save as publish successfully for class ${values.className}`,
         });
       }
 

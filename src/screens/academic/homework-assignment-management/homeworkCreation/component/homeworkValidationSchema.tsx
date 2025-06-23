@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 export const homeworkValidationSchema = Yup.object().shape({
   title: Yup.string().required('Homework Title is required'),
   class: Yup.string().required('Class is required'),
+  description: Yup.string().required('Description is required'),
   divisions: Yup.array()
     .of(
       Yup.object().shape({
@@ -13,10 +14,10 @@ export const homeworkValidationSchema = Yup.object().shape({
           .min(Yup.ref('publishDate'), 'Due Date cannot be before Publish Date'),
       })
     )
-    .min(1, 'At least one division is required'),
+    .min(1, 'At least one Division is required'),
   subject: Yup.string().required('Subject is required'),
   chapters: Yup.array().of(Yup.string()),
-  homeworkType: Yup.string().required('Homework type is required'),
+  homeworkType: Yup.string().required('Homework Type is required'),
   submissionType: Yup.string().required('Submission type is required'),
   attachments: Yup.array(),
   createdBy: Yup.object(),

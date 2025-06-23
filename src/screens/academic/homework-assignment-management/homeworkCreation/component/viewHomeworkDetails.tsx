@@ -2,7 +2,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useState } from 'react';
 
-import { Box, Tab, Tabs, Divider, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -51,7 +51,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
 
   return (
     <Box sx={{ p: 2, height: '100%' }}>
-      <Scrollbar sx={{ height: '600px' }}>
+      <Scrollbar sx={{ height: '450px' }}>
         <Box
           sx={{
             display: 'flex',
@@ -113,37 +113,7 @@ const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
         {/* Subject Accordion - Single Subject */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
           {homework ? (
-            <Box
-              sx={{
-                border: '1px solid #e0e0e0',
-                borderRadius: 2,
-                p: 2,
-                mb: 2,
-              }}
-            >
-              <Tabs
-                value={tabs.value}
-                onChange={tabs.onChange}
-                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-                role="tablist"
-              >
-                {HOMEWORK_TABS.map((tab) => (
-                  <Tab
-                    key={tab.value}
-                    value={tab.value}
-                    icon={tab.icon}
-                    label={tab.label}
-                    role="tab"
-                    sx={{ fontSize: '12px' }}
-                  />
-                ))}
-              </Tabs>
-              <Divider sx={{ mb: 2 }} />
-
-              {currentActiveComponent?.component && (
-                <currentActiveComponent.component tabs={tabs} homework={homework} />
-              )}
-            </Box>
+            <HomeworkOverview homework={homework} />
           ) : (
             <Box
               sx={{

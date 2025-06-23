@@ -269,7 +269,7 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
           <TimelineContent>
             <Paper
               sx={{
-                p: 3,
+                p: 2,
                 bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
               }}
             >
@@ -277,10 +277,7 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {item.des}
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: 'text.disabled', mt: 1, display: 'block' }}
-              >
+              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
                 By : {item.teacher}
               </Typography>
             </Paper>

@@ -45,6 +45,7 @@ interface FileUploaderProps<T extends boolean = true> {
   multiple?: T;
   value?: T extends true ? (File | FileData)[] : File | FileData;
   propertyPr?: string;
+  showVisibleDocumentCount?: number;
 }
 
 const FileUploader = <T extends boolean = true>({
@@ -55,6 +56,7 @@ const FileUploader = <T extends boolean = true>({
   multiple = true as T,
   value,
   propertyPr,
+  showVisibleDocumentCount = 3,
 }: FileUploaderProps<T>) => {
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
@@ -152,7 +154,7 @@ const FileUploader = <T extends boolean = true>({
       </IconButton> */}
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FileThumbnail file={normalizeFileForThumbnail(file)} sx={{ height: 25, width: 25 }} />
+        <FileThumbnail file={file} sx={{ height: 25, width: 25 }} />
         <Box sx={{ ml: 1.5, flex: 1 }}>
           <Tooltip title={file.name}>
             <Typography
@@ -211,9 +213,11 @@ const FileUploader = <T extends boolean = true>({
           transition: 'all 0.3s ease-in-out',
           display: 'flex',
           justifyContent: 'center',
+          // height: '100%',
           // flexDirection: !value || (Array.isArray(value) && value.length === 0) ? 'row' : 'column',
           alignItems: 'center',
           gap: 2,
+          height: value && (Array.isArray(value) ? value.length > 0 : value) ? 'auto' : '150px',
         }}
         onClick={() => document.getElementById('file-input')?.click()}
       >
@@ -258,9 +262,9 @@ const FileUploader = <T extends boolean = true>({
         />
       </Box>
       <Stack spacing={1} mt={2}>
-        {Array.isArray(value) && value.slice(0, 3).map(renderFileCard)}
+        {Array.isArray(value) && value.slice(0, showVisibleDocumentCount).map(renderFileCard)}
 
-        {Array.isArray(value) && value.length > 3 && (
+        {Array.isArray(value) && value.length > showVisibleDocumentCount && (
           <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
             View All Files ({value.length})
           </Button>

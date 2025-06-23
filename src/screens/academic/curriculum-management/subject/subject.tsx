@@ -331,7 +331,7 @@ const Subject = (props: TabComponentType) => {
         content={
           selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
             <>
-              Are you sure you want to {selectedSubject.status === 0 ? 'Draft' : 'Publish'}{' '}
+              Are you sure you want move{' '}
               <strong>
                 {selectedSubject.subjectName
                   .map((name: any, index: any) => {
@@ -340,15 +340,15 @@ const Subject = (props: TabComponentType) => {
                   })
                   .join(', ')}
               </strong>{' '}
-              subject?
+              subject to {selectedSubject.status === 0 ? 'draft' : 'publish'} ?
             </>
           ) : (
             <>
-              Are you sure you want to {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}{' '}
+              Are you sure you want move{' '}
               <strong>
                 {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
               </strong>{' '}
-              subject?
+              subject to {selectedSubject?.status === 0 ? 'draft' : 'publish'} ?
             </>
           )
         }
@@ -356,7 +356,11 @@ const Subject = (props: TabComponentType) => {
           <Button
             variant="contained"
             size="small"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            startIcon={
+              <Iconify
+                icon={selectedSubject?.status === 0 ? GlobalIcons.draftIcon : GlobalIcons.publish}
+              />
+            }
             onClick={() => {
               const status = selectedSubject?.status === 0 ? 'Draft' : 'Published';
               shikshaMitraToast.success({

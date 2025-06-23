@@ -43,9 +43,7 @@ export function ConfirmDialog({
       {/* <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle> */}
 
       <Divider />
-      {content && (
-        <DialogContent sx={{ typography: 'body2', mt: 2, mb: 2 }}> {content} </DialogContent>
-      )}
+      {content && <DialogContent sx={{ typography: 'body2', mt: 2 }}> {content} </DialogContent>}
       {/* <Divider /> */}
 
       <DialogActions sx={{ flexShrink: 0, p: 1.5 }}>

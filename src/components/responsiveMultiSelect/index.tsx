@@ -3,8 +3,8 @@ import type { AutocompleteRenderOptionState } from '@mui/material';
 import { useRef, useState, useLayoutEffect } from 'react';
 
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { Box, Chip, Checkbox, TextField, Autocomplete } from '@mui/material';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 import CustomTooltip from '../custom-tooltip';
 
@@ -124,7 +124,7 @@ export function ResponsiveMultiSelect<T>({
           },
           '& .MuiAutocomplete-inputRoot': {
             alignItems: 'center',
-            flexWrap: 'nowrap', // ⛔ Prevent chip wrapping
+            flexWrap: 'nowrap',
             paddingTop: '4px',
             paddingBottom: '4px',
             minHeight: '40px',
@@ -132,6 +132,8 @@ export function ResponsiveMultiSelect<T>({
           '& .MuiAutocomplete-input': {
             padding: '0 !important',
             margin: '0 !important',
+            paddingLeft: '14px !important',
+
             lineHeight: 1.5,
             flexGrow: 1,
           },
@@ -154,6 +156,7 @@ export function ResponsiveMultiSelect<T>({
                 padding: '0px !important',
                 margin: '0px !important',
                 height: '24px',
+                paddingLeft: '7px !important',
                 lineHeight: 1.5,
               },
             }}

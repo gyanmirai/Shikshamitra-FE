@@ -21,7 +21,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
       assignmentTypeName: editData?.assignmentTypeName || '',
     },
     validationSchema: Yup.object().shape({
-      assignmentTypeName: Yup.string().required('Assignment type name is required'),
+      assignmentTypeName: Yup.string().required('Name is required'),
     }),
     onSubmit: (values) => {
       console.log(values);
@@ -45,7 +45,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
                     fullWidth
                     size="small"
                     name="assignmentTypeName"
-                    label="Assignment Type Name *"
+                    label="Name *"
                     // placeholder="Enter Assignment Type Name"
                     value={formik.values.assignmentTypeName}
                     onChange={formik.handleChange}

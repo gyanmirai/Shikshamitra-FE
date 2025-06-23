@@ -58,14 +58,17 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '250px' }}>
-            <Grid container spacing={2}>
+          <Scrollbar sx={{ p: 2, height: '500px' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} mb={-2}>
+                <Typography variant="subtitle2">Student Submission</Typography>
+              </Grid>
               <Grid item xs={12}>
                 <Card
                   key={document.id}
                   sx={{
                     p: 2,
-                    mb: 2,
+
                     border: '1px solid',
                     borderColor: 'divider',
                     display: 'flex',
@@ -97,13 +100,54 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                   </Tooltip>
                 </Card>
               </Grid>
+
+              <Grid item xs={12} mb={-2}>
+                <Typography variant="subtitle2">Description</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 1,
+                    p: 2,
+                    bgcolor: '#fafafa',
+                    minHeight: '100px',
+                    maxHeight: '200px',
+                    overflow: 'auto',
+                  }}
+                >
+                  <Typography
+                    component="pre"
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      m: 0,
+                      fontSize: '0.875rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {`Homework Assignment: Science Fundamentals
+
+Due Date: Friday, March 15th, 2024
+Instructions: Write detailed explanations for the following scientific facts.
+
+Questions:
+1. Explain why the sun appears to rise in the east every day
+2. Describe the process of water boiling and why it occurs at 100°C at sea level
+3. Explain the importance of water in plant growth and development
+
+Additional Notes:
+I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
+                  </Typography>
+                </Box>
+              </Grid>
+
               <Grid item xs={12}>
                 <ShakingTextField
                   error={!!(formik.touched.feedback && formik.errors.feedback) || false}
                 >
                   <TextField
                     // placeholder="Enter Feedback"
-                    label="Feedback"
+                    label="Feedback *"
                     multiline
                     size="small"
                     disabled={!isEdit}
@@ -119,7 +163,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               variant="outlined"
               onClick={() => {

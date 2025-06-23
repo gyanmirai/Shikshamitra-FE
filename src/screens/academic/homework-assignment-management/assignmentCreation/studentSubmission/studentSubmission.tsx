@@ -79,7 +79,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       <>
         {' '}
         <MenuList>
-          {row.status === ScheduleExamStatus.Submitted && (
+          {row.status === ScheduleExamStatus['Needs Review'] && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -88,14 +88,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               }}
             >
               {' '}
-              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
               Assign Marks
             </MenuItem>
           )}
           {row.status === ScheduleExamStatus.Reviewed && (
             <MenuItem
               onClick={() => {
-                setSelectedStudent(row);
                 viewSubmissionDialog.onTrue();
                 pop.onClose();
               }}
@@ -157,9 +156,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
           {
             id: 'submissionDate',
+            label: 'Submission Date',
+            align: 'left',
+            minWidth: 160,
+          },
+          {
+            id: 'dueDate',
             label: 'Due Date',
             align: 'left',
-            minWidth: 120,
+            minWidth: 140,
           },
           {
             id: 'marks',
@@ -243,8 +248,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignmentType: 'Practice',
             submissionType: 'online',
             submissionDate: '20-05-2025',
+            dueDate: '25-05-2025',
             marks: 18,
-            totalMarks: 20,
+            totalMarks: 25,
             feedback: 'Well done!',
             status: ScheduleExamStatus.Reviewed,
           },
@@ -256,11 +262,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignment: 'Science Homework',
             assignmentType: 'Practice',
             submissionType: 'file_upload',
-            submissionDate: '19-05-2025',
-            marks: 30,
-            totalMarks: 35,
+            submissionDate: '20-05-2025',
+            dueDate: '22-05-2025',
+            marks: null,
+            totalMarks: 25,
             feedback: '',
-            status: ScheduleExamStatus.Submitted,
+            status: ScheduleExamStatus['Needs Review'],
           },
           {
             id: '3',
@@ -270,7 +277,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignment: 'English Essay',
             assignmentType: 'Practice',
             submissionType: 'online',
-            submissionDate: '18-05-2025',
+            submissionDate: '20-05-2025',
+            dueDate: '23-05-2025',
             marks: 15,
             totalMarks: 25,
             feedback: 'Good effort.',
@@ -284,9 +292,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignment: 'History Worksheet',
             assignmentType: 'Practice',
             submissionType: 'file_upload',
-            submissionDate: '18-05-2025',
+            submissionDate: '20-05-2025',
+            dueDate: '21-05-2025',
             marks: 20,
-            totalMarks: 30,
+            totalMarks: 25,
             feedback: '',
             status: ScheduleExamStatus.Reviewed,
           },
