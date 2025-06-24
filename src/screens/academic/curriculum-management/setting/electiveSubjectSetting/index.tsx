@@ -82,7 +82,7 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
         setEditData={setSelected}
         data={[
           {
-            title: 'Elective Group 1',
+            title: 'Tech & Fitness Group',
             subjectColor: '#1E90FF',
             subjects: [
               { name: 'Computer', subjectColor: '#4169E1' },
@@ -91,7 +91,7 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
             createdBy: 'Patel Jeena Rajeshbhai',
           },
           {
-            title: 'Elective Group 2',
+            title: 'Language Enrichment Group',
             subjectColor: '#FF4500',
             subjects: [
               { name: 'Hindi', subjectColor: '#FF4500' },
@@ -118,8 +118,8 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
               placement="right"
               title={
                 selected
-                  ? 'You can update the elective group details including title, subjects and other information'
-                  : 'You can create a new elective group by entering the group title, subjects and other required details'
+                  ? 'You can update the elective group details by entering group name, subjects and other required details.'
+                  : 'You can create a new elective group details by entering the group name, subjects and other required details.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Grid, Chip, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -19,6 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
@@ -73,8 +74,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '450px' }}>
-            <Grid container spacing={3}>
+          <Scrollbar sx={{ p: 2, height: '450px' }}>
+            <Grid container spacing={1}>
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
@@ -98,7 +99,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} mb="-15px">
                 <CustomizableTable
                   tableId="table-subject-list"
                   isSearch={false}
@@ -109,14 +110,17 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                       id: 'subjects',
                       label: 'Subjects',
                       render: (value) => (
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
                           {value.map((subject: any) => (
-                            <Chip
+                            <Box
                               key={subject.name}
-                              label={subject.name}
-                              size="small"
-                              variant="outlined"
-                            />
+                              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                            >
+                              <SubjectColorIndicator color={subject.subjectColor} />
+                              <Typography variant="caption" fontSize="13px">
+                                {subject.name}
+                              </Typography>
+                            </Box>
                           ))}
                         </Box>
                       ),
@@ -132,11 +136,22 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                             type="number"
                             size="small"
                             label="Weekly Lectures *"
-                            // placeholder="Enter weekly lectures"
                             value={value}
                             onChange={(e) => handleInputChange(row.id, e.target.value)}
                             className="w-24"
                             disabled={disabled}
+                            error={
+                              formik.touched.weeklyLectures && Boolean(formik.errors.weeklyLectures)
+                            }
+                            helperText={
+                              formik.touched.weeklyLectures && formik.errors.weeklyLectures
+                                ? String(formik.errors.weeklyLectures)
+                                : ''
+                            }
+                            inputProps={{
+                              min: 0,
+                              max: 100, // Set appropriate max value
+                            }}
                             sx={{ minWidth: '200px', width: '100%' }}
                           />
                         );
@@ -148,7 +163,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               onClick={() => {
                 onClose?.(null, false);

@@ -6,8 +6,8 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-24T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-25T00:00:00.000Z",
         "dueDate": "2025-06-29T00:00:00.000Z",
         "status": 1
       }
@@ -21,7 +21,7 @@
       "id": 5,
       "name": "Trivedi Isha Rajesh",
       "avatarUrl": "/assets/teachers/isha.jpg",
-      "designation": "Mathematics Instructor",
+      "designation": "Mathematics Instructor", 
       "department": "Mathematics",
       "class": "5",
       "division": "C",
@@ -42,8 +42,8 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-24T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-25T00:00:00.000Z",
         "dueDate": "2025-06-29T00:00:00.000Z",
         "status": 0
       }
@@ -78,8 +78,8 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-22T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-24T00:00:00.000Z",
         "dueDate": "2025-06-25T00:00:00.000Z",
         "status": 1
       }

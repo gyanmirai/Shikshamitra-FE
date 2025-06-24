@@ -3,7 +3,6 @@ import * as Yup from 'yup';
 export const validationSchema = Yup.object().shape({
   className: Yup.string().required('Class is required'),
   schoolHours: Yup.string().required('School hours are required'),
-  previousClassSlots: Yup.string().required('Previous class slot is required'),
   totalSlots: Yup.number()
     .typeError('Total slots must be a number')
     .required('Total slots are required')

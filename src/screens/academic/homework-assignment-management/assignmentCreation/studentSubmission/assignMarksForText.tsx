@@ -33,7 +33,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   const formik = useFormik({
     initialValues: {
       marks: data?.marks || '',
-      totalMarks: data?.totalMarks || '',
+      totalMarks: data?.totalMarks || 25,
       feedback: data?.feedback || '',
     },
     validationSchema: Yup.object({
@@ -46,7 +46,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '350px' }}>
+          <Scrollbar sx={{ p: 2, height: '280px' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Editor onChange={(value) => {}} value="Submission Data" editable={false} />
@@ -106,7 +106,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               variant="outlined"
               onClick={() => {

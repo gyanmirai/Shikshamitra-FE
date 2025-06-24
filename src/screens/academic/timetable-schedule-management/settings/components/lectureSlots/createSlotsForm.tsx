@@ -143,7 +143,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '400px' }}>
+          <Scrollbar sx={{ p: 2, height: '400px' }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
@@ -176,8 +176,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     name="schoolHours"
                     value={formik.values.schoolHours || '07:00 - 12:30'}
                     onChange={formik.handleChange}
-                    error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
-                    helperText={formik.touched.schoolHours && formik.errors.schoolHours}
+                    // error={formik.touched.schoolHours && Boolean(formik.errors.schoolHours)}
+                    // helperText={formik.touched.schoolHours && formik.errors.schoolHours}
                     size="small"
                     disabled
                   />
@@ -323,7 +323,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
             )}
           </Scrollbar>
 
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               type="submit"
               startIcon={<Iconify icon={GlobalIcons.eye} />}

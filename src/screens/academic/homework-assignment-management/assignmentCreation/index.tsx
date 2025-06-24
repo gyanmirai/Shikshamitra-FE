@@ -19,6 +19,7 @@ import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -205,9 +206,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         <AssignmentForm
           classes={classes}
           dialog={addAssignmentDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedAssignment}
         />
       </CustomDialog>
@@ -256,6 +255,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             color="error"
             size="small"
             onClick={() => {
+              deleteAssignmentDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Assignment Deleted successfully for ${selectedAssignment?.subjects}!`,
+              });
               // delete logic here
             }}
           >
@@ -283,6 +286,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
+              publishAssignmentDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Assignment Published successfully for ${selectedAssignment?.subjects}!`,
+              });
               // publish logic here
             }}
           >

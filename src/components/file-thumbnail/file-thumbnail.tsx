@@ -25,7 +25,6 @@ export function FileThumbnail({
   const previewUrl = typeof file === 'string' ? file : URL.createObjectURL(file);
 
   const { name, path } = fileData(file);
-  console.log('FileThumbnail:', { name, path, format: fileFormat(path || previewUrl) });
 
   const format = fileFormat(path || previewUrl);
 

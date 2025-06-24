@@ -36,7 +36,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '150px' }}>
+          <Scrollbar sx={{ p: 2, height: '170px' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <ShakingTextField
@@ -44,7 +44,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                 >
                   <TextField
                     fullWidth
-                    label="Subject Name"
+                    label="Subject Name *"
                     name="subjectName"
                     size="small"
                     value={formik.values.subjectName}
@@ -82,7 +82,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
             </Grid>
           </Scrollbar>
 
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={onClose}
@@ -92,7 +92,13 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={editData ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={editData ? 16 : 20}
+                  height={editData ? 16 : 20}
+                />
+              }
               type="submit"
               variant="contained"
               size="small"

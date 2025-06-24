@@ -3,7 +3,7 @@
     "title": "Understanding Place Value",
     "description": "In this homework, students will complete a comprehensive worksheet focused on understanding place value concepts. The worksheet includes exercises on identifying ones, tens, and hundreds places in 2 and 3-digit numbers, writing numbers in expanded form, comparing numbers using place value understanding, and solving real-world problems involving place value. Students must show their work clearly and upload clear, legible photos or scans of their completed worksheet. Pay special attention to proper number formation and place value column alignment.",
     "class": "3",
-    "subject": "Mathematics",
+    "subject": "Mathematics", 
     "chapter": "Place Value",
     "homeworkType": "Regular",
     "submissionType": 0,
@@ -28,15 +28,15 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-21T00:00:00.000Z", 
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-24T00:00:00.000Z",
         "dueDate": "2025-06-28T00:00:00.000Z",
         "status": 1
       },
       {
-        "divisionId": "B",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-21T00:00:00.000Z",
+        "divisionId": "B", 
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-25T00:00:00.000Z",
         "dueDate": "2025-06-28T00:00:00.000Z",
         "status": 0
       }
@@ -48,7 +48,7 @@
     "class": "2nd",
     "subject": "Mathematics",
     "chapter": "Addition and Subtraction",
-    "homeworkType": "Worksheet",
+    "homeworkType": "Worksheet", 
     "submissionType": 1,
     "attachments": [],
     "content": null,
@@ -72,9 +72,9 @@
     "divisions": [
       {
         "divisionId": "C",
-        "createdAt": "2025-06-21T12:00:00.000Z", 
-        "publishDate": "2025-06-22T09:00:00.000Z",
-        "dueDate": "2025-06-29T23:59:59.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-24T12:00:00.000Z",
+        "dueDate": "2025-06-30T23:59:59.000Z",
         "status": 0
       }
     ]
@@ -109,9 +109,9 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-21T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
         "publishDate": "2025-06-24T00:00:00.000Z",
-        "dueDate": "2025-06-28T00:00:00.000Z",
+        "dueDate": "2025-06-30T00:00:00.000Z",
         "status": 0
       }
     ]
@@ -145,9 +145,9 @@
     "divisions": [
       {
         "divisionId": "B",
-        "createdAt": "2025-06-21T00:00:00.000Z",
-        "publishDate": "2025-06-21T00:00:00.000Z",
-        "dueDate": "2025-06-24T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-26T00:00:00.000Z",
+        "dueDate": "2025-06-27T00:00:00.000Z",
         "status": 0
       }
     ]
@@ -182,16 +182,16 @@
     "divisions": [
       {
         "divisionId": "A",
-        "createdAt": "2025-06-05T00:00:00.000Z",
-        "publishDate": "2025-06-05T00:00:00.000Z",
-        "dueDate": "2025-06-07T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-27T00:00:00.000Z",
+        "dueDate": "2025-07-07T00:00:00.000Z",
         "status": 0
       },
       {
         "divisionId": "C",
-        "createdAt": "2025-06-05T00:00:00.000Z",
-        "publishDate": "2025-06-05T00:00:00.000Z",
-        "dueDate": "2025-06-07T00:00:00.000Z",
+        "createdAt": "2025-06-24T00:00:00.000Z",
+        "publishDate": "2025-06-28T00:00:00.000Z",
+        "dueDate": "2025-07-07T00:00:00.000Z",
         "status": 0
       }
     ]

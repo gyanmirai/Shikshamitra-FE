@@ -16,7 +16,7 @@ import { ConfirmDialog } from '../confirm-dialog';
 import { fileData, FileThumbnail } from '../file-thumbnail';
 
 interface DocumentCardProps {
-  file: File;
+  file: any;
 }
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {

@@ -8,7 +8,6 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { Create } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -27,19 +26,21 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getAssignmentInitialValues } from './assignmentInitialValues';
 import { assignmentValidationSchema } from './assignmentValidationSchema';
-import { SectionCard } from '../../homeworkCreation/component/homeworkForm';
 import AssignmentTypeForm from '../../setting/assignmentType/assignmentTypeForm';
 
 import type { IAssignmentFormProps } from '../type';
@@ -75,6 +76,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     initialValues: getAssignmentInitialValues(editData, classes),
     validationSchema: assignmentValidationSchema,
     onSubmit: (values) => {
+      onClose(null, true);
+      shikshaMitraToast.success({
+        message: `Assignment Added successfully for ${values.subjects}!`,
+      });
       // Submit logic would go here
       console.log('Submitted values:', values);
     },
@@ -124,7 +129,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           }}
         >
           {/* Basic Details Section */}
-          <Box sx={{ mb: 3 }}>
+          <Grid item xs={12}>
             <SectionCard title="Basic Details">
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
@@ -250,7 +255,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     }
                   />
                 </ShakingTextField>
-                <Box mt={1} display="flex" justifyContent="flex-end">
+                {/* <Box mt={1} display="flex" justifyContent="flex-end">
                   <Typography
                     variant="body2"
                     fontWeight={500}
@@ -261,7 +266,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   >
                     Add Assignment Type ?
                   </Typography>
-                </Box>
+                </Box> */}
 
                 <CustomDialog
                   open={assignmentTypeDialog.value}
@@ -375,7 +380,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                 </ShakingTextField>
               </Grid>
             </SectionCard>
-          </Box>
+          </Grid>
 
           {/* Due Date */}
           {/* <Grid item xs={12} md={6}>
@@ -403,53 +408,52 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               </Grid> */}
 
           {/* Description Section */}
-          <Box sx={{ mb: 3 }}>
-            <SectionCard title="Description">
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                >
-                  <Editor
-                    value={formik.values.description}
-                    onChange={(value) => {
-                      formik.setFieldValue('description', value);
-                    }}
-                    placeholder="Description"
-                    sx={{ width: '100%', height: '200px' }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* File Upload */}
-              <Grid item xs={12} md={6} sx={{ mt: 2 }}>
-                <FileUploader
-                  // @ts-ignore
-                  value={formik.values.attachments}
-                  multiple
+          <SectionCard title="Description and Document">
+            <Grid item xs={12} md={6}>
+              {' '}
+              <ShakingTextField
+                error={!!(formik.touched.description && formik.errors.description) || false}
+              >
+                <Editor
+                  value={formik.values.description}
                   onChange={(value) => {
-                    // const reader = new FileReader();
-                    formik.setFieldValue('attachments', value);
-                    // reader.readAsDataURL(value as File);
-                    // reader.readAsDataURL(value as File);
-                    // reader.onload = () => {
-                    //   const base64String = reader.result;
-                    // };
+                    formik.setFieldValue('description', value);
                   }}
-                  primaryText="Please Upload Your File"
-                  secondaryText="Maximum file size is 5MB"
+                  placeholder="Description"
                 />
-              </Grid>
-            </SectionCard>
-          </Box>
+              </ShakingTextField>
+            </Grid>
+
+            {/* File Upload */}
+            <Grid item xs={12} md={6} mt={1}>
+              <FileUploader
+                // @ts-ignore
+                value={formik.values.attachments}
+                multiple
+                showVisibleDocumentCount={1}
+                onChange={(value) => {
+                  // const reader = new FileReader();
+                  formik.setFieldValue('attachments', value);
+                  // reader.readAsDataURL(value as File);
+                  // reader.readAsDataURL(value as File);
+                  // reader.onload = () => {
+                  //   const base64String = reader.result;
+                  // };
+                }}
+                primaryText="Please Upload Your File"
+                secondaryText="Maximum file size is 5MB"
+              />
+            </Grid>
+          </SectionCard>
 
           {/* Schedule Assignment */}
           {formik.values.divisions.length > 0 && (
-            <Grid item xs={12} sx={{ p: 0, mt: 3 }}>
-              <SectionCard title="Schedule Homework">
+            <Grid item xs={12}>
+              <SectionCard title="Schedule Assignment">
                 {formik.values.divisions.map((div, idx) => (
-                  <Grid container spacing={2} ml={0.2} key={div.divisionId}>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                  <Grid container spacing={3} key={div.divisionId} ml={0.4}>
+                    <Grid item xs={12} mt={2}>
+                      <Typography variant="subtitle2" sx={{ mt: 1, mb: -1, lineHeight: 1.2 }}>
                         Div : {div.divisionId}
                       </Typography>
                     </Grid>
@@ -533,7 +537,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               <FormControl
                 component="fieldset"
                 error={!!(formik.touched.submissionType && formik.errors.submissionType)}
-                sx={{ p: 2 }}
+                sx={{ p: 2, ml: 1 }}
               >
                 <RadioGroup
                   row
@@ -558,7 +562,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
         </Scrollbar>
       </Box>
       {/* Action Buttons */}
-      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           variant="outlined"
           size="small"
@@ -574,7 +578,13 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             // formik.setFieldValue('status', 1);
             formik.handleSubmit();
           }}
-          startIcon={editData ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
         >
           {editData ? 'Update' : 'Submit'}
         </Button>

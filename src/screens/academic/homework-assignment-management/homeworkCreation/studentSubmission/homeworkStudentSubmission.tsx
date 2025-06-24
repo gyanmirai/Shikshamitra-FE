@@ -84,16 +84,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         <MenuList>
           {/* Show 'Assign Grade' option only when marks are not assigned (marksStatus=0)
               but submission is completed (submissionStatus!=0) */}
-          {row.status === ScheduleExamStatus.Submitted && (
+          {row.status === ScheduleExamStatus['Needs Review'] && (
             <MenuItem
               onClick={() => {
-                setSelectedStudent(row);
                 viewSubmissionDialog.onTrue();
                 pop.onClose();
               }}
             >
               {' '}
-              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
               Give Feedback
             </MenuItem>
           )}
@@ -154,9 +153,17 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           { id: 'homeworkType', label: 'Type', align: 'left' },
           {
             id: 'submissionDate',
+            label: 'Submission Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: 160,
+          },
+          {
+            id: 'dueDate',
             label: 'Due Date',
             align: 'left',
-            minWidth: 100,
+            filterType: 'date',
+            minWidth: 140,
           },
           {
             id: 'feedback',
@@ -217,9 +224,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '1',
             studentName: 'Sharma Priya Rajesh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '22-05-2025',
+            submissionDate: '20-05-2025',
+            dueDate: '25-05-2025',
             marks: 45,
             totalMarks: 50,
             feedback: 'Excellent analysis!',
@@ -230,9 +238,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '2',
             studentName: 'Kumar Arjun Dinesh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
             submissionDate: '21-05-2025',
+            dueDate: '25-05-2025',
             marks: 28,
             totalMarks: 30,
             feedback: 'Great understanding of concepts',
@@ -243,22 +252,24 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '3',
             studentName: 'Gupta Ananya Suresh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
             submissionDate: '23-05-2025',
+            dueDate: '25-05-2025',
             marks: 0,
             totalMarks: 40,
             feedback: '',
-            status: ScheduleExamStatus.Submitted,
+            status: ScheduleExamStatus['Needs Review'],
           },
           {
             id: '4',
             rollNumber: '4',
             studentName: 'Singh Rohan Vikram',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '22-05-2025',
+            submissionDate: '24-05-2025',
+            dueDate: '25-05-2025',
             marks: 24,
             totalMarks: 25,
             feedback: 'Excellent analysis!',
@@ -281,7 +292,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={selectedStudent ? 'Edit Feedback' : 'Add Feedback'}
         maxWidth="sm"
       >
-        {selectedStudent?.submissionType === 'file_upload' ? (
+        {selectedHomework?.submissionType === 'file_upload' ? (
           <AssignGrade data={selectedStudent} onClose={handleClose} isEdit />
         ) : (
           <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />

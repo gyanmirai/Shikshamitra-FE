@@ -452,7 +452,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Timetable"
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
-          description="Create Manage Timetable for selected class and division"
+          description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
           sx={{ px: 1, mb: 2 }}
           isBack
           onBack={() => {
@@ -467,7 +467,7 @@ const TimeTableGrid = (props: TabComponentType) => {
             { name: 'Timetable' },
             { name: 'Manage Timetable' },
           ]}
-          description="Create Manage Timetable for selected class and division"
+          description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
           sx={{ px: 1, mb: 2 }}
         />
       )}
@@ -657,7 +657,13 @@ const TimeTableGrid = (props: TabComponentType) => {
       {!open && (
         <>
           <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2,
+              ml: 1,
+            }}
           >
             <CustomSelect
               label="Class"
@@ -665,7 +671,7 @@ const TimeTableGrid = (props: TabComponentType) => {
               options={allClass}
               valueKey="id"
               labelKey="name"
-              formControlProps={{ sx: { maxWidth: '260px', width: '100%' } }}
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
               value={classes}
               onChange={(value) => {
                 setClasses(value as string);
@@ -674,14 +680,6 @@ const TimeTableGrid = (props: TabComponentType) => {
           </Box>
           <CustomizableTable
             tableId="timetable-table"
-            searchFieldProps={{
-              placeholder: 'Search by Division, Status...',
-              label: 'Search by Division, Status...',
-              sx: {
-                maxWidth: '250px',
-                width: '100%',
-              },
-            }}
             noDataText="No Time Table Data Found"
             columns={[
               { id: 'division', label: 'Division' },
@@ -698,8 +696,9 @@ const TimeTableGrid = (props: TabComponentType) => {
               },
               {
                 id: 'action',
-                label: 'Actions',
-                minWidth: 50,
+                label: 'Action',
+                minWidth: 40,
+                align: 'left',
                 sticky: true,
                 isSort: false,
                 isFilter: false,
@@ -764,6 +763,7 @@ const TimeTableGrid = (props: TabComponentType) => {
         action={
           <Button
             variant="contained"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               // handleDelete(selectedExam?.id);
