@@ -142,6 +142,9 @@ export const workExperienceValidationSchema = Yup.object({
     })
   ),
 });
+export const reportingManagerValidationSchema = Yup.object({
+  reportingManager: Yup.string().required('Reporting manager is required'),
+});
 
 export const validations = [
   personalInformationValidationSchema,
@@ -149,10 +152,12 @@ export const validations = [
   Yup.object({}),
   workExperienceValidationSchema,
   Yup.object({}),
+  reportingManagerValidationSchema,
 ];
 export const infoValidations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,
   workExperienceValidationSchema,
   Yup.object({}),
+  reportingManagerValidationSchema,
 ];
