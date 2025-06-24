@@ -177,13 +177,17 @@ export const payrollInitialValues = (editData: any) => ({
   shiftName: '',
 });
 
+export const assignReportingManagerInitialValues = (editData: any) => ({
+  reportingManager: editData ? editData?.reportingManager : '',
+});
+
 const steps = [
   'Personal Information',
   'Family Information',
   'Documents',
   'Work Experience',
   'Payroll',
-  // 'Performance and Development',
+  'Assign Reporting Manager',
 ];
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
@@ -228,6 +232,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       ...documentsInitialValues(),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
+      ...assignReportingManagerInitialValues(editData),
     }),
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

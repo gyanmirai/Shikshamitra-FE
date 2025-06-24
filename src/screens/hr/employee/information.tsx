@@ -30,18 +30,26 @@ import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
+import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
 // } from './employee-form-fields';
 import {
   payrollInitialValues,
   workExperienceInitialValues,
   familyInformationInitialValues,
   personalInformationInitialValues,
+  assignReportingManagerInitialValues,
 } from './employee-form';
 
 //   InformationFields,
 import type { FieldsType } from './employee-form-fields/types';
 
-const fields = [InformationFields, FamilyFields, WorkExperienceFields, PayrollFields];
+const fields = [
+  InformationFields,
+  FamilyFields,
+  WorkExperienceFields,
+  PayrollFields,
+  AssignReportingManager,
+];
 // const fields = [InformationFields];
 
 const TABS = [
@@ -49,6 +57,7 @@ const TABS = [
   { value: 'familyInformation', label: 'Family Information' },
   { value: 'workExperience', label: 'Work Experience' },
   { value: 'payroll', label: 'Payroll' },
+  { value: 'assignReportingManager', label: 'Assign Reporting Manager' },
   //   { value: 'performanceAndDevelopment', label: 'Performance and Development' },
 ];
 
@@ -282,6 +291,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       ...familyInformationInitialValues(editData),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
+      ...assignReportingManagerInitialValues(editData),
     },
     // Use validation schema based on active tab
     validationSchema: infoValidations[activeTabIndex],
