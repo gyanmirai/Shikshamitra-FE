@@ -17,7 +17,6 @@ import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
-  Radio,
   Button,
   MenuItem,
   Checkbox,
@@ -54,10 +53,12 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -905,16 +906,31 @@ const ResultForm = ({
       obtainedMarks: editData?.marksObtained ?? null,
       totalMarks: editData?.totalMarks,
       status: editData?.status,
+      passingMarks: editData?.passingMark,
     },
+    validateOnChange: true,
     validationSchema: Yup.object({
-      obtainedMarks: Yup.string().test(
-        'is-less-than-total',
-        'Obtained marks must be less than total marks',
-        (value, context) => {
-          const { totalMarks } = context.parent;
-          return value == null || (totalMarks != null && value <= totalMarks);
-        }
-      ),
+      obtainedMarks: Yup.string()
+        .test(
+          'is-less-than-total',
+          'Obtained marks must be less than total marks',
+          (value, context) => {
+            const { totalMarks } = context.parent;
+            return value == null || (totalMarks != null && value <= totalMarks);
+          }
+        )
+        .required('Obtained marks is required'),
+      passingMarks: Yup.string()
+        .test(
+          'is-less-than-total',
+          'Passing marks must be less than total marks',
+          (value, context) => {
+            const { totalMarks } = context.parent;
+            return value == null || (totalMarks != null && value <= totalMarks);
+          }
+        )
+        .required('Passing marks is required'),
+      totalMarks: Yup.string().required('Total marks is required'),
     }),
     onSubmit: async (values) => {
       console.log(values);
@@ -925,13 +941,16 @@ const ResultForm = ({
             entranceExamSlotId: editData.entranceExamSlotId,
             studentEnrollmentId: editData.studentEnrollmentId,
             examDate: editData.examDate,
-            examType: editData.examType,
+            // examType: editData.examType,
+            passingMark: values.passingMarks,
             marksObtained: values.obtainedMarks,
             totalMarks: values.totalMarks,
-            examScheduleType: editData.examScheduleType,
-            passingMark: editData.passingMark,
+            // examScheduleType: editData.examScheduleType,
           },
         }).unwrap();
+        shikshaMitraToast.success({
+          message: `${editData?.name || ''} marks updated successfully`,
+        });
         handleClose(null, true);
       } catch (error) {
         console.log(error);
@@ -953,29 +972,56 @@ const ResultForm = ({
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Box display="flex" flexDirection="column" gap={2}>
-            <TextField
-              label="Total Marks"
-              size="small"
-              fullWidth
-              name="totalMarks"
-              value={formik.values.totalMarks}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Obtained Marks"
-              size="small"
-              fullWidth
-              name="obtainedMarks"
-              value={formik.values.obtainedMarks}
-              onChange={formik.handleChange}
+            <ShakingTextField
+              error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+            >
+              <TextField
+                label="Total Marks *"
+                size="small"
+                fullWidth
+                type="number"
+                name="totalMarks"
+                value={formik.values.totalMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                helperText={(formik.touched.totalMarks && formik.errors.totalMarks) as string}
+              />
+            </ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+            >
+              <TextField
+                label="Passing Marks *"
+                size="small"
+                fullWidth
+                name="passingMarks"
+                type="number"
+                value={formik.values.passingMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+                helperText={(formik.touched.passingMarks && formik.errors.passingMarks) as string}
+              />
+            </ShakingTextField>
+            <ShakingTextField
               error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
-              helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
-            />
+            >
+              <TextField
+                label="Obtained Marks *"
+                size="small"
+                fullWidth
+                type="number"
+                name="obtainedMarks"
+                value={formik.values.obtainedMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
+                helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
+              />
+            </ShakingTextField>
             {/* <Typography variant="caption" color="error">
               {formik.errors.obtainedMarks as string}
             </Typography> */}
 
-            <Box>
+            {/* <Box>
               <FormControlLabel
                 control={
                   <Radio
@@ -994,17 +1040,16 @@ const ResultForm = ({
                 }
                 label="Fail"
               />
-            </Box>
+            </Box> */}
           </Box>
         </BackPopUpChecked>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2 }}>
+      <DialogActions>
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
           onClick={() => handleClose(null, false)}
-          style={{ marginTop: '1rem' }}
         >
           Cancel
         </Button>
@@ -1014,7 +1059,6 @@ const ResultForm = ({
           onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          style={{ marginTop: '1rem' }}
         >
           Submit
         </LoadingButton>
