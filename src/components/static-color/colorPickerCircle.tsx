@@ -46,6 +46,10 @@ export default function ColorPickerCircle({
             boxShadow: selectedColor === color ? `0 0 0 4px ${color}44` : 'none',
             color: '#fff',
             p: 0,
+            '&:hover': {
+              boxShadow: `0 0 0 4px ${color}44`,
+              backgroundColor: `${color}99`, // Change the background color on hover with alpha
+            },
           }}
         >
           {selectedColor === color && <CheckIcon fontSize="small" />}
