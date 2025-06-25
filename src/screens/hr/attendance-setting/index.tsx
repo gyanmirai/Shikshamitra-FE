@@ -13,16 +13,18 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import LeaveType from './leave-type';
 import LeavePolicy from './leave-policy';
 import AttendanceRule from './attendance-rule';
+import ShiftManagement from './shift-management';
 
 const TABS = [
-  // {
-  //   value: 'notification',
-  //   label: 'Notification',
-  //   icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-  //   component: () => <Notification />,
-  // },
+  {
+    value: 'shiftManagement',
+    label: 'Shift Management',
+    icon: <Iconify icon="mdi:clock" width={20} />,
+    component: (props: any) => <ShiftManagement {...props} />,
+  },
   // {
   //   value: 'method',
   //   label: 'Notification Method',
@@ -34,6 +36,12 @@ const TABS = [
     label: 'Attendance Rule',
     icon: <Iconify icon="carbon:rule-draft" width={20} />,
     component: (props: any) => <AttendanceRule {...props} />,
+  },
+  {
+    value: 'leaveType',
+    label: 'Leave Type',
+    icon: <Iconify icon="fluent:notepad-edit-16-filled" width={20} />,
+    component: (props: any) => <LeaveType {...props} />,
   },
   {
     value: 'leavePolicy',
@@ -52,6 +60,8 @@ const TABS = [
 const HrAttendanceSettingScreen = () => {
   const attendanceRuleDialog = useBoolean(false);
   const leavePolicyDialog = useBoolean(false);
+  const shiftManagementDialog = useBoolean(false);
+  const leaveTypeDialog = useBoolean(false);
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
 
   const renderButton = useMemo(
@@ -78,8 +88,35 @@ const HrAttendanceSettingScreen = () => {
           Leave Policy
         </Button>
       ),
+      shiftManagement: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          size="small"
+          onClick={shiftManagementDialog.onTrue}
+        >
+          Shift
+        </Button>
+      ),
+      leaveType: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          size="small"
+          onClick={leaveTypeDialog.onTrue}
+        >
+          Leave Type
+        </Button>
+      ),
     }),
-    [attendanceRuleDialog.onTrue, leavePolicyDialog.onTrue]
+    [
+      attendanceRuleDialog.onTrue,
+      leavePolicyDialog.onTrue,
+      leaveTypeDialog.onTrue,
+      shiftManagementDialog.onTrue,
+    ]
   );
 
   const currentActiveComponent = useMemo(
@@ -133,6 +170,8 @@ const HrAttendanceSettingScreen = () => {
           <currentActiveComponent.component
             attendanceRuleDialog={attendanceRuleDialog}
             leavePolicyDialog={leavePolicyDialog}
+            shiftManagementDialog={shiftManagementDialog}
+            leaveTypeDialog={leaveTypeDialog}
             // searchParams={searchParams}
             // setSearchParams={setSearchParams}
           />

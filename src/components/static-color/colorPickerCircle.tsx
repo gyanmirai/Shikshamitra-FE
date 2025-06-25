@@ -72,7 +72,8 @@ export default function ColorPickerCircle({
             color: '#fff',
             p: 0,
             '&:hover': {
-              bgcolor: color, // Maintain the color on hover
+              boxShadow: `0 0 0 4px ${color}44`,
+              backgroundColor: `${color}99`, // Change the background color on hover with alpha
             },
           }}
         >

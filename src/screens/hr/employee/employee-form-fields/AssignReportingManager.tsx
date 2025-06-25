@@ -7,6 +7,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 
+import CustomTooltip from 'src/components/custom-tooltip';
+
 import { CardActions } from './InformationFields';
 
 import type { FieldsType } from './types';
@@ -52,16 +54,25 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
           }
           disabled={!isEditable.value}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Reporting Manager *"
-              size="small"
-              error={!!touched.reportingManager && !!errors.reportingManager}
-              helperText={touched.reportingManager && errors.reportingManager}
-              disabled={!isEditable.value}
-              sx={{ width: '100%', minWidth: 300 }}
-            />
+            <CustomTooltip
+              placement="top"
+              title={
+                employeeValue &&
+                `${employeeValue?.firstName || ''} ${employeeValue?.middleName || ''} ${employeeValue?.lastName || ''} (${employeeValue?.employeeCode || ''})`
+              }
+            >
+              <TextField
+                {...params}
+                label="Reporting Manager *"
+                size="small"
+                error={!!touched.reportingManager && !!errors.reportingManager}
+                helperText={touched.reportingManager && errors.reportingManager}
+                disabled={!isEditable.value}
+                sx={{ maxWidth: 268 }}
+              />
+            </CustomTooltip>
           )}
+          sx={{ minWidth: 300 }}
           value={employeeValue}
           onChange={(e, value) => {
             setFieldValue('reportingManager', value?.id);
