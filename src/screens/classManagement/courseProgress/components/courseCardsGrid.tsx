@@ -1,13 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-import { Box, Grid, Card, alpha, Typography, LinearProgress } from '@mui/material';
+import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
+import { Box, Card, alpha, Typography, IconButton, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
 export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseCardsGridProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
 
-  // Select first course by default
+  // Scroll Left/Right
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 300;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth);
+    }
+  };
+
   useEffect(() => {
     if (courses.length > 0 && selectedCourseId === null) {
       setSelectedCourseId(courses[0].id);
@@ -15,45 +37,92 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
     }
   }, [courses, selectedCourseId, handleCardDetails]);
 
-  return (
-    <Grid container spacing={2} marginTop={2} marginBottom={4} gap={1}>
-      {courses.map((course) => {
-        const isSelected = selectedCourseId === course.id;
+  useEffect((): (() => void) | undefined => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      handleScroll(); // Initial check
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
 
-        return (
-          <Grid item xs={12} md={6} lg={2} key={course.id}>
-            <Card
+    return undefined; // Explicitly return undefined when no scrollContainer
+  }, []);
+
+  return (
+    <Box display="flex" alignItems="center" sx={{ mt: 2, mb: 4 }}>
+      {/* Left Arrow */}
+      {showLeftArrow && (
+        <IconButton onClick={() => scroll('left')} sx={{ mx: 1, color: 'primary.main' }}>
+          <ArrowBackIos fontSize="small" />
+        </IconButton>
+      )}
+
+      {/* Scrollable Cards */}
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          display: 'flex',
+          overflowX: 'auto',
+          scrollBehavior: 'smooth',
+          gap: 2,
+          px: 1,
+          flexGrow: 1,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
+        {courses.map((course) => {
+          const isSelected = selectedCourseId === course.id;
+
+          return (
+            <Box
+              key={course.id}
               sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
-                transform: isSelected ? 'scale(1)' : 'scale(1)',
-                boxShadow: isSelected
-                  ? `0 2px 10px ${alpha(course.color, 0.4)}`
-                  : '0 1px 6px rgba(0,0,0,0.10)',
-                cursor: 'pointer',
-                zIndex: isSelected ? 2 : 1,
-                backgroundColor: 'transparent',
-                height: '100%',
-              }}
-              onClick={() => {
-                setSelectedCourseId(course.id);
-                handleCardDetails(course);
+                flex: '0 0 auto',
+                width: '220px', // Adjust width for consistent card size
+                mb: 4,
+                mt: 2,
               }}
             >
-              <AppWidget
-                title={course.name}
-                color={course.color}
-                // icon="solar:user-rounded-bold"
-                chart={{ series: course.progress }}
-                completedChapter={course.completedChapter}
-                totalChapter={course.totalChapter}
-              />
-            </Card>
-          </Grid>
-        );
-      })}
-    </Grid>
+              <Card
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  transform: isSelected ? 'scale(1)' : 'scale(1)',
+                  boxShadow: isSelected
+                    ? `0 2px 10px ${alpha(course.color, 0.4)}`
+                    : '0 1px 6px rgba(0,0,0,0.10)',
+                  cursor: 'pointer',
+                  zIndex: isSelected ? 2 : 1,
+                  backgroundColor: 'transparent',
+                  height: '100%',
+                }}
+                onClick={() => {
+                  setSelectedCourseId(course.id);
+                  handleCardDetails(course);
+                }}
+              >
+                <AppWidget
+                  title={course.name}
+                  color={course.color}
+                  chart={{ series: course.progress }}
+                  completedChapter={course.completedChapter}
+                  totalChapter={course.totalChapter}
+                />
+              </Card>
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Right Arrow */}
+      {showRightArrow && (
+        <IconButton onClick={() => scroll('right')} sx={{ mx: 1, color: 'primary.main' }}>
+          <ArrowForwardIos fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
   );
 }
 
@@ -79,7 +148,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
       }}
     >
       <Box>
-        <Typography variant="h6" fontWeight={700} color="text.primary">
+        <Typography variant="subtitle2" fontWeight={700} color="text.primary">
           {title}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary" mt={0.5}>

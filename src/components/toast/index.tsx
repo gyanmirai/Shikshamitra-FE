@@ -14,9 +14,11 @@ export const shikshaMitraToast = {
           toast.dismiss(t);
         }}
         sx={{
-          alignItems: 'center', // ✅ aligns icon, content, and close icon vertically
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           '& .MuiAlert-action': {
-            alignItems: 'center', // ✅ specifically targets the close icon wrapper
+            alignItems: 'center',
           },
         }}
         {...alertProps}
@@ -33,9 +35,12 @@ export const shikshaMitraToast = {
           toast.dismiss(t);
         }}
         sx={{
-          alignItems: 'center', // ✅ aligns icon, content, and close icon vertically
+          alignItems: 'center',
+          '& .MuiAlert-message': {
+            width: '100%',
+          },
           '& .MuiAlert-action': {
-            alignItems: 'center', // ✅ specifically targets the close icon wrapper
+            alignItems: 'center',
           },
         }}
         {...alertProps}
@@ -52,9 +57,11 @@ export const shikshaMitraToast = {
           toast.dismiss(t);
         }}
         sx={{
-          alignItems: 'center', // ✅ aligns icon, content, and close icon vertically
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           '& .MuiAlert-action': {
-            alignItems: 'center', // ✅ specifically targets the close icon wrapper
+            alignItems: 'center',
           },
         }}
         {...alertProps}

@@ -7,13 +7,27 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
+
+const ASSIGNMENT_OPTIONS = [
+  { value: 'Periodic Assessment 1', label: 'Periodic Assessment 1' },
+  { value: 'Mid-Term Examination', label: 'Mid-Term Examination' },
+  { value: 'Final Term Examination', label: 'Final Term Examination' },
+  { value: 'Project Work: Environmental Study', label: 'Project Work: Environmental Study' },
+  { value: 'Research Paper: Scientific Method', label: 'Research Paper: Scientific Method' },
+  { value: 'Laboratory Experiment Report', label: 'Laboratory Experiment Report' },
+  { value: 'Case Study Analysis', label: 'Case Study Analysis' },
+  { value: 'Group Presentation', label: 'Group Presentation' },
+  { value: 'Portfolio Assessment', label: 'Portfolio Assessment' },
+  { value: 'Practical Skills Evaluation', label: 'Practical Skills Evaluation' },
+];
 
 const AssignmentMarksAndFeedback = (props: TabComponentType) => {
   // State to store selected assignment data
@@ -111,30 +125,40 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
-        <CustomSelect
-          label="Assignment Title"
-          disabled={!subject}
-          options={[
-            { value: 'Chapter 1 Quiz', label: 'Chapter 1 Quiz' },
-            { value: 'Chapter 2 Quiz', label: 'Chapter 2 Quiz' },
-            { value: 'Chapter 3 Quiz', label: 'Chapter 3 Quiz' },
-            { value: 'Assignment 1', label: 'Assignment 1' },
-            { value: 'Assignment 2', label: 'Assignment 2' },
-            { value: 'Quiz 3', label: 'Quiz 3' },
-            { value: 'Lab Report', label: 'Lab Report' },
-          ]}
-          onChange={(val) => {
-            setAssignmentTitle(val as string);
-            // Set mock selected assignment data when title is selected
-            setSelectedAssignment({
-              id: val,
-              title: val,
-              submissionType: 1, // Default to file upload type
-            });
-          }}
-          value={assignmentTitle}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
+        <CustomTooltip
+          placement="top"
+          title={
+            selectedAssignment
+              ? `${selectedAssignment.title} (${selectedAssignment.id})`
+              : undefined
+          }
+        >
+          <Autocomplete
+            options={ASSIGNMENT_OPTIONS}
+            getOptionLabel={(option: any) => option.label || ''}
+            isOptionEqualToValue={(option, value) => option.value === value.value}
+            value={ASSIGNMENT_OPTIONS.find((opt) => opt.value === assignmentTitle) || null}
+            onChange={(event, newValue) => {
+              const selectedValue = newValue?.value || '';
+              setAssignmentTitle(selectedValue);
+              setSelectedAssignment({
+                id: selectedValue,
+                title: newValue?.label || selectedValue,
+                submissionType: 1, // Default to file upload type
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Assignment Title"
+                size="small"
+                fullWidth
+                sx={{ minWidth: '248px', width: '100%' }}
+                disabled={!subject}
+              />
+            )}
+          />
+        </CustomTooltip>
       </Box>
       {assignmentTitle && (
         <StudentSubmissions

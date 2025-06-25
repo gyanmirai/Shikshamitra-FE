@@ -160,8 +160,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
                 onClick={handleToggleToolbar}
                 style={{
                   position: 'absolute',
-                  bottom: 8,
-                  right: 8,
+                  bottom: 7,
+                  right: 15,
                   cursor: 'pointer',
                   zIndex: 1,
                 }}

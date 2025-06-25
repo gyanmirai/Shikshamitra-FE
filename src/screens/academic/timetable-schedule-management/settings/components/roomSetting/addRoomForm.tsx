@@ -59,7 +59,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+          <Scrollbar sx={{ p: 2, height: '150px' }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
@@ -134,7 +134,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Close />}
               onClick={() => {
@@ -146,7 +146,13 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={isEdit ? 16 : 20}
+                  height={isEdit ? 16 : 20}
+                />
+              }
               type="submit"
               size="small"
               variant="contained"

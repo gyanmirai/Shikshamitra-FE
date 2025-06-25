@@ -173,28 +173,38 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                 : theme.palette.text.secondary;
 
             return (
-              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
-                <IconButton
-                  onClick={() => {
-                    // Only allow click action when status is draft (1)
-                    if (value === PublishUnpublishStatusType.Draft) {
-                      onSwitchToggle(row as IAssignment);
-                    }
-                  }}
-                  disabled={value === PublishUnpublishStatusType.Published}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Tooltip
+                  title={value === PublishUnpublishStatusType.Published ? 'Published' : 'Draft'}
+                  placement="bottom"
+                  arrow
                 >
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      cursor:
-                        value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
-                      color: statusColor,
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
+                  <span>
+                    {' '}
+                    {/* Wrap IconButton in span to ensure tooltip works with disabled button */}
+                    <IconButton
+                      onClick={() => {
+                        // Only allow click action when status is draft (1)
+                        if (value === PublishUnpublishStatusType.Draft) {
+                          onSwitchToggle(row as IAssignment);
+                        }
+                      }}
+                      disabled={value === PublishUnpublishStatusType.Published}
+                    >
+                      <Iconify
+                        icon={GlobalIcons.tick}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          cursor:
+                            value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                          color: statusColor,
+                        }}
+                      />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
             );
           },
         },

@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 
 export const getChapterInitialValues = (editData?: any) => {
   const initialValues = {
-    chapterNo: editData?.chapterNo || 0,
+    chapterNo: editData?.chapterNo || null,
     chapterName: editData?.chapterName || '',
     description: editData?.description || '',
     startDate: editData?.startDate ? dayjs(editData.startDate, 'DD-MM-YYYY') : null,

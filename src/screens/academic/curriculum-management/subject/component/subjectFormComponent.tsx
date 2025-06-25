@@ -41,8 +41,8 @@ const subjectOptions = [
   { label: 'Gujarati', value: 'Gujarati', type: 'Core', subjectColor: '#3CB371' },
   // Elective subject groups
   {
-    label: 'Elective Subject 1',
-    value: 'Elective Subject 1',
+    label: 'Tech & Fitness Group',
+    value: 'Tech & Fitness Group',
     type: 'Elective',
     subjects: [
       { name: 'Computer', code: 'COMP101', subjectColor: '#4169E1' },
@@ -50,8 +50,8 @@ const subjectOptions = [
     ],
   },
   {
-    label: 'Elective Subject 2',
-    value: 'Elective Subject 2',
+    label: 'Language Enrichment Group',
+    value: 'Language Enrichment Group',
     type: 'Elective',
     subjects: [
       { name: 'Sanskrit', code: 'SNSK101', subjectColor: '#DA70D6' },
@@ -302,11 +302,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       };
       if (isDraft) {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Draft Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} save as draft successfully for class ${values.className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Published Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} save as publish successfully for class ${values.className}`,
         });
       }
 

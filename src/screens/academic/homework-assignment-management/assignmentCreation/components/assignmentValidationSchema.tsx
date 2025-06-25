@@ -15,10 +15,10 @@ export const assignmentValidationSchema = Yup.object({
           .min(Yup.ref('publishDate'), 'Due Date cannot be before Publish Date'),
       })
     )
-    .min(1, 'At least one division is required'),
+    .min(1, 'At least one Division is required'),
   subjects: Yup.string().required('Subject is required'),
   submissionType: Yup.string().required('Submission type is required'),
   endDate: Yup.date().required('End Date is required'),
   startDate: Yup.date().required('Start Date is required'),
-  assignmentType: Yup.string().required('Assignment type is required'),
+  assignmentType: Yup.string().required('Assignment Type is required'),
 });

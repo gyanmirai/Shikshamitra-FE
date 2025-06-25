@@ -193,7 +193,7 @@ const Subjects = (props: TabComponentType) => {
       ) : (
         <CustomBreadcrumbs
           heading="Chapters Management"
-          description="Manage your academic syllabus by organizing chapters and subjects. Create, update and track chapter progress across different classes and divisions. Add learning resources and documents to enhance the learning experience."
+          description="Add and organize chapters for your subjects. Select a class and subject, then add chapter details like name, chapter number and learning materials."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
@@ -325,9 +325,9 @@ const Subjects = (props: TabComponentType) => {
         handleClose={() => {
           viewDocumentDialog.onFalse();
         }}
-        title="Documents"
+        title={`Documents for Chapter ${selectedChapter?.chapterNo}`}
       >
-        <ChapterDocuments documents={selectedChapter?.documents} />
+        <ChapterDocuments chapter={selectedChapter} />
       </CustomDialog>
     </Box>
   );

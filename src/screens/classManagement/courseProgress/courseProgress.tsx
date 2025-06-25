@@ -203,6 +203,31 @@ const CourseProgress = (props: TabComponentType) => {
                 label: 'End Date',
                 align: 'left',
                 filterType: 'date',
+                render(value) {
+                  const endDate = new Date(value);
+                  const today = new Date();
+                  const diffDays = Math.ceil(
+                    (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+
+                  let color = 'text.secondary';
+
+                  if (diffDays <= 7) {
+                    color = 'error.main'; // red
+                  } else if (diffDays <= 15) {
+                    color = 'warning.dark'; // dark yellow or orange
+                  } else if (diffDays <= 30) {
+                    color = 'warning.main'; // lighter yellow
+                  } else {
+                    color = 'success.main'; // green
+                  }
+
+                  return (
+                    <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                      {value}
+                    </Typography>
+                  );
+                },
               },
               {
                 id: 'progress',

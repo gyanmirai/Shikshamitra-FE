@@ -83,12 +83,10 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           </Box>
         ),
       },
-
-      { id: 'createdBy', label: 'Created By', align: 'left' },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 70,
+        minWidth: 60,
         isSort: false,
         align: 'left',
         sticky: true,

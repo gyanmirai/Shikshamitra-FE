@@ -7,9 +7,10 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, TextField, Autocomplete } from '@mui/material';
 
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
 
@@ -149,18 +150,33 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           disabled={!division}
         />
 
-        <CustomSelect
-          label="Homework Title"
-          disabled={!subject}
-          options={HOMEWORK_OPTIONS}
-          onChange={(val) => {
-            const selectedOption = HOMEWORK_OPTIONS.find((option) => option.value === val);
-            setHomeworkTitle(val as string);
-            setSelectedHomework(selectedOption);
-          }}
-          value={homeworkTitle}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
+        <CustomTooltip
+          placement="top"
+          title={
+            selectedHomework ? `${selectedHomework.label} (${selectedHomework.value})` : undefined
+          }
+        >
+          <Autocomplete
+            options={HOMEWORK_OPTIONS}
+            getOptionLabel={(option: any) => option.label || ''}
+            isOptionEqualToValue={(option, value) => option.value === value.value}
+            value={HOMEWORK_OPTIONS.find((opt) => opt.value === homeworkTitle) || null}
+            onChange={(event, newValue) => {
+              setHomeworkTitle(newValue?.value || '');
+              setSelectedHomework(newValue || null);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Homework Title"
+                size="small"
+                fullWidth
+                sx={{ minWidth: '248px', width: '100%' }}
+                disabled={!subject}
+              />
+            )}
+          />
+        </CustomTooltip>
       </Box>
       {homeworkTitle && <StudentSubmissions selectedHomework={selectedHomework} />}
     </>

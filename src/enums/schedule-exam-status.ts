@@ -5,6 +5,7 @@ export enum ScheduleExamStatus {
   Submitted,
   Reviewed,
   Completed,
+  'Needs Review',
 }
 
 export const ScheduleExamStatusColor = {
@@ -12,8 +13,9 @@ export const ScheduleExamStatusColor = {
   [ScheduleExamStatus.Draft]: 'warning',
   [ScheduleExamStatus.Published]: 'info',
   [ScheduleExamStatus.Submitted]: 'success',
-  [ScheduleExamStatus.Reviewed]: 'secondary',
+  [ScheduleExamStatus.Reviewed]: 'success',
   [ScheduleExamStatus.Completed]: 'sucess',
+  [ScheduleExamStatus['Needs Review']]: 'warning',
 };
 
 export const ScheduleExamStatusOptions = [
@@ -23,4 +25,5 @@ export const ScheduleExamStatusOptions = [
   { label: 'Published', value: ScheduleExamStatus.Published },
   { label: 'Submitted', value: ScheduleExamStatus.Submitted },
   { label: 'Reviewed', value: ScheduleExamStatus.Reviewed },
+  { label: 'Needs Review', value: ScheduleExamStatus['Needs Review'] },
 ];

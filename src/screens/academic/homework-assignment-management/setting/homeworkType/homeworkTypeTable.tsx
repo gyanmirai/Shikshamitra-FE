@@ -14,7 +14,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({ data, onDelete, 
     columns={[
       {
         id: 'homeworkTypeName',
-        label: 'Homework Type Name',
+        label: 'Name',
         align: 'left',
       },
       {

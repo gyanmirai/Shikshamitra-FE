@@ -163,27 +163,33 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
                 : theme.palette.text.secondary;
 
             return (
-              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
-                <IconButton
-                  onClick={() => {
-                    // Only allow click action when status is draft (1)
-                    if (value === PublishUnpublishStatusType.Draft) {
-                      handleSwitchChange(row as IHomework);
-                    }
-                  }}
-                  disabled={value === PublishUnpublishStatusType.Published}
-                >
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      cursor:
-                        value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
-                      color: statusColor,
+              <Tooltip
+                title={value === PublishUnpublishStatusType.Published ? 'Published' : 'Draft'}
+                placement="bottom"
+                arrow
+              >
+                <span>
+                  <IconButton
+                    onClick={() => {
+                      // Only allow click action when status is draft (1)
+                      if (value === PublishUnpublishStatusType.Draft) {
+                        handleSwitchChange(row as IHomework);
+                      }
                     }}
-                  />
-                </IconButton>
+                    disabled={value === PublishUnpublishStatusType.Published}
+                  >
+                    <Iconify
+                      icon={GlobalIcons.tick}
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        cursor:
+                          value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                        color: statusColor,
+                      }}
+                    />
+                  </IconButton>
+                </span>
               </Tooltip>
             );
           },

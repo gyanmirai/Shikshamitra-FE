@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
@@ -63,7 +64,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         endDate: values.endDate,
         // documents,
       });
-      shikshaMitraToast.success({ message: 'Chapter added successfully !' });
+      shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} added successfully` });
       onClose(null, true);
     },
   });
@@ -168,6 +169,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     onChange={(newValue) => {
                       formik.setFieldValue('startDate', newValue);
                     }}
+                    minDate={dayjs()}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {
@@ -190,6 +192,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <DatePicker
                     label="Chapter End Date *"
                     format="DD/MM/YYYY"
+                    minDate={dayjs()}
                     value={formik.values.endDate}
                     onChange={(newValue) => {
                       formik.setFieldValue('endDate', newValue);
@@ -235,6 +238,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               <Grid item xs={12} md={6}>
                 <FileUploader
                   // @ts-ignore
+                  showVisibleDocumentCount={1}
                   value={formik.values.documents}
                   multiple
                   onChange={(value) => {

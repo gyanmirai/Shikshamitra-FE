@@ -5,13 +5,15 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -93,7 +95,7 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
           {
             id: 'actions',
             label: 'Actions',
-            minWidth: 70,
+            minWidth: 60,
             sticky: true,
             align: 'left',
             isSort: false,
@@ -144,7 +146,24 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
       />
 
       <CustomDialog
-        title={isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                isEdit
+                  ? 'You can update the weekly lecture details including class and total number of lectures'
+                  : 'You can create weekly lectures by specifying the class and total number of lectures'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={addWeeklyLectureDialog.value}
         handleClose={() => {
           addWeeklyLectureDialog.onFalse();

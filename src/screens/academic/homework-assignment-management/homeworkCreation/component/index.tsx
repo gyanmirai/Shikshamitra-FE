@@ -19,6 +19,7 @@ import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-tab
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -211,9 +212,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           classes={classes}
           subject={subject}
           dialog={addHomeworkDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedHomework}
         />
       </CustomDialog>
@@ -255,7 +254,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to Delete <strong>{selectedHomework?.title}</strong>?
+            Are you sure you want to Delete Homework <strong>{selectedHomework?.title}</strong>?
           </>
         }
         action={
@@ -263,7 +262,12 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             variant="contained"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              deleteHomeworkDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Homework Deleted successfully for ${selectedHomework?.subject}!`,
+              });
+            }}
             size="small"
           >
             Yes
@@ -280,14 +284,19 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to Publish <strong>{selectedHomework?.title}</strong>?
+            Are you sure you want to Publish Homework <strong>{selectedHomework?.title}</strong>?
           </>
         }
         action={
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
+            onClick={() => {
+              publishHomeworkDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Homework Published successfully for ${selectedHomework?.subject}!`,
+              });
+            }}
             size="small"
           >
             Publish

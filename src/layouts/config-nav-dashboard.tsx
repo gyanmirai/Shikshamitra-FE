@@ -665,7 +665,7 @@ const classManagementModule = {
           shortcutKeyName: 'Alt+A+C+2',
         },
         {
-          title: 'Assign Class Teacher',
+          title: 'Class Teacher Assignment',
           path: '/classManagement/assignClassTeacher',
           _action: 'assign-teacher',
           shortcutKey: 'Alt+A+Z',
