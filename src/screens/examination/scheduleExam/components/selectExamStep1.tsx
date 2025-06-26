@@ -5,21 +5,58 @@ import type { Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { Box, Grid, Chip, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Grid, TextField } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { TeacherListPopover } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { ISubjectDetail, IExamFormValues } from '../type';
+import type { IExamFormValues } from '../type';
+
+const subjectOptions = [
+  // Core subjects
+  { subjectName: 'Mathematics', subjectCode: 'MATH', subjectColor: '#DEB887', type: 'Core' },
+  { subjectName: 'Science', subjectCode: 'SCI', subjectColor: '#00CED1', type: 'Core' },
+  {
+    subjectName: 'Social Science',
+    subjectCode: 'SSCI',
+    subjectColor: '#B22222',
+    type: 'Core',
+  },
+  { subjectName: 'English', subjectCode: 'ENG', subjectColor: '#4682B4', type: 'Core' },
+  { subjectName: 'Gujarati', subjectCode: 'GUJ', subjectColor: '#3CB371', type: 'Core' },
+
+  // Elective subjects (group name included in subjectName)
+  {
+    subjectName: 'Computer (Tech & Fitness Group)',
+    subjectCode: 'COMP',
+    subjectColor: '#4169E1',
+    type: 'Elective',
+  },
+  {
+    subjectName: 'Physical Training (Tech & Fitness Group)',
+    subjectCode: 'PHYS',
+    subjectColor: '#FF69B4',
+    type: 'Elective',
+  },
+  {
+    subjectName: 'Sanskrit (Language Enrichment Group)',
+    subjectCode: 'SANS',
+    subjectColor: '#DA70D6',
+    type: 'Elective',
+  },
+  {
+    subjectName: 'Hindi (Language Enrichment Group)',
+    subjectCode: 'HIND',
+    subjectColor: '#FF4500',
+    type: 'Elective',
+  },
+];
 
 const SelectExam = (props: FormikProps<IExamFormValues>) => {
   // Dialog state to control exam type creation modal visibility
@@ -76,7 +113,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               // }
             />
           </ShakingTextField>
-          <Box mt={1} display="flex" justifyContent="flex-end">
+          {/* <Box mt={1} display="flex" justifyContent="flex-end">
             <Typography
               variant="body2"
               fontWeight={500}
@@ -87,7 +124,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             >
               Add Exam Type ?
             </Typography>
-          </Box>
+          </Box> */}
           <CustomDialog
             title="Create Exam Type"
             open={examTypeDialog.value}
@@ -150,12 +187,33 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               valueKey="id"
               multiple
               disabled={!formik.values.className}
-              options={
-                allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions || []
-              }
-              value={formik.values.divisions}
+              options={[
+                { id: 'all', name: 'All' },
+                ...(allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
+                  []),
+              ]}
+              value={(formik.values.divisions.includes('all')
+                ? ['all', ...formik.values.divisions.filter((id) => id !== 'all')]
+                : formik.values.divisions
+              ).filter((id) => id !== 'all')}
               onChange={(val) => {
-                formik.setFieldValue('divisions', val as string[]);
+                const value = val as string[];
+
+                const divisionOptions =
+                  allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
+                  [];
+
+                const allDivisionIds = divisionOptions.map((d) => d.id);
+                const selectedWithoutAll = value.filter((id) => id !== 'all');
+                const isAllClicked = value.includes('all');
+
+                if (isAllClicked && selectedWithoutAll.length !== allDivisionIds.length) {
+                  formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
+                } else if (isAllClicked && selectedWithoutAll.length === allDivisionIds.length) {
+                  formik.setFieldValue('divisions', []);
+                } else {
+                  formik.setFieldValue('divisions', selectedWithoutAll);
+                }
               }}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.divisions && formik.errors.divisions)}
@@ -170,76 +228,38 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
         <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects) || false}>
-            <Autocomplete
-              multiple
+            <ResponsiveMultiSelect
+              label="Subjects *"
               disabled={formik.values.divisions.length === 0}
-              options={[
-                { value: 'Math', label: 'Math' },
-                { value: 'English', label: 'English' },
-                { value: 'Science', label: 'Science' },
-              ]}
-              disableCloseOnSelect
-              getOptionLabel={(option: { value: string; label: string }) => option.label}
-              value={
-                formik.values.subjects.map((sub: ISubjectDetail) => ({
-                  value: sub.subjectName,
-                  label: sub.subjectName,
-                })) || []
-              }
-              onChange={(event, newValue: Array<{ value: string; label: string }>) => {
-                const updatedSubjects = newValue.map((item, index) => ({
-                  id: index,
-                  subjectName: item.value,
-                  examDate: null,
-                  examTime: null,
-                  examDuration: 0,
-                  totalMarks: 0,
-                  passingMarks: 0,
-                  teacher: '',
-                  invigilationTeacher: '',
-                }));
+              options={subjectOptions}
+              value={formik.values.subjects.map((sub: any) => sub.subjectCode)}
+              getOptionLabel={(opt) => opt?.subjectName}
+              getOptionValue={(opt) => opt?.subjectCode}
+              onChange={(selectedCodes: string[]) => {
+                const updatedSubjects = selectedCodes.map((code, index) => {
+                  const fullSubject = subjectOptions.find((s) => s.subjectCode === code);
+                  return {
+                    id: index,
+                    subjectName: fullSubject?.subjectName || '',
+                    subjectCode: fullSubject?.subjectCode || '',
+                    subjectColor: fullSubject?.subjectColor || '#000000',
+                    examDate: null,
+                    startTime: null,
+                    endTime: null,
+                    totalMarks: null,
+                    passingMarks: null,
+                  };
+                });
                 formik.setFieldValue('subjects', updatedSubjects);
               }}
-              isOptionEqualToValue={(option, value) => option.value === value.value}
-              renderOption={(prop, option, { selected }) => (
-                <li {...prop}>
-                  <Checkbox
-                    icon={<CheckBoxOutlineBlankIcon />}
-                    checkedIcon={<CheckBoxIcon />}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option.label}
-                </li>
-              )}
-              renderTags={(value: Array<{ value: string; label: string }>) => {
-                if (value.length === 0) return null;
-                const first = value[0].label;
-                const remainingCount = value.length - 1;
-                return [
-                  <Chip key={first} label={first} sx={{ ml: 1 }} size="small" variant="soft" />,
-                  remainingCount > 0 && (
-                    <TeacherListPopover
-                      key="more-count"
-                      data={value.slice(1)}
-                      count={remainingCount}
-                    />
-                  ),
-                ];
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Subjects *"
-                  size="small"
-                  error={!!(formik.touched.subjects && formik.errors.subjects)}
-                  helperText={
-                    Array.isArray(formik.errors.subjects)
-                      ? formik.errors.subjects.join(', ')
-                      : (formik.touched.subjects && formik.errors.subjects) || undefined
-                  }
-                />
-              )}
+              error={!!(formik.touched.subjects && formik.errors.subjects)}
+              helperText={
+                typeof formik.errors.subjects === 'string'
+                  ? formik.errors.subjects
+                  : formik.touched.subjects && typeof formik.errors.subjects === 'string'
+                    ? formik.errors.subjects
+                    : undefined
+              }
             />
           </ShakingTextField>
         </Grid>

@@ -1,586 +1,649 @@
 [
-  {
-    "id": 1,
-    "name": "Programming (CS-12)",
-    "progress": 60,
-    "completedChapter": 5,
-    "totalChapter": 8,
-    "color": "#0056D2",
-    "details": [
-      {
-        "chapterName": "Introduction to Programming",
-        "teacherName": "John Developer",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-05-01",
-        "timeLine": "2025-05-30"
-      },
-      {
-        "chapterName": "Data Types & Variables",
-        "teacherName": "John Developer",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-06-01",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Control Structures",
-        "teacherName": "Jane Code",
-        "progress": 55,
-        "pending": 45,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-07-01"
-      },
-      {
-        "chapterName": "Functions & Modules",
-        "teacherName": "Jane Code",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-07-05",
-        "timeLine": "2025-07-25"
-      },
-      {
-        "chapterName": "Arrays & Lists",
-        "teacherName": "Jake Byte",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-07-28",
-        "timeLine": "2025-08-15"
-      },
-      {
-        "chapterName": "OOP Basics",
-        "teacherName": "Jake Byte",
-        "progress": 40,
-        "pending": 60,
-        "startDate": "2025-08-18",
-        "timeLine": "2025-09-05"
-      },
-      {
-        "chapterName": "File Handling",
-        "teacherName": "Lucy Logic",
-        "progress": 30,
-        "pending": 70,
-        "startDate": "2025-09-10",
-        "timeLine": "2025-09-25"
-      },
-      {
-        "chapterName": "Error Handling",
-        "teacherName": "Lucy Logic",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-09-28",
-        "timeLine": "2025-10-10"
-      }
-    ]
-  },  
-  {
-    "id": 2,
-    "name": "Physical Training (PT-12)",
-    "progress": 80,
-    "completedChapter": 6,
-    "totalChapter": 7,
-    "color": "#E77DC1",
-    "details": [
-      {
-        "chapterName": "Fitness Introduction",
-        "teacherName": "Coach Sam",
-        "progress": 90,
-        "pending": 10,
-        "startDate": "2025-04-01",
-        "timeLine": "2025-04-25"
-      },
-      {
-        "chapterName": "Yoga & Meditation",
-        "teacherName": "Coach Sam",
-        "progress": 85,
-        "pending": 15,
-        "startDate": "2025-04-28",
-        "timeLine": "2025-05-20"
-      },
-      {
-        "chapterName": "Endurance Training",
-        "teacherName": "Coach Leo",
-        "progress": 75,
-        "pending": 25,
-        "startDate": "2025-05-22",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Strength Building",
-        "teacherName": "Coach Leo",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-15"
-      },
-      {
-        "chapterName": "Flexibility",
-        "teacherName": "Coach Ana",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-07-17",
-        "timeLine": "2025-08-05"
-      },
-      {
-        "chapterName": "Team Sports",
-        "teacherName": "Coach Ana",
-        "progress": 95,
-        "pending": 5,
-        "startDate": "2025-08-07",
-        "timeLine": "2025-08-28"
-      },
-      {
-        "chapterName": "Diet & Nutrition",
-        "teacherName": "Coach Ana",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-09-01",
-        "timeLine": "2025-09-20"
-      }
-    ]
-  },  
-  {
-    "id": 3,
-    "name": "Hindi (HIN-12)",
-    "progress": 65,
-    "completedChapter": 6,
-    "totalChapter": 8,
-    "color": "#E74C3C",
-    "details": [
-      {
-        "chapterName": "काव्य परिचय",
-        "teacherName": "श्री. शर्मा",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-03-20",
-        "timeLine": "2025-04-10"
-      },
-      {
-        "chapterName": "निबंध लेखन",
-        "teacherName": "श्री. शर्मा",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-04-12",
-        "timeLine": "2025-05-02"
-      },
-      {
-        "chapterName": "पत्र लेखन",
-        "teacherName": "श्रीमती रेखा",
-        "progress": 55,
-        "pending": 45,
-        "startDate": "2025-05-05",
-        "timeLine": "2025-06-10"
-      },
-      {
-        "chapterName": "कहानी: 'दो बैलों की कथा'",
-        "teacherName": "श्रीमती रेखा",
-        "progress": 80,
-        "pending": 20,
-        "startDate": "2025-06-12",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "व्याकरण भाग",
-        "teacherName": "श्री. राज",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-10"
-      },
-      {
-        "chapterName": "संधि व समास",
-        "teacherName": "श्री. राज",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-07-12",
-        "timeLine": "2025-07-30"
-      },
-      {
-        "chapterName": "मुहावरे व लोकोक्तियाँ",
-        "teacherName": "श्री. राज",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-08-02",
-        "timeLine": "2025-08-20"
-      },
-      {
-        "chapterName": "पुनरावृत्ति",
-        "teacherName": "श्री. राज",
-        "progress": 30,
-        "pending": 70,
-        "startDate": "2025-08-22",
-        "timeLine": "2025-09-10"
-      }
-    ]
-  },  
-  {
-    "id": 4,
-    "name": "Mathematics (MATH-10)",
-    "progress": 75,
-    "completedChapter": 6,
-    "totalChapter": 8,
-    "color": "#D9A066",
-    "details": [
-      {
-        "chapterName": "Number Systems",
-        "teacherName": "Mr. Kumar",
-        "progress": 80,
-        "pending": 20,
-        "startDate": "2025-03-10",
-        "timeLine": "2025-04-10"
-      },
-      {
-        "chapterName": "Linear Equations",
-        "teacherName": "Ms. Meera",
-        "progress": 75,
-        "pending": 25,
-        "startDate": "2025-04-12",
-        "timeLine": "2025-05-05"
-      },
-      {
-        "chapterName": "Polynomials",
-        "teacherName": "Mr. Singh",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-05-08",
-        "timeLine": "2025-06-05"
-      },
-      {
-        "chapterName": "Coordinate Geometry",
-        "teacherName": "Ms. Meera",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Trigonometry",
-        "teacherName": "Mr. Arjun",
-        "progress": 65,
-        "pending": 35,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-05"
-      },
-      {
-        "chapterName": "Mensuration",
-        "teacherName": "Mr. Arjun",
-        "progress": 85,
-        "pending": 15,
-        "startDate": "2025-07-08",
-        "timeLine": "2025-07-25"
-      },
-      {
-        "chapterName": "Statistics",
-        "teacherName": "Mr. Arjun",
-        "progress": 90,
-        "pending": 10,
-        "startDate": "2025-07-28",
-        "timeLine": "2025-08-10"
-      },
-      {
-        "chapterName": "Probability",
-        "teacherName": "Ms. Meera",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-08-12",
-        "timeLine": "2025-08-25"
-      }
-    ]
-  },  
-  {
-    "id": 5,
-    "name": "Science (SCI-12)",
-    "progress": 80,
-    "completedChapter": 7,
-    "totalChapter": 8,
-    "color": "#00C9A7",
-    "details": [
-      {
-        "chapterName": "Matter and Its Properties",
-        "teacherName": "Dr. Patel",
-        "progress": 90,
-        "pending": 10,
-        "startDate": "2025-03-10",
-        "timeLine": "2025-04-01"
-      },
-      {
-        "chapterName": "Laws of Motion",
-        "teacherName": "Mr. Rao",
-        "progress": 85,
-        "pending": 15,
-        "startDate": "2025-04-05",
-        "timeLine": "2025-05-01"
-      },
-      {
-        "chapterName": "Acids, Bases and Salts",
-        "teacherName": "Ms. Iyer",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-05-05",
-        "timeLine": "2025-06-01"
-      },
-      {
-        "chapterName": "Electricity",
-        "teacherName": "Mr. Rao",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Life Processes",
-        "teacherName": "Dr. Patel",
-        "progress": 95,
-        "pending": 5,
-        "startDate": "2025-06-21",
-        "timeLine": "2025-07-01"
-      },
-      {
-        "chapterName": "Light: Reflection & Refraction",
-        "teacherName": "Ms. Iyer",
-        "progress": 75,
-        "pending": 25,
-        "startDate": "2025-07-03",
-        "timeLine": "2025-07-15"
-      },
-      {
-        "chapterName": "Carbon Compounds",
-        "teacherName": "Ms. Iyer",
-        "progress": 65,
-        "pending": 35,
-        "startDate": "2025-07-18",
-        "timeLine": "2025-08-01"
-      },
-      {
-        "chapterName": "Environmental Chemistry",
-        "teacherName": "Mr. Rao",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-08-03",
-        "timeLine": "2025-08-20"
-      }
-    ]
-  },  
-  {
-    "id": 6,
-    "name": "Social Science (SOC-12)",
-    "progress": 68,
-    "completedChapter": 6,
-    "totalChapter": 8,
-    "color": "#8B0000",
-    "details": [
-      {
-        "chapterName": "The French Revolution",
-        "teacherName": "Ms. Thomas",
-        "progress": 80,
-        "pending": 20,
-        "startDate": "2025-03-01",
-        "timeLine": "2025-03-25"
-      },
-      {
-        "chapterName": "Indian National Movement",
-        "teacherName": "Mr. Bose",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-04-01",
-        "timeLine": "2025-04-25"
-      },
-      {
-        "chapterName": "Resources & Development",
-        "teacherName": "Ms. Roy",
-        "progress": 65,
-        "pending": 35,
-        "startDate": "2025-05-01",
-        "timeLine": "2025-06-01"
-      },
-      {
-        "chapterName": "Democratic Politics",
-        "teacherName": "Mr. Mehta",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Globalization",
-        "teacherName": "Ms. Roy",
-        "progress": 85,
-        "pending": 15,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-05"
-      },
-      {
-        "chapterName": "Economics: Development",
-        "teacherName": "Mr. Bose",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-07-07",
-        "timeLine": "2025-07-20"
-      },
-      {
-        "chapterName": "Climate and Weather",
-        "teacherName": "Ms. Thomas",
-        "progress": 75,
-        "pending": 25,
-        "startDate": "2025-07-22",
-        "timeLine": "2025-08-05"
-      },
-      {
-        "chapterName": "Working of Institutions",
-        "teacherName": "Mr. Mehta",
-        "progress": 45,
-        "pending": 55,
-        "startDate": "2025-08-07",
-        "timeLine": "2025-08-20"
-      }
-    ]
-  },  
-  {
-    "id": 7,
-    "name": "Gujarati (GUJ-12)",
-    "progress": 72,
-    "completedChapter": 6,
-    "totalChapter": 8,
-    "color": "#00B894",
-    "details": [
-      {
-        "chapterName": "વાર્તા લેખન",
-        "teacherName": "શ્રી દવે",
-        "progress": 80,
-        "pending": 20,
-        "startDate": "2025-04-05",
-        "timeLine": "2025-04-25"
-      },
-      {
-        "chapterName": "નિબંધ લેખન",
-        "teacherName": "શ્રીમતી પટેલ",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-05-01",
-        "timeLine": "2025-05-20"
-      },
-      {
-        "chapterName": "નાટક પરિચય",
-        "teacherName": "શ્રી દવે",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-06-01",
-        "timeLine": "2025-06-15"
-      },
-      {
-        "chapterName": "કાવ્ય પાઠ",
-        "teacherName": "શ્રીમતી પટેલ",
-        "progress": 90,
-        "pending": 10,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "વ્યાકરણ",
-        "teacherName": "શ્રી દવે",
-        "progress": 50,
-        "pending": 50,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-05"
-      },
-      {
-        "chapterName": "મહુાવરા અને લોખૂક્તિ",
-        "teacherName": "શ્રી દવે",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-07-07",
-        "timeLine": "2025-07-20"
-      },
-      {
-        "chapterName": "સાંસ્કૃતિક વારસો",
-        "teacherName": "શ્રીમતી પટેલ",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-07-22",
-        "timeLine": "2025-08-05"
-      },
-      {
-        "chapterName": "પુનરાવર્તન",
-        "teacherName": "શ્રીમતી પટેલ",
-        "progress": 40,
-        "pending": 60,
-        "startDate": "2025-08-07",
-        "timeLine": "2025-08-20"
-      }
-    ]
-  },  
-  {
-    "id": 8,
-    "name": "English (ENG-12)",
-    "progress": 78,
-    "completedChapter": 6,
-    "totalChapter": 8,
-    "color": "#2F80ED",
-    "details": [
-      {
-        "chapterName": "Prose: The Last Lesson",
-        "teacherName": "Ms. Linda",
-        "progress": 85,
-        "pending": 15,
-        "startDate": "2025-04-10",
-        "timeLine": "2025-05-01"
-      },
-      {
-        "chapterName": "Poem: My Mother at Sixty-Six",
-        "teacherName": "Mr. George",
-        "progress": 80,
-        "pending": 20,
-        "startDate": "2025-05-05",
-        "timeLine": "2025-05-25"
-      },
-      {
-        "chapterName": "Letter Writing",
-        "teacherName": "Ms. Linda",
-        "progress": 70,
-        "pending": 30,
-        "startDate": "2025-06-01",
-        "timeLine": "2025-06-15"
-      },
-      {
-        "chapterName": "Report Writing",
-        "teacherName": "Mr. George",
-        "progress": 75,
-        "pending": 25,
-        "startDate": "2025-06-10",
-        "timeLine": "2025-06-20"
-      },
-      {
-        "chapterName": "Reading Comprehension",
-        "teacherName": "Ms. Linda",
-        "progress": 65,
-        "pending": 35,
-        "startDate": "2025-06-22",
-        "timeLine": "2025-07-05"
-      },
-      {
-        "chapterName": "Debate & Speech",
-        "teacherName": "Mr. George",
-        "progress": 90,
-        "pending": 10,
-        "startDate": "2025-07-07",
-        "timeLine": "2025-07-20"
-      },
-      {
-        "chapterName": "Grammar Revision",
-        "teacherName": "Ms. Linda",
-        "progress": 60,
-        "pending": 40,
-        "startDate": "2025-07-22",
-        "timeLine": "2025-08-05"
-      },
-      {
-        "chapterName": "Creative Writing",
-        "teacherName": "Mr. George",
-        "progress": 55,
-        "pending": 45,
-        "startDate": "2025-08-07",
-        "timeLine": "2025-08-20"
-      }
-    ]
-  }  
+{
+  "id": 1,
+  "name": "Programming (CS-12)", 
+  "progress": 75,
+  "completedChapter": 6,
+  "totalChapter": 8,
+  "color": "#0056D2",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "Introduction to Programming",
+      "teacherName": "John Developer",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "01-05-2025",
+      "timeLine": "30-05-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Data Types & Variables",
+      "teacherName": "John Developer", 
+      "progress": 100,
+      "pending": 0,
+      "startDate": "01-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Control Structures",
+      "teacherName": "Jane Code",
+      "progress": 80,
+      "pending": 20,
+      "startDate": "10-06-2025",
+      "timeLine": "01-07-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Functions & Modules",
+      "teacherName": "Jane Code",
+      "progress": 25,
+      "pending": 75,
+      "startDate": "02-07-2025",
+      "timeLine": "20-07-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Arrays & Lists",
+      "teacherName": "Jake Byte",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "22-07-2025",
+      "timeLine": "05-08-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Object-Oriented Programming",
+      "teacherName": "Jake Byte",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-08-2025",
+      "timeLine": "25-08-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "File Handling",
+      "teacherName": "Lucy Logic",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "27-08-2025",
+      "timeLine": "10-09-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "Error Handling & Debugging",
+      "teacherName": "Lucy Logic",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "12-09-2025",
+      "timeLine": "30-09-2025"
+    }
+  ]
+},
+{
+  "id": 2,
+  "name": "Physical Training (PT-12)",
+  "progress": 78,
+  "completedChapter": 5,
+  "totalChapter": 7,
+  "color": "#E77DC1",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "Fitness Introduction",
+      "teacherName": "Coach Sam",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "01-04-2025",
+      "timeLine": "25-04-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Yoga & Meditation",
+      "teacherName": "Coach Sam",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "28-04-2025",
+      "timeLine": "20-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Endurance Training",
+      "teacherName": "Coach Leo",
+      "progress": 90,
+      "pending": 10,
+      "startDate": "22-05-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Strength Building",
+      "teacherName": "Coach Leo",
+      "progress": 50,
+      "pending": 50,
+      "startDate": "22-06-2025",
+      "timeLine": "15-07-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Flexibility",
+      "teacherName": "Coach Ana",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "17-07-2025",
+      "timeLine": "05-08-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Team Sports",
+      "teacherName": "Coach Ana",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-08-2025",
+      "timeLine": "28-08-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "Diet & Nutrition",
+      "teacherName": "Coach Ana",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "01-09-2025",
+      "timeLine": "20-09-2025"
+    }
+  ]
+},
+{
+  "id": 3,
+  "name": "Hindi (HIN-12)",
+  "progress": 63,
+  "completedChapter": 4,
+  "totalChapter": 8,
+  "color": "#E74C3C",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "काव्य परिचय",
+      "teacherName": "श्री. शर्मा",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "20-03-2025",
+      "timeLine": "10-04-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "निबंध लेखन",
+      "teacherName": "श्री. शर्मा",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "12-04-2025",
+      "timeLine": "02-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "पत्र लेखन",
+      "teacherName": "श्रीमती रेखा",
+      "progress": 90,
+      "pending": 10,
+      "startDate": "05-05-2025",
+      "timeLine": "10-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "कहानी: 'दो बैलों की कथा'",
+      "teacherName": "श्रीमती रेखा",
+      "progress": 70,
+      "pending": 30,
+      "startDate": "12-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "व्याकरण भाग",
+      "teacherName": "श्री. राज",
+      "progress": 30,
+      "pending": 70,
+      "startDate": "22-06-2025",
+      "timeLine": "10-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "संधि व समास",
+      "teacherName": "श्री. राज",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "12-07-2025",
+      "timeLine": "30-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "मुहावरे व लोकोक्तियाँ",
+      "teacherName": "श्री. राज",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "02-08-2025",
+      "timeLine": "20-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "पुनरावृत्ति",
+      "teacherName": "श्री. राज",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "22-08-2025",
+      "timeLine": "10-09-2025"
+    }
+  ]
+},
+{
+  "id": 4,
+  "name": "Mathematics (MATH-10)",
+  "progress": 71,
+  "completedChapter": 5,
+  "totalChapter": 8,
+  "color": "#D9A066",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "Number Systems",
+      "teacherName": "Mr. Kumar",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "10-03-2025",
+      "timeLine": "10-04-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Linear Equations",
+      "teacherName": "Ms. Meera",
+      "progress": 95,
+      "pending": 5,
+      "startDate": "12-04-2025",
+      "timeLine": "05-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Polynomials",
+      "teacherName": "Mr. Singh",
+      "progress": 90,
+      "pending": 10,
+      "startDate": "08-05-2025",
+      "timeLine": "05-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Coordinate Geometry",
+      "teacherName": "Ms. Meera",
+      "progress": 60,
+      "pending": 40,
+      "startDate": "10-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Trigonometry",
+      "teacherName": "Mr. Arjun",
+      "progress": 40,
+      "pending": 60,
+      "startDate": "22-06-2025",
+      "timeLine": "05-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Mensuration",
+      "teacherName": "Mr. Arjun",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "08-07-2025",
+      "timeLine": "25-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "Statistics",
+      "teacherName": "Mr. Arjun",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "28-07-2025",
+      "timeLine": "10-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "Probability",
+      "teacherName": "Ms. Meera",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "12-08-2025",
+      "timeLine": "25-08-2025"
+    }
+  ]
+},
+{
+  "id": 5,
+  "name": "Science (SCI-12)",
+  "progress": 73,
+  "completedChapter": 5,
+  "totalChapter": 8,
+  "color": "#00C9A7",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "Matter and Its Properties",
+      "teacherName": "Dr. Patel",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "10-03-2025",
+      "timeLine": "01-04-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Laws of Motion",
+      "teacherName": "Mr. Rao",
+      "progress": 95,
+      "pending": 5,
+      "startDate": "05-04-2025",
+      "timeLine": "01-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Acids, Bases and Salts",
+      "teacherName": "Ms. Iyer",
+      "progress": 85,
+      "pending": 15,
+      "startDate": "05-05-2025",
+      "timeLine": "01-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Electricity",
+      "teacherName": "Mr. Rao",
+      "progress": 75,
+      "pending": 25,
+      "startDate": "10-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Life Processes",
+      "teacherName": "Dr. Patel",
+      "progress": 40,
+      "pending": 60,
+      "startDate": "21-06-2025",
+      "timeLine": "01-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Light: Reflection & Refraction",
+      "teacherName": "Ms. Iyer",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "03-07-2025",
+      "timeLine": "15-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "Carbon Compounds",
+      "teacherName": "Ms. Iyer",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "18-07-2025",
+      "timeLine": "01-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "Environmental Chemistry",
+      "teacherName": "Mr. Rao",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "03-08-2025",
+      "timeLine": "20-08-2025"
+    }
+  ]
+},
+{
+  "id": 6,
+  "name": "Social Science (SOC-12)",
+  "progress": 66,
+  "completedChapter": 5,
+  "totalChapter": 8,
+  "color": "#8B0000",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "The French Revolution",
+      "teacherName": "Ms. Thomas",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "01-03-2025",
+      "timeLine": "25-03-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Indian National Movement",
+      "teacherName": "Mr. Bose",
+      "progress": 95,
+      "pending": 5,
+      "startDate": "01-04-2025",
+      "timeLine": "25-04-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Resources & Development",
+      "teacherName": "Ms. Roy",
+      "progress": 80,
+      "pending": 20,
+      "startDate": "01-05-2025",
+      "timeLine": "01-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Democratic Politics",
+      "teacherName": "Mr. Mehta",
+      "progress": 70,
+      "pending": 30,
+      "startDate": "10-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Globalization",
+      "teacherName": "Ms. Roy",
+      "progress": 30,
+      "pending": 70,
+      "startDate": "22-06-2025",
+      "timeLine": "05-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Economics: Development",
+      "teacherName": "Mr. Bose",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-07-2025",
+      "timeLine": "20-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "Climate and Weather",
+      "teacherName": "Ms. Thomas",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "22-07-2025",
+      "timeLine": "05-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "Working of Institutions",
+      "teacherName": "Mr. Mehta",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-08-2025",
+      "timeLine": "20-08-2025"
+    }
+  ]
+},
+{
+  "id": 7,
+  "name": "Gujarati (GUJ-12)",
+  "progress": 68,
+  "completedChapter": 5,
+  "totalChapter": 8,
+  "color": "#00B894",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "વાર્તા લેખન",
+      "teacherName": "શ્રી દવે",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "05-04-2025",
+      "timeLine": "25-04-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "નિબંધ લેખન",
+      "teacherName": "શ્રીમતી પટેલ",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "01-05-2025",
+      "timeLine": "20-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "નાટક પરિચય",
+      "teacherName": "શ્રી દવે",
+      "progress": 90,
+      "pending": 10,
+      "startDate": "01-06-2025",
+      "timeLine": "15-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "કાવ્ય પાઠ",
+      "teacherName": "શ્રીમતી પટેલ",
+      "progress": 95,
+      "pending": 5,
+      "startDate": "10-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "વ્યાકરણ",
+      "teacherName": "શ્રી દવે",
+      "progress": 40,
+      "pending": 60,
+      "startDate": "22-06-2025",
+      "timeLine": "05-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "મહુાવરા અને લોખૂક્તિ",
+      "teacherName": "શ્રી દવે",
+      "progress": 20,
+      "pending": 80,
+      "startDate": "07-07-2025",
+      "timeLine": "20-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "સાંસ્કૃતિક વારસો",
+      "teacherName": "શ્રીમતી પટેલ",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "22-07-2025",
+      "timeLine": "05-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "પુનરાવર્તન",
+      "teacherName": "શ્રીમતી પટેલ",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-08-2025",
+      "timeLine": "20-08-2025"
+    }
+  ]
+},
+{
+  "id": 8,
+  "name": "English (ENG-12)",
+  "progress": 73,
+  "completedChapter": 5,
+  "totalChapter": 8,
+  "color": "#2F80ED",
+  "details": [
+    {
+      "chapterNumber": 1,
+      "chapterName": "Prose: The Last Lesson",
+      "teacherName": "Ms. Linda",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "10-04-2025",
+      "timeLine": "01-05-2025"
+    },
+    {
+      "chapterNumber": 2,
+      "chapterName": "Poem: My Mother at Sixty-Six",
+      "teacherName": "Mr. George",
+      "progress": 100,
+      "pending": 0,
+      "startDate": "05-05-2025",
+      "timeLine": "25-05-2025"
+    },
+    {
+      "chapterNumber": 3,
+      "chapterName": "Letter Writing",
+      "teacherName": "Ms. Linda",
+      "progress": 90,
+      "pending": 10,
+      "startDate": "01-06-2025",
+      "timeLine": "15-06-2025"
+    },
+    {
+      "chapterNumber": 4,
+      "chapterName": "Report Writing",
+      "teacherName": "Mr. George",
+      "progress": 95,
+      "pending": 5,
+      "startDate": "10-06-2025",
+      "timeLine": "20-06-2025"
+    },
+    {
+      "chapterNumber": 5,
+      "chapterName": "Reading Comprehension",
+      "teacherName": "Ms. Linda",
+      "progress": 65,
+      "pending": 35,
+      "startDate": "22-06-2025",
+      "timeLine": "05-07-2025"
+    },
+    {
+      "chapterNumber": 6,
+      "chapterName": "Debate & Speech",
+      "teacherName": "Mr. George",
+      "progress": 30,
+      "pending": 70,
+      "startDate": "07-07-2025",
+      "timeLine": "20-07-2025"
+    },
+    {
+      "chapterNumber": 7,
+      "chapterName": "Grammar Revision",
+      "teacherName": "Ms. Linda",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "22-07-2025",
+      "timeLine": "05-08-2025"
+    },
+    {
+      "chapterNumber": 8,
+      "chapterName": "Creative Writing",
+      "teacherName": "Mr. George",
+      "progress": 0,
+      "pending": 100,
+      "startDate": "07-08-2025",
+      "timeLine": "20-08-2025"
+    }
+  ]
+}
 ]

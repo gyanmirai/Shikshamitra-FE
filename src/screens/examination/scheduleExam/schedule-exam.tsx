@@ -13,6 +13,7 @@ import examTableData from 'src/json/examination/examTableData.json';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -69,7 +70,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading={selectedExam?.examName ? `Update Exam` : 'Add Exam'}
+            heading="Schedule Exam"
             description={
               selectedExam?.examName
                 ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'
@@ -77,11 +78,10 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             }
             links={[
               { name: 'Academics', href: '/academic/dashboard' },
-              { name: 'Examination', href: '/academic/examinationDashboard' },
+              { name: 'Examination', href: '/academic/scheduleExam' },
               { name: 'Schedule Exam' },
-              { name: selectedExam?.examName ? `Update Exam` : 'Add Exam' },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1 }}
             isBack
             onBack={() => {
               handleClose(null, false);
@@ -96,11 +96,11 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Examination', href: '/academic/examinationDashboard' },
               { name: 'Schedule Exam' },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1 }}
           />
         ))}
       {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <NewExamForm
             // onSubmit={handleSubmit}
             onClose={() => {
@@ -141,9 +141,13 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
-              handleDelete(selectedExam?.id);
+              deleteDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Exam ${selectedExam?.examName} deleted successfully`,
+              });
             }}
           >
             Yes

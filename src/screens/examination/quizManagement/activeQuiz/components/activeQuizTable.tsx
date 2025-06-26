@@ -122,7 +122,7 @@ const QuizTable = ({
   return (
     <Box>
       {/* Tabs Section */}
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Box display="flex" justifyContent="space-between" mb={2}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -153,7 +153,7 @@ const QuizTable = ({
             setOpenDialog(true);
           }}
           sx={{
-            mt: 0.5,
+            mt: 2,
           }}
         >
           Quiz
@@ -162,14 +162,6 @@ const QuizTable = ({
 
       <CustomizableTable
         tableId="quiz-table"
-        searchFieldProps={{
-          // placeholder: 'Search by Class, Division, Subject...',
-          label: 'Search by Class, Division, Subject...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Quiz Data Found{' '}
@@ -200,17 +192,14 @@ const QuizTable = ({
                   label: 'Divisions',
                   align: 'left',
                   filterType: 'string',
-                  render(value, row) {
-                    return (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {value?.length
-                          ? value.map((item: string) => (
-                              <Chip key={item} label={item} size="small" variant="outlined" />
-                            ))
-                          : '-'}
-                      </Box>
-                    );
-                  },
+                  render: (value) => <Box>{value.join(', ')}</Box>,
+                },
+                {
+                  id: 'quizTitle',
+                  label: 'Quiz Title',
+                  align: 'left',
+                  filterType: 'string',
+                  minWidth: 120,
                 },
                 {
                   id: 'subject',
@@ -229,7 +218,7 @@ const QuizTable = ({
                             backgroundColor: row.subjectColor,
                           }}
                         />
-                        <Typography variant="caption">
+                        <Typography variant="caption" sx={{ fontSize: '13px' }}>
                           {value} ({row.subjectCode})
                         </Typography>
                       </Box>
@@ -237,44 +226,43 @@ const QuizTable = ({
                   },
                 },
                 {
-                  id: 'quizTitle',
-                  label: 'Quiz Title',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
                   id: 'createdAt',
                   label: 'Created At',
                   align: 'left',
                   filterType: 'date',
+                  minWidth: 120,
                 },
                 {
                   id: 'quizDate',
-                  label: 'Quiz Date',
+                  label: 'Start Date',
                   align: 'left',
                   filterType: 'date',
+                  minWidth: 110,
                 },
                 {
                   id: 'quizTime',
-                  label: 'Quiz Time',
+                  label: 'Start Time',
                   align: 'left',
                   filterType: 'date',
+                  minWidth: 110,
                 },
                 {
                   id: 'quizEndDate',
-                  label: 'Quiz End Date',
+                  label: 'End Date',
                   align: 'left',
                   filterType: 'date',
+                  minWidth: 110,
                 },
                 {
                   id: 'quizEndTime',
-                  label: 'Quiz End Time',
+                  label: 'End Time',
                   align: 'left',
                   filterType: 'date',
+                  minWidth: 110,
                 },
                 {
                   id: 'quizDuration',
-                  label: 'Quiz Duration',
+                  label: 'Duration',
                   align: 'left',
                   filterType: 'string',
                 },
@@ -283,12 +271,14 @@ const QuizTable = ({
                   label: 'Total Marks',
                   align: 'left',
                   filterType: 'number',
+                  minWidth: 120,
                 },
                 {
                   id: 'passingMarks',
                   label: 'Passing Marks',
                   align: 'left',
                   filterType: 'number',
+                  minWidth: 140,
                 },
                 {
                   id: 'action',
@@ -297,7 +287,7 @@ const QuizTable = ({
                   sticky: true,
                   isFilter: false,
                   align: 'left',
-                  minWidth: 100,
+                  minWidth: 70,
                   render(value, row) {
                     return (
                       <ThreeDotsActions

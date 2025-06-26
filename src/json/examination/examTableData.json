@@ -38,6 +38,46 @@
     "status": 0
   },
   {
+  "examType": "Weekly Test",
+  "examName": "Weekly Test - English & Math",
+  "className": "5",
+  "divisions": ["A", "B"],
+  "subjects": [
+    {
+      "id": 201,
+      "subjectName": "English",
+      "subjectCode": "ENG201",
+      "examDate": "2025-06-10T00:00:00.000Z",
+      "startTime": "08:30 AM",
+      "endTime": "09:30 AM",
+      "totalMarks": 40,
+      "passingMarks": 16,
+      "invigilationTeacher": "Ms. D'Souza",
+      "teacher": "Mr. John",
+      "rubric": [],
+      "subjectColor": "#4A90E2"
+    },
+    {
+      "id": 202,
+      "subjectName": "Math",
+      "subjectCode": "MTH202",
+      "examDate": "2025-06-10T00:00:00.000Z",
+      "startTime": "10:00 AM",
+      "endTime": "11:00 AM",
+      "totalMarks": 40,
+      "passingMarks": 16,
+      "invigilationTeacher": "Mr. Raj",
+      "teacher": "Ms. Suman",
+      "rubric": [],
+      "subjectColor": "#7ED321"
+    }
+  ],
+  "description": "Combined test for English and Math.",
+  "status": 1,
+  "createdBy": "Prerna Atre",
+  "createdOn": "2025-06-01T08:00:00.000Z"
+},
+  {
     "examType": "Weekly Test",
     "examName": "Weekly Test - Art & Computer",
     "className": "4",

@@ -12,6 +12,8 @@ export interface DayData {
 
 export interface TimetableSlot {
   startTime: string;
+  class?: string;
+  division?: string;
   endTime: string;
   isBreak: boolean;
   dayData: DayData[];

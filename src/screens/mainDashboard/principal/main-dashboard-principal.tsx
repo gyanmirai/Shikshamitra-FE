@@ -26,7 +26,6 @@ import CustomSelect from 'src/components/custom-select';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-import TimeTableView from '../component/time-table-view';
 import PerformerCard from '../teacher/component/performer-card';
 import { AnalyticsClassResults } from './component/result-graph';
 import ExamOverviewForPrincipal from './component/exam-overview';
@@ -335,7 +334,7 @@ const MainDashboardPrincipal = () => {
             )}
           </Box>
         </Box>
-        <TimeTableView />
+        {/* <TimeTableView /> */}
       </Grid>
     </Grid>
   );

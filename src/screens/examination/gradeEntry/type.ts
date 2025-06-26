@@ -1,15 +1,16 @@
 export interface IStudentExamGradeEntry {
   id: string;
+  rollNo: string;
   studentName: string;
-  assignments: string;
   subject: string;
-  marks: number;
+  marks: number | null;
   totalMarks: number;
   grade: string;
   feedback: string;
   weightedAverage: string;
   status: number;
-  GrNo: string;
+  examType: string;
+  examName: string;
 }
 
 /**

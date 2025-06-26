@@ -6,9 +6,8 @@ import type {
   ICourse,
   ICourseDetail,
   IUpdateProgressProps,
-} from 'src/screens/academic/course-management/courseProgress/type';
+} from 'src/screens/classManagement/courseProgress/type';
 
-import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
@@ -32,7 +31,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
-import CourseCardsGrid from 'src/screens/academic/course-management/courseProgress/components/courseCardsGrid';
+import CourseCardsGrid from 'src/screens/classManagement/courseProgress/components/courseCardsGrid';
 import ViewChapterLogs from 'src/screens/academic/course-management/courseProgress/components/viewChapterLogs';
 
 import { Iconify } from 'src/components/iconify';
@@ -42,6 +41,7 @@ import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { ComponentBlock } from 'src/components/component-block';
 import ShakingTextField from 'src/components/shaking-text-field';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -170,82 +170,107 @@ const CourseProgress = () => {
 
       {/* Selected course details section */}
       {selectedCourse && (
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            {selectedCourse.name} Details
-          </Typography>
-          {/* Table showing chapter-wise progress details */}
-          <CustomizableTable
-            tableId="course-progress-table"
-            noDataText={<>No Chapters Found For This Course Found </>}
-            columns={[
-              { id: 'chapterName', label: 'Chapter Name', align: 'left' },
-
-              {
-                id: 'timeLine',
-                label: 'Deadline',
-                align: 'left',
-                filterType: 'date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD-MM-YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'progress',
-                label: 'Progress',
-                align: 'left',
-                filterType: 'number',
-                render(value, row) {
-                  return (
-                    // Circular progress indicator with percentage
-                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                      <CircularProgress variant="determinate" value={value} />
-                      <Box
-                        sx={{
-                          top: 0,
-                          left: 0,
-                          bottom: 0,
-                          right: 0,
-                          position: 'absolute',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          component="div"
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          {value}%
-                        </Typography>
-                      </Box>
-                    </Box>
-                  );
+        <>
+          <Typography variant="h6">{selectedCourse.name} Details</Typography>
+          <Box ml={0.1}>
+            {/* Table showing chapter-wise progress details */}
+            <CustomizableTable
+              tableId="course-progress-table"
+              noDataText={<>No Chapters Found For This Course Found </>}
+              columns={[
+                { id: 'chapterNumber', label: 'Chapter No.', align: 'left' },
+                { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+                {
+                  id: 'startDate',
+                  label: 'Start Date',
+                  align: 'left',
+                  filterType: 'date',
                 },
-              },
-              // {
-              //   id: 'actions',
-              //   label: 'Action',
-              //   minWidth: 50,
-              //   align: 'left',
-              //   sticky: true,
-              //   isFilter: false,
-              //   render(value: any, row: any) {
-              //     return (
-              //       <ThreeDotsActions
-              //         actions={(prop) => actions({ ...prop, row })}
-              //         placement="right-top"
-              //       />
-              //     );
-              //   },
-              // },
-            ]}
-            data={selectedCourse.details}
-          />{' '}
-        </Box>
+                {
+                  id: 'timeLine',
+                  label: 'End Date',
+                  align: 'left',
+                  filterType: 'date',
+                  render(value) {
+                    const endDate = new Date(value);
+                    const today = new Date();
+                    const diffDays = Math.ceil(
+                      (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+
+                    let color = 'text.secondary';
+
+                    if (diffDays <= 7) {
+                      color = 'error.main'; // red
+                    } else if (diffDays <= 15) {
+                      color = 'warning.dark'; // dark yellow or orange
+                    } else if (diffDays <= 30) {
+                      color = 'warning.main'; // lighter yellow
+                    } else {
+                      color = 'success.main'; // green
+                    }
+
+                    return (
+                      <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                        {value}
+                      </Typography>
+                    );
+                  },
+                },
+                {
+                  id: 'progress',
+                  label: 'Progress',
+                  filterType: 'number',
+                  render(value, row) {
+                    return (
+                      // Circular progress indicator with percentage
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress variant="determinate" value={value} />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {value}%
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  },
+                },
+                {
+                  id: 'actions',
+                  label: 'Action',
+                  minWidth: 40,
+                  align: 'left',
+                  sticky: true,
+                  isFilter: false,
+                  render(value: any, row: any) {
+                    return (
+                      <ThreeDotsActions
+                        actions={(prop) => actions({ ...prop, row })}
+                        placement="right-top"
+                      />
+                    );
+                  },
+                },
+              ]}
+              data={selectedCourse.details}
+            />{' '}
+          </Box>
+        </>
       )}
       {/* Dialog for updating progress */}
       <CustomDialog
@@ -333,7 +358,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
           helperText={formik.touched.description && formik.errors.description}
         />
 
-        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <CancelButton
             onClick={() => {
               onClose(null, false);

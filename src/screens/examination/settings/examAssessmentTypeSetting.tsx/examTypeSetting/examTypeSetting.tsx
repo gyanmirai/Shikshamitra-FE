@@ -3,14 +3,16 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -128,14 +130,6 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="examTypeTable"
-        searchFieldProps={{
-          // placeholder: 'Search by Exam Type, Description, Status...',
-          label: 'Search by Exam Type, Description...',
-          sx: {
-            maxWidth: '300px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Exam Type Data Found{' '}
@@ -166,7 +160,7 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
             isSort: false,
             isFilter: false,
             align: 'left',
-            minWidth: 90,
+            minWidth: 50,
             sticky: true,
             render(value, row) {
               return (
@@ -194,7 +188,24 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
       />
 
       <CustomDialog
-        title={isEdit ? 'Update Exam Type' : 'Add Exam Type'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedExamType ? 'Update Exam Type' : 'Add Exam Type'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedExamType
+                  ? 'You can update the exam type details including name and other information.'
+                  : 'You can create a new exam type by entering the required details.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={addExamTypeDialog.value}
         handleClose={addExamTypeDialog.onFalse}
       >
@@ -222,6 +233,7 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedExamType);

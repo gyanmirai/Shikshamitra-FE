@@ -49,7 +49,13 @@ export function CustomBreadcrumbs({
       )}
       {heading}{' '}
       {description && (
-        <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
+        <CustomTooltip
+          arrow
+          placement="right"
+          sx={{ textAlign: 'justify' }}
+          title={description}
+          {...tooltipProps}
+        >
           <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
         </CustomTooltip>
       )}

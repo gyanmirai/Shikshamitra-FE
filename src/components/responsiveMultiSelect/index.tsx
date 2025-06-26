@@ -133,7 +133,6 @@ export function ResponsiveMultiSelect<T>({
             padding: '0 !important',
             margin: '0 !important',
             paddingLeft: '14px !important',
-
             lineHeight: 1.5,
             flexGrow: 1,
           },
@@ -159,6 +158,12 @@ export function ResponsiveMultiSelect<T>({
                 paddingLeft: '7px !important',
                 lineHeight: 1.5,
               },
+              '& .MuiFormHelperText-root': {
+                marginLeft: 0,
+                marginTop: '2px',
+                color: error ? 'error' : undefined, // <-- Force red when error
+                // Remove any color override here
+              },
             }}
           />
         )}
@@ -182,7 +187,15 @@ export const OverflowChipPopover = <T,>({
 }: OverflowChipPopoverProps<T>) => (
   <CustomTooltip
     title={
-      <Box sx={{ display: 'flex', flexDirection: 'column', p: 1, maxWidth: 230, borderRadius: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: 1,
+          maxHeight: '150px',
+          overflowY: 'auto',
+        }}
+      >
         {data.map((item, idx) => (
           <Chip
             key={getKey(item)}

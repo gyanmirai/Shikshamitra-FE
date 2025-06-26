@@ -186,6 +186,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               autoComplete="off"
               autoCapitalize="off"
               editor={editor}
+              style={{ textAlign: 'justify', fontSize: '0.98rem' }}
               className={editorClasses.content.root}
             />
 

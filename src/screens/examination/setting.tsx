@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
@@ -8,10 +8,13 @@ import { Tab, Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
+import { FormSlider } from '../student/enrollment/register/register-form';
 import ExamTypeSettings from './settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeSetting';
 
 import type { TabComponentType } from '../hr/leave-request';
@@ -20,12 +23,14 @@ const TABS = [
   {
     value: 'gradeScaling',
     label: 'Grade Scaling',
+    icon: <Iconify icon="carbon:document-subject" width={20} />,
     description: 'Configure grade scaling for assessments.',
     component: (props: any) => <GradeScaling {...props} />,
   },
   {
     value: 'examType',
     label: 'Exam Type',
+    icon: <Iconify icon="carbon:document-subject" width={20} />,
     description: 'Configure exam types.',
     component: (props: any) => <ExamTypeSettings {...props} />,
   },
@@ -72,6 +77,12 @@ const Setting = (props: TabComponentType) => {
     [searchParams.tab]
   );
 
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
+
   return (
     <Box>
       <CustomBreadcrumbs
@@ -79,7 +90,7 @@ const Setting = (props: TabComponentType) => {
         description={currentActiveComponent?.description}
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/examinationDashboard' },
+          { name: 'Examination', href: '/academic/scheduleExam' },
           { name: 'Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
@@ -93,22 +104,43 @@ const Setting = (props: TabComponentType) => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            addGradeScalingDialog={addGradeScalingDialog}
-            addExamTypeDialog={addExamTypeDialog}
-          />
-        )}
-      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              addGradeScalingDialog={addGradeScalingDialog}
+              addExamTypeDialog={addExamTypeDialog}
+            />
+          )}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

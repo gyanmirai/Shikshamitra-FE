@@ -10,7 +10,6 @@ import SeoIllustration from 'src/assets/illustrations/seo-illustration';
 
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 
-import TimeTableView from '../component/time-table-view';
 import OneLineInfoCard from './component/one-line-info-card';
 import UpcomingExamCard from './component/exam-card-for-student';
 import UpcomingAssignmentCard from './component/upcoming-assignment-card';
@@ -102,7 +101,7 @@ const MainDashboardStudent = () => (
     </Grid>
     <Grid item lg={12}>
       <Typography variant="h6">My Timetable</Typography>
-      <TimeTableView />
+      {/* <TimeTableView /> */}
     </Grid>
 
     <Grid item lg={6} pb="30px">
