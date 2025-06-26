@@ -14,7 +14,7 @@ import MyProfileSubmission from './studentProfileHomeworkAssignment';
 
 const TABS = [
   { value: 'timetable', label: 'Timetable' },
-  { value: 'subjectPerformace', label: 'Subject Performace' },
+  { value: 'subjectPerformace', label: 'Subject Performance' },
   { value: 'homework/assignments', label: 'Homework/Assignments' },
   { value: 'examination', label: 'Examination' },
 ];

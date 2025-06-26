@@ -148,7 +148,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start">
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start" ml={1}>
         <DatePicker
           label="Homework Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -191,14 +191,6 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
       </Box>
       <CustomizableTable
         tableId="homework-assignment-management"
-        searchFieldProps={{
-          placeholder: 'Search by Subject, Title, Homework Type...',
-          label: 'Search by Subject, Title, Homework Type...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
         noDataText={<>No Homework Available</>}
         columns={
           tabs.value === ScheduleExamStatus.Pending
