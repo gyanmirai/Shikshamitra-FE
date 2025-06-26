@@ -3,6 +3,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 import { AppWidgetSummary } from './app-widget-summary';
@@ -63,7 +64,9 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
                   fontWeight={500}
                   color="text.secondary"
                 >
-                  +2% Higher than previous term
+                  <Label color="success" variant="soft">
+                    +2% Higher than previous term
+                  </Label>
                 </Typography>
               </Box>
             }
@@ -110,10 +113,14 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
                     fontWeight={600}
                     color="success.main"
                   >
-                    Paid: ₹ 25,000
+                    <Label color="success" variant="soft">
+                      Paid: ₹ 25,000
+                    </Label>
                   </Typography>
                   <Typography component="span" fontSize="15px" fontWeight={600} color="error.main">
-                    Pending: ₹ 5,000
+                    <Label color="warning" variant="soft">
+                      Pending: ₹ 5,000
+                    </Label>
                   </Typography>
                 </Box>
               </Box>
@@ -149,7 +156,9 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
                     fontWeight={600}
                     color="success.main"
                   >
-                    Uploaded: 06
+                    <Label color="success" variant="soft">
+                      Uploaded: 06
+                    </Label>
                   </Typography>
                   <Typography
                     component="span"
@@ -157,7 +166,9 @@ const StudentDashboard = (props: StudentTabsComponentType) => {
                     fontWeight={600}
                     color="warning.main"
                   >
-                    Pending: 02
+                    <Label color="warning" variant="soft">
+                      Pending: 02
+                    </Label>
                   </Typography>
                 </Box>
               </Box>
