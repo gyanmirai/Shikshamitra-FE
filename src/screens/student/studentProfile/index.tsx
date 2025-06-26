@@ -20,7 +20,6 @@ import { GenderType } from 'src/enums/gender';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -202,7 +201,7 @@ export function StudentProfile() {
     () =>
       StudentsData?.items?.map((item: any) => ({
         ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        name: `${item.lastName} ${item.firstName} ${item.middleName}`,
       })) || [],
     [StudentsData?.items]
   );
@@ -255,7 +254,7 @@ export function StudentProfile() {
 
       {!currentStudent && (
         <>
-          <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+          <Box display="flex" gap={2} flexWrap="wrap" mb={2} ml={1}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -351,36 +350,26 @@ export function StudentProfile() {
               },
               {
                 id: 'rollNo',
-                label: 'Roll No',
-                render: (value, row) =>
-                  value || (
-                    <Label variant="soft" color="default">
-                      Not Assigned
-                    </Label>
-                  ),
+                label: 'Roll No.',
+                render: (value, row) => value || '-',
               },
               {
                 id: 'grNoRecord',
-                label: 'Gr No',
-                render: (value, row) =>
-                  value || (
-                    <Label variant="soft" color="default">
-                      Not Assigned
-                    </Label>
-                  ),
+                label: 'Gr No.',
+                render: (value, row) => value || '-',
               },
 
               // { id: 'organization', label: 'Organization' },
               // { id: 'class', label: 'Class' },
               // { id: 'division', label: 'Division' },
-              { id: 'parentContactNumber', label: 'Contact No' },
+              { id: 'parentContactNumber', label: 'Contact No.' },
               {
                 id: 'action',
                 label: 'Action',
                 isSort: false,
                 isFilter: false,
                 sticky: true,
-                minWidth: 80,
+                minWidth: 50,
                 align: 'left',
                 render: (value, row) => (
                   <ThreeDotsActions
