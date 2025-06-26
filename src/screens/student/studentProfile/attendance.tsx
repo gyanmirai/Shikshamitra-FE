@@ -289,7 +289,6 @@ const Attendance = (props: StudentTabsComponentType) => {
               slots={{
                 day: (prop: any) => {
                   const { day, today } = prop;
-                  console.log('day----', day);
 
                   const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;

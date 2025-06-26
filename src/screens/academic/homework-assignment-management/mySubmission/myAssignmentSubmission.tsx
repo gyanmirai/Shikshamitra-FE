@@ -150,7 +150,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start">
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start" ml={1}>
         <DatePicker
           label="Assignment Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -187,14 +187,6 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
       </Box>
       <CustomizableTable
         tableId="assignment-submission-management"
-        searchFieldProps={{
-          placeholder: 'Search by Subject, Title, Assignment Type...',
-          label: 'Search by Subject, Title, Assignment Type...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
         noDataText={<>No Assignment Available</>}
         columns={
           tabs.value === ScheduleExamStatus.Pending
