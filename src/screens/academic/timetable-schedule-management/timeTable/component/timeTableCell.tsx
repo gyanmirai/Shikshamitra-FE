@@ -1,24 +1,21 @@
 'use client';
 
-import React from 'react';
+import type { RootState } from 'src/redux/store';
 
-import {
-  Box,
-  alpha,
-  Paper,
-  Button,
-  MenuList,
-  MenuItem,
-  TableCell,
-  Typography,
-} from '@mui/material';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { Box, Paper, Button, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
@@ -26,6 +23,10 @@ import AssignRoom from './assignRoomDialog';
 import AssignTeacher from './assignTeacherDialog';
 
 const TimeTableCell = ({
+  isTeacherVisible = true,
+  isRoomVisible = true,
+  isClassVisible = false,
+  isDivisionVisible = false,
   timeSlot,
   day,
   slotData,
@@ -33,20 +34,26 @@ const TimeTableCell = ({
   onDrop,
   rowIndex,
   colIndex,
+  isDrag = true,
   item,
   onTeacherSelect,
   onRoomSelect,
   onDeleteSlot,
-  isThreeDots = true,
+  showThreeDots = true,
 }: any) => {
-  console.log('slotData----', slotData);
-
   /**
    * Dialog state hooks for managing teacher and room assignment dialogs
    */
+
+  console.log('item----', item);
+  console.log('isClassVisible---', isClassVisible);
+  console.log('isDivisionVisible---', isDivisionVisible);
+
   const teacherDialog = useBoolean();
   const roomDialog = useBoolean();
   const deleteDialog = useBoolean();
+  const dispatch = useDispatch();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   /**
    * Unique key for identifying the time slot based on time and day
@@ -60,9 +67,9 @@ const TimeTableCell = ({
    * @param e - The drag over event object
    */
   const handleDragOver = (e: any) => {
-    // if (!isBreak && !slotData) {
-    e.preventDefault();
-    // }
+    if (!isBreak && isDrag) {
+      e.preventDefault();
+    }
   };
 
   /**
@@ -72,12 +79,27 @@ const TimeTableCell = ({
    * @param e - The drop event object
    */
   const handleDrop = (e: any) => {
-    if (!isBreak && (!slotData || !slotData.subjects?.length)) {
+    if (!isBreak && isDrag && (!slotData || !slotData.subjects?.length)) {
       e.preventDefault();
       onDrop(e, item, rowIndex, colIndex);
     }
   };
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      teacherDialog.onFalse();
+      roomDialog.onFalse();
+      dispatch(setIsChanges(false));
+      // setSelectedSubject(null);
+      // addSubjectDialog.onFalse();
+    } else if (!isChanges) {
+      teacherDialog.onFalse();
+      roomDialog.onFalse();
+
+      // setSelectedSubject(null);
+      // addSubjectDialog.onFalse();
+    }
+  };
   /**
    * Handles the drag start event for the timetable cell
    * Sets the drag data including subject details and source location
@@ -85,7 +107,7 @@ const TimeTableCell = ({
    * @param e - The drag start event object
    */
   const handleDragStart = (e: any) => {
-    if (!isBreak && slotData?.subjects?.length) {
+    if (!isBreak && isDrag && slotData?.subjects?.length) {
       e.dataTransfer.setData('subject', JSON.stringify(slotData));
       e.dataTransfer.setData('rowIndex', rowIndex.toString());
       e.dataTransfer.setData('colIndex', colIndex.toString());
@@ -127,7 +149,7 @@ const TimeTableCell = ({
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      draggable={!!slotData?.subjects?.length}
+      draggable={isDrag && !!slotData?.subjects?.length}
       onDragStart={handleDragStart}
     >
       {slotData?.subjects?.length ? (
@@ -137,7 +159,10 @@ const TimeTableCell = ({
             sx={{
               p: 1,
               height: '90%',
-              bgcolor: alpha(slotData?.subjectColor, 0.2),
+              boxShadow: 'var(--shadows-10)',
+              borderLeft: `4px solid ${slotData.subjectColor}`, // 👈 Left border
+              borderRadius: '8px', // Optional for rounded corners like in image
+              // bgcolor: alpha(slotData?.subjectColor, 0.2),
               position: 'relative',
               '& .action-menu': {
                 opacity: 0,
@@ -156,11 +181,24 @@ const TimeTableCell = ({
                 position: 'relative',
               }}
             >
-              <Typography variant="subtitle2" fontWeight="medium">
-                {slotData.subjects.map((sub: any) => sub.subject).join('/')}
-              </Typography>
+              <CustomTooltip
+                title={
+                  <Box>
+                    {slotData.subjects.map((sub: any, index: number) => (
+                      <Typography key={index} variant="caption">
+                        {sub.subject} ({sub.subjectCode})
+                        {index < slotData.subjects.length - 1 && <br />}
+                      </Typography>
+                    ))}
+                  </Box>
+                }
+              >
+                <Typography variant="subtitle2" fontWeight="medium">
+                  {slotData.subjects.map((sub: any) => sub.subject).join('/')}
+                </Typography>
+              </CustomTooltip>
               <Box className="action-menu">
-                {isThreeDots && (
+                {showThreeDots && (
                   <ThreeDotsActions
                     placement="bottom-center"
                     onClickThreeDots={(e) => {
@@ -220,16 +258,25 @@ const TimeTableCell = ({
               </Box>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="caption" color="text.secondary">
-                {slotData?.subjects?.length
-                  ? slotData.subjects.map((sub: any) => sub?.room || 'No Room').join('/')
-                  : 'No Room'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {slotData?.subjects?.length
-                  ? slotData.subjects.map((sub: any) => sub?.teacher || 'No Teacher').join('/')
-                  : 'No Teacher'}
-              </Typography>
+              {isRoomVisible && (
+                <Typography variant="caption" color="text.secondary">
+                  {slotData?.subjects?.length
+                    ? slotData.subjects.map((sub: any) => sub?.room || 'No Room').join('/')
+                    : 'No Room'}
+                </Typography>
+              )}
+              {isTeacherVisible && (
+                <Typography variant="caption" color="text.secondary">
+                  {slotData?.subjects?.length
+                    ? slotData.subjects.map((sub: any) => sub?.teacher || 'No Teacher').join('/')
+                    : 'No Teacher'}
+                </Typography>
+              )}
+              {isClassVisible && isDivisionVisible && (
+                <Typography variant="caption" color="text.secondary">
+                  {item.class}-{item.division}
+                </Typography>
+              )}
             </Box>
           </Paper>
 
@@ -244,8 +291,9 @@ const TimeTableCell = ({
               teacherDialog={teacherDialog}
               onTeacherSelect={(value) => {
                 onTeacherSelect(value, rowIndex, colIndex);
-                teacherDialog.onFalse();
+                handleClose(null, true);
               }}
+              onClose={handleClose}
             />
           </CustomDialog>
 
@@ -258,9 +306,10 @@ const TimeTableCell = ({
             <AssignRoom
               roomDialog={roomDialog}
               slotData={slotData}
+              onClose={handleClose}
               onRoomSelect={(value) => {
                 onRoomSelect(value, rowIndex, colIndex);
-                roomDialog.onFalse();
+                handleClose(null, true);
               }}
             />
           </CustomDialog>
@@ -276,6 +325,7 @@ const TimeTableCell = ({
               <Button
                 variant="contained"
                 color="error"
+                size="small"
                 onClick={() => {
                   onDeleteSlot(rowIndex, colIndex);
                   deleteDialog.onFalse();

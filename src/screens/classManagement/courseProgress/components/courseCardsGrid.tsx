@@ -49,7 +49,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
   }, []);
 
   return (
-    <Box display="flex" alignItems="center" sx={{ mt: 2, mb: 4 }}>
+    <Box display="flex" alignItems="center">
       {/* Left Arrow */}
       {showLeftArrow && (
         <IconButton onClick={() => scroll('left')} sx={{ mx: 1, color: 'primary.main' }}>
@@ -65,7 +65,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
           overflowX: 'auto',
           scrollBehavior: 'smooth',
           gap: 2,
-          px: 1,
+          px: 0.5,
           flexGrow: 1,
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },

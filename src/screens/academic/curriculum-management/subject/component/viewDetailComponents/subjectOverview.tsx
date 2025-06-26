@@ -27,7 +27,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
     <Grid container spacing={2}>
       <Grid item xs={12} md={8} sx={{ mt: 0, pt: 0, pl: 0, pb: 2 }}>
         <Card sx={{ height: '100%', boxShadow: 0, border: 'none', m: 0 }}>
-          <Scrollbar sx={{ height: '400px', px: 0 }}>
+          <Scrollbar sx={{ height: '400px', px: 0, pr: 2 }}>
             <CardContent sx={{ p: 0 }}>
               {' '}
               {/* Adjust padding here */}
@@ -144,9 +144,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
             </Box>
 
             {/* Secondary Teachers */}
-            <Typography variant="subtitle2" gutterBottom>
-              Secondary Teacher
-            </Typography>
+            <Typography variant="subtitle2">Secondary Teacher</Typography>
 
             <Scrollbar sx={{ height: '200px' }}>
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (

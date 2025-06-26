@@ -22,6 +22,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from '../iconify';
+import { shikshaMitraToast } from '../toast';
 import CustomTooltip from '../custom-tooltip';
 import { FileThumbnail } from '../file-thumbnail';
 
@@ -69,10 +70,19 @@ const FileUploader = <T extends boolean = true>({
   };
 
   const handleFiles = (newFile: T extends true ? File[] | FileData[] : File | FileData) => {
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+
     if (multiple) {
       const existingFiles = (value || []) as (File | FileData)[];
       const newFiles = Array.isArray(newFile) ? newFile : [newFile];
       const filteredFiles = newFiles.filter((file: File | FileData) => {
+        const size = file instanceof File ? file.size : (file?.size ?? 0);
+        if (size > maxSizeInBytes) {
+          shikshaMitraToast.error({
+            message: `File exceeds the 5 MB size limit.`,
+          });
+          return false;
+        }
         if (file instanceof File) return allowedTypes.includes(file.type);
         if (file.type) return allowedTypes.includes(file.type);
         if (file.base64) {
@@ -84,6 +94,18 @@ const FileUploader = <T extends boolean = true>({
       const updatedFiles = [...existingFiles, ...filteredFiles];
       onChange(updatedFiles as any);
     } else {
+      let size = 0;
+
+      if (newFile instanceof File) {
+        size = newFile.size;
+      } else if (typeof newFile === 'object' && 'size' in newFile) {
+        size = (newFile as FileData).size ?? 0;
+      }
+
+      if (size > maxSizeInBytes) {
+        shikshaMitraToast.error({ message: 'File exceeds the 5 MB size limit.' });
+        return;
+      }
       onChange(newFile as any);
     }
   };

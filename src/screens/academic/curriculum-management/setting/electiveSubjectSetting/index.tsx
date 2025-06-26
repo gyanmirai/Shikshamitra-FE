@@ -118,8 +118,8 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
               placement="right"
               title={
                 selected
-                  ? 'You can update the elective group details by entering group name, subjects and other required details.'
-                  : 'You can create a new elective group details by entering the group name, subjects and other required details.'
+                  ? 'You can update the elective group details by entering group name, subjects and color details.'
+                  : 'You can create a new elective group details by entering the group name, subjects and color details.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

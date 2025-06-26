@@ -97,8 +97,8 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
               placement="right"
               title={
                 selectedSubject
-                  ? 'You can update the subject details including name, code and other information.'
-                  : 'You can create a new subject by entering the subject name, code and other required details.'
+                  ? 'You can update the subject details including name and color details.'
+                  : 'You can create a new subject by entering the subject name and color details.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

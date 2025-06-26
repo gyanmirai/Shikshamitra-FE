@@ -2,12 +2,12 @@
 
 import React from 'react';
 
-import { alpha } from '@mui/system';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import CreateNoOfLecture from '../../settings/components/weeklyLectures/createWeeklyLectures';
 
@@ -30,9 +30,13 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }
           onDragStart={(e) => onDragStart(e, subject)}
           sx={{
             p: 1,
+            // boxShadow: 3,
             cursor: 'move',
-            bgcolor: alpha(subject.subjectColor, 0.2),
-            color: subject.subjectColor,
+            boxShadow: 'var(--shadows-10)',
+            // bgcolor: alpha(subject.subjectColor, 0.2),
+            // color: subject.subjectColor,
+            borderLeft: `4px solid ${subject.subjectColor}`, // 👈 Left border
+            borderRadius: '8px', // Optional for rounded corners like in image
           }}
         >
           <Box
@@ -46,14 +50,16 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {subject.subjects.map((sub: Subject, index: number) => (
                 <React.Fragment key={index}>
-                  <Typography variant="body2" fontWeight="bold">
-                    {sub.subject}
-                  </Typography>
-                  {index < subject.subjects.length - 1 && ','}
+                  <CustomTooltip title={`${sub.subject} (${sub.subjectCode})`} placement="top">
+                    <Typography variant="body2">
+                      {sub.subject}
+                      {index < subject.subjects.length - 1 && ', '}
+                    </Typography>
+                  </CustomTooltip>
                 </React.Fragment>
               ))}
             </Box>
-            <Typography variant="body2" fontWeight="bold">
+            <Typography variant="body2">
               ({subject.allocateLectures} / {subject.totalLectures})
             </Typography>
           </Box>

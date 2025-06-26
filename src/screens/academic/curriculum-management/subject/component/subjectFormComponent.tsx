@@ -33,13 +33,11 @@ import type { TeacherProfile, ISubjectFormProps, ISubjectFormValues } from './ty
 
 // Enhanced subject options with Core and Elective groups
 const subjectOptions = [
-  // Core subjects
   { label: 'Mathematics', value: 'Mathematics', type: 'Core', subjectColor: '#DEB887' },
   { label: 'Science', value: 'Science', type: 'Core', subjectColor: '#00CED1' },
   { label: 'Social Science', value: 'Social Science', type: 'Core', subjectColor: '#B22222' },
   { label: 'English', value: 'English', type: 'Core', subjectColor: '#4682B4' },
   { label: 'Gujarati', value: 'Gujarati', type: 'Core', subjectColor: '#3CB371' },
-  // Elective subject groups
   {
     label: 'Tech & Fitness Group',
     value: 'Tech & Fitness Group',

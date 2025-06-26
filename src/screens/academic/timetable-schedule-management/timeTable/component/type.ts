@@ -26,10 +26,12 @@ export interface IAssignRoomProps {
   roomDialog: UseBooleanReturn;
   slotData: any;
   onRoomSelect: (value: string) => void;
+  onClose?: (e: any, isSubmit: boolean) => void;
 }
 
 export interface IAssignTeacherProps {
   teacherDialog: UseBooleanReturn;
   slotData: any;
   onTeacherSelect: (value: string) => void;
+  onClose?: (e: any, isSubmit: boolean) => void;
 }

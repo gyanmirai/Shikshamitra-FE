@@ -3,14 +3,17 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -53,6 +56,9 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       setGrades(grades.filter((grade) => grade.id !== gradeData.id));
       deleteConfirmDialog.onFalse();
       setSelectedGrade(null);
+      shikshaMitraToast.success({
+        message: `Grade Scale : ${selectedGrade.name} delete successfully`,
+      });
     }
   };
 
@@ -99,14 +105,6 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="gradesTable"
-        searchFieldProps={{
-          // placeholder: 'Search by Grade Scale Title, Total Marks...',
-          label: 'Search by Grade Scale Title, Total Marks...',
-          sx: {
-            width: '100%',
-            maxWidth: '350px',
-          },
-        }}
         noDataText={
           <>
             No Grade Scaling Data Found{' '}
@@ -136,7 +134,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
             label: 'Actions',
             isSort: false,
             sticky: true,
-            minWidth: 90,
+            minWidth: 50,
             align: 'left',
             isFilter: false,
             render(value, row) {
@@ -175,7 +173,24 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
           addGradeScalingDialog.onFalse();
           setSelectedGrade(null);
         }}
-        title={selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedGrade
+                  ? 'You can update the grade scale details including grade ranges, total marks and other grading parameters.'
+                  : 'You can create a new grade scale by defining grade ranges, total marks and other grading parameters.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <GradeForm
           onSubmit={handleSubmit}
@@ -214,6 +229,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               if (selectedGrade) {

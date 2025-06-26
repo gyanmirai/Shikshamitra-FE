@@ -1,38 +1,38 @@
 [
     {
       "id": 1,
-      "name": "Math (MA-12)",
-      "progress": 60,
-      "completedChapter": 5,
+      "name": "Math (MTH101)",
+      "progress": 5,
+      "completedChapter": 0,
       "totalChapter": 8,
-      "color": "#0056D2",
+      "color": "#42a5f5",
       "details": [
-        { "chapterName": "Algebra", "teacherName": "John Smith", "progress": 70, "pending": 30, "timeLine": "2024-10-05" },
-        { "chapterName": "Geometry", "teacherName": "John Smith", "progress": 60, "pending": 40, "timeLine": "2024-10-08" },
-        { "chapterName": "Trigonometry", "teacherName": "Mary Johnson", "progress": 55, "pending": 45, "timeLine": "2024-10-10" },
-        { "chapterName": "Calculus", "teacherName": "Mary Johnson", "progress": 50, "pending": 50, "timeLine": "2024-10-13" },
-        { "chapterName": "Statistics", "teacherName": "David Brown", "progress": 70, "pending": 30, "timeLine": "2024-10-16" },
-        { "chapterName": "Probability", "teacherName": "David Brown", "progress": 40, "pending": 60, "timeLine": "2024-10-20" },
-        { "chapterName": "Sets", "teacherName": "Sarah Wilson", "progress": 30, "pending": 70, "timeLine": "2024-10-23" },
-        { "chapterName": "Matrices", "teacherName": "Sarah Wilson", "progress": 50, "pending": 50, "timeLine": "2024-10-25" }
+        { "chapterNumber": 1, "chapterName": "Algebra", "teacherName": "Sharma Rajesh Kumar", "startDate": "01-06-2025", "progress": 20, "pending": 80, "timeLine": "05-07-2025" },
+        { "chapterNumber": 2, "chapterName": "Geometry", "teacherName": "Sharma Rajesh Kumar", "startDate": "08-07-2025", "progress": 0, "pending": 100, "timeLine": "08-08-2025" },
+        { "chapterNumber": 3, "chapterName": "Trigonometry", "teacherName": "Patel Meera Suresh", "startDate": "10-08-2025", "progress": 0, "pending": 100, "timeLine": "10-09-2025" },
+        { "chapterNumber": 4, "chapterName": "Calculus", "teacherName": "Patel Meera Suresh", "startDate": "13-09-2025", "progress": 0, "pending": 100, "timeLine": "13-10-2025" },
+        { "chapterNumber": 5, "chapterName": "Statistics", "teacherName": "Gupta Deepak Ramesh", "startDate": "16-10-2025", "progress": 0, "pending": 100, "timeLine": "16-11-2025" },
+        { "chapterNumber": 6, "chapterName": "Probability", "teacherName": "Gupta Deepak Ramesh", "startDate": "20-11-2025", "progress": 0, "pending": 100, "timeLine": "20-12-2025" },
+        { "chapterNumber": 7, "chapterName": "Sets", "teacherName": "Reddy Sarita Prakash", "startDate": "23-12-2025", "progress": 0, "pending": 100, "timeLine": "23-01-2026" },
+        { "chapterNumber": 8, "chapterName": "Matrices", "teacherName": "Reddy Sarita Prakash", "startDate": "25-01-2026", "progress": 0, "pending": 100, "timeLine": "25-02-2026" }
       ]
     },
     {
       "id": 2,
-      "name": "Science (SCI-12)", 
-      "progress": 55,
-      "completedChapter": 4,
+      "name": "Science (SCI201)", 
+      "progress": 3,
+      "completedChapter": 0,
       "totalChapter": 8,
-      "color": "#28A745",
+      "color": "#ef5350",
       "details": [
-        { "chapterName": "Physics Mechanics", "teacherName": "Robert Physics", "progress": 65, "pending": 35, "timeLine": "2024-10-05" },
-        { "chapterName": "Thermodynamics", "teacherName": "Robert Physics", "progress": 55, "pending": 45, "timeLine": "2024-10-08" },
-        { "chapterName": "Chemical Bonding", "teacherName": "Emma Chemistry", "progress": 60, "pending": 40, "timeLine": "2024-10-10" },
-        { "chapterName": "Organic Chemistry", "teacherName": "Emma Chemistry", "progress": 45, "pending": 55, "timeLine": "2024-10-13" },
-        { "chapterName": "Cell Biology", "teacherName": "Michael Bio", "progress": 50, "pending": 50, "timeLine": "2024-10-16" },
-        { "chapterName": "Genetics", "teacherName": "Michael Bio", "progress": 35, "pending": 65, "timeLine": "2024-10-20" },
-        { "chapterName": "Electricity", "teacherName": "Lisa Science", "progress": 40, "pending": 60, "timeLine": "2024-10-23" },
-        { "chapterName": "Magnetism", "teacherName": "Lisa Science", "progress": 45, "pending": 55, "timeLine": "2024-10-25" }
+        { "chapterNumber": 1, "chapterName": "Physics Mechanics", "teacherName": "Iyer Ramesh Venkat", "startDate": "01-06-2025", "progress": 15, "pending": 85, "timeLine": "05-07-2025" },
+        { "chapterNumber": 2, "chapterName": "Thermodynamics", "teacherName": "Iyer Ramesh Venkat", "startDate": "08-07-2025", "progress": 0, "pending": 100, "timeLine": "08-08-2025" },
+        { "chapterNumber": 3, "chapterName": "Chemical Bonding", "teacherName": "Chatterjee Esha Pranab", "startDate": "10-08-2025", "progress": 0, "pending": 100, "timeLine": "10-09-2025" },
+        { "chapterNumber": 4, "chapterName": "Organic Chemistry", "teacherName": "Chatterjee Esha Pranab", "startDate": "13-09-2025", "progress": 0, "pending": 100, "timeLine": "13-10-2025" },
+        { "chapterNumber": 5, "chapterName": "Cell Biology", "teacherName": "Menon Mohan Krishna", "startDate": "16-10-2025", "progress": 0, "pending": 100, "timeLine": "16-11-2025" },
+        { "chapterNumber": 6, "chapterName": "Genetics", "teacherName": "Menon Mohan Krishna", "startDate": "20-11-2025", "progress": 0, "pending": 100, "timeLine": "20-12-2025" },
+        { "chapterNumber": 7, "chapterName": "Electricity", "teacherName": "Singh Lakshmi Devi", "startDate": "23-12-2025", "progress": 0, "pending": 100, "timeLine": "23-01-2026" },
+        { "chapterNumber": 8, "chapterName": "Magnetism", "teacherName": "Singh Lakshmi Devi", "startDate": "25-01-2026", "progress": 0, "pending": 100, "timeLine": "25-02-2026" }
       ]
     }
 ]

@@ -177,13 +177,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                           }
                         );
                       });
-
                       formik.setFieldValue('divisions', newDivisions);
                     }}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                     helperText={
-                      typeof formik.errors.divisions === 'string'
+                      formik.touched.divisions && typeof formik.errors.divisions === 'string'
                         ? formik.errors.divisions
                         : undefined
                     }
@@ -308,65 +307,62 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     label="Students"
                     options={[
                       { id: 'all', name: 'All' },
-                      { id: 'st1', name: 'Smith, John Michael' },
-                      { id: 'st2', name: 'Johnson, Emily Rose' },
-                      { id: 'st3', name: 'Williams, James Robert' },
-                      { id: 'st4', name: 'Brown, Sarah Elizabeth' },
-                      { id: 'st5', name: 'Jones, David William' },
-                      { id: 'st6', name: 'Garcia, Maria Elena' },
-                      { id: 'st7', name: 'Miller, Thomas Andrew' },
-                      { id: 'st8', name: 'Davis, Jennifer Lynn' },
-                      { id: 'st9', name: 'Rodriguez, Carlos Manuel' },
-                      { id: 'st10', name: 'Martinez, Ana Sofia' },
-                      { id: 'st11', name: 'Anderson, Michael James' },
-                      { id: 'st12', name: 'Taylor, Jessica Marie' },
-                      { id: 'st13', name: 'Thomas, Robert James' },
-                      { id: 'st14', name: 'Moore, Patricia Ann' },
-                      { id: 'st15', name: 'Jackson, William Henry' },
-                      { id: 'st16', name: 'White, Elizabeth Marie' },
-                      { id: 'st17', name: 'Harris, Joseph Charles' },
-                      { id: 'st18', name: 'Martin, Susan Jane' },
-                      { id: 'st19', name: 'Thompson, Richard Lee' },
-                      { id: 'st20', name: 'Lewis, Margaret Rose' },
-                      { id: 'st21', name: 'Lee, Christopher John' },
-                      { id: 'st22', name: 'Walker, Barbara Jean' },
-                      { id: 'st23', name: 'Hall, Kevin Michael' },
-                      { id: 'st24', name: 'Allen, Dorothy Mae' },
-                      { id: 'st25', name: 'Young, George Edward' },
+                      { id: 'st1', name: 'Sharma Amit Raj' },
+                      { id: 'st2', name: 'Verma Priya Suresh' },
+                      { id: 'st3', name: 'Mehta Rahul Kishore' },
+                      { id: 'st4', name: 'Kapoor Sneha Anil' },
+                      { id: 'st5', name: 'Patel Vikram Harish' },
+                      { id: 'st6', name: 'Nair Anjali Mohan' },
+                      { id: 'st7', name: 'Malhotra Karan Dev' },
+                      { id: 'st8', name: 'Desai Pooja Ramesh' },
+                      { id: 'st9', name: 'Reddy Rohit Kumar' },
+                      { id: 'st10', name: 'Joshi Neha Pravin' },
+                      { id: 'st11', name: 'Singh Arjun Vikrant' },
+                      { id: 'st12', name: 'Iyer Deepika Suresh' },
+                      { id: 'st13', name: 'Das Siddharth Manoj' },
+                      { id: 'st14', name: 'Rao Meera Subhash' },
+                      { id: 'st15', name: 'Gupta Rohan Mahesh' },
+                      { id: 'st16', name: 'Mishra Swati Nilesh' },
+                      { id: 'st17', name: 'Tripathi Nikhil Satish' },
+                      { id: 'st18', name: 'Chopra Ananya Rajeev' },
+                      { id: 'st19', name: 'Bhatia Aditya Omprakash' },
+                      { id: 'st20', name: 'Kulkarni Tanya Yogesh' },
+                      { id: 'st21', name: 'Thakur Manav Dinesh' },
+                      { id: 'st22', name: 'Pillai Kavya Raghav' },
+                      { id: 'st23', name: 'Naidu Harsh Vikas' },
+                      { id: 'st24', name: 'Khan Sana Imran' },
+                      { id: 'st25', name: 'Ahmed Zoya Farhan' },
                     ]}
                     value={formik.values.students}
                     onChange={(val) => {
                       if (val.includes('all')) {
-                        // If "Select All" is chosen, select all students except the "all" option
                         const allStudentIds = [
-                          { id: 'st1', name: 'Smith, John Michael' },
-                          { id: 'st2', name: 'Johnson, Emily Rose' },
-                          { id: 'st3', name: 'Williams, James Robert' },
-                          { id: 'st4', name: 'Brown, Sarah Elizabeth' },
-                          { id: 'st5', name: 'Jones, David William' },
-                          { id: 'st6', name: 'Garcia, Maria Elena' },
-                          { id: 'st7', name: 'Miller, Thomas Andrew' },
-                          { id: 'st8', name: 'Davis, Jennifer Lynn' },
-                          { id: 'st9', name: 'Rodriguez, Carlos Manuel' },
-                          { id: 'st10', name: 'Martinez, Ana Sofia' },
-                          { id: 'st11', name: 'Anderson, Michael James' },
-                          { id: 'st12', name: 'Taylor, Jessica Marie' },
-                          { id: 'st13', name: 'Thomas, Robert James' },
-                          { id: 'st14', name: 'Moore, Patricia Ann' },
-                          { id: 'st15', name: 'Jackson, William Henry' },
-                          { id: 'st16', name: 'White, Elizabeth Marie' },
-                          { id: 'st17', name: 'Harris, Joseph Charles' },
-                          { id: 'st18', name: 'Martin, Susan Jane' },
-                          { id: 'st19', name: 'Thompson, Richard Lee' },
-                          { id: 'st20', name: 'Lewis, Margaret Rose' },
-                          { id: 'st21', name: 'Lee, Christopher John' },
-                          { id: 'st22', name: 'Walker, Barbara Jean' },
-                          { id: 'st23', name: 'Hall, Kevin Michael' },
-                          { id: 'st24', name: 'Allen, Dorothy Mae' },
-                          { id: 'st25', name: 'Young, George Edward' },
-                        ]
-                          .filter((opt) => opt.id !== 'all')
-                          .map((opt) => opt.id);
+                          'st1',
+                          'st2',
+                          'st3',
+                          'st4',
+                          'st5',
+                          'st6',
+                          'st7',
+                          'st8',
+                          'st9',
+                          'st10',
+                          'st11',
+                          'st12',
+                          'st13',
+                          'st14',
+                          'st15',
+                          'st16',
+                          'st17',
+                          'st18',
+                          'st19',
+                          'st20',
+                          'st21',
+                          'st22',
+                          'st23',
+                          'st24',
+                          'st25',
+                        ];
                         formik.setFieldValue('students', allStudentIds);
                       } else {
                         formik.setFieldValue('students', val);

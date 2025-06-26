@@ -16,6 +16,7 @@ import type { IAssignGradeProps } from '../type';
 const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGradeProps) => {
   const formik = useFormik({
     initialValues: {
+      totalMarks: data?.totalMarks || '',
       marks: data?.marks || '',
       feedback: data?.feedback || '',
     },
@@ -29,7 +30,30 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '200px', backgroundColor: 'background.paper' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
+                <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
+                  <TextField
+                    label="Total Marks *"
+                    disabled
+                    // placeholder="Enter Marks"
+                    name="totalMarks"
+                    type="number"
+                    value={formik.values.totalMarks}
+                    onChange={formik.handleChange}
+                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                    helperText={
+                      formik.touched.totalMarks && formik.errors.totalMarks
+                        ? formik.errors.totalMarks
+                        : undefined
+                    }
+                    size="small"
+                    sx={{
+                      width: '100%',
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
                   <TextField
                     label="Marks *"
@@ -69,7 +93,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               size="small"
               onClick={() => {
@@ -84,7 +108,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
               size="small"
               type="submit"
               variant="contained"
-              startIcon={<Iconify icon={data ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={data ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={data ? 16 : 20}
+                  height={data ? 16 : 20}
+                />
+              }
             >
               {data ? 'Update' : 'Submit'}
             </Button>

@@ -3,7 +3,7 @@ import type { FormikProps } from 'formik';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 
-import { TextField } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,30 +26,82 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       columns={[
         {
           id: 'subjectName',
-          label: 'Subject Name',
-          minWidth: '160px',
+          label: 'Subject',
+          minWidth: '130px',
           align: 'left',
-          isFilter: false,
-          isSort: false,
-        },
-        {
-          id: 'examDate',
-          label: 'Exam Date',
           isFilter: false,
           isSort: false,
           render(value, row) {
             return (
-              <DatePicker
-                value={value ? dayjs(value) : null}
-                format="DD-MM-YYYY"
-                onChange={(newTime) => {
-                  const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].examDate = newTime;
-                  setExamSchedules(updatedSchedules);
+              <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box
+                  sx={{
+                    width: 4,
+                    height: 18,
+                    borderRadius: 1,
+                    backgroundColor: row.subjectColor,
+                  }}
+                />
+                <Typography variant="caption">
+                  {value} ({row.subjectCode})
+                </Typography>
+              </Box>
+            );
+          },
+        },
+        {
+          id: 'examDate',
+          label: 'Date',
+          isFilter: false,
+          isSort: false,
+          render(value, row) {
+            return (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '160px',
+                  width: '100%',
+                  mb: 1,
                 }}
-                slotProps={{ textField: { size: 'small' } }}
-                sx={{ minWidth: '250px', width: '100%' }}
-              />
+              >
+                <DatePicker
+                  value={value ? dayjs(value) : null}
+                  format="DD-MM-YYYY"
+                  label="Date *"
+                  onChange={(newTime) => {
+                    const updated = [...examSchedules];
+                    updated[row.id].examDate = newTime;
+                    setExamSchedules(updated);
+                  }}
+                  minDate={dayjs()}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      error:
+                        typeof formik.errors.subjects?.[row.id] === 'object' &&
+                        !!(formik.errors.subjects?.[row.id] as any)?.examDate &&
+                        !!formik.touched.subjects?.[row.id]?.examDate,
+                      helperText:
+                        formik.touched.subjects?.[row.id]?.examDate &&
+                        typeof formik.errors.subjects?.[row.id] === 'object'
+                          ? (formik.errors.subjects?.[row.id] as any)?.examDate
+                          : '',
+                      FormHelperTextProps: {
+                        sx: {
+                          margin: 0,
+                          marginTop: '4px',
+                          lineHeight: '1.25rem',
+                          whiteSpace: 'normal',
+                        },
+                      },
+                      InputLabelProps: {
+                        sx: { lineHeight: '1.2em' },
+                      },
+                    },
+                  }}
+                />
+              </Box>
             );
           },
         },
@@ -60,21 +112,52 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <TimePicker
-                format="hh:mm"
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '160px',
+                  width: '100%',
+                  mb: 1,
                 }}
-                value={value ? dayjs(value) : null}
-                onChange={(newTime) => {
-                  const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].startTime = newTime;
-                  setExamSchedules(updatedSchedules);
-                }}
-                slotProps={{ textField: { size: 'small' } }}
-                sx={{ minWidth: '250px', width: '100%' }}
-              />
+              >
+                <TimePicker
+                  value={value ? dayjs(value) : null}
+                  format="hh:mm"
+                  label="Start Time *"
+                  onChange={(newTime) => {
+                    const updated = [...examSchedules];
+                    updated[row.id].startTime = newTime;
+                    setExamSchedules(updated);
+                  }}
+                  viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      error:
+                        typeof formik.errors.subjects?.[row.id] === 'object' &&
+                        !!(formik.errors.subjects?.[row.id] as any)?.startTime &&
+                        !!formik.touched.subjects?.[row.id]?.startTime,
+                      helperText:
+                        formik.touched.subjects?.[row.id]?.startTime &&
+                        typeof formik.errors.subjects?.[row.id] === 'object'
+                          ? (formik.errors.subjects?.[row.id] as any)?.startTime
+                          : '',
+                      FormHelperTextProps: {
+                        sx: {
+                          margin: 0,
+                          marginTop: '4px',
+                          lineHeight: '1.25rem',
+                          whiteSpace: 'normal',
+                        },
+                      },
+                      InputLabelProps: {
+                        sx: { lineHeight: '1.2em' },
+                      },
+                    },
+                  }}
+                />
+              </Box>
             );
           },
         },
@@ -85,21 +168,52 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <TimePicker
-                format="hh:mm"
-                value={value ? dayjs(value) : null}
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '160px',
+                  width: '100%',
+                  mb: 1,
                 }}
-                onChange={(newTime) => {
-                  const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].startTime = newTime;
-                  setExamSchedules(updatedSchedules);
-                }}
-                slotProps={{ textField: { size: 'small' } }}
-                sx={{ minWidth: '250px', width: '100%' }}
-              />
+              >
+                <TimePicker
+                  value={value ? dayjs(value) : null}
+                  format="hh:mm"
+                  label="End Time *"
+                  onChange={(newTime) => {
+                    const updated = [...examSchedules];
+                    updated[row.id].endTime = newTime;
+                    setExamSchedules(updated);
+                  }}
+                  viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      error:
+                        typeof formik.errors.subjects?.[row.id] === 'object' &&
+                        !!(formik.errors.subjects?.[row.id] as any)?.endTime &&
+                        !!formik.touched.subjects?.[row.id]?.endTime,
+                      helperText:
+                        formik.touched.subjects?.[row.id]?.endTime &&
+                        typeof formik.errors.subjects?.[row.id] === 'object'
+                          ? (formik.errors.subjects?.[row.id] as any)?.endTime
+                          : '',
+                      FormHelperTextProps: {
+                        sx: {
+                          margin: 0,
+                          marginTop: '4px',
+                          lineHeight: '1.25rem',
+                          whiteSpace: 'normal',
+                        },
+                      },
+                      InputLabelProps: {
+                        sx: { lineHeight: '1.2em' },
+                      },
+                    },
+                  }}
+                />
+              </Box>
             );
           },
         },
@@ -110,17 +224,48 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <TextField
-                value={value}
-                type="number"
-                onChange={(e) => {
-                  const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].totalMarks = Number(e.target.value);
-                  setExamSchedules(updatedSchedules);
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '160px',
+                  width: '100%',
+                  mb: 1,
                 }}
-                size="small"
-                sx={{ minWidth: '250px', width: '100%' }}
-              />
+              >
+                <TextField
+                  value={value}
+                  type="number"
+                  label="Total Marks *"
+                  onChange={(e) => {
+                    const updated = [...examSchedules];
+                    updated[row.id].totalMarks = Number(e.target.value);
+                    setExamSchedules(updated);
+                  }}
+                  size="small"
+                  error={
+                    Boolean(formik.touched.subjects?.[row.id]?.totalMarks) &&
+                    !!(formik.errors.subjects?.[row.id] as any)?.totalMarks
+                  }
+                  helperText={
+                    formik.touched.subjects?.[row.id]?.totalMarks &&
+                    (formik.errors.subjects?.[row.id] as any)?.totalMarks
+                      ? (formik.errors.subjects?.[row.id] as any)?.totalMarks
+                      : ''
+                  }
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      marginTop: '4px',
+                      lineHeight: '1.25rem',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
+                />
+              </Box>
             );
           },
         },
@@ -131,17 +276,48 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <TextField
-                value={value}
-                type="number"
-                onChange={(e) => {
-                  const updatedSchedules = [...examSchedules];
-                  updatedSchedules[row.id].passingMarks = Number(e.target.value);
-                  setExamSchedules(updatedSchedules);
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '160px',
+                  width: '100%',
+                  mb: 1,
                 }}
-                size="small"
-                sx={{ minWidth: '250px', width: '100%' }}
-              />
+              >
+                <TextField
+                  value={value}
+                  type="number"
+                  label="Passing Marks *"
+                  onChange={(e) => {
+                    const updated = [...examSchedules];
+                    updated[row.id].passingMarks = Number(e.target.value);
+                    setExamSchedules(updated);
+                  }}
+                  size="small"
+                  error={
+                    Boolean(formik.touched.subjects?.[row.id]?.passingMarks) &&
+                    !!(formik.errors.subjects?.[row.id] as any)?.passingMarks
+                  }
+                  helperText={
+                    formik.touched.subjects?.[row.id]?.passingMarks &&
+                    (formik.errors.subjects?.[row.id] as any)?.passingMarks
+                      ? (formik.errors.subjects?.[row.id] as any)?.passingMarks
+                      : ''
+                  }
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      marginTop: '4px',
+                      lineHeight: '1.25rem',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
+                />
+              </Box>
             );
           },
         },
