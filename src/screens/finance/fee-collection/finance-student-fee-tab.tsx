@@ -6,9 +6,12 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box, TextField } from '@mui/material';
+import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
+
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -17,17 +20,20 @@ import FinanceStudentFeeCardComponent from './studentFeeDetails/finance-student-
 import FinanceStudentDetailedFeeComponent from './studentFeeDetails/finance-student-detailed-fee-component';
 
 interface FinanceStudentFeeTabProps {
-  studentId: string;
+  studentId?: string;
 }
 
-const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId }) => {
+const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId = '' }) => {
   // Get and set search params (studentId, class, division)
 
-  const [searchParams, setSearchParams] = useSearchParam({ studentId: '1' });
+  const { getParam, getAllParams, setParam } = useCustomSearchParams({ studentId });
+
+  const searchParams = getAllParams();
 
   // Update studentId in the URL
   const handleStudentChange = (newStudentId: string) => {
-    setSearchParams({ studentId: newStudentId });
+    setParam('studentId', newStudentId);
+    // setSearchParams({ studentId: newStudentId });
   };
 
   // States for managing organization/stage selection
@@ -66,6 +72,27 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId }
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
+
+  // Returns getStudents function, StudentsData response and loading state
+  const [getStudents, { data: StudentsData, isLoading: isStudentLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  const studentValue = StudentsData?.items?.find(
+    (item: any) => item?.id === searchParams.studentId
+  );
+
+  // Effect to fetch students when division, class and organization are selected
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
 
   return (
     <>
@@ -109,18 +136,39 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId }
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           disabled={!classes}
         />
-        <TextField
-          label="Search by student name"
-          variant="outlined"
-          size="small"
-          value={searchParams.studentId || ''}
-          onChange={(e) => handleStudentChange(e.target.value)}
-        />
+        {isStudentLoading ? (
+          <Skeleton variant="rectangular" width={250} height={40} />
+        ) : (
+          <Autocomplete
+            noOptionsText="No Student Found"
+            sx={{ maxWidth: '250px', width: '100%' }}
+            value={studentValue}
+            onChange={(e, value: any) => {
+              setParam('studentId', value?.id || '');
+            }}
+            options={StudentsData?.items || []}
+            getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size="small"
+                label="Student"
+                placeholder="Search  Student"
+                fullWidth
+              />
+            )}
+            renderOption={(prop: any, option: any) => (
+              <li {...prop} key={option.id}>
+                {option.firstName || ''} {option.lastName || ''}
+              </li>
+            )}
+          />
+        )}
       </Box>
 
       {/* Fee Components */}
-      <FinanceStudentFeeCardComponent studentId={searchParams.studentId} />
-      <FinanceStudentDetailedFeeComponent studentId={searchParams.studentId} />
+      {studentValue && <FinanceStudentFeeCardComponent student={studentValue} />}
+      {studentValue && <FinanceStudentDetailedFeeComponent studentId={studentValue} />}
     </>
   );
 };

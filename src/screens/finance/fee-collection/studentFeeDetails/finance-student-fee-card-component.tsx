@@ -367,11 +367,11 @@ const students = [
 ];
 
 interface FinanceStudentFeeCardComponentProps {
-  studentId: string;
+  student: Record<string, any>;
 }
 
 const FinanceStudentFeeCardComponent: React.FC<FinanceStudentFeeCardComponentProps> = ({
-  studentId,
-}) => <FinanceStudentInfoCardComponent user={dummyUser} />;
+  student,
+}) => <FinanceStudentInfoCardComponent user={student} />;
 
 export default FinanceStudentFeeCardComponent;

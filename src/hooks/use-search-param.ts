@@ -192,3 +192,52 @@ export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
 
 //   return [getAllParams(), setSearchParams, removeSearchParamsByKey] as const;
 // };
+
+type ParamsObject = Record<string, string>;
+
+export const useCustomSearchParams = (initialValues?: ParamsObject) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Apply initial values on first render if keys are missing
+  useEffect(() => {
+    if (!initialValues) return;
+
+    const current = new URLSearchParams(searchParams.toString());
+    let hasChanged = false;
+
+    Object.entries(initialValues).forEach(([key, value]) => {
+      if (!current.has(key)) {
+        current.set(key, value);
+        hasChanged = true;
+      }
+    });
+
+    if (hasChanged) {
+      router.replace(`?${current.toString()}`); // Replace to avoid new history entry
+    }
+  }, [initialValues, searchParams, router]);
+
+  const getParam = (key: string): string | null => searchParams.get(key);
+
+  const setParam = (key: string, value: string): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.push(`?${params.toString()}`);
+  };
+
+  const deleteParam = (key: string): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(key);
+    router.push(`?${params.toString()}`);
+  };
+
+  const getAllParams = (): ParamsObject => Object.fromEntries(searchParams.entries());
+
+  return {
+    getParam,
+    setParam,
+    deleteParam,
+    getAllParams,
+  };
+};

@@ -4,6 +4,9 @@ import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import calculateAge from 'src/utils/calculate-age';
+import { convertBase64Format } from 'src/utils/base64Formate';
+
 import { CONFIG } from 'src/config-global';
 
 import { Iconify } from 'src/components/iconify';
@@ -39,7 +42,7 @@ const dummyUser: IUserCard = {
   totalFollowing: 300,
 };
 
-const FinanceStudentInfoCardComponent = ({ user }: Props) => {
+const FinanceStudentInfoCardComponent = ({ user }: any) => {
   // Dialog state management using useBoolean hook
   const dialog = useBoolean();
   const feeRefundDialog = useBoolean();
@@ -70,7 +73,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           display: 'flex',
           flexDirection: 'row',
           width: '100%',
-          padding: 4,
+          padding: 2,
           background: 'linear-gradient(to right, #fbe8d3, #e0f7fa)',
           boxShadow: 3,
           borderRadius: 2,
@@ -85,16 +88,16 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
             justifyContent: 'center',
             width: '20%',
             textAlign: 'center',
-            padding: 2,
+            // padding: 2,
           }}
         >
           <Avatar
             alt={user.name}
-            src={`${assetURL}/assets/images/avatar/avatar-${0 + 1}.webp`}
-            sx={{ width: 120, height: 120, mb: 1 }}
+            src={convertBase64Format(user?.profilePicture || '')}
+            sx={{ width: 80, height: 80 }}
           />
           <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-            {user.name}
+            {user?.firstName} {user?.lastName} {user?.middleName}
           </Typography>
         </Box>
 
@@ -103,17 +106,21 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
           {/* First Row */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2 }}>
             {[
-              { label: 'Standard', icon: 'fa:mortar-board', value: '10-A' },
-              { label: 'Roll Number', icon: 'mdi:account', value: '20223' },
-              { label: 'Gr Number', icon: 'ph:student-bold', value: '9876GH' },
+              {
+                label: 'Standard',
+                icon: 'fa:mortar-board',
+                value: `${user?.standard?.name}-${user?.division?.name}`,
+              },
+              { label: 'Roll Number', icon: 'mdi:account', value: user?.rollNo || '-' },
+              { label: 'Gr Number', icon: 'ph:student-bold', value: user?.grNoRecord || '-' },
               { label: 'Class Teacher', icon: 'mdi:teach', value: 'Mr. John' },
-              { label: 'Age', icon: 'ic:baseline-cake', value: '15 Years' },
+              { label: 'Age', icon: 'ic:baseline-cake', value: calculateAge(user?.dateOfBirth) },
             ].map((item) => (
               <Box key={item.label} sx={{ textAlign: 'center' }}>
                 <Typography variant="caption" sx={{ mb: 0.5, color: 'text.secondary' }}>
                   {item.label}
                 </Typography>
-                <Box display="flex" alignItems="center" justifyContent="center">
+                <Box display="flex" alignItems="center" justifyContent="center" fontSize={12}>
                   <Iconify icon={item.icon} width={20} height={20} sx={{ mr: 1 }} />
                   {item.value}
                 </Box>
@@ -154,6 +161,7 @@ const FinanceStudentInfoCardComponent = ({ user }: Props) => {
                   alignItems="center"
                   justifyContent="center"
                   sx={{ color: color || 'text.primary' }}
+                  fontSize={12}
                 >
                   <Iconify icon={icon} width={20} height={20} sx={{ mr: 1 }} />
                   {value}
