@@ -201,6 +201,12 @@ const RollNoGenerationScreen = ({
                 onClick={handleSave}
                 disabled={isSaving || !tableData.some((item) => item.rollNo)}
                 size="small"
+                sx={{
+                  position: 'fixed',
+                  bottom: 16,
+                  right: 16,
+                  zIndex: 1000,
+                }}
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
