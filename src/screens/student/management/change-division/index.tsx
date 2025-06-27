@@ -85,18 +85,21 @@ const ChangeDivisionScreen = ({
   return (
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
-          <LoadingButton
-            loading={isChangeDivisionLoading}
-            startIcon={<Save />}
-            variant="outlined"
-            onClick={handelSave}
-            size="small"
-            sx={{ width: '180px' }}
-          >
-            Save
-          </LoadingButton>
-        </Box>
+        <LoadingButton
+          loading={isChangeDivisionLoading}
+          startIcon={<Save />}
+          variant="contained"
+          onClick={handelSave}
+          size="small"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            zIndex: 1000,
+          }}
+        >
+          {isChangeDivisionLoading ? 'Saving...' : 'Save'}
+        </LoadingButton>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}

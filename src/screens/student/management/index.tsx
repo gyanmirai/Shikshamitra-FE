@@ -144,6 +144,7 @@ const StudentManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Student Management"
+        description=" "
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Records', href: '/student/overview/' },
