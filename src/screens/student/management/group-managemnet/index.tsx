@@ -723,7 +723,6 @@ const GroupManagementForm = ({
           size="small"
           value={formik.values.name}
           name="name"
-          placeholder="Enter House Name"
           label="House Name"
           autoFocus
           onChange={(e) => {
