@@ -508,7 +508,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         <Box display="flex" my={2} gap={2} flexWrap="wrap">
           <CustomSelect
             options={allOrganization}
-            label="Organization"
+            label="Organization *"
             value={organization}
             onChange={(val) => setOrganization(val as string)}
             labelKey="name"
@@ -518,7 +518,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           />
           <CustomSelect
             options={allClass}
-            label="Class"
+            label="Class *"
             value={classes}
             onChange={(val) => setClass(val as string)}
             labelKey="name"
@@ -528,7 +528,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           />
           <CustomSelect
             options={allDivision}
-            label="Division"
+            label="Division *"
             value={division}
             onChange={(val) => setDivision(val as string)}
             labelKey="name"
@@ -547,13 +547,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
             options={StudentsData?.items || []}
             getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Student"
-                placeholder="Search  Student"
-                fullWidth
-              />
+              <TextField {...params} size="small" label="Student *" fullWidth />
             )}
             renderOption={(prop: any, option: any) => (
               <li {...prop} key={option.id}>
@@ -562,7 +556,6 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
             )}
           />
         </Box>
-
         {student?.id && (
           <Box component="form">
             <Grid container spacing={2}>
@@ -571,7 +564,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   name="leaveType"
                   select
                   fullWidth
-                  label="Leave Type"
+                  label="Leave Type *"
                   size="small"
                   value={values.leaveType}
                   onChange={(e) => setFieldValue('leaveType', e.target.value)}
@@ -622,8 +615,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   label="Half Day"
                 />
               </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={4} sx={{ marginLeft: -25 }}>
                 <DateTimePicker
+                  format="DD-MM-YYYY hh:mm"
                   label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
                   onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
@@ -636,8 +630,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                 />
               </Grid>
               {!values.isHalfDay && (
-                <Grid item xs={4}>
+                <Grid item xs={4} sx={{ marginLeft: -4 }}>
                   <DateTimePicker
+                    format="DD-MM-YYYY hh:mm"
                     label="End Date and Time"
                     onChange={(value) => setFieldValue('endDate', value)}
                     slotProps={{

@@ -5,9 +5,9 @@ import type { Standards } from 'src/types/school';
 import { useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
+import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
-import { Box, Checkbox } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -91,10 +91,9 @@ const ChangeClassScreen = ({
           <LoadingButton
             loading={isClassChangLoading}
             startIcon={<Save />}
-            variant="outlined"
+            variant="contained"
             onClick={handleSave}
             size="small"
-            sx={{ width: '180px' }}
           >
             Save
           </LoadingButton>
@@ -113,42 +112,42 @@ const ChangeClassScreen = ({
           noDataText="No Student data available"
           isLoading={isLoading}
           columns={[
-            {
-              id: 'checkBox',
-              label: ' ',
-              minWidth: '60px',
-              sticky: true,
-              isSort: false,
-              isFilter: false,
-              renderColumn: (value) => (
-                <Checkbox
-                  checked={tableData.length === selectedStudent.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudent(tableData);
-                    } else {
-                      setSelectedStudent([]);
-                    }
-                  }}
-                />
-              ),
-              render(value, row) {
-                return (
-                  <Checkbox
-                    checked={selectedStudent.some((student: any) => student.id === row.id)}
-                    onChange={(e) => {
-                      if (!e.target.checked) {
-                        setSelectedStudent(
-                          selectedStudent.filter((student: any) => student.id !== row.id)
-                        );
-                      } else {
-                        setSelectedStudent([...selectedStudent, row]);
-                      }
-                    }}
-                  />
-                );
-              },
-            },
+            // {
+            //   id: 'checkBox',
+            //   label: ' ',
+            //   minWidth: '60px',
+            //   sticky: true,
+            //   isSort: false,
+            //   isFilter: false,
+            //   renderColumn: (value) => (
+            //     <Checkbox
+            //       checked={tableData.length === selectedStudent.length}
+            //       onChange={(e) => {
+            //         if (e.target.checked) {
+            //           setSelectedStudent(tableData);
+            //         } else {
+            //           setSelectedStudent([]);
+            //         }
+            //       }}
+            //     />
+            //   ),
+            //   render(value, row) {
+            //     return (
+            //       <Checkbox
+            //         checked={selectedStudent.some((student: any) => student.id === row.id)}
+            //         onChange={(e) => {
+            //           if (!e.target.checked) {
+            //             setSelectedStudent(
+            //               selectedStudent.filter((student: any) => student.id !== row.id)
+            //             );
+            //           } else {
+            //             setSelectedStudent([...selectedStudent, row]);
+            //           }
+            //         }}
+            //       />
+            //     );
+            //   },
+            // },
             // { id: 'srNo', label: 'Sr. No.' },
             { id: 'grNoRecord', label: 'GR No.', align: 'left' },
             { id: 'name', label: 'Name', align: 'left' },

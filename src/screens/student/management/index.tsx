@@ -6,13 +6,14 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Tab, Box, Card, Divider, useTheme } from '@mui/material';
+import { Tab, Box, Card, useTheme } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -29,6 +30,7 @@ const TABS = [
   {
     value: 'grGeneration',
     label: 'GR. No. Generation',
+    icon: <Iconify icon="cil:badge" width={20} />,
     component: (props: {
       isLoading: boolean;
       tableData: IInquiryData[];
@@ -38,7 +40,8 @@ const TABS = [
   },
   {
     value: 'rollGeneration',
-    label: 'Roll No. Generation',
+    label: ' Roll No. Generation',
+    icon: <Iconify icon="token:scroll" width={20} />,
     component: (props: {
       isLoading: boolean;
       tableData: IInquiryData[];
@@ -49,6 +52,7 @@ const TABS = [
   {
     value: 'changeDivision',
     label: 'Change Division',
+    icon: <Iconify icon="mage:exchange-a" width={20} />,
     component: (props: {
       isLoading: boolean;
       tableData: IInquiryData[];
@@ -59,6 +63,7 @@ const TABS = [
   {
     value: 'changeClass',
     label: 'Change Class',
+    icon: <Iconify icon="icon-park-outline:exchange-one" width={20} />,
     component: (props: {
       isLoading: boolean;
       tableData: IInquiryData[];
@@ -71,6 +76,7 @@ const TABS = [
   {
     value: 'groupManageMent',
     label: 'House Management',
+    icon: <Iconify icon="mdi:house" width={20} />,
     component: (props: { tableData: IInquiryData[]; isLoading: boolean }) => (
       <GroupManagement {...props} />
     ),
@@ -144,7 +150,7 @@ const StudentManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Student Management"
-        description=" "
+        description="Manage student records by class and division. Generate GR numbers manually or automatically, and perform actions like changing class, division, or house allocation"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Records', href: '/student/overview/' },
@@ -186,8 +192,6 @@ const StudentManagementScreen = () => {
       </Box>
       <Card
         sx={{
-          // py: 2,
-          // px: 2,
           mt: 1,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -196,17 +200,16 @@ const StudentManagementScreen = () => {
           value={searchParams.tab}
           onChange={(_, val) => setSearchParams({ tab: val })}
           // variant=""
-          // slotProps={{ tab: { px: 1 } }}
+          slotProps={{ tab: { px: 1 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab key={tab.value} icon={tab.icon} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
-        <Divider sx={{ my: 2 }} />
-        <Box px={2} pb={2}>
-          {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
-        </Box>
       </Card>
+      <Box pb={2}>
+        {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
+      </Box>
     </Box>
   );
 };
