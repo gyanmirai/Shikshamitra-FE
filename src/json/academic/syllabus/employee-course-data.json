@@ -1,38 +1,216 @@
 [
-    {
-      "id": 1,
-      "name": "Math (MTH101)",
-      "progress": 5,
-      "completedChapter": 0,
-      "totalChapter": 8,
-      "color": "#42a5f5",
-      "details": [
-        { "chapterNumber": 1, "chapterName": "Algebra", "teacherName": "Sharma Rajesh Kumar", "startDate": "01-06-2025", "progress": 20, "pending": 80, "timeLine": "05-07-2025" },
-        { "chapterNumber": 2, "chapterName": "Geometry", "teacherName": "Sharma Rajesh Kumar", "startDate": "08-07-2025", "progress": 0, "pending": 100, "timeLine": "08-08-2025" },
-        { "chapterNumber": 3, "chapterName": "Trigonometry", "teacherName": "Patel Meera Suresh", "startDate": "10-08-2025", "progress": 0, "pending": 100, "timeLine": "10-09-2025" },
-        { "chapterNumber": 4, "chapterName": "Calculus", "teacherName": "Patel Meera Suresh", "startDate": "13-09-2025", "progress": 0, "pending": 100, "timeLine": "13-10-2025" },
-        { "chapterNumber": 5, "chapterName": "Statistics", "teacherName": "Gupta Deepak Ramesh", "startDate": "16-10-2025", "progress": 0, "pending": 100, "timeLine": "16-11-2025" },
-        { "chapterNumber": 6, "chapterName": "Probability", "teacherName": "Gupta Deepak Ramesh", "startDate": "20-11-2025", "progress": 0, "pending": 100, "timeLine": "20-12-2025" },
-        { "chapterNumber": 7, "chapterName": "Sets", "teacherName": "Reddy Sarita Prakash", "startDate": "23-12-2025", "progress": 0, "pending": 100, "timeLine": "23-01-2026" },
-        { "chapterNumber": 8, "chapterName": "Matrices", "teacherName": "Reddy Sarita Prakash", "startDate": "25-01-2026", "progress": 0, "pending": 100, "timeLine": "25-02-2026" }
-      ]
-    },
-    {
-      "id": 2,
-      "name": "Science (SCI201)", 
-      "progress": 3,
-      "completedChapter": 0,
-      "totalChapter": 8,
-      "color": "#ef5350",
-      "details": [
-        { "chapterNumber": 1, "chapterName": "Physics Mechanics", "teacherName": "Iyer Ramesh Venkat", "startDate": "01-06-2025", "progress": 15, "pending": 85, "timeLine": "05-07-2025" },
-        { "chapterNumber": 2, "chapterName": "Thermodynamics", "teacherName": "Iyer Ramesh Venkat", "startDate": "08-07-2025", "progress": 0, "pending": 100, "timeLine": "08-08-2025" },
-        { "chapterNumber": 3, "chapterName": "Chemical Bonding", "teacherName": "Chatterjee Esha Pranab", "startDate": "10-08-2025", "progress": 0, "pending": 100, "timeLine": "10-09-2025" },
-        { "chapterNumber": 4, "chapterName": "Organic Chemistry", "teacherName": "Chatterjee Esha Pranab", "startDate": "13-09-2025", "progress": 0, "pending": 100, "timeLine": "13-10-2025" },
-        { "chapterNumber": 5, "chapterName": "Cell Biology", "teacherName": "Menon Mohan Krishna", "startDate": "16-10-2025", "progress": 0, "pending": 100, "timeLine": "16-11-2025" },
-        { "chapterNumber": 6, "chapterName": "Genetics", "teacherName": "Menon Mohan Krishna", "startDate": "20-11-2025", "progress": 0, "pending": 100, "timeLine": "20-12-2025" },
-        { "chapterNumber": 7, "chapterName": "Electricity", "teacherName": "Singh Lakshmi Devi", "startDate": "23-12-2025", "progress": 0, "pending": 100, "timeLine": "23-01-2026" },
-        { "chapterNumber": 8, "chapterName": "Magnetism", "teacherName": "Singh Lakshmi Devi", "startDate": "25-01-2026", "progress": 0, "pending": 100, "timeLine": "25-02-2026" }
-      ]
-    }
+  {
+    "id": 1,
+    "name": "Math (MTH101)",
+    "progress": 5,
+    "completedChapter": 0,
+    "totalChapter": 8,
+    "color": "#42a5f5",
+    "details": [
+      {
+        "chapterNumber": 1,
+        "chapterName": "Algebra",
+        "teacherName": "Sharma Rajesh Kumar",
+        "startDate": "01-06-2025",
+        "progress": 20,
+        "pending": 80,
+        "timeLine": "05-07-2025",
+        "logs": [
+          {
+            "key": 1,
+            "des": "Chapter introduced to students.",
+            "time": "2025-06-01 09:00 AM",
+            "color": "info",
+            "progress": 0,
+            "teacher": "Sharma Rajesh Kumar"
+          },
+          {
+            "key": 2,
+            "des": "Basic concepts covered.",
+            "time": "2025-06-05 10:00 AM",
+            "color": "success",
+            "progress": 20,
+            "teacher": "Sharma Rajesh Kumar"
+          }
+        ]
+      },
+      {
+        "chapterNumber": 2,
+        "chapterName": "Geometry",
+        "teacherName": "Sharma Rajesh Kumar",
+        "startDate": "08-07-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "08-08-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 3,
+        "chapterName": "Trigonometry",
+        "teacherName": "Patel Meera Suresh",
+        "startDate": "10-08-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "10-09-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 4,
+        "chapterName": "Calculus",
+        "teacherName": "Patel Meera Suresh",
+        "startDate": "13-09-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "13-10-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 5,
+        "chapterName": "Statistics",
+        "teacherName": "Gupta Deepak Ramesh",
+        "startDate": "16-10-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "16-11-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 6,
+        "chapterName": "Probability",
+        "teacherName": "Gupta Deepak Ramesh",
+        "startDate": "20-11-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "20-12-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 7,
+        "chapterName": "Sets",
+        "teacherName": "Reddy Sarita Prakash",
+        "startDate": "23-12-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "23-01-2026",
+        "logs": []
+      },
+      {
+        "chapterNumber": 8,
+        "chapterName": "Matrices",
+        "teacherName": "Reddy Sarita Prakash",
+        "startDate": "25-01-2026",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "25-02-2026",
+        "logs": []
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Science (SCI201)",
+    "progress": 3,
+    "completedChapter": 0,
+    "totalChapter": 8,
+    "color": "#ef5350",
+    "details": [
+      {
+        "chapterNumber": 1,
+        "chapterName": "Physics Mechanics",
+        "teacherName": "Iyer Ramesh Venkat",
+        "startDate": "01-06-2025",
+        "progress": 15,
+        "pending": 85,
+        "timeLine": "05-07-2025",
+        "logs": [
+          {
+            "key": 1,
+            "des": "Chapter introduced to class.",
+            "time": "2025-06-01 10:00 AM",
+            "color": "info",
+            "progress": 0,
+            "teacher": "Iyer Ramesh Venkat"
+          },
+          {
+            "key": 2,
+            "des": "Explained Newton's laws.",
+            "time": "2025-06-10 11:30 AM",
+            "color": "success",
+            "progress": 15,
+            "teacher": "Iyer Ramesh Venkat"
+          }
+        ]
+      },
+      {
+        "chapterNumber": 2,
+        "chapterName": "Thermodynamics",
+        "teacherName": "Iyer Ramesh Venkat",
+        "startDate": "08-07-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "08-08-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 3,
+        "chapterName": "Chemical Bonding",
+        "teacherName": "Chatterjee Esha Pranab",
+        "startDate": "10-08-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "10-09-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 4,
+        "chapterName": "Organic Chemistry",
+        "teacherName": "Chatterjee Esha Pranab",
+        "startDate": "13-09-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "13-10-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 5,
+        "chapterName": "Cell Biology",
+        "teacherName": "Menon Mohan Krishna",
+        "startDate": "16-10-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "16-11-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 6,
+        "chapterName": "Genetics",
+        "teacherName": "Menon Mohan Krishna",
+        "startDate": "20-11-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "20-12-2025",
+        "logs": []
+      },
+      {
+        "chapterNumber": 7,
+        "chapterName": "Electricity",
+        "teacherName": "Singh Lakshmi Devi",
+        "startDate": "23-12-2025",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "23-01-2026",
+        "logs": []
+      },
+      {
+        "chapterNumber": 8,
+        "chapterName": "Magnetism",
+        "teacherName": "Singh Lakshmi Devi",
+        "startDate": "25-01-2026",
+        "progress": 0,
+        "pending": 100,
+        "timeLine": "25-02-2026",
+        "logs": []
+      }
+    ]
+  }
 ]

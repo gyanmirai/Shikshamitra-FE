@@ -1,11 +1,22 @@
-// utils/initialValues.ts
+import type { ISubjectFormValues } from './type';
 
-import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesTableData.json';
+export const getNoOfLectureInitialValues = (
+  editData: ISubjectFormValues | null
+): ISubjectFormValues => {
+  const subjects =
+    editData?.subjects?.map(({ name, subjectCode, subjectColor, noOfLecture }, index) => ({
+      id: `subject-${index}`,
+      name,
+      subjectCode,
+      subjectColor,
+      noOfLecture: noOfLecture ?? 0,
+    })) ?? [];
 
-export const getNoOfLectureInitialValues = () => ({
-  className: '',
-  weeklyLectures: weeklyLecturesTableData.map(({ id, noOfLecture }) => ({
-    id: id.toString(),
-    weeklyLectures: noOfLecture,
-  })),
-});
+  const totalLectures = subjects.reduce((sum, subj) => sum + subj.noOfLecture, 0);
+
+  return {
+    className: editData?.className || '',
+    subjects,
+    totalLectures,
+  };
+};

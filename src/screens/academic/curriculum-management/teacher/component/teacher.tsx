@@ -45,9 +45,7 @@ const Teacher = ({
   searchParams?: Record<string, string>;
   setSearchParams?: (obj: Record<string, any>) => void;
 }) => {
-  // Dialog control states for reset and save confirmations
   const resetConfirmDialog = useBoolean();
-  // Dialog state for save confirmation popup
   const saveConfirmDialog = useBoolean();
 
   const teacherOptions: ITeacherOption[] = [
@@ -103,43 +101,71 @@ const Teacher = ({
     {
       division: 'A',
       subjects: {
-        Math: 'teacher1',
-        English: '',
-        Science: 'teacher3',
-        History: 'teacher4',
-        Geography: '',
-        Computer: 'teacher2',
-        Physics: 'teacher5',
-        Chemistry: '',
-        Biology: 'teacher6',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
     {
       division: 'B',
       subjects: {
-        Math: 'teacher2',
-        English: 'teacher1',
-        Science: '',
-        History: '',
-        Geography: 'teacher3',
-        Computer: '',
-        Physics: 'teacher6',
-        Chemistry: 'teacher2',
-        Biology: '',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
     {
       division: 'C',
       subjects: {
-        Math: '',
-        English: 'teacher3',
-        Science: 'teacher2',
-        History: 'teacher1',
-        Geography: '',
-        Computer: 'teacher4',
-        Physics: '',
-        Chemistry: 'teacher5',
-        Biology: 'teacher3',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
+      },
+    },
+    {
+      division: 'D',
+      subjects: {
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
+      },
+    },
+    {
+      division: 'E',
+      subjects: {
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
   ];
@@ -181,14 +207,14 @@ const Teacher = ({
 
   const handleReset = () => {
     setTableData(originalTableData);
-    setFocusedCells([]); // clear
+    setFocusedCells([]);
     resetConfirmDialog.onFalse();
     shikshaMitraToast.success({ message: 'Teachers assignment reset successfully' });
   };
 
   const handleSave = () => {
     setOriginalTableData(tableData);
-    setFocusedCells([]); // clear
+    setFocusedCells([]);
     saveConfirmDialog.onFalse();
     shikshaMitraToast.success({ message: 'Teachers assignment saved successfully' });
   };
@@ -274,7 +300,7 @@ const Teacher = ({
             sticky: true,
             render: (value: string) => (
               <Typography variant="caption" fontSize="13px">
-                Division {value}
+                {value}
               </Typography>
             ),
           },
@@ -288,13 +314,6 @@ const Teacher = ({
                 (cell) => cell.division === row.division && cell.subject === subject.name
               );
               return (
-                // <Box
-                //   sx={{
-                //     borderRadius: 1,
-                //     border: isCellFocused ? '2px solid #1976d2' : '1px solid transparent',
-                //     transition: 'border-color 0.2s ease-in-out',
-                //   }}
-                // >
                 <Autocomplete
                   multiple
                   disableCloseOnSelect
@@ -306,21 +325,22 @@ const Teacher = ({
                       : []
                   }
                   onChange={(_, newValue) => {
-                    const updatedTableData = tableData.map((divisionData) => {
-                      if (divisionData.division === row.division) {
-                        return {
-                          ...divisionData,
-                          subjects: {
-                            ...divisionData.subjects,
-                            [subject.name.charAt(0).toUpperCase() + subject.name.slice(1)]:
-                              newValue.map((teacher) => teacher.value),
-                          },
-                        };
-                      }
-                      return divisionData;
-                    });
+                    const updatedTableData = [...tableData];
+                    const divisionIndex = updatedTableData.findIndex(
+                      (d) => d.division === row.division
+                    );
 
-                    setTableData(updatedTableData);
+                    if (divisionIndex !== -1) {
+                      updatedTableData[divisionIndex] = {
+                        ...updatedTableData[divisionIndex],
+                        subjects: {
+                          ...updatedTableData[divisionIndex].subjects,
+                          [subject.name.charAt(0).toUpperCase() + subject.name.slice(1)]:
+                            newValue.map((teacher) => teacher.value),
+                        },
+                      };
+                      setTableData(updatedTableData);
+                    }
 
                     const newFocus = { division: row.division, subject: subject.name };
                     setFocusedCells((prev) => {
@@ -330,7 +350,6 @@ const Teacher = ({
                       );
 
                       if (newValue.length === 0) {
-                        // Remove focus if no value selected
                         return prev.filter(
                           (cell) =>
                             !(
@@ -375,10 +394,6 @@ const Teacher = ({
                       {option.name}
                     </li>
                   )}
-                  // sx={{
-                  //   width: '100%',
-                  //   minWidth: '330px',
-                  // }}
                   renderTags={(val) => {
                     if (val.length === 0) return null;
                     const first = val[0];
@@ -416,23 +431,18 @@ const Teacher = ({
                     },
                   }}
                 />
-                // </Box>
               );
             },
           })),
         ]}
         data={divisionList.map((division) => {
-          const divisionData = tableData.find((d) => d.division === division) || {
-            division,
-            subjects: {},
-          };
-
+          const divisionData = tableData.find((d) => d.division === division);
           const row: any = { division };
 
           subjectList.forEach((subject) => {
             const formattedSubject = subject.name.charAt(0).toUpperCase() + subject.name.slice(1);
             row[subject.name] =
-              divisionData.subjects[formattedSubject as keyof typeof divisionData.subjects] || [];
+              divisionData?.subjects[formattedSubject as keyof typeof divisionData.subjects] || [];
           });
 
           return row;

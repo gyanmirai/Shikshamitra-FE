@@ -106,7 +106,7 @@ const TimetableSettingScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
-        description="Configure timetable settings including weekly lectures, lecture slots and room details"
+        description="Configure timetable settings including weekly lectures, lecture slots and room details."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Timetable', href: '/academic/newTimetable' },

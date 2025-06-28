@@ -352,6 +352,7 @@ const GradeEntry = (props: TabComponentType) => {
           title={assignmentTitle ? `${assignmentTitle}` : 'Select an exam title'}
         >
           <Autocomplete
+            disabled={!subject}
             options={[
               // Unit Test titles
               { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },

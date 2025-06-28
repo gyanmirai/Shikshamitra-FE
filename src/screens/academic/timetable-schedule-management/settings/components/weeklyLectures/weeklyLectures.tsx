@@ -16,10 +16,24 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 
-const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
+import type { ISubject, ISubjectFormValues } from './type';
+
+interface WeeklyLecturesProps {
+  addWeeklyLectureDialog: {
+    value: boolean;
+    onTrue: () => void;
+    onFalse: () => void;
+  };
+}
+
+const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog }) => {
+  const [selectedWeeklyLecture, setSelectedWeeklyLecture] = useState<ISubjectFormValues | null>(
+    null
+  );
   // Dialog state to control the visibility of create lecture number dialog
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions
@@ -45,12 +59,16 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
       addWeeklyLectureDialog.onFalse();
       dispatch(setIsChanges(false));
       setIsEdit(false);
+      setDisabled(false);
+      setSelectedWeeklyLecture(null);
     }
     // Close dialog if no unsaved changes
     else if (!isChanges) {
       addWeeklyLectureDialog.onFalse();
+      setDisabled(false);
       dispatch(setIsChanges(false));
       setIsEdit(false);
+      setSelectedWeeklyLecture(null);
     }
   };
 
@@ -72,7 +90,10 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
           <>
             No Create Number Of Lectures Found{' '}
             <Box
-              onClick={() => {
+              component="span"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 addWeeklyLectureDialog.onTrue();
               }}
               color="primary.main"
@@ -85,15 +106,40 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
                 },
               }}
             >
-              Create Weekly Lectures
+              Weekly Lectures
             </Box>
           </>
         }
         columns={[
-          { id: 'class', label: 'Class', filterType: 'number' },
-          { id: 'totalLectures', label: 'Total Lectures', filterType: 'number' },
+          { id: 'className', label: 'Class', filterType: 'number', align: 'left' },
           {
-            id: 'actions',
+            id: 'totalLectures',
+            label: 'Total Lectures',
+            minWidth: 150,
+            filterType: 'number',
+            align: 'left',
+          },
+          {
+            id: 'subjects',
+            label: 'Subjects',
+            isSort: false,
+            align: 'left',
+            isFilter: false,
+            render: (value) => (
+              <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
+                {value.map((subject: ISubject) => (
+                  <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <SubjectColorIndicator color={subject.subjectColor} />
+                    <Typography variant="caption" fontSize="13px">
+                      {`${subject.name} (${subject.noOfLecture})`}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ),
+          },
+          {
+            id: 'action',
             label: 'Actions',
             minWidth: 60,
             sticky: true,
@@ -106,12 +152,14 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
                   // actions={(prop) => actions({ ...prop, row })}
                   showViewIcon
                   handleViewClick={() => {
+                    setSelectedWeeklyLecture(row as ISubjectFormValues);
                     viewWeeklyLecturesDialog.onTrue();
                     setDisabled(true);
                   }}
                   showEditIcon
                   showThreeDots={false}
                   handleEditClick={() => {
+                    setSelectedWeeklyLecture(row as ISubjectFormValues);
                     setIsEdit(true);
                     addWeeklyLectureDialog.onTrue();
                   }}
@@ -123,24 +171,94 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
         ]}
         data={[
           {
-            class: 1,
-            totalLectures: 8,
+            id: '1',
+            className: 1,
+            totalLectures: 52,
+            subjects: [
+              {
+                name: 'Mathematics',
+                subjectCode: 'MATH101',
+                subjectColor: '#FFB74D',
+                noOfLecture: 10,
+              },
+              { name: 'Science', subjectCode: 'SCI101', subjectColor: '#81C784', noOfLecture: 8 },
+              { name: 'English', subjectCode: 'ENG101', subjectColor: '#64B5F6', noOfLecture: 8 },
+              { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#E57373', noOfLecture: 6 },
+              { name: 'Computer', subjectCode: 'COM101', subjectColor: '#4DB6AC', noOfLecture: 6 },
+              { name: 'Art', subjectCode: 'ART101', subjectColor: '#FF8A65', noOfLecture: 4 },
+              {
+                name: 'Physical Education',
+                subjectCode: 'PHY101',
+                subjectColor: '#9575CD',
+                noOfLecture: 4,
+              },
+              {
+                name: 'Environmental Studies',
+                subjectCode: 'EVS101',
+                subjectColor: '#7CB342',
+                noOfLecture: 6,
+              },
+            ],
           },
           {
-            class: 2,
-            totalLectures: 9,
+            id: '2',
+            className: 2,
+            totalLectures: 54,
+            subjects: [
+              {
+                name: 'Mathematics',
+                subjectCode: 'MATH201',
+                subjectColor: '#FFB74D',
+                noOfLecture: 10,
+              },
+              { name: 'Science', subjectCode: 'SCI201', subjectColor: '#81C784', noOfLecture: 8 },
+              { name: 'English', subjectCode: 'ENG201', subjectColor: '#64B5F6', noOfLecture: 8 },
+              { name: 'Hindi', subjectCode: 'HIN201', subjectColor: '#E57373', noOfLecture: 7 },
+              { name: 'Computer', subjectCode: 'COM201', subjectColor: '#4DB6AC', noOfLecture: 6 },
+              { name: 'Art', subjectCode: 'ART201', subjectColor: '#FF8A65', noOfLecture: 4 },
+              {
+                name: 'Physical Education',
+                subjectCode: 'PHY201',
+                subjectColor: '#9575CD',
+                noOfLecture: 5,
+              },
+              {
+                name: 'Environmental Studies',
+                subjectCode: 'EVS201',
+                subjectColor: '#7CB342',
+                noOfLecture: 6,
+              },
+            ],
           },
           {
-            class: 3,
-            totalLectures: 6,
-          },
-          {
-            class: 4,
-            totalLectures: 7,
-          },
-          {
-            class: 5,
-            totalLectures: 5,
+            id: '3',
+            className: 3,
+            totalLectures: 56,
+            subjects: [
+              {
+                name: 'Mathematics',
+                subjectCode: 'MATH301',
+                subjectColor: '#FFB74D',
+                noOfLecture: 10,
+              },
+              { name: 'Science', subjectCode: 'SCI301', subjectColor: '#81C784', noOfLecture: 9 },
+              { name: 'English', subjectCode: 'ENG301', subjectColor: '#64B5F6', noOfLecture: 8 },
+              { name: 'Hindi', subjectCode: 'HIN301', subjectColor: '#E57373', noOfLecture: 7 },
+              { name: 'Computer', subjectCode: 'COM301', subjectColor: '#4DB6AC', noOfLecture: 6 },
+              { name: 'Art', subjectCode: 'ART301', subjectColor: '#FF8A65', noOfLecture: 4 },
+              {
+                name: 'Physical Education',
+                subjectCode: 'PHY301',
+                subjectColor: '#9575CD',
+                noOfLecture: 5,
+              },
+              {
+                name: 'Environmental Studies',
+                subjectCode: 'EVS301',
+                subjectColor: '#7CB342',
+                noOfLecture: 7,
+              },
+            ],
           },
         ]}
       />
@@ -156,8 +274,8 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
               placement="right"
               title={
                 isEdit
-                  ? 'You can update the weekly lecture details including class and total number of lectures'
-                  : 'You can create weekly lectures by specifying the class and total number of lectures'
+                  ? 'You can update the weekly lecture details including class and total number of lectures.'
+                  : 'You can create weekly lectures by specifying the class and total number of lectures.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -167,6 +285,7 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
         open={addWeeklyLectureDialog.value}
         handleClose={() => {
           addWeeklyLectureDialog.onFalse();
+          setSelectedWeeklyLecture(null);
           setIsEdit(false);
         }}
         maxWidth="sm"
@@ -175,6 +294,7 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
           // onSave={handleSave}
           // dialogValue={dialog.value}
           onClose={handleClose}
+          editData={selectedWeeklyLecture}
           // data={selectedEntry}
           // isEdit={isEdit}
           // allData={roomData}
@@ -189,7 +309,8 @@ const WeeklyLectures = ({ addWeeklyLectureDialog }: any) => {
       >
         <CreateNoOfLecture
           disabled={disabled}
-          onClose={viewWeeklyLecturesDialog.onFalse}
+          onClose={handleClose}
+          editData={selectedWeeklyLecture}
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}
