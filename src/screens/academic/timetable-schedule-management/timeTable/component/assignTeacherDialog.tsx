@@ -61,11 +61,11 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
                       labelKey="name"
                       valueKey="id"
                       options={[
-                        { id: 'John Smith', name: 'John Smith' },
-                        { id: 'Mary Johnson', name: 'Mary Johnson' },
-                        { id: 'David Williams', name: 'David Williams' },
-                        { id: 'Sarah Brown', name: 'Sarah Brown' },
-                        { id: 'Michael Davis', name: 'Michael Davis' },
+                        { id: 'Sharma Rajesh Kumar', name: 'Sharma Rajesh Kumar' },
+                        { id: 'Patel Priya Dinesh', name: 'Patel Priya Dinesh' },
+                        { id: 'Singh Amit Raj', name: 'Singh Amit Raj' },
+                        { id: 'Gupta Neha Anil', name: 'Gupta Neha Anil' },
+                        { id: 'Kumar Suresh Mohan', name: 'Kumar Suresh Mohan' },
                       ]}
                       value={row.teacher || ''}
                       onChange={(val) => {

@@ -4,198 +4,393 @@ import React from 'react';
 
 import TimeTableView from 'src/screens/academic/timetable-schedule-management/timeTable/component/timeTableView';
 
-const teacherTimetable: TimetableSlot[] = [
+const studentTimetable: TimetableSlot[] = [
   {
-    startTime: '07:00 Am',
-    endTime: '08:00 Am',
+    startTime: '07:00 AM',
+    endTime: '08:00 AM',
     isBreak: false,
-    class: '6',
-    division: 'B',
     dayData: [
       {
         day: 'Mon',
         subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH101', room: 'A102' }],
+        subjects: [
+          { subject: 'Math', subjectCode: 'MTH101', teacher: 'Kumar Rajesh Sharma', room: 'A102' },
+        ],
       },
       {
         day: 'Tue',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH101', room: 'B201' }],
+        subjectColor: '#ff7043',
+        subjects: [
+          {
+            subject: 'English',
+            subjectCode: 'ENG101',
+            teacher: 'Priyanka Rina Mehta',
+            room: 'B201',
+          },
+        ],
       },
       {
         day: 'Wed',
-        subjectColor: '#42a5f5',
-        subjects: [],
+        subjectColor: '#66bb6a',
+        subjects: [
+          {
+            subject: 'Science',
+            subjectCode: 'SCI101',
+            teacher: 'Mohan Prakash Joshi',
+            room: 'Lab1',
+          },
+        ],
       },
       {
         day: 'Thu',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH101', room: 'B201' }],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Social Science',
+            subjectCode: 'SOC101',
+            teacher: 'Anjali Priya Desai',
+            room: 'C103',
+          },
+        ],
       },
       {
         day: 'Fri',
-        subjectColor: '#42a5f5',
-        subjects: [],
+        subjectColor: '#29b6f6',
+        subjects: [
+          {
+            subject: 'Gujarati',
+            subjectCode: 'GUJ101',
+            teacher: 'Ramesh Hardik Patel',
+            room: 'D101',
+          },
+        ],
       },
-      { day: 'Sat', subjectColor: '', subjects: [] },
+      {
+        day: 'Sat',
+        subjectColor: '#ec407a',
+        subjects: [
+          {
+            subject: 'Computer',
+            subjectCode: 'CMP101',
+            teacher: 'Dipak Falguni Shah',
+            room: 'Lab2',
+          },
+        ],
+      },
     ],
   },
   {
-    startTime: '08:00 Am',
-    endTime: '09:00 Am',
+    startTime: '08:00 AM',
+    endTime: '09:00 AM',
     isBreak: false,
-    class: '7',
-    division: 'A',
     dayData: [
       {
         day: 'Mon',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI201', room: 'Lab1' }],
+        subjectColor: '#ff7043',
+        subjects: [
+          {
+            subject: 'English',
+            subjectCode: 'ENG101',
+            teacher: 'Priyanka Rina Mehta',
+            room: 'B201',
+          },
+        ],
       },
       {
         day: 'Tue',
-        subjectColor: '#ef5350',
-        subjects: [],
+        subjectColor: '#42a5f5',
+        subjects: [
+          { subject: 'Math', subjectCode: 'MTH101', teacher: 'Kumar Rajesh Sharma', room: 'A102' },
+        ],
       },
       {
         day: 'Wed',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI201', room: 'Lab2' }],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Social Science',
+            subjectCode: 'SOC101',
+            teacher: 'Anjali Priya Desai',
+            room: 'C103',
+          },
+        ],
       },
       {
         day: 'Thu',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI201', room: 'Lab1' }],
+        subjectColor: '#66bb6a',
+        subjects: [
+          {
+            subject: 'Science',
+            subjectCode: 'SCI101',
+            teacher: 'Mohan Prakash Joshi',
+            room: 'Lab1',
+          },
+        ],
       },
       {
         day: 'Fri',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI201', room: 'Lab1' }],
+        subjectColor: '#ec407a',
+        subjects: [
+          {
+            subject: 'Computer',
+            subjectCode: 'CMP101',
+            teacher: 'Dipak Falguni Shah',
+            room: 'Lab2',
+          },
+        ],
       },
-      { day: 'Sat', subjectColor: '', subjects: [] },
+      {
+        day: 'Sat',
+        subjectColor: '#29b6f6',
+        subjects: [
+          {
+            subject: 'Gujarati',
+            subjectCode: 'GUJ101',
+            teacher: 'Ramesh Hardik Patel',
+            room: 'D101',
+          },
+        ],
+      },
     ],
   },
   {
-    startTime: '09:00 Am',
-    endTime: '10:00 Am',
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
     isBreak: false,
-    class: '8',
-    division: 'C',
     dayData: [
       {
         day: 'Mon',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH301', room: 'C301' }],
+        subjectColor: '#66bb6a',
+        subjects: [
+          {
+            subject: 'Science',
+            subjectCode: 'SCI101',
+            teacher: 'Mohan Prakash Joshi',
+            room: 'Lab1',
+          },
+        ],
       },
       {
         day: 'Tue',
-        subjectColor: '#42a5f5',
-        subjects: [],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Social Science',
+            subjectCode: 'SOC101',
+            teacher: 'Anjali Priya Desai',
+            room: 'C103',
+          },
+        ],
       },
       {
         day: 'Wed',
         subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH301', room: 'C301' }],
+        subjects: [
+          { subject: 'Math', subjectCode: 'MTH101', teacher: 'Kumar Rajesh Sharma', room: 'A102' },
+        ],
       },
       {
         day: 'Thu',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH301', room: 'C301' }],
+        subjectColor: '#ff7043',
+        subjects: [
+          {
+            subject: 'English',
+            subjectCode: 'ENG101',
+            teacher: 'Priyanka Rina Mehta',
+            room: 'B201',
+          },
+        ],
       },
       {
         day: 'Fri',
-        subjectColor: '#42a5f5',
-        subjects: [],
+        subjectColor: '#ec407a',
+        subjects: [
+          {
+            subject: 'Computer',
+            subjectCode: 'CMP101',
+            teacher: 'Dipak Falguni Shah',
+            room: 'Lab2',
+          },
+        ],
       },
-      { day: 'Sat', subjectColor: '', subjects: [] },
+      {
+        day: 'Sat',
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Sanskrit',
+            subjectCode: 'SAN101',
+            teacher: 'Shastri Venkatesh Iyer',
+            room: 'D201',
+          },
+        ],
+      },
     ],
   },
   {
-    startTime: '10:00 Am',
-    endTime: '10:30 Am',
+    startTime: '10:00 AM',
+    endTime: '10:30 AM',
     isBreak: true,
     dayData: [],
   },
   {
-    startTime: '10:30 Am',
-    endTime: '11:30 Am',
+    startTime: '10:30 AM',
+    endTime: '11:30 AM',
     isBreak: false,
-    class: '9',
-    division: 'A',
     dayData: [
       {
         day: 'Mon',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI401', room: 'Lab1' }],
+        subjectColor: '#29b6f6',
+        subjects: [
+          {
+            subject: 'Gujarati',
+            subjectCode: 'GUJ101',
+            teacher: 'Ramesh Hardik Patel',
+            room: 'D101',
+          },
+        ],
       },
       {
         day: 'Tue',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI401', room: 'Lab1' }],
+        subjectColor: '#ec407a',
+        subjects: [
+          {
+            subject: 'Computer',
+            subjectCode: 'CMP101',
+            teacher: 'Dipak Falguni Shah',
+            room: 'Lab2',
+          },
+        ],
       },
       {
         day: 'Wed',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI401', room: 'Lab1' }],
+        subjectColor: '#ff7043',
+        subjects: [
+          {
+            subject: 'English',
+            subjectCode: 'ENG101',
+            teacher: 'Priyanka Rina Mehta',
+            room: 'B201',
+          },
+        ],
       },
       {
         day: 'Thu',
-        subjectColor: '#ef5350',
-        subjects: [{ subject: 'Science', subjectCode: 'SCI401', room: 'Lab1' }],
+        subjectColor: '#42a5f5',
+        subjects: [
+          { subject: 'Math', subjectCode: 'MTH101', teacher: 'Kumar Rajesh Sharma', room: 'A102' },
+        ],
       },
       {
         day: 'Fri',
-        subjectColor: '#ef5350',
-        subjects: [],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Sanskrit',
+            subjectCode: 'SAN101',
+            teacher: 'Shastri Venkatesh Iyer',
+            room: 'D201',
+          },
+        ],
       },
-      { day: 'Sat', subjectColor: '', subjects: [] },
+      {
+        day: 'Sat',
+        subjectColor: '#66bb6a',
+        subjects: [
+          {
+            subject: 'Science',
+            subjectCode: 'SCI101',
+            teacher: 'Mohan Prakash Joshi',
+            room: 'Lab1',
+          },
+        ],
+      },
     ],
   },
   {
-    startTime: '11:30 Am',
-    endTime: '12:00 Pm',
+    startTime: '11:30 AM',
+    endTime: '12:30 PM',
     isBreak: false,
-    class: '10',
-    division: 'B',
     dayData: [
       {
         day: 'Mon',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH501', room: 'E101' }],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Social Science',
+            subjectCode: 'SOC101',
+            teacher: 'Anjali Priya Desai',
+            room: 'C103',
+          },
+        ],
       },
       {
         day: 'Tue',
-        subjectColor: '#42a5f5',
-        subjects: [],
+        subjectColor: '#29b6f6',
+        subjects: [
+          {
+            subject: 'Gujarati',
+            subjectCode: 'GUJ101',
+            teacher: 'Ramesh Hardik Patel',
+            room: 'D101',
+          },
+        ],
       },
       {
         day: 'Wed',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH501', room: 'E101' }],
+        subjectColor: '#ec407a',
+        subjects: [
+          {
+            subject: 'Computer',
+            subjectCode: 'CMP101',
+            teacher: 'Dipak Falguni Shah',
+            room: 'Lab2',
+          },
+        ],
       },
       {
         day: 'Thu',
-        subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH501', room: 'E101' }],
+        subjectColor: '#ab47bc',
+        subjects: [
+          {
+            subject: 'Sanskrit',
+            subjectCode: 'SAN101',
+            teacher: 'Shastri Venkatesh Iyer',
+            room: 'D201',
+          },
+        ],
       },
       {
         day: 'Fri',
         subjectColor: '#42a5f5',
-        subjects: [{ subject: 'Math', subjectCode: 'MTH501', room: 'E101' }],
+        subjects: [
+          { subject: 'Math', subjectCode: 'MTH101', teacher: 'Kumar Rajesh Sharma', room: 'A102' },
+        ],
       },
-      { day: 'Sat', subjectColor: '', subjects: [] },
+      {
+        day: 'Sat',
+        subjectColor: '#ff7043',
+        subjects: [
+          {
+            subject: 'English',
+            subjectCode: 'ENG101',
+            teacher: 'Priyanka Rina Mehta',
+            room: 'B201',
+          },
+        ],
+      },
     ],
   },
 ];
 
 const AcademicTimetable = () => (
   <TimeTableView
-    isClassVisible
-    isDivisionVisible
+    isClassVisible={false}
+    isDivisionVisible={false}
     isDrag={false}
     isRoomVisible
-    isTeacherVisible={false}
-    timeTableData={teacherTimetable}
+    isTeacherVisible
+    timeTableData={studentTimetable}
     showThreeDots={false}
   />
 );

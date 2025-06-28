@@ -37,6 +37,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
           <MenuItem
             onClick={() => {
               assignSlotsDialog.onTrue();
+              pop.onClose();
             }}
           >
             <Iconify icon="mdi:arrow-right-bold" />
@@ -51,28 +52,16 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addLectureSlotDialog.onFalse();
-
+      assignSlotsDialog.onFalse();
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
+      assignSlotsDialog.onFalse();
       addLectureSlotDialog.onFalse();
     }
   };
 
   return (
     <Box>
-      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          size="small"
-          onClick={addLectureSlotDialog.onTrue}
-          sx={{
-            width: '145px',
-          }}
-        >
-          Slots
-        </Button>
-      </Box> */}
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         noDataText={
@@ -187,7 +176,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         open={assignSlotsDialog.value}
         handleClose={assignSlotsDialog.onFalse}
       >
-        <AssignSlots />
+        <AssignSlots onClose={handleClose} />
       </CustomDialog>
     </Box>
   );

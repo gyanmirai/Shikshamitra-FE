@@ -85,6 +85,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }
         maxWidth="md"
       >
         <CreateNoOfLecture
+          editData={null}
           onClose={weeklyLecturesDialog.onFalse}
           // onSave={handleSave}
           // dialogValue={dialog.value}

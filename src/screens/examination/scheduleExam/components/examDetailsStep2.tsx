@@ -42,7 +42,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     backgroundColor: row.subjectColor,
                   }}
                 />
-                <Typography variant="caption">
+                <Typography variant="caption" fontWeight="13px">
                   {value} ({row.subjectCode})
                 </Typography>
               </Box>
@@ -60,7 +60,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  minWidth: '160px',
+                  minWidth: '150px',
                   width: '100%',
                   mb: 1,
                 }}
@@ -72,7 +72,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   onChange={(newTime) => {
                     const updated = [...examSchedules];
                     updated[row.id].examDate = newTime;
-                    setExamSchedules(updated);
+                    formik.setFieldValue('subjects', updated);
                   }}
                   minDate={dayjs()}
                   slotProps={{
@@ -116,7 +116,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  minWidth: '160px',
+                  minWidth: '150px',
                   width: '100%',
                   mb: 1,
                 }}
@@ -128,7 +128,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   onChange={(newTime) => {
                     const updated = [...examSchedules];
                     updated[row.id].startTime = newTime;
-                    setExamSchedules(updated);
+                    formik.setFieldValue('subjects', updated);
                   }}
                   viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                   slotProps={{
@@ -172,7 +172,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  minWidth: '160px',
+                  minWidth: '150px',
                   width: '100%',
                   mb: 1,
                 }}
@@ -184,7 +184,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   onChange={(newTime) => {
                     const updated = [...examSchedules];
                     updated[row.id].endTime = newTime;
-                    setExamSchedules(updated);
+                    formik.setFieldValue('subjects', updated);
                   }}
                   viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                   slotProps={{
@@ -228,7 +228,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  minWidth: '160px',
+                  minWidth: '150px',
                   width: '100%',
                   mb: 1,
                 }}
@@ -240,7 +240,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   onChange={(e) => {
                     const updated = [...examSchedules];
                     updated[row.id].totalMarks = Number(e.target.value);
-                    setExamSchedules(updated);
+                    formik.setFieldValue('subjects', updated);
                   }}
                   size="small"
                   error={
@@ -280,7 +280,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  minWidth: '160px',
+                  minWidth: '150px',
                   width: '100%',
                   mb: 1,
                 }}
@@ -292,7 +292,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   onChange={(e) => {
                     const updated = [...examSchedules];
                     updated[row.id].passingMarks = Number(e.target.value);
-                    setExamSchedules(updated);
+                    formik.setFieldValue('subjects', updated);
                   }}
                   size="small"
                   error={

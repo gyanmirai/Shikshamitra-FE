@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -26,7 +26,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import AssignGrade from '../assignmentCreation/studentSubmission/assignMarksForm';
@@ -150,7 +150,22 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          p: 1,
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+        }}
+      >
+        {' '}
+        <Box display="flex" alignItems="center" gap={1} ml={0.1}>
+          <Iconify icon="material-symbols:assignment-add-outline" width={20} />{' '}
+          <Typography variant="h6">Assignments</Typography>
+        </Box>
         <DatePicker
           label="Assignment Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -162,185 +177,110 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
           format="DD-MM-YYYY"
           sx={{ maxWidth: '250px' }}
         />
-        <Tabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                </Box>
-              }
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
       </Box>
       <CustomizableTable
         tableId="assignment-submission-management"
-        searchFieldProps={{
-          placeholder: 'Search by Subject, Title, Assignment Type...',
-          label: 'Search by Subject, Title, Assignment Type...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
         noDataText={<>No Assignment Available</>}
-        columns={
-          tabs.value === ScheduleExamStatus.Pending
-            ? [
-                {
-                  id: 'subjects',
-                  label: 'Subject',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'title',
-                  label: 'Assignment Title',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'assignmentType',
-                  label: 'Assignment Type',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'endDate',
-                  label: 'End Date',
-                  align: 'left',
-                  filterType: 'date',
-                },
-                {
-                  id: 'createdBy',
-                  label: 'Created By',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'submissionType',
-                  label: 'Submission Type',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  isSort: false,
-                  isFilter: false,
-                  sticky: true,
-                  align: 'center',
-                  minWidth: 50,
-                  render: (value, row) => (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      showViewIcon
-                      handleViewClick={() => {
-                        setSelectedAssignment(row as IAssignment);
-                        viewAssignmentDetails.onTrue();
-                      }}
-                      actions={(prop) => actions({ ...prop, row })}
-                    />
-                  ),
-                },
-              ]
-            : [
-                {
-                  id: 'subjects',
-                  label: 'Subject',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'title',
-                  label: 'Assignment Title',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'assignmentType',
-                  label: 'Assignment Type',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'endDate',
-                  label: 'End Date',
-                  align: 'left',
-                  filterType: 'date',
-                },
-                {
-                  id: 'createdBy',
-                  label: 'Created By',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'submissionType',
-                  label: 'Submission Type',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'marks',
-                  label: 'Marks',
-                  align: 'left',
-                  filterType: 'number',
-                },
-                {
-                  id: 'feedback',
-                  label: 'Feedback',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
-                  id: 'marksStatus',
-                  label: 'Marks Status',
-                  sticky: true,
-                  filterType: 'enum',
-                  enumOptions: ScheduleExamStatusOptions,
-                  align: 'left',
-                  render(value, row) {
-                    const color = ScheduleExamStatusColor[
-                      value as ScheduleExamStatus
-                    ] as LabelColor;
-                    return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
-                  },
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  isSort: false,
-                  isFilter: false,
-                  sticky: true,
-                  align: 'center',
-                  minWidth: 50,
-                  render: (value, row) => (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      actions={(prop) => actions({ ...prop, row })}
-                      showViewIcon
-                      handleViewClick={() => {
-                        setSelectedAssignment(row as IAssignment);
-                        viewAssignmentDetails.onTrue();
-                      }}
-                    />
-                  ),
-                },
-              ]
-        }
+        columns={[
+          {
+            id: 'subjects',
+            label: 'Subject',
+            align: 'left',
+            filterType: 'string',
+          },
+          {
+            id: 'title',
+            label: 'Title',
+            align: 'left',
+            filterType: 'string',
+          },
+          {
+            id: 'assignmentType',
+            label: 'Type',
+            align: 'left',
+            filterType: 'string',
+          },
+          {
+            id: 'startDate',
+            label: 'Created At',
+            align: 'left',
+            filterType: 'date',
+            minWidth: 110,
+          },
+          {
+            id: 'endDate',
+            label: 'End Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: 100,
+          },
+          {
+            id: 'createdBy',
+            label: 'Created By',
+            align: 'left',
+            filterType: 'string',
+            minWidth: 120,
+          },
+          {
+            id: 'submissionType',
+            label: 'Submission Type',
+            align: 'left',
+            filterType: 'string',
+            minWidth: 160,
+          },
+          {
+            id: 'marks',
+            label: 'Marks',
+            align: 'left',
+            filterType: 'number',
+            minWidth: 120,
+            render: (value, row) =>
+              value ? (
+                <Typography variant="caption" fontWeight="13px">
+                  {value}
+                </Typography>
+              ) : (
+                <Typography variant="caption" fontWeight="13px">
+                  -
+                </Typography>
+              ),
+          },
+          {
+            id: 'feedback',
+            label: 'Feedback',
+            render: (value, row) => (
+              <CustomTooltip title={value || '-'} arrow>
+                <Typography
+                  variant="caption"
+                  fontSize="13px"
+                  noWrap
+                  sx={{
+                    maxWidth: 150,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'block',
+                  }}
+                >
+                  {value || '-'}
+                </Typography>
+              </CustomTooltip>
+            ),
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            minWidth: 80,
+            sticky: true,
+            filterType: 'enum',
+            enumOptions: ScheduleExamStatusOptions,
+            align: 'left',
+            render(value, row) {
+              const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
+              return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+            },
+          },
+        ]}
         data={tableData}
       />
       <CustomDialog

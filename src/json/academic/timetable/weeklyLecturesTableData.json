@@ -1,6 +1,7 @@
 [
   {
     "subjectName": "Mathematics",
+    "subjectCode": "MATH101",
     "subjectColor": "#FFB74D",
     "noOfLecture": 0,
     "subjectType": "core",
@@ -8,13 +9,15 @@
       {
         "name": "Mathematics",
         "teachers": [],
-        "subjectColor": "#FFB74D"
+        "subjectColor": "#FFB74D",
+        "subjectCode": "MATH101"
       }
     ],
     "id": "1"
   },
   {
     "subjectName": "Science",
+    "subjectCode": "SCI101",
     "subjectColor": "#81C784",
     "noOfLecture": 0,
     "subjectType": "core",
@@ -22,13 +25,15 @@
       {
         "name": "Science",
         "teachers": [],
-        "subjectColor": "#81C784"
+        "subjectColor": "#81C784",
+        "subjectCode": "SCI101"
       }
     ],
     "id": "2"
   },
   {
     "subjectName": "English",
+    "subjectCode": "ENG101",
     "subjectColor": "#64B5F6",
     "noOfLecture": 0,
     "subjectType": "core",
@@ -36,18 +41,21 @@
       {
         "name": "English",
         "teachers": [],
-        "subjectColor": "#64B5F6"
+        "subjectColor": "#64B5F6",
+        "subjectCode": "ENG101"
       },
       {
         "name": "Math",
         "teachers": [],
-        "subjectColor": "#64B5F6"
+        "subjectColor": "#64B5F6",
+        "subjectCode": "MATH102"
       }
     ],
     "id": "3"
   },
   {
     "subjectName": "History",
+    "subjectCode": "HIST101",
     "subjectColor": "#E57373",
     "noOfLecture": 0,
     "subjectType": "core",
@@ -55,13 +63,15 @@
       {
         "name": "History",
         "teachers": [],
-        "subjectColor": "#E57373"
+        "subjectColor": "#E57373",
+        "subjectCode": "HIST101"
       }
     ],
     "id": "4"
   },
   {
     "subjectName": "Geography",
+    "subjectCode": "GEO101",
     "subjectColor": "#BA68C8",
     "noOfLecture": 0,
     "subjectType": "core",
@@ -69,7 +79,8 @@
       {
         "name": "Geography",
         "teachers": [],
-        "subjectColor": "#BA68C8"
+        "subjectColor": "#BA68C8",
+        "subjectCode": "GEO101"
       }
     ],
     "id": "5"

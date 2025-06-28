@@ -104,7 +104,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               label="Exam Type *"
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={formik.touched.examType && Boolean(formik.errors.examType)}
-              helperText={(formik.touched.examType && formik.errors.examType) as string}
+              helperText={formik.touched.examType ? formik.errors.examType : undefined}
               // error={!!(formik.touched.examType && formik.errors.examType)}
               // helperText={
               //   formik.touched.examType && formik.errors.examType
@@ -218,9 +218,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.divisions && formik.errors.divisions)}
               helperText={
-                Array.isArray(formik.errors.divisions)
-                  ? formik.errors.divisions.join(', ')
-                  : (formik.touched.divisions && formik.errors.divisions) || undefined
+                formik.touched.divisions
+                  ? Array.isArray(formik.errors.divisions)
+                    ? formik.errors.divisions.join(', ')
+                    : formik.errors.divisions
+                  : undefined
               }
             />
           </ShakingTextField>
@@ -254,7 +256,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={
-                typeof formik.errors.subjects === 'string'
+                formik.touched.subjects && typeof formik.errors.subjects === 'string'
                   ? formik.errors.subjects
                   : formik.touched.subjects && typeof formik.errors.subjects === 'string'
                     ? formik.errors.subjects

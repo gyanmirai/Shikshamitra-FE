@@ -20,8 +20,8 @@ import { ScrollToViewTemplate } from '../component-template';
 // ----------------------------------------------------------------------
 
 export type TimelineType = {
+  title?: string;
   key: number;
-  title: string;
   des: string;
   time: string;
   progress?: number;
@@ -250,12 +250,12 @@ export function TimelineView({ data }: { data: TimelineType[] }) {
   return <ScrollToViewTemplate data={DEMO} />;
 }
 
-export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
-  const lastItem = data[data.length - 1].key;
+export function CustomizedTimeline({ data }: { data: TimelineType[] | undefined }) {
+  const lastItem = data && data.length > 0 ? data[data.length - 1].key : undefined;
 
   return (
     <Timeline position="right">
-      {data.map((item) => (
+      {data?.map((item) => (
         <TimelineItem key={item.key}>
           <TimelineOppositeContent>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -263,7 +263,7 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
             </Typography>
           </TimelineOppositeContent>
           <TimelineSeparator>
-            <TimelineDot color={item.color}>{item.icon}</TimelineDot>
+            <TimelineDot color={item.color} />
             {lastItem === item.key ? null : <TimelineConnector />}
           </TimelineSeparator>
           <TimelineContent>
@@ -273,7 +273,7 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] }) {
                 bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
               }}
             >
-              <Typography variant="subtitle2">{item.title}</Typography>
+              <Typography variant="subtitle2">{item.progress}% Completed</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {item.des}
               </Typography>
