@@ -1,5 +1,3 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -12,13 +10,21 @@ import {
   Button,
   MenuItem,
   TextField,
+  Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
+
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,15 +32,59 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
+interface PayElement {
+  name: string;
+  componentType: string;
+  id: string;
+  description: string;
+  isEmployeeSpecific: boolean;
+  isDependent: boolean;
+  dependName: string;
+  dependent: {
+    amount: number;
+    percentage: boolean;
+    elementCode: string;
+  };
+  amount: number;
+  amountOfPercentage: number;
+  isVisibleInPaySlip: boolean;
+}
+
 const EarningComponent = ({
   isEarningComponentOpen,
 }: {
   isEarningComponentOpen: UseBooleanReturn;
 }) => {
-  const [editData, setEditData] = useState<any>(null);
+  const confirm = useBoolean();
 
+  const [editData, setEditData] = useState<any>(null);
+  const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
+
+  const [deletePayElement] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeletePayElementMutation,
+  });
   return (
     <Box>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content="Are you sure you want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              await deletePayElement(deleteInformation?.id);
+              confirm.onFalse();
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
       <CustomizableTable
         tableId="earning-component"
         columns={[
@@ -70,7 +120,10 @@ const EarningComponent = ({
                     setEditData(row);
                     isEarningComponentOpen.onTrue();
                   }}
-                  handleDeleteClick={() => {}}
+                  handleDeleteClick={() => {
+                    setDeleteInformation(row as PayElement);
+                    confirm.onTrue();
+                  }}
                 />
               );
             },
@@ -126,7 +179,24 @@ const EarningComponent = ({
           isEarningComponentOpen.onFalse();
           setEditData(null);
         }}
-        title="Earning Component"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Edit Earning Component' : 'Add Earning Component'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                editData
+                  ? `Edit ${editData.name} component settings including type, dependencies and visibility`
+                  : 'Configure salary components like basic pay, allowances and other earnings. Set component types, dependencies and visibility in payslip.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <EarningComponentForm
           editData={editData}
@@ -305,7 +375,7 @@ const EarningComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </>

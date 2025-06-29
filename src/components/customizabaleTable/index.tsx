@@ -344,6 +344,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           : filter.value;
         const isDateType = filter.valueType === 'date';
         const isFormattedNumber = filter.valueType === 'formattedNumber';
+        // const isBetweenfilter=
+        console.log(filter.valueType, 'filter.valueType');
 
         if (isDateType) {
           switch (filter.type) {
@@ -351,7 +353,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
 
             case 'after':
-              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(dayjs(filter.value, 'DD-MM-YYYY'));
+              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
+                dayjs(filter.value as string, 'DD-MM-YYYY')
+              );
             case 'before':
               return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
             default:
@@ -360,7 +364,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         }
         if (isFormattedNumber) {
           const parsedValue = parseFormattedNumber(value);
-          const parsedFilterValue = parseFormattedNumber(filter.value);
+          const parsedFilterValue = parseFormattedNumber(filter.value as string);
 
           switch (filter.type) {
             case 'equals':
@@ -375,17 +379,25 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         } else {
           switch (filter.type) {
             case 'contains':
-              return value.toString().toLowerCase().includes(filter.value.toLowerCase());
+              return value.toString().toLowerCase().includes(filter.value.toString().toLowerCase());
             case 'equals':
               return value.toString().toLowerCase() === filter.value.toString().toLowerCase();
             case 'startsWith':
-              return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
+              return value
+                .toString()
+                .toLowerCase()
+                .startsWith(filter.value.toString().toLowerCase());
             case 'endsWith':
-              return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
+              return value.toString().toLowerCase().endsWith(filter.value.toString().toLowerCase());
             case 'greaterThan':
               return valueAsNumber > filterValueAsNumber;
             case 'lessThan':
               return valueAsNumber < filterValueAsNumber;
+            case 'between':
+              return (
+                valueAsNumber >= (filter?.value as any)?.min &&
+                valueAsNumber <= (filter?.value as any)?.max
+              );
             default:
               return true;
           }
@@ -1015,17 +1027,26 @@ const FilterChips = ({
   >
     {filters.map((filter: any, index: number) => {
       const findColumn = columns.find((column: any) => column.id === filter.column);
-      const filterValue: string | number =
+      const filterValue: any =
         findColumn?.filterType === 'enum'
           ? findColumn.enumOptions?.find((i) => i.value === filter.value)?.label
-          : filter.value;
+          : (filter.value as string);
+
+      let label = '';
+      if (findColumn?.filterType === 'formattedNumber') {
+        label = formatNumber(filterValue, 'INR');
+      } else if (findColumn?.filterType === 'number' && filter.type === 'between') {
+        label = `Between ${filter?.value?.min} to ${filter?.value?.max}`;
+      } else {
+        label = String(filterValue);
+      }
 
       return (
         <Chip
           key={index}
           size="small"
           variant="soft"
-          label={`${findColumn?.label} :   ${findColumn?.filterType === 'formattedNumber' ? formatNumber(filterValue, 'INR') : filterValue}`}
+          label={`${findColumn?.label} :  ${label}`}
           onDelete={() => removeFilter(index)}
         />
       );
@@ -1053,7 +1074,12 @@ const ColumnFilterMenu: React.FC<{
   const [filterType, setFilterType] = useState('');
 
   // Stores the filter value entered by the user (can be string, date, or null)
-  const [filterValue, setFilterValue] = useState<null | string | Dayjs | number>(null);
+  const [filterValue, setFilterValue] = useState<
+    null | string | Dayjs | number | { min: number; max: number }
+  >(null);
+
+  const [min, setMin] = useState<null | number>(null);
+  const [max, setMax] = useState<null | number>(null);
 
   // Stores the date range for date filters (currently unused)
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
@@ -1105,7 +1131,7 @@ const ColumnFilterMenu: React.FC<{
   const handleApply = () => {
     if (!anchorEl) return;
 
-    let value = filterValue;
+    let value: any = filterValue;
     let filterTypeValue = filterType;
     if (anchorEl.column.filterType === 'date') {
       value = (value as Dayjs).format('DD-MM-YYYY');
@@ -1115,6 +1141,9 @@ const ColumnFilterMenu: React.FC<{
     }
     if (anchorEl.column.filterType === 'formattedNumber') {
       value = parseFormattedNumber(value);
+    }
+    if (filterType === 'between') {
+      value = { min, max };
     }
 
     onApplyFilter(anchorEl.column.id, filterTypeValue, value, anchorEl.column.filterType as string);
@@ -1176,9 +1205,32 @@ const ColumnFilterMenu: React.FC<{
             <DatePicker
               value={filterValue as null | Dayjs}
               onChange={(newValue) => setFilterValue(newValue)}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              slotProps={{
+                textField: { size: 'small', fullWidth: true, label: anchorEl?.column.label },
+              }}
               format="DD-MM-YYYY"
             />
+          ) : filterType === 'between' ? (
+            <>
+              <TextField
+                fullWidth
+                size="small"
+                value={filterValue as string}
+                onChange={(e) => setMin(+e.target.value)}
+                type="number"
+                label={`${anchorEl?.column.label} Min`}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                size="small"
+                value={filterValue as string}
+                onChange={(e) => setMax(+e.target.value)}
+                type="number"
+                label={`${anchorEl?.column.label} Max`}
+              />
+            </>
           ) : (
             <TextField
               fullWidth

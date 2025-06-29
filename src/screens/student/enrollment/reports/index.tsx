@@ -70,7 +70,7 @@ const StudentReportsScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/reports/' },
           { name: 'Reports' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Formik
         initialValues={initialValues}

@@ -18,14 +18,12 @@ import {
   Stack,
   Button,
   Avatar,
-  Checkbox,
   MenuItem,
   TextField,
   IconButton,
   Typography,
   Autocomplete,
   DialogActions,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -49,10 +47,10 @@ import {
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -200,7 +198,6 @@ const LeaveAndAbsentScreen = () => {
               );
             },
           },
-          { id: 'student.educationMedium.name', label: 'Medium' },
           { id: 'student.educationMediumStage.name', label: 'Organization' },
           { id: 'student.standard.name', label: 'Class' },
           { id: 'student.division.name', label: 'Division' },
@@ -505,57 +502,67 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   return (
     <>
       <DialogScrollContent>
-        <Box display="flex" my={2} gap={2} flexWrap="wrap">
-          <CustomSelect
-            options={allOrganization}
-            label="Organization *"
-            value={organization}
-            onChange={(val) => setOrganization(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            disabled={!medium}
-          />
-          <CustomSelect
-            options={allClass}
-            label="Class *"
-            value={classes}
-            onChange={(val) => setClass(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            disabled={!organization}
-          />
-          <CustomSelect
-            options={allDivision}
-            label="Division *"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            disabled={!classes}
-          />
-          <Autocomplete
-            loading={false}
-            noOptionsText="No Student Found"
-            sx={{ maxWidth: '250px', width: '100%' }}
-            value={student}
-            onChange={(e, value: any) => {
-              setStudent(value);
-            }}
-            options={StudentsData?.items || []}
-            getOptionLabel={(option: any) => `${option?.firstName || ''} ${option?.lastName || ''}`}
-            renderInput={(params) => (
-              <TextField {...params} size="small" label="Student *" fullWidth />
-            )}
-            renderOption={(prop: any, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.firstName || ''} {option.lastName || ''}
-              </li>
-            )}
-          />
-        </Box>
+        <Grid container spacing={2} sx={{ my: 2 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <CustomSelect
+              options={allOrganization}
+              label="Organization *"
+              value={organization}
+              onChange={(val) => setOrganization(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { width: '100%' } }}
+              disabled={!medium}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <CustomSelect
+              options={allClass}
+              label="Class *"
+              value={classes}
+              onChange={(val) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { width: '100%' } }}
+              disabled={!organization}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <CustomSelect
+              options={allDivision}
+              label="Division *"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { width: '100%' } }}
+              disabled={!classes}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Autocomplete
+              loading={false}
+              noOptionsText="No Student Found"
+              sx={{ width: '100%' }}
+              value={student}
+              onChange={(e, value: any) => {
+                setStudent(value);
+              }}
+              options={StudentsData?.items || []}
+              getOptionLabel={(option: any) =>
+                `${option?.firstName || ''} ${option?.lastName || ''}`
+              }
+              renderInput={(params) => (
+                <TextField {...params} size="small" label="Student *" fullWidth />
+              )}
+              renderOption={(prop: any, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.firstName || ''} {option.lastName || ''}
+                </li>
+              )}
+            />
+          </Grid>
+        </Grid>
         {student?.id && (
           <Box component="form">
             <Grid container spacing={2}>
@@ -572,11 +579,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   helperText={touched.leaveType && errors.leaveType}
                 >
                   {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                    <MenuItem
-                      key={option.type}
-                      value={option.id}
-                      sx={{ bgcolor: `${option.color}20` }}
-                    >
+                    <MenuItem key={option.type} value={option.id}>
                       {option.type}
                     </MenuItem>
                   ))}
@@ -599,7 +602,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                 </CustomDialog>
               </Grid>
               <Grid item xs={4}>
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Checkbox
                       name="isHalfDay"
@@ -613,9 +616,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     />
                   }
                   label="Half Day"
-                />
+                /> */}
               </Grid>
-              <Grid item xs={4} sx={{ marginLeft: -25 }}>
+              <Grid item xs={4} sx={{ marginLeft: -37 }}>
                 <DateTimePicker
                   format="DD-MM-YYYY hh:mm"
                   label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
@@ -646,22 +649,22 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                 </Grid>
               )}
               <Grid item xs={6}>
-                <Upload
-                  {...uploadProps}
-                  thumbnail
+                <FileUploader
+                  // disabled={editData}
+                  // @ts-ignore
                   value={values.docs}
-                  onDrop={(acceptedFiles) => {
-                    const file = acceptedFiles[0];
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                      const base64String = reader.result;
-                      setFieldValue('docs', base64String);
-                    };
-                  }}
                   multiple={false}
-                  onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
-                  onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                  onChange={(value) => {
+                    // const reader = new FileReader();
+                    setFieldValue('docs', value);
+                    // reader.readAsDataURL(value as File);
+                    // reader.readAsDataURL(value as File);
+                    // reader.onload = () => {
+                    //   const base64String = reader.result;
+                    // };
+                  }}
+                  primaryText="Please Upload Your File"
+                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
               <Grid item xs={6}>
