@@ -111,7 +111,7 @@ const RegistrationFormScreen = () => {
             registerFormDialog.onFalse();
             dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -122,7 +122,7 @@ const RegistrationFormScreen = () => {
             { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
             { name: 'Registration Form Issued' },
           ]}
-          sx={{ px: 1, mb: 3 }}
+          sx={{ mb: 2 }}
         />
       )}
       {registerFormDialog.value ? (

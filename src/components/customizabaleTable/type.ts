@@ -68,7 +68,12 @@ export type IParams = {
   filterType: string;
   dense: boolean;
   columnSearchTerm: string;
-  filters: Array<{ column: string; type: string; value: string; valueType: string }>;
+  filters: Array<{
+    column: string;
+    type: string;
+    value: string;
+    valueType: string;
+  }>;
   sorts: Array<{ column: string; direction: 'asc' | 'desc' }>;
   dateFilter: null | Dayjs;
   dateRangeFilter: { start: null | Dayjs; end: null | Dayjs };

@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Stack,
@@ -122,8 +121,8 @@ const GroupManagement = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 6 }}>
+        {/* <Button
           sx={{ width: '180px' }}
           size="small"
           startIcon={<Add />}
@@ -131,7 +130,7 @@ const GroupManagement = ({
           onClick={dialog.onTrue}
         >
           House
-        </Button>
+        </Button> */}
       </Box>
       <ConfirmDialog
         open={confirm.value}
@@ -184,6 +183,9 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveDivisionLeaderLoading}
             color="error"
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeDivisionLeader(editData?.groupMembership?.groupId).unwrap();
@@ -220,6 +222,7 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveLeaderLoading}
             color="error"
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeLeader(editData?.groupMembership?.groupId).unwrap();
@@ -256,6 +259,9 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveStudentFromHouse}
             color="error"
+            size="small" // ✅ same as Cancel
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeStudentFromHouse({
@@ -294,6 +300,9 @@ const GroupManagement = ({
           <LoadingButton
             variant="contained"
             loading={isAssignDivisionLeaderLoading}
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="mdi:account-plus" width={18} />}
             onClick={async () => {
               try {
                 await assignDivisionLeader({
@@ -322,16 +331,19 @@ const GroupManagement = ({
           isConfirmForMainLeader.onFalse();
           setEditData(null);
         }}
-        title="Assign Leader"
+        title="Assign House Leader"
         content={
           <>
-            Are you sure want to Assign Leader to <b>{`${editData?.name}`}</b> ?
+            Are you sure want to Assign House Leader to <b>{`${editData?.name}`}</b> ?
           </>
         }
         action={
           <LoadingButton
             variant="contained"
             loading={isAssignMainLeaderLoading}
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="mdi:account-plus" width={18} />}
             onClick={async () => {
               try {
                 await assignMainLeader({
@@ -426,8 +438,8 @@ const GroupManagement = ({
           },
           {
             id: 'actions',
-            label: 'Actions',
-            minWidth: '80px',
+            label: 'Action',
+            minWidth: '40px',
             align: 'left',
             sticky: true,
             isFilter: false,
@@ -723,7 +735,6 @@ const GroupManagementForm = ({
           size="small"
           value={formik.values.name}
           name="name"
-          placeholder="Enter House Name"
           label="House Name"
           autoFocus
           onChange={(e) => {
@@ -731,26 +742,26 @@ const GroupManagementForm = ({
             formik.setFieldValue('name', value);
           }}
         />
-        <DialogActions sx={{ p: 0 }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            variant="outlined"
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            type="submit"
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-          >
-            {editData ? 'Update' : 'Add'}
-          </LoadingButton>
-        </DialogActions>
       </Stack>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading || isUpdateLoading}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+        >
+          {editData ? 'Update' : 'Add'}
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };
@@ -787,7 +798,6 @@ const AssignStudentForm = ({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
   });
-  console.log('🚀 ~ groupData:', groupData);
 
   /**
    * Formik instance for handling form state and validation
@@ -857,10 +867,21 @@ const AssignStudentForm = ({
         />
       </Stack>
       <DialogActions sx={{ px: 0, pb: 0 }}>
-        <Button size="small" variant="outlined" onClick={handleClose}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton size="small" type="submit" variant="contained" loading={isLoading}>
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading}
+          startIcon={<Iconify icon="mdi:account-plus" width={18} />}
+        >
           Assign
         </LoadingButton>
       </DialogActions>

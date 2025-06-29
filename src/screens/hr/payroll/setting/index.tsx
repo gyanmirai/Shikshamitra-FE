@@ -123,7 +123,7 @@ const PayrollSettingScreen = () => {
           setIsBackClick(isBack);
           setParam('tab', value);
         }}
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, marginBottom: -2 }}
         // variant="fullWidth"
         // slotProps={{ tab: { px: 0 } }}
       >

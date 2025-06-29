@@ -573,7 +573,7 @@ const AdmissionScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
           { name: 'Admission' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         description="Manage student admissions: Approve or reject applications here."
       />
       <Box display="flex" gap={1} alignItems="flex-start">

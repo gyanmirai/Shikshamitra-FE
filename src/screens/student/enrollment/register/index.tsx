@@ -74,7 +74,7 @@ const RegisterScreen = () => {
             : 'View and manage student registrations. Track completion status and edit details for each record'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         isBack={formDialog.value}
         onBack={handleClose}
         action={

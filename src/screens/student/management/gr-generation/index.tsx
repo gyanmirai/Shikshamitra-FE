@@ -167,7 +167,6 @@ const GrNoGenerationScreen = ({
             onClick={handleSave}
             disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
             size="small"
-            // sx={{ width: '180px' }}
           >
             {isSaving ? 'Saving...' : 'Save'}
           </Button>

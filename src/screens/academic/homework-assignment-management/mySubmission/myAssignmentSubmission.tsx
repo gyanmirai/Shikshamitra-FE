@@ -150,22 +150,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{
-          p: 1,
-          borderRadius: '8px',
-          bgcolor: 'background.paper',
-          boxShadow: 'var(--shadows-3)',
-        }}
-      >
-        {' '}
-        <Box display="flex" alignItems="center" gap={1} ml={0.1}>
-          <Iconify icon="material-symbols:assignment-add-outline" width={20} />{' '}
-          <Typography variant="h6">Assignments</Typography>
-        </Box>
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start" ml={1}>
         <DatePicker
           label="Assignment Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}

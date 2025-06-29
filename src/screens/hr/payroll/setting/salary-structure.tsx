@@ -92,6 +92,7 @@ const SalaryStructure = ({
         action={
           <Button
             variant="contained"
+            size="small"
             color="error"
             onClick={async () => {
               await deletePayElement(deleteInformation?.id);
@@ -124,14 +125,6 @@ const SalaryStructure = ({
             </Box>
           </>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Name, Type...',
-          label: 'Search by Name, Type....',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="pay-element-table"
         isLoading={isLoading}
         columns={[
@@ -505,7 +498,7 @@ const CTCPreviewForm = ({ handleClose, editData }: { handleClose: () => void; ed
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </>

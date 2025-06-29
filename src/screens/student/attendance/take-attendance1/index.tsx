@@ -503,7 +503,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'student.rollNo',
             label: 'Roll No',
             align: 'left',
-            minWidth: '100px',
+            minWidth: '90px',
             sticky: true,
           },
           {
@@ -534,7 +534,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             id: 'student.grNoRecord',
             label: 'Gr No',
             align: 'left',
-            minWidth: '100px',
+            minWidth: '90px',
           },
 
           {
@@ -552,6 +552,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           {
             id: 'remarks',
             label: 'Remarks',
+            isFilter: false,
+            isSort: false,
             render(value, row) {
               return row.attendance === 'Present' ? (
                 '-'
@@ -569,7 +571,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                   }}
                   multiline
                   rows={2}
-                  sx={{ maxWidth: '200px', width: '100%' }}
+                  sx={{ width: '100%' }}
                 />
               );
             },
@@ -577,11 +579,11 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           {
             id: 'isPresent',
             label: 'Attendance',
-            minWidth: '6vw',
             align: 'left',
             isSort: false,
             sticky: true,
             isFilter: false,
+            minWidth: '80px',
             render(value, row) {
               return isSaved.value ? (
                 <Label color={value === 'Present' ? 'success' : 'error'}>{value}</Label>

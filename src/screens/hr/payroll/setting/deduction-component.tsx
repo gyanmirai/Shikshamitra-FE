@@ -1,5 +1,3 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -17,24 +15,75 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
+
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
+interface PayElement {
+  name: string;
+  componentType: string;
+  id: string;
+  description: string;
+  isEmployeeSpecific: boolean;
+  isDependent: boolean;
+  dependName: string;
+  dependent: {
+    amount: number;
+    percentage: boolean;
+    elementCode: string;
+  };
+  amount: number;
+  amountOfPercentage: number;
+  isVisibleInPaySlip: boolean;
+}
+
 const DeductionComponent = ({
   isDeductionComponentOpen,
 }: {
   isDeductionComponentOpen: UseBooleanReturn;
 }) => {
+  const confirm = useBoolean();
   const [editData, setEditData] = useState<any>(null);
+  const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
+
+  const [deletePayElement] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeletePayElementMutation,
+  });
 
   return (
     <Box>
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content="Are you sure you want to delete?"
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              await deletePayElement(deleteInformation?.id);
+              confirm.onFalse();
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
       <CustomizableTable
         tableId="earning-component"
         columns={[
@@ -59,7 +108,10 @@ const DeductionComponent = ({
                     setEditData(row);
                     isDeductionComponentOpen.onTrue();
                   }}
-                  handleDeleteClick={() => {}}
+                  handleDeleteClick={() => {
+                    setDeleteInformation(row as PayElement);
+                    confirm.onTrue();
+                  }}
                 />
               );
             },
@@ -115,7 +167,24 @@ const DeductionComponent = ({
           isDeductionComponentOpen.onFalse();
           setEditData(null);
         }}
-        title="Deduction Component"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Edit Deduction Component' : 'Add Deduction Component'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                editData
+                  ? `Edit ${editData.name} deduction settings including type and calculation rules`
+                  : 'Configure deduction components like PF, PT, TDS, LWF and ESI. Set calculation rules, percentages and eligibility criteria.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <DeductionComponentForm
           editData={editData}
@@ -136,8 +205,8 @@ const salaryRanges = ['Basic', 'Gross', 'CTC'];
 const deductionFrequencies = ['Monthly', 'Quarterly', 'Yearly'];
 
 const validationSchema = Yup.object({
-  componentName: Yup.string().required('Required'),
-  componentType: Yup.string().required('Required'),
+  componentName: Yup.string().required('Component Name is required'),
+  componentType: Yup.string().required('Component Type is required'),
   description: Yup.string(),
   // Add more validation rules as per your requirement
 });
@@ -200,6 +269,8 @@ const DeductionComponentForm = ({
               name="componentName"
               value={formik.values.componentName}
               onChange={formik.handleChange}
+              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+              helperText={(formik.touched.componentName && formik.errors.componentName) as string}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -211,6 +282,8 @@ const DeductionComponentForm = ({
               name="componentType"
               value={formik.values.componentType}
               onChange={formik.handleChange}
+              error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+              helperText={(formik.touched.componentType && formik.errors.componentType) as string}
             >
               {['Deduction', 'Tax', 'Other'].map((opt) => (
                 <MenuItem key={opt} value={opt}>
@@ -452,7 +525,7 @@ const DeductionComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </>

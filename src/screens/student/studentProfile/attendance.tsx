@@ -18,6 +18,7 @@ import {
   useTheme,
   Typography,
   ButtonGroup,
+  CircularProgress,
 } from '@mui/material';
 
 import {
@@ -47,7 +48,7 @@ const Dot: React.FC<DotProps> = ({
   children = null,
   ...props
 }) => (
-  <Box display="flex" alignItems="center">
+  <Box display="flex" alignItems="center" sx={{ ...sx }} {...props}>
     <Box
       component="span"
       bgcolor={color}
@@ -57,15 +58,9 @@ const Dot: React.FC<DotProps> = ({
         borderRadius: '50%',
         display: 'inline-block',
         marginRight: '5px',
-        wordWrap: 'normal',
-        whiteSpace: 'nowrap',
-
-        ...sx,
       }}
-      {...props}
     />
-    <Typography color={color} fontSize="12px !important" whiteSpace="nowrap">
-      {' '}
+    <Typography sx={{ color: '#000', fontSize: '12px', whiteSpace: 'nowrap' }}>
       {children}
     </Typography>
   </Box>
@@ -107,9 +102,25 @@ const Attendance = (props: StudentTabsComponentType) => {
             <Stack>
               <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
                 Overall Attendance&nbsp;
-                <Label variant="soft" color="success">
-                  90%
-                </Label>
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress variant="determinate" value={90} />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="caption" component="div" color="text.secondary">
+                      {`${90}%`}
+                    </Typography>
+                  </Box>
+                </Box>
                 <CustomTooltip
                   placement="top"
                   title={
@@ -289,7 +300,6 @@ const Attendance = (props: StudentTabsComponentType) => {
               slots={{
                 day: (prop: any) => {
                   const { day, today } = prop;
-                  console.log('day----', day);
 
                   const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;
@@ -364,6 +374,27 @@ const Attendance = (props: StudentTabsComponentType) => {
                 },
               }}
             />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderTop: '1px dashed #ddd',
+                mt: 9.3,
+                pt: 3,
+                color: 'text.primary',
+              }}
+            >
+              <Dot color="success.main" sx={{ marginLeft: 2 }}>
+                Present
+              </Dot>
+              <Dot color="warning.main" sx={{ marginLeft: 2 }}>
+                Holiday
+              </Dot>
+              <Dot color="error.main" sx={{ marginLeft: 2 }}>
+                Absent/ Half-Day
+              </Dot>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
@@ -384,7 +415,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           },
         ]}
         columns={[
-          { id: 'date', label: 'Date', minWidth: '10%' },
+          { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
           {
             id: 'status',
             label: 'Status',

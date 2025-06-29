@@ -146,8 +146,15 @@ const RollNoGenerationScreen = ({
   return (
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-          <Box display="flex" gap={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          width="100%"
+          mb={2}
+          ml={1}
+        >
+          <Box display="flex" gap={2} mt={3}>
             <CustomSelect
               options={[
                 { id: 'mix', name: 'Mix' },
@@ -159,20 +166,19 @@ const RollNoGenerationScreen = ({
               onChange={(val) => setArrangementType(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '200px' } }}
+              formControlProps={{ sx: { width: '250px' } }}
             />
             <CustomSelect
               options={[
                 { id: 'surname', name: 'Surname' },
                 { id: 'name', name: 'Name' },
-                { id: 'grNo', name: 'GR.No.' },
               ]}
               label="Arrangement By"
               value={arrangeBy}
               onChange={(val) => setArrangeBy(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '200px' } }}
+              formControlProps={{ sx: { width: '250px' } }}
               disabled={!arrangementType}
             />
           </Box>

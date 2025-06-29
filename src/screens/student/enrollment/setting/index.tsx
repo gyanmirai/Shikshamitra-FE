@@ -73,7 +73,7 @@ const StudentEnrollmentSettingScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/setting' },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         description="This is the Settings tab, where you can configure the necessary steps for the admission process, such as exam settings, document types, and other essential requirements for the admission."
         action={
           <Button
