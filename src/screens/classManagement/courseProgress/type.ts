@@ -1,5 +1,23 @@
 import type { Dayjs } from 'dayjs';
+import type { TimelineType } from 'src/components/timeline-view';
 
+export interface IChapterLog {
+  key: number;
+  des: string; // Description of the progress stage
+  time: string; // Timestamp of the log entry
+  color?:
+    | 'primary'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'inherit'
+    | 'grey'
+    | 'secondary'
+    | 'default';
+  progress: number; // Progress percentage at that point
+  teacher: string; // Teacher involved in the step
+}
 // Interface representing details of a course chapter
 export interface ICourseDetail {
   chapterName: string; // Name of the chapter
@@ -8,6 +26,7 @@ export interface ICourseDetail {
   pending: number; // Remaining percentage to be completed
   startDate: Dayjs | string | null;
   timeLine: Dayjs | string | null; // Timeline/deadline for the chapter completion
+  logs?: TimelineType[]; // Optional array of log steps
 }
 
 // Interface representing a course with its details

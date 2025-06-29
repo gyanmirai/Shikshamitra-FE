@@ -41,14 +41,28 @@ const electiveGroups = [
 
 const studentData = {
   elective1: [
-    { srNo: 1, grNo: 'GR001', name: 'Atre Prerna Bhanudas', preference: 'Computer' },
-    { srNo: 2, grNo: 'GR002', name: 'Mehta Divya Hitesh', preference: 'Physical Training' },
-    { srNo: 3, grNo: 'GR003', name: 'Patel Jiya Ganesh', preference: 'Computer' },
+    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Computer' },
+    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Physical Training' },
+    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Computer' },
+    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Art' },
+    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Computer' },
+    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Physical Training' },
+    { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh', preference: 'Art' },
+    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Computer' },
+    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Art' },
+    { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay', preference: 'Physical Training' },
   ],
   elective2: [
-    { srNo: 1, grNo: 'GR001', name: 'Atre Prerna Bhanudas', preference: 'Hindi' },
-    { srNo: 2, grNo: 'GR002', name: 'Mehta Divya Hitesh', preference: 'Sanskrit' },
-    { srNo: 3, grNo: 'GR003', name: 'Patel Jiya Ganesh', preference: 'Hindi' },
+    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Hindi' },
+    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Sanskrit' },
+    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Hindi' },
+    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Gujarati' },
+    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Sanskrit' },
+    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Hindi' },
+    { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh', preference: 'Gujarati' },
+    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Sanskrit' },
+    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Hindi' },
+    { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay', preference: 'Sanskrit' },
   ],
 };
 
@@ -200,7 +214,7 @@ const AssignElectiveSubject = () => {
         noDataText={<>No Students Found</>}
         columns={[
           { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
-          { id: 'grNo', label: 'GR No.', minWidth: '120px', align: 'left' },
+          { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' },
           { id: 'preference', label: 'Student Preference', minWidth: '200px', align: 'left' },
           {
             id: 'electiveSubject',

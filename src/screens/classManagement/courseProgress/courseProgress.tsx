@@ -33,6 +33,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -46,7 +47,7 @@ import ViewChapterLogs from './components/viewChapterLogs';
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
-  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
+  const [courses, setCourses] = useState<any[]>(courseProgressTableData);
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
   // Props destructuring for search parameters
@@ -200,24 +201,57 @@ const CourseProgress = (props: TabComponentType) => {
               },
               {
                 id: 'timeLine',
-                label: 'End Date',
+                label: '',
                 align: 'left',
                 filterType: 'date',
-                render(value) {
-                  const endDate = new Date(value);
+                renderColumn: () => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    End Date
+                    <CustomTooltip
+                      title={
+                        <Box>
+                          <Typography variant="caption" display="block">
+                            Red : Due within 7 days
+                          </Typography>
+                          <Typography variant="caption" display="block">
+                            Yellow : Due within 30 days
+                          </Typography>
+                          <Typography variant="caption" display="block">
+                            Green : Due after 30 days
+                          </Typography>
+                        </Box>
+                      }
+                    >
+                      <Iconify icon="eva:info-outline" width={16} />
+                    </CustomTooltip>
+                  </Box>
+                ),
+                render(value, row) {
+                  const [day, month, year] = value.split('-');
+                  const endDate = new Date(`${year}-${month}-${day}`);
                   const today = new Date();
+                  endDate.setHours(0, 0, 0, 0);
+                  today.setHours(0, 0, 0, 0);
+
                   const diffDays = Math.ceil(
                     (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
                   );
+
+                  // If progress is 100%, use normal text color
+                  if (row.progress === 100) {
+                    return (
+                      <Typography variant="caption" fontSize="13px">
+                        {value}
+                      </Typography>
+                    );
+                  }
 
                   let color = 'text.secondary';
 
                   if (diffDays <= 7) {
                     color = 'error.main'; // red
-                  } else if (diffDays <= 15) {
-                    color = 'warning.dark'; // dark yellow or orange
                   } else if (diffDays <= 30) {
-                    color = 'warning.main'; // lighter yellow
+                    color = 'warning.main'; // yellow
                   } else {
                     color = 'success.main'; // green
                   }
@@ -338,7 +372,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
+      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} gap={3} p={2}>
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
@@ -370,16 +404,15 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
           error={!!(formik.touched.description && formik.errors.description)}
           helperText={formik.touched.description && formik.errors.description}
         />
-
-        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
-          <CancelButton
-            onClick={() => {
-              onClose(null, false);
-            }}
-          />
-          <SubmitButton onClick={() => {}} />
-        </DialogActions>
       </Box>
+      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+        <CancelButton
+          onClick={() => {
+            onClose(null, false);
+          }}
+        />
+        <SubmitButton onClick={() => {}} />
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

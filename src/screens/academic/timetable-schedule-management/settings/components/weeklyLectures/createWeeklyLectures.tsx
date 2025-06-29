@@ -11,11 +11,10 @@ import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/ma
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import weeklyLecturesTableData from 'src/json/academic/timetable/weeklyLecturesTableData.json';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -24,9 +23,14 @@ import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor
 import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
 
-import type { ICreateNoOfLectureProps } from './type';
+import type { ISubjectFormValues, ICreateNoOfLectureProps } from './type';
 
-const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, disabled }) => {
+const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
+  open,
+  onClose,
+  disabled,
+  editData,
+}) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -48,27 +52,40 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  const formik = useFormik({
-    initialValues: getNoOfLectureInitialValues(),
+  const generateDummySubjects = () => [
+    { name: 'Mathematics', subjectCode: 'MTH101', subjectColor: '#42a5f5' },
+    { name: 'Science', subjectCode: 'SCI101', subjectColor: '#66bb6a' },
+    { name: 'English', subjectCode: 'ENG101', subjectColor: '#ef5350' },
+    { name: 'Social Studies', subjectCode: 'SST101', subjectColor: '#ab47bc' },
+    { name: 'Gujarati', subjectCode: 'GUJ101', subjectColor: '#ffa726' },
+    { name: 'Computer', subjectCode: 'COMP101', subjectColor: '#26c6da' },
+    { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
+    { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
+  ];
+
+  const formik = useFormik<ISubjectFormValues>({
+    initialValues: getNoOfLectureInitialValues(editData),
+    enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      // Calculate total lectures
+      const totalLectures = values.subjects.reduce((sum, subject) => sum + subject.noOfLecture, 0);
+      const submitData = {
+        ...values,
+        totalLectures,
+      };
+      shikshaMitraToast.success({ message: `Weekly lectures added for class ${values.className}` });
+      onClose?.(null, true);
+    },
   });
 
-  // Initialize subject list state with default data
-  const [subjectList, setSubjectList] = useState(weeklyLecturesTableData);
-
-  /**
-   * Handle changes to weekly lecture input fields
-   * Updates the number of lectures for a specific subject
-   * Ensures value is non-negative and converts string to number
-   */
-  const handleInputChange = (id: string, value: string) => {
-    const numValue = Math.max(0, parseInt(value, 10) || 0);
-
-    setSubjectList((prevData) =>
-      prevData.map((row) => (row.id === id ? { ...row, weeklyLectures: numValue } : row))
-    );
-  };
+  // // Update total lectures whenever subject lectures change
+  // useEffect(() => {
+  //   const total = formik.values.subjects.reduce((sum, subject) => sum + subject.noOfLecture, 0);
+  //   if (total !== formik.values.totalLectures) {
+  //     formik.setFieldValue('totalLectures', total);
+  //   }
+  // }, [formik, formik.values.subjects]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -80,14 +97,23 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     options={allClass}
-                    value={formik.values.className || classes}
+                    value={formik.values.className}
                     onChange={(val) => {
                       formik.setFieldValue('className', val as string);
+
+                      const dummySubjects = generateDummySubjects().map((subj, index) => ({
+                        id: `subject-${index}`,
+                        ...subj,
+                        noOfLecture: 0,
+                      }));
+
+                      formik.setFieldValue('subjects', dummySubjects);
+                      formik.setFieldValue('totalLectures', 0);
                     }}
                     label="Class *"
                     // isLoading={isLoading}
                     labelKey="name"
-                    valueKey="id"
+                    valueKey="name"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
                     helperText={
@@ -99,92 +125,97 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({ open, onClose, d
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} mb="-15px">
-                <CustomizableTable
-                  tableId="table-subject-list"
-                  isSearch={false}
-                  isShowedDense={false}
-                  isFilter={false}
-                  columns={[
-                    {
-                      id: 'subjects',
-                      label: 'Subjects',
-                      render: (value) => (
-                        <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
-                          {value.map((subject: any) => (
-                            <Box
-                              key={subject.name}
-                              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                            >
-                              <SubjectColorIndicator color={subject.subjectColor} />
-                              <Typography variant="caption" fontSize="13px">
-                                {subject.name}
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Box>
-                      ),
-                    },
-                    {
-                      id: 'weeklyLectures',
-                      label: 'Weekly Lectures',
-                      isSort: false,
-                      isFilter: false,
-                      render(value, row) {
-                        return (
-                          <TextField
-                            type="number"
-                            size="small"
-                            label="Weekly Lectures *"
-                            value={value}
-                            onChange={(e) => handleInputChange(row.id, e.target.value)}
-                            className="w-24"
-                            disabled={disabled}
-                            error={
-                              formik.touched.weeklyLectures && Boolean(formik.errors.weeklyLectures)
-                            }
-                            helperText={
-                              formik.touched.weeklyLectures && formik.errors.weeklyLectures
-                                ? String(formik.errors.weeklyLectures)
-                                : ''
-                            }
-                            inputProps={{
-                              min: 0,
-                              max: 100, // Set appropriate max value
-                            }}
-                            sx={{ minWidth: '200px', width: '100%' }}
-                          />
-                        );
+              {formik.values.className && (
+                <Grid item xs={12}>
+                  <CustomizableTable
+                    tableId="table-subject-list"
+                    isSearch={false}
+                    isShowedDense={false}
+                    isFilter={false}
+                    columns={[
+                      {
+                        id: 'name',
+                        label: 'Subject',
+                        render: (value, row) => (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={row.subjectColor} />
+                            <Typography variant="caption" fontSize="13px">
+                              {value} ({row.subjectCode})
+                            </Typography>
+                          </Box>
+                        ),
                       },
-                    },
-                  ]}
-                  data={subjectList}
-                />
-              </Grid>
+                      {
+                        id: 'noOfLecture',
+                        label: 'Weekly Lectures',
+                        isSort: false,
+                        isFilter: false,
+                        render: (value, row) => {
+                          const index = formik.values.subjects.findIndex(
+                            (item) => item.id === row.id
+                          );
+                          return (
+                            <TextField
+                              type="number"
+                              size="small"
+                              label="Weekly Lectures *"
+                              name={`subjects[${index}].noOfLecture`}
+                              value={formik.values.subjects[index]?.noOfLecture}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              disabled={disabled}
+                              error={
+                                !!formik.touched.subjects?.[index]?.noOfLecture &&
+                                !!(formik.errors.subjects?.[index] as any)?.noOfLecture
+                              }
+                              helperText={
+                                formik.touched.subjects?.[index]?.noOfLecture &&
+                                (formik.errors.subjects?.[index] as any)?.noOfLecture
+                                  ? String((formik.errors.subjects?.[index] as any).noOfLecture)
+                                  : ''
+                              }
+                              sx={{ minWidth: '100px', width: '100%' }}
+                            />
+                          );
+                        },
+                      },
+                    ]}
+                    data={formik.values.subjects}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Scrollbar>
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              onClick={() => {
-                onClose?.(null, false);
-              }}
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              type="submit"
-              size="small"
-              variant="contained"
-            >
-              Submit
-              {/* {isEdit ? 'Update' : 'Submit'} */}
-            </Button>
-            {/* <SubmitButton size="small" disabled={disabled} /> */}
-          </DialogActions>
+          {!disabled && (
+            <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+              <Button
+                onClick={() => {
+                  onClose?.(null, false);
+                }}
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              >
+                Cancel
+              </Button>
+              <Button
+                startIcon={
+                  <Iconify
+                    icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                    width={editData ? 16 : 20}
+                    height={editData ? 16 : 20}
+                  />
+                }
+                type="submit"
+                size="small"
+                variant="contained"
+              >
+                {editData ? 'Update' : 'Submit'}
+                {/* {isEdit ? 'Update' : 'Submit'} */}
+              </Button>
+              {/* <SubmitButton size="small" disabled={disabled} /> */}
+            </DialogActions>
+          )}
         </form>
       </Box>
     </BackPopUpChecked>

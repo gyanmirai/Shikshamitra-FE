@@ -107,17 +107,19 @@ const CourseProgress = (props: TabComponentType) => {
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            viewLogsDialog.onTrue();
-            setSelectedChapter(row);
-            pop.onClose();
-          }}
-        >
-          {' '}
-          <Iconify icon={GlobalIcons.eye} />
-          View Logs
-        </MenuItem>
+        {row.progress > 0 && (
+          <MenuItem
+            onClick={() => {
+              viewLogsDialog.onTrue();
+              setSelectedChapter(row);
+              pop.onClose();
+            }}
+          >
+            {' '}
+            <Iconify icon={GlobalIcons.eye} />
+            View Logs
+          </MenuItem>
+        )}
 
         {/* Update progress action item */}
         <MenuItem

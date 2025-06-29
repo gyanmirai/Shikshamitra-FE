@@ -10,74 +10,226 @@
     {
       "chapterNumber": 1,
       "chapterName": "Introduction to Programming",
-      "teacherName": "John Developer",
+      "teacherName": "Sharma Rajesh Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "01-05-2025",
-      "timeLine": "30-05-2025"
+      "timeLine": "30-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter assigned to students.",
+          "time": "2025-05-01 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 2,
+          "des": "Basic concepts introduced.",
+          "time": "2025-05-05 10:00 AM",
+          "color": "success",
+          "progress": 30,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 3,
+          "des": "Main content explained.",
+          "time": "2025-05-15 11:30 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 4,
+          "des": "Revision and completion.",
+          "time": "2025-05-28 02:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Sharma Rajesh Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Data Types & Variables",
-      "teacherName": "John Developer", 
+      "teacherName": "Sharma Rajesh Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "01-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter started with overview.",
+          "time": "2025-06-01 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 2,
+          "des": "Practical examples shared.",
+          "time": "2025-06-05 10:00 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 3,
+          "des": "Hands-on sessions completed.",
+          "time": "2025-06-15 01:00 PM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 4,
+          "des": "Final wrap-up done.",
+          "time": "2025-06-20 03:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Sharma Rajesh Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Control Structures",
-      "teacherName": "Jane Code",
+      "teacherName": "Patel Jaya Suresh",
       "progress": 80,
       "pending": 20,
       "startDate": "10-06-2025",
-      "timeLine": "01-07-2025"
+      "timeLine": "01-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Basic control structures explained.",
+          "time": "2025-06-10 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Jaya Suresh"
+        },
+        {
+          "key": 2,
+          "des": "If-else and loops covered.",
+          "time": "2025-06-15 10:30 AM",
+          "color": "success",
+          "progress": 50,
+          "teacher": "Patel Jaya Suresh"
+        },
+        {
+          "key": 3,
+          "des": "Hands-on practice done.",
+          "time": "2025-06-25 02:00 PM",
+          "color": "success",
+          "progress": 80,
+          "teacher": "Patel Jaya Suresh"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Functions & Modules",
-      "teacherName": "Jane Code",
+      "teacherName": "Patel Jaya Suresh",
       "progress": 25,
       "pending": 75,
       "startDate": "02-07-2025",
-      "timeLine": "20-07-2025"
+      "timeLine": "20-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Functions topic introduced.",
+          "time": "2025-07-02 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Jaya Suresh"
+        },
+        {
+          "key": 2,
+          "des": "Basic syntax covered.",
+          "time": "2025-07-05 11:00 AM",
+          "color": "success",
+          "progress": 25,
+          "teacher": "Patel Jaya Suresh"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Arrays & Lists",
-      "teacherName": "Jake Byte",
+      "teacherName": "Verma Jayant Prakash",
       "progress": 0,
       "pending": 100,
       "startDate": "22-07-2025",
-      "timeLine": "05-08-2025"
+      "timeLine": "05-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter yet to begin.",
+          "time": "2025-07-22 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Verma Jayant Prakash"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Object-Oriented Programming",
-      "teacherName": "Jake Byte",
+      "teacherName": "Verma Jayant Prakash",
       "progress": 0,
       "pending": 100,
       "startDate": "07-08-2025",
-      "timeLine": "25-08-2025"
+      "timeLine": "25-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Planned for next phase.",
+          "time": "2025-08-07 09:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Verma Jayant Prakash"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "File Handling",
-      "teacherName": "Lucy Logic",
+      "teacherName": "Gupta Lakshmi Devi",
       "progress": 0,
       "pending": 100,
       "startDate": "27-08-2025",
-      "timeLine": "10-09-2025"
+      "timeLine": "10-09-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Upcoming topic in schedule.",
+          "time": "2025-08-27 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Gupta Lakshmi Devi"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "Error Handling & Debugging",
-      "teacherName": "Lucy Logic",
+      "teacherName": "Gupta Lakshmi Devi",
       "progress": 0,
       "pending": 100,
       "startDate": "12-09-2025",
-      "timeLine": "30-09-2025"
+      "timeLine": "30-09-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Scheduled for later stage.",
+          "time": "2025-09-12 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Gupta Lakshmi Devi"
+        }
+      ]
     }
   ]
 },
@@ -92,65 +244,199 @@
     {
       "chapterNumber": 1,
       "chapterName": "Fitness Introduction",
-      "teacherName": "Coach Sam",
+      "teacherName": "Verma Sandeep Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "01-04-2025",
-      "timeLine": "25-04-2025"
+      "timeLine": "25-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter assigned.",
+          "time": "2025-04-01 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Verma Sandeep Kumar"
+        },
+        {
+          "key": 2,
+          "des": "Basics introduced and demonstrated.",
+          "time": "2025-04-05 10:00 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Verma Sandeep Kumar"
+        },
+        {
+          "key": 3,
+          "des": "Full body warm-ups completed.",
+          "time": "2025-04-15 11:00 AM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Verma Sandeep Kumar"
+        },
+        {
+          "key": 4,
+          "des": "Chapter review and completion.",
+          "time": "2025-04-25 01:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Verma Sandeep Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Yoga & Meditation",
-      "teacherName": "Coach Sam",
+      "teacherName": "Verma Sandeep Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "28-04-2025",
-      "timeLine": "20-05-2025"
+      "timeLine": "20-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Yoga introduction started.",
+          "time": "2025-04-28 08:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Verma Sandeep Kumar"
+        },
+        {
+          "key": 2,
+          "des": "Breathing exercises practiced.",
+          "time": "2025-05-05 10:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Verma Sandeep Kumar"
+        },
+        {
+          "key": 3,
+          "des": "Meditation sessions conducted.",
+          "time": "2025-05-15 12:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Verma Sandeep Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Endurance Training",
-      "teacherName": "Coach Leo",
+      "teacherName": "Rathod Lalit Rajesh",
       "progress": 90,
       "pending": 10,
       "startDate": "22-05-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Introduction to cardio routines.",
+          "time": "2025-05-22 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rathod Lalit Rajesh"
+        },
+        {
+          "key": 2,
+          "des": "Circuit training sessions conducted.",
+          "time": "2025-06-01 11:00 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Rathod Lalit Rajesh"
+        },
+        {
+          "key": 3,
+          "des": "Endurance assessments done.",
+          "time": "2025-06-18 01:00 PM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Rathod Lalit Rajesh"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Strength Building",
-      "teacherName": "Coach Leo",
+      "teacherName": "Rathod Lalit Rajesh",
       "progress": 50,
       "pending": 50,
       "startDate": "22-06-2025",
-      "timeLine": "15-07-2025"
+      "timeLine": "15-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Weight training basics introduced.",
+          "time": "2025-06-22 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rathod Lalit Rajesh"
+        },
+        {
+          "key": 2,
+          "des": "Upper body focus sessions completed.",
+          "time": "2025-07-01 12:00 PM",
+          "color": "success",
+          "progress": 50,
+          "teacher": "Rathod Lalit Rajesh"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Flexibility",
-      "teacherName": "Coach Ana",
+      "teacherName": "Sharma Anjali Meena",
       "progress": 0,
       "pending": 100,
       "startDate": "17-07-2025",
-      "timeLine": "05-08-2025"
+      "timeLine": "05-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Session scheduled to begin.",
+          "time": "2025-07-17 09:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Sharma Anjali Meena"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Team Sports",
-      "teacherName": "Coach Ana",
+      "teacherName": "Sharma Anjali Meena",
       "progress": 0,
       "pending": 100,
       "startDate": "07-08-2025",
-      "timeLine": "28-08-2025"
+      "timeLine": "28-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Upcoming chapter – warm-ups planned.",
+          "time": "2025-08-07 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Sharma Anjali Meena"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "Diet & Nutrition",
-      "teacherName": "Coach Ana",
+      "teacherName": "Sharma Anjali Meena",
       "progress": 0,
       "pending": 100,
       "startDate": "01-09-2025",
-      "timeLine": "20-09-2025"
+      "timeLine": "20-09-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Planned to start after sports module.",
+          "time": "2025-09-01 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Sharma Anjali Meena"
+        }
+      ]
     }
   ]
 },
@@ -165,74 +451,142 @@
     {
       "chapterNumber": 1,
       "chapterName": "काव्य परिचय",
-      "teacherName": "श्री. शर्मा",
+      "teacherName": "Sharma Rajesh Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "20-03-2025",
-      "timeLine": "10-04-2025"
+      "timeLine": "10-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "अध्याय आरंभ किया गया।",
+          "time": "2025-03-20 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 2,
+          "des": "मुख्य भावों की व्याख्या हुई।",
+          "time": "2025-03-28 10:30 AM",
+          "color": "success",
+          "progress": 50,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 3,
+          "des": "अध्याय पूर्ण हुआ।",
+          "time": "2025-04-10 12:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Sharma Rajesh Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "निबंध लेखन",
-      "teacherName": "श्री. शर्मा",
+      "teacherName": "Sharma Rajesh Kumar",
       "progress": 100,
       "pending": 0,
       "startDate": "12-04-2025",
-      "timeLine": "02-05-2025"
+      "timeLine": "02-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "निबंध की रूपरेखा समझाई गई।",
+          "time": "2025-04-12 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 2,
+          "des": "उदाहरणों के साथ अभ्यास कराया गया।",
+          "time": "2025-04-22 11:30 AM",
+          "color": "success",
+          "progress": 80,
+          "teacher": "Sharma Rajesh Kumar"
+        },
+        {
+          "key": 3,
+          "des": "पूर्ण पुनरावलोकन के साथ समाप्त।",
+          "time": "2025-05-02 01:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Sharma Rajesh Kumar"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "पत्र लेखन",
-      "teacherName": "श्रीमती रेखा",
+      "teacherName": "Rekha Suman Lalit",
       "progress": 90,
       "pending": 10,
       "startDate": "05-05-2025",
-      "timeLine": "10-06-2025"
+      "timeLine": "10-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "पत्र लेखन के प्रारूप की जानकारी दी गई।",
+          "time": "2025-05-05 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rekha Suman Lalit"
+        },
+        {
+          "key": 2,
+          "des": "छात्रों से पत्र लेखन का अभ्यास करवाया गया।",
+          "time": "2025-05-20 11:00 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Rekha Suman Lalit"
+        },
+        {
+          "key": 3,
+          "des": "अधिकांश छात्र पत्र लेखन समझ चुके हैं।",
+          "time": "2025-06-08 12:00 PM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Rekha Suman Lalit"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "कहानी: 'दो बैलों की कथा'",
-      "teacherName": "श्रीमती रेखा",
+      "teacherName": "Rekha Suman Lalit",
       "progress": 70,
       "pending": 30,
       "startDate": "12-06-2025",
-      "timeLine": "20-06-2025"
-    },
-    {
-      "chapterNumber": 5,
-      "chapterName": "व्याकरण भाग",
-      "teacherName": "श्री. राज",
-      "progress": 30,
-      "pending": 70,
-      "startDate": "22-06-2025",
-      "timeLine": "10-07-2025"
-    },
-    {
-      "chapterNumber": 6,
-      "chapterName": "संधि व समास",
-      "teacherName": "श्री. राज",
-      "progress": 0,
-      "pending": 100,
-      "startDate": "12-07-2025",
-      "timeLine": "30-07-2025"
-    },
-    {
-      "chapterNumber": 7,
-      "chapterName": "मुहावरे व लोकोक्तियाँ",
-      "teacherName": "श्री. राज",
-      "progress": 0,
-      "pending": 100,
-      "startDate": "02-08-2025",
-      "timeLine": "20-08-2025"
-    },
-    {
-      "chapterNumber": 8,
-      "chapterName": "पुनरावृत्ति",
-      "teacherName": "श्री. राज",
-      "progress": 0,
-      "pending": 100,
-      "startDate": "22-08-2025",
-      "timeLine": "10-09-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "कहानी की भूमिका प्रस्तुत की गई।",
+          "time": "2025-06-12 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rekha Suman Lalit"
+        },
+        {
+          "key": 2,
+          "des": "मुख्य पात्रों की चर्चा की गई।",
+          "time": "2025-06-16 11:30 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Rekha Suman Lalit"
+        },
+        {
+          "key": 3,
+          "des": "विषयवस्तु की व्याख्या की गई।",
+          "time": "2025-06-20 01:00 PM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Rekha Suman Lalit"
+        }
+      ]
     }
   ]
 },
@@ -247,74 +601,218 @@
     {
       "chapterNumber": 1,
       "chapterName": "Number Systems",
-      "teacherName": "Mr. Kumar",
+      "teacherName": "Kumar Ramesh Pratap",
       "progress": 100,
       "pending": 0,
       "startDate": "10-03-2025",
-      "timeLine": "10-04-2025"
+      "timeLine": "10-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter assigned.",
+          "time": "2025-03-10 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Kumar Ramesh Pratap"
+        },
+        {
+          "key": 2,
+          "des": "Concepts of whole numbers and integers discussed.",
+          "time": "2025-03-20 10:00 AM",
+          "color": "success",
+          "progress": 50,
+          "teacher": "Kumar Ramesh Pratap"
+        },
+        {
+          "key": 3,
+          "des": "Completed rational and irrational numbers.",
+          "time": "2025-04-05 11:30 AM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Kumar Ramesh Pratap"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Linear Equations",
-      "teacherName": "Ms. Meera",
+      "teacherName": "Mehta Meera Suresh",
       "progress": 95,
       "pending": 5,
       "startDate": "12-04-2025",
-      "timeLine": "05-05-2025"
+      "timeLine": "05-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Linear equations in one variable introduced.",
+          "time": "2025-04-12 09:15 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Mehta Meera Suresh"
+        },
+        {
+          "key": 2,
+          "des": "Word problems and applications discussed.",
+          "time": "2025-04-20 10:30 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Mehta Meera Suresh"
+        },
+        {
+          "key": 3,
+          "des": "Final examples solved and practice completed.",
+          "time": "2025-05-03 11:00 AM",
+          "color": "success",
+          "progress": 95,
+          "teacher": "Mehta Meera Suresh"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Polynomials",
-      "teacherName": "Mr. Singh",
+      "teacherName": "Singh Aditya Narayan",
       "progress": 90,
       "pending": 10,
       "startDate": "08-05-2025",
-      "timeLine": "05-06-2025"
+      "timeLine": "05-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Introduction to polynomials and terminology.",
+          "time": "2025-05-08 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Singh Aditya Narayan"
+        },
+        {
+          "key": 2,
+          "des": "Operations and degree of polynomials covered.",
+          "time": "2025-05-18 11:00 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Singh Aditya Narayan"
+        },
+        {
+          "key": 3,
+          "des": "Zeros of polynomial and graphical representation discussed.",
+          "time": "2025-06-01 12:00 PM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Singh Aditya Narayan"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Coordinate Geometry",
-      "teacherName": "Ms. Meera",
+      "teacherName": "Mehta Meera Suresh",
       "progress": 60,
       "pending": 40,
       "startDate": "10-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Basics of coordinate plane explained.",
+          "time": "2025-06-10 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Mehta Meera Suresh"
+        },
+        {
+          "key": 2,
+          "des": "Plotting points and distance formula introduced.",
+          "time": "2025-06-15 11:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Mehta Meera Suresh"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Trigonometry",
-      "teacherName": "Mr. Arjun",
+      "teacherName": "Arjun Vishal Mahesh",
       "progress": 40,
       "pending": 60,
       "startDate": "22-06-2025",
-      "timeLine": "05-07-2025"
+      "timeLine": "05-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Trigonometric ratios introduced.",
+          "time": "2025-06-22 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Arjun Vishal Mahesh"
+        },
+        {
+          "key": 2,
+          "des": "Angle measurements and identities practiced.",
+          "time": "2025-06-29 10:45 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Arjun Vishal Mahesh"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Mensuration",
-      "teacherName": "Mr. Arjun",
+      "teacherName": "Arjun Vishal Mahesh",
       "progress": 0,
       "pending": 100,
       "startDate": "08-07-2025",
-      "timeLine": "25-07-2025"
+      "timeLine": "25-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter yet to be started.",
+          "time": "2025-07-08 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Arjun Vishal Mahesh"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "Statistics",
-      "teacherName": "Mr. Arjun",
+      "teacherName": "Arjun Vishal Mahesh",
       "progress": 0,
       "pending": 100,
       "startDate": "28-07-2025",
-      "timeLine": "10-08-2025"
+      "timeLine": "10-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Planned to begin after Mensuration.",
+          "time": "2025-07-28 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Arjun Vishal Mahesh"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "Probability",
-      "teacherName": "Ms. Meera",
+      "teacherName": "Mehta Meera Suresh",
       "progress": 0,
       "pending": 100,
       "startDate": "12-08-2025",
-      "timeLine": "25-08-2025"
+      "timeLine": "25-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Session scheduled to begin.",
+          "time": "2025-08-12 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Mehta Meera Suresh"
+        }
+      ]
     }
   ]
 },
@@ -329,74 +827,218 @@
     {
       "chapterNumber": 1,
       "chapterName": "Matter and Its Properties",
-      "teacherName": "Dr. Patel",
+      "teacherName": "Patel Nilesh Mahendra",
       "progress": 100,
       "pending": 0,
       "startDate": "10-03-2025",
-      "timeLine": "01-04-2025"
+      "timeLine": "01-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter introduced and objectives explained.",
+          "time": "2025-03-10 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Nilesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "Physical and chemical properties covered.",
+          "time": "2025-03-20 10:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Patel Nilesh Mahendra"
+        },
+        {
+          "key": 3,
+          "des": "Chapter concluded and revision done.",
+          "time": "2025-03-30 11:00 AM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Patel Nilesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Laws of Motion",
-      "teacherName": "Mr. Rao",
+      "teacherName": "Rao Suresh Vinod",
       "progress": 95,
       "pending": 5,
       "startDate": "05-04-2025",
-      "timeLine": "01-05-2025"
+      "timeLine": "01-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Newton’s laws introduced with examples.",
+          "time": "2025-04-05 09:15 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rao Suresh Vinod"
+        },
+        {
+          "key": 2,
+          "des": "Derivations and numerical applications practiced.",
+          "time": "2025-04-18 11:00 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Rao Suresh Vinod"
+        },
+        {
+          "key": 3,
+          "des": "Final problems and worksheet completed.",
+          "time": "2025-04-29 12:00 PM",
+          "color": "success",
+          "progress": 95,
+          "teacher": "Rao Suresh Vinod"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Acids, Bases and Salts",
-      "teacherName": "Ms. Iyer",
+      "teacherName": "Iyer Shruti Anand",
       "progress": 85,
       "pending": 15,
       "startDate": "05-05-2025",
-      "timeLine": "01-06-2025"
+      "timeLine": "01-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Types of acids and bases explained.",
+          "time": "2025-05-05 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Iyer Shruti Anand"
+        },
+        {
+          "key": 2,
+          "des": "Neutralization reactions and indicators covered.",
+          "time": "2025-05-15 11:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Iyer Shruti Anand"
+        },
+        {
+          "key": 3,
+          "des": "Salt formation and uses discussed.",
+          "time": "2025-05-28 01:00 PM",
+          "color": "success",
+          "progress": 85,
+          "teacher": "Iyer Shruti Anand"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Electricity",
-      "teacherName": "Mr. Rao",
+      "teacherName": "Rao Suresh Vinod",
       "progress": 75,
       "pending": 25,
       "startDate": "10-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Basics of current, voltage and circuits explained.",
+          "time": "2025-06-10 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Rao Suresh Vinod"
+        },
+        {
+          "key": 2,
+          "des": "Ohm’s Law and resistors in series/parallel discussed.",
+          "time": "2025-06-15 10:45 AM",
+          "color": "success",
+          "progress": 75,
+          "teacher": "Rao Suresh Vinod"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Life Processes",
-      "teacherName": "Dr. Patel",
+      "teacherName": "Patel Nilesh Mahendra",
       "progress": 40,
       "pending": 60,
       "startDate": "21-06-2025",
-      "timeLine": "01-07-2025"
+      "timeLine": "01-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Introduction to nutrition in plants and animals.",
+          "time": "2025-06-21 09:45 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Nilesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "Respiration and transportation in organisms covered.",
+          "time": "2025-06-28 11:15 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Patel Nilesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Light: Reflection & Refraction",
-      "teacherName": "Ms. Iyer",
+      "teacherName": "Iyer Shruti Anand",
       "progress": 0,
       "pending": 100,
       "startDate": "03-07-2025",
-      "timeLine": "15-07-2025"
+      "timeLine": "15-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Topic planned to begin next week.",
+          "time": "2025-07-03 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Iyer Shruti Anand"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "Carbon Compounds",
-      "teacherName": "Ms. Iyer",
+      "teacherName": "Iyer Shruti Anand",
       "progress": 0,
       "pending": 100,
       "startDate": "18-07-2025",
-      "timeLine": "01-08-2025"
+      "timeLine": "01-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Scheduled after optics chapter.",
+          "time": "2025-07-18 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Iyer Shruti Anand"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "Environmental Chemistry",
-      "teacherName": "Mr. Rao",
+      "teacherName": "Rao Suresh Vinod",
       "progress": 0,
       "pending": 100,
       "startDate": "03-08-2025",
-      "timeLine": "20-08-2025"
+      "timeLine": "20-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Planned to start after completion of organics.",
+          "time": "2025-08-03 10:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Rao Suresh Vinod"
+        }
+      ]
     }
   ]
 },
@@ -411,74 +1053,210 @@
     {
       "chapterNumber": 1,
       "chapterName": "The French Revolution",
-      "teacherName": "Ms. Thomas",
+      "teacherName": "Thomas Anjali Deepa",
       "progress": 100,
       "pending": 0,
       "startDate": "01-03-2025",
-      "timeLine": "25-03-2025"
+      "timeLine": "25-03-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter overview and key events explained.",
+          "time": "2025-03-01 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Thomas Anjali Deepa"
+        },
+        {
+          "key": 2,
+          "des": "Causes and consequences discussed in depth.",
+          "time": "2025-03-15 10:30 AM",
+          "color": "success",
+          "progress": 65,
+          "teacher": "Thomas Anjali Deepa"
+        },
+        {
+          "key": 3,
+          "des": "Timeline recap and chapter conclusion.",
+          "time": "2025-03-24 11:45 AM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Thomas Anjali Deepa"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Indian National Movement",
-      "teacherName": "Mr. Bose",
+      "teacherName": "Bose Amit Rajiv",
       "progress": 95,
       "pending": 5,
       "startDate": "01-04-2025",
-      "timeLine": "25-04-2025"
+      "timeLine": "25-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Initial struggle phases explained.",
+          "time": "2025-04-01 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Bose Amit Rajiv"
+        },
+        {
+          "key": 2,
+          "des": "Major revolts and leaders covered.",
+          "time": "2025-04-15 11:00 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Bose Amit Rajiv"
+        },
+        {
+          "key": 3,
+          "des": "Final events and Quit India Movement discussed.",
+          "time": "2025-04-23 01:00 PM",
+          "color": "success",
+          "progress": 95,
+          "teacher": "Bose Amit Rajiv"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Resources & Development",
-      "teacherName": "Ms. Roy",
+      "teacherName": "Roy Nandini Shweta",
       "progress": 80,
       "pending": 20,
       "startDate": "01-05-2025",
-      "timeLine": "01-06-2025"
+      "timeLine": "01-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Definition and classification of resources explained.",
+          "time": "2025-05-01 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Roy Nandini Shweta"
+        },
+        {
+          "key": 2,
+          "des": "Development strategies and resource conservation discussed.",
+          "time": "2025-05-20 12:30 PM",
+          "color": "success",
+          "progress": 80,
+          "teacher": "Roy Nandini Shweta"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Democratic Politics",
-      "teacherName": "Mr. Mehta",
+      "teacherName": "Mehta Rakesh Ajay",
       "progress": 70,
       "pending": 30,
       "startDate": "10-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Democracy concepts introduced.",
+          "time": "2025-06-10 09:15 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Mehta Rakesh Ajay"
+        },
+        {
+          "key": 2,
+          "des": "Forms of government and participation discussed.",
+          "time": "2025-06-18 11:00 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Mehta Rakesh Ajay"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Globalization",
-      "teacherName": "Ms. Roy",
+      "teacherName": "Roy Nandini Shweta",
       "progress": 30,
       "pending": 70,
       "startDate": "22-06-2025",
-      "timeLine": "05-07-2025"
+      "timeLine": "05-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Introduction to globalization and key terms.",
+          "time": "2025-06-22 10:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Roy Nandini Shweta"
+        },
+        {
+          "key": 2,
+          "des": "Case studies and global market impacts discussed.",
+          "time": "2025-06-30 01:15 PM",
+          "color": "success",
+          "progress": 30,
+          "teacher": "Roy Nandini Shweta"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Economics: Development",
-      "teacherName": "Mr. Bose",
+      "teacherName": "Bose Amit Rajiv",
       "progress": 0,
       "pending": 100,
       "startDate": "07-07-2025",
-      "timeLine": "20-07-2025"
+      "timeLine": "20-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Scheduled to begin after Globalization chapter.",
+          "time": "2025-07-07 09:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Bose Amit Rajiv"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "Climate and Weather",
-      "teacherName": "Ms. Thomas",
+      "teacherName": "Thomas Anjali Deepa",
       "progress": 0,
       "pending": 100,
       "startDate": "22-07-2025",
-      "timeLine": "05-08-2025"
+      "timeLine": "05-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter scheduled post Development unit.",
+          "time": "2025-07-22 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Thomas Anjali Deepa"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "Working of Institutions",
-      "teacherName": "Mr. Mehta",
+      "teacherName": "Mehta Rakesh Ajay",
       "progress": 0,
       "pending": 100,
       "startDate": "07-08-2025",
-      "timeLine": "20-08-2025"
+      "timeLine": "20-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Planned to start after Climate and Weather.",
+          "time": "2025-08-07 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Mehta Rakesh Ajay"
+        }
+      ]
     }
   ]
 },
@@ -493,74 +1271,218 @@
     {
       "chapterNumber": 1,
       "chapterName": "વાર્તા લેખન",
-      "teacherName": "શ્રી દવે",
+      "teacherName": "Dave Ramesh Mahendra",
       "progress": 100,
       "pending": 0,
       "startDate": "05-04-2025",
-      "timeLine": "25-04-2025"
+      "timeLine": "25-04-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "વાર્તા લેખનના તત્વો રજૂ કર્યા.",
+          "time": "2025-04-05 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Dave Ramesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "વિભિન્ન વાર્તાના ઉદાહરણો સાથે સમજાવ્યું.",
+          "time": "2025-04-15 10:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Dave Ramesh Mahendra"
+        },
+        {
+          "key": 3,
+          "des": "પ્રશ્નોત્તરી અને સમીક્ષા સાથે અધ્યાય પૂર્ણ.",
+          "time": "2025-04-25 01:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Dave Ramesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "નિબંધ લેખન",
-      "teacherName": "શ્રીમતી પટેલ",
+      "teacherName": "Patel Bhavna Kirit",
       "progress": 100,
       "pending": 0,
       "startDate": "01-05-2025",
-      "timeLine": "20-05-2025"
+      "timeLine": "20-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "નિબંધ લેખનનું પરિચય આપવામાં આવ્યું.",
+          "time": "2025-05-01 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Bhavna Kirit"
+        },
+        {
+          "key": 2,
+          "des": "વિષયના આધારે નિબંધ લખવાનું માર્ગદર્શન.",
+          "time": "2025-05-10 10:45 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Patel Bhavna Kirit"
+        },
+        {
+          "key": 3,
+          "des": "અભ્યાસક્રમ અંતર્ગત નિબંધ લેખન પૂર્ણ.",
+          "time": "2025-05-20 11:45 AM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Patel Bhavna Kirit"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "નાટક પરિચય",
-      "teacherName": "શ્રી દવે",
+      "teacherName": "Dave Ramesh Mahendra",
       "progress": 90,
       "pending": 10,
       "startDate": "01-06-2025",
-      "timeLine": "15-06-2025"
+      "timeLine": "15-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "નાટકના અંગો અને શૈલીની ચર્ચા.",
+          "time": "2025-06-01 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Dave Ramesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "અદાકારી અને સંવાદ વિશ્લેષણ.",
+          "time": "2025-06-10 12:00 PM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Dave Ramesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "કાવ્ય પાઠ",
-      "teacherName": "શ્રીમતી પટેલ",
+      "teacherName": "Patel Bhavna Kirit",
       "progress": 95,
       "pending": 5,
       "startDate": "10-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "કાવ્યોનું વાચન અને અર્થ સમજાવવો.",
+          "time": "2025-06-10 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Patel Bhavna Kirit"
+        },
+        {
+          "key": 2,
+          "des": "પ્રતિમાઓ અને અલંકારોની ઓળખ.",
+          "time": "2025-06-18 01:00 PM",
+          "color": "success",
+          "progress": 95,
+          "teacher": "Patel Bhavna Kirit"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "વ્યાકરણ",
-      "teacherName": "શ્રી દવે",
+      "teacherName": "Dave Ramesh Mahendra",
       "progress": 40,
       "pending": 60,
       "startDate": "22-06-2025",
-      "timeLine": "05-07-2025"
+      "timeLine": "05-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "સર્જનાત્મક વાક્ય રચનાનું શીખવણ.",
+          "time": "2025-06-22 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Dave Ramesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "વિભક્તિઓ અને ક્રિયાપદોનું અભ્યાસ.",
+          "time": "2025-07-01 11:30 AM",
+          "color": "success",
+          "progress": 40,
+          "teacher": "Dave Ramesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "મહુાવરા અને લોખૂક્તિ",
-      "teacherName": "શ્રી દવે",
+      "teacherName": "Dave Ramesh Mahendra",
       "progress": 20,
       "pending": 80,
       "startDate": "07-07-2025",
-      "timeLine": "20-07-2025"
+      "timeLine": "20-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "મહાવરાનો અર્થ અને ઉપયોગ બતાવ્યા.",
+          "time": "2025-07-07 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Dave Ramesh Mahendra"
+        },
+        {
+          "key": 2,
+          "des": "ઉદાહરણોથી સમજાવ્યા.",
+          "time": "2025-07-15 10:45 AM",
+          "color": "success",
+          "progress": 20,
+          "teacher": "Dave Ramesh Mahendra"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "સાંસ્કૃતિક વારસો",
-      "teacherName": "શ્રીમતી પટેલ",
+      "teacherName": "Patel Bhavna Kirit",
       "progress": 0,
       "pending": 100,
       "startDate": "22-07-2025",
-      "timeLine": "05-08-2025"
+      "timeLine": "05-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "અધ્યાય શરુ થવાનું આયોજન.",
+          "time": "2025-07-22 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Patel Bhavna Kirit"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "પુનરાવર્તન",
-      "teacherName": "શ્રીમતી પટેલ",
+      "teacherName": "Patel Bhavna Kirit",
       "progress": 0,
       "pending": 100,
       "startDate": "07-08-2025",
-      "timeLine": "20-08-2025"
+      "timeLine": "20-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "મુખ્ય મુદ્દાઓનો પુનરાવલોકન માટે આયોજન.",
+          "time": "2025-08-07 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Patel Bhavna Kirit"
+        }
+      ]
     }
   ]
 },
@@ -575,75 +1497,220 @@
     {
       "chapterNumber": 1,
       "chapterName": "Prose: The Last Lesson",
-      "teacherName": "Ms. Linda",
+      "teacherName": "Thomas Linda Mary",
       "progress": 100,
       "pending": 0,
       "startDate": "10-04-2025",
-      "timeLine": "01-05-2025"
+      "timeLine": "01-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Chapter introduced with historical background.",
+          "time": "2025-04-10 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Thomas Linda Mary"
+        },
+        {
+          "key": 2,
+          "des": "Prose thoroughly explained with Q&A.",
+          "time": "2025-04-20 10:30 AM",
+          "color": "success",
+          "progress": 60,
+          "teacher": "Thomas Linda Mary"
+        },
+        {
+          "key": 3,
+          "des": "Summary and character analysis completed.",
+          "time": "2025-05-01 12:00 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Thomas Linda Mary"
+        }
+      ]
     },
     {
       "chapterNumber": 2,
       "chapterName": "Poem: My Mother at Sixty-Six",
-      "teacherName": "Mr. George",
+      "teacherName": "Fernandes George Joseph",
       "progress": 100,
       "pending": 0,
       "startDate": "05-05-2025",
-      "timeLine": "25-05-2025"
+      "timeLine": "25-05-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Poem recited and contextual meaning discussed.",
+          "time": "2025-05-05 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Fernandes George Joseph"
+        },
+        {
+          "key": 2,
+          "des": "Literary devices and emotional tone explained.",
+          "time": "2025-05-15 11:30 AM",
+          "color": "success",
+          "progress": 70,
+          "teacher": "Fernandes George Joseph"
+        },
+        {
+          "key": 3,
+          "des": "Evaluation and worksheet discussion done.",
+          "time": "2025-05-25 12:45 PM",
+          "color": "success",
+          "progress": 100,
+          "teacher": "Fernandes George Joseph"
+        }
+      ]
     },
     {
       "chapterNumber": 3,
       "chapterName": "Letter Writing",
-      "teacherName": "Ms. Linda",
+      "teacherName": "Thomas Linda Mary",
       "progress": 90,
       "pending": 10,
       "startDate": "01-06-2025",
-      "timeLine": "15-06-2025"
+      "timeLine": "15-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Types of formal/informal letters explained.",
+          "time": "2025-06-01 09:30 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Thomas Linda Mary"
+        },
+        {
+          "key": 2,
+          "des": "Sample letters practiced in class.",
+          "time": "2025-06-10 10:45 AM",
+          "color": "success",
+          "progress": 90,
+          "teacher": "Thomas Linda Mary"
+        }
+      ]
     },
     {
       "chapterNumber": 4,
       "chapterName": "Report Writing",
-      "teacherName": "Mr. George",
+      "teacherName": "Fernandes George Joseph",
       "progress": 95,
       "pending": 5,
       "startDate": "10-06-2025",
-      "timeLine": "20-06-2025"
+      "timeLine": "20-06-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Structure and tone of reports taught.",
+          "time": "2025-06-10 10:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Fernandes George Joseph"
+        },
+        {
+          "key": 2,
+          "des": "Real-world examples and practice reports given.",
+          "time": "2025-06-18 11:00 AM",
+          "color": "success",
+          "progress": 95,
+          "teacher": "Fernandes George Joseph"
+        }
+      ]
     },
     {
       "chapterNumber": 5,
       "chapterName": "Reading Comprehension",
-      "teacherName": "Ms. Linda",
+      "teacherName": "Thomas Linda Mary",
       "progress": 65,
       "pending": 35,
       "startDate": "22-06-2025",
-      "timeLine": "05-07-2025"
+      "timeLine": "05-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Comprehension techniques and practice passages.",
+          "time": "2025-06-22 09:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Thomas Linda Mary"
+        },
+        {
+          "key": 2,
+          "des": "Passage-solving in groups with strategies.",
+          "time": "2025-07-01 10:30 AM",
+          "color": "success",
+          "progress": 65,
+          "teacher": "Thomas Linda Mary"
+        }
+      ]
     },
     {
       "chapterNumber": 6,
       "chapterName": "Debate & Speech",
-      "teacherName": "Mr. George",
+      "teacherName": "Fernandes George Joseph",
       "progress": 30,
       "pending": 70,
       "startDate": "07-07-2025",
-      "timeLine": "20-07-2025"
+      "timeLine": "20-07-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Basic debate/speech structure explained.",
+          "time": "2025-07-07 11:00 AM",
+          "color": "success",
+          "progress": 0,
+          "teacher": "Fernandes George Joseph"
+        },
+        {
+          "key": 2,
+          "des": "Individual speeches and feedback session.",
+          "time": "2025-07-12 12:30 PM",
+          "color": "success",
+          "progress": 30,
+          "teacher": "Fernandes George Joseph"
+        }
+      ]
     },
     {
       "chapterNumber": 7,
       "chapterName": "Grammar Revision",
-      "teacherName": "Ms. Linda",
+      "teacherName": "Thomas Linda Mary",
       "progress": 0,
       "pending": 100,
       "startDate": "22-07-2025",
-      "timeLine": "05-08-2025"
+      "timeLine": "05-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Grammar revision session scheduled.",
+          "time": "2025-07-22 10:00 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Thomas Linda Mary"
+        }
+      ]
     },
     {
       "chapterNumber": 8,
       "chapterName": "Creative Writing",
-      "teacherName": "Mr. George",
+      "teacherName": "Fernandes George Joseph",
       "progress": 0,
       "pending": 100,
       "startDate": "07-08-2025",
-      "timeLine": "20-08-2025"
+      "timeLine": "20-08-2025",
+      "logs": [
+        {
+          "key": 1,
+          "des": "Creative writing tasks to begin soon.",
+          "time": "2025-08-07 09:30 AM",
+          "color": "warning",
+          "progress": 0,
+          "teacher": "Fernandes George Joseph"
+        }
+      ]
     }
   ]
 }
+
 ]

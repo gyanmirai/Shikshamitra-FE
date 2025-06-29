@@ -182,6 +182,8 @@ const TimeTableCell = ({
               }}
             >
               <CustomTooltip
+                arrow
+                placement="top"
                 title={
                   <Box>
                     {slotData.subjects.map((sub: any, index: number) => (
@@ -266,11 +268,38 @@ const TimeTableCell = ({
                 </Typography>
               )}
               {isTeacherVisible && (
-                <Typography variant="caption" color="text.secondary">
-                  {slotData?.subjects?.length
-                    ? slotData.subjects.map((sub: any) => sub?.teacher || 'No Teacher').join('/')
-                    : 'No Teacher'}
-                </Typography>
+                <Box>
+                  <CustomTooltip
+                    arrow
+                    placement="bottom"
+                    title={
+                      <Box>
+                        {slotData?.subjects?.length
+                          ? slotData.subjects.map((sub: any, index: number) => (
+                              <Typography key={index} variant="caption">
+                                {sub?.teacher || 'No Teacher'}
+                                {index < slotData.subjects.length - 1 && <br />}
+                              </Typography>
+                            ))
+                          : 'No Teacher'}
+                      </Box>
+                    }
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      {slotData?.subjects?.length
+                        ? slotData.subjects.map((sub: any, index: number) => {
+                            const teacherName = sub?.teacher || 'No Teacher';
+                            const nameParts = teacherName.split(' ');
+                            const shortName =
+                              nameParts.length > 1
+                                ? `${nameParts[0]} ${nameParts[1]}`
+                                : teacherName;
+                            return `${shortName}`;
+                          })
+                        : 'No Teacher'}
+                    </Typography>
+                  </CustomTooltip>
+                </Box>
               )}
               {isClassVisible && isDivisionVisible && (
                 <Typography variant="caption" color="text.secondary">

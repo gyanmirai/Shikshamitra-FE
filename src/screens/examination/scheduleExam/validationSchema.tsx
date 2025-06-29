@@ -7,7 +7,11 @@ export const validationSchema = [
     examName: yup.string().required('Exam Name is required'),
     className: yup.string().required('Class is required'),
     divisions: yup.array().min(1, 'At least one division is required'),
-    subjects: yup.array().min(1, 'At least one subject is required'),
+    // 👇 Only check for minimum one subject in Step 1, no .of() or .test()
+    subjects: yup
+      .array()
+      .required('Subjects is required')
+      .min(1, 'At least one subject is required'),
   }),
 
   yup.object().shape({
@@ -45,24 +49,28 @@ export const validationSchema = [
       )
       .test(
         'no-duplicate-time',
-        'Subjects cannot have the same start and end time',
+        'Subjects cannot have same date and start time',
         function (subjects) {
-          if (!subjects) return true;
+          if (!Array.isArray(subjects)) return true;
 
-          const seenKeys = new Set<string>();
+          const seen = new Set();
+
           const hasDuplicate = subjects.some((sub) => {
-            if (!sub.startTime || !sub.endTime) return false;
+            if (!sub.examDate || !sub.startTime) return false;
 
-            const key = `${new Date(sub.startTime).getTime()}-${new Date(sub.endTime).getTime()}`;
+            const date = new Date(sub.examDate).toISOString().split('T')[0];
+            const time = new Date(sub.startTime).toTimeString().slice(0, 5);
+            const key = `${date}-${time}`;
 
-            if (seenKeys.has(key)) return true;
-            seenKeys.add(key);
+            if (seen.has(key)) return true;
+            seen.add(key);
             return false;
           });
 
           return hasDuplicate
             ? this.createError({
-                message: 'Subjects cannot have the same start and end time',
+                message: 'Subjects cannot have same date and start time',
+                path: `subjects`,
               })
             : true;
         }
