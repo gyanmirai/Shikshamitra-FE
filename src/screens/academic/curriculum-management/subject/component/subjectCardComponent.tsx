@@ -415,6 +415,7 @@ export const TeacherListPopover = ({
   count: number;
 }) => (
   <CustomTooltip
+    sx={{ textAlign: 'justify' }}
     title={
       <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
         {teachers.map((teacher) => (

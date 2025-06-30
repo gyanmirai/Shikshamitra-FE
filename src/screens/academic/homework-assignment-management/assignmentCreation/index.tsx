@@ -189,6 +189,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
               {selectedAssignment ? 'Update Assignment' : 'Add Assignment'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
@@ -317,6 +318,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Assignment Details</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View complete details of the assignment including title, description, due date, submission status and other information"

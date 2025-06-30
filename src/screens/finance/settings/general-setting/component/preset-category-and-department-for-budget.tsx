@@ -5,7 +5,9 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -15,13 +17,14 @@ import AddBudgetCategoryDialog from '../dialogs/finance-add-budget-category-dial
 const PresetCategoryAndDepartmentForBudget = () => {
   // Dialog state for delete confirmation popup
   const dialogForDeleteConfirmation = useBoolean();
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   // Dialog state for edit/add category popup
   const editDialog = useBoolean();
   // State to track if we are in edit mode or add mode
   const [isEdit, setIsEdit] = useState(false);
 
   return (
-    <Box pt="20px">
+    <Box>
       <Grid container display="flex" flexDirection="column">
         <Grid item xs={12} md={12}>
           <CustomizableTable
@@ -51,7 +54,6 @@ const PresetCategoryAndDepartmentForBudget = () => {
             isShowedDense={false}
             isPagination={false}
             isFilter={false}
-            isSearch={false}
             columns={[
               {
                 id: 'budgetCategoryName',
@@ -64,26 +66,27 @@ const PresetCategoryAndDepartmentForBudget = () => {
                   );
                 },
               },
-
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
                 sticky: true,
-                align: 'center',
-                minWidth: 100,
-                render(row: any, value) {
+                align: 'left',
+                minWidth: 50,
+                render(value, row) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
                       showEditIcon
                       handleEditClick={() => {
+                        setSelectedEntry(row);
                         setIsEdit(true);
                         editDialog.onTrue();
                       }}
                       showDeleteIcon
                       handleDeleteClick={() => {
+                        setSelectedEntry(row);
                         dialogForDeleteConfirmation.onTrue();
                       }}
                     />
@@ -91,46 +94,87 @@ const PresetCategoryAndDepartmentForBudget = () => {
                 },
               },
             ]}
-            data={[]}
+            data={[
+              {
+                id: 1,
+                budgetCategoryName: 'salary',
+              },
+              {
+                id: 2,
+                budgetCategoryName: 'utilities',
+              },
+              {
+                id: 3,
+                budgetCategoryName: 'supplies',
+              },
+              {
+                id: 4,
+                budgetCategoryName: 'maintenance',
+              },
+              {
+                id: 5,
+                budgetCategoryName: 'transportation',
+              },
+            ]}
           />
         </Grid>
-        {dialogForDeleteConfirmation.value && (
-          <ConfirmDialog
-            open={dialogForDeleteConfirmation.value}
-            onClose={() => {
-              dialogForDeleteConfirmation.onFalse();
-            }}
-            title="Delete Item"
-            content="Are you sure you want to delete?"
-            action={
-              <LoadingButton variant="contained" color="error" onClick={() => {}}>
-                Yes
-              </LoadingButton>
-            }
-          />
-        )}
 
-        {editDialog.value && (
-          <CustomDialog
-            open={editDialog.value}
-            handleClose={() => {
+        <ConfirmDialog
+          open={dialogForDeleteConfirmation.value}
+          onClose={() => {
+            setSelectedEntry(null);
+            dialogForDeleteConfirmation.onFalse();
+          }}
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete the budget category{' '}
+              <strong>{selectedEntry?.budgetCategoryName}</strong>?
+            </>
+          }
+          action={
+            <LoadingButton variant="contained" color="error" size="small" onClick={() => {}}>
+              Yes
+            </LoadingButton>
+          }
+        />
+
+        <CustomDialog
+          open={editDialog.value}
+          handleClose={() => {
+            setSelectedEntry(null);
+            editDialog.onFalse();
+          }}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">{`${isEdit ? 'Update' : 'Add'} Budget Category`}</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title={
+                  isEdit
+                    ? 'Update an existing budget category to modify how expenses are organized and tracked'
+                    : 'Add a new budget category to organize and track different types of expenses like salary, utilities, or supplies'
+                }
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+        >
+          <AddBudgetCategoryDialog
+            onClose={() => {
+              setSelectedEntry(null);
               editDialog.onFalse();
             }}
-            title={`${isEdit ? 'Edit' : 'Add'} Budget Category`}
-            maxWidth="sm"
-          >
-            <AddBudgetCategoryDialog
-              onClose={() => {
-                editDialog.onFalse();
-              }}
-              isEditMode={isEdit}
-              data={null}
-              onSave={() => {
-                editDialog.onFalse();
-              }}
-            />
-          </CustomDialog>
-        )}
+            isEditMode={isEdit}
+            data={selectedEntry}
+            onSave={() => {
+              setSelectedEntry(null);
+              editDialog.onFalse();
+            }}
+          />
+        </CustomDialog>
       </Grid>
     </Box>
   );

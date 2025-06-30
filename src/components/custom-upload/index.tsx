@@ -364,7 +364,16 @@ const FileUploader = <T extends boolean = true>({
           <Stack spacing={2}>{Array.isArray(value) && value.map(renderFileCard)}</Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAllDialog(false)}>Close</Button>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              setShowAllDialog(false);
+            }}
+            variant="outlined"
+            size="small"
+          >
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

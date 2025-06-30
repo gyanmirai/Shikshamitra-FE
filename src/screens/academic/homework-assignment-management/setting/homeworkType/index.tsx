@@ -99,6 +99,7 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
               {selectedData ? 'Update Homework Type' : 'Add Homework Type'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={

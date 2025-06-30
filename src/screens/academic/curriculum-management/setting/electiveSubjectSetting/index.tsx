@@ -115,11 +115,12 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
             </Typography>
             <CustomTooltip
               arrow
+              sx={{ textAlign: 'justify' }}
               placement="right"
               title={
                 selected
-                  ? 'You can update the elective group details by entering group name, subjects and color details.'
-                  : 'You can create a new elective group details by entering the group name, subjects and color details.'
+                  ? 'You can update the elective group details by entering group name, subjects and color.'
+                  : 'You can create a new elective group details by entering the group name, subjects and color.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

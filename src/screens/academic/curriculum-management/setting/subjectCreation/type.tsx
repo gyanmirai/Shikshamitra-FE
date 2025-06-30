@@ -8,7 +8,7 @@ export interface ISubject {
 
 export interface ISubjectFormProps {
   open: UseBooleanReturn;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   editData?: ISubject | null;
 }
 

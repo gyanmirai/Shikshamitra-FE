@@ -426,6 +426,7 @@ const GradeEntry = (props: TabComponentType) => {
               {selectedStudent ? 'Update Marks' : 'Assign Marks'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={

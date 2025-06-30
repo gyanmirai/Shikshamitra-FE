@@ -270,12 +270,13 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
               {isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
                 isEdit
-                  ? 'You can update the weekly lecture details including class and total number of lectures.'
-                  : 'You can create weekly lectures by specifying the class and total number of lectures.'
+                  ? 'You can update the weekly lecture details including class and total weekly number of lectures.'
+                  : 'You can add weekly lectures by specifying the class and total weekly number of lectures.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -302,7 +303,19 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
       </CustomDialog>
 
       <CustomDialog
-        title="View Number of Lectures"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Weekly Lectures Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed information about weekly lectures including class, total lectures, and subject-wise lecture distribution"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewWeeklyLecturesDialog.value}
         handleClose={viewWeeklyLecturesDialog.onFalse}
         maxWidth="sm"

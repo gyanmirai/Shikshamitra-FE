@@ -85,6 +85,7 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
             variant="outlined"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={onClose}
+            size="small"
           >
             Cancel
           </Button>
@@ -93,6 +94,7 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             disabled={isSubmitting}
+            size="small"
           >
             {isEditMode ? 'Update' : 'Submit'}
           </Button>

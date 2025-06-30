@@ -5,7 +5,7 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -74,7 +74,15 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
         ...values,
         totalLectures,
       };
-      shikshaMitraToast.success({ message: `Weekly lectures added for class ${values.className}` });
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Weekly No of lectures updated for class ${values.className}`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Weekly No of lectures added for class ${values.className}`,
+        });
+      }
       onClose?.(null, true);
     },
   });
@@ -86,6 +94,43 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   //     formik.setFieldValue('totalLectures', total);
   //   }
   // }, [formik, formik.values.subjects]);
+
+  const subjectColumnRender = useCallback(
+    (value: any, row: any) => {
+      const index = formik.values.subjects.findIndex((item) => item.id === row.id);
+      return (
+        <TextField
+          type="number"
+          size="small"
+          label="Weekly Lectures *"
+          name={`subjects[${index}].noOfLecture`}
+          value={formik.values.subjects[index]?.noOfLecture ?? ''}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          disabled={disabled}
+          error={
+            !!formik.touched.subjects?.[index]?.noOfLecture &&
+            !!(formik.errors.subjects?.[index] as any)?.noOfLecture
+          }
+          helperText={
+            formik.touched.subjects?.[index]?.noOfLecture &&
+            (formik.errors.subjects?.[index] as any)?.noOfLecture
+              ? String((formik.errors.subjects?.[index] as any).noOfLecture)
+              : ''
+          }
+          sx={{ minWidth: '100px', width: '100%', mb: 1.5, mt: 0.3 }}
+        />
+      );
+    },
+    [
+      formik.values.subjects,
+      formik.handleChange,
+      formik.handleBlur,
+      formik.touched.subjects,
+      formik.errors.subjects,
+      disabled,
+    ]
+  );
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -104,7 +149,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                       const dummySubjects = generateDummySubjects().map((subj, index) => ({
                         id: `subject-${index}`,
                         ...subj,
-                        noOfLecture: 0,
+                        noOfLecture: null,
                       }));
 
                       formik.setFieldValue('subjects', dummySubjects);
@@ -150,34 +195,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                         label: 'Weekly Lectures',
                         isSort: false,
                         isFilter: false,
-                        render: (value, row) => {
-                          const index = formik.values.subjects.findIndex(
-                            (item) => item.id === row.id
-                          );
-                          return (
-                            <TextField
-                              type="number"
-                              size="small"
-                              label="Weekly Lectures *"
-                              name={`subjects[${index}].noOfLecture`}
-                              value={formik.values.subjects[index]?.noOfLecture}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
-                              disabled={disabled}
-                              error={
-                                !!formik.touched.subjects?.[index]?.noOfLecture &&
-                                !!(formik.errors.subjects?.[index] as any)?.noOfLecture
-                              }
-                              helperText={
-                                formik.touched.subjects?.[index]?.noOfLecture &&
-                                (formik.errors.subjects?.[index] as any)?.noOfLecture
-                                  ? String((formik.errors.subjects?.[index] as any).noOfLecture)
-                                  : ''
-                              }
-                              sx={{ minWidth: '100px', width: '100%' }}
-                            />
-                          );
-                        },
+                        render: subjectColumnRender,
                       },
                     ]}
                     data={formik.values.subjects}

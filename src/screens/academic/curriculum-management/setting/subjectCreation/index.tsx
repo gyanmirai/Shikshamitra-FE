@@ -95,10 +95,11 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
             <CustomTooltip
               arrow
               placement="right"
+              sx={{ textAlign: 'justify' }}
               title={
                 selectedSubject
-                  ? 'You can update the subject details including name and color details.'
-                  : 'You can create a new subject by entering the subject name and color details.'
+                  ? 'You can update the subject details including name and color.'
+                  : 'You can create a new subject by entering the subject name and color.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -108,9 +109,7 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
       >
         <SettingSubjectForm
           open={addSubjectDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedSubject}
         />
       </CustomDialog>

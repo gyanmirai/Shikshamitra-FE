@@ -1,11 +1,11 @@
 import * as Yup from 'yup';
 
 export const setFeeHeadValidationSchema = Yup.object().shape({
-  feeHeadName: Yup.string().required('Fee Head Name is required'),
+  feeHeadName: Yup.string().required('Fee Head is required'),
 });
 
 export const addPaymentMethodValidationSchema = Yup.object().shape({
-  paymentMethodName: Yup.string().required('Payment Method Name is required'),
+  paymentMethodName: Yup.string().required('Payment Method is required'),
 });
 
 export const addLateFeeTypeValidationSchema = Yup.object().shape({
