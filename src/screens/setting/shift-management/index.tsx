@@ -14,7 +14,7 @@ import { MobileTimePicker } from '@mui/x-date-pickers';
 import {
   Box,
   Step,
-  Card,
+  Paper,
   styled,
   Button,
   Stepper,
@@ -22,7 +22,6 @@ import {
   TextField,
   Typography,
   StepContent,
-  DialogActions,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -37,6 +36,7 @@ import {
 
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -67,14 +67,20 @@ const ShiftManageMentScreen = () => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <b>{editData?.shiftName}</b> shift ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
             color="error"
             onClick={async () => {
-              await deleteShift(editData?.id || '');
+              await deleteShift(editData?.id || '').unwrap();
+              shikshaMitraToast.success({ message: 'Shift deleted successfully' });
+
               confirm.onFalse();
               setEditData(null);
             }}
@@ -87,15 +93,22 @@ const ShiftManageMentScreen = () => {
         heading="Shift Management"
         links={[{ name: 'Institute Setup' }, { name: 'Shift Management' }]}
         sx={{ px: 1, mb: 2 }}
+        isBack={open.value}
+        onBack={() => {
+          setEditData(null);
+          open.onFalse();
+        }}
         action={
-          <Button
-            startIcon={open.value ? <ArrowBack /> : <Add />}
-            size="small"
-            variant="contained"
-            onClick={open.onToggle}
-          >
-            {open.value ? 'back' : 'Shift'}
-          </Button>
+          !open.value && (
+            <Button
+              startIcon={open.value ? <ArrowBack /> : <Add />}
+              size="small"
+              variant="contained"
+              onClick={open.onToggle}
+            >
+              {open.value ? 'back' : 'Shift'}
+            </Button>
+          )
         }
       />
       {open.value ? (
@@ -177,6 +190,8 @@ const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
 }));
 
 const ShiftManageMentForm = ({ handleClose, editData }: any) => {
+  console.log('🚀 ~ ShiftManageMentForm ~ editData:', editData);
+
   const [addShift, { isLaoding: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddShiftMutation,
@@ -192,9 +207,9 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
     endTime: Dayjs | null;
   }>({
     initialValues: {
-      name: editData?.name || '',
-      startTime: editData?.startTime || null,
-      endTime: editData?.endTime || null,
+      name: editData?.shiftName || '',
+      startTime: editData?.startTime ? dayjs(editData?.startTime, 'HH:mm:ss') : null,
+      endTime: editData?.endTime ? dayjs(editData?.endTime, 'HH:mm:ss') : null,
     },
     validationSchema: yup.object({
       name: yup.string().required('Name is required'),
@@ -228,12 +243,14 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
               endTime: values.endTime?.format('HH:mm:ss'),
             },
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Shift updated successfully' });
         } else {
           await addShift({
             shiftName: values.name,
             startTime: values.startTime?.format('HH:mm:ss'),
             endTime: values.endTime?.format('HH:mm:ss'),
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Shift added successfully' });
         }
         handleClose();
       } catch (error) {
@@ -324,84 +341,47 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
     };
   };
   return (
-    <Card sx={{ height: '100%' }}>
-      <Box
-        component="form"
-        onSubmit={formik.handleSubmit}
-        height="100%"
-        display="flex"
-        flexDirection="column"
+    <Box
+      component="form"
+      onSubmit={formik.handleSubmit}
+      height="100%"
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Paper
+        elevation={2}
+        sx={{
+          p: 2,
+          // height: '100%',
+          minHeight: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
       >
-        <Box sx={{ p: 2, height: '100%' }}>
-          <Stepper orientation="vertical" sx={{ ' & .MuiStepConnector-line': { display: 'none' } }}>
-            {steps.map((step, index) => (
-              <Step key={index} expanded>
-                <CustomStepLabel
-                  error={validation(index).value}
-                  sx={{ '& svg': { color: 'primary.main' } }}
-                >
-                  {step.label}{' '}
-                  <small>{validation(index).value && `(${validation(index).msg})`}</small>
-                </CustomStepLabel>
-                <StepContent>
-                  <Typography>{step.content()}</Typography>
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-
-          {/* <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Name"
-              name="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-              fullWidth
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <MobileTimePicker
-              label="Start Time"
-              value={formik.values.startTime}
-              format="hh:mm A"
-              onChange={(date) => formik.setFieldValue('startTime', date)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  helperText: formik.touched.startTime && formik.errors.startTime,
-                  error: !!formik.errors.startTime && formik.touched.startTime,
-                },
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <MobileTimePicker
-              label="End Time"
-              format="hh:mm A"
-              value={formik.values.endTime}
-              onChange={(date) => formik.setFieldValue('endTime', date)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  helperText: formik.touched.endTime && formik.errors.endTime,
-                  error: !!formik.errors.endTime && formik.touched.endTime,
-                },
-              }}
-            />
-          </Grid>
-        </Grid> */}
-        </Box>
-        <DialogActions>
+        <Stepper orientation="vertical" sx={{ ' & .MuiStepConnector-line': { display: 'none' } }}>
+          {steps.map((step, index) => (
+            <Step key={index} expanded>
+              <CustomStepLabel
+                error={validation(index).value}
+                sx={{ '& svg': { color: 'primary.main' } }}
+              >
+                {step.label}{' '}
+                <small>{validation(index).value && `(${validation(index).msg})`}</small>
+              </CustomStepLabel>
+              <StepContent>
+                <Typography>{step.content()}</Typography>
+              </StepContent>
+            </Step>
+          ))}
+        </Stepper>
+        <Box display="flex" justifyContent="space-between">
           <CancelButton onClick={handleClose} />
-          <SubmitButton onClick={() => {}} />
-        </DialogActions>
-      </Box>
-    </Card>
+          <SubmitButton loading={isAddLoading || isUpdateLoading} />
+        </Box>
+      </Paper>
+    </Box>
   );
 };

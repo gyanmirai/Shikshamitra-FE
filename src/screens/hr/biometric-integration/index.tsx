@@ -351,7 +351,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
             />
           </ShakingTextField>
 
-          <DialogActions sx={{ p: 0 }}>
+          <DialogActions>
             <Button
               onClick={handleClose}
               variant="outlined"

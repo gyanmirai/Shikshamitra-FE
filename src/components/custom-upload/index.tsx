@@ -1,3 +1,4 @@
+import type { BoxProps } from '@mui/material';
 import type { DragEvent, ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
@@ -47,6 +48,8 @@ interface FileUploaderProps<T extends boolean = true> {
   value?: T extends true ? (File | FileData)[] : File | FileData;
   propertyPr?: string;
   showVisibleDocumentCount?: number;
+  parentsProps?: BoxProps;
+  dragProps?: BoxProps;
 }
 
 const FileUploader = <T extends boolean = true>({
@@ -58,7 +61,11 @@ const FileUploader = <T extends boolean = true>({
   value,
   propertyPr,
   showVisibleDocumentCount = 3,
+  parentsProps = {},
+  dragProps = {},
 }: FileUploaderProps<T>) => {
+  const { sx: parentSx = {}, ...remainingProps } = parentsProps;
+  const { sx = {}, ...dragRemainingProps } = dragProps;
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
@@ -220,7 +227,7 @@ const FileUploader = <T extends boolean = true>({
   const hasFiles = Array.isArray(value) ? value.length > 0 : !!value;
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', ...parentSx }} {...remainingProps}>
       <Box
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -240,8 +247,10 @@ const FileUploader = <T extends boolean = true>({
           alignItems: 'center',
           gap: 2,
           height: value && (Array.isArray(value) ? value.length > 0 : value) ? 'auto' : '150px',
+          ...sx,
         }}
         onClick={() => document.getElementById('file-input')?.click()}
+        {...dragRemainingProps}
       >
         <Iconify
           icon="eva:cloud-upload-fill"
@@ -283,16 +292,18 @@ const FileUploader = <T extends boolean = true>({
           onChange={handleFileInput}
         />
       </Box>
-      <Stack spacing={1} mt={2}>
-        {Array.isArray(value) && value.slice(0, showVisibleDocumentCount).map(renderFileCard)}
+      {(Array.isArray(value) ? value.length > 0 : value) && (
+        <Stack spacing={1} mt={2}>
+          {Array.isArray(value) && value.slice(0, showVisibleDocumentCount).map(renderFileCard)}
 
-        {Array.isArray(value) && value.length > showVisibleDocumentCount && (
-          <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
-            View All Files ({value.length})
-          </Button>
-        )}
-        {!Array.isArray(value) && value && renderFileCard(value, 0)}
-      </Stack>
+          {Array.isArray(value) && value.length > showVisibleDocumentCount && (
+            <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
+              View All Files ({value.length})
+            </Button>
+          )}
+          {!Array.isArray(value) && value && renderFileCard(value, 0)}
+        </Stack>
+      )}
 
       <Dialog open={!!previewFile} onClose={() => setPreviewFile(null)} maxWidth="md" fullWidth>
         <DialogTitle>

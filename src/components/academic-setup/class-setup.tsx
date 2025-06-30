@@ -1,13 +1,14 @@
 'use client';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Autocomplete, LoadingButton } from '@mui/lab';
 import {
   Tab,
   Box,
@@ -24,8 +25,11 @@ import {
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import {
   useGetClassQuery,
   useAddClassMutation,
@@ -228,6 +232,52 @@ interface IClassForm {
 }
 export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm) => {
   const confirm = useBoolean();
+
+  const formik = useFormik<{
+    class: string;
+    limit: number;
+    shift: string;
+  }>({
+    initialValues: {
+      class: editData ? editData.name : '',
+      limit: editData ? editData.ageLowerLimit : null,
+      shift: editData ? editData?.shift : '',
+    },
+    validationSchema: Yup.object().shape({
+      class: Yup.string().required('Class is required'),
+      shift: Yup.string().required('Shift is required'),
+    }),
+    onSubmit: async (values) => {
+      confirm.onTrue();
+    },
+  });
+
+  const onSubmit = async () => {
+    try {
+      if (editData) {
+        await updateClass({
+          id: editData.id,
+          body: {
+            name: formik.values.class,
+            ageLowerLimit: formik.values.limit,
+            educationMediumStageId: organizationId,
+            shiftId: formik.values.shift,
+          },
+        }).unwrap();
+      } else {
+        await addClass({
+          name: formik.values.class,
+          ageLowerLimit: formik.values.limit,
+          educationMediumStageId: organizationId,
+          shiftId: formik.values.shift,
+        }).unwrap();
+      }
+      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
+      handleClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const [addClass, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddClassMutation,
@@ -244,48 +294,12 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       successMessage: 'Class updated Successfully',
     },
   });
-  const dispatch = useDispatch();
-
-  const formik = useFormik<{
-    class: string;
-    limit: number;
-  }>({
-    initialValues: {
-      class: editData ? editData.name : '',
-      limit: editData ? editData.ageLowerLimit : 5,
-    },
-    validationSchema: Yup.object().shape({
-      class: Yup.string().required('Class is required'),
-    }),
-    onSubmit: async (values) => {
-      confirm.onTrue();
-    },
+  const { data, isLoading: isShiftLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetShiftsQuery,
   });
-
-  const onSubmit = async () => {
-    try {
-      if (editData) {
-        await updateClass({
-          id: editData.id,
-          body: {
-            name: formik.values.class,
-            ageLowerLimit: formik.values.limit,
-            educationMediumStageId: organizationId,
-          },
-        }).unwrap();
-      } else {
-        await addClass({
-          name: formik.values.class,
-          ageLowerLimit: formik.values.limit,
-          educationMediumStageId: organizationId,
-        }).unwrap();
-      }
-      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
-      handleClose();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const shiftValue = data?.items?.find((shift: any) => shift.id === formik.values.shift) || null;
+  const dispatch = useDispatch();
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
@@ -352,20 +366,51 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           helperText={formik.touched.limit && formik.errors.limit}
           size="small"
         />
-        <DialogActions sx={{ p: 0 }}>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            type="submit"
-            variant="contained"
-            size="small"
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
+        <Autocomplete
+          disabled={isShiftLoading}
+          options={data?.items || []}
+          value={shiftValue}
+          getOptionLabel={(option: any) => {
+            const startTime = dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A');
+            const endTime = dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A');
+            return `${option.shiftName} (${startTime}-${endTime})`;
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Shift *"
+              placeholder="Search Shift *"
+              size="small"
+              fullWidth
+              sx={{ width: '100%', minWidth: '200px' }}
+              error={formik.touched.shift && Boolean(formik.errors.shift)}
+              helperText={formik.touched.shift && formik.errors.shift}
+            />
+          )}
+          onChange={(e, value) => {
+            formik.setFieldValue('shift', value?.id);
+          }}
+        />
       </Stack>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          size="small"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          loading={isLoading || isUpdateLoading}
+          type="submit"
+          variant="contained"
+          size="small"
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };
