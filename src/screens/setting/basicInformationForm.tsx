@@ -1,7 +1,6 @@
 'use client';
 
 // @ts-nocheck
-
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
@@ -11,16 +10,13 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import {
   Box,
-  List,
   Card,
   Stack,
   Dialog,
   Button,
   Divider,
-  ListItem,
   TextField,
   IconButton,
-  Typography,
   DialogContent,
   DialogActions,
 } from '@mui/material';
@@ -34,20 +30,16 @@ import {
   useUpdateTenantMutation,
 } from 'src/redux/tenant/tenantApi';
 
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
-import { EmptyContent } from 'src/components/empty-content';
-import { RemoveButton } from 'src/components/file-thumbnail';
+import FileUploader from 'src/components/custom-upload';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
-import { fileThumbnailClasses } from 'src/components/file-thumbnail/classes';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 import { basicInformationvalidationSchema } from './validationSchema';
@@ -97,7 +89,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
             name: editData?.extraProperties?.Country?.name,
             isoCode: editData?.extraProperties?.Country?.isoCode,
           }
-        : undefined,
+        : { name: 'India', isoCode: 'IN' }, // Default value for country
       contactNumber: editData?.extraProperties?.ContactNumber || '',
       emailAddress: editData?.adminEmailAddress || '',
       password: '',
@@ -178,7 +170,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   return (
     <Box
       component="form"
-      sx={{ height: 'calc(100% - 74px)', display: 'flex', flexDirection: 'column' }}
+      sx={{ minHeight: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}
       onSubmit={handleSubmit}
     >
       <Scrollbar
@@ -265,6 +257,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     // @ts-ignore
                     helperText={touched.country && errors?.country?.name}
                     // fieldProps={{ size: 'small' }}
+                    textFieldProps={{ label: 'Country', size: 'small' }}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -363,21 +356,21 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
               </Grid>
             </Box>
           </Grid>
-          <Grid xs={12}>
+          <Grid xs={4}>
             <BasicInformationAssets
               formik={formik}
               name="instituteLogo"
               title="Upload Institute Logo"
             />
           </Grid>
-          <Grid xs={12}>
+          <Grid xs={4}>
             <BasicInformationAssets
               formik={formik}
               name="instituteBanner"
               title="Upload Institute Banner"
             />
           </Grid>
-          <Grid xs={12}>
+          <Grid xs={4}>
             <BasicInformationAssets
               formik={formik}
               name="principleSign"
@@ -387,15 +380,15 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
         </Grid>
       </Scrollbar>
 
-      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+      <DialogActions sx={{ borderRadius: 1, boxShadow: 'none', bgcolor: 'background.paper' }}>
         <Stack
           alignItems="flex-end"
           sx={{
             position: 'sticky',
             bottom: 0,
-            backgroundColor: 'white',
+            bgcolor: 'background.paper',
             zIndex: 10,
-            py: 2,
+            // py: 2,
             textAlign: 'right',
           }}
         >
@@ -413,7 +406,6 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
 const BasicInformation = () => {
   const store = useSelector((state: any) => state.auth);
   const isSuperAdmin = !store?.user?.profile.tenantid;
-  console.log('🚀 ~ store:', store);
   // Toggle form visibility
   const form = useBoolean();
   // Toggle view dialog for assets
@@ -458,7 +450,6 @@ const BasicInformation = () => {
         heading="Basic Information"
         description="Manage and create tenant information for schools, including institute details, contact information, and assets like logos and banners."
         links={[{ name: 'Institute Setup' }, { name: 'Basic Information' }]}
-        sx={{ px: 1 }}
         isBack={isSuperAdmin ? form.value : false}
         onBack={() => {
           form.onFalse();
@@ -628,121 +619,22 @@ export default BasicInformation;
  * @param {string} name - Field name for the form values
  * @param {string} title - Title to display above the upload section
  */
-const BasicInformationAssets = ({ formik, name, title }: any) => {
-  // Dialog state for image preview
-  const priviewDialog = useBoolean();
-
-  // State to store the currently previewed image
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  return (
-    <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 1 }}>
-      <Box>
-        <Typography variant="body1" fontWeight={600}>
-          {title}
-        </Typography>
-        <Upload
-          multiple
-          isPreview={false}
-          accept={{ 'image/*': [] }}
-          thumbnail
-          value={formik.values[name]}
-          error={formik.touched[name] && formik.errors[name]}
-          helperText={formik.touched[name] && formik.errors[name]}
-          onDrop={async (acceptedFiles) => {
-            const base64StringArray = await Promise.all(
-              acceptedFiles.map(
-                async (file) =>
-                  new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                      resolve(reader.result);
-                    };
-                  })
-              )
-            );
-            formik.setFieldValue(name, [...formik.values[name], ...base64StringArray]);
-          }}
-          onRemove={(file) => {}}
-          onRemoveAll={() => {}}
-          sx={{
-            '& svg': {
-              height: '110px',
-            },
-            '& > div': {
-              p: 2,
-            },
-          }}
-        />
-      </Box>
-      <Box sx={{ flexGrow: 1 }}>
-        <Typography variant="body1" fontWeight={600}>
-          Preview
-        </Typography>
-        {formik.values?.[name]?.length ? (
-          <List sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {formik.values?.[name]?.map((image: string, index: number) => (
-              <ListItem key={index} sx={{ width: 'auto', p: 0 }}>
-                <Card sx={{ p: 1, position: 'relative' }} elevation={3}>
-                  <RemoveButton
-                    onClick={() => {
-                      const newLogos = formik.values[name].filter(
-                        (_: string, i: number) => i !== index
-                      );
-                      formik.setFieldValue(name, newLogos);
-                    }}
-                    className={fileThumbnailClasses.removeBtn}
-                    sx={{ zIndex: 2 }}
-                  />
-
-                  <Button
-                    onClick={() => {
-                      setPreviewImage(image);
-                      priviewDialog.onTrue();
-                    }}
-                    style={{ border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}
-                  >
-                    <img
-                      src={image}
-                      alt={`Preview ${index + 1}`}
-                      style={{ height: '100px', width: 'auto', zIndex: 1 }}
-                    />
-                  </Button>
-                </Card>
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <EmptyContent
-            title="Please upload images"
-            slotProps={{ title: { fontSize: '14px !important' } }}
-          />
-        )}
-      </Box>
-
-      <CustomDialog
-        maxWidth="md"
-        open={priviewDialog.value}
-        handleClose={priviewDialog.onFalse}
-        title="Preview"
-        paperProps={{
-          sx: {
-            height: '80vh',
-          },
-        }}
-      >
-        <Box width="100%" height="100%">
-          <img
-            src={previewImage as string}
-            alt="Preview"
-            style={{ height: '100%', width: '100%', objectFit: 'fill' }}
-          />
-        </Box>
-      </CustomDialog>
-    </Card>
-  );
-};
+const BasicInformationAssets = ({ formik, name, title }: any) => (
+  <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }}>
+    <FileUploader
+      onChange={(values) => {
+        formik.setFieldValue(name, values);
+      }}
+      multiple
+      parentsProps={{ sx: { width: '100%' } }}
+      showVisibleDocumentCount={2}
+      value={formik.values[name]}
+      primaryText="Upload Institute Logo"
+      secondaryText="maximum upload size (5mb)"
+      error={formik.touched[name] && formik.errors[name]}
+    />
+  </Card>
+);
 
 // ImageSlider component displays a modal dialog with image carousel functionality
 const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {

@@ -742,6 +742,25 @@ const GroupManagementForm = ({
             formik.setFieldValue('name', value);
           }}
         />
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            size="small"
+            variant="outlined"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            type="submit"
+            variant="contained"
+            loading={isLoading || isUpdateLoading}
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            {editData ? 'Update' : 'Add'}
+          </LoadingButton>
+        </DialogActions>
       </Stack>
       <DialogActions>
         <Button

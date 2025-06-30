@@ -146,7 +146,11 @@ const BoardActions = (data: Board & { parentsData: OrgChartListProps['parentsDat
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete board <b>{data?.name}</b> ?{' '}
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -269,7 +273,11 @@ const MediumActions = (data: Medium & { parentsData: OrgChartListProps['parentsD
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete medium <b>{data?.name}</b> ?{' '}
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -400,7 +408,11 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete standard <b>{data?.name}</b> ?{' '}
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -508,7 +520,11 @@ const DivisionActions = (data: Division & { parentsData: OrgChartListProps['pare
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete division <b>{data?.name}</b> ?{' '}
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -632,7 +648,11 @@ const OrganizationActions = (
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete Organization <b>{data?.name}</b> ?{' '}
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
@@ -1146,7 +1166,7 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
             },
           }}
         />
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel
           </Button>

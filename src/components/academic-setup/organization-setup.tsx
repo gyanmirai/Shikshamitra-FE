@@ -362,7 +362,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
             }}
           />
         )}
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel
           </Button>
