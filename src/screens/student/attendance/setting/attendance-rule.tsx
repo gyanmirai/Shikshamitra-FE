@@ -17,6 +17,8 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { TimeUnitType } from 'src/enums/time-units';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
@@ -158,6 +160,7 @@ const AttendanceRule = () => {
             isFilter: false,
             isSort: false,
             minWidth: 90,
+            align: 'left',
             sticky: true,
             render(value, row) {
               return (
@@ -186,12 +189,13 @@ const AttendanceRule = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content="Are you sure you want to delete"
         action={
           <LoadingButton
             loading={isDeleteLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               deleteRule(deleteInformation?.id);
               confirm.onFalse();
@@ -394,7 +398,13 @@ export const AttendanceRuleForm = ({ handleClose, editData }: any) => {
           </Grid>
         </Scrollbar>
         <DialogActions>
-          <LoadingButton loading={isLoading || isUpdateLoading} type="submit" variant="contained">
+          <LoadingButton
+            loading={isLoading || isUpdateLoading}
+            type="submit"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            variant="contained"
+          >
             Submit
           </LoadingButton>
         </DialogActions>

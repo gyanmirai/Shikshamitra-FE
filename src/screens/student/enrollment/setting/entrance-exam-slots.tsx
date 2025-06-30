@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { MobileTimePicker } from '@mui/x-date-pickers';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -73,12 +73,21 @@ const EntranceExamSlots = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {editData?.slotName}
+            </Box>
+            ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteSlotLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={async () => {
               await deleteSlot(editData?.id);
               confirm.onFalse();
@@ -121,7 +130,7 @@ const EntranceExamSlots = () => {
           { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
           { label: 'Room No', id: 'roomNo', filterType: 'number' },
           {
-            label: 'Action',
+            label: 'Actions',
             id: 'action',
             isSort: false,
             minWidth: 50,
@@ -275,10 +284,15 @@ export const SlotsForm = ({
           <ShakingTextField
             error={!!(formik.touched.startTime && formik.errors.startTime) || false}
           >
-            <MobileTimePicker
+            <TimePicker
               label="Start Time *"
               value={formik.values.startTime}
-              format="hh:mm A"
+              format="hh:mm "
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
               onChange={(date) => formik.setFieldValue('startTime', date)}
               slotProps={{
                 textField: {
@@ -296,10 +310,15 @@ export const SlotsForm = ({
           </ShakingTextField>
 
           <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
-            <MobileTimePicker
+            <TimePicker
               label="End Time *"
-              format="hh:mm A"
+              format="hh:mm "
               value={formik.values.endTime}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
               onChange={(date) => formik.setFieldValue('endTime', date)}
               slotProps={{
                 textField: {
@@ -340,7 +359,7 @@ export const SlotsForm = ({
           <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
             <TextField
               name="roomNo"
-              label="Room No *"
+              label="Room No. *"
               type="number"
               onBlur={formik.handleBlur}
               value={formik.values.roomNo}

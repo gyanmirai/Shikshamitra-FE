@@ -28,6 +28,7 @@ const StudentEnrollmentSettingScreen = () => {
     {
       value: 'defaultDocumentTypes',
       label: 'Default Document Types',
+      icon: <Iconify icon="basil:document-outline" width={20} />,
       buttonText: 'Document',
       onClick: () => {
         defaultDocumentTypes.onTrue();
@@ -37,6 +38,7 @@ const StudentEnrollmentSettingScreen = () => {
     {
       value: 'inquiryPreference',
       label: 'Inquiry Preference',
+      icon: <Iconify icon="ix:inquiry" width={20} />,
       buttonText: 'Inquiry Preference',
       onClick: () => {
         inquiryPreference.onTrue();
@@ -46,6 +48,7 @@ const StudentEnrollmentSettingScreen = () => {
     {
       value: 'entranceExamSlots',
       label: 'Entrance Exam Slots',
+      icon: <Iconify icon="healthicons:i-exam-qualification-outline" width={20} />,
       buttonText: 'Slot',
       onClick: () => {
         entranceExamSlots.onTrue();
@@ -81,7 +84,7 @@ const StudentEnrollmentSettingScreen = () => {
             size="small"
             onClick={handleClick}
             startIcon={<AddIcon />}
-            sx={{ textTransform: 'capitalize', width: '180px' }}
+            sx={{ textTransform: 'capitalize' }}
           >
             {getButtonText()}
           </Button>
@@ -96,17 +99,20 @@ const StudentEnrollmentSettingScreen = () => {
         <CustomTabs
           value={tabs.value}
           onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
-        {CurrentComponent?.()}
-      </Box>
+      <Box pt={1}>{CurrentComponent?.()}</Box>
 
       {defaultDocumentTypes.value && (
         <CustomDialog
@@ -116,7 +122,7 @@ const StudentEnrollmentSettingScreen = () => {
           }}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Document</Typography>
+              <Typography variant="h5">Add Document</Typography>
               <CustomTooltip
                 arrow
                 placement="right"

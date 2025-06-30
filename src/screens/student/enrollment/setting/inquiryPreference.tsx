@@ -76,12 +76,21 @@ const InquiryPreference = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {editData?.preferenceName}
+            </Box>
+            ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={async () => {
               await deletePreference(editData?.id);
               confirm.onFalse();
@@ -120,7 +129,7 @@ const InquiryPreference = () => {
           { id: 'preferenceName', label: 'Preference Name' },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isFilter: false,
             isSort: false,
             sticky: true,
@@ -223,7 +232,6 @@ export const InquiryPreferenceForm = ({
                 fullWidth
                 size="small"
                 label="Preference Name *"
-                placeholder="Enter preference name"
                 name="fieldName"
                 value={values.fieldName}
                 onChange={(e) => setFieldValue('fieldName', e.target.value)}
