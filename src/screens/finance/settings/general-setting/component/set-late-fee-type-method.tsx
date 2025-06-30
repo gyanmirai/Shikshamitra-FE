@@ -7,7 +7,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import data from 'src/json/finance/settings/late-fee-type.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -58,7 +60,6 @@ const SetLateFeeTypeMethod = () => {
             isShowedDense={false}
             isPagination={false}
             isFilter={false}
-            isSearch={false}
             columns={[
               {
                 id: 'lateFeeTypeName',
@@ -73,24 +74,25 @@ const SetLateFeeTypeMethod = () => {
               },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
                 sticky: true,
-                align: 'center',
-                minWidth: 100,
-                render(row, value) {
+                align: 'left',
+                minWidth: 50,
+                render(value, row) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
                       showDeleteIcon
                       showEditIcon
                       handleEditClick={() => {
-                        setSelectedEntry(row);
+                        setSelectedEntry(row as IFinanceAddLateFeeTypeInterface);
                         setIsEdit(true);
                         editDialog.onTrue();
                       }}
                       handleDeleteClick={() => {
+                        setSelectedEntry(row as IFinanceAddLateFeeTypeInterface);
                         dialogForDeleteConfirmation.onTrue();
                       }}
                     />
@@ -103,42 +105,66 @@ const SetLateFeeTypeMethod = () => {
         </Grid>
       </Grid>
 
-      {editDialog.value && (
-        <CustomDialog
-          open={editDialog.value}
-          handleClose={() => {
+      <CustomDialog
+        open={editDialog.value}
+        handleClose={() => {
+          editDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isEdit ? 'Update Late Fee Type' : 'Add Late Fee Type'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                isEdit
+                  ? 'Update late fee type to modify how late fees are calculated for overdue payments'
+                  : 'Add new late fee type to specify how late fees will be calculated for overdue payments'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddLateFeeTypeDialog
+          onClose={() => {
             editDialog.onFalse();
           }}
-          title={`${isEdit ? 'Edit' : 'Add'} Late Fee Type`}
-          maxWidth="sm"
-        >
-          <AddLateFeeTypeDialog
-            onClose={() => {
-              editDialog.onFalse();
-            }}
-            isEditMode={isEdit}
-            data={selectedEntry}
-            onSave={() => {
-              editDialog.onFalse();
-            }}
-          />
-        </CustomDialog>
-      )}
-      {dialogForDeleteConfirmation.value && (
-        <ConfirmDialog
-          open={dialogForDeleteConfirmation.value}
-          onClose={() => {
-            dialogForDeleteConfirmation.onFalse();
+          isEditMode={isEdit}
+          data={selectedEntry}
+          onSave={() => {
+            editDialog.onFalse();
           }}
-          title="Delete Item"
-          content="Are you sure want to delete?"
-          action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
-              Yes
-            </LoadingButton>
-          }
         />
-      )}
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={dialogForDeleteConfirmation.value}
+        onClose={() => {
+          dialogForDeleteConfirmation.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete <strong>{selectedEntry?.lateFeeTypeName}</strong> late
+            fee type?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            loading={false}
+            size="small"
+            color="error"
+            onClick={() => {}}
+          >
+            Yes
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

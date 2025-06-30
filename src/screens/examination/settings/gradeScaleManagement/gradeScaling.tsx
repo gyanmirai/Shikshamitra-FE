@@ -179,6 +179,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
               {selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={

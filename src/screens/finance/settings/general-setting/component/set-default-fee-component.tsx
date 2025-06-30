@@ -7,7 +7,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useGetfeeHeadQuery, useDeletefeeHeadMutation } from 'src/redux/feeHead/feeHeadApi';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -28,6 +30,7 @@ const SetDefaultFeeComponent = () => {
   const [selectedFeeHeadId, setSelectedFeeHeadId] = useState<number | null>(null);
   // State to store name of fee head to be deleted (for confirmation message)
   const [selectedFeeHeadName, setSelectedFeeHeadName] = useState<string | null>(null);
+  console.log('selectedFeeHead---', selectedFeeHead);
 
   // RTK Query hook to fetch all fee heads
   const { data: feeHeadList, isLoading: isFeeHeadLoading, refetch } = useGetfeeHeadQuery(null);
@@ -76,7 +79,6 @@ const SetDefaultFeeComponent = () => {
               isShowedDense={false}
               isPagination={false}
               isFilter={false}
-              isSearch={false}
               columns={[
                 {
                   id: 'feeHeadName',
@@ -91,28 +93,28 @@ const SetDefaultFeeComponent = () => {
                 },
                 {
                   id: 'action',
-                  label: 'Action',
+                  label: 'Actions',
                   isFilter: false,
                   isSort: false,
                   sticky: true,
-                  align: 'center',
-                  minWidth: 100,
-                  render(row) {
+                  align: 'left',
+                  minWidth: 50,
+                  render(value, row) {
                     return (
                       <ThreeDotsActions
                         showThreeDots={false}
                         showEditIcon
                         showDeleteIcon
                         handleEditClick={() => {
-                          setSelectedFeeHead(row);
+                          setSelectedFeeHead(row as IFinanceFeeSetHeadInterface);
                           setFeeHeadDialog.onTrue();
                         }}
                         handleDeleteClick={() => {
-                          // setSelectedFeeHeadId(row.id);
-                          // const capitalizedName =
-                          //   row.feeHeadName.charAt(0).toUpperCase() +
-                          //   row.feeHeadName.slice(1).toLowerCase();
-                          // setSelectedFeeHeadName(capitalizedName);
+                          setSelectedFeeHeadId(row.id);
+                          const capitalizedName =
+                            row.feeHeadName.charAt(0).toUpperCase() +
+                            row.feeHeadName.slice(1).toLowerCase();
+                          setSelectedFeeHeadName(capitalizedName);
                           dialogForDeleteConfirmation.onTrue();
                         }}
                       />
@@ -127,27 +129,42 @@ const SetDefaultFeeComponent = () => {
       </Grid>
 
       {/* Edit Dialog */}
-      {setFeeHeadDialog.value && (
-        <CustomDialog
-          open={setFeeHeadDialog.value}
-          handleClose={() => {
+
+      <CustomDialog
+        open={setFeeHeadDialog.value}
+        handleClose={() => {
+          setFeeHeadDialog.onFalse();
+          setSelectedFeeHead(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedFeeHead ? 'Update Fee Head' : 'Add Fee Head'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                selectedFeeHead
+                  ? 'You can update the fee head details including name and other configurations.'
+                  : 'You can add a new fee head by entering the name and configuring other settings.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <SetFeeHeadDialog
+          onClose={() => {
             setFeeHeadDialog.onFalse();
             setSelectedFeeHead(null);
           }}
-          title="Edit Fee Head"
-          maxWidth="sm"
-        >
-          <SetFeeHeadDialog
-            onClose={() => {
-              setFeeHeadDialog.onFalse();
-              setSelectedFeeHead(null);
-            }}
-            isEditMode
-            data={selectedFeeHead}
-            onSave={handleSaveFeeHead}
-          />
-        </CustomDialog>
-      )}
+          isEditMode
+          data={selectedFeeHead}
+          onSave={handleSaveFeeHead}
+        />
+      </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
       {dialogForDeleteConfirmation.value && (
@@ -155,16 +172,21 @@ const SetDefaultFeeComponent = () => {
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
-            // setSelectedFeeHeadId(null);
-            // setSelectedFeeHeadName(null);
+            setSelectedFeeHeadId(null);
+            setSelectedFeeHeadName(null);
           }}
-          title="Delete Fee Head"
-          content="Are you sure you want to delete ?"
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete <strong>{selectedFeeHeadName}</strong> fee head?
+            </>
+          }
           action={
             <LoadingButton
               variant="contained"
               loading={isDeleteLoading}
               color="error"
+              size="small"
               onClick={handleDeleteFeeHead}
             >
               Yes

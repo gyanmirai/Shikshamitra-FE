@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -10,6 +9,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -28,7 +28,14 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     validationSchema: subjectValidationSchema,
     // Handle form submission
     onSubmit: (values, formikHelpers) => {
-      console.log(values);
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Subject ${values.subjectName} updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({ message: `Subject ${values.subjectName} added successfully` });
+      }
+      onClose(null, true);
     },
   });
 
@@ -50,7 +57,10 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                     value={formik.values.subjectName}
                     // placeholder="Enter Subject Name"
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
+                      const value = e.target.value
+                        .split(' ')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
                       formik.setFieldValue('subjectName', value);
                     }}
                     error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
@@ -85,7 +95,9 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={onClose}
+              onClick={() => {
+                onClose(null, false);
+              }}
               variant="outlined"
               size="small"
             >

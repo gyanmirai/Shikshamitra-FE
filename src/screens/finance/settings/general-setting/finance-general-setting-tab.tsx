@@ -1,15 +1,20 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Tab, Card, Button } from '@mui/material';
+import { Box, Tab, Card, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import SetFeeHeadDialog from './dialogs/set-fee-head-dialog';
@@ -47,6 +52,7 @@ const FinanceGeneralSettingTab = () => {
       {
         value: 'setDefaultFeeComponents',
         label: 'Fee Head',
+        icon: <Iconify icon="ri:money-rupee-circle-fill" width={20} />,
         buttonText: 'Fee Head',
         onClick: () => {
           setFeeHeadDialog.onTrue();
@@ -57,6 +63,7 @@ const FinanceGeneralSettingTab = () => {
         value: 'setPaymentMethodComponents',
         label: 'Payment Method',
         buttonText: 'Payment Method',
+        icon: <Iconify icon="hugeicons:payment-02" width={20} />,
         onClick: () => {
           setPaymentMethodDialog.onTrue();
           console.log('Add Payment Method clicked');
@@ -67,6 +74,7 @@ const FinanceGeneralSettingTab = () => {
         value: 'lateFeeType',
         label: 'Late Fee Type',
         buttonText: 'Late Fee Type',
+        icon: <Iconify icon="streamline-freehand:wealth-time-money" width={20} />,
         onClick: () => {
           setLateFeeTypeDialog.onTrue();
           console.log('Add Late Fee Type clicked');
@@ -77,6 +85,7 @@ const FinanceGeneralSettingTab = () => {
         value: 'setPaymentTerm',
         label: 'Payment Term',
         buttonText: 'Payment Term',
+        icon: <Iconify icon="mdi:payment-clock" width={20} />,
         onClick: () => {
           setPaymentTermDialog.onTrue();
           console.log('Add Payment Term clicked');
@@ -87,6 +96,7 @@ const FinanceGeneralSettingTab = () => {
         value: 'configurePaymentStatusOptions',
         label: 'Payment Status',
         buttonText: 'Payment Status',
+        icon: <Iconify icon="hugeicons:payment-success-01" width={20} />,
         onClick: () => {
           setPaymentStatusDialog.onTrue();
           console.log('Add Payment Status Option clicked');
@@ -97,6 +107,12 @@ const FinanceGeneralSettingTab = () => {
         value: 'presentCategoriesandDepartmentsforBudgeting',
         label: 'Budget Category',
         buttonText: 'Budget Category',
+        icon: (
+          <Iconify
+            icon="streamline-ultimate:presentation-projector-screen-budget-analytics"
+            width={20}
+          />
+        ),
         onClick: () => {
           presetCategoryAndDepartmentForBudgetDialog.onTrue();
           console.log('Add Budget Category clicked');
@@ -107,6 +123,12 @@ const FinanceGeneralSettingTab = () => {
         value: 'predefinedCategoriesForincomeandexpenses',
         label: 'Budget Sub Category',
         buttonText: 'Budget Sub Category',
+        icon: (
+          <Iconify
+            icon="streamline-freehand:presentation-projector-screen-budget-analytics"
+            width={20}
+          />
+        ),
         onClick: () => {
           predefinedCategoryIncomeExpenseDialog.onTrue();
           console.log('Add Income/Expense Category clicked');
@@ -135,17 +157,22 @@ const FinanceGeneralSettingTab = () => {
     currentTab?.onClick?.(); // Safely call action if it exists
   };
 
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [TABS, searchParams?.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
   // Get the button text for the current active tab
   const getButtonText = () => currentTab?.buttonText || 'Add';
 
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="General Settings"
+        heading="General Setting"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'General Settings' },
-          { name: currentTab?.label || '' },
+          { name: 'Setting' },
+          { name: 'General Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
         description="This is the General Settings section for the Finance module, where you can manage fee heads, payment status options, and other required fields and details related to financial operations."
@@ -162,7 +189,54 @@ const FinanceGeneralSettingTab = () => {
         }
       />
 
-      <Card>
+      <Card
+        sx={{
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
+      >
+        <CustomTabs
+          value={searchParams.tab}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+          ))}
+        </CustomTabs>
+      </Card>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentTab?.component && (
+            <currentTab.component
+            // addSubjectDialog={addSubjectDialog}
+            // addElectiveGroupDialog={addElectiveGroupDialog}
+            // searchParams={searchParams}
+            // setSearchParams={setSearchParams}
+            />
+          )}{' '}
+        </Scrollbar>
+      </FormSlider>
+
+      {/* <Card>
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => setSearchParams({ tab: value })}
@@ -170,14 +244,20 @@ const FinanceGeneralSettingTab = () => {
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab sx={{ fontSize: '12px' }} key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+              icon={tab.icon}
+            />
           ))}
         </CustomTabs>
       </Card>
 
       <Box px={1} pt={2}>
         {currentTab?.component && <currentTab.component />}
-      </Box>
+      </Box> */}
 
       {setFeeHeadDialog.value && (
         <CustomDialog
@@ -185,8 +265,18 @@ const FinanceGeneralSettingTab = () => {
           handleClose={() => {
             setFeeHeadDialog.onFalse();
           }}
-          title="Add Fee Head"
-          maxWidth="sm"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Add Fee Head</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="You can create a new fee head by entering the fee head name and other required details."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
         >
           <SetFeeHeadDialog
             onClose={() => {
@@ -207,8 +297,18 @@ const FinanceGeneralSettingTab = () => {
           handleClose={() => {
             setPaymentMethodDialog.onFalse();
           }}
-          title="Add Payment Method"
-          maxWidth="sm"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Add Payment Method</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="You can add a new payment method by specifying the method name and other payment processing details."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
         >
           <AddPaymentMethodDialog
             onClose={() => {
@@ -229,8 +329,18 @@ const FinanceGeneralSettingTab = () => {
           handleClose={() => {
             setLateFeeTypeDialog.onFalse();
           }}
-          title="Add Late Fee Type"
-          maxWidth="sm"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Add Late Fee Type</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="You can add a new late fee type by specifying the fee type and other related details."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
         >
           <AddLateFeeTypeDialog
             onClose={() => {
@@ -251,8 +361,18 @@ const FinanceGeneralSettingTab = () => {
           handleClose={() => {
             setPaymentTermDialog.onFalse();
           }}
-          title="Add Payment Term"
-          maxWidth="sm"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Add Payment Term</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="You can add a new payment term by specifying the term duration, due dates, and other payment scheduling details. This helps establish when payments are expected and manages payment cycles effectively."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
         >
           <AddPaymentTermDialog
             onClose={() => {
@@ -267,72 +387,95 @@ const FinanceGeneralSettingTab = () => {
         </CustomDialog>
       )}
 
-      {setPaymentStatusDialog.value && (
-        <CustomDialog
-          open={setPaymentStatusDialog.value}
-          handleClose={() => {
+      <CustomDialog
+        open={setPaymentStatusDialog.value}
+        handleClose={() => {
+          setPaymentStatusDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Payment Status</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="You can add a new payment status to track different states of payments like Pending, Completed, Failed etc. This helps in monitoring and managing payment transactions effectively."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddPaymentStatusDialog
+          onClose={() => {
             setPaymentStatusDialog.onFalse();
           }}
-          title="Add Payment Status"
-          maxWidth="sm"
-        >
-          <AddPaymentStatusDialog
-            onClose={() => {
-              setPaymentStatusDialog.onFalse();
-            }}
-            isEditMode={false}
-            data={null}
-            onSave={() => {
-              setPaymentStatusDialog.onFalse();
-            }}
-          />
-        </CustomDialog>
-      )}
+          isEditMode={false}
+          data={null}
+          onSave={() => {
+            setPaymentStatusDialog.onFalse();
+          }}
+        />
+      </CustomDialog>
 
-      {presetCategoryAndDepartmentForBudgetDialog.value && (
-        <CustomDialog
-          open={presetCategoryAndDepartmentForBudgetDialog.value}
-          handleClose={() => {
+      <CustomDialog
+        open={presetCategoryAndDepartmentForBudgetDialog.value}
+        handleClose={() => {
+          presetCategoryAndDepartmentForBudgetDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Budget Category</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="You can add a new budget category to organize and track different types of financial allocations. This helps in better financial planning and monitoring of expenses across various departments."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddBudgetCategoryDialog
+          onClose={() => {
             presetCategoryAndDepartmentForBudgetDialog.onFalse();
           }}
-          title="Add Budget Category"
-          maxWidth="sm"
-        >
-          <AddBudgetCategoryDialog
-            onClose={() => {
-              presetCategoryAndDepartmentForBudgetDialog.onFalse();
-            }}
-            isEditMode={false}
-            data={null}
-            onSave={() => {
-              presetCategoryAndDepartmentForBudgetDialog.onFalse();
-            }}
-          />
-        </CustomDialog>
-      )}
+          isEditMode={false}
+          data={null}
+          onSave={() => {
+            presetCategoryAndDepartmentForBudgetDialog.onFalse();
+          }}
+        />
+      </CustomDialog>
 
-      {predefinedCategoryIncomeExpenseDialog.value && (
-        <CustomDialog
-          open={predefinedCategoryIncomeExpenseDialog.value}
-          handleClose={() => {
+      <CustomDialog
+        open={predefinedCategoryIncomeExpenseDialog.value}
+        handleClose={() => {
+          predefinedCategoryIncomeExpenseDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Budget Sub Category</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Add budget sub-categories to organize income and expenses."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddBudgetSubcategoryDialog
+          onClose={() => {
             predefinedCategoryIncomeExpenseDialog.onFalse();
           }}
-          title="Add Budget Sub Category"
-          maxWidth="md"
-        >
-          <AddBudgetSubcategoryDialog
-            onClose={() => {
-              predefinedCategoryIncomeExpenseDialog.onFalse();
-            }}
-            isEditMode={false}
-            data={null}
-            onSave={() => {
-              predefinedCategoryIncomeExpenseDialog.onFalse();
-            }}
-            categories={[]}
-          />
-        </CustomDialog>
-      )}
+          isEditMode={false}
+          data={null}
+          onSave={() => {
+            predefinedCategoryIncomeExpenseDialog.onFalse();
+          }}
+        />
+      </CustomDialog>
     </Box>
   );
 };

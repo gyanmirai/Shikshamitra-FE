@@ -194,6 +194,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
               {selectedHomework ? 'Update Homework' : 'Add Homework'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
@@ -310,6 +311,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Homework Details</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View complete details of the homework including title, description, due date, submission status and other information"

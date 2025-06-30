@@ -89,6 +89,7 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
               {selectedData ? 'Update Assignment Type' : 'Add Assignment Type'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={

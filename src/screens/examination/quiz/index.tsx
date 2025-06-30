@@ -112,6 +112,7 @@ const QuizManagement = (props: TabComponentType) => {
           <Box display="flex" alignItems="center" gap={1}>
             {selectedQuiz?.quizTitle || 'Attempt Quiz'}{' '}
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="Take the quiz by answering all questions within the allocated time. Your responses will be automatically submitted when the timer ends."

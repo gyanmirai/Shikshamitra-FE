@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
-import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, useTheme, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -64,7 +63,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         endDate: values.endDate,
         // documents,
       });
-      shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} added successfully` });
+      if (initialValues) {
+        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} updated successfully` });
+      } else {
+        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} added successfully` });
+      }
       onClose(null, true);
     },
   });
@@ -176,8 +179,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                         fullWidth: true,
                         size: 'small',
                         // placeholder: 'Select Start Date',
-                        helperText: formik.touched.startDate && (formik.errors.startDate as string),
-                        error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                        error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                        helperText: formik.touched.startDate && formik.errors.startDate,
                       },
                     }}
                   />
@@ -271,7 +274,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               Cancel
             </Button>
             <Button
-              startIcon={initialValues ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={initialValues ? 16 : 20}
+                  height={initialValues ? 16 : 20}
+                />
+              }
               type="submit"
               size="small"
               variant="contained"

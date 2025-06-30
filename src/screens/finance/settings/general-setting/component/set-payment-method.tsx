@@ -5,7 +5,9 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -76,7 +78,6 @@ const SetPaymentMethodComponent = () => {
             isShowedDense={false}
             isPagination={false}
             isFilter={false}
-            isSearch={false}
             columns={[
               {
                 id: 'paymentMethodName',
@@ -91,13 +92,13 @@ const SetPaymentMethodComponent = () => {
               },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
                 sticky: true,
-                align: 'center',
-                minWidth: 100,
-                render(row) {
+                align: 'left',
+                minWidth: 50,
+                render(value, row) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
@@ -110,6 +111,7 @@ const SetPaymentMethodComponent = () => {
                       }}
                       handleDeleteClick={() => {
                         dialogForDeleteConfirmation.onTrue();
+                        setSelectedPaymentMethod(row);
                       }}
                     />
                   );
@@ -122,29 +124,45 @@ const SetPaymentMethodComponent = () => {
       </Grid>
 
       {/* Edit Dialog Placeholder (Implement as needed) */}
-      {editDialog.value && (
-        <CustomDialog
-          open={editDialog.value}
-          handleClose={() => {
+
+      <CustomDialog
+        open={editDialog.value}
+        handleClose={() => {
+          editDialog.onFalse();
+          setSelectedPaymentMethod(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isEdit ? 'Update Payment Method' : 'Add Payment Method'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                isEdit
+                  ? 'Update existing payment method details'
+                  : 'Add a new payment method to the system'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddPaymentMethodDialog
+          isEditMode
+          onClose={() => {
             editDialog.onFalse();
             setSelectedPaymentMethod(null);
           }}
-          title={isEdit ? 'Edit Payment Method' : 'Add Payment Method'}
-          maxWidth="sm"
-        >
-          {/* Replace with actual Edit Form */}
-          <AddPaymentMethodDialog
-            onClose={() => {
-              editDialog.onFalse();
-            }}
-            isEditMode={isEdit}
-            data={null}
-            onSave={() => {
-              editDialog.onFalse();
-            }}
-          />
-        </CustomDialog>
-      )}
+          data={selectedPaymentMethod}
+          onSave={() => {
+            editDialog.onFalse();
+            setSelectedPaymentMethod(null);
+          }}
+        />
+      </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
       {dialogForDeleteConfirmation.value && (
@@ -153,12 +171,18 @@ const SetPaymentMethodComponent = () => {
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
           }}
-          title="Delete Payment Method"
-          content="Are you sure you want to delete?"
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete{' '}
+              <strong>{selectedPaymentMethod?.paymentMethodName}</strong> payment method?
+            </>
+          }
           action={
             <LoadingButton
               variant="contained"
               loading={isDeleteLoading}
+              size="small"
               color="error"
               onClick={handleDelete}
             >

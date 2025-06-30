@@ -9,7 +9,7 @@ export const getNoOfLectureInitialValues = (
       name,
       subjectCode,
       subjectColor,
-      noOfLecture: noOfLecture ?? 0,
+      noOfLecture,
     })) ?? [];
 
   const totalLectures = subjects.reduce((sum, subj) => sum + subj.noOfLecture, 0);

@@ -32,7 +32,6 @@ const TABS = [
     value: 'general-setting',
     label: 'General Settings',
     icon: <Iconify icon="uil:setting" width={20} />,
-
     component: () => <FinanceGeneralSettingTab />,
   },
   {

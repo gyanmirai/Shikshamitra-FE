@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button, MenuItem, MenuList } from '@mui/material';
+import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 // Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -29,6 +29,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -325,7 +326,19 @@ const Subjects = (props: TabComponentType) => {
         handleClose={() => {
           viewDocumentDialog.onFalse();
         }}
-        title={`Documents for Chapter ${selectedChapter?.chapterNo}`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Documents for {selectedChapter?.chapterNo} Chapter</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ChapterDocuments chapter={selectedChapter} />
       </CustomDialog>
