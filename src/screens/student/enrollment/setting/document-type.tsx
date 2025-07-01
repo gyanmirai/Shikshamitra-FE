@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -44,9 +45,13 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import type { IStudentDocument } from './type';
 
-const StudentDocumentType = () => {
+const StudentDocumentType = ({
+  defaultDocumentTypes,
+}: {
+  defaultDocumentTypes: UseBooleanReturn;
+}) => {
   // Dialog state for add/edit form
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
   // State to store document being edited
@@ -70,11 +75,11 @@ const StudentDocumentType = () => {
   // Reset form and close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      defaultDocumentTypes.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      dialog.onFalse();
+      defaultDocumentTypes.onFalse();
       setEditData(null);
     }
   };
@@ -90,11 +95,7 @@ const StudentDocumentType = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete{' '}
-            <Box component="span" fontWeight="bold" color="text.primary">
-              {editData?.documentName}
-            </Box>
-            ?
+            Are you sure you want to delete <strong>{editData?.documentName}</strong>?
           </>
         }
         action={
@@ -120,7 +121,7 @@ const StudentDocumentType = () => {
             No Document Type Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                defaultDocumentTypes.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -168,7 +169,7 @@ const StudentDocumentType = () => {
                   showEditIcon
                   handleEditClick={() => {
                     setEditData(row as IStudentDocument);
-                    dialog.onTrue();
+                    defaultDocumentTypes?.onTrue();
                   }}
                 />
               );
@@ -178,18 +179,21 @@ const StudentDocumentType = () => {
         data={documents?.items || []}
       />{' '}
       <CustomDialog
-        open={dialog.value}
+        open={defaultDocumentTypes?.value}
         handleClose={() => {
-          dialog.onFalse();
+          defaultDocumentTypes.onFalse();
           setEditData(null);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Document</Typography>
+            <Typography variant="h5">
+              {editData ? 'Edit Document Type' : 'Add New Document Type'}
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
-              title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
+              sx={{ textAlign: 'justify' }}
+              title="This is the Document dialog, where you can update the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -575,7 +579,7 @@ export const DocumentForm = ({
           </Stack>
         </DialogScrollContent>
 
-        <DialogActions sx={{ px: 2 }}>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -588,7 +592,13 @@ export const DocumentForm = ({
             size="small"
             variant="contained"
             loading={isUpdateLoading || isLoading}
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            startIcon={
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                width={editData ? 16 : 20}
+                height={editData ? 16 : 20}
+              />
+            }
             type="submit"
           >
             {editData ? 'Update' : 'Submit'}

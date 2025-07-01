@@ -273,7 +273,7 @@ const TakeAttendanceScreen = () => {
           border: (theme) => `1px dashed gray`,
           p: 1,
           borderRadius: 1,
-          my: 1,
+          mb: 2,
         }}
       >
         <Typography variant="body1" fontWeight={500}>
@@ -293,17 +293,6 @@ const TakeAttendanceScreen = () => {
                 )
               );
             }}
-            // icon={
-            //   <CancelOutlined
-            //     onClick={() => {
-            //       setStudentData((studentDetails: any) =>
-            //         studentDetails.map((student: any) =>
-            //           item.student.id === student.student.id ? { ...item, isPresent: false } : item
-            //         )
-            //       );
-            //     }}
-            //   />
-            // }
           />
         ))}
       </Box>
@@ -499,16 +488,10 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           //     );
           //   },
           // },
-          {
-            id: 'student.rollNo',
-            label: 'Roll No',
-            align: 'left',
-            minWidth: '90px',
-            sticky: true,
-          },
+
           {
             id: 'name',
-            label: 'Name',
+            label: 'Student Name',
             align: 'left',
             sticky: true,
             minWidth: '180px',
@@ -531,12 +514,12 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             },
           },
           {
-            id: 'student.grNoRecord',
-            label: 'Gr No',
+            id: 'student.rollNo',
+            label: 'Roll No.',
             align: 'left',
             minWidth: '90px',
+            sticky: true,
           },
-
           {
             id: 'presentDays',
             label: 'Total Present Days',
@@ -545,7 +528,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           },
           {
             id: 'percentage',
-            label: 'Attendance Percentage',
+            label: 'Attendance %',
             align: 'left',
             minWidth: '210px',
           },

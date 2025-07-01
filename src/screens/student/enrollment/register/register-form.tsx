@@ -451,7 +451,7 @@ const RegisterForm = ({
           shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
         } else if (activeStep === 7) {
           await handleBankDetailsFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          shikshaMitraToast.success({ message: 'Registration updated successfully' });
         }
         if (!isLastStep) {
           if (!isSaveButton) {

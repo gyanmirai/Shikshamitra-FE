@@ -23,7 +23,6 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -34,9 +33,9 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import type { IInquiryPreference } from './type';
 
-const InquiryPreference = () => {
+const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
   // Dialog state for add/edit inquiry preference form
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
   // Get the isChanges state from the Redux store
@@ -58,11 +57,11 @@ const InquiryPreference = () => {
   // Reset form and close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      inquiryPreferenceDialog.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      dialog.onFalse();
+      inquiryPreferenceDialog.onFalse();
       setEditData(null);
     }
   };
@@ -108,7 +107,7 @@ const InquiryPreference = () => {
             No Inquiry Preference Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                inquiryPreferenceDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -145,7 +144,7 @@ const InquiryPreference = () => {
                   }}
                   handleEditClick={() => {
                     setEditData(row as IInquiryPreference);
-                    dialog.onTrue();
+                    inquiryPreferenceDialog.onTrue();
                   }}
                   showThreeDots={false}
                 />
@@ -156,9 +155,9 @@ const InquiryPreference = () => {
         data={inquiryPreference?.items || []}
       />{' '}
       <CustomDialog
-        open={dialog.value}
+        open={inquiryPreferenceDialog.value}
         handleClose={() => {
-          dialog.onFalse();
+          inquiryPreferenceDialog.onFalse();
           setEditData(null);
         }}
         title={
@@ -253,7 +252,21 @@ export const InquiryPreferenceForm = ({
             Cancel
           </Button>
 
-          <SubmitButton loading={isUpdateLoading || isLoading} />
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={isUpdateLoading || isLoading}
+            startIcon={
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                width={editData ? 16 : 20}
+                height={editData ? 16 : 20}
+              />
+            }
+            type="submit"
+          >
+            {editData ? 'Update' : 'Submit'}
+          </LoadingButton>
         </DialogActions>
       </form>
     </BackPopUpChecked>

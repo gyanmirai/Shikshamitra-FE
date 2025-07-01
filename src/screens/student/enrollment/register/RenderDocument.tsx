@@ -122,7 +122,7 @@ export const RenderDocuments = (props: any) => {
           { id: 'documentName', label: 'Name' },
           {
             id: 'docType',
-            label: 'Document Type',
+            label: 'Accepted Document',
             isSort: false,
           },
           {

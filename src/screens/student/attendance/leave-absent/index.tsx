@@ -229,6 +229,7 @@ const LeaveAndAbsentScreen = () => {
             id: 'status',
             label: 'Status',
             filterType: 'enum',
+            sticky: true,
             enumOptions: EmployeeLeaveStatusOptions,
             render(value, row) {
               const color = EmployeeLeaveStatusTypeColor[
@@ -440,9 +441,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         docs: '',
       },
       validationSchema: Yup.object({
-        leaveType: Yup.string().required('Leave type is required'),
+        leaveType: Yup.string().required('Leave Type is required'),
         isHalfDay: Yup.boolean(),
-        startDate: Yup.date().required('Start date is required'),
+        startDate: Yup.date().required('Start Date and Time is required'),
         endDate: Yup.string()
           .nullable()
           .test('endDate', '', (value, context) => {
@@ -460,7 +461,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
               );
             }
             if (!value && !isHalfDay) {
-              return context.createError({ message: 'End date is required' });
+              return context.createError({ message: 'End Date and Time is required' });
             }
             return true;
           }),
@@ -502,7 +503,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   return (
     <>
       <DialogScrollContent>
-        <Grid container spacing={2} sx={{ my: 2 }}>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
             <CustomSelect
               options={allOrganization}
@@ -564,9 +565,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           </Grid>
         </Grid>
         {student?.id && (
-          <Box component="form">
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+          <Box component="form" mt={3}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   name="leaveType"
                   select
@@ -601,53 +602,40 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
                 </CustomDialog>
               </Grid>
-              <Grid item xs={4}>
-                {/* <FormControlLabel
-                  control={
-                    <Checkbox
-                      name="isHalfDay"
-                      checked={values.isHalfDay}
-                      onChange={(e) => {
-                        setFieldValue('isHalfDay', e.target.checked);
-                        if (e.target.checked) {
-                          setFieldValue('endDate', null);
-                        }
-                      }}
-                    />
-                  }
-                  label="Half Day"
-                /> */}
-              </Grid>
-              <Grid item xs={4} sx={{ marginLeft: -37 }}>
+
+              <Grid item xs={12} sm={6} md={4}>
                 <DateTimePicker
                   format="DD-MM-YYYY hh:mm"
-                  label={values.isHalfDay ? 'Date and Time' : 'Start Date and Time'}
+                  label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
                   onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
                     textField: {
                       size: 'small',
+                      fullWidth: true,
                       helperText: touched.startDate && errors.startDate,
                       error: touched.startDate && Boolean(errors.startDate),
+                      sx: { width: '272px' },
                     },
                   }}
                 />
               </Grid>
-              {!values.isHalfDay && (
-                <Grid item xs={4} sx={{ marginLeft: -4 }}>
+              <Grid item xs={12} sm={6} md={4}>
+                {!values.isHalfDay && (
                   <DateTimePicker
                     format="DD-MM-YYYY hh:mm"
-                    label="End Date and Time"
+                    label="End Date and Time *"
                     onChange={(value) => setFieldValue('endDate', value)}
                     slotProps={{
                       textField: {
                         size: 'small',
                         helperText: touched.endDate && errors.endDate,
                         error: touched.endDate && Boolean(errors.endDate),
+                        sx: { width: '272px' },
                       },
                     }}
                   />
-                </Grid>
-              )}
+                )}
+              </Grid>
               <Grid item xs={6}>
                 <FileUploader
                   // disabled={editData}
@@ -672,7 +660,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   onChange={(value) => {
                     setFieldValue('description', value);
                   }}
-                  placeholder="Leave description"
+                  placeholder="Description *"
                   error={touched.description && Boolean(errors.description)}
                   helperText={touched.description && errors.description}
                 />
@@ -682,7 +670,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         )}
       </DialogScrollContent>
 
-      <DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"

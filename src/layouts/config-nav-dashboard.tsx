@@ -221,6 +221,13 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+6',
               shortcutKeyName: 'Alt+S+R+6',
             },
+            {
+              title: 'Setting',
+              path: '/student/studentRecords/setting',
+              _action: 'student-setting',
+              shortcutKey: 'Alt+S+R+6',
+              shortcutKeyName: 'Alt+S+R+6',
+            },
           ],
         },
         {

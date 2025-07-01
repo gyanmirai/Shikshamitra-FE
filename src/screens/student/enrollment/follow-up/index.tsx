@@ -204,7 +204,7 @@ export const CommunicationForm = ({
       dueDate: data?.dueDate ? dayjs(data?.dueDate) : null,
     },
     validationSchema: Yup.object({
-      msg: Yup.string().required('Message is required'),
+      msg: Yup.string().required('Notes are required'),
       status: Yup.string().required('Status is required'),
       dueDate: Yup.string(),
     }),
@@ -243,33 +243,39 @@ export const CommunicationForm = ({
           <Box className="loader" />
         ) : (
           <Timeline>
-            {data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
-              <TimelineItem key={index}>
-                <TimelineOppositeContent>
-                  <Typography sx={{ color: 'text.primary' }}>
-                    {dayjs(item?.timestamp).format('DD-MM-YYYY')}
-                  </Typography>
-                  <Typography sx={{ color: 'text.secondary' }}>{item?.author}</Typography>
-                </TimelineOppositeContent>
-                <TimelineSeparator>
-                  <TimelineDot color="primary" />
-                  {data?.followUps.length === index ? null : <TimelineConnector />}
-                </TimelineSeparator>
-                <TimelineContent>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
-                    }}
-                  >
-                    <Typography> {item?.message}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Due Date : {dayjs(item.dueDate).format('DD-MM-YYYY')}
+            {data ? (
+              data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
+                <TimelineItem key={index}>
+                  <TimelineOppositeContent>
+                    <Typography sx={{ color: 'text.primary' }}>
+                      {dayjs(item?.timestamp).format('DD-MM-YYYY')}
                     </Typography>
-                  </Paper>
-                </TimelineContent>
-              </TimelineItem>
-            ))}
+                    <Typography sx={{ color: 'text.secondary' }}>{item?.author}</Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot color="primary" />
+                    {data?.followUps.length === index ? null : <TimelineConnector />}
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Paper
+                      sx={{
+                        p: 2,
+                        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                      }}
+                    >
+                      <Typography> {item?.message}</Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Reminder Date : {dayjs(item.dueDate).format('DD-MM-YYYY')}
+                      </Typography>
+                    </Paper>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                No notes added yet
+              </Typography>
+            )}
           </Timeline>
           // data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (
           //   <Box key={index} py={1} borderBottom={1} borderColor="divider">
@@ -302,7 +308,7 @@ export const CommunicationForm = ({
           fullWidth
           // sx={{ marginBottom: '10px' }}
           variant="outlined"
-          placeholder="Notes"
+          label="Notes *"
           size="small"
           value={formik.values.msg}
           name="msg"
@@ -329,19 +335,24 @@ export const CommunicationForm = ({
         >
           <DatePicker
             label="Next Reminder Date"
+            format="DD/MM/YYYY"
+            value={formik.values.dueDate}
+            onChange={(newValue) => {
+              formik.setFieldValue('dueDate', newValue);
+            }}
+            minDate={dayjs()}
+            sx={{ minWidth: 180, width: '100%' }}
             slotProps={{
               textField: {
-                size: 'small',
                 fullWidth: true,
-                helperText:
-                  formik.touched.dueDate && formik.errors.dueDate ? formik.errors.dueDate : '',
-                error: formik.touched.dueDate && !!formik.errors.dueDate,
+                size: 'small',
+                // placeholder: 'Select Start Date',
+                error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
+                helperText: formik.touched.dueDate && formik.errors.dueDate,
               },
             }}
-            value={formik.values.dueDate}
-            format="DD-MM-YYYY"
-            onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
           />
+
           <CustomSelect
             options={FollowUpStatusTypeOptions}
             value={formik.values.status}
@@ -356,7 +367,7 @@ export const CommunicationForm = ({
         </Box>
       </Box>
 
-      <DialogActions sx={{ p: 2 }}>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleCloseDialog}

@@ -77,7 +77,7 @@ const EntranceExamScreen = () => {
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
 
   // State for managing edit data and move operations
-  const [editData, setEditData] = useState(null);
+  const [editData, setEditData] = useState<any | null>(null);
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
   // State for managing the start date filter for entrance exams
@@ -197,13 +197,14 @@ const EntranceExamScreen = () => {
             popover.onClose();
           }}
         >
-          <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.upload} sx={{ height: '16px', width: '16px' }} />
           Upload Result
         </MenuItem>
 
         <MenuItem
           onClick={async () => {
             confirmMovePopup.onTrue();
+            setEditData(row);
             setMoveId(row.id);
             popover.onClose();
           }}
@@ -385,7 +386,7 @@ const EntranceExamScreen = () => {
               render(value, row) {
                 return (
                   <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress variant="determinate" value={value} />
+                    <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
                     <Box
                       sx={{
                         top: 0,
@@ -468,13 +469,17 @@ const EntranceExamScreen = () => {
 
       <ConfirmDialog
         title="Move"
-        content="Are you sure want to move in admission ?"
+        content={
+          <>
+            Are you sure want to move student <strong>{editData?.name || ''}</strong> in admission ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isLoading}
             size="small"
-            color="error"
+            startIcon={<Iconify icon="mdi:arrow-right-circle" />}
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();

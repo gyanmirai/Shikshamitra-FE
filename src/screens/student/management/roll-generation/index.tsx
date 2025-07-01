@@ -146,15 +146,8 @@ const RollNoGenerationScreen = ({
   return (
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          width="100%"
-          mb={2}
-          ml={1}
-        >
-          <Box display="flex" gap={2} mt={3}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
+          <Box display="flex" gap={2} ml={1}>
             <CustomSelect
               options={[
                 { id: 'mix', name: 'Mix' },
