@@ -16,6 +16,7 @@ import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inqui
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { IInquiryData } from '../Inquiry';
@@ -80,6 +81,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
               }).unwrap();
             }
             handleClose(null, true);
+            shikshaMitraToast.success({ message: 'Registration Form Issued Successfully' });
           } catch (error) {
             console.error('Error:', error);
           }
@@ -114,7 +116,6 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       size="small"
                       name="formNumber"
                       label="Form Number *"
-                      placeholder="Enter Form Number *"
                       error={touched.formNumber && Boolean(errors.formNumber)}
                       helperText={touched.formNumber && errors.formNumber}
                       value={values.formNumber}
@@ -128,7 +129,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       fullWidth
                       size="small"
                       name="amount"
-                      label="Amount"
+                      label="Amount *"
                       type="number"
                       error={touched.amount && Boolean(errors.amount)}
                       helperText={touched.amount && errors.amount}

@@ -27,15 +27,19 @@ import type { IInquiryData } from '../Inquiry';
 const RegistrationTable = ({
   dialog,
   followUpDialog,
+  editData,
   setEditData,
   formDialog,
 }: {
+  editData: IInquiryData | null;
   dialog: UseBooleanReturn;
   formDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   setEditData: (data: null | IInquiryData) => void;
 }) => {
   const [moveId, setMoveId] = useState<string | null>(null);
+  console.log('editData---', editData);
+
   const confirmMovePopup = useBoolean();
   const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -58,12 +62,13 @@ const RegistrationTable = ({
                 return;
               }
               confirmMovePopup.onTrue();
+              setEditData(row);
               // dialog.onTrue();
               setMoveId(row.id);
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
+            <Iconify icon="mdi:arrow-right-circle" />
             Move To Admission
           </MenuItem>
           <MenuItem
@@ -288,7 +293,7 @@ const RegistrationTable = ({
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress variant="determinate" value={value} />
+                  <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
                   <Box
                     sx={{
                       top: 0,
@@ -333,7 +338,7 @@ const RegistrationTable = ({
             label: 'Actions',
             isSort: false,
             isFilter: false,
-            minWidth: 40,
+            minWidth: 50,
             align: 'left',
             sticky: true,
             render(value, row) {
@@ -355,16 +360,23 @@ const RegistrationTable = ({
       />
       <ConfirmDialog
         title="Move"
-        content="Are you sure want to move in admission ?"
+        content={
+          <>
+            Are you sure want to move student{' '}
+            <strong>{`${(editData as IInquiryData)?.lastName || ''} ${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''}`}</strong>{' '}
+            in admission ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isMoveToAdmissionLoading}
-            color="error"
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();
             }}
+            startIcon={<Iconify icon="mdi:arrow-right-circle" />}
+            size="small"
           >
             Move
           </LoadingButton>

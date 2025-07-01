@@ -200,14 +200,14 @@ const StudentManagementScreen = () => {
           value={searchParams.tab}
           onChange={(_, val) => setSearchParams({ tab: val })}
           // variant=""
-          slotProps={{ tab: { px: 1 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} icon={tab.icon} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
-      <Box pb={2}>
+      <Box pb={2} mt={2}>
         {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
       </Box>
     </Box>

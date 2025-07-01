@@ -27,10 +27,10 @@ const generalFieldValidation = Yup.object({
   primaryContactNumber: Yup.string()
     .test(
       'Mobile NO',
-      'mobile number is not valid',
+      'Primary Contact No. is not valid',
       (value) => !!value && matchIsValidTel(value as string)
     )
-    .required('Mobile number is required'),
+    .required('Primary Contact No. is required'),
   // alternativeContactNumber: Yup.string()
   //   .test('Mobile NO', 'mobile number is not valid', (value) =>
   //     value ? matchIsValidTel(value as string) : true

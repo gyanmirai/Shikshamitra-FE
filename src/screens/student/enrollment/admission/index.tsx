@@ -67,6 +67,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -881,7 +882,19 @@ const AdmissionScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Note"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Notes</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Track and manage student communication history, including parent interactions, and important updates regarding the admission process."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <CommunicationForm
           handleCloseDialog={() => {
@@ -889,7 +902,7 @@ const AdmissionScreen = () => {
             followUpDialog.onFalse();
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
-        />{' '}
+        />
       </CustomDialog>
 
       {dialogForCollectFees.value && (

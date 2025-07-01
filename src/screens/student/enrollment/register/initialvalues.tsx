@@ -48,7 +48,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   addressLine2: editData?.addressLine2 || '',
   addressLine3: editData?.addressLine3 || '',
   pinCode: editData?.pinCode || '',
-  inquiryPreference: editData?.inquiryPreferencesId || null,
+  inquiryPreference: editData?.inquiryPreferenceId || null,
   apparId: editData?.apparId || '',
   panNo: editData?.panNo || '',
   lastClassPassed: editData?.lastClassPassed || '',

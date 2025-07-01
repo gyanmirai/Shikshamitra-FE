@@ -10,7 +10,7 @@ import { Box, MenuItem, MenuList } from '@mui/material';
 
 import calculateAge from 'src/utils/calculate-age';
 
-import { GenderType } from 'src/enums/gender';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 import {
@@ -51,6 +51,7 @@ const InquiryTable = ({
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        secondaryContactNumber: item.secondaryContactNumber ? item.secondaryContactNumber : '-',
         studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType],
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
@@ -60,160 +61,173 @@ const InquiryTable = ({
     [inquiryData?.items]
   );
   return (
-    <CustomizableTable
-      showCheckbox
-      isLoading={isLoading}
-      tableId="inquiry-table"
-      noDataText={
-        <>
-          No Inquiry Found{' '}
-          <Box
-            onClick={() => {
-              inquiryDialog.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Inquiry
-          </Box>
-        </>
-      }
-      columns={[
-        {
-          id: 'inquiryNumber',
-          label: 'Inquiry No.',
-          sticky: true,
-          minWidth: '110px',
-          filterType: 'string',
-          align: 'left',
-        },
-        {
-          id: 'studentName',
-          label: 'Student Name',
-          minWidth: '150px',
-          align: 'left',
-          sticky: true,
-        },
-        { id: 'standard.name', label: 'Class', align: 'left' },
-        {
-          id: 'dobValue',
-          label: 'Date of Birth',
-          minWidth: '8vw',
-          align: 'left',
-          filterType: 'date',
-        },
-        { id: 'ageValue', label: 'Age', align: 'left', minWidth: '120px' },
-        {
-          id: 'doiValue',
-          label: 'Date of Inquiry',
-          filterType: 'date',
-          minWidth: '10vw',
-          align: 'left',
-          isDateRangeFilter: true,
-        },
-        { id: 'genderValue', label: 'Gender', align: 'left' },
-        {
-          id: 'address',
-          label: 'Address',
-          minWidth: '200px',
-          align: 'left',
-          render(value, row) {
-            return value || '-';
+    <Box>
+      <CustomizableTable
+        showCheckbox
+        isLoading={isLoading}
+        tableId="inquiry-table"
+        noDataText={
+          <>
+            No Inquiry Found{' '}
+            <Box
+              onClick={() => {
+                inquiryDialog.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Inquiry
+            </Box>
+          </>
+        }
+        columns={[
+          {
+            id: 'inquiryNumber',
+            label: 'Inquiry No.',
+            sticky: true,
+            minWidth: '110px',
+            filterType: 'string',
+            align: 'left',
           },
-        },
-        {
-          id: 'primaryContactNumber',
-          label: 'Primary Contact No.',
-          minWidth: '180px',
-          align: 'left',
-        },
-        {
-          id: 'secondaryContactNumber',
-          label: 'Secondary Contact No.',
-          minWidth: '200px',
-          align: 'left',
-        },
-        { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
-        {
-          id: 'inquiryPreference.preferenceName',
-          label: 'Inquiry Preference',
-          minWidth: '11vw',
-          align: 'left',
-        },
-        {
-          id: 'lastFollowUpDate',
-          label: 'Last Follow Up Date',
-          minWidth: '180px',
-          align: 'left',
-          filterType: 'date',
-        },
-        {
-          id: 'followUpStatusType',
-          label: 'Status',
-          filterType: 'enum',
-          enumOptions: FollowUpStatusTypeOptions,
-          minWidth: '100px',
-          align: 'left',
-          sticky: true,
-          render(value, row) {
-            const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-            return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+          {
+            id: 'studentName',
+            label: 'Student Name',
+            minWidth: '150px',
+            align: 'left',
+            sticky: true,
           },
-        },
-        {
-          id: 'actions',
-          label: 'Actions',
-          isFilter: false,
-          isSort: false,
-          sticky: true,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                placement="right-top"
-                showEditIcon
-                handleEditClick={() => {
-                  inquiryDialog.onTrue();
-                  setEditData(row as IInquiryData);
-                }}
-                actions={({ popover }) => (
-                  <MenuList>
-                    <MenuItem
-                      onClick={() => {
-                        followUpDialog.onTrue();
-                        setEditData(row as IInquiryData);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="clarity:note-edit-line" />
-                      Note
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        issueRegistrationFormDialog.onTrue();
-                        setEditData(row as IInquiryData);
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="clarity:form-line" />
-                      Issue Registration Form
-                    </MenuItem>
-                  </MenuList>
-                )}
-              />
-            );
+          { id: 'standard.name', label: 'Class', align: 'left' },
+          {
+            id: 'dobValue',
+            label: 'Date of Birth',
+            minWidth: '8vw',
+            align: 'left',
+            filterType: 'date',
           },
-        },
-      ]}
-      data={tableData || []}
-    />
+          { id: 'ageValue', label: 'Age', align: 'left', minWidth: '120px' },
+          {
+            id: 'doiValue',
+            label: 'Date of Inquiry',
+            filterType: 'date',
+            minWidth: '10vw',
+            align: 'left',
+            isDateRangeFilter: true,
+          },
+          {
+            id: 'genderValue',
+            label: 'Gender',
+            align: 'left',
+            filterType: 'enum',
+            enumOptions: GenderOptions,
+            // render: (value, row) => (
+            //   <Typography variant="caption" fontSize="13px">
+            //     {GenderType[value]}
+            //   </Typography>
+            // ),
+          },
+          {
+            id: 'address',
+            label: 'Address',
+            minWidth: '200px',
+            align: 'left',
+            render(value, row) {
+              return value || '-';
+            },
+          },
+          {
+            id: 'primaryContactNumber',
+            label: 'Primary Contact No.',
+            minWidth: '180px',
+            align: 'left',
+          },
+          {
+            id: 'secondaryContactNumber',
+            label: 'Secondary Contact No.',
+            minWidth: '200px',
+            align: 'left',
+          },
+          { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
+          {
+            id: 'inquiryPreference.preferenceName',
+            label: 'Inquiry Preference',
+            minWidth: '11vw',
+            align: 'left',
+          },
+          {
+            id: 'lastFollowUpDate',
+            label: 'Last Follow Up Date',
+            minWidth: '180px',
+            align: 'left',
+            filterType: 'date',
+          },
+          {
+            id: 'followUpStatusType',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: FollowUpStatusTypeOptions,
+            minWidth: '100px',
+            align: 'left',
+            sticky: true,
+            render(value, row) {
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+            },
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            isFilter: false,
+            isSort: false,
+            sticky: true,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showEditIcon
+                  handleEditClick={() => {
+                    inquiryDialog.onTrue();
+                    setEditData(row as IInquiryData);
+                  }}
+                  actions={({ popover }) => (
+                    <MenuList>
+                      <MenuItem
+                        onClick={() => {
+                          followUpDialog.onTrue();
+                          setEditData(row as IInquiryData);
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="clarity:note-edit-line" />
+                        Notes
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          issueRegistrationFormDialog.onTrue();
+                          setEditData(row as IInquiryData);
+                          popover.onClose();
+                        }}
+                      >
+                        <Iconify icon="clarity:form-line" />
+                        Issue Registration Form
+                      </MenuItem>
+                    </MenuList>
+                  )}
+                />
+              );
+            },
+          },
+        ]}
+        data={tableData || []}
+      />
+    </Box>
   );
 };
 export default InquiryTable;

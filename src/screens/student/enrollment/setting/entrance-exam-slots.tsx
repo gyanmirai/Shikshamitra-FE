@@ -22,7 +22,6 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -32,9 +31,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { ISlot } from './type';
 
-const EntranceExamSlots = () => {
+const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
   // Dialog state for opening/closing modal
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for confirmation modal
   const confirm = useBoolean();
   // State to store data being edited
@@ -61,7 +60,7 @@ const EntranceExamSlots = () => {
 
   // Handle closing of dialog and reset edit data
   const handleClose = () => {
-    dialog.onFalse();
+    entranceExamSlotsDialog.onFalse();
     setEditData(null);
   };
   return (
@@ -75,7 +74,7 @@ const EntranceExamSlots = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete{' '}
+            Are you sure you want to delete exam slot{' '}
             <Box component="span" fontWeight="bold" color="text.primary">
               {editData?.slotName}
             </Box>
@@ -107,7 +106,7 @@ const EntranceExamSlots = () => {
             No Entrance Exam Slots Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                entranceExamSlotsDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -147,7 +146,7 @@ const EntranceExamSlots = () => {
                     confirm.onTrue();
                   }}
                   handleEditClick={() => {
-                    dialog.onTrue();
+                    entranceExamSlotsDialog.onTrue();
                     setEditData(row as ISlot);
                   }}
                 />
@@ -170,7 +169,7 @@ const EntranceExamSlots = () => {
             </CustomTooltip>
           </Box>
         }
-        open={dialog.value}
+        open={entranceExamSlotsDialog.value}
         handleClose={handleClose}
       >
         <SlotsForm handleClose={handleClose} editData={editData} />
@@ -185,7 +184,7 @@ export const SlotsForm = ({
   handleClose,
   editData,
 }: {
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
   editData: ISlot | null;
 }) => {
   // Hook for adding a new entrance exam slot
@@ -253,7 +252,7 @@ export const SlotsForm = ({
             roomNo: values.roomNo,
           }).unwrap();
         }
-        handleClose?.();
+        handleClose?.(null, true);
       } catch (error) {
         console.log(error);
       }
@@ -378,12 +377,28 @@ export const SlotsForm = ({
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose?.(null, false);
+          }}
           size="small"
         >
           Cancel
         </Button>
-        <SubmitButton loading={isLoading || isUpdateSlotLoading} />
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isLoading || isUpdateSlotLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          type="submit"
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

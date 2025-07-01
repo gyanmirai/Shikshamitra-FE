@@ -76,9 +76,7 @@ const CustomSelect = <T extends string, J extends boolean>({
       sx={{ width: '100%', position: 'relative' }}
       {...formControlProps}
     >
-      <InputLabel size="small" sx={{ fontSize: '14px', mt: 0, mb: '-4px', lineHeight: 1 }}>
-        {label}
-      </InputLabel>
+      <InputLabel size="small">{label}</InputLabel>
       <Select
         multiple={multiple}
         value={value}
