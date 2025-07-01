@@ -1,5 +1,7 @@
 'use client';
 
+import type { StepIconProps } from '@mui/material';
+
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
@@ -125,7 +127,27 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
     }),
   },
 }));
-
+function CustomStepIcon(props: StepIconProps) {
+  const { active, completed, icon } = props;
+  return (
+    <Box
+      sx={{
+        width: 24,
+        height: 24,
+        borderRadius: '50%',
+        backgroundColor: (theme) =>
+          active || completed ? theme.palette.primary.main : theme.palette.grey[400],
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold',
+      }}
+    >
+      {icon}
+    </Box>
+  );
+}
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
   scrollbarHeight = 'auto',
   activeStep,
@@ -182,6 +204,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
               // @ts-ignore
               isDisabledLabel={isDisabledLabel}
+              StepIconComponent={CustomStepIcon}
             >
               {label}
             </CustomStepLabel>

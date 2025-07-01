@@ -27,7 +27,12 @@ const RenderBoard = (props: any) => {
       labelKey="name"
       valueKey="id"
       value={values.board}
-      onChange={(value) => setFieldValue('board', value)}
+      onBlur={formik.handleBlur}
+      onChange={(value) => {
+        setFieldValue('board', value);
+        setFieldValue('medium', null);
+        setFieldValue('class', null);
+      }}
       error={!!(touched.board && errors.board) || false}
       helperText={(touched.board && errors.board) || ''}
       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
