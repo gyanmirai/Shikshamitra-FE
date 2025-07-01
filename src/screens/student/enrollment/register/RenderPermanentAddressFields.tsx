@@ -93,6 +93,7 @@ const RenderPermanentAddressFields = (props: any) => {
           }}
           error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
           helperText={formik.touched.permanentCountry && formik.errors.permanentCountry}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -105,6 +106,7 @@ const RenderPermanentAddressFields = (props: any) => {
           error={formik.touched.permanentState && Boolean(formik.errors.permanentState)}
           helperText={formik.touched.permanentState && formik.errors.permanentState}
           countryValue={formik.values.permanentCountry}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -114,6 +116,7 @@ const RenderPermanentAddressFields = (props: any) => {
           error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
           helperText={formik.touched.permanentCity && formik.errors.permanentCity}
           stateValue={formik.values.permanentState}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>

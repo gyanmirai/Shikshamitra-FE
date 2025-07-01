@@ -228,13 +228,13 @@ export function StudentProfile() {
     <>
       {currentStudent ? (
         <CustomBreadcrumbs
-          heading="Student Profile"
+          heading="Student List"
           links={[
             { name: 'Student', href: '/student/enrollment/dashboard' },
             { name: 'Student Records', href: '/student/overview/' },
             { name: 'Student List' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
           description="View and manage comprehensive student information including academics, attendance, finance and more."
@@ -403,7 +403,7 @@ export function StudentProfile() {
         <>
           <Card
             sx={{
-              mb: 3,
+              mb: 2,
               borderTopLeftRadius: 0,
               borderTopRightRadius: 0,
               boxShadow: 'var(--shadows-4)',
@@ -507,10 +507,12 @@ export function StudentProfile() {
                 </CustomTooltip>
               </Box> */}
             </Paper>
+          </Card>
+          <Paper elevation={2} sx={{ mb: 2, px: 2 }}>
             <Tabs
               value={tabs.value}
               onChange={tabs.onChange}
-              sx={{ px: 2, '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
               role="tablist"
             >
               {TABS.map((tab) => (
@@ -524,7 +526,7 @@ export function StudentProfile() {
                 />
               ))}
             </Tabs>
-          </Card>
+          </Paper>
           <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
             <StudentIDCard
               student={{

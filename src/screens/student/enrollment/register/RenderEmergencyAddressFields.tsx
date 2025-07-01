@@ -90,6 +90,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             formik.setFieldValue('emergencyState', null);
             formik.setFieldValue('emergencyCountry', value);
           }}
+          disabled={!isEdit}
           error={formik.touched.emergencyCountry && Boolean(formik.errors.emergencyCountry)}
           helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
         />
@@ -101,6 +102,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             formik.setFieldValue('emergencyCity', null);
             formik.setFieldValue('emergencyState', value);
           }}
+          disabled={!isEdit}
           error={formik.touched.emergencyState && Boolean(formik.errors.emergencyState)}
           helperText={formik.touched.emergencyState && formik.errors.emergencyState}
           countryValue={formik.values.emergencyCountry}
@@ -113,6 +115,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
           helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
           stateValue={formik.values.emergencyState}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>

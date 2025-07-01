@@ -27,7 +27,12 @@ const RenderMedium = (props: any) => {
       value={values.medium}
       labelKey="name"
       valueKey="id"
-      onChange={(value) => setFieldValue('medium', value)}
+      onBlur={formik.handleBlur}
+      onChange={(value) => {
+        setFieldValue('medium', value);
+        setFieldValue('class', null);
+        formik.setFieldTouched('medium', true, false);
+      }}
       error={!!(touched.medium && errors.medium) || false}
       helperText={(touched.medium && errors.medium) || ''}
       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
