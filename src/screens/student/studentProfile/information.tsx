@@ -5,23 +5,20 @@ import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Grid, Card, Stack, Button, TextField, CardContent } from '@mui/material';
+import { Tab, Box, Grid, Card, TextField } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { FormSlider } from '../enrollment/register/register-form';
+import { familyFields } from '../enrollment/register/register-fields';
 import { generalFormFields } from '../enrollment/register/GeneralFormFields';
-import {
-  familyFields,
-  medicalFields,
-  bankDetailsFields,
-  communicationFields,
-  previousSchoolFields,
-  additionalDetailsFields,
-} from '../enrollment/register/register-fields';
+import { medicalFields } from '../enrollment/register/render-medical-details';
+import { bankDetailsFields } from '../enrollment/register/render-bank-details';
+import { communicationFields } from '../enrollment/register/render-communication';
+import { previousSchoolFields } from '../enrollment/register/render-previous-details';
+import { additionalDetailsFields } from '../enrollment/register/render-additional-details';
 import {
   bankDetailsInitialValues,
   familyFieldsInitialValues,
@@ -97,131 +94,92 @@ export function StudentInformation(props: StudentTabsComponentType) {
   //     // setEditData(null);
   //   }
   // }, [dispatch, isChanges, tabs.value]);
-
+  const [isBackClick, setIsBackClick] = useState(false);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    const newIndex = TABS.findIndex((tab) => tab.value === newValue);
+    if (activeTabIndex > newIndex) {
+      setIsBackClick(true);
+    } else {
+      setIsBackClick(false);
+    }
+    setIsEdit(false);
+    tabs.setValue(newValue);
+  };
   return (
-    <Box
-      sx={
-        {
-          // '& input': { fontSize: '12px' },
-          // '& label': { fontSize: '12px' },
-        }
-      }
-    >
-      <BackPopUpChecked initialValues={initialValues} currentValues={formik.values}>
-        <Box component="form" onSubmit={formik.handleSubmit}>
-          <Card
-            sx={
-              {
-                // px: 1,
-                // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-              }
-            }
+    <Box>
+      {/* <BackPopUpChecked initialValues={initialValues} currentValues={formik.values}> */}
+      <form onSubmit={formik.handleSubmit}>
+        <Card sx={{ px: 0 }}>
+          <CustomTabs value={tabs.value} onChange={handleTabChange} variant="fullWidth">
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} />
+            ))}
+          </CustomTabs>
+          <FormSlider
+            steps={TABS}
+            isBackClick={isBackClick}
+            step={activeTabIndex}
+            containerProps={{
+              sx: {
+                p: 0,
+              },
+            }}
           >
-            <CustomTabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              variant="fullWidth"
-              slotProps={{
-                tab: {
-                  px: 0,
-
-                  // fontSize: '12px'
-                },
-              }}
-            >
-              {TABS.map((tab) => (
-                <Tab key={tab.value} value={tab.value} label={tab.label} />
-              ))}
-            </CustomTabs>
-
-            <Stack direction="row" justifyContent="flex-end" sx={{ my: 1 }}>
-              <Button
-                startIcon={
-                  <Iconify
-                    icon={isEdit ? 'icon-park-solid:save' : 'solar:pen-bold'}
-                    sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
-                  />
-                }
-                onClick={() => {
-                  setIsEdit(!isEdit);
-                  // popover.onClose();
-                }}
-              >
-                {isEdit ? 'Save' : 'Edit'}
-              </Button>
-            </Stack>
-            <Box sx={{ backgroundColor: (theme) => theme.palette.background.paper }}>
-              <CardContent
-                sx={{
-                  width: '100%',
-                  p: 0,
-                  // '& .Mui-disabled': {
-                  //   cursor: 'no-drop',
-                  // },
-                  // '& .MuiInputLabel-shrink.Mui-disabled': {
-                  //   color: (theme) => `${theme.palette.text.disabled} !important`,
-                  // },
-                }}
-              >
-                {/* <Scrollbar sx={{ width: '100%' }}> */}
-                <Grid container spacing={2} p={2}>
-                  {fields[activeTabIndex].map((field: FieldsType) => (
-                    <Grid
-                      item
-                      xs={[1].includes(activeTabIndex) ? 12 : 3}
-                      md={[1].includes(activeTabIndex) ? 12 : 3}
+            <Grid container spacing={2} p={2}>
+              {fields[activeTabIndex].map((field: FieldsType) => (
+                <Grid
+                  item
+                  xs={[1].includes(activeTabIndex) ? 12 : 3}
+                  md={[1].includes(activeTabIndex) ? 12 : 3}
+                  key={field.name}
+                  {...(field.gridProps || {})}
+                >
+                  {field.renderComp ? (
+                    field.renderComp({ formik, field, isEdit, isMainForm: false })
+                  ) : field.type === 'date' ? (
+                    <DatePicker
+                      label={field.label}
+                      name={field.name}
+                      value={formik.values[field.name]}
+                      format="DD-MM-YYYY"
+                      onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                      disabled={!isEdit}
+                      slotProps={{
+                        textField: {
+                          placeholder: field.placeholder,
+                          fullWidth: true,
+                          size: 'small',
+                          helperText: formik.touched[field.name] && formik.errors[field.name],
+                          error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                        },
+                      }}
+                    />
+                  ) : (
+                    <TextField
                       key={field.name}
-                      {...(field.gridProps || {})}
-                    >
-                      {field.renderComp ? (
-                        field.renderComp({ formik, field, isEdit })
-                      ) : field.type === 'date' ? (
-                        <DatePicker
-                          label={field.label}
-                          name={field.name}
-                          value={formik.values[field.name]}
-                          format="DD-MM-YYYY"
-                          onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                          disabled={!isEdit}
-                          slotProps={{
-                            textField: {
-                              placeholder: field.placeholder,
-                              fullWidth: true,
-                              size: 'small',
-                              helperText: formik.touched[field.name] && formik.errors[field.name],
-                              error:
-                                formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                            },
-                          }}
-                        />
-                      ) : (
-                        <TextField
-                          key={field.name}
-                          type={field.type}
-                          size="small"
-                          label={field.label}
-                          name={field.name}
-                          placeholder={field.placeholder}
-                          value={formik.values[field.name]}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                          helperText={formik.touched[field.name] && formik.errors[field.name]}
-                          fullWidth
-                          disabled={!isEdit}
-                          // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                          {...(field?.otherProps || {})}
-                        />
-                      )}
-                    </Grid>
-                  ))}
+                      type={field.type}
+                      size="small"
+                      label={field.label}
+                      name={field.name}
+                      placeholder={field.placeholder}
+                      value={formik.values[field.name]}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                      helperText={formik.touched[field.name] && formik.errors[field.name]}
+                      fullWidth
+                      disabled={!isEdit}
+                      // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                      {...(field?.otherProps || {})}
+                    />
+                  )}
                 </Grid>
-                {/* </Scrollbar> */}
-              </CardContent>
-            </Box>
-          </Card>
-        </Box>
-      </BackPopUpChecked>
+              ))}
+            </Grid>
+          </FormSlider>
+        </Card>
+      </form>
+      {/* </BackPopUpChecked> */}
     </Box>
   );
 }
