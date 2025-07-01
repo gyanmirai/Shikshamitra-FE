@@ -11,7 +11,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add, Upload } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
@@ -26,6 +26,7 @@ import {
   Typography,
   DialogActions,
   FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -196,7 +197,7 @@ const EntranceExamScreen = () => {
             popover.onClose();
           }}
         >
-          <Iconify icon="carbon:result" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
           Upload Result
         </MenuItem>
 
@@ -257,14 +258,14 @@ const EntranceExamScreen = () => {
         ]}
         sx={{ mb: 2 }}
       />
-      <Box display="flex" gap={2} justifyContent="space-between" alignItems="center">
+      <Box display="flex" gap={2} marginLeft={1} justifyContent="space-between" alignItems="center">
         <Box display="flex" gap={2}>
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
             slotProps={{
               textField: {
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '250px' },
                 size: 'small',
               },
             }}
@@ -277,7 +278,7 @@ const EntranceExamScreen = () => {
             format="DD-MM-YYYY"
             slotProps={{
               textField: {
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '250px' },
                 size: 'small',
               },
             }}
@@ -286,9 +287,9 @@ const EntranceExamScreen = () => {
             }}
           />
         </Box>
-        <Button startIcon={<Upload />} variant="contained" size="small">
+        {/* <Button startIcon={<Upload />} variant="contained" size="small">
           Upload Results
-        </Button>
+        </Button> */}
       </Box>
       <Box mt={2}>
         <CustomizableTable
@@ -382,7 +383,32 @@ const EntranceExamScreen = () => {
               sticky: true,
               align: 'left',
               render(value, row) {
-                return `${value}%`;
+                return (
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress variant="determinate" value={value} />
+                    <Box
+                      sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        component="small"
+                        color="text.secondary"
+                        sx={{ fontSize: '12px' }}
+                      >
+                        {value}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
               },
             },
             {
@@ -405,7 +431,8 @@ const EntranceExamScreen = () => {
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
+              align: 'left',
               isFilter: false,
               sticky: true,
               isSort: false,
@@ -418,12 +445,23 @@ const EntranceExamScreen = () => {
         />{' '}
       </Box>
       <CustomDialog
-        title="Result"
+        open={resultDialog.value}
         handleClose={() => {
           setEditData(null);
           resultDialog.onFalse();
         }}
-        open={resultDialog.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Result</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Update entrance exam results by entering total, passing, and obtained marks for students."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ResultForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
@@ -435,6 +473,7 @@ const EntranceExamScreen = () => {
           <LoadingButton
             variant="contained"
             loading={isLoading}
+            size="small"
             color="error"
             onClick={async () => {
               await moveToAdmission(moveId);

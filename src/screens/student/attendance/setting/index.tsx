@@ -68,6 +68,7 @@ const HrAttendanceSettingScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
+        description="Define leave types like Sick or Casual under Leave Type"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Attendance', href: '/student/attendance/dashboard/' },

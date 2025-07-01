@@ -1,10 +1,9 @@
-import type { DocumentType } from 'src/enums/documnet-type';
-
 export interface IStudentDocument {
   id: string;
   documentName: string;
   isRequired: boolean;
-  documentTypes: DocumentType[];
+  documentSize: number;
+  documentTypes: { label: string; value: number }[];
 }
 
 // types/slot.types.ts or within the same file
