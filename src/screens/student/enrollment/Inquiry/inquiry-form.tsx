@@ -101,11 +101,6 @@ const InquiryForm = ({
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const classesData = useMemo(
-    () => [...(classes || [])]?.sort((a: any, b: any) => a.name.localeCompare(b.name)) || [],
-    [classes]
-  );
-
   /**
    * Hook to fetch academic year data
    */
@@ -113,13 +108,6 @@ const InquiryForm = ({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
   });
-
-  const years = useMemo(
-    () =>
-      [...(academicYear?.items || [])]?.sort((a: any, b: any) => b.name.localeCompare(a.name)) ||
-      [],
-    [academicYear?.items]
-  );
 
   /**
    * Handles form submission for both adding and updating student inquiries
@@ -214,10 +202,10 @@ const InquiryForm = ({
   });
 
   useMemo(() => {
-    if (years?.length) {
-      setFieldValue('academicYear', years[0].id);
+    if (academicYear?.items?.length) {
+      setFieldValue('academicYear', academicYear?.items[0].id);
     }
-  }, [setFieldValue, years]);
+  }, [setFieldValue, academicYear?.items]);
 
   /**
    * Custom hook to check for changes in form values
@@ -289,7 +277,7 @@ const InquiryForm = ({
                     name="academicYear"
                     label="Academic Year *"
                     isLoading={yearLoading}
-                    options={years}
+                    options={academicYear?.items || []}
                     value={values.academicYear}
                     labelKey="name"
                     valueKey="id"
@@ -300,6 +288,8 @@ const InquiryForm = ({
                       );
                       setBoards(findBoards);
                       setFieldValue('board', '');
+                      setFieldValue('medium', '');
+                      setFieldValue('class', '');
                       setFieldValue('academicYear', value);
                     }}
                     error={!!(touched.academicYear && errors.academicYear) || false}
@@ -320,6 +310,7 @@ const InquiryForm = ({
                     value={values.board}
                     onChange={(value) => {
                       setFieldValue('medium', '');
+                      setFieldValue('class', '');
                       setFieldValue('board', value);
                     }}
                     error={!!(touched.board && errors.board) || false}
@@ -344,6 +335,7 @@ const InquiryForm = ({
                     valueKey="id"
                     onChange={async (value) => {
                       setFieldValue('medium', value);
+                      setFieldValue('class', '');
                       await getClassByMedium(value);
                     }}
                     error={!!(touched.medium && errors.medium) || false}
@@ -361,11 +353,11 @@ const InquiryForm = ({
                     isLoading={classLoading}
                     labelKey="name"
                     valueKey="id"
-                    options={classesData || []}
+                    options={classes || []}
                     value={values.class}
                     onChange={(value) => {
                       setFieldValue('class', value);
-                      setFieldTouched('class', true);
+                      // setFieldTouched('class', true);
                     }}
                     error={!!(touched.class && errors.class) || false}
                     helperText={(touched.class && errors.class) || ''}
