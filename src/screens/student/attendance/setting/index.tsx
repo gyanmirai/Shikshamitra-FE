@@ -15,27 +15,27 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import AttendanceRule, { AttendanceRuleForm } from './attendance-rule';
+import { AttendanceRuleForm } from './attendance-rule';
 import AttendanceType, { AttendanceTypeForm } from './attendance-type';
 
 const HrAttendanceSettingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'leaveType' });
 
   const attendanceRuleDialog = useBoolean();
   const leaveTypeDialog = useBoolean();
 
   const TABS = useMemo(
     () => [
-      {
-        value: 'rule',
-        label: 'Attendance Rule',
-        icon: <Iconify icon="carbon:rule-draft" width={20} />,
-        buttonText: 'Attendance Rule',
-        onClick: () => {
-          attendanceRuleDialog.onTrue();
-        },
-        component: () => <AttendanceRule />,
-      },
+      // {
+      //   value: 'rule',
+      //   label: 'Attendance Rule',
+      //   icon: <Iconify icon="carbon:rule-draft" width={20} />,
+      //   buttonText: 'Attendance Rule',
+      //   onClick: () => {
+      //     attendanceRuleDialog.onTrue();
+      //   },
+      //   component: () => <AttendanceRule />,
+      // },
 
       {
         value: 'leaveType',
@@ -48,7 +48,7 @@ const HrAttendanceSettingScreen = () => {
         component: () => <AttendanceType />,
       },
     ],
-    [attendanceRuleDialog, leaveTypeDialog]
+    [leaveTypeDialog]
   );
 
   const currentActiveComponent = useMemo(
@@ -149,7 +149,7 @@ const HrAttendanceSettingScreen = () => {
           }}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Leave Type</Typography>
+              <Typography variant="h5">Add Leave Type</Typography>
               <CustomTooltip
                 arrow
                 placement="right"
