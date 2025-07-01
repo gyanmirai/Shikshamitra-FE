@@ -11,6 +11,8 @@ import type {
 export function getInitialSetFeeHeadValues(
   data: Partial<IFinanceFeeSetHeadInterface> | null = null
 ): IFinanceFeeSetHeadInterface {
+  console.log('data---', data);
+
   return {
     feeHeadName: data?.feeHeadName || '',
   };

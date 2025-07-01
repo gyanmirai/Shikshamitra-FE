@@ -470,6 +470,7 @@ const TimeTableGrid = ({
           <Box display="flex" alignItems="center" gap={1}>
             {isEdit ? 'Update Timetable' : 'Create Timetable'}{' '}
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="Create or update timetable schedules for classes and divisions to organize daily academic activities"

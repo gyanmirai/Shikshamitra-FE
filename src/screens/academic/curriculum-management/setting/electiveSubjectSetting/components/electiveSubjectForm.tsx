@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -10,6 +9,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
@@ -40,7 +40,16 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
     validationSchema: electiveSubjectValidationSchema,
     // Handle form submission
     onSubmit: (values) => {
-      console.log(values);
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Elective Group ${values.title} updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Elective Group ${values.title} added successfully`,
+        });
+      }
+      onClose(null, true);
     },
   });
 
@@ -56,12 +65,15 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                     fullWidth
                     label="Elective Group Name *"
                     name="title"
-                    size="small"
-                    value={formik.values.title}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
+                      const value = e.target.value
+                        .split(' ')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
                       formik.setFieldValue('title', value);
                     }}
+                    size="small"
+                    value={formik.values.title}
                     error={formik.touched.title && Boolean(formik.errors.title)}
                     helperText={formik.touched.title && formik.errors.title}
                   />

@@ -735,6 +735,7 @@ const academicModule = (isDdvs: boolean) => ({
             {
               title: 'Resources',
               path: '/academic/learningResources',
+              caption: 'Coming Soon',
               _action: 'course-management-learningResources',
               shortcutKey: 'Alt+A+S+2',
               shortcutKeyName: 'Alt+A+S+2',

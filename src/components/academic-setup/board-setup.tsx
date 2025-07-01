@@ -360,7 +360,7 @@ export const BoardForm = ({
           }}
         />
 
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel
           </Button>

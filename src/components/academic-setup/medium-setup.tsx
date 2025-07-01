@@ -366,7 +366,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           helperText={formik.touched.medium && formik.errors.medium}
           size="small"
         />
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel
           </Button>

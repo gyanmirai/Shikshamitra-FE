@@ -357,7 +357,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           helperText={formik.touched.roomNo && formik.errors.roomNo}
           size="small"
         />
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button variant="outlined" size="small" onClick={handleClose}>
             Cancel
           </Button>

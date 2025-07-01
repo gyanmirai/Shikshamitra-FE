@@ -78,10 +78,11 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
         </Grid>
       </Scrollbar>
 
-      <DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
           <Button
             variant="outlined"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={onClose}
           >
@@ -90,6 +91,7 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
           <Button
             type="submit"
             variant="contained"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             disabled={isSubmitting}
           >

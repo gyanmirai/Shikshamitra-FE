@@ -169,7 +169,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             id: 'feedback',
             label: 'Feedback',
             render: (value, row) => (
-              <CustomTooltip title={value || '-'} arrow>
+              <CustomTooltip title={value || '-'} arrow sx={{ textAlign: 'justify' }}>
                 <Typography
                   variant="caption"
                   fontSize="13px"

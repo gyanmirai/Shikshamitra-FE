@@ -73,7 +73,7 @@ const ChapterTable = ({
         align: 'left',
         filterType: 'string',
         render: (value, row) => (
-          <CustomTooltip title={value} arrow>
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
               variant="caption"
               noWrap

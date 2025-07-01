@@ -194,6 +194,7 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
               {selectedExamType ? 'Update Exam Type' : 'Add Exam Type'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={

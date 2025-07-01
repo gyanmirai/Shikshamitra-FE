@@ -190,6 +190,7 @@ const RoomDetails = ({ addRoomDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">{isEdit ? 'Update Room' : 'Add Room'}</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
