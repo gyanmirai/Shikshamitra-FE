@@ -189,7 +189,15 @@ const AttendanceRule = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete"
+        content={
+          <>
+            Are you sure you want to delete{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {deleteInformation?.name}
+            </Box>
+            ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteLoading}

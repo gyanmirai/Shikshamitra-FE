@@ -1,7 +1,6 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { MuiColorInput } from 'mui-color-input';
 
 import { LoadingButton } from '@mui/lab';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -24,7 +23,10 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { IAttendanceRule } from './type';
 
@@ -81,31 +83,28 @@ const AttendanceType = () => {
         }
         isLoading={isLoading}
         columns={[
-          { id: 'type', label: 'Type' },
           {
-            id: 'color',
-            label: 'Color',
-            isSort: false,
+            id: 'type',
+            label: 'Type',
             render(value, row) {
               return (
-                <Box
-                  sx={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    backgroundColor: value,
-                  }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
               );
             },
           },
+
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             sticky: true,
             isFilter: false,
             isSort: false,
-            minWidth: 130,
+            minWidth: 60,
             align: 'left',
             render: (value, row) => (
               <ThreeDotsActions
@@ -133,12 +132,21 @@ const AttendanceType = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete Leave Type{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {editData?.type}
+            </Box>
+            ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={async () => {
               await deleteAttendanceType(editData?.id);
               confirm.onFalse();
@@ -154,7 +162,7 @@ const AttendanceType = () => {
         handleClose={handleClose}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Type</Typography>
+            <Typography variant="h5">Update Leave Type</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -198,7 +206,7 @@ export const AttendanceTypeForm = ({
       color: editData?.color || 'white',
     },
     validationSchema: Yup.object({
-      type: Yup.string().required('Type is required'),
+      type: Yup.string().required('Leave Type is required'),
       color: Yup.string().required('Color is required'),
     }),
     onSubmit: async (value) => {
@@ -217,12 +225,13 @@ export const AttendanceTypeForm = ({
       }
     },
   });
+
   return (
     <Box component="form" onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+      <Scrollbar sx={{ p: 2 }}>
         <Stack spacing={2.5}>
           <TextField
-            label="Type"
+            label="Leave Type *"
             name="type"
             value={values.type}
             onChange={handleChange}
@@ -230,17 +239,29 @@ export const AttendanceTypeForm = ({
             error={!!(errors.type && touched.type)}
             helperText={touched.type && errors.type}
           />
-          <MuiColorInput
-            format="hex"
-            value={values.color}
-            onChange={(color) => setFieldValue('color', color)}
-            fullWidth
-            placeholder="color"
-            label="Background Color"
-            size="small"
-            error={!!(errors.color && touched.color)}
-            helperText={touched.color && errors.color}
-          />
+          <ShakingTextField error={touched.color && Boolean(errors.color)}>
+            {/* Dynamic Heading */}
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 1 }}
+              color={touched.color && errors.color ? 'error.main' : 'text.primary'}
+            >
+              Leave Type Color
+            </Typography>
+
+            {/* Color Picker */}
+            <ColorPickerCircle
+              onSelect={(color: string) => setFieldValue('color', color)}
+              initialColor={values.color}
+            />
+
+            {/* Error Message */}
+            {touched.color && errors.color && (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                {errors.color}
+              </Typography>
+            )}
+          </ShakingTextField>
         </Stack>
       </Scrollbar>
       <DialogActions>
@@ -254,13 +275,19 @@ export const AttendanceTypeForm = ({
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           loading={isUpdateLoading || isLoading}
           variant="contained"
           type="submit"
           size="small"
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </Box>
