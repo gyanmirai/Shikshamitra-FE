@@ -74,7 +74,13 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                     // placeholder="Enter Marks"
                     label="Marks *"
                     fullWidth
+                    type="number"
                     name="marks"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     disabled={!isEdit}
                     size="small"
                     value={formik.values.marks}

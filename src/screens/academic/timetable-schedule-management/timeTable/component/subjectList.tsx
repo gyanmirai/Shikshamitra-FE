@@ -6,6 +6,7 @@ import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 
@@ -16,9 +17,14 @@ import type { Subject } from '../type';
 interface SubjectListProps {
   onDragStart: (e: any, subject: any) => void;
   subjectsGroups: any;
+  selectedClass: any;
 }
 
-const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }) => {
+const SubjectList: React.FC<SubjectListProps> = ({
+  onDragStart,
+  subjectsGroups,
+  selectedClass,
+}) => {
   const weeklyLecturesDialog = useBoolean();
   return (
     <Stack spacing={1}>
@@ -79,14 +85,27 @@ const SubjectList: React.FC<SubjectListProps> = ({ onDragStart, subjectsGroups }
         Create Weekly Lectures ?
       </Typography>
       <CustomDialog
-        title="Create Number of Lectures"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Weekly Lectures</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Configure the number of lectures per week for each subject"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={weeklyLecturesDialog.value}
         handleClose={weeklyLecturesDialog.onFalse}
-        maxWidth="md"
+        maxWidth="sm"
       >
         <CreateNoOfLecture
           editData={null}
           onClose={weeklyLecturesDialog.onFalse}
+          selectedClass={selectedClass}
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}

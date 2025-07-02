@@ -45,6 +45,34 @@ import AssignmentTypeForm from '../../setting/assignmentType/assignmentTypeForm'
 
 import type { IAssignmentFormProps } from '../type';
 
+export const allStudentIds = [
+  'st1',
+  'st2',
+  'st3',
+  'st4',
+  'st5',
+  'st6',
+  'st7',
+  'st8',
+  'st9',
+  'st10',
+  'st11',
+  'st12',
+  'st13',
+  'st14',
+  'st15',
+  'st16',
+  'st17',
+  'st18',
+  'st19',
+  'st20',
+  'st21',
+  'st22',
+  'st23',
+  'st24',
+  'st25',
+];
+
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editData, onClose }) => {
   // State to control assignment type dialog visibility
   const assignmentTypeDialog = useBoolean();
@@ -238,10 +266,12 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   <CustomSelect
                     label="Assignment Type *"
                     options={[
-                      { value: 'essay', label: 'Essay' },
-                      { value: 'project', label: 'Project' },
-                      { value: 'quiz', label: 'Quiz' },
-                      { value: 'presentation', label: 'Presentation' },
+                      { value: 'Drawing', label: 'Drawing' },
+                      { value: 'Worksheet', label: 'Worksheet' },
+                      { value: 'Essay', label: 'Essay' },
+                      { value: 'Project', label: 'Project' },
+                      { value: 'Quiz', label: 'Quiz' },
+                      { value: 'Presentation', label: 'Presentation' },
                     ]}
                     value={formik.values.assignmentType || ''}
                     onChange={(val) => formik.setFieldValue('assignmentType', val)}
@@ -291,6 +321,11 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     name="totalMarks"
                     size="small"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.totalMarks}
                     onChange={formik.handleChange}
                     error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
@@ -333,40 +368,28 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       { id: 'st24', name: 'Khan Sana Imran' },
                       { id: 'st25', name: 'Ahmed Zoya Farhan' },
                     ]}
-                    value={formik.values.students}
+                    value={
+                      formik.values.students.length === allStudentIds.length
+                        ? ['all', ...formik.values.students]
+                        : formik.values.students
+                    }
                     onChange={(val) => {
-                      if (val.includes('all')) {
-                        const allStudentIds = [
-                          'st1',
-                          'st2',
-                          'st3',
-                          'st4',
-                          'st5',
-                          'st6',
-                          'st7',
-                          'st8',
-                          'st9',
-                          'st10',
-                          'st11',
-                          'st12',
-                          'st13',
-                          'st14',
-                          'st15',
-                          'st16',
-                          'st17',
-                          'st18',
-                          'st19',
-                          'st20',
-                          'st21',
-                          'st22',
-                          'st23',
-                          'st24',
-                          'st25',
-                        ];
+                      // Check if the change involves the 'all' option
+                      const hasAll = val.includes('all');
+                      const currentStudents = formik.values.students;
+                      const hadAll = currentStudents.length === allStudentIds.length;
+
+                      if (hasAll && !hadAll) {
+                        // 'All' was just added - select all students
                         formik.setFieldValue('students', allStudentIds);
-                      } else {
+                      } else if (!hasAll && hadAll) {
+                        // 'All' was just removed - deselect all students
+                        formik.setFieldValue('students', []);
+                      } else if (!hasAll) {
+                        // No 'all' involved, just individual student changes
                         formik.setFieldValue('students', val);
                       }
+                      // If hasAll && hadAll, it means all is still selected, do nothing
                     }}
                     getOptionLabel={(opt) => opt.name}
                     getOptionValue={(opt) => opt.id}

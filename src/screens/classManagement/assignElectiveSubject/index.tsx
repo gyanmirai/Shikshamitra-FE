@@ -6,8 +6,8 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
+import { Save } from '@mui/icons-material';
 import { Box, Button, useTheme } from '@mui/material';
-import { Save, RestartAlt } from '@mui/icons-material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -191,7 +191,7 @@ const AssignElectiveSubject = () => {
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button
             variant="outlined"
-            startIcon={<RestartAlt />}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={() => resetDialog.onTrue()}
             size="small"
           >

@@ -68,15 +68,23 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedGrade(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust this if your dialog animation is different
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       viewDialog.onFalse();
       addGradeScalingDialog.onFalse();
-      dispatch(setIsChanges(false));
-      setSelectedGrade(null);
+      resetState();
     } else if (!isChanges) {
       viewDialog.onFalse();
       addGradeScalingDialog.onFalse();
-      setSelectedGrade(null);
+      setTimeout(() => {
+        setSelectedGrade(null);
+      }, 200);
     }
   };
 
@@ -171,7 +179,9 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
         open={addGradeScalingDialog.value}
         handleClose={() => {
           addGradeScalingDialog.onFalse();
-          setSelectedGrade(null);
+          setTimeout(() => {
+            setSelectedGrade(null);
+          }, 200); // Adjust this delay if your dialog animation takes more/less time
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -206,7 +216,9 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
         open={viewDialog.value}
         handleClose={() => {
           viewDialog.onFalse();
-          setSelectedGrade(null);
+          setTimeout(() => {
+            setSelectedGrade(null);
+          }, 200); // Match dialog close animation duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

@@ -54,21 +54,21 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Close dialog if form submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetState = () => {
+      setTimeout(() => {
+        setIsEdit(false);
+        setDisabled(false);
+        setSelectedWeeklyLecture(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing if needed to match dialog animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addWeeklyLectureDialog.onFalse();
-      dispatch(setIsChanges(false));
-      setIsEdit(false);
-      setDisabled(false);
-      setSelectedWeeklyLecture(null);
-    }
-    // Close dialog if no unsaved changes
-    else if (!isChanges) {
+      resetState();
+    } else if (!isChanges) {
       addWeeklyLectureDialog.onFalse();
-      setDisabled(false);
-      dispatch(setIsChanges(false));
-      setIsEdit(false);
-      setSelectedWeeklyLecture(null);
+      resetState();
     }
   };
 
@@ -286,8 +286,10 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
         open={addWeeklyLectureDialog.value}
         handleClose={() => {
           addWeeklyLectureDialog.onFalse();
-          setSelectedWeeklyLecture(null);
-          setIsEdit(false);
+          setTimeout(() => {
+            setSelectedWeeklyLecture(null);
+            setIsEdit(false);
+          }, 200); // Adjust duration if your dialog animation is longer
         }}
         maxWidth="sm"
       >

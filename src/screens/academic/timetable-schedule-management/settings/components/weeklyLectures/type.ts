@@ -20,6 +20,7 @@ export interface ICreateNoOfLectureProps {
   onClose?: (event: any, isSubmit?: boolean) => void;
   disabled?: boolean;
   editData: ISubjectFormValues | null;
+  selectedClass?: string;
 }
 
 export interface ISubjectFormValues {

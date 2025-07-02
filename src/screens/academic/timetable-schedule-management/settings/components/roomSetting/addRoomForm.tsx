@@ -65,11 +65,16 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                 <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
                   <TextField
                     disabled={isEdit}
-                    label="Room Number *"
+                    label="Room No. *"
                     // placeholder="Enter Room Number"
                     size="small"
                     name="roomNumber"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.roomNumber}
                     onChange={formik.handleChange}
                     fullWidth
@@ -107,6 +112,11 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     // placeholder="Enter Floor"
                     size="small"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.floor}
                     onChange={formik.handleChange}
                     fullWidth
@@ -124,6 +134,11 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     // placeholder="Enter Room Capacity"
                     type="number"
                     size="small"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.capacity}
                     onChange={formik.handleChange}
                     fullWidth

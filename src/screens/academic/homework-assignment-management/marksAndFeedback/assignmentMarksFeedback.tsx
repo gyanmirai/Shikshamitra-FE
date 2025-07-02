@@ -81,7 +81,8 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          my: 1,
+          mb: 2,
           p: 1,
           gap: 2,
         }}
@@ -127,14 +128,11 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
         />
         <CustomTooltip
           placement="top"
-          title={
-            selectedAssignment
-              ? `${selectedAssignment.title} (${selectedAssignment.id})`
-              : undefined
-          }
+          title={selectedAssignment ? `${selectedAssignment.title}` : undefined}
         >
           <Autocomplete
             options={ASSIGNMENT_OPTIONS}
+            disabled={!subject}
             getOptionLabel={(option: any) => option.label || ''}
             isOptionEqualToValue={(option, value) => option.value === value.value}
             value={ASSIGNMENT_OPTIONS.find((opt) => opt.value === assignmentTitle) || null}

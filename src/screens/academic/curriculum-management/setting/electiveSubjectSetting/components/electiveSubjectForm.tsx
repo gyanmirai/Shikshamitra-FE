@@ -118,7 +118,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                         : 'text.primary'
                     }
                   >
-                    Elective Group Color
+                    Elective Group Color *
                   </Typography>
                   <ColorPickerCircle
                     onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}

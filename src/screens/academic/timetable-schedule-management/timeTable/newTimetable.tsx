@@ -147,6 +147,7 @@ const TimeTableGrid = ({
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
   // Dialog state for publishing marks modal (currently unused)
   const publishTimetableDialog = useBoolean();
+  const draftTimetableDialog = useBoolean();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -521,6 +522,9 @@ const TimeTableGrid = ({
                 startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 variant="outlined"
                 size="small"
+                onClick={() => {
+                  draftTimetableDialog.onTrue();
+                }}
               >
                 Draft
               </Button>
@@ -548,7 +552,11 @@ const TimeTableGrid = ({
                 <Typography variant="h6">Subjects</Typography>
               </Box>
               <Box sx={{ p: 1 }}>
-                <SubjectList onDragStart={handleDragStart} subjectsGroups={subjectsGroups} />
+                <SubjectList
+                  onDragStart={handleDragStart}
+                  subjectsGroups={subjectsGroups}
+                  selectedClass={classes}
+                />
               </Box>
             </Paper>
             <BackPopUpChecked initialValues={initialTimetableData} currentValues={timetable}>
@@ -681,6 +689,28 @@ const TimeTableGrid = ({
             }}
           >
             Publish
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={draftTimetableDialog.value}
+        onClose={() => {
+          draftTimetableDialog.onFalse();
+          // setSelectedExam(null);
+        }}
+        title="Publish"
+        content="Are you sure you want to Publish Timetable ?"
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+            onClick={() => {
+              // handleDelete(selectedExam?.id);
+            }}
+          >
+            Draft
           </Button>
         }
       />

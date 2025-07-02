@@ -1,6 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
@@ -51,6 +50,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
   const formik = useFormik({
     initialValues,
     validationSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
     onSubmit: (values) => {},
   });
 
@@ -68,6 +69,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
   const handleCreateSlots = (e: any) => {
     const inputValue = e.target.value;
     formik.setFieldValue('totalSlots', inputValue);
+
     const slotsCount = parseInt(inputValue, 10);
 
     if (slotsCount > 0) {
@@ -78,9 +80,19 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
           startTime: index === 0 ? dayjs('2024-01-01T07:00') : null,
           endTime: index === slotsCount - 1 ? dayjs('2024-01-01T12:30') : null,
           slotType: 'period',
+          breakType: '',
         }));
 
       setTimeSlots(newSlots);
+      formik.setFieldValue('timeSlots', newSlots);
+
+      // Trigger validation for all slots
+      // newSlots.forEach((_, index) => {
+      //   formik.setFieldTouched(`timeSlots[${index}].startTime`, true);
+      //   formik.setFieldTouched(`timeSlots[${index}].endTime`, true);
+      //   formik.setFieldTouched(`timeSlots[${index}].slotType`, true);
+      // });
+
       setShowTable(true);
     }
   };
@@ -91,54 +103,54 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
    * @param slotIndex - Index of the slot to update
    * @param type - Whether updating start or end time
    */
-  const handleTimeChange = (
-    time: Dayjs | null,
-    slotIndex: number,
-    type: 'startTime' | 'endTime'
-  ) => {
-    setTimeSlots((prevSlots) => {
-      const newSlots = [...prevSlots];
-      newSlots[slotIndex] = {
-        ...newSlots[slotIndex],
-        [type]: time,
-      };
-      return newSlots;
-    });
-  };
+  // const handleTimeChange = (
+  //   time: Dayjs | null,
+  //   slotIndex: number,
+  //   type: 'startTime' | 'endTime'
+  // ) => {
+  //   setTimeSlots((prevSlots) => {
+  //     const newSlots = [...prevSlots];
+  //     newSlots[slotIndex] = {
+  //       ...newSlots[slotIndex],
+  //       [type]: time,
+  //     };
+  //     return newSlots;
+  //   });
+  // };
 
   /**
    * Updates the slot type (period/break) for a specific slot
    * @param value - The selected slot type
    * @param slotIndex - Index of the slot to update
    */
-  const handleSlotTypeChange = (value: any, slotIndex: number) => {
-    setTimeSlots((prevSlots) => {
-      const newSlots = [...prevSlots];
-      newSlots[slotIndex] = {
-        ...newSlots[slotIndex],
-        slotType: value,
-        // Reset breakType when changing slot type
-        breakType: value === 'break' ? '' : undefined,
-      };
-      return newSlots;
-    });
-  };
+  // const handleSlotTypeChange = (value: any, slotIndex: number) => {
+  //   setTimeSlots((prevSlots) => {
+  //     const newSlots = [...prevSlots];
+  //     newSlots[slotIndex] = {
+  //       ...newSlots[slotIndex],
+  //       slotType: value,
+  //       // Reset breakType when changing slot type
+  //       breakType: value === 'break' ? '' : undefined,
+  //     };
+  //     return newSlots;
+  //   });
+  // };
 
   /**
    * Updates the break type for a specific slot
    * @param value - The selected break type
    * @param slotIndex - Index of the slot to update
    */
-  const handleBreakTypeChange = (value: any, slotIndex: number) => {
-    setTimeSlots((prevSlots) => {
-      const newSlots = [...prevSlots];
-      newSlots[slotIndex] = {
-        ...newSlots[slotIndex],
-        breakType: value,
-      };
-      return newSlots;
-    });
-  };
+  // const handleBreakTypeChange = (value: any, slotIndex: number) => {
+  //   setTimeSlots((prevSlots) => {
+  //     const newSlots = [...prevSlots];
+  //     newSlots[slotIndex] = {
+  //       ...newSlots[slotIndex],
+  //       breakType: value,
+  //     };
+  //     return newSlots;
+  //   });
+  // };
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
@@ -192,7 +204,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     options={allClass}
                     value={formik.values.previousClassSlots}
                     onChange={(val) => formik.setFieldValue('previousClassSlots', val as string)}
-                    label="Previous Class Slots"
+                    label="Slots From Previous Class	"
                     labelKey="name"
                     valueKey="name"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -222,6 +234,11 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                     onChange={(e) => {
                       handleCreateSlots(e);
                     }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
                     helperText={formik.touched.totalSlots && formik.errors.totalSlots}
                     size="small"
@@ -231,7 +248,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
               </Grid>
             </Grid>
 
-            {showTable && (
+            {formik.values.totalSlots && (
               <>
                 <Typography variant="subtitle2" sx={{ mt: 2 }}>
                   Slot Times
@@ -247,36 +264,150 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                       label: 'Start Time',
                       render(value, row) {
                         return (
-                          <TimePicker
-                            value={value}
-                            viewRenderers={{
-                              hours: renderTimeViewClock,
-                              minutes: renderTimeViewClock,
-                              seconds: renderTimeViewClock,
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              minWidth: '150px',
+                              width: '100%',
+                              mb: 1,
                             }}
-                            onChange={(newTime) => handleTimeChange(newTime, row.id, 'startTime')}
-                            slotProps={{ textField: { size: 'small' } }}
-                            disabled={disabled}
-                          />
+                          >
+                            <ShakingTextField
+                              error={
+                                !!(formik.touched.timeSlots?.[row.id]?.startTime &&
+                                typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                  ? (formik.errors.timeSlots[row.id] as any).startTime
+                                  : undefined)
+                              }
+                            >
+                              <TimePicker
+                                value={value || null}
+                                format="hh:mm a"
+                                views={['hours', 'minutes']}
+                                ampm
+                                onChange={(newTime) => {
+                                  const updated = [...formik.values.timeSlots];
+
+                                  // Ensure the slot exists with all required fields
+                                  if (!updated[row.id]) {
+                                    updated[row.id] = {
+                                      id: row.id,
+                                      startTime: null,
+                                      endTime: null,
+                                      slotType: 'period',
+                                      breakType: '', // optional, depending on your type
+                                    };
+                                  }
+
+                                  updated[row.id].startTime = newTime;
+
+                                  formik.setFieldValue('timeSlots', updated);
+                                  // formik.setFieldTouched(`timeSlots[${row.id}].startTime`, true);
+                                }}
+                                slotProps={{
+                                  textField: {
+                                    size: 'small',
+                                    placeholder: 'hh:mm', // ✅ Custom placeholder shown when empty
+                                    inputProps: {
+                                      placeholder: 'hh:mm', // ✅ Prevents weird raw input like hh:mm aa
+                                    },
+                                    error:
+                                      typeof formik.errors.timeSlots?.[row.id] === 'object' &&
+                                      !!(formik.errors.timeSlots?.[row.id] as any)?.startTime &&
+                                      !!formik.touched.timeSlots?.[row.id]?.startTime,
+                                    helperText:
+                                      formik.touched.timeSlots?.[row.id]?.startTime &&
+                                      typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                        ? (formik.errors.timeSlots?.[row.id] as any)?.startTime
+                                        : '',
+                                    FormHelperTextProps: {
+                                      sx: {
+                                        margin: 0,
+                                        marginTop: '4px',
+                                        lineHeight: '1.25rem',
+                                        whiteSpace: 'normal',
+                                      },
+                                    },
+                                    InputLabelProps: {
+                                      sx: { lineHeight: '1.2em' },
+                                    },
+                                  },
+                                }}
+                                viewRenderers={{
+                                  hours: renderTimeViewClock,
+                                  minutes: renderTimeViewClock,
+                                  seconds: renderTimeViewClock,
+                                }}
+                                disabled={disabled}
+                              />
+                            </ShakingTextField>
+                          </Box>
                         );
                       },
                     },
+
                     {
                       id: 'endTime',
                       label: 'End Time',
                       render(value, row) {
                         return (
-                          <TimePicker
-                            value={value}
-                            viewRenderers={{
-                              hours: renderTimeViewClock,
-                              minutes: renderTimeViewClock,
-                              seconds: renderTimeViewClock,
-                            }}
-                            onChange={(newTime) => handleTimeChange(newTime, row.id, 'endTime')}
-                            slotProps={{ textField: { size: 'small' } }}
-                            disabled={disabled}
-                          />
+                          <ShakingTextField
+                            error={
+                              !!(formik.touched.timeSlots?.[row.id]?.endTime &&
+                              typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                ? (formik.errors.timeSlots[row.id] as any).endTime
+                                : undefined)
+                            }
+                          >
+                            <TimePicker
+                              value={value || null}
+                              viewRenderers={{
+                                hours: renderTimeViewClock,
+                                minutes: renderTimeViewClock,
+                                seconds: renderTimeViewClock,
+                              }}
+                              format="HH:mm a"
+                              views={['hours', 'minutes']}
+                              ampm
+                              onChange={(newTime) => {
+                                const updated = [...formik.values.timeSlots];
+                                updated[row.id].endTime = newTime;
+                                formik.setFieldValue('timeSlots', updated);
+                                formik.setFieldTouched(`timeSlots[${row.id}].endTime`, true);
+                              }}
+                              slotProps={{
+                                textField: {
+                                  size: 'small',
+                                  placeholder: 'hh:mm', // ✅ Custom placeholder shown when empty
+                                  inputProps: {
+                                    placeholder: 'hh:mm', // ✅ Prevents weird raw input like hh:mm aa
+                                  },
+                                  error:
+                                    typeof formik.errors.timeSlots?.[row.id] === 'object' &&
+                                    !!(formik.errors.timeSlots?.[row.id] as any)?.endTime &&
+                                    !!formik.touched.timeSlots?.[row.id]?.endTime,
+                                  helperText:
+                                    formik.touched.timeSlots?.[row.id]?.endTime &&
+                                    typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                      ? (formik.errors.timeSlots?.[row.id] as any)?.endTime
+                                      : '',
+                                  FormHelperTextProps: {
+                                    sx: {
+                                      margin: 0,
+                                      marginTop: '4px',
+                                      lineHeight: '1.25rem',
+                                      whiteSpace: 'normal',
+                                    },
+                                  },
+                                  InputLabelProps: {
+                                    sx: { lineHeight: '1.2em' },
+                                  },
+                                },
+                              }}
+                              disabled={disabled}
+                            />
+                          </ShakingTextField>
                         );
                       },
                     },
@@ -285,32 +416,83 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
                       label: 'Slot Type',
                       render(value, row) {
                         return (
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <CustomSelect
-                              label="Slot"
-                              options={[
-                                { value: 'period', label: 'Period' },
-                                { value: 'break', label: 'Break' },
-                              ]}
-                              value={value}
-                              onChange={(val: any) => handleSlotTypeChange(val, row.id)}
-                              formControlProps={{ sx: { minWidth: '150px' } }}
-                              disabled={disabled}
-                            />
-                            {value === 'break' && (
+                          <Box sx={{ display: 'flex', gap: 1, minWidth: '300px' }}>
+                            <ShakingTextField
+                              error={
+                                !!(formik.touched.timeSlots?.[row.id]?.slotType &&
+                                typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                  ? (formik.errors.timeSlots[row.id] as any).slotType
+                                  : undefined)
+                              }
+                            >
                               <CustomSelect
-                                label="Break Type"
+                                label="Slot *"
                                 options={[
-                                  { value: 'lunch', label: 'Lunch Break' },
-                                  { value: 'short', label: 'Short Break' },
-                                  { value: 'recess', label: 'Recess' },
-                                  { value: 'prayer', label: 'Prayer Break' },
+                                  { value: 'period', label: 'Period' },
+                                  { value: 'break', label: 'Break' },
                                 ]}
-                                value={row.breakType || ''}
-                                onChange={(val: any) => handleBreakTypeChange(val, row.id)}
+                                value={value}
+                                onChange={(val: any) => {
+                                  const updated = [...formik.values.timeSlots];
+                                  updated[row.id].slotType = val;
+                                  formik.setFieldValue('timeSlots', updated);
+                                  // formik.setFieldTouched(`timeSlots[${row.id}].slotType`, true);
+                                }}
+                                error={
+                                  typeof formik.errors.timeSlots?.[row.id] === 'object' &&
+                                  !!(formik.errors.timeSlots?.[row.id] as any)?.slotType &&
+                                  !!formik.touched.timeSlots?.[row.id]?.slotType
+                                }
+                                helperText={
+                                  formik.touched.timeSlots?.[row.id]?.slotType &&
+                                  typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                    ? (formik.errors.timeSlots?.[row.id] as any)?.slotType
+                                    : ''
+                                }
                                 formControlProps={{ sx: { minWidth: '150px' } }}
                                 disabled={disabled}
                               />
+                            </ShakingTextField>
+
+                            {value === 'break' && (
+                              <ShakingTextField
+                                error={
+                                  !!(formik.touched.timeSlots?.[row.id]?.breakType &&
+                                  typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                    ? (formik.errors.timeSlots[row.id] as any).breakType
+                                    : undefined)
+                                }
+                              >
+                                <CustomSelect
+                                  label="Break Type *"
+                                  options={[
+                                    { value: 'lunch', label: 'Lunch Break' },
+                                    { value: 'short', label: 'Short Break' },
+                                    { value: 'recess', label: 'Recess' },
+                                    { value: 'prayer', label: 'Prayer Break' },
+                                  ]}
+                                  value={row.breakType || ''}
+                                  onChange={(val: any) => {
+                                    const updated = [...formik.values.timeSlots];
+                                    updated[row.id].breakType = val;
+                                    formik.setFieldValue('timeSlots', updated);
+                                    // formik.setFieldTouched(`timeSlots[${row.id}].breakType`, true);
+                                  }}
+                                  error={
+                                    typeof formik.errors.timeSlots?.[row.id] === 'object' &&
+                                    !!(formik.errors.timeSlots?.[row.id] as any)?.breakType &&
+                                    !!formik.touched.timeSlots?.[row.id]?.breakType
+                                  }
+                                  helperText={
+                                    formik.touched.timeSlots?.[row.id]?.breakType &&
+                                    typeof formik.errors.timeSlots?.[row.id] === 'object'
+                                      ? (formik.errors.timeSlots?.[row.id] as any)?.breakType
+                                      : ''
+                                  }
+                                  formControlProps={{ sx: { minWidth: '150px' } }}
+                                  disabled={disabled}
+                                />
+                              </ShakingTextField>
                             )}
                           </Box>
                         );
@@ -323,27 +505,29 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, onClose, disab
             )}
           </Scrollbar>
 
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              type="submit"
-              startIcon={<Iconify icon={GlobalIcons.eye} />}
-              variant="outlined"
-              disabled={disabled}
-              size="small"
-            >
-              Preview
-            </Button>
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              type="submit"
-              size="small"
-              variant="contained"
-            >
-              {/* {isEdit ? 'Update' : 'Submit'} */}
-              Submit
-            </Button>
-            {/* <SubmitButton size="small" disabled={disabled} /> */}
-          </DialogActions>
+          {!disabled && (
+            <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+              <Button
+                type="submit"
+                startIcon={<Iconify icon={GlobalIcons.eye} />}
+                variant="outlined"
+                disabled={disabled}
+                size="small"
+              >
+                Preview
+              </Button>
+              <Button
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
+                type="submit"
+                size="small"
+                variant="contained"
+              >
+                {/* {isEdit ? 'Update' : 'Submit'} */}
+                Submit
+              </Button>
+              {/* <SubmitButton size="small" disabled={disabled} /> */}
+            </DialogActions>
+          )}
         </form>
       </Box>
     </BackPopUpChecked>

@@ -81,7 +81,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                         : 'text.primary'
                     }
                   >
-                    Subject Color
+                    Subject Color *
                   </Typography>
                   <ColorPickerCircle
                     onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}

@@ -113,7 +113,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           '&:before': {
             display: 'none', // remove default divider line at top
           },
-          mb: '2px',
+          mb: '16px',
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -222,6 +222,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
                   multiple
+                  // isOptionEqualToValue={(option, value) => option.id === value.id} // ✅ This is essential!
                   options={
                     teacherOptions?.filter((option) => subject.primaryTeacher?.id !== option.id) ||
                     []
@@ -232,7 +233,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   onChange={(event, newValue) =>
                     formik.setFieldValue(`subjects.${index}.secondaryTeacher`, newValue)
                   }
-                  // isOptionEqualToValue={(option, value) => option.value === value.value}
+                  isOptionEqualToValue={(option, value) => option.name === value.name}
                   renderOption={(props, option, { selected }) => (
                     <li {...props}>
                       <Checkbox

@@ -115,7 +115,8 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          my: 1,
+          mb: 2,
           p: 1,
           gap: 2,
         }}
@@ -152,9 +153,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
 
         <CustomTooltip
           placement="top"
-          title={
-            selectedHomework ? `${selectedHomework.label} (${selectedHomework.value})` : undefined
-          }
+          title={selectedHomework ? `${selectedHomework.label}` : undefined}
         >
           <Autocomplete
             options={HOMEWORK_OPTIONS}
@@ -165,6 +164,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
               setHomeworkTitle(newValue?.value || '');
               setSelectedHomework(newValue || null);
             }}
+            disabled={!subject}
             renderInput={(params) => (
               <TextField
                 {...params}

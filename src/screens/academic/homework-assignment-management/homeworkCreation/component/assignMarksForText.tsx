@@ -48,7 +48,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               <Grid item xs={12} mb={-2}>
                 <Typography variant="subtitle2">Student Submission</Typography>
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} mb={-1}>
                 <Editor
                   editable={false}
                   onChange={() => {}}
@@ -81,7 +81,7 @@ I have completed all answers as per the instructions.`}
                     sx={{
                       whiteSpace: 'pre-wrap',
                       m: 0,
-                      fontSize: '0.875rem',
+                      fontSize: '1rem',
                       lineHeight: 1.5,
                     }}
                   >

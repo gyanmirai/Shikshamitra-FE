@@ -40,7 +40,7 @@ const GradeEntryTable = ({
       //   ),
       // },
       { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
-      { id: 'rollNo', label: 'Roll No.', minWidth: 100, align: 'left' },
+      { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' },
       { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: 120 },
       {
         id: 'marks',

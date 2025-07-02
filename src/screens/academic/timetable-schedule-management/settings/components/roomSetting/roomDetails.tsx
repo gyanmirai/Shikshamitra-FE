@@ -103,15 +103,20 @@ const RoomDetails = ({ addRoomDialog }: any) => {
   };
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetAfterClose = () => {
+      setTimeout(() => {
+        setIsEdit(false);
+        setSelectedEntry(null);
+        dispatch(setIsChanges(false));
+      }, 300); // Delay matches dialog exit animation (adjust if needed)
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addRoomDialog.onFalse();
-      setIsEdit(false);
-      setSelectedEntry(null);
-      dispatch(setIsChanges(false));
+      resetAfterClose();
     } else if (!isChanges) {
       addRoomDialog.onFalse();
-      setIsEdit(false);
-      setSelectedEntry(null);
+      resetAfterClose();
     }
   };
 
@@ -154,7 +159,7 @@ const RoomDetails = ({ addRoomDialog }: any) => {
           </>
         }
         columns={[
-          { id: 'roomNumber', label: 'Room Number', filterType: 'number' },
+          { id: 'roomNumber', label: 'Room No.', filterType: 'number' },
           { id: 'buildingName', label: 'Building Name', filterType: 'number' },
           { id: 'floor', label: 'Floor', filterType: 'number' },
           { id: 'capacity', label: 'Capacity', filterType: 'number' },
@@ -204,7 +209,12 @@ const RoomDetails = ({ addRoomDialog }: any) => {
           </Box>
         }
         open={addRoomDialog.value}
-        handleClose={addRoomDialog.onFalse}
+        handleClose={() => {
+          addRoomDialog.onFalse();
+          setTimeout(() => {
+            setSelectedEntry(null);
+          }, 200); // Adjust delay to match your dialog animation
+        }}
         maxWidth="sm"
       >
         <RoomCreationForm

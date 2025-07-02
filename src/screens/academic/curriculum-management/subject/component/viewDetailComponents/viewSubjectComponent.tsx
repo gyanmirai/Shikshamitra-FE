@@ -89,11 +89,11 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-              {subject?.subjectType === 'Elective' && subject?.subjectName && (
+              {subject?.subjectType === 'Elective' && (
                 <Typography fontWeight="bold">{subject.subjectName}</Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+                <Typography variant="body2" component="span">
                   {subject?.className}- {subject?.subjectType}
                 </Typography>
               </Box>
@@ -156,7 +156,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
           {subject?.subjects?.map(
             (sub) =>
               expandedSubject === sub.subjectCode && (
-                <Box key={sub.subjectCode}>
+                <Box
+                  key={sub.subjectCode}
+                  sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                >
                   <Tabs
                     value={tabs.value}
                     onChange={tabs.onChange}

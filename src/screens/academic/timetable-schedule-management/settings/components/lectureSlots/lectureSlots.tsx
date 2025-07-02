@@ -5,7 +5,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, MenuList, MenuItem } from '@mui/material';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -13,6 +13,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -50,13 +51,20 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+        // Add any other state resets here if needed
+      }, 200); // Match this with dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addLectureSlotDialog.onFalse();
       assignSlotsDialog.onFalse();
-      dispatch(setIsChanges(false));
+      resetState();
     } else if (!isChanges) {
-      assignSlotsDialog.onFalse();
       addLectureSlotDialog.onFalse();
+      assignSlotsDialog.onFalse();
     }
   };
 
@@ -139,9 +147,30 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         ]}
       />
       <CustomDialog
-        title={isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                isEdit
+                  ? 'Update existing lecture slots configuration'
+                  : 'Add new lecture slots configuration'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={addLectureSlotDialog.value}
-        handleClose={addLectureSlotDialog.onFalse}
+        handleClose={() => {
+          addLectureSlotDialog.onFalse();
+          setIsEdit(false);
+        }}
         maxWidth="md"
       >
         <CreateSlotsForm
@@ -155,7 +184,19 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
       </CustomDialog>
 
       <CustomDialog
-        title="View Lecture Slots"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Lecture Slots</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View lecture slots configuration"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewSlotsDialog.value}
         handleClose={viewSlotsDialog.onFalse}
         maxWidth="md"
@@ -172,7 +213,19 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
       </CustomDialog>
 
       <CustomDialog
-        title="Assign this slot to another classes"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign to other class</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Assign existing lecture slots configuration to other classes"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={assignSlotsDialog.value}
         handleClose={assignSlotsDialog.onFalse}
       >

@@ -108,7 +108,7 @@ const AssignRoom: React.FC<IAssignRoomProps> = ({
               size="small"
               variant="contained"
             >
-              Save
+              Submit
             </Button>
           </DialogActions>
         </form>

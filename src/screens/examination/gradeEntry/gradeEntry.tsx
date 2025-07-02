@@ -349,10 +349,7 @@ const GradeEntry = (props: TabComponentType) => {
           value={subject}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
-        <CustomTooltip
-          placement="top"
-          title={assignmentTitle ? `${assignmentTitle}` : 'Select exam title'}
-        >
+        <CustomTooltip placement="top" title={assignmentTitle && `${assignmentTitle}`}>
           <Autocomplete
             disabled={!subject}
             options={[

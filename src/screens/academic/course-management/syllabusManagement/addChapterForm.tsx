@@ -128,6 +128,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     // placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.chapterNo}
                     onChange={formik.handleChange}
                     size="small"

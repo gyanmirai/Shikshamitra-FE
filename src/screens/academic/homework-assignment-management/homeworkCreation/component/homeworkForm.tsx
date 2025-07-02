@@ -124,6 +124,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         <Scrollbar
           sx={{
             height: '100%',
+            px: 1,
           }}
         >
           {/* Basic Details Section */}
@@ -283,6 +284,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <CustomSelect
                     label="Homework Type *" // Select homework type from dropdown
                     options={[
+                      { label: 'Regular', value: 'Regular' },
+                      { label: 'Worksheet', value: 'Worksheet' },
+                      { label: 'Activity', value: 'Activity' },
+                      { label: 'Practice', value: 'Practice' },
                       { label: 'Written Assignment', value: 'written_assignment' },
                       { label: 'Reading Comprehension', value: 'reading_comprehension' },
                       { label: 'Worksheet Practice', value: 'worksheet_practice' },
@@ -396,6 +401,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           onChange={(val) =>
                             formik.setFieldValue(`divisions[${idx}].publishDate`, val)
                           }
+                          ampm={false}
                           minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
                             popper: {
@@ -433,6 +439,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           value={div.dueDate ? dayjs(div.dueDate) : null}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
                           minDateTime={dayjs()} // Prevent selecting dates before today
+                          ampm={false}
                           slotProps={{
                             popper: {
                               disablePortal: true, // <-- correct place

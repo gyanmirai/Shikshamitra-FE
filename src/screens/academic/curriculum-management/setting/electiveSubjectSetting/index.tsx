@@ -42,17 +42,26 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
    * @param isSubmit - Flag indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelected(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust delay if your dialog animation is longer/shorter
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelected(null);
       addElectiveGroupDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
       setOpen(false);
-      setSelected(null);
       addElectiveGroupDialog.onFalse();
+      setTimeout(() => {
+        setSelected(null);
+      }, 200);
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end" mb={1}>
@@ -106,7 +115,9 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
         open={addElectiveGroupDialog.value}
         handleClose={() => {
           addElectiveGroupDialog.onFalse();
-          setSelected(null);
+          setTimeout(() => {
+            setSelected(null);
+          }, 200); // Adjust delay if your dialog has a different close animation duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

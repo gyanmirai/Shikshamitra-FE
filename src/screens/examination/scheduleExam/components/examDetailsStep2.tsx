@@ -56,52 +56,53 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: '150px',
-                  width: '100%',
-                  mb: 1,
+              // <Box
+              //   sx={{
+              //     display: 'flex',
+              //     flexDirection: 'column',
+              //     minWidth: '150px',
+              //     width: '100%',
+              //     mb: 1,
+              //   }}
+              // >
+              <DatePicker
+                value={value ? dayjs(value) : null}
+                format="DD-MM-YYYY"
+                label="Date *"
+                onChange={(newTime) => {
+                  const updated = [...examSchedules];
+                  updated[row.id].examDate = newTime;
+                  formik.setFieldValue('subjects', updated);
                 }}
-              >
-                <DatePicker
-                  value={value ? dayjs(value) : null}
-                  format="DD-MM-YYYY"
-                  label="Date *"
-                  onChange={(newTime) => {
-                    const updated = [...examSchedules];
-                    updated[row.id].examDate = newTime;
-                    formik.setFieldValue('subjects', updated);
-                  }}
-                  minDate={dayjs()}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error:
-                        typeof formik.errors.subjects?.[row.id] === 'object' &&
-                        !!(formik.errors.subjects?.[row.id] as any)?.examDate &&
-                        !!formik.touched.subjects?.[row.id]?.examDate,
-                      helperText:
-                        formik.touched.subjects?.[row.id]?.examDate &&
-                        typeof formik.errors.subjects?.[row.id] === 'object'
-                          ? (formik.errors.subjects?.[row.id] as any)?.examDate
-                          : '',
-                      FormHelperTextProps: {
-                        sx: {
-                          margin: 0,
-                          marginTop: '4px',
-                          lineHeight: '1.25rem',
-                          whiteSpace: 'normal',
-                        },
-                      },
-                      InputLabelProps: {
-                        sx: { lineHeight: '1.2em' },
+                minDate={dayjs()}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    error:
+                      typeof formik.errors.subjects?.[row.id] === 'object' &&
+                      !!(formik.errors.subjects?.[row.id] as any)?.examDate &&
+                      !!formik.touched.subjects?.[row.id]?.examDate,
+                    helperText:
+                      formik.touched.subjects?.[row.id]?.examDate &&
+                      typeof formik.errors.subjects?.[row.id] === 'object'
+                        ? (formik.errors.subjects?.[row.id] as any)?.examDate
+                        : '',
+                    FormHelperTextProps: {
+                      sx: {
+                        margin: 0,
+                        // marginTop: '4px',
+                        position: 'static',
+                        lineHeight: '1.25rem',
+                        whiteSpace: 'normal',
                       },
                     },
-                  }}
-                />
-              </Box>
+                    InputLabelProps: {
+                      sx: { lineHeight: '1.2em' },
+                    },
+                  },
+                }}
+              />
+              // </Box>
             );
           },
         },
@@ -112,52 +113,52 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: '150px',
-                  width: '100%',
-                  mb: 1,
+              // <Box
+              //   sx={{
+              //     display: 'flex',
+              //     flexDirection: 'column',
+              //     minWidth: '150px',
+              //     width: '100%',
+              //     mb: 1,
+              //   }}
+              // >
+              <TimePicker
+                value={value ? dayjs(value) : null}
+                format="hh:mm"
+                label="Start Time *"
+                onChange={(newTime) => {
+                  const updated = [...examSchedules];
+                  updated[row.id].startTime = newTime;
+                  formik.setFieldValue('subjects', updated);
                 }}
-              >
-                <TimePicker
-                  value={value ? dayjs(value) : null}
-                  format="hh:mm"
-                  label="Start Time *"
-                  onChange={(newTime) => {
-                    const updated = [...examSchedules];
-                    updated[row.id].startTime = newTime;
-                    formik.setFieldValue('subjects', updated);
-                  }}
-                  viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error:
-                        typeof formik.errors.subjects?.[row.id] === 'object' &&
-                        !!(formik.errors.subjects?.[row.id] as any)?.startTime &&
-                        !!formik.touched.subjects?.[row.id]?.startTime,
-                      helperText:
-                        formik.touched.subjects?.[row.id]?.startTime &&
-                        typeof formik.errors.subjects?.[row.id] === 'object'
-                          ? (formik.errors.subjects?.[row.id] as any)?.startTime
-                          : '',
-                      FormHelperTextProps: {
-                        sx: {
-                          margin: 0,
-                          marginTop: '4px',
-                          lineHeight: '1.25rem',
-                          whiteSpace: 'normal',
-                        },
-                      },
-                      InputLabelProps: {
-                        sx: { lineHeight: '1.2em' },
+                viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    error:
+                      typeof formik.errors.subjects?.[row.id] === 'object' &&
+                      !!(formik.errors.subjects?.[row.id] as any)?.startTime &&
+                      !!formik.touched.subjects?.[row.id]?.startTime,
+                    helperText:
+                      formik.touched.subjects?.[row.id]?.startTime &&
+                      typeof formik.errors.subjects?.[row.id] === 'object'
+                        ? (formik.errors.subjects?.[row.id] as any)?.startTime
+                        : '',
+                    FormHelperTextProps: {
+                      sx: {
+                        margin: 0,
+                        position: 'static', // ✅ override default absolute
+                        // marginTop: '4px',
+                        whiteSpace: 'normal',
                       },
                     },
-                  }}
-                />
-              </Box>
+                    InputLabelProps: {
+                      sx: { lineHeight: '1.2em' },
+                    },
+                  },
+                }}
+              />
+              // </Box>
             );
           },
         },
@@ -168,52 +169,52 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: '150px',
-                  width: '100%',
-                  mb: 1,
+              // <Box
+              //   sx={{
+              //     display: 'flex',
+              //     flexDirection: 'column',
+              //     minWidth: '150px',
+              //     width: '100%',
+              //     mb: 1,
+              //   }}
+              // >
+              <TimePicker
+                value={value ? dayjs(value) : null}
+                format="hh:mm"
+                label="End Time *"
+                onChange={(newTime) => {
+                  const updated = [...examSchedules];
+                  updated[row.id].endTime = newTime;
+                  formik.setFieldValue('subjects', updated);
                 }}
-              >
-                <TimePicker
-                  value={value ? dayjs(value) : null}
-                  format="hh:mm"
-                  label="End Time *"
-                  onChange={(newTime) => {
-                    const updated = [...examSchedules];
-                    updated[row.id].endTime = newTime;
-                    formik.setFieldValue('subjects', updated);
-                  }}
-                  viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error:
-                        typeof formik.errors.subjects?.[row.id] === 'object' &&
-                        !!(formik.errors.subjects?.[row.id] as any)?.endTime &&
-                        !!formik.touched.subjects?.[row.id]?.endTime,
-                      helperText:
-                        formik.touched.subjects?.[row.id]?.endTime &&
-                        typeof formik.errors.subjects?.[row.id] === 'object'
-                          ? (formik.errors.subjects?.[row.id] as any)?.endTime
-                          : '',
-                      FormHelperTextProps: {
-                        sx: {
-                          margin: 0,
-                          marginTop: '4px',
-                          lineHeight: '1.25rem',
-                          whiteSpace: 'normal',
-                        },
-                      },
-                      InputLabelProps: {
-                        sx: { lineHeight: '1.2em' },
+                viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    error:
+                      typeof formik.errors.subjects?.[row.id] === 'object' &&
+                      !!(formik.errors.subjects?.[row.id] as any)?.endTime &&
+                      !!formik.touched.subjects?.[row.id]?.endTime,
+                    helperText:
+                      formik.touched.subjects?.[row.id]?.endTime &&
+                      typeof formik.errors.subjects?.[row.id] === 'object'
+                        ? (formik.errors.subjects?.[row.id] as any)?.endTime
+                        : '',
+                    FormHelperTextProps: {
+                      sx: {
+                        margin: 0,
+                        position: 'static', // ✅ override default absolute
+                        // marginTop: '4px',
+                        whiteSpace: 'normal',
                       },
                     },
-                  }}
-                />
-              </Box>
+                    InputLabelProps: {
+                      sx: { lineHeight: '1.2em' },
+                    },
+                  },
+                }}
+              />
+              // </Box>
             );
           },
         },
@@ -224,48 +225,54 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: '150px',
-                  width: '100%',
-                  mb: 1,
+              // <Box
+              //   sx={{
+              //     display: 'flex',
+              //     flexDirection: 'column',
+              //     minWidth: '150px',
+              //     width: '100%',
+              //     mb: 1,
+              //   }}
+              // >
+              <TextField
+                value={value}
+                type="number"
+                label="Total Marks *"
+                onChange={(e) => {
+                  const updated = [...examSchedules];
+                  // updated[row.id].totalMarks = Number(e.target.value);
+                  updated[row.id].totalMarks = e.target.value;
+                  formik.setFieldValue('subjects', updated);
                 }}
-              >
-                <TextField
-                  value={value}
-                  type="number"
-                  label="Total Marks *"
-                  onChange={(e) => {
-                    const updated = [...examSchedules];
-                    updated[row.id].totalMarks = Number(e.target.value);
-                    formik.setFieldValue('subjects', updated);
-                  }}
-                  size="small"
-                  error={
-                    Boolean(formik.touched.subjects?.[row.id]?.totalMarks) &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.totalMarks
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                    e.preventDefault();
                   }
-                  helperText={
-                    formik.touched.subjects?.[row.id]?.totalMarks &&
-                    (formik.errors.subjects?.[row.id] as any)?.totalMarks
-                      ? (formik.errors.subjects?.[row.id] as any)?.totalMarks
-                      : ''
-                  }
-                  FormHelperTextProps={{
-                    sx: {
-                      margin: 0,
-                      marginTop: '4px',
-                      lineHeight: '1.25rem',
-                      whiteSpace: 'normal',
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
-                />
-              </Box>
+                }}
+                size="small"
+                error={
+                  Boolean(formik.touched.subjects?.[row.id]?.totalMarks) &&
+                  !!(formik.errors.subjects?.[row.id] as any)?.totalMarks
+                }
+                helperText={
+                  formik.touched.subjects?.[row.id]?.totalMarks &&
+                  (formik.errors.subjects?.[row.id] as any)?.totalMarks
+                    ? (formik.errors.subjects?.[row.id] as any)?.totalMarks
+                    : ''
+                }
+                FormHelperTextProps={{
+                  sx: {
+                    margin: 0,
+                    position: 'static', // ✅ override default absolute
+                    // marginTop: '4px',
+                    whiteSpace: 'normal',
+                  },
+                }}
+                InputLabelProps={{
+                  sx: { lineHeight: '1.2em' },
+                }}
+              />
+              // </Box>
             );
           },
         },
@@ -276,48 +283,54 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isSort: false,
           render(value, row) {
             return (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minWidth: '150px',
-                  width: '100%',
-                  mb: 1,
+              // <Box
+              //   sx={{
+              //     display: 'flex',
+              //     flexDirection: 'column',
+              //     minWidth: '150px',
+              //     width: '100%',
+              //     mb: 1,
+              //   }}
+              // >
+              <TextField
+                value={value}
+                type="number"
+                label="Passing Marks *"
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                    e.preventDefault();
+                  }
                 }}
-              >
-                <TextField
-                  value={value}
-                  type="number"
-                  label="Passing Marks *"
-                  onChange={(e) => {
-                    const updated = [...examSchedules];
-                    updated[row.id].passingMarks = Number(e.target.value);
-                    formik.setFieldValue('subjects', updated);
-                  }}
-                  size="small"
-                  error={
-                    Boolean(formik.touched.subjects?.[row.id]?.passingMarks) &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.passingMarks
-                  }
-                  helperText={
-                    formik.touched.subjects?.[row.id]?.passingMarks &&
-                    (formik.errors.subjects?.[row.id] as any)?.passingMarks
-                      ? (formik.errors.subjects?.[row.id] as any)?.passingMarks
-                      : ''
-                  }
-                  FormHelperTextProps={{
-                    sx: {
-                      margin: 0,
-                      marginTop: '4px',
-                      lineHeight: '1.25rem',
-                      whiteSpace: 'normal',
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
-                />
-              </Box>
+                onChange={(e) => {
+                  const updated = [...examSchedules];
+                  // updated[row.id].passingMarks = Number(e.target.value);
+                  updated[row.id].passingMarks = e.target.value;
+                  formik.setFieldValue('subjects', updated);
+                }}
+                size="small"
+                error={
+                  Boolean(formik.touched.subjects?.[row.id]?.passingMarks) &&
+                  !!(formik.errors.subjects?.[row.id] as any)?.passingMarks
+                }
+                helperText={
+                  formik.touched.subjects?.[row.id]?.passingMarks &&
+                  (formik.errors.subjects?.[row.id] as any)?.passingMarks
+                    ? (formik.errors.subjects?.[row.id] as any)?.passingMarks
+                    : ''
+                }
+                FormHelperTextProps={{
+                  sx: {
+                    margin: 0,
+                    position: 'static', // ✅ override default absolute
+                    // marginTop: '4px',
+                    whiteSpace: 'normal',
+                  },
+                }}
+                InputLabelProps={{
+                  sx: { lineHeight: '1.2em' },
+                }}
+              />
+              // </Box>
             );
           },
         },

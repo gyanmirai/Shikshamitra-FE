@@ -12,6 +12,7 @@ import examTypeTableData from 'src/json/academic/examination/examTypeTableData.j
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -75,6 +76,10 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
     setExamTypeTable((prevData) =>
       prevData.filter((examType) => examType.id !== comingExamType.id)
     );
+    confirmDeleteDialog.onFalse();
+    shikshaMitraToast.success({
+      message: `Exam Type deleted successfully`,
+    });
     // Close the dialogs after deletion.
   };
 
@@ -99,15 +104,20 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
 
   // Function to handle closing of the dialog
   const handleClose = (e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+        setIsEdit(false);
+        setSelectedExamType(null);
+      }, 200); // Adjust this delay based on your dialog's closing animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addExamTypeDialog.onFalse();
-      dispatch(setIsChanges(false));
-      setIsEdit(false);
-      setSelectedExamType(null);
+      resetState();
     } else if (!isChanges) {
       addExamTypeDialog.onFalse();
-      setIsEdit(false);
-      setSelectedExamType(null);
+      resetState();
     }
   };
 
@@ -208,7 +218,12 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
           </Box>
         }
         open={addExamTypeDialog.value}
-        handleClose={addExamTypeDialog.onFalse}
+        handleClose={() => {
+          addExamTypeDialog.onFalse();
+          setTimeout(() => {
+            setSelectedExamType(null);
+          }, 200); // Adjust the delay if needed to match the dialog's close animation
+        }}
       >
         <ExamTypeForm
           onClose={handleClose}

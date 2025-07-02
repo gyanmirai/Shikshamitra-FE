@@ -91,13 +91,21 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedAssignment(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust duration to match your dialog animation timing
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
+      setTimeout(() => {
+        setSelectedAssignment(null);
+      }, 200);
     }
   };
 
@@ -109,7 +117,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          mb: 2,
+          mt: 1,
           p: 1,
           gap: 2,
         }}
@@ -181,7 +190,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         open={addAssignmentDialog.value}
         handleClose={() => {
           addAssignmentDialog.onFalse();
-          setSelectedAssignment(null);
+          setTimeout(() => {
+            setSelectedAssignment(null);
+          }, 200); // Adjust delay to match your Dialog transition (typically 200–300ms)
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
