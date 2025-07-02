@@ -40,10 +40,13 @@ const GradeEntryTable = ({
       //   ),
       // },
       { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
-      { id: 'rollNo', label: 'Roll No.', align: 'left' },
+      { id: 'rollNo', label: 'Roll No.', minWidth: 100, align: 'left' },
+      { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: 120 },
       {
         id: 'marks',
-        label: 'Marks',
+        label: 'Obtained Marks',
+        align: 'left',
+        minWidth: 150,
         filterType: 'number',
         render: (value, row) =>
           value == null ? (
@@ -56,7 +59,6 @@ const GradeEntryTable = ({
             </Typography>
           ),
       },
-      { id: 'totalMarks', label: 'Total Marks', align: 'left', minWidth: 120 },
       {
         id: 'grade',
         label: 'Grade',
@@ -97,6 +99,7 @@ const GradeEntryTable = ({
         id: 'status',
         label: 'Status',
         align: 'left',
+        minWidth: 90,
         sticky: true,
         filterType: 'enum',
         enumOptions: ExamGradeStatusOptions,

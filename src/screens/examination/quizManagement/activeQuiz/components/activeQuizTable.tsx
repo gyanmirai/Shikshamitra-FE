@@ -45,10 +45,10 @@ const QuizTable = ({
       <MenuList>
         {tabs.value === ScheduleExamStatus.Pending && (
           <>
-            <MenuItem onClick={() => onAttemptClick(row)}>
+            {/* <MenuItem onClick={() => onAttemptClick(row)}>
               <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
               Attempt Quiz
-            </MenuItem>
+            </MenuItem> */}
 
             <MenuItem onClick={() => {}}>
               <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
@@ -122,7 +122,7 @@ const QuizTable = ({
   return (
     <Box>
       {/* Tabs Section */}
-      <Box display="flex" justifyContent="space-between" mb={2}>
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -240,15 +240,15 @@ const QuizTable = ({
                   minWidth: 110,
                 },
                 {
-                  id: 'quizTime',
-                  label: 'Start Time',
+                  id: 'quizEndDate',
+                  label: 'End Date',
                   align: 'left',
                   filterType: 'date',
                   minWidth: 110,
                 },
                 {
-                  id: 'quizEndDate',
-                  label: 'End Date',
+                  id: 'quizTime',
+                  label: 'Start Time',
                   align: 'left',
                   filterType: 'date',
                   minWidth: 110,

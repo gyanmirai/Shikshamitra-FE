@@ -56,7 +56,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
                   <TextField
-                    label="Marks *"
+                    label="Obtained Marks *"
                     // placeholder="Enter Marks"
                     name="marks"
                     type="number"

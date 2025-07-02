@@ -38,6 +38,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  // 🔼 Add this near the top with other useState hooks
+  const [selectedTimetableName, setSelectedTimetableName] = useState<string | null>(null);
+
   // Calculate counts of exams by status
   const examCounts = useMemo(
     () => ({
@@ -105,7 +108,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           <MenuItem
             onClick={() => {
               publishExamDialog.onTrue();
-
+              setSelectedTimetableName(row.examName);
               pop.onClose();
             }}
           >
@@ -120,7 +123,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" mb={2}>
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -243,9 +246,18 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         onClose={() => {
           publishExamDialog.onFalse();
           // setSelectedAssignment(null);
+          setSelectedTimetableName(null);
         }}
         title="Publish"
-        content="Are you sure want to Publish Exam Timetable ?"
+        content={
+          <>
+            Are you sure you want to publish{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {selectedTimetableName}
+            </Box>
+            ?
+          </>
+        }
         action={
           <Button
             variant="contained"
@@ -253,6 +265,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             onClick={() => {
               shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
               publishExamDialog.onFalse();
+              setSelectedTimetableName(null);
             }}
             size="small"
           >

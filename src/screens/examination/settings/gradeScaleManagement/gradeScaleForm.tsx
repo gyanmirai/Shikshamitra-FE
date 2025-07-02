@@ -92,6 +92,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <h4>Grading Scale</h4>
                   <Button
+                    disabled
                     startIcon={<Add />}
                     variant="contained"
                     size="small"
