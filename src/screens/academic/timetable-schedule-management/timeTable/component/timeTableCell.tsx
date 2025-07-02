@@ -48,6 +48,7 @@ const TimeTableCell = ({
   console.log('item----', item);
   console.log('isClassVisible---', isClassVisible);
   console.log('isDivisionVisible---', isDivisionVisible);
+  console.log('slotData---', slotData);
 
   const teacherDialog = useBoolean();
   const roomDialog = useBoolean();
@@ -312,7 +313,19 @@ const TimeTableCell = ({
           <CustomDialog
             open={teacherDialog.value}
             handleClose={teacherDialog.onFalse}
-            title="Assign Teacher"
+            title={
+              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                <Typography variant="h5">Assign Teacher</Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Assign teacher for subject for specific lecture"
+                >
+                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                </CustomTooltip>
+              </Box>
+            }
             maxWidth="sm"
           >
             <AssignTeacher
@@ -330,7 +343,19 @@ const TimeTableCell = ({
             maxWidth="sm"
             open={roomDialog.value}
             handleClose={roomDialog.onFalse}
-            title="Assign Room"
+            title={
+              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                <Typography variant="h5">Assign Room</Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Assign room for subject for specific lecture"
+                >
+                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                </CustomTooltip>
+              </Box>
+            }
           >
             <AssignRoom
               roomDialog={roomDialog}
@@ -349,7 +374,12 @@ const TimeTableCell = ({
               deleteDialog.onFalse();
             }}
             title="Delete"
-            content="Are you sure you want to Delete Slot ?"
+            content={
+              <>
+                Are you sure you want to delete{' '}
+                <strong>{slotData?.subjects?.map((sub: any) => sub.subject).join(', ')}</strong> ?
+              </>
+            }
             action={
               <Button
                 variant="contained"

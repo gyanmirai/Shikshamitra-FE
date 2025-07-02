@@ -30,6 +30,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   onClose,
   disabled,
   editData,
+  selectedClass,
 }) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -63,8 +64,35 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
   ];
 
+  useEffect(() => {
+    if (!editData && selectedClass) {
+      const dummySubjects = generateDummySubjects().map((subj, index) => ({
+        id: `subject-${index}`,
+        ...subj,
+        noOfLecture: null,
+      }));
+
+      formik.setFieldValue('className', selectedClass);
+      formik.setFieldValue('subjects', dummySubjects);
+      formik.setFieldValue('totalLectures', 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClass, editData]); // only run when selectedClass or editData changes
+
+  // const initialValues = useMemo(() => {
+  //   const base = getNoOfLectureInitialValues(editData, selectedClass);
+  //   if (!editData && selectedClass) {
+  //     return {
+  //       ...base,
+  //       subjects: generateDummySubjects(),
+  //       totalLectures: 40,
+  //     };
+  //   }
+  //   return base;
+  // }, [editData, selectedClass]);
+
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getNoOfLectureInitialValues(editData),
+    initialValues: getNoOfLectureInitialValues(editData, selectedClass),
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
     onSubmit: (values) => {
@@ -99,27 +127,39 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     (value: any, row: any) => {
       const index = formik.values.subjects.findIndex((item) => item.id === row.id);
       return (
-        <TextField
-          type="number"
-          size="small"
-          label="Weekly Lectures *"
-          name={`subjects[${index}].noOfLecture`}
-          value={formik.values.subjects[index]?.noOfLecture ?? ''}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          disabled={disabled}
+        <ShakingTextField
           error={
             !!formik.touched.subjects?.[index]?.noOfLecture &&
             !!(formik.errors.subjects?.[index] as any)?.noOfLecture
           }
-          helperText={
-            formik.touched.subjects?.[index]?.noOfLecture &&
-            (formik.errors.subjects?.[index] as any)?.noOfLecture
-              ? String((formik.errors.subjects?.[index] as any).noOfLecture)
-              : ''
-          }
-          sx={{ minWidth: '100px', width: '100%', mb: 1.5, mt: 0.3 }}
-        />
+        >
+          <TextField
+            type="number"
+            size="small"
+            label="Weekly Lectures *"
+            name={`subjects[${index}].noOfLecture`}
+            value={formik.values.subjects[index]?.noOfLecture ?? ''}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            disabled={disabled}
+            error={
+              !!formik.touched.subjects?.[index]?.noOfLecture &&
+              !!(formik.errors.subjects?.[index] as any)?.noOfLecture
+            }
+            helperText={
+              formik.touched.subjects?.[index]?.noOfLecture &&
+              (formik.errors.subjects?.[index] as any)?.noOfLecture
+                ? String((formik.errors.subjects?.[index] as any).noOfLecture)
+                : ''
+            }
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            sx={{ minWidth: '100px', width: '100%', mb: 1.5, mt: 0.3 }}
+          />
+        </ShakingTextField>
       );
     },
     [
@@ -138,7 +178,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '450px' }}>
             <Grid container spacing={1}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     options={allClass}
@@ -151,14 +191,13 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                         ...subj,
                         noOfLecture: null,
                       }));
-
                       formik.setFieldValue('subjects', dummySubjects);
                       formik.setFieldValue('totalLectures', 0);
                     }}
                     label="Class *"
                     // isLoading={isLoading}
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
                     helperText={

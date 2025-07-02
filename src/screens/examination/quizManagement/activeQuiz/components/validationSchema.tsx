@@ -3,14 +3,19 @@ import * as yup from 'yup';
 export const stepValidationSchemas = [
   yup.object().shape({
     attemptsAllowed: yup.number(),
+
+    quizStartDateTime: yup.date().required('Start Date/Time is required'),
+    totalMarks: yup.number().required('Total Marks is required'),
     passingMarks: yup
       .number()
-      .min(0, 'Passing score must be at least 0')
-      .max(100, 'Passing score must not exceed 100')
-      .required('Passing score is required'),
-    quizStartDateTime: yup.date().required('Start Date/Time is required'),
+      .required('Passing Marks is required')
+      .min(0, 'Passing Marks cannot be negative')
+      .max(yup.ref('totalMarks'), 'Cannot exceed total marks'),
     quizTakenType: yup.string().required('Quiz Taken Type is Required'),
-    quizEndDateTime: yup.date().required('End Date/Time is required'),
+    quizEndDateTime: yup
+      .date()
+      .required('End Date/Time is required')
+      .min(yup.ref('quizStartDateTime'), 'End date must be after start date'),
     quizTitle: yup.string().required('Title is required'),
     className: yup.string().required('Class is required'),
     division: yup.array().of(yup.string()).min(1, 'At least one Division is required'),

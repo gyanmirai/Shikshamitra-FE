@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
@@ -14,6 +15,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -37,8 +40,12 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
     initialValues: {
       classNames: [] as string[],
     },
+    validationSchema: Yup.object({
+      classNames: Yup.array().min(1, 'Please select at least one class'),
+    }),
     onSubmit: (values) => {
       console.log('Selected classes:', values.classNames);
+      shikshaMitraToast.success({ message: 'Slots assign successfully to class ' });
       onClose?.(null, true);
     },
   });
@@ -49,16 +56,26 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '120px' }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <CustomSelect
-                options={allClass}
-                value={formik.values.classNames}
-                onChange={(val) => formik.setFieldValue('classNames', val)}
-                label="Class"
-                multiple
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              />
+              <ShakingTextField
+                error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+              >
+                <CustomSelect
+                  options={allClass}
+                  value={formik.values.classNames}
+                  onChange={(val) => formik.setFieldValue('classNames', val)}
+                  label="Class"
+                  multiple
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+                  helperText={
+                    formik.touched.classNames && typeof formik.errors.classNames === 'string'
+                      ? formik.errors.classNames
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>

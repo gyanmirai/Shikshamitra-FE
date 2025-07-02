@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 
+import { allStudentIds } from './assignmentForm';
+
 import type { IAssignment } from '../type';
 
 export const getAssignmentInitialValues = (editData: IAssignment | null, classes: string) => ({
@@ -15,7 +17,7 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
       dueDate: div.dueDate ? dayjs(div.dueDate) : null,
       status: div.status ?? 0,
     })) || [],
-  students: editData?.students || [],
+  students: editData?.students?.length ? editData.students : allStudentIds,
   subjects: editData?.subjects || '',
   submissionType: editData?.submissionType || 0,
   // dueDate: dayjs(editData?.dueDate) || null,

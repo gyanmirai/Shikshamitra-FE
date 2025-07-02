@@ -57,20 +57,22 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   /**
    * Handles closing the view submission dialog and resetting the selected student
    */
-  const handleCloseDialog = () => {
-    setSelectedStudent(null);
-    viewSubmissionDialog.onFalse();
-  };
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedStudent(null);
+        dispatch(setIsChanges(false));
+      }, 300); // Delay can be adjusted (200ms is typical for smooth UX)
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      resetState();
     }
   };
 
@@ -82,7 +84,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {row.status === ScheduleExamStatus['Needs Review'] && (
             <MenuItem
               onClick={() => {
-                setSelectedStudent(row);
                 viewSubmissionDialog.onTrue();
                 pop.onClose();
               }}
@@ -95,6 +96,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {row.status === ScheduleExamStatus.Reviewed && (
             <MenuItem
               onClick={() => {
+                setSelectedStudent(row);
                 viewSubmissionDialog.onTrue();
                 pop.onClose();
               }}
@@ -159,32 +161,36 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             label: 'Submission Date',
             align: 'left',
             minWidth: 160,
+            filterType: 'date',
           },
           {
             id: 'dueDate',
             label: 'Due Date',
             align: 'left',
             minWidth: 140,
-          },
-          {
-            id: 'marks',
-            label: 'Marks',
-            render: (value, row) =>
-              value === '' ? (
-                <Typography variant="subtitle2" color="textSecondary">
-                  -
-                </Typography>
-              ) : (
-                <Typography variant="caption" gutterBottom>
-                  {value}
-                </Typography>
-              ),
+            filterType: 'date',
           },
           {
             id: 'totalMarks',
             label: 'Total Marks',
             align: 'left',
             minWidth: 130,
+            filterType: 'number',
+          },
+          {
+            id: 'marks',
+            label: 'Obtained Marks',
+            filterType: 'number',
+            minWidth: 150,
+            align: 'left',
+            render: (value, row) =>
+              value ? (
+                <Typography variant="caption" fontSize="13px">
+                  {value}
+                </Typography>
+              ) : (
+                <Typography variant="caption">-</Typography>
+              ),
           },
           {
             id: 'feedback',
@@ -226,7 +232,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             label: 'Action',
             isSort: false,
             isFilter: false,
-            align: 'center',
+            align: 'left',
+            minWidth: 50,
             sticky: true,
             render(value, row) {
               return (
@@ -312,8 +319,31 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       )}
       <CustomDialog
         open={viewSubmissionDialog.value}
-        handleClose={handleCloseDialog}
-        title={selectedStudent ? 'Edit Marks' : 'Add Marks'}
+        handleClose={() => {
+          viewSubmissionDialog.onFalse();
+          setTimeout(() => {
+            setSelectedStudent(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedStudent ? 'Edit Feedback & Marks' : 'Add Feedback & Marks'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedStudent
+                  ? 'You can modify the feedback & marks given to the student for their assignment submission.'
+                  : "You can provide feedback & marks for the student's assignment submission."
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="sm"
       >
         {selectedAssignment?.submissionType === 1 ? (

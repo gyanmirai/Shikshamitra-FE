@@ -101,7 +101,7 @@ const AssignTeacher: React.FC<IAssignTeacherProps> = ({
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               variant="contained"
             >
-              Save
+              Submit
             </Button>
           </DialogActions>
         </form>

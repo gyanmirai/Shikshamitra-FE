@@ -46,17 +46,23 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setOpen(false);
+        setSelectedData(null);
+        dispatch(setIsChanges(false));
+      }, 300); // Optional: adjust delay to match your dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedData(null);
       addAssignmentTypeDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setOpen(false);
-      setSelectedData(null);
       addAssignmentTypeDialog.onFalse();
+      resetState();
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end">
@@ -81,7 +87,9 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
         open={addAssignmentTypeDialog.value}
         handleClose={() => {
           addAssignmentTypeDialog.onFalse();
-          setSelectedData(null);
+          setTimeout(() => {
+            setSelectedData(null);
+          }, 200); // Match this delay to your dialog's transition duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

@@ -40,7 +40,7 @@ const chapters = [
 
 const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%', overflow: 'hidden' }}>
-    <Scrollbar sx={{ height: '300px' }}>
+    <Scrollbar sx={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '0 5px' }}>
       <Box sx={{ pb: 2 }}>
         {chapters.length > 0 ? (
           chapters.map((chapter, index) => (

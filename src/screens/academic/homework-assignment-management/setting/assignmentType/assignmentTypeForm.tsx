@@ -71,12 +71,18 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={editData ? 16 : 20}
+                  height={editData ? 16 : 20}
+                />
+              }
               type="submit"
               variant="contained"
               size="small"
             >
-              Submit
+              {editData ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

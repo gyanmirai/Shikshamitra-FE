@@ -218,6 +218,7 @@ const QuizManagement = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedQuiz?.id);

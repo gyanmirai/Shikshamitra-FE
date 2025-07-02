@@ -37,17 +37,24 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedSubject(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedSubject(null);
       addSubjectDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setOpen(false);
-      setSelectedSubject(null);
       addSubjectDialog.onFalse();
+      setTimeout(() => {
+        setSelectedSubject(null);
+      }, 200);
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end" mb={1}>
@@ -85,7 +92,9 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
         open={addSubjectDialog.value}
         handleClose={() => {
           addSubjectDialog.onFalse();
-          setSelectedSubject(null);
+          setTimeout(() => {
+            setSelectedSubject(null);
+          }, 200); // Adjust the delay based on your dialog transition duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

@@ -19,6 +19,7 @@ import {
   Switch,
   Button,
   TableRow,
+  useTheme,
   TextField,
   TableHead,
   TableCell,
@@ -27,7 +28,6 @@ import {
   Typography,
   DialogActions,
   TableContainer,
-  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
@@ -43,6 +43,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -143,6 +144,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <DateTimePicker
               label="End Date/Time *"
+              format="DD/MM/YYYY HH:mm"
               value={formik.values.quizEndDateTime}
               onChange={(value) => {
                 formik.setFieldValue('quizEndDateTime', value);
@@ -302,6 +304,7 @@ const QuizInformation = ({ formik }: any) => {
             <TextField
               fullWidth
               label="Total Marks *"
+              type="number"
               // placeholder="Enter Total Marks"
               name="totalMarks"
               value={formik.values.totalMarks}
@@ -309,6 +312,11 @@ const QuizInformation = ({ formik }: any) => {
               error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
               helperText={formik.touched.totalMarks && formik.errors.totalMarks}
               size="small"
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
           </ShakingTextField>
         </Grid>
@@ -319,6 +327,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
+              type="number"
               label="Passing Marks *"
               // placeholder="Enter Passing Marks"
               name="passingMarks"
@@ -327,6 +336,11 @@ const QuizInformation = ({ formik }: any) => {
               error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
               helperText={formik.touched.passingMarks && formik.errors.passingMarks}
               size="small"
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
           </ShakingTextField>
         </Grid>
@@ -337,6 +351,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <TextField
               fullWidth
+              type="number"
               label="Duration (In Minutes) *"
               // placeholder="Enter Duration"
               name="quizDuration"
@@ -345,6 +360,11 @@ const QuizInformation = ({ formik }: any) => {
               error={formik.touched.quizDuration && Boolean(formik.errors.quizDuration)}
               helperText={formik.touched.quizDuration && formik.errors.quizDuration}
               size="small"
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
             />
           </ShakingTextField>
         </Grid>
@@ -486,6 +506,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                         <Button
                           variant="contained"
                           color="error"
+                          size="small"
                           onClick={() => {
                             onDeleteQuestion(index);
                             deleteQuestionDialog.onFalse();
@@ -521,6 +542,8 @@ const defaultValues = {
 const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
+  const theme = useTheme();
+  const [optionToDeleteIndex, setOptionToDeleteIndex] = useState<number | null>(null);
 
   const deleteOptionDialog = useBoolean();
   const [errors, setErrors] = useState({
@@ -562,16 +585,21 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
   const validate = () => {
     const newErrors: any = {};
     if (!formState.question.trim()) newErrors.question = 'Question is required';
-    if (!formState.questionType) newErrors.questionType = 'Type is required';
+    if (!formState.questionType) newErrors.questionType = 'Question Type is required';
     if (!formState.marks || isNaN(Number(formState.marks)) || Number(formState.marks) <= 0)
       newErrors.marks = 'Valid marks required';
     if (!formState.questionTime) newErrors.questionTime = 'Time is required';
     if (!formState.correctAnswer) newErrors.correctAnswer = 'Answer required';
 
-    if (formState.questionType === 'multiple-choice') {
-      if (formState.options.length < 2) newErrors.options = 'At least two options needed';
-      else if (formState.options.some((opt: any) => !opt.trim()))
-        newErrors.options = 'Options cannot be empty';
+    if (formState.options.length < 2) {
+      newErrors.options = ['At least two options needed'];
+    } else {
+      const optionErrors = formState.options.map((opt: string) =>
+        !opt.trim() ? 'Option cannot be empty' : ''
+      );
+      if (optionErrors.some((e: any) => e)) {
+        newErrors.options = optionErrors;
+      }
     }
 
     setErrors(newErrors);
@@ -587,7 +615,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
   const renderAnswerField = () => {
     const { questionType, correctAnswer, options } = formState;
     switch (questionType) {
-      case 'multiple-choice':
+      case 'Multiple Choice':
         return (
           <CustomSelect
             label="Correct Answer *"
@@ -598,7 +626,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
             formControlProps={{ fullWidth: true }}
           />
         );
-      case 'trueFalse':
+      case 'True / False':
         return (
           <CustomSelect
             label="Correct Answer *"
@@ -612,7 +640,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
             formControlProps={{ fullWidth: true }}
           />
         );
-      case 'shortAns':
+      case 'Short Answer':
         return (
           <TextField
             fullWidth
@@ -635,48 +663,65 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
         <Scrollbar sx={{ p: 2, height: '300px' }}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
-              <CustomSelect
-                label="Question Type *"
-                options={[
-                  { label: 'Multiple Choice', value: 'multiple-choice' },
-                  { label: 'True / False', value: 'trueFalse' },
-                  { label: 'Short Answer', value: 'shortAns' },
-                ]}
-                value={formState.questionType}
-                onChange={(val) => {
-                  handleChange('questionType', val);
-                  handleChange('correctAnswer', '');
-                  handleChange('options', val === 'multiple-choice' ? [''] : []);
-                }}
-                error={!!errors.questionType}
-                formControlProps={{ fullWidth: true }}
-              />
+              <ShakingTextField error={!!errors.question}>
+                <CustomSelect
+                  label="Question Type *"
+                  options={[
+                    { label: 'Multiple Choice', value: 'Multiple Choice' },
+                    { label: 'True / False', value: 'True / False' },
+                    { label: 'Short Answer', value: 'Short Answer' },
+                  ]}
+                  value={formState.questionType}
+                  onChange={(val) => {
+                    handleChange('questionType', val);
+                    handleChange('correctAnswer', '');
+                    handleChange('options', val === 'multiple-choice' ? [''] : []);
+                  }}
+                  error={!!errors.questionType}
+                  helperText={errors.questionType}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <TextField
-                label="Marks *"
-                type="number"
-                value={formState.marks}
-                onChange={(e) => handleChange('marks', e.target.value)}
-                fullWidth
-                size="small"
-                error={!!errors.marks}
-                helperText={errors.marks}
-              />
+              <ShakingTextField error={!!errors.marks}>
+                <TextField
+                  label="Marks *"
+                  type="number"
+                  value={formState.marks}
+                  onChange={(e) => handleChange('marks', e.target.value)}
+                  fullWidth
+                  size="small"
+                  error={!!errors.marks}
+                  helperText={errors.marks}
+                  onKeyDown={(e) => {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <TextField
-                label="Time (Minutes) *"
-                type="number"
-                value={formState.questionTime}
-                onChange={(e) => handleChange('questionTime', e.target.value)}
-                fullWidth
-                size="small"
-                error={!!errors.questionTime}
-                helperText={errors.questionTime}
-              />
+              <ShakingTextField error={!!errors.questionTime}>
+                <TextField
+                  label="Time (Minutes) *"
+                  type="number"
+                  value={formState.questionTime}
+                  onChange={(e) => handleChange('questionTime', e.target.value)}
+                  fullWidth
+                  size="small"
+                  error={!!errors.questionTime}
+                  helperText={errors.questionTime}
+                  onKeyDown={(e) => {
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid item xs={12}>
@@ -686,31 +731,59 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                 placeholder="Question *"
                 error={!!errors.question}
                 helperText={errors.question}
+                // sx={{
+                //   border: `1px solid ${theme.palette.grey[500]}`,
+                //   borderRadius: 1,
+                //   '&:hover': {
+                //     borderColor: theme.palette.text.primary,
+                //   },
+                //   '&:focus-within': {
+                //     borderColor: theme.palette.text.primary,
+                //     borderWidth: 2,
+                //   },
+                //   // ...((!!errors.question || !!errors.question) && {
+                //   //   borderColor: 'error',
+                //   // }),
+                // }}
               />
             </Grid>
 
-            {formState.questionType === 'multiple-choice' && (
+            {formState.questionType === 'Multiple Choice' && (
               <Grid item xs={12}>
                 <Grid container spacing={2}>
                   {formState.options.map((opt: any, i: any) => (
                     <Grid item xs={12} key={i}>
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <TextField
-                          label={`Option ${i + 1}`}
-                          value={opt}
-                          onChange={(e) => handleOptionChange(i, e.target.value)}
-                          fullWidth
-                          size="small"
-                        />
+                        <Box sx={{ flex: 1 }}>
+                          <ShakingTextField error={!!errors.options}>
+                            <TextField
+                              label={`Option ${i + 1}`}
+                              value={opt}
+                              onChange={(e) => handleOptionChange(i, e.target.value)}
+                              fullWidth
+                              size="small"
+                              error={!!errors.options?.[i]}
+                              helperText={errors.options?.[i]}
+                            />
+                          </ShakingTextField>
+                        </Box>
+                        {/* {errors.options && (
+                          <FormHelperText error sx={{ mt: 1 }}>
+                            {errors.options}
+                          </FormHelperText>
+                        )} */}
                         <IconButton
-                          onClick={deleteOptionDialog.onTrue}
+                          onClick={() => {
+                            setOptionToDeleteIndex(i); // Store current index
+                            deleteOptionDialog.onTrue(); // Open confirm dialog
+                          }}
                           size="small"
                           color="error"
                           disabled={formState.options.length <= 2}
                         >
                           <Iconify icon={GlobalIcons.delete} />
                         </IconButton>
-                        <ConfirmDialog
+                        {/* <ConfirmDialog
                           open={deleteOptionDialog.value}
                           onClose={deleteOptionDialog.onFalse}
                           title="Delete"
@@ -728,12 +801,12 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                               Yes
                             </Button>
                           }
-                        />
+                        /> */}
                       </Box>
                     </Grid>
                   ))}
                 </Grid>
-                {errors.options && <FormHelperText error>{errors.options}</FormHelperText>}
+                {/* {errors.options && <FormHelperText error>{errors.options}</FormHelperText>} */}
                 <Button
                   variant="outlined"
                   size="small"
@@ -744,6 +817,31 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                 >
                   Add Option
                 </Button>
+                <ConfirmDialog
+                  open={deleteOptionDialog.value}
+                  onClose={() => {
+                    deleteOptionDialog.onFalse();
+                    setOptionToDeleteIndex(null);
+                  }}
+                  title="Delete"
+                  content="Are you sure you want to delete this option?"
+                  action={
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => {
+                        if (optionToDeleteIndex !== null) {
+                          handleRemoveOption(optionToDeleteIndex);
+                          setOptionToDeleteIndex(null);
+                        }
+                        deleteOptionDialog.onFalse();
+                      }}
+                    >
+                      Yes
+                    </Button>
+                  }
+                />
               </Grid>
             )}
 
@@ -914,7 +1012,19 @@ const QuizBuilder = ({ formik }: any) => {
         maxWidth="sm"
         open={addQuestionDialog.value}
         handleClose={addQuestionDialog.onFalse}
-        title="Add Question"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Question</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Create a new question by entering the question text, selecting a question type, adding answer options if required, and specifying the correct answer, marks, and time."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <QuestionForm onSave={handleAddQuestion} onCancel={handleClose} />
       </CustomDialog>
@@ -923,7 +1033,19 @@ const QuizBuilder = ({ formik }: any) => {
         maxWidth="sm"
         open={!!editingQuestion}
         handleClose={() => setEditingQuestion(null)}
-        title="Update Question"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Question</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Modify the existing question by updating its content, question type, answer options, correct answer, marks, or time duration."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         {editingQuestion && (
           <QuestionForm
@@ -988,6 +1110,7 @@ const AddNewQuiz = ({
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
+      validateOnChange
       validationSchema={stepValidationSchemas[activeStep as keyof typeof stepValidationSchemas]}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;

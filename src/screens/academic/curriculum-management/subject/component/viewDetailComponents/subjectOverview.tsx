@@ -26,8 +26,8 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%' }}>
     <Grid container spacing={2}>
       <Grid item xs={12} md={8} sx={{ mt: 0, pt: 0, pl: 0, pb: 2 }}>
-        <Card sx={{ height: '100%', boxShadow: 0, border: 'none', m: 0 }}>
-          <Scrollbar sx={{ height: '400px', px: 0, pr: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 0, border: 'none' }}>
+          <Scrollbar sx={{ height: '100%', px: 0, pr: 2 }}>
             <CardContent sx={{ p: 0 }}>
               {' '}
               {/* Adjust padding here */}

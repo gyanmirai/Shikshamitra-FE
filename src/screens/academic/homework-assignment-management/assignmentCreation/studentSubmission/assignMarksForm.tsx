@@ -129,8 +129,14 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                     // placeholder="Enter Marks"
                     label="Marks *"
                     fullWidth
+                    type="number"
                     name="marks"
                     disabled={!isEdit}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     size="small"
                     value={formik.values.marks}
                     onChange={formik.handleChange}

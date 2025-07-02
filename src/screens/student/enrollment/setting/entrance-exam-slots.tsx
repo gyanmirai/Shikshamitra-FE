@@ -286,7 +286,7 @@ export const SlotsForm = ({
             <TimePicker
               label="Start Time *"
               value={formik.values.startTime}
-              format="hh:mm "
+              format="hh:mm"
               viewRenderers={{
                 hours: renderTimeViewClock,
                 minutes: renderTimeViewClock,

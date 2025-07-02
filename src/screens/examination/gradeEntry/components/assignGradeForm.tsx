@@ -31,27 +31,27 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
           <Scrollbar sx={{ p: 2, height: '200px', backgroundColor: 'background.paper' }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
-                  <TextField
-                    label="Total Marks *"
-                    disabled
-                    // placeholder="Enter Marks"
-                    name="totalMarks"
-                    type="number"
-                    value={formik.values.totalMarks}
-                    onChange={formik.handleChange}
-                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                    helperText={
-                      formik.touched.totalMarks && formik.errors.totalMarks
-                        ? formik.errors.totalMarks
-                        : undefined
-                    }
-                    size="small"
-                    sx={{
-                      width: '100%',
-                    }}
-                  />
-                </ShakingTextField>
+                {/* <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}> */}
+                <TextField
+                  label="Total Marks *"
+                  disabled
+                  // placeholder="Enter Marks"
+                  name="totalMarks"
+                  type="number"
+                  value={formik.values.totalMarks}
+                  onChange={formik.handleChange}
+                  error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                  helperText={
+                    formik.touched.totalMarks && formik.errors.totalMarks
+                      ? formik.errors.totalMarks
+                      : undefined
+                  }
+                  size="small"
+                  sx={{
+                    width: '100%',
+                  }}
+                />
+                {/* </ShakingTextField> */}
               </Grid>
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
@@ -69,6 +69,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                     size="small"
                     sx={{
                       width: '100%',
+                    }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
                     }}
                   />
                 </ShakingTextField>
