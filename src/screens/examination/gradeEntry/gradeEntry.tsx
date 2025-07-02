@@ -250,6 +250,7 @@ const GradeEntry = (props: TabComponentType) => {
               onClick={() => {
                 viewSubmissionDialog.onTrue();
                 popover.onClose();
+                setSelectedStudent(row);
               }}
             >
               {' '}
@@ -292,6 +293,7 @@ const GradeEntry = (props: TabComponentType) => {
           <Button
             variant="contained"
             size="small"
+            disabled={!assignmentTitle}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               publishMarksDialog.onTrue();
@@ -349,7 +351,7 @@ const GradeEntry = (props: TabComponentType) => {
         />
         <CustomTooltip
           placement="top"
-          title={assignmentTitle ? `${assignmentTitle}` : 'Select an exam title'}
+          title={assignmentTitle ? `${assignmentTitle}` : 'Select exam title'}
         >
           <Autocomplete
             disabled={!subject}
@@ -401,7 +403,6 @@ const GradeEntry = (props: TabComponentType) => {
                 size="small"
                 fullWidth
                 sx={{ minWidth: '248px', width: '100%' }}
-                disabled={!assignmentType}
               />
             )}
           />
@@ -458,10 +459,15 @@ const GradeEntry = (props: TabComponentType) => {
           // setSelectedExam(null);
         }}
         title="Publish"
-        content="Are you sure you want to Publish Marks ?"
+        content={
+          <>
+            Are you sure you want to publish marks <strong>{assignmentTitle}</strong>?`
+          </>
+        }
         action={
           <Button
             variant="contained"
+            size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               // handleDelete(selectedExam?.id);

@@ -208,7 +208,18 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
           viewDialog.onFalse();
           setSelectedGrade(null);
         }}
-        title="View Grade Scale"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Grade Scale</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View grade scales, grade ranges, total marks, and related grading criteria"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <GradeForm
           onSubmit={handleSubmit}
@@ -225,7 +236,11 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure you want to Delete Grade Scaling?"
+        content={
+          <>
+            Are you sure you want to Delete Grade Scaling <strong>{selectedGrade?.name}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
