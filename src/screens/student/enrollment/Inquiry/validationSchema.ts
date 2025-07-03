@@ -36,7 +36,7 @@ export const inquiryValidationSchema = Yup.object().shape({
     .test('Mobile NO', 'Primary Contact No. is not valid', (value) =>
       value ? matchIsValidTel((value || '') as string) : true
     )
-    .required('Primary Contact No. number is required'),
+    .required('Primary Contact No. is required'),
   secondaryContactNumber: Yup.string()
     .test('Mobile NO', 'Secondary Contact No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true

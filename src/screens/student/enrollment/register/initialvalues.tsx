@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 
 import calculateAge from 'src/utils/calculate-age';
+import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { GenderType } from 'src/enums/gender';
 import { Category } from 'src/enums/studnet-category';
@@ -35,7 +36,7 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   academicYear: editData?.academicYearId || '',
   class: editData?.standardId || '',
   previousSchool: editData?.previousSchoolName || '',
-  photo: editData?.profilePicture || '',
+  photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
   city: editData?.city ? { name: editData?.city } : { name: '' },
   state: editData?.state
     ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }

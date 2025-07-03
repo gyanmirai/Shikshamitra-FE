@@ -4,7 +4,7 @@ import { matchIsValidTel } from 'mui-tel-input';
 // validation schema for student registration
 // Validates various student-specific information and characteristics
 
-const generalFieldValidation = Yup.object({
+export const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
   formNo: Yup.string().required('Form No. is required'),
   firstName: Yup.string().required('First Name is required'),
@@ -25,12 +25,13 @@ const generalFieldValidation = Yup.object({
 
   remarks: Yup.string(),
   primaryContactNumber: Yup.string()
-    .test(
-      'Mobile NO',
-      'Primary Contact No. is not valid',
-      (value) => !!value && matchIsValidTel(value as string)
-    )
-    .required('Primary Contact No. is required'),
+    .test('primaryContactNumber', 'primary contact no. is not valid', (value) => {
+      console.log(value, '=========>');
+      return value ? matchIsValidTel(value as string) : true;
+    })
+    .required('primary contact no. is required'),
+  addressLine1: Yup.string().required('Building No./Flat/ House No. is required'),
+  addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
   // alternativeContactNumber: Yup.string()
   //   .test('Mobile NO', 'mobile number is not valid', (value) =>
   //     value ? matchIsValidTel(value as string) : true
@@ -61,7 +62,7 @@ const generalFieldValidation = Yup.object({
     .required('State is required'),
 });
 
-const familyFieldsValidation = Yup.object({
+export const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
   fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
   fatherOccupation: Yup.string(),
@@ -124,7 +125,7 @@ const familyFieldsValidation = Yup.object({
   guardianAddress3: Yup.string(),
 });
 
-const communicationFieldsValidation = Yup.object({
+export const communicationFieldsValidation = Yup.object({
   primaryContactNumber: Yup.string().test('Mobile NO', 'mobile number is not valid', (value) =>
     value ? matchIsValidTel(value as string) : true
   ),
@@ -186,7 +187,7 @@ const communicationFieldsValidation = Yup.object({
   remarks: Yup.string(),
 });
 
-const additionalDetailsValidations = Yup.object({
+export const additionalDetailsValidations = Yup.object({
   category: Yup.string(),
   RTE: Yup.boolean(),
   bplStudent: Yup.boolean().nullable(),
@@ -203,7 +204,7 @@ const additionalDetailsValidations = Yup.object({
   // sponsorStudent: Yup.boolean(),
   sponsorName: Yup.string(),
 });
-const medicalDetailsValidations = Yup.object({
+export const medicalDetailsValidations = Yup.object({
   weight: Yup.number(),
   height: Yup.string(),
   bmi: Yup.string(),
@@ -218,7 +219,7 @@ const medicalDetailsValidations = Yup.object({
   childImmunisation: Yup.boolean(),
   immunisationRemarks: Yup.string(),
 });
-const previousSchoolValidation = Yup.object({
+export const previousSchoolValidation = Yup.object({
   schoolName: Yup.string(),
   schoolAddress: Yup.string(),
   schoolBoard: Yup.string(),
@@ -228,7 +229,7 @@ const previousSchoolValidation = Yup.object({
   percentage: Yup.string(),
 });
 
-const bankDetailsValidation = Yup.object({
+export const bankDetailsValidation = Yup.object({
   bankName: Yup.string(),
   accountNo: Yup.string(),
   ifscCode: Yup.string(),

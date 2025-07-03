@@ -89,8 +89,14 @@ const RenderLocalAddressFields = (props: any) => {
           <TextField
             disabled={!isEdit}
             name="localPincode"
-            value={formik.values.localPincode}
-            onChange={formik.handleChange}
+            value={formik.values.localPincode || ''}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 6) {
+                value = value.slice(0, 6);
+              }
+              formik.setFieldValue('localPincode', value);
+            }}
             error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
             helperText={formik.touched.localPincode && formik.errors.localPincode}
             fullWidth

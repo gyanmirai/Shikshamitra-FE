@@ -226,6 +226,14 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
     router.push(`?${params.toString()}`);
   };
 
+  const setMultipleParams = (newParams: ParamsObject): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(newParams).forEach(([key, value]) => {
+      params.set(key, value);
+    });
+    router.push(`?${params.toString()}`);
+  };
+
   const deleteParam = (key: string): void => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete(key);
@@ -239,5 +247,6 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
     setParam,
     deleteParam,
     getAllParams,
+    setMultipleParams,
   };
 };

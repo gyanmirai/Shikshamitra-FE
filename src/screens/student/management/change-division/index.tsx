@@ -15,18 +15,13 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { TableDivisionDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
-
-const initialData = [
-  { id: 1, srNo: 1, grNo: 'GR001', name: 'John Doe', division: '' },
-  { id: 2, srNo: 2, grNo: 'GR002', name: 'Jane Smith', division: '' },
-  { id: 3, srNo: 3, grNo: 'GR003', name: 'Alice Johnson', division: '' },
-];
 
 const ChangeDivisionScreen = ({
   tableData: studentData,
@@ -65,6 +60,7 @@ const ChangeDivisionScreen = ({
             divisionId: student.divisionId,
           })),
       }).unwrap();
+      shikshaMitraToast.success({ message: 'Data saved successfully' });
       // Invalidate cache to refetch updated data
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
@@ -93,7 +89,7 @@ const ChangeDivisionScreen = ({
             onClick={handelSave}
             size="small"
           >
-            {isChangeDivisionLoading ? 'Saving...' : 'Save'}
+            Save
           </LoadingButton>
         </Box>
         <CustomizableTable
@@ -101,6 +97,7 @@ const ChangeDivisionScreen = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
           noDataText={<>No Student Data Found </>}
+          isLoading={isLoading}
           columns={[
             // {
             //   id: 'checkBox',

@@ -19,8 +19,12 @@ export const previousSchoolFields: FieldsType[] = [
     type: 'text',
     otherProps: ({ formik }: any) => ({
       onChange: (e: any) => {
-        const newName = capitalize(e.target.value);
+        const newName = e.target.value
+          .split(' ')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
         formik.setFieldValue('schoolName', newName);
+        formik.setFieldTouched('schoolName', true, true);
       },
       autoFocus: true,
     }),
@@ -31,7 +35,7 @@ export const previousSchoolFields: FieldsType[] = [
 ];
 
 const RenderPreviousSchoolFields = (props: any) => {
-  const { formik, isMainForm = true } = props;
+  const { formik, isMainForm = false } = props;
   const isEditable = useBoolean(isMainForm);
   const handleSave = () => {
     formik.submitForm();
@@ -40,10 +44,15 @@ const RenderPreviousSchoolFields = (props: any) => {
   const handleCancel = () => {};
   return (
     <SectionCard
-      title=" "
+      title=""
       headerContent={
         !isMainForm && (
-          <CardActions isEdit={isEditable} onSave={handleSave} onCancel={handleCancel} />
+          <CardActions
+            isLoading={formik.isSubmitting}
+            isEdit={isEditable}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         )
       }
     >
@@ -125,6 +134,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           fullWidth
           label="Percentage %"
           name="percentage"
+          type="number"
           value={formik.values.percentage}
           onChange={(e: any) => {
             const newName = capitalize(e.target.value);

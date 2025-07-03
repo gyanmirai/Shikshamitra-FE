@@ -8,24 +8,24 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 
-import { Box, Tab, Card, Tabs, Paper, Avatar, Dialog, Divider, Typography } from '@mui/material';
+import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 
+import calculateAge from 'src/utils/calculate-age';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
-import { GenderType } from 'src/enums/gender';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -33,7 +33,6 @@ import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
 import Communication from './communication';
-import StudentIDCard from './student-id-card';
 import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
@@ -44,6 +43,7 @@ import type { IInquiryData } from '../enrollment/Inquiry';
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
   student?: IInquiryData;
+  refetch?: any;
 }
 
 const TABS = [
@@ -51,7 +51,7 @@ const TABS = [
     value: 'dashboard',
     label: 'Dashboard',
     icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentDashboard {...props} />
     ),
   },
@@ -59,7 +59,7 @@ const TABS = [
     value: 'information',
     label: 'Information',
     icon: <Iconify icon="solar:user-id-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentInformation {...props} />
     ),
   },
@@ -67,13 +67,17 @@ const TABS = [
     value: 'attendance',
     label: 'Attendance',
     icon: <Iconify icon="solar:bill-list-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Attendance {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+      <Attendance {...props} />
+    ),
   },
   {
     value: 'academic',
     label: 'Academic',
     icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Academic {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+      <Academic {...props} />
+    ),
   },
   // {
   //   value: 'records',
@@ -85,19 +89,23 @@ const TABS = [
     value: 'finance',
     label: 'Finance',
     icon: <Iconify icon="map:finance" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Finance {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+      <Finance {...props} />
+    ),
   },
   {
     value: 'documents',
     label: 'Documents',
     icon: <Iconify icon="ion:documents" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Document {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+      <Document {...props} />
+    ),
   },
   {
     value: 'communications',
     label: 'Communications',
     icon: <Iconify icon="maki:communications-tower" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Communication {...props} />
     ),
   },
@@ -105,7 +113,7 @@ const TABS = [
     value: 'transportation',
     label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentTransportProfile {...props} />
     ),
   },
@@ -113,13 +121,15 @@ const TABS = [
     value: 'library',
     label: 'Library',
     icon: <Iconify icon="mdi:library" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Library {...props} />,
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+      <Library {...props} />
+    ),
   },
   {
     value: 'hostel',
     label: 'Hostel',
     icon: <Iconify icon="mdi:home-city-outline" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => (
+    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <HostelRoomMate {...props} />
     ),
   },
@@ -165,18 +175,11 @@ export function StudentProfile() {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
-  const [searchParams, setSearchParams] = useSearchParam({
-    isSearch: '',
-    student: '',
-    searchValue: '',
-  });
-  const tabs = useTabs('dashboard');
 
-  // Find the currently active tab component based on selected tab value
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
+    student: '',
+  });
+  const searchParams = getAllParams();
 
   // Query hook for fetching filtered student data
   // Returns getStudents function, StudentsData response and loading state
@@ -202,14 +205,19 @@ export function StudentProfile() {
       StudentsData?.items?.map((item: any) => ({
         ...item,
         name: `${item.lastName} ${item.firstName} ${item.middleName}`,
+        genderValue: GenderType[item.genderType],
+        age: calculateAge(item.dateOfBirth),
+        address:
+          [item.addressLine1, item.addressLine2, item.addressLine3].filter(Boolean).join(', ') ||
+          '-',
+        RTE: item.studentAdditionalDetails.rightToEducation ? 'Yes' : 'No',
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
       })) || [],
     [StudentsData?.items]
   );
 
   // Find currently selected student based on search params
-  const currentStudent: IInquiryData = tableData.find(
-    (item: IInquiryData) => item.id === searchParams.student
-  );
+  const currentStudent: boolean = !!searchParams?.student;
 
   // State to track selected students for bulk actions
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -225,7 +233,7 @@ export function StudentProfile() {
   };
 
   return (
-    <>
+    <Box>
       {currentStudent ? (
         <CustomBreadcrumbs
           heading="Student List"
@@ -236,7 +244,7 @@ export function StudentProfile() {
           ]}
           sx={{ mb: 2 }}
           isBack
-          onBack={() => setSearchParams({ isSearch: '', student: '', searchValue: '' })}
+          onBack={() => setSearchParams('student', '')}
           description="View and manage comprehensive student information including academics, attendance, finance and more."
         />
       ) : (
@@ -247,7 +255,7 @@ export function StudentProfile() {
             { name: 'Student Records', href: '/student/overview/' },
             { name: 'Student List' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
         />
       )}
@@ -335,6 +343,8 @@ export function StudentProfile() {
                 id: 'name',
                 label: 'Student Name',
                 sticky: true,
+                minWidth: '14vw',
+                align: 'left',
                 render: (value, row) => (
                   <Box style={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar
@@ -351,18 +361,55 @@ export function StudentProfile() {
               {
                 id: 'rollNo',
                 label: 'Roll No.',
+                minWidth: '6vw',
+                align: 'left',
                 render: (value, row) => value || '-',
               },
               {
                 id: 'grNoRecord',
                 label: 'Gr No.',
+                minWidth: '6vw',
+                align: 'left',
                 render: (value, row) => value || '-',
               },
 
-              // { id: 'organization', label: 'Organization' },
+              {
+                id: 'genderValue',
+                label: 'Gender',
+                minWidth: '6vw',
+                align: 'left',
+                filterType: 'enum',
+                enumOptions: GenderOptions,
+              },
+              {
+                id: 'dobValue',
+                label: 'Date Of Birth',
+                minWidth: '10vw',
+                align: 'left',
+                filterType: 'date',
+              },
+              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
+              { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
+              { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
               // { id: 'class', label: 'Class' },
               // { id: 'division', label: 'Division' },
-              { id: 'parentContactNumber', label: 'Contact No.' },
+              {
+                id: 'parentContactNumber',
+                label: 'Parent Contact No.',
+                minWidth: '12vw',
+                align: 'left',
+              },
+              {
+                id: 'RTE',
+                label: 'RTE',
+                minWidth: '6vw',
+                align: 'left',
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Yes', value: 'Yes' },
+                  { label: 'No', value: 'No' },
+                ],
+              },
               {
                 id: 'action',
                 label: 'Action',
@@ -376,11 +423,7 @@ export function StudentProfile() {
                     showViewIcon
                     showThreeDots={false}
                     handleViewClick={() => {
-                      setSearchParams({
-                        student: `${row.id}`,
-                        isSearch: 'false',
-                        searchValue: row.name,
-                      });
+                      setSearchParams('student', row.id);
                     }}
                   />
                 ),
@@ -390,169 +433,153 @@ export function StudentProfile() {
         </>
       )}
 
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
-
-      {currentStudent && (
-        <>
-          <Card
-            sx={{
-              mb: 2,
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              boxShadow: 'var(--shadows-4)',
-            }}
-          >
-            <Paper
-              sx={{
-                p: 1,
-                borderBottom: '1px dashed',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
-                borderRadius: 1,
-              }}
-            >
-              <Box display="flex" gap={2} alignItems="center">
-                <Avatar
-                  src={convertBase64Format(currentStudent?.profilePicture as string)}
-                  sx={{ width: 64, height: 64 }}
-                />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Name
-                  </Typography>
-                  <Typography fontWeight={500} variant="body2">
-                    {currentStudent?.name || '-'}
-                  </Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Gr No.
-                  </Typography>
-                  <Typography fontWeight={500} variant="body2">
-                    {currentStudent?.grNoRecord || '-'}
-                  </Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Roll No.
-                  </Typography>
-                  <Typography fontWeight={500} variant="body2">
-                    {currentStudent?.rollNo || '-'}
-                  </Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Class
-                  </Typography>
-                  <Typography fontWeight={500} variant="body2">
-                    {currentStudent?.standard?.name}-{currentStudent?.division?.name}
-                  </Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Medium
-                  </Typography>
-                  <Typography fontWeight={500} variant="body2">
-                    {currentStudent?.educationMedium?.name || '-'}
-                  </Typography>
-                </Box>
-              </Box>
-              {/* <Box display="flex" gap={2} alignItems="center">
-                <Button
-                  startIcon={<Iconify icon="lineicons:id-card" />}
-                  size="small"
-                  variant="outlined"
-                  onClick={icardDialog.onTrue}
-                >
-                  View I-card
-                </Button>
-                <CustomTooltip
-                  arrow
-                  title={
-                    <Box p={1}>
-                      <Label variant="soft" color="success">
-                        Volunteer
-                      </Label>
-                      <Label variant="soft" color="warning" sx={{ ml: 1 }}>
-                        New
-                      </Label>
-                      <Label variant="soft" color="info" sx={{ ml: 1 }}>
-                        VIP
-                      </Label>
-                      <Label variant="soft" color="error" sx={{ ml: 1 }}>
-                        Good Listener
-                      </Label>
-                    </Box>
-                  }
-                >
-                  <IconButton sx={{ color: 'primary.main' }}>
-                    <Iconify
-                      icon="iconamoon:certificate-badge-fill"
-                      sx={{ height: '24px', width: '24px' }}
-                    />
-                  </IconButton>
-                </CustomTooltip>
-              </Box> */}
-            </Paper>
-          </Card>
-          <Paper elevation={2} sx={{ mb: 2, px: 2 }}>
-            <Tabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
-              role="tablist"
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  sx={{ fontSize: '12px' }}
-                  key={tab.value}
-                  value={tab.value}
-                  icon={tab.icon}
-                  label={tab.label}
-                  role="tab"
-                />
-              ))}
-            </Tabs>
-          </Paper>
-          <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
-            <StudentIDCard
-              student={{
-                name: currentStudent?.name || 'John Doe',
-                grNo: currentStudent?.grNoRecord || '-',
-                rollNo: currentStudent?.rollNo || '-',
-                class: `${currentStudent?.standard?.name}-${currentStudent?.division?.name}`,
-                // division: 'Higher Secondary',
-                contactNo: currentStudent?.primaryContactNumber || '-',
-                email: currentStudent?.email || '-',
-                address: currentStudent?.addressLine1 || '-',
-                dob: dayjs(currentStudent?.dateOfBirth).format('DD/MM/YYYY') || '-',
-                // bloodGroup:  || '-',
-                academicYear: currentStudent?.academicYear?.name || '-',
-                gender: GenderType[currentStudent?.genderType],
-                profilePicture: convertBase64Format(currentStudent?.profilePicture as string) || '',
-              }}
-            />
-          </Dialog>
-          {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component tabs={tabs} student={currentStudent} />
-          )}
-          {/* </Scrollbar> */}
-        </>
-      )}
-    </>
+      {currentStudent && <StudentProfileView />}
+    </Box>
   );
 }
+
+const StudentProfileView = () => {
+  const tabs = useTabs('dashboard');
+
+  // Find the currently active tab component based on selected tab value
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
+  const { getAllParams } = useCustomSearchParams();
+  const searchParams = getAllParams();
+  const {
+    data: currentStudent,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentByIdQuery,
+    params: searchParams?.student,
+    options: {
+      skip: !searchParams?.student,
+    },
+  });
+  console.log(currentStudent, 'currentStudent==========>');
+  return isLoading ? (
+    'Loading ...'
+  ) : (
+    <>
+      <Card
+        sx={{
+          mb: 2,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          boxShadow: 'var(--shadows-4)',
+        }}
+      >
+        <Paper
+          sx={{
+            p: 1,
+            borderBottom: '1px dashed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+            borderRadius: 1,
+          }}
+        >
+          <Box display="flex" gap={2} alignItems="center">
+            <Avatar
+              src={convertBase64Format(currentStudent?.profilePicture as string)}
+              sx={{ width: 64, height: 64 }}
+            />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Name
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
+                {currentStudent?.middleName || '-'}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Gr No.
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {currentStudent?.grNoRecord || '-'}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Roll No.
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {currentStudent?.rollNo || '-'}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Class
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {currentStudent?.standard?.name}-{currentStudent?.division?.name}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Medium
+              </Typography>
+              <Typography fontWeight={500} variant="body2">
+                {currentStudent?.educationMedium?.name || '-'}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Card>
+      <Paper elevation={2} sx={{ mb: 2, px: 2 }}>
+        <Tabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
+          ))}
+        </Tabs>
+      </Paper>
+      {/* <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
+        <StudentIDCard
+          student={{
+            name: currentStudent?.name || 'John Doe',
+            grNo: currentStudent?.grNoRecord || '-',
+            rollNo: currentStudent?.rollNo || '-',
+            class: `${currentStudent?.standard?.name}-${currentStudent?.division?.name}`,
+            // division: 'Higher Secondary',
+            contactNo: currentStudent?.primaryContactNumber || '-',
+            email: currentStudent?.email || '-',
+            address: currentStudent?.addressLine1 || '-',
+            dob: dayjs(currentStudent?.dateOfBirth).format('DD/MM/YYYY') || '-',
+            // bloodGroup:  || '-',
+            academicYear: currentStudent?.academicYear?.name || '-',
+            gender: GenderType[currentStudent?.genderType],
+            profilePicture: convertBase64Format(currentStudent?.profilePicture as string) || '',
+          }}
+        />
+      </Dialog> */}
+      {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
+      {currentActiveComponent?.component && (
+        <currentActiveComponent.component tabs={tabs} student={currentStudent} refetch={refetch} />
+      )}
+      {/* </Scrollbar> */}
+    </>
+  );
+};

@@ -16,7 +16,7 @@ import PhoneInput from 'src/components/phone-input';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 function MotherOfficeAddressComponent(props: any) {
-  const { formik, disabled, isMainForm = true } = props;
+  const { formik, disabled, isMainForm = false } = props;
 
   return (
     <Grid container spacing={2}>
@@ -304,7 +304,7 @@ function GuardianAddressComponent(props: any) {
 }
 
 function RenderFamilyInformation(props: any) {
-  const { formik, isEdit, isMainForm = true } = props;
+  const { formik, isEdit, isMainForm = false } = props;
   const [student, setStudent] = useState([]);
 
   const isFatherDetailsEditable = useBoolean(isMainForm);
@@ -328,6 +328,7 @@ function RenderFamilyInformation(props: any) {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isFatherDetailsEditable}
               onSave={handleSave}
               onCancel={handelFatherDetailsCancel}
@@ -343,8 +344,9 @@ function RenderFamilyInformation(props: any) {
               value={formik.values.fatherName}
               autoFocus
               onChange={(e) => {
-                const value = capitalize(e.target.value);
-                formik.setFieldValue('fatherName', value);
+                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                formik.setFieldValue('fatherName', capitalized);
               }}
               error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
               helperText={formik.touched.fatherName && formik.errors.fatherName}
@@ -360,6 +362,7 @@ function RenderFamilyInformation(props: any) {
               name="fatherDob"
               label="Date Of Birth"
               value={formik.values.fatherDob}
+              format="DD-MM-YYYY"
               onChange={(value) => {
                 formik.setFieldValue('fatherDob', value);
               }}
@@ -382,8 +385,10 @@ function RenderFamilyInformation(props: any) {
             label="Occupation"
             value={formik.values.fatherOccupation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('fatherOccupation', value);
+              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const capitalized = capitalize(onlyLetters);
+
+              formik.setFieldValue('fatherOccupation', capitalized);
             }}
             error={formik.touched.fatherOccupation && Boolean(formik.errors.fatherOccupation)}
             helperText={formik.touched.fatherOccupation && formik.errors.fatherOccupation}
@@ -413,20 +418,7 @@ function RenderFamilyInformation(props: any) {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="fatherPassOutYear"
-            label="Year of Passing"
-            type="number"
-            value={formik.values.fatherPassOutYear}
-            onChange={formik.handleChange}
-            error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
-            helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
-            fullWidth
-            size="small"
-            disabled={!isFatherDetailsEditable.value}
-          />
-        </Grid>
+
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="fatherQualification"
@@ -438,6 +430,20 @@ function RenderFamilyInformation(props: any) {
             }}
             error={formik.touched.fatherQualification && Boolean(formik.errors.fatherQualification)}
             helperText={formik.touched.fatherQualification && formik.errors.fatherQualification}
+            fullWidth
+            size="small"
+            disabled={!isFatherDetailsEditable.value}
+          />
+        </Grid>
+        <Grid item xs={12} md={4} lg={3}>
+          <TextField
+            name="fatherPassOutYear"
+            label="Year of Passing"
+            type="number"
+            value={formik.values.fatherPassOutYear}
+            onChange={formik.handleChange}
+            error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
+            helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
             fullWidth
             size="small"
             disabled={!isFatherDetailsEditable.value}
@@ -474,8 +480,9 @@ function RenderFamilyInformation(props: any) {
             label="Designation"
             value={formik.values.fatherDesignation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('fatherDesignation', value);
+              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('fatherDesignation', capitalized);
             }}
             error={formik.touched.fatherDesignation && Boolean(formik.errors.fatherDesignation)}
             helperText={formik.touched.fatherDesignation && formik.errors.fatherDesignation}
@@ -491,8 +498,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
             value={formik.values.fatherOrganization}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('fatherOrganization', value);
+              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('fatherOrganization', capitalized);
             }}
             error={formik.touched.fatherOrganization && Boolean(formik.errors.fatherOrganization)}
             helperText={formik.touched.fatherOrganization && formik.errors.fatherOrganization}
@@ -507,7 +515,13 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isFatherDetailsEditable.value}
             value={formik.values.fatherAadharNo}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 12) {
+                value = value.slice(0, 12);
+              }
+              formik.setFieldValue('fatherAadharNo', value);
+            }}
             error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
             helperText={formik.touched.fatherAadharNo && formik.errors.fatherAadharNo}
             fullWidth
@@ -662,6 +676,7 @@ function RenderFamilyInformation(props: any) {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isMotherDetailsEditable}
               onSave={handleSave}
               onCancel={handelMotherDetailsCancel}
@@ -677,8 +692,9 @@ function RenderFamilyInformation(props: any) {
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherName}
               onChange={(e) => {
-                const value = capitalize(e.target.value);
-                formik.setFieldValue('motherName', value);
+                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                formik.setFieldValue('motherName', capitalized);
               }}
               error={formik.touched.motherName && Boolean(formik.errors.motherName)}
               helperText={formik.touched.motherName && formik.errors.motherName}
@@ -694,6 +710,7 @@ function RenderFamilyInformation(props: any) {
               label="Date Of Birth"
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherDob}
+              format="DD-MM-YYYY"
               onChange={(value) => {
                 formik.setFieldValue('motherDob', value);
               }}
@@ -716,8 +733,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherOccupation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('motherOccupation', value);
+              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('motherOccupation', capitalized);
             }}
             error={formik.touched.motherOccupation && Boolean(formik.errors.motherOccupation)}
             helperText={formik.touched.motherOccupation && formik.errors.motherOccupation}
@@ -746,20 +764,7 @@ function RenderFamilyInformation(props: any) {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="motherPassOutYear"
-            label="Year of Passing"
-            type="number"
-            disabled={!isMotherDetailsEditable.value}
-            value={formik.values.motherPassOutYear}
-            onChange={formik.handleChange}
-            error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
-            helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
-            fullWidth
-            size="small"
-          />
-        </Grid>
+
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="motherQualification"
@@ -772,6 +777,20 @@ function RenderFamilyInformation(props: any) {
             }}
             error={formik.touched.motherQualification && Boolean(formik.errors.motherQualification)}
             helperText={formik.touched.motherQualification && formik.errors.motherQualification}
+            fullWidth
+            size="small"
+          />
+        </Grid>
+        <Grid item xs={12} md={4} lg={3}>
+          <TextField
+            name="motherPassOutYear"
+            label="Year of Passing"
+            type="number"
+            disabled={!isMotherDetailsEditable.value}
+            value={formik.values.motherPassOutYear}
+            onChange={formik.handleChange}
+            error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
+            helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
             fullWidth
             size="small"
           />
@@ -840,7 +859,13 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherAadharNo}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 12) {
+                value = value.slice(0, 12);
+              }
+              formik.setFieldValue('motherAadharNo', value);
+            }}
             error={formik.touched.motherAadharNo && Boolean(formik.errors.motherAadharNo)}
             helperText={formik.touched.motherAadharNo && formik.errors.motherAadharNo}
             fullWidth
@@ -876,6 +901,7 @@ function RenderFamilyInformation(props: any) {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isGuardianDetailsEditable}
               onSave={handleSave}
               onCancel={handelGuardianDetailsCancel}
@@ -893,8 +919,9 @@ function RenderFamilyInformation(props: any) {
               disabled={!isGuardianDetailsEditable.value}
               value={formik.values.guardianName}
               onChange={(e) => {
-                const value = capitalize(e.target.value);
-                formik.setFieldValue('guardianName', value);
+                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                formik.setFieldValue('guardianName', capitalized);
               }}
               error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
               helperText={formik.touched.guardianName && formik.errors.guardianName}
@@ -910,6 +937,7 @@ function RenderFamilyInformation(props: any) {
             <DatePicker
               name="guardianDob"
               label="Date Of Birth"
+              format="DD-MM-YYYY"
               disabled={!isGuardianDetailsEditable.value}
               value={formik.values.guardianDob}
               onChange={(value) => {
@@ -934,8 +962,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianOccupation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('guardianOccupation', value);
+              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('guardianOccupation', capitalized);
             }}
             error={formik.touched.guardianOccupation && Boolean(formik.errors.guardianOccupation)}
             helperText={formik.touched.guardianOccupation && formik.errors.guardianOccupation}
@@ -964,20 +993,7 @@ function RenderFamilyInformation(props: any) {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="guardianPassOutYear"
-            label="Year of Passing"
-            type="number"
-            disabled={!isGuardianDetailsEditable.value}
-            value={formik.values.guardianPassOutYear}
-            onChange={formik.handleChange}
-            error={formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)}
-            helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
-            fullWidth
-            size="small"
-          />
-        </Grid>
+
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="guardianQualification"
@@ -992,6 +1008,20 @@ function RenderFamilyInformation(props: any) {
               formik.touched.guardianQualification && Boolean(formik.errors.guardianQualification)
             }
             helperText={formik.touched.guardianQualification && formik.errors.guardianQualification}
+            fullWidth
+            size="small"
+          />
+        </Grid>
+        <Grid item xs={12} md={4} lg={3}>
+          <TextField
+            name="guardianPassOutYear"
+            label="Year of Passing"
+            type="number"
+            disabled={!isGuardianDetailsEditable.value}
+            value={formik.values.guardianPassOutYear}
+            onChange={formik.handleChange}
+            error={formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)}
+            helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
             fullWidth
             size="small"
           />
@@ -1062,7 +1092,13 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianAadharNo}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 12) {
+                value = value.slice(0, 12);
+              }
+              formik.setFieldValue('guardianAadharNo', value);
+            }}
             error={formik.touched.guardianAadharNo && Boolean(formik.errors.guardianAadharNo)}
             helperText={formik.touched.guardianAadharNo && formik.errors.guardianAadharNo}
             fullWidth
@@ -1101,6 +1137,7 @@ function RenderFamilyInformation(props: any) {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isSiblingDetailsEditable}
               onSave={handleSave}
               onCancel={handelSiblingDetailsCancel}

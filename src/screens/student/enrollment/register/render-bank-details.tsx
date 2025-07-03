@@ -23,7 +23,7 @@ export const bankDetailsFields: FieldsType[] = [
 ];
 
 const RenderBankDetails = (props: any) => {
-  const { formik, isMainForm = true } = props;
+  const { formik, isMainForm = false } = props;
   const isEditable = useBoolean(isMainForm);
   const handleSave = () => {
     formik.submitForm();
@@ -32,10 +32,13 @@ const RenderBankDetails = (props: any) => {
   const handleCancel = () => {};
   return (
     <SectionCard
-      title=" "
+      title=""
       headerContent={
         !isMainForm && (
-          <CardActions {...{ isEdit: isEditable, onSave: handleSave, onCancel: handleCancel }} />
+          <CardActions
+            isLoading={formik.isSubmitting}
+            {...{ isEdit: isEditable, onSave: handleSave, onCancel: handleCancel }}
+          />
         )
       }
     >

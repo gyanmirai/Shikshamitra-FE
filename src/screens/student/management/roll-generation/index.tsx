@@ -62,7 +62,7 @@ const RollNoGenerationScreen = ({
     }
 
     // Sort students based on selected criteria (name, lastName, or GR number)
-    if (arrangeBy === 'name') {
+    if (arrangeBy === 'firstName') {
       filteredData.sort((a, b) => a.name.localeCompare(b.name));
     } else if (arrangeBy === 'lastName') {
       filteredData.sort((a, b) => a.lastName.localeCompare(b.lastName));
@@ -163,8 +163,8 @@ const RollNoGenerationScreen = ({
             />
             <CustomSelect
               options={[
-                { id: 'surname', name: 'Surname' },
-                { id: 'name', name: 'Name' },
+                { id: 'firstName', name: 'First Name' },
+                { id: 'lastName', name: 'Last Name' },
               ]}
               label="Arrangement By"
               value={arrangeBy}

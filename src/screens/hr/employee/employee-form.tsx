@@ -304,7 +304,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateName: values?.fatherState?.name,
             stateIsoCode: values?.fatherState?.isoCode,
             city: values?.fatherCity?.name,
-            pincode: values.fatherPinCode,
+            pincode: String(values.fatherPinCode),
           },
           motherDetails: {
             name: values.motherName,
@@ -320,7 +320,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateIsoCode: values?.motherState?.isoCode,
 
             city: values?.motherCity?.name,
-            pincode: values.motherPinCode,
+            pincode: String(values.motherPinCode),
           },
           spouseDetails: {
             name: values.spouseName,
@@ -334,7 +334,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateName: values?.spouseState?.name,
             stateIsoCode: values?.spouseState?.isoCode,
             city: values?.spouseCity?.name,
-            pincode: values.spousePinCode,
+            pincode: String(values.spousePinCode),
           },
         },
       }).unwrap();

@@ -2,6 +2,8 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
+import { useState, useEffect } from 'react';
+import { m as motion, AnimatePresence } from 'framer-motion';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -21,6 +23,7 @@ import {
   FormControl,
   Autocomplete,
   FormHelperText,
+  LinearProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -52,16 +55,26 @@ export const SectionCard = ({
   title,
   children,
   headerContent = null,
+  isLoading = false,
 }: {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   headerContent?: React.ReactNode;
+  isLoading?: boolean;
 }) => (
-  <Paper sx={{ p: 2, mb: 3 }} elevation={6}>
-    <Box display="flex" justifyContent="space-between" alignItems="center" pb={2}>
-      <Typography variant="h6" color="primary.main">
-        {title}
-      </Typography>
+  <Paper sx={{ p: 2, mb: 3, position: 'relative', overflow: 'hidden' }} elevation={6}>
+    {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
+    <Box
+      display="flex"
+      justifyContent={title ? 'space-between' : 'end'}
+      alignItems="center"
+      pb={title || headerContent ? 2 : 0}
+    >
+      {title && (
+        <Typography variant="h6" color="primary.main">
+          {title}
+        </Typography>
+      )}
       {headerContent}
     </Box>
     <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
@@ -69,52 +82,106 @@ export const SectionCard = ({
     </Grid>
   </Paper>
 );
+// Motion variants for subtle slide
+const editButtonVariant = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -10 },
+};
 
+const actionButtonsVariant = {
+  hidden: { opacity: 0, x: 20 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 10 },
+};
 export const CardActions = ({
   isEdit,
   onCancel = () => {},
   onSave = () => {},
+  isLoading = false,
 }: {
   isEdit: UseBooleanReturn;
   onSave?: () => void;
   onCancel?: () => void;
-}) => (
-  <Box sx={{ display: 'flex', gap: 1 }}>
-    {!isEdit.value ? (
-      <CustomTooltip title="Edit" placement="top">
-        <IconButton onClick={isEdit.onTrue} title="Edit">
-          <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} onClick={isEdit.onTrue} />
-        </IconButton>
-      </CustomTooltip>
-    ) : (
-      <>
-        <CustomTooltip title="Save" placement="top">
-          <IconButton
-            onClick={() => {
-              // Handle save logic here
-              onSave();
-              isEdit.onFalse();
-            }}
-            title="Save Changes"
+  isLoading?: boolean;
+}) => {
+  const isNewLoading = isLoading && isEdit.value;
+  const [isClickOnSave, setIsClickOnSave] = useState<string>('no');
+  useEffect(() => {
+    if (isClickOnSave === 'yes' && !isLoading) {
+      isEdit.onFalse();
+      setIsClickOnSave('no');
+    }
+  }, [isClickOnSave, isEdit, isLoading]);
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', minHeight: 40 }}>
+      <AnimatePresence mode="wait">
+        {!isEdit.value && (
+          <motion.div
+            key="edit"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={editButtonVariant}
+            transition={{ duration: 0.3 }}
           >
-            <Iconify icon="lets-icons:save" sx={{ cursor: 'pointer' }} />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Cancel" placement="top">
-          <IconButton
-            onClick={() => {
-              onCancel();
-              isEdit.onFalse();
-            }}
-            title="Cancel"
+            <CustomTooltip title="Edit" placement="top">
+              <IconButton onClick={isEdit.onTrue} title="Edit">
+                <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} />
+              </IconButton>
+            </CustomTooltip>
+          </motion.div>
+        )}
+
+        {isEdit.value && (
+          <motion.div
+            key="actions"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={actionButtonsVariant}
+            transition={{ duration: 0.3 }}
+            style={{ display: 'flex', gap: 8 }}
           >
-            <Iconify icon="game-icons:cancel" sx={{ cursor: 'pointer' }} />
-          </IconButton>
-        </CustomTooltip>
-      </>
-    )}
-  </Box>
-);
+            <CustomTooltip title="Save" placement="top">
+              <IconButton
+                onClick={() => {
+                  onSave();
+                  setIsClickOnSave('yes');
+                }}
+                disabled={isNewLoading && isClickOnSave === 'yes'}
+                title="Save Changes"
+              >
+                <Iconify
+                  icon={
+                    isNewLoading && isClickOnSave === 'yes'
+                      ? 'eos-icons:loading'
+                      : 'lets-icons:save'
+                  }
+                  width={20}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </IconButton>
+            </CustomTooltip>
+
+            <CustomTooltip title="Cancel" placement="top">
+              <IconButton
+                onClick={() => {
+                  onCancel();
+                  isEdit.onFalse();
+                }}
+                title="Cancel"
+              >
+                <Iconify icon="game-icons:cancel" width={20} sx={{ cursor: 'pointer' }} />
+              </IconButton>
+            </CustomTooltip>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Box>
+  );
+};
 
 const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
@@ -183,6 +250,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           !isMainForm && (
             <CardActions
               isEdit={isBasicDetailsEditable}
+              isLoading={formik.isSubmitting}
               onSave={handleSave}
               onCancel={handleBasicDetailCancel}
             />
@@ -498,6 +566,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isContactDetailsEditable}
               onSave={handleSave}
               onCancel={handleContactDetailCancel}
@@ -564,6 +633,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isProfessionalDetailsEditable}
               onSave={handleSave}
               onCancel={handleProfessionalDetailCancel}
@@ -678,6 +748,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isAddressDetailsEditable}
               onSave={handleSave}
               onCancel={handleAddressDetailCancel}

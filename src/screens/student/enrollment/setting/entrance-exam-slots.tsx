@@ -123,7 +123,7 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
           </>
         }
         columns={[
-          { label: 'Slot Name', id: 'slotName' },
+          // { label: 'Slot Name', id: 'slotName' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
           { label: 'End Time', id: 'endTime', filterType: 'date' },
           { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },

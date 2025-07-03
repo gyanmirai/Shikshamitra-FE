@@ -18,7 +18,6 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ChangeClassScreen from './change-class';
 import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
@@ -60,17 +59,17 @@ const TABS = [
       division: string;
     }) => <ChangeDivisionScreen {...props} />,
   },
-  {
-    value: 'changeClass',
-    label: 'Change Class',
-    icon: <Iconify icon="icon-park-outline:exchange-one" width={20} />,
-    component: (props: {
-      isLoading: boolean;
-      tableData: IInquiryData[];
-      allClass: Standards[];
-      classes: string;
-    }) => <ChangeClassScreen {...props} />,
-  },
+  // {
+  //   value: 'changeClass',
+  //   label: 'Change Class',
+  //   icon: <Iconify icon="icon-park-outline:exchange-one" width={20} />,
+  //   component: (props: {
+  //     isLoading: boolean;
+  //     tableData: IInquiryData[];
+  //     allClass: Standards[];
+  //     classes: string;
+  //   }) => <ChangeClassScreen {...props} />,
+  // },
   // { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
   // { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
   {
@@ -121,7 +120,7 @@ const StudentManagementScreen = () => {
 
   // const tabs = useTabs('grGeneration');
 
-  const CurrentComponent = TABS.find((tab) => tab.value === searchParams.tab)?.component;
+  const CurrentComponent: any = TABS.find((tab) => tab.value === searchParams.tab)?.component;
 
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',

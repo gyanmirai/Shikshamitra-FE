@@ -18,7 +18,7 @@ const RenderPayrollFields = (props: any) => {
     <Box>
       {!isMainForm && (
         <Box display="flex" justifyContent="flex-end" p={1}>
-          <CardActions isEdit={isEditable} onSave={handleSave} />
+          <CardActions isLoading={formik.isSubmitting} isEdit={isEditable} onSave={handleSave} />
         </Box>
       )}
       <Grid container spacing={2}>

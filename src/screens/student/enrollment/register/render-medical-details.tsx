@@ -10,7 +10,7 @@ import {
 import type { FieldsType } from './type';
 
 const RenderMedicalFields = (props: any) => {
-  const { formik, isMainForm = true } = props;
+  const { formik, isMainForm = false } = props;
   const isMedicalEditable = useBoolean(isMainForm);
   const handleSave = () => {
     formik.submitForm();
@@ -19,10 +19,15 @@ const RenderMedicalFields = (props: any) => {
   const handleCancel = () => {};
   return (
     <SectionCard
-      title=" "
+      title=""
       headerContent={
         !isMainForm && (
-          <CardActions isEdit={isMedicalEditable} onSave={handleSave} onCancel={handleCancel} />
+          <CardActions
+            isLoading={formik.isSubmitting}
+            isEdit={isMedicalEditable}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         )
       }
     >

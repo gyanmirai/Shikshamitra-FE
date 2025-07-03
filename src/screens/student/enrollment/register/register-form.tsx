@@ -64,6 +64,7 @@ const RegisterForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   isComeFromIssueForm?: boolean;
 }) => {
+  console.log('============>', editData);
   const [activeStep, setActiveStep] = useState(0);
 
   const [addRegistration] = useQueryAndMutation({
@@ -527,6 +528,7 @@ const RegisterForm = ({
                       formik,
                       field,
                       isEdit: true,
+                      isMainForm: true,
                     })
                   ) : field.type === 'date' ? (
                     <DatePicker

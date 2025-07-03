@@ -17,7 +17,7 @@ import RenderEmergencyAddressFields from './RenderEmergencyAddressFields';
 import type { FieldsType } from './type';
 
 const RenderCommunicationFields = (props: any) => {
-  const { formik, isEdit, isMainForm = true } = props;
+  const { formik, isEdit, isMainForm = false } = props;
   const isCommunicationEditable = useBoolean(isMainForm);
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
@@ -36,6 +36,7 @@ const RenderCommunicationFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isCommunicationEditable}
               onSave={handleSave}
               onCancel={handleCommunicationCancel}
@@ -153,6 +154,7 @@ const RenderCommunicationFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isLocalAddressEditable}
               onSave={handleSave}
               onCancel={handleLocalAddressCancel}
@@ -169,6 +171,7 @@ const RenderCommunicationFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isPermanentAddressEditable}
               onSave={handleSave}
               onCancel={handlePermanentAddressCancel}
@@ -185,6 +188,7 @@ const RenderCommunicationFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isEmergencyAddressEditable}
               onSave={handleSave}
               onCancel={handleEmergencyAddressCancel}

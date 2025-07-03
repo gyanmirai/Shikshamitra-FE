@@ -128,6 +128,7 @@ const EntranceExamScreen = () => {
         name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
         medium: item.studentEnrollment.educationMedium.name,
         class: item.studentEnrollment.standard.name,
+        board: item.studentEnrollment.educationBoard.name,
         status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
         percentage:
           item.marksObtained === null
@@ -344,6 +345,17 @@ const EntranceExamScreen = () => {
               sticky: true,
               minWidth: 180,
             },
+
+            {
+              id: 'board',
+              label: 'Board',
+              align: 'left',
+            },
+            {
+              id: 'medium',
+              label: 'Medium',
+              align: 'left',
+            },
             {
               id: 'class',
               label: 'Class',
@@ -351,11 +363,7 @@ const EntranceExamScreen = () => {
             },
             { id: 'date', label: 'Date', filterType: 'date' },
             { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
-            {
-              id: 'medium',
-              label: 'Medium',
-              align: 'left',
-            },
+
             {
               id: 'passingMark',
               label: 'Passing Marks',
@@ -954,27 +962,27 @@ const ResultForm = ({
     },
     validateOnChange: true,
     validationSchema: Yup.object({
-      obtainedMarks: Yup.string()
+      obtainedMarks: Yup.number()
         .test(
           'is-less-than-total',
           'Obtained marks must be less than total marks',
           (value, context) => {
             const { totalMarks } = context.parent;
-            return value == null || (totalMarks != null && value <= totalMarks);
+            return value ? value <= totalMarks : true;
           }
         )
         .required('Obtained marks is required'),
-      passingMarks: Yup.string()
+      passingMarks: Yup.number()
         .test(
           'is-less-than-total',
           'Passing marks must be less than total marks',
           (value, context) => {
             const { totalMarks } = context.parent;
-            return value == null || (totalMarks != null && value <= totalMarks);
+            return value ? value <= totalMarks : true;
           }
         )
         .required('Passing marks is required'),
-      totalMarks: Yup.string().required('Total marks is required'),
+      totalMarks: Yup.number().required('Total marks is required'),
     }),
     onSubmit: async (values) => {
       console.log(values);
@@ -993,7 +1001,7 @@ const ResultForm = ({
           },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${editData?.name || ''} marks updated successfully`,
+          message: `${editData?.name || ''}'s marks updated successfully`,
         });
         handleClose(null, true);
       } catch (error) {
@@ -1015,7 +1023,7 @@ const ResultForm = ({
     <>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" flexDirection="column" gap={3}>
             <ShakingTextField
               error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
             >

@@ -176,9 +176,11 @@ interface IFollowUpResponse {
 export const CommunicationForm = ({
   handleCloseDialog,
   studentEnrollmentId,
+  isStatus = true,
 }: {
   handleCloseDialog: () => void;
   studentEnrollmentId: string;
+  isStatus?: boolean;
 }) => {
   const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -216,7 +218,7 @@ export const CommunicationForm = ({
           studentEnrollmentId,
           body: {
             message: values.msg,
-            inquiryStatusType: values.status,
+            inquiryStatusType: isStatus ? values.status : FollowUpStatusType.Interested,
             dueDate: dateConvertor((values.dueDate as Dayjs).format(dateFormat)),
           },
         }).unwrap();
@@ -353,17 +355,19 @@ export const CommunicationForm = ({
             }}
           />
 
-          <CustomSelect
-            options={FollowUpStatusTypeOptions}
-            value={formik.values.status}
-            isLoading={isLoading}
-            sx={{ minWidth: 200, flex: 1 }}
-            onChange={(newValue) => {
-              formik.setFieldValue('status', newValue);
-            }}
-            size="small"
-            label="Status"
-          />
+          {isStatus && (
+            <CustomSelect
+              options={FollowUpStatusTypeOptions}
+              value={formik.values.status}
+              isLoading={isLoading}
+              sx={{ minWidth: 200, flex: 1 }}
+              onChange={(newValue) => {
+                formik.setFieldValue('status', newValue);
+              }}
+              size="small"
+              label="Status"
+            />
+          )}
         </Box>
       </Box>
 

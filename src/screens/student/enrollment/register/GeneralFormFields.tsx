@@ -32,6 +32,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -46,7 +47,7 @@ import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isEdit: disabled, isMainForm = true } = props;
+  const { formik, isEdit: disabled, isMainForm = false } = props;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);
@@ -54,8 +55,8 @@ const RenderGeneralFormFields = (props: any) => {
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
 
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
   };
   const handleGeneralDetailCancel = () => {};
   const handleStudentDetailCancel = () => {};
@@ -70,6 +71,7 @@ const RenderGeneralFormFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isGeneralFormEditable}
               onSave={handleSave}
               onCancel={handleGeneralDetailCancel}
@@ -111,6 +113,7 @@ const RenderGeneralFormFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isStudentDetailsEditable}
               onSave={handleSave}
               onCancel={handleStudentDetailCancel}
@@ -123,13 +126,20 @@ const RenderGeneralFormFields = (props: any) => {
             maxSize={3145728}
             onDrop={async (acceptedFiles: File[]) => {
               const value = acceptedFiles[0];
+
+              // Check if file size is within 3MB limit
+              if (value.size > 3 * 1024 * 1024) {
+                shikshaMitraToast.error({ message: 'File size should be less than 3MB.' });
+                return;
+              }
+
               const base64 = await fileToBase64(value);
               formik.setFieldValue('photo', base64);
               formik.setFieldTouched('photo', true);
             }}
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
-            disabled={!isGeneralFormEditable.value}
+            disabled={!isStudentDetailsEditable.value}
           />
         </Grid>
         <Grid item xs={12} md={9}>
@@ -149,11 +159,13 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.firstName && formik.errors.firstName}
                   fullWidth
                   onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('firstName', newName);
+                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const capitalized = capitalize(onlyLetters);
+
+                    formik.setFieldValue('firstName', capitalized);
                     formik.setFieldTouched('firstName', true);
                   }}
-                  disabled={!isGeneralFormEditable.value}
+                  disabled={!isStudentDetailsEditable.value}
                 />
               </ShakingTextField>
             </Grid>
@@ -172,11 +184,12 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.middleName && formik.errors.middleName}
                   fullWidth
                   onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('middleName', newName);
+                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const capitalized = capitalize(onlyLetters);
+                    formik.setFieldValue('middleName', capitalized);
                     formik.setFieldTouched('middleName', true);
                   }}
-                  disabled={!isGeneralFormEditable.value}
+                  disabled={!isStudentDetailsEditable.value}
                 />
               </ShakingTextField>
             </Grid>
@@ -193,11 +206,12 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.lastName && formik.errors.lastName}
                   fullWidth
                   onChange={(e: any) => {
-                    const newName = capitalize(e.target.value);
-                    formik.setFieldValue('lastName', newName);
+                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const capitalized = capitalize(onlyLetters);
+                    formik.setFieldValue('lastName', capitalized);
                     formik.setFieldTouched('lastName', true);
                   }}
-                  disabled={!isGeneralFormEditable.value}
+                  disabled={!isStudentDetailsEditable.value}
                 />
               </ShakingTextField>
             </Grid>
@@ -207,7 +221,7 @@ const RenderGeneralFormFields = (props: any) => {
                   label="Date of Birth *"
                   name="dob"
                   value={formik.values.dob}
-                  disabled={!isGeneralFormEditable.value}
+                  disabled={!isStudentDetailsEditable.value}
                   format="DD-MM-YYYY"
                   slotProps={{
                     textField: {
@@ -215,7 +229,7 @@ const RenderGeneralFormFields = (props: any) => {
                       size: 'small',
                       error: formik.touched.dob && Boolean(formik.errors.dob),
                       helperText: formik.touched.dob && formik.errors.dob,
-                      disabled: !disabled,
+                      disabled: !isStudentDetailsEditable.value,
                     },
                   }}
                   onChange={(newValue) => {
@@ -256,7 +270,7 @@ const RenderGeneralFormFields = (props: any) => {
                       value={index}
                       control={<Radio size="small" />}
                       label={GenderType[index]}
-                      disabled={!isGeneralFormEditable.value}
+                      disabled={!isStudentDetailsEditable.value}
                     />
                   ))}
                 </RadioGroup>
@@ -273,6 +287,7 @@ const RenderGeneralFormFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isContactDetailsEditable}
               onSave={handleSave}
               onCancel={handleContactDetailCancel}
@@ -288,11 +303,11 @@ const RenderGeneralFormFields = (props: any) => {
           >
             <PhoneInput
               name="primaryContactNumber"
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isContactDetailsEditable.value}
               value={formik.values.primaryContactNumber}
               onChange={(value) => {
                 formik.setFieldValue('primaryContactNumber', value);
-                formik.setFieldTouched('primaryContactNumber', true);
+                formik.setFieldTouched('primaryContactNumber', true, true);
               }}
               label="Primary Contact No *"
               error={
@@ -314,7 +329,7 @@ const RenderGeneralFormFields = (props: any) => {
             <PhoneInput
               name="secondaryContactNumber"
               value={formik.values.secondaryContactNumber}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isContactDetailsEditable.value}
               onChange={(value) => {
                 formik.setFieldValue('secondaryContactNumber', value);
                 formik.setFieldTouched('secondaryContactNumber', true);
@@ -348,7 +363,7 @@ const RenderGeneralFormFields = (props: any) => {
                 formik.setFieldValue('email', e.target.value);
                 formik.setFieldTouched('email', true);
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isContactDetailsEditable.value}
               InputProps={{
                 startAdornment: (
                   <>
@@ -368,6 +383,7 @@ const RenderGeneralFormFields = (props: any) => {
           !isMainForm && (
             <CardActions
               isEdit={isIdentificationEditable}
+              isLoading={formik.isSubmitting}
               onSave={handleSave}
               onCancel={handleIdentificationDetailCancel}
             />
@@ -381,7 +397,7 @@ const RenderGeneralFormFields = (props: any) => {
               size="small"
               label="Aadhar No."
               name="adharNo"
-              type="text"
+              type="number"
               value={formik.values.adharNo}
               onBlur={formik.handleBlur}
               error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
@@ -393,13 +409,13 @@ const RenderGeneralFormFields = (props: any) => {
                   value = value.slice(0, 12);
                 }
                 formik.setFieldValue('adharNo', value);
-                formik.setFieldTouched('adharNo', true);
+                formik.setFieldTouched('adharNo', true, true);
               }}
               inputProps={{
                 maxLength: 12,
                 pattern: '[0-9]*',
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -416,7 +432,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.apparId && formik.errors.apparId}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -432,7 +448,7 @@ const RenderGeneralFormFields = (props: any) => {
               error={formik.touched.panNo && Boolean(formik.errors.panNo)}
               helperText={formik.touched.panNo && formik.errors.panNo}
               fullWidth
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
               inputProps={{
                 maxLength: 10,
                 inputMode: 'text',
@@ -453,14 +469,14 @@ const RenderGeneralFormFields = (props: any) => {
           <ShakingTextField
             error={formik.touched.inquiryPreference && Boolean(formik.errors.inquiryPreference)}
           >
-            <RenderInquiryPrefrance {...props} />
+            <RenderInquiryPrefrance {...props} disabled={!isIdentificationEditable.value} />
           </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={3}>
           <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
             <FormControl
               fullWidth
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
               error={!!formik.errors.religion && formik.touched.religion}
             >
               <InputLabel id="religion-label" size="small">
@@ -503,11 +519,16 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.familyCast && formik.errors.familyCast}
               fullWidth
               onChange={(e: any) => {
-                const newName = capitalize(e.target.value);
+                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                const newName = capitalized
+                  .split(' ')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ');
                 formik.setFieldValue('familyCast', newName);
-                formik.setFieldTouched('familyCast', true);
+                formik.setFieldTouched('familyCast', true, true);
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -536,7 +557,7 @@ const RenderGeneralFormFields = (props: any) => {
                 label="Cast Category *"
                 name="castCategory"
                 error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
-                disabled={!isGeneralFormEditable.value}
+                disabled={!isIdentificationEditable.value}
               >
                 {EmployeeCastTypeArray.map((i, index) => (
                   <MenuItem key={i} value={index}>
@@ -570,7 +591,7 @@ const RenderGeneralFormFields = (props: any) => {
                 formik.setFieldValue('nationality', newName);
                 formik.setFieldTouched('nationality', true);
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -591,7 +612,7 @@ const RenderGeneralFormFields = (props: any) => {
                 formik.setFieldValue('birthPlace', newName);
                 formik.setFieldTouched('birthPlace', true);
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -603,7 +624,7 @@ const RenderGeneralFormFields = (props: any) => {
               fullWidth
               size="small"
               error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isIdentificationEditable.value}
             >
               <InputLabel id="mother-tongue-label">Mother Tongue</InputLabel>
               <Select
@@ -633,6 +654,7 @@ const RenderGeneralFormFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isAddressEditable}
               onSave={handleSave}
               onCancel={handleAddressDetailCancel}
@@ -647,7 +669,7 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="addressLine1"
               size="small"
-              label="Building No./Flat/ House No."
+              label="Building No./Flat/ House No. *"
               name="addressLine1"
               value={formik.values.addressLine1}
               onBlur={formik.handleBlur}
@@ -655,7 +677,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isAddressEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -666,7 +688,7 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="addressLine2"
               size="small"
-              label="Area/Locality/Road Name"
+              label="Area/Locality/Road Name *"
               name="addressLine2"
               value={formik.values.addressLine2}
               onBlur={formik.handleBlur}
@@ -674,7 +696,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isAddressEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -693,7 +715,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.addressLine3 && formik.errors.addressLine3}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isAddressEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -709,7 +731,7 @@ const RenderGeneralFormFields = (props: any) => {
               onBlur={formik.handleBlur}
               error={formik.touched.country && Boolean(formik.errors?.country?.name)}
               helperText={formik.touched.country && formik.errors?.country?.name}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isAddressEditable.value}
               textFieldProps={{
                 label: 'Country *',
               }}
@@ -731,7 +753,7 @@ const RenderGeneralFormFields = (props: any) => {
               countryValue={formik.values.country}
               error={formik.touched.state && Boolean(formik.errors?.state?.name)}
               helperText={formik.touched.state && formik.errors?.state?.name}
-              disabled={!disabled || !formik.values.country}
+              disabled={!isAddressEditable.value || !formik.values.country}
               textFieldProps={{
                 label: 'State *',
               }}
@@ -748,7 +770,7 @@ const RenderGeneralFormFields = (props: any) => {
               stateValue={formik.values.state}
               error={formik.touched.city && Boolean(formik.errors?.city?.name)}
               helperText={formik.touched.city && formik.errors?.city?.name}
-              disabled={!disabled || !formik.values.state}
+              disabled={!isAddressEditable.value || !formik.values.state}
               textFieldProps={{
                 label: 'City *',
               }}
@@ -773,13 +795,13 @@ const RenderGeneralFormFields = (props: any) => {
                   value = value.slice(0, 6);
                 }
                 formik.setFieldValue('pinCode', value);
-                formik.setFieldTouched('pinCode', true);
+                formik.setFieldTouched('pinCode', true, true);
               }}
               inputProps={{
                 maxLength: 6,
                 pattern: '[0-9]*',
               }}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isAddressEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -790,6 +812,7 @@ const RenderGeneralFormFields = (props: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isPreviousSchoolEditable}
               onSave={handleSave}
               onCancel={handlePreviousSchoolDetailCancel}
@@ -812,7 +835,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.previousSchool && formik.errors.previousSchool}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isPreviousSchoolEditable.value}
             />
           </ShakingTextField>
         </Grid>
@@ -831,7 +854,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.lastClassPassed && formik.errors.lastClassPassed}
               fullWidth
               onChange={formik.handleChange}
-              disabled={!isGeneralFormEditable.value}
+              disabled={!isPreviousSchoolEditable.value}
             />
           </ShakingTextField>
         </Grid>

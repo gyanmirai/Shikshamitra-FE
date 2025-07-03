@@ -295,8 +295,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     },
     // Use validation schema based on active tab
     validationSchema: infoValidations[activeTabIndex],
-    onSubmit: (values) => {
-      onSubmit(values);
+    onSubmit: async (values, { setSubmitting }) => {
+      await onSubmit(values);
+      setSubmitting(false);
     },
   });
   return (

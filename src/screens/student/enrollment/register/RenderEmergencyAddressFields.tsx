@@ -42,7 +42,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine1"
           label="Building No./Flat/House No."
-          value={formik.values.emergencyAddressLine1}
+          value={formik.values.emergencyAddressLine1 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine1 && Boolean(formik.errors.emergencyAddressLine1)
@@ -57,7 +57,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine2"
           label="Area/Locality/Road Name"
-          value={formik.values.emergencyAddressLine2}
+          value={formik.values.emergencyAddressLine2 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine2 && Boolean(formik.errors.emergencyAddressLine2)
@@ -72,7 +72,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine3"
           label="Landmark"
-          value={formik.values.emergencyAddressLine3}
+          value={formik.values.emergencyAddressLine3 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine3 && Boolean(formik.errors.emergencyAddressLine3)
@@ -122,8 +122,14 @@ const RenderEmergencyAddressFields = (props: any) => {
         <TextField
           name="emergencyPincode"
           disabled={!isEdit}
-          value={formik.values.emergencyPincode}
-          onChange={formik.handleChange}
+          value={formik.values.emergencyPincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('emergencyPincode', value);
+          }}
           error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
           helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
           fullWidth

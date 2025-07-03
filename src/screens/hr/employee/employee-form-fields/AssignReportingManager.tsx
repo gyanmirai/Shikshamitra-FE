@@ -36,6 +36,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
           <CardActions
             isEdit={isEditable}
             onSave={handleSave}
+            isLoading={formik.isSubmitting}
             onCancel={() => {
               setFieldValue('reportingManager', editData?.reportingManager || '');
             }}

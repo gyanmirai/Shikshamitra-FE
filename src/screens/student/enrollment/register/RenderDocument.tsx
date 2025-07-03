@@ -121,11 +121,6 @@ export const RenderDocuments = (props: any) => {
         columns={[
           { id: 'documentName', label: 'Name' },
           {
-            id: 'docType',
-            label: 'Accepted Document',
-            isSort: false,
-          },
-          {
             id: 'statusVal',
             label: 'Status',
             enumOptions: DocumentStatusOptions,
@@ -221,13 +216,15 @@ export const RenderDocuments = (props: any) => {
             label: 'View',
             isFilter: false,
             isSort: false,
+            align: 'left',
+            minWidth: '80px',
             render(value, row) {
               return (
                 <IconButton
                   style={{
                     textAlign: 'left',
                     marginLeft: '0px',
-                    paddingLeft: '0px',
+                    padding: '0px',
                     justifyContent: 'flex-start',
                     display: 'flex',
                   }}
@@ -278,7 +275,7 @@ export const RenderDocuments = (props: any) => {
   );
 };
 
-const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
+export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
   // Fetch student document data using the provided student ID and document ID
   // Returns document content and loading state for rendering
   const { data: documents, isLoading } = useQueryAndMutation({
@@ -299,7 +296,7 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
     >
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
-      ) : (
+      ) : documents?.contentType === 'application/pdf' ? (
         <Box
           component="iframe"
           src={convertBase64Format(documents.content)}
@@ -307,10 +304,18 @@ const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
             width: '100%',
             height: '100%',
             border: 'none',
+          }}
+          title="Employee Document"
+        />
+      ) : (
+        <Box
+          component="img"
+          src={convertBase64Format(documents.content)}
+          sx={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
             objectFit: 'contain',
-            '& img': {
-              height: '100%',
-            },
           }}
           title="Employee Document"
         />

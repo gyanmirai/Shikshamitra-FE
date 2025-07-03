@@ -471,7 +471,6 @@ const FamilyMemberSection = ({
     formik.submitForm();
   };
   const handleCancel = () => {
-    console.log('cancel', editData);
     formik.setFieldValue(`${type}Name`, editData.fatherDetails.name || '');
     formik.setFieldValue(`${type}Occupation`, editData.fatherDetails.occupation || '');
     formik.setFieldValue(`${type}ContactNo`, editData.fatherDetails.contactNo || '');
@@ -496,7 +495,12 @@ const FamilyMemberSection = ({
       title={title}
       headerContent={
         !isMainForm && (
-          <CardActions isEdit={isEditable} onSave={handleSave} onCancel={handleCancel} />
+          <CardActions
+            isEdit={isEditable}
+            isLoading={formik.isSubmitting}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         )
       }
     >

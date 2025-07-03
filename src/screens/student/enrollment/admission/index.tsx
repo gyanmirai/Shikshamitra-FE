@@ -17,6 +17,7 @@ import {
   Tab,
   Tabs,
   Stack,
+  Paper,
   Button,
   Dialog,
   Divider,
@@ -24,7 +25,6 @@ import {
   useTheme,
   MenuList,
   MenuItem,
-  Skeleton,
   TextField,
   IconButton,
   Typography,
@@ -37,25 +37,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 import calculateAge from 'src/utils/calculate-age';
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { GenderType } from 'src/enums/gender';
 import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
 import { RegistrationStatusType } from 'src/enums/registration-status-type';
+import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
 import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
-import {
-  useGetStudentDocumentsQuery,
-  useGetStudentDocumentByIdQuery,
-} from 'src/redux/student/registration/registration-api';
-import {
-  AdmissionPaymentStatusType,
-  AdmissionPaymentStatusOptions,
-  AdmissionPaymentStatusTypeColors,
-} from 'src/enums/admission-payment-statusType';
 import {
   useGetStudentAdmissionQuery,
   useChangeAdmissionStatusMutation,
@@ -76,6 +67,7 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
+import { ViewDocuments } from '../register/RenderDocument';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -547,6 +539,9 @@ const AdmissionScreen = () => {
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
           studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
           genderValue: GenderType[item?.genderType],
+          address: [item.addressLine1, item.addressLine2, item.addressLine3]
+            .filter(Boolean)
+            .join(', '),
         })) || [],
     [admissionData?.items, tabs.value]
   );
@@ -577,12 +572,14 @@ const AdmissionScreen = () => {
         sx={{ mb: 2 }}
         description="Manage student admissions: Approve or reject applications here."
       />
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Paper
+        elevation={2}
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1, mb: 2 }}
+      >
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
           }}
@@ -617,7 +614,7 @@ const AdmissionScreen = () => {
         >
           Change Status
         </Button>
-      </Box>
+      </Paper>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
@@ -627,7 +624,7 @@ const AdmissionScreen = () => {
         columns={[
           {
             id: 'checkBox',
-            align: 'left',
+            align: 'center',
             minWidth: '60px',
             isSort: false,
             sticky: true,
@@ -662,18 +659,17 @@ const AdmissionScreen = () => {
               );
             },
           },
-          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
-            id: 'inquiryNumber',
-            label: 'Inquiry No.',
-            minWidth: '120px',
-            isFilter: true,
-            filterType: 'string',
+            id: 'studentName',
+            label: 'Student Name',
+            minWidth: '160px',
             align: 'left',
+            sticky: true,
           },
+          { id: 'educationBoard.name', label: 'Board', align: 'left' },
+          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
           { id: 'standard.name', label: 'Class', align: 'left' },
           { id: 'division.name', label: 'Division', align: 'left' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
           {
             id: 'dobValue',
             label: 'DOB',
@@ -683,6 +679,17 @@ const AdmissionScreen = () => {
             filterType: 'date',
           },
           { id: 'ageValue', label: 'Age', align: 'left' },
+          { id: 'genderValue', label: 'Gender', align: 'left' },
+          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
+          {
+            id: 'inquiryNumber',
+            label: 'Inquiry No.',
+            minWidth: '120px',
+            isFilter: true,
+            filterType: 'string',
+            align: 'left',
+          },
+
           {
             id: 'doiValue',
             label: 'Inquiry Date',
@@ -691,12 +698,12 @@ const AdmissionScreen = () => {
             isDateRangeFilter: true,
             filterType: 'date',
           },
-          { id: 'genderValue', label: 'Gender', align: 'left' },
-          { id: 'address', label: 'Address', minWidth: '100px', align: 'left' },
+
+          { id: 'address', label: 'Address', minWidth: '180px', align: 'left' },
           {
             id: 'primaryContactNumber',
             label: 'Primary Contact No.',
-            minWidth: '150px',
+            minWidth: '185px',
             align: 'left',
           },
           {
@@ -717,43 +724,43 @@ const AdmissionScreen = () => {
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
           // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
           // { id: 'Name', label: 'Name', align: 'left' },
-          { id: 'Code', label: 'Code', align: 'left' },
+          // { id: 'Code', label: 'Code', align: 'left' },
           // { id: 'class', label: 'Class', align: 'left' },
           // { id: 'Organization', label: 'Organization' },
-          {
-            id: 'totalAmount',
-            label: 'Total Amount',
-            minWidth: '135px',
-            filterType: 'number',
-            align: 'left',
-          },
-          {
-            id: 'paidAmount',
-            label: 'Paid Amount',
-            minWidth: '125px',
-            filterType: 'number',
-            align: 'left',
-          },
-          {
-            id: 'feeStatusType',
-            label: 'Payment Status',
-            minWidth: '150px',
-            filterType: 'enum',
-            sticky: true,
-            enumOptions: AdmissionPaymentStatusOptions,
-            align: 'left',
-            render(value, row) {
-              const color = AdmissionPaymentStatusTypeColors[
-                value as Partial<AdmissionPaymentStatusType>
-              ] as LabelColor;
+          // {
+          //   id: 'totalAmount',
+          //   label: 'Total Amount',
+          //   minWidth: '135px',
+          //   filterType: 'number',
+          //   align: 'left',
+          // },
+          // {
+          //   id: 'paidAmount',
+          //   label: 'Paid Amount',
+          //   minWidth: '125px',
+          //   filterType: 'number',
+          //   align: 'left',
+          // },
+          // {
+          //   id: 'feeStatusType',
+          //   label: 'Payment Status',
+          //   minWidth: '150px',
+          //   filterType: 'enum',
+          //   sticky: true,
+          //   enumOptions: AdmissionPaymentStatusOptions,
+          //   align: 'left',
+          //   render(value, row) {
+          //     const color = AdmissionPaymentStatusTypeColors[
+          //       value as Partial<AdmissionPaymentStatusType>
+          //     ] as LabelColor;
 
-              return (
-                <Label color={color}>
-                  {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
-                </Label>
-              );
-            },
-          },
+          //     return (
+          //       <Label color={color}>
+          //         {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
+          //       </Label>
+          //     );
+          //   },
+          // },
           {
             id: 'actions',
             label: 'Actions',
@@ -787,14 +794,14 @@ const AdmissionScreen = () => {
                         <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
                         Assign Division
                       </MenuItem>
-                      <MenuItem
+                      {/* <MenuItem
                         onClick={() => {
                           dialogForCollectFees.onTrue();
                         }}
                       >
                         <Iconify icon="tdesign:money" />
                         Pay Fees
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem
                         onClick={() => {
                           followUpDialog.onTrue();
@@ -902,6 +909,7 @@ const AdmissionScreen = () => {
             followUpDialog.onFalse();
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          isStatus={false}
         />
       </CustomDialog>
 
@@ -961,13 +969,10 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
       <DialogScrollContent>
         <Typography variant="subtitle2" color="text.secondary">
           Name :{' '}
-          {editData?.firstName || `${editData?.lastName}` || `${editData?.middleName}` || '-'}
+          {`${editData?.lastName || ''} ${editData?.firstName || ''} ${editData?.middleName || ''}`}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary">
-          Class : {editData?.standard?.name}
-        </Typography>
-        <Typography variant="subtitle2" color="text.secondary">
-          Parent Name : {editData?.fatherDetails.name || '-'}
+          Class : {editData?.standard?.name} {editData?.division?.name}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary">
           Contact : {editData?.primaryContactNumber || '-'}
@@ -1166,7 +1171,7 @@ const EntranceExamSections = ({ editData }: any) => {
         </IconButton>
       </Stack>
 
-      {exam.value && (
+      {entranceExamData ? (
         <Stack spacing={2} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
@@ -1187,6 +1192,12 @@ const EntranceExamSections = ({ editData }: any) => {
             </Box>
             {examData?.obtainMarks || 0}/{examData?.totalMarks || 0}
           </Stack>
+        </Stack>
+      ) : (
+        <Stack spacing={2} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
+          <Box component="span" sx={{ textAlign: 'center', color: 'text.secondary' }}>
+            No Entrance Exam Found
+          </Box>
         </Stack>
       )}
     </Stack>
@@ -1282,28 +1293,6 @@ const DocumentsSections = ({ editData }: any) => {
         <ViewDocuments id={editData?.id} docId={docId} />
       </Dialog>
     </Stack>
-  );
-};
-
-const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentByIdQuery,
-    params: { id, documentId: docId },
-  });
-
-  return (
-    <Box>
-      {isLoading ? (
-        <Skeleton variant="rectangular" height={300} />
-      ) : (
-        <iframe
-          src={convertBase64Format(documents.content)}
-          style={{ width: '100%', height: 500 }}
-          title="Employee Document"
-        />
-      )}
-    </Box>
   );
 };
 
@@ -1455,7 +1444,11 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
         <CustomSelect
-          options={getStatusOptions()}
+          options={[
+            { label: 'Approved', value: RegistrationStatusType.Approved },
+            { label: 'Pending', value: RegistrationStatusType.Pending },
+            { label: 'Rejected', value: RegistrationStatusType.Rejected },
+          ]}
           value={formik.values.status}
           onChange={(val) => {
             formik.setFieldValue('status', val);

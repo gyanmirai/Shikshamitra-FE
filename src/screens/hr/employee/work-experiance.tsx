@@ -38,7 +38,12 @@ const WorkExperiences = (props: any) => {
     <Box>
       {!isMainForm && (
         <Box display="flex" justifyContent="flex-end" p={1}>
-          <CardActions isEdit={isEditable} onSave={handleSave} onCancel={handleCancel} />
+          <CardActions
+            isLoading={formik.isSubmitting}
+            isEdit={isEditable}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         </Box>
       )}
       <Box display="flex" justifyContent="flex-end">

@@ -15,7 +15,7 @@ import CustomSelect from 'src/components/custom-select';
 import type { FieldsType } from './type';
 
 const RenderAdditionalDetails = (props: any) => {
-  const { formik, isEdit, isMainForm = true } = props;
+  const { formik, isEdit, isMainForm = false } = props;
   const isAdditionalDetailsEditable = useBoolean(isMainForm);
 
   const handleSave = () => {
@@ -24,10 +24,11 @@ const RenderAdditionalDetails = (props: any) => {
   const handleCancel = () => {};
   return (
     <SectionCard
-      title=" "
+      title=""
       headerContent={
         !isMainForm && (
           <CardActions
+            isLoading={formik.isSubmitting}
             isEdit={isAdditionalDetailsEditable}
             onSave={handleSave}
             onCancel={handleCancel}
