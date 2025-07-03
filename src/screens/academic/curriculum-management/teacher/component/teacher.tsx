@@ -6,7 +6,7 @@ import type { Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Save, RestartAlt } from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -262,7 +262,7 @@ const Teacher = ({
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button
             variant="outlined"
-            startIcon={<RestartAlt />}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={() => {
               resetConfirmDialog.onTrue();
             }}
@@ -296,7 +296,7 @@ const Teacher = ({
             label: 'Division',
             filterType: 'string',
             align: 'left',
-            minWidth: '100px',
+            minWidth: '80px',
             sticky: true,
             render: (value: string) => (
               <Typography variant="caption" fontSize="13px">
@@ -379,7 +379,7 @@ const Teacher = ({
                             borderWidth: '2px',
                           },
                         },
-                        width: '310px',
+                        width: '330px',
                       }}
                     />
                   )}
@@ -394,18 +394,18 @@ const Teacher = ({
                       {option.name}
                     </li>
                   )}
-                  renderTags={(val) => {
+                  renderTags={(val, getTagProps) => {
                     if (val.length === 0) return null;
                     const first = val[0];
                     const remainingCount = val.length - 1;
                     return [
                       <Chip
-                        key={first.value}
-                        variant="soft"
                         avatar={<Avatar>{first.name.charAt(0)}</Avatar>}
                         label={first.name}
-                        sx={{ ml: 1 }}
                         size="small"
+                        variant="soft"
+                        sx={{ ml: 1 }}
+                        {...getTagProps({ index: 0 })} // includes key + onDelete
                       />,
                       remainingCount > 0 && (
                         <TeacherListPopover

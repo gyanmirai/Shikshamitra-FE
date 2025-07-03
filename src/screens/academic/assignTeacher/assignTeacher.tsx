@@ -4,7 +4,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import { useState, useEffect } from 'react';
 
-import { Save, RestartAlt } from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -111,7 +111,9 @@ const AssignTeacher = () => {
     setFocusedCells([]);
     setHasChanges(false);
     resetConfirmDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Selected changes reset successfully' });
+    shikshaMitraToast.success({
+      message: 'Class Teacher assignments have been reset successfully',
+    });
   };
 
   const handleSave = () => {
@@ -119,7 +121,7 @@ const AssignTeacher = () => {
     setFocusedCells([]);
     setHasChanges(false);
     saveConfirmDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Changes saved successfully' });
+    shikshaMitraToast.success({ message: 'Class Teacher assignments have been save successfully' });
   };
 
   const getModifiedSubjects = () =>
@@ -176,7 +178,7 @@ const AssignTeacher = () => {
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button
             variant="outlined"
-            startIcon={<RestartAlt />}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={resetConfirmDialog.onTrue}
             size="small"
             disabled={!hasChanges}
@@ -212,6 +214,8 @@ const AssignTeacher = () => {
           {
             id: 'classTeacher',
             label: 'Class Teacher',
+            isSort: false,
+            isFilter: false,
             render: (value, row: any) => (
               <Autocomplete
                 options={getAvailableTeachers(row)}
