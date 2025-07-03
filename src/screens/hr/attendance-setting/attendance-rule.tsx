@@ -205,9 +205,10 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Rule</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
-              title="Define the criteria for half-day and late attendance by creating rules here. "
+              title="Create rules to define the criteria for half-day and late attendance."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

@@ -1,35 +1,50 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { matchIsValidTel } from 'mui-tel-input';
 
 const personalInformationValidationSchema = Yup.object({
   photo: Yup.string().required('Photo is required'),
   //   code: Yup.string().required('Code is required'),
-  lastName: Yup.string().required('Last name is required'),
-  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last Name is required'),
+  firstName: Yup.string().required('First Name is required'),
   middleName: Yup.string(),
   shortName: Yup.string(),
   employeeStatusType: Yup.number().required('Employee status type is required'),
   //   subject: Yup.array().required('Subject is required'),
-  dob: Yup.date().nullable().required('Date of birth is required'),
-  familyCast: Yup.string().required('Family cast is required'),
-  castType: Yup.string().required('Cast type is required'),
+  dob: Yup.mixed()
+    .test(
+      'is-valid-dayjs',
+      'Date of Birth is required',
+      (value) => value && dayjs(value as any).isValid()
+    )
+    .required('Date of Birth is required'),
+  // dob: Yup.date().nullable().required('Date of birth is required'),
+  familyCast: Yup.string().required('Family Cast is required'),
+  castType: Yup.string().required('Category is required'),
   gender: Yup.string().required('Gender is required'),
   religion: Yup.string().required('Religion is required'),
-  maritalStatus: Yup.string().required('Marital status is required'),
+  maritalStatus: Yup.string().required('Marital Status is required'),
   bloodGroup: Yup.string(),
   mobileNo: Yup.string()
-    .test('mobileNo', 'mobile number is not valid', (value) => matchIsValidTel(value as string))
-    .required('Mobile number is required'),
+    .test('mobileNo', 'Primary Contact No. is not valid', (value) =>
+      matchIsValidTel(value as string)
+    )
+    .required('Primary Contact No. is required'),
+  secondaryMobileNo: Yup.string()
+    .nullable()
+    .test('secondaryMobileNo', 'Secondary Contact No. is not valid', (value) =>
+      value ? matchIsValidTel(value as string) : true
+    ),
   email: Yup.string().email('Invalid email').required('Email is required'),
   department: Yup.string(),
   designation: Yup.string(),
   dateOfJoining: Yup.date().nullable().required('Date of joining is required'),
-  employeeGroup: Yup.string().required('Employee group is required'),
+  employeeGroup: Yup.string().required('Employee Group is required'),
   qualification: Yup.string(),
   role: Yup.string().required('Role is required'),
   //   identificationMark1: Yup.string().required('Identification mark is required'),
-  addressLine1: Yup.string().required('Building/Flat/House No is required'),
-  addressLine2: Yup.string().required('Street/Road Name is required'),
+  addressLine1: Yup.string().required('Building No./Flat/House No. No is required'),
+  addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
   addressLine3: Yup.string(),
   country: Yup.object()
     .shape({ name: Yup.string().required('Country is required') })
@@ -56,7 +71,7 @@ const familyInformationValidationSchema = Yup.object({
   fatherName: Yup.string().nullable(),
   //   fatherOccupation: Yup.string().required('Father occupation is required'),
   fatherContactNo: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) =>
+    .test('fatherContactNo', 'Mobile No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     )
     .nullable(),
@@ -75,7 +90,7 @@ const familyInformationValidationSchema = Yup.object({
   motherName: Yup.string().nullable(),
   //   motherOccupation: Yup.string().required('Mother occupation is required'),
   motherContactNo: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) =>
+    .test('motherContactNo', 'Mobile No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     )
     .nullable(),
@@ -93,7 +108,7 @@ const familyInformationValidationSchema = Yup.object({
   spouseName: Yup.string().nullable(),
   //   spouseOccupation: Yup.string().required('Spouse occupation is required'),
   spouseContactNo: Yup.string()
-    .test('Mobile NO', 'mobile number is not valid', (value) =>
+    .test('spouseContactNo', 'Mobile No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     )
     .nullable(),

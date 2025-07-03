@@ -124,6 +124,7 @@ const ChangeStatusForm = ({
         <Button
           variant="outlined"
           onClick={handleClose}
+          size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel
@@ -133,6 +134,7 @@ const ChangeStatusForm = ({
           loading={isLoading}
           variant="contained"
           type="submit"
+          size="small"
         >
           Update
         </LoadingButton>

@@ -304,7 +304,8 @@ const LeaveTypeForm = ({
       fieldType: editData?.fieldType || 'paid',
     },
     validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave type is required'),
+      leaveType: Yup.string().required('Leave Type is required'),
+      color: Yup.string().required('Color is required'),
       // leaveTypeShortName: Yup.string().required('Leave type short name is required'),
       // leaveDays: Yup.number()
       //   .required('Leave days is required')
@@ -426,6 +427,13 @@ const LeaveTypeForm = ({
 
           <Grid item xs={12}>
             <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1 }}
+                color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
+              >
+                Leave Type Color
+              </Typography>
               <ColorPickerCircle
                 onSelect={(color: string) => formik.setFieldValue('color', color)}
                 initialColor={formik.values.color}
@@ -469,7 +477,13 @@ const LeaveTypeForm = ({
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           loading={isUpdateLoading || isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"

@@ -699,7 +699,13 @@ export const LeavePolicyForm = ({
         </Button>
         <LoadingButton
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           variant="contained"
           type="submit"
         >
