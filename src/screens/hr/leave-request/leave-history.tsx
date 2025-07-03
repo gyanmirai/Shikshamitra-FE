@@ -405,9 +405,21 @@ const LeaveHistory = (props: any) => {
             setEditData(null);
           }}
           title={
-            editData.type === EmployeeLeaveStatusType.Rejected
-              ? 'Reject Leave Request'
-              : 'Approve Leave Request'
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">
+                {editData.type === EmployeeLeaveStatusType.Rejected
+                  ? 'Reject Leave Request'
+                  : 'Approve Leave Request'}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
           }
         >
           <ApproveRejectForm
@@ -470,6 +482,7 @@ const ApproveRejectForm = ({
         rows={4}
         label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
         onChange={handleChange}
+        name="rejectionReason"
         value={values.rejectionReason}
         error={touched.rejectionReason && !!errors.rejectionReason}
         helperText={touched.rejectionReason && errors.rejectionReason}
@@ -478,6 +491,7 @@ const ApproveRejectForm = ({
       <Box display="flex" justifyContent="flex-end" gap={2}>
         <Button
           variant="outlined"
+          size="small"
           onClick={handleClose}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
@@ -487,6 +501,7 @@ const ApproveRejectForm = ({
           variant="contained"
           loading={isChangeStatusLoading}
           type="submit"
+          size="small"
           startIcon={
             <Iconify
               icon={

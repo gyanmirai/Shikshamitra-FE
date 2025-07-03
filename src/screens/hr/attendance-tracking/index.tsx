@@ -437,6 +437,7 @@ const DateWise = ({
             sticky: true,
             isSort: false,
             isFilter: false,
+            minWidth: '100px',
             align: 'left',
             render(value, row) {
               return (
@@ -747,7 +748,7 @@ const EmployeeWise = ({
             name="organization"
             size="small"
             onChange={handleChange}
-            label="Organization" // ✅ Needed to link with InputLabel
+            label="Organization"
           >
             {medium?.educationMediumStages.length ? (
               medium?.educationMediumStages.map((org: any) => (
@@ -930,6 +931,7 @@ const EmployeeWise = ({
             },
             {
               id: 'timeIn',
+              align: 'left',
               label: 'In-time',
               minWidth: '6vw',
               render(value, row) {
@@ -938,18 +940,22 @@ const EmployeeWise = ({
             },
             {
               id: 'timeOut',
+              align: 'left',
               label: 'Out-time',
               minWidth: '8vw',
               render(value, row) {
                 return value || `__ __`;
               },
             },
-            { id: 'totalHoursWorked', label: 'Hours Worked', minWidth: '10vw' },
+            { id: 'totalHoursWorked', align: 'left', label: 'Hours Worked', minWidth: '10vw' },
             { id: 'description', label: 'Description' },
             {
               id: 'status',
               label: 'Status',
+              align: 'left',
+              minWidth: '100px',
               sticky: true,
+              isFilter: false,
               render(value, row) {
                 return (
                   <Label

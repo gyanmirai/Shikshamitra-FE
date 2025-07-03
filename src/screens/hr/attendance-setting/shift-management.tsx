@@ -1,5 +1,3 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -18,9 +16,14 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -33,7 +36,15 @@ const ShiftManagement = ({
 }: {
   shiftManagementDialog: UseBooleanReturn;
 }) => {
+  const confirm = useBoolean();
   const [editData, setEditData] = useState(null);
+  const [deleteInformation, setDeleteInformation] = useState<any>(null);
+
+  // const [deleteRule] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useDeleteEmployeeCustomAttendanceRuleMutation,
+  // });
+
   return (
     <>
       <CustomizableTable
@@ -48,7 +59,7 @@ const ShiftManagement = ({
             isSort: false,
             isFilter: false,
             sticky: true,
-            label: 'Action',
+            label: 'Actions',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -60,7 +71,8 @@ const ShiftManagement = ({
                     dialog.onTrue();
                   }}
                   handleDeleteClick={() => {
-                    setEditData(row as any);
+                    setDeleteInformation(row);
+                    confirm.onTrue();
                   }}
                 />
               );
@@ -105,9 +117,49 @@ const ShiftManagement = ({
           },
         ]}
       />
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete <strong>{deleteInformation?.shiftName}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              confirm.onFalse();
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
       <CustomDialog
         maxWidth="md"
-        title={editData ? 'Update Shift Rule' : 'Add Shift Rule'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Update Shift Rule' : 'Add Shift Rule'}
+            </Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title={
+                editData
+                  ? 'Define shift name, week start day, working days, and set day-wise timing here.'
+                  : 'Define shift name, week start day, working days, and set day-wise timing here.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         handleClose={() => {
           setEditData(null);
           dialog.onFalse();
@@ -164,6 +216,8 @@ const ShiftManagementForm = ({
     }),
     onSubmit: (values) => {
       console.log(values);
+      handleClose();
+      shikshaMitraToast.success({ message: 'Shift rule updated successfully' });
     },
   });
 
@@ -234,21 +288,24 @@ const ShiftManagementForm = ({
           </TextField> */}
 
           <SectionCard title="Working Days & Timing">
-            {Object.entries(formik.values.workingDays).map(([day, checked]) => (
-              <Grid item xs={6} sm={3} md={1.5} key={day}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={checked}
-                      onChange={formik.handleChange}
-                      name={`workingDays.${day}`}
-                    />
-                  }
-                  label={day.charAt(0).toUpperCase() + day.slice(1)}
-                />
-              </Grid>
-            ))}
+            <Grid item xs={12}>
+              <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+                {Object.entries(formik.values.workingDays).map(([day, checked]) => (
+                  <FormControlLabel
+                    key={day}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={checked}
+                        onChange={formik.handleChange}
+                        name={`workingDays.${day}`}
+                      />
+                    }
+                    label={day.charAt(0).toUpperCase() + day.slice(1)}
+                  />
+                ))}
+              </Box>
+            </Grid>
           </SectionCard>
 
           {/* <TextField
@@ -332,7 +389,7 @@ const ShiftManagementForm = ({
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </>

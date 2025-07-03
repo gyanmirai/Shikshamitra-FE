@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -20,6 +20,7 @@ import { EmployeeAttendanceStatusOptions } from 'src/enums/employee-attendance-s
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -43,6 +44,7 @@ const BiometricIntegrationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Import Attendance"
+        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
@@ -50,23 +52,36 @@ const BiometricIntegrationScreen = () => {
         ]}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1, pl: 1, mt: 2 }}>
-        <DatePicker
-          label="Date"
-          value={date}
-          onChange={(newValue) => {
-            setDate(newValue);
-          }}
-          format="DD-MM-YYYY"
-          disableFuture
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
-        />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          mb: 2,
+          pl: 1,
+          mt: 2,
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Date Picker */}
+        <Box>
+          <DatePicker
+            label="Date"
+            value={date}
+            onChange={(newValue) => setDate(newValue)}
+            format="DD-MM-YYYY"
+            disableFuture
+            slotProps={{
+              textField: {
+                size: 'small',
+              },
+            }}
+          />
+        </Box>
 
-        <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
+        {/* Buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <LoadingButton
             loading={isDownLoadingTemplate.value}
             variant="outlined"
@@ -76,6 +91,7 @@ const BiometricIntegrationScreen = () => {
           >
             Download Sample File
           </LoadingButton>
+
           <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
             Upload File
           </Button>
@@ -253,7 +269,19 @@ const BiometricIntegrationScreen = () => {
       />
 
       <CustomDialog
-        title="Update Attendance"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Attendance</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={open.value}
         handleClose={() => {
           open.onFalse();
@@ -350,27 +378,26 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
               }}
             />
           </ShakingTextField>
-
-          <DialogActions>
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              size="small"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              size="small"
-            >
-              Submit
-            </Button>
-          </DialogActions>
         </Stack>
       </Box>
+      <DialogActions>
+        <Button
+          onClick={handleClose}
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          size="small"
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
     </Box>
   );
 };
