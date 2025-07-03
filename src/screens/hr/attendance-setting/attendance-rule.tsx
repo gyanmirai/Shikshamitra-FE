@@ -180,11 +180,16 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{deleteInformation?.name}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               deleteRule(deleteInformation?.id);
               confirm.onFalse();

@@ -24,9 +24,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import { AccurateRateType } from 'src/enums/accurate-rate';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { AccurateRateType, AccurateRateTypeArray } from 'src/enums/accurate-rate';
 import {
   useGetEmployeeLeavePolicyQuery,
   useAddEmployeeLeavePolicyMutation,
@@ -34,7 +34,6 @@ import {
   useDeleteEmployeeLeavePolicyMutation,
 } from 'src/redux/employee/employeeApi';
 
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -44,6 +43,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 interface ILeavePolicy {
   id: string;
@@ -105,12 +105,17 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{editData?.leaveType}</strong>?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
             color="error"
+            size="small"
             onClick={async () => {
               await deleteLeavePolicy(editData?.id);
               confirm.onFalse();
@@ -159,44 +164,58 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
           {
             id: 'leaveType',
             label: 'Leave Type',
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SubjectColorIndicator color={row.color || '#ccc'} />
+                <Typography variant="body2" fontSize={13}>
+                  {value || '-'}
+                </Typography>
+              </Box>
+            ),
           },
-          {
-            id: 'leaveDays',
-            label: 'Leave Days',
-            filterType: 'number',
-          },
-          {
-            id: 'isCarryForward',
-            label: 'Carry Forward',
-          },
-          {
-            id: 'accrualRateString',
-            label: 'Accrual Rate',
-          },
-          {
-            id: 'color',
-            label: 'Color',
-            isSort: false,
-            isFilter: false,
+          //  {
+          //   id: 'leaveTypeShortName',
+          //   label: 'Leave Type Short Name',
+          // },
+          // {
+          //   id: 'leaveDays',
+          //   label: 'Leave Days',
+          //   filterType: 'number',
+          // },
+          // {
+          //   id: 'isCarryForward',
+          //   label: 'Carry Forward',
+          // },
+          // {
+          //   id: 'accrualRateString',
+          //   label: 'Accrual Rate',
+          // },
+          // {
+          //   id: 'color',
+          //   label: 'Color',
+          //   isSort: false,
+          //   isFilter: false,
 
-            render(value, row) {
-              return (
-                <Box
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    backgroundColor: value,
-                  }}
-                />
-              );
-            },
-          },
+          //   render(value, row) {
+          //     return (
+          //       <Box
+          //         sx={{
+          //           width: 20,
+          //           height: 20,
+          //           borderRadius: '50%',
+          //           backgroundColor: value,
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'action',
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            minWidth: 60,
+            align: 'left',
             sticky: true,
 
             render(value, row) {
@@ -224,7 +243,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Type</Typography>
+            {editData ? 'Update Leave Type' : 'Add Leave Type'}
             <CustomTooltip
               arrow
               placement="right"
@@ -286,11 +305,11 @@ const LeaveTypeForm = ({
     },
     validationSchema: Yup.object().shape({
       leaveType: Yup.string().required('Leave type is required'),
-      leaveTypeShortName: Yup.string().required('Leave type short name is required'),
-      leaveDays: Yup.number()
-        .required('Leave days is required')
-        .min(1, 'Leave days must be greater than 0'),
-      color: Yup.string().required('Color is required'),
+      // leaveTypeShortName: Yup.string().required('Leave type short name is required'),
+      // leaveDays: Yup.number()
+      //   .required('Leave days is required')
+      //   .min(1, 'Leave days must be greater than 0'),
+      // color: Yup.string().required('Color is required'),
       //   roles: Yup.array().min(1, 'At least one role must be selected'),
       //   fieldType: Yup.string().required('Field type is required'),
     }),
@@ -351,7 +370,7 @@ const LeaveTypeForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField
               error={formik.touched.leaveTypeShortName && Boolean(formik.errors.leaveTypeShortName)}
             >
@@ -370,9 +389,9 @@ const LeaveTypeForm = ({
                 }
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField error={formik.touched.leaveDays && Boolean(formik.errors.leaveDays)}>
               <TextField
                 name="leaveDays"
@@ -386,9 +405,9 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.leaveDays && formik.errors.leaveDays) as string}
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField
               error={formik.touched.accrualRate && Boolean(formik.errors.accrualRate)}
             >
@@ -403,7 +422,7 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.accrualRate && formik.errors.accrualRate) as string}
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12}>
             <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
@@ -456,7 +475,7 @@ const LeaveTypeForm = ({
           variant="contained"
           size="small"
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
