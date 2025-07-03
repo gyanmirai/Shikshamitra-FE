@@ -80,7 +80,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
               sx={{
                 flex: '0 0 auto',
                 width: '220px', // Adjust width for consistent card size
-                mb: 4,
+                mb: 2,
                 mt: 2,
               }}
             >

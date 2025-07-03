@@ -41,57 +41,92 @@ const electiveGroups = [
 
 const studentData = {
   elective1: [
-    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Computer' },
-    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Physical Training' },
-    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Computer' },
-    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Art' },
-    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Computer' },
-    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Physical Training' },
-    { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh', preference: 'Art' },
-    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Computer' },
-    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Art' },
-    { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay', preference: 'Physical Training' },
+    {
+      srNo: 1,
+      rollNo: 'R001',
+      name: 'Atre Prerna Bhanudas',
+      preference: 'Computer',
+      grNo: 'GR001',
+    },
+    {
+      srNo: 2,
+      rollNo: 'R002',
+      name: 'Mehta Divya Hitesh',
+      preference: 'Physical Training',
+      grNo: 'GR002',
+    },
+    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Computer', grNo: 'GR003' },
+    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Computer', grNo: 'GR004' },
+    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Computer', grNo: 'GR005' },
+    {
+      srNo: 6,
+      rollNo: 'R006',
+      name: 'Joshi Aarav Mihir',
+      preference: 'Physical Training',
+      grNo: 'GR006',
+    },
+    {
+      srNo: 7,
+      rollNo: 'R007',
+      name: 'Kapadia Reeva Suresh',
+      preference: 'Computer',
+      grNo: 'GR007',
+    },
+    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Computer', grNo: 'GR008' },
+    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Computer', grNo: 'GR009' },
+    {
+      srNo: 10,
+      rollNo: 'R010',
+      name: 'Rathod Yashika Sanjay',
+      preference: 'Physical Training',
+      grNo: 'GR010',
+    },
   ],
   elective2: [
-    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Hindi' },
-    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Sanskrit' },
-    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Hindi' },
-    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Gujarati' },
-    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Sanskrit' },
-    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Hindi' },
-    { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh', preference: 'Gujarati' },
-    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Sanskrit' },
-    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Hindi' },
-    { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay', preference: 'Sanskrit' },
+    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Hindi', grNo: 'GR001' },
+    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Sanskrit', grNo: 'GR002' },
+    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Hindi', grNo: 'GR003' },
+    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Hindi', grNo: 'GR004' },
+    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Sanskrit', grNo: 'GR005' },
+    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Hindi', grNo: 'GR006' },
+    {
+      srNo: 7,
+      rollNo: 'R007',
+      name: 'Kapadia Reeva Suresh',
+      preference: 'Hindi',
+      grNo: 'GR007',
+    },
+    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Sanskrit', grNo: 'GR008' },
+    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Hindi', grNo: 'GR009' },
+    {
+      srNo: 10,
+      rollNo: 'R010',
+      name: 'Rathod Yashika Sanjay',
+      preference: 'Sanskrit',
+      grNo: 'GR010',
+    },
   ],
 };
 
 const AssignElectiveSubject = () => {
   const theme = useTheme();
-  // State for managing class-related data
-  const [allClass, setAllClass] = useState<Standards[]>([]); // Stores all available classes
-  const [classes, setClasses] = useState<string>(''); // Currently selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]); // Stores divisions for selected class
-  const [division, setDivision] = useState<string>(''); // Currently selected division
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
+  const [students, setStudents] = useState<any[]>([]);
+  const [electiveSubject, setElectiveSubject] = useState<string>('');
+  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
+  const resetDialog = useBoolean();
+  const saveDialog = useBoolean();
 
-  // State for managing student and subject selections
-  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({}); // Maps student GR numbers to selected subjects
-  const [students, setStudents] = useState<any[]>([]); // List of students in current selection
-  const [electiveSubject, setElectiveSubject] = useState<string>(''); // Currently selected elective subject group
-  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>(''); // Subject selected for bulk assignment
-
-  // Dialog control states
-  const resetDialog = useBoolean(); // Controls visibility of reset confirmation dialog
-  const saveDialog = useBoolean(); // Controls visibility of save confirmation dialog
-
-  // Get global state from Redux
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
-  // Effect to populate classes when medium changes
   useEffect(() => {
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
@@ -99,7 +134,6 @@ const AssignElectiveSubject = () => {
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Effect to update divisions when selected class changes
   useEffect(() => {
     const selectedClass = allClass.find((org: any) => org?.id === classes);
     setAllDivision(selectedClass?.divisions || []);
@@ -108,29 +142,53 @@ const AssignElectiveSubject = () => {
     setStudentSelections({});
   }, [allClass, classes, setDivision]);
 
-  // Effect to update student list when elective subject group changes
   useEffect(() => {
     if (electiveSubject) {
       setStudents(studentData[electiveSubject as keyof typeof studentData]);
     }
   }, [electiveSubject]);
 
-  // Handler for resetting all selections
   const handleReset = () => {
     setSelectedElectiveSubject('');
     setStudentSelections({});
     resetDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Reset successful' });
+    shikshaMitraToast.success({
+      message: 'Student elective assignments have been reset successfully',
+    });
   };
 
-  // Handler for saving current selections
   const handleSave = () => {
-    // Add your save logic here
     saveDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Changes saved successfully' });
+    shikshaMitraToast.success({
+      message: 'Student elective subject assignments have been saved successfully',
+    });
   };
 
-  // Check if any student selections have been made
+  const handleHeaderSubjectClick = (subjId: string) => {
+    const isSame = selectedElectiveSubject === subjId;
+    setSelectedElectiveSubject(isSame ? '' : subjId);
+
+    if (!isSame) {
+      const newSelections = students.reduce(
+        (acc, student) => {
+          acc[student.grNo] = subjId;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+      setStudentSelections(newSelections);
+    } else {
+      setStudentSelections({});
+    }
+  };
+
+  const handleStudentSubjectClick = (studentGrNo: string, subjId: string) => {
+    setStudentSelections((prev) => ({
+      ...prev,
+      [studentGrNo]: subjId,
+    }));
+  };
+
   const hasStudentSelections = Object.keys(studentSelections).length > 0;
 
   return (
@@ -236,22 +294,7 @@ const AssignElectiveSubject = () => {
                         key={subj.id}
                         variant={isSelected ? 'contained' : 'outlined'}
                         size="small"
-                        onClick={() => {
-                          const isSame = selectedElectiveSubject === subj.id;
-                          const newValue = isSame ? '' : subj.id;
-                          setSelectedElectiveSubject(newValue);
-
-                          if (!isSame) {
-                            const newSelections = students.reduce(
-                              (acc, student) => {
-                                acc[student.grNo] = subj.id;
-                                return acc;
-                              },
-                              {} as Record<string, string>
-                            );
-                            setStudentSelections(newSelections);
-                          }
-                        }}
+                        onClick={() => handleHeaderSubjectClick(subj.id)}
                         sx={{
                           color: isSelected ? '#fff' : subj.color,
                           borderColor: subj.color,
@@ -281,12 +324,7 @@ const AssignElectiveSubject = () => {
                         key={subj.id}
                         variant={isSelected ? 'contained' : 'outlined'}
                         size="small"
-                        onClick={() =>
-                          setStudentSelections((prev) => ({
-                            ...prev,
-                            [row.grNo]: subj.id,
-                          }))
-                        }
+                        onClick={() => handleStudentSubjectClick(row.grNo, subj.id)}
                         sx={{
                           color: isSelected ? '#fff' : subj.color,
                           borderColor: subj.color,
@@ -344,4 +382,5 @@ const AssignElectiveSubject = () => {
     </Box>
   );
 };
+
 export default AssignElectiveSubject;

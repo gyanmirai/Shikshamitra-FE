@@ -157,7 +157,7 @@ const CourseProgress = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       {/* Class and Division selection filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
         <CustomSelect
           options={allClass}
           label="Class"
@@ -192,31 +192,35 @@ const CourseProgress = (props: TabComponentType) => {
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
-              { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+              { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+              { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 300 },
               {
                 id: 'startDate',
                 label: 'Start Date',
                 align: 'left',
                 filterType: 'date',
+                minWidth: 200,
               },
               {
                 id: 'timeLine',
                 label: '',
+                minWidth: 200,
                 align: 'left',
                 filterType: 'date',
                 renderColumn: () => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     End Date
                     <CustomTooltip
+                      arrow
                       title={
                         <Box>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="error.main">
                             Red : Due within 7 days
                           </Typography>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="warning.main">
                             Yellow : Due within 30 days
                           </Typography>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="success.main">
                             Green : Due after 30 days
                           </Typography>
                         </Box>
@@ -323,7 +327,19 @@ const CourseProgress = (props: TabComponentType) => {
         handleClose={() => {
           updateProgressDialog.onFalse();
         }}
-        title="Update Progress"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Progress</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Update the completion percentage and add notes about the progress made in this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <UpdateProgress onClose={handleClose} />
       </CustomDialog>
@@ -334,7 +350,19 @@ const CourseProgress = (props: TabComponentType) => {
           viewLogsDialog.onFalse();
         }}
         maxWidth="sm"
-        title={`${selectedChapter?.chapterName} Logs`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{selectedChapter?.chapterName} Logs</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View the history of progress updates and changes made to this chapter's completion status"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
       </CustomDialog>
@@ -383,7 +411,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
                 formik.setFieldValue('completePercentage', value);
               }}
               getAriaValueText={(value) => `${value}%`}
-              step={2}
+              step={1}
               valueLabelDisplay="auto"
               marks={marks}
               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
