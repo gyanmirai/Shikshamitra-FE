@@ -130,8 +130,7 @@ const LeaveCalender = (props: TabComponentType) => {
             <CustomTooltip
               arrow
               placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+              title="Displays detailed information about the employee’s leave request, including type, dates, reason, and approval status."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

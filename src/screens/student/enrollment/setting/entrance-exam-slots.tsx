@@ -159,7 +159,7 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Slots</Typography>
+            <Typography variant="h5">{editData ? 'Update Slots' : 'Add Slots'}</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -228,7 +228,7 @@ export const SlotsForm = ({
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
-      roomNo: Yup.string().required('Room No is required'),
+      roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
       try {

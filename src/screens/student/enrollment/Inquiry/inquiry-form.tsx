@@ -431,7 +431,7 @@ const InquiryForm = ({
                     helperText={(touched.firstName && errors.firstName) || ''}
                     value={values.firstName}
                     onChange={(e) => {
-                      const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
                       // const value = capitalize(e.target.value);
                       setFieldValue('firstName', capitalized);
@@ -451,7 +451,7 @@ const InquiryForm = ({
                     helperText={touched.middleName && errors.middleName}
                     value={values.middleName}
                     onChange={(e) => {
-                      const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
                       setFieldValue('middleName', capitalized);
                       // setFieldTouched('middleName', true);
@@ -470,7 +470,7 @@ const InquiryForm = ({
                     helperText={touched.lastName && errors.lastName}
                     value={values.lastName}
                     onChange={(e) => {
-                      const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
                       setFieldValue('lastName', capitalized);
                       // setFieldTouched('lastName', true);
@@ -541,8 +541,9 @@ const InquiryForm = ({
                     fullWidth
                     value={values.previousSchool}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
-                      setFieldValue('previousSchool', value);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const capitalized = capitalize(onlyLetters);
+                      setFieldValue('previousSchool', capitalized);
                       // setFieldTouched('previousSchool', true);
                     }}
                     size="small"

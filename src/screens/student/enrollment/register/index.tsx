@@ -73,7 +73,7 @@ const RegisterScreen = () => {
         description={
           formDialog.value
             ? 'Enter student information across the sections to complete the registration'
-            : 'View and manage student registrations. Track completion status and edit details for each record'
+            : 'View students registrations, manage completion status, and update details for each record.'
         }
         links={links}
         sx={{ mb: 1 }}
@@ -120,7 +120,7 @@ const RegisterScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Schedule and manage entrance exams for student enrollment. Set exam dates, subjects, and track student performance."
+              title="Schedule and manage entrance exams — set dates, assign subjects, and monitor students performance."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -150,7 +150,7 @@ const RegisterScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Track and manage communication history, including follow-up notes and important updates for student enrollment."
+              title="Monitor communication history with follow-up notes and important updates for students enrollment."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

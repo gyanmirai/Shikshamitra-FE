@@ -44,19 +44,19 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} sm={4}>
+        {/* <Grid item xs={12} sm={4}>
           <PhoneInput
-            disabled={!isCommunicationEditable.value}
             name="primaryContactNumber"
+            disabled={!isCommunicationEditable.value}
             value={formik.values.primaryContactNumber}
             onChange={(value) => {
               formik.setFieldValue('primaryContactNumber', value);
             }}
-            autoFocus
             label="Primary Contact No."
             error={
               formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)
             }
+            helperText={formik.touched.primaryContactNumber && formik.errors.primaryContactNumber}
           />
         </Grid>
 
@@ -72,8 +72,9 @@ const RenderCommunicationFields = (props: any) => {
             error={
               formik.touched.secondaryContactNumber && Boolean(formik.errors.secondaryContactNumber)
             }
+            helperText={formik.touched.secondaryContactNumber && formik.errors.secondaryContactNumber}
           />
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} sm={4}>
           <TextField

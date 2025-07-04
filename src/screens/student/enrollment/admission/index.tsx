@@ -487,9 +487,6 @@ const AdmissionScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
   });
-
-  console.log('admissionData----', admissionData);
-
   const counts = useMemo(
     () => ({
       pending: admissionData?.items.filter(
@@ -570,7 +567,7 @@ const AdmissionScreen = () => {
           { name: 'Admission' },
         ]}
         sx={{ mb: 2 }}
-        description="Manage student admissions: Approve or reject applications here."
+        description="Manage students admissions, review applications and approve or reject them as needed."
       />
       <Paper
         elevation={2}
@@ -672,8 +669,8 @@ const AdmissionScreen = () => {
           { id: 'division.name', label: 'Division', align: 'left' },
           {
             id: 'dobValue',
-            label: 'DOB',
-            minWidth: '80px',
+            label: 'Date of Birth',
+            minWidth: '130px',
             align: 'left',
             isFilter: true,
             filterType: 'date',
@@ -692,7 +689,7 @@ const AdmissionScreen = () => {
 
           {
             id: 'doiValue',
-            label: 'Inquiry Date',
+            label: 'Date of Inquiry',
             minWidth: '140px',
             align: 'left',
             isDateRangeFilter: true,
@@ -720,7 +717,7 @@ const AdmissionScreen = () => {
             align: 'left',
           },
 
-          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
+          // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
           // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
           // { id: 'Name', label: 'Name', align: 'left' },
@@ -765,6 +762,7 @@ const AdmissionScreen = () => {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            align: 'left',
             isFilter: false,
             sticky: true,
             minWidth: 70,
@@ -843,7 +841,19 @@ const AdmissionScreen = () => {
           setEditData(null);
           setOpen(false);
         }}
-        title="Edit Details"
+        // title="Edit Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Edit a student’s admission, personal, and contact details across multiple tabs."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <RegisterForm
           editData={editData}
@@ -859,7 +869,19 @@ const AdmissionScreen = () => {
           divisionDialog.onFalse();
           setEditData(null);
         }}
-        title="Assign Division"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Division</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Assign students to specific divisions based on their selected class."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AssignDivisionForm
           handleClose={divisionDialog.onFalse}
@@ -871,7 +893,19 @@ const AdmissionScreen = () => {
       <CustomDialog
         open={statusDialog.value}
         handleClose={statusDialog.onFalse}
-        title="Change Status"
+        // title="Change Status"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Change Status</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Update the admission status of selected students to Pending, Approved, or Rejected for enrollment tracking and processing."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ChangeStatusForm
           handleClose={() => {
@@ -889,6 +923,7 @@ const AdmissionScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
+        maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Notes</Typography>
@@ -896,7 +931,7 @@ const AdmissionScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Track and manage student communication history, including parent interactions, and important updates regarding the admission process."
+              title="Maintain a detailed record of student communication, parent interactions, and critical admission updates."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -941,7 +976,19 @@ const AdmissionScreen = () => {
           setEditData(null);
           openDetails.onFalse();
         }}
-        title="Student Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Student Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View a student’s entrance exam result, submitted documents, and take action on the admission application."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <StudentDetails
           tabValue={tabs.value}
@@ -1093,6 +1140,7 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
       <DialogActions sx={{ p: 2 }}>
         <Button
           variant="outlined"
+          size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={async () => {
             onClose();
@@ -1102,6 +1150,7 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
         </Button>
         <Button
           variant="contained"
+          size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
             onClose();
@@ -1320,7 +1369,7 @@ const AssignDivisionForm = ({
       standardName: standard?.name || '',
     },
     validationSchema: Yup.object({
-      division: Yup.string().required('Required'),
+      division: Yup.string().required('Division is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -1355,7 +1404,7 @@ const AssignDivisionForm = ({
           options={standard?.divisions || []}
           value={formik.values.division}
           onChange={(val) => formik.setFieldValue('division', val)}
-          label="Division"
+          label="Division *"
           valueKey="id"
           labelKey="name"
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}

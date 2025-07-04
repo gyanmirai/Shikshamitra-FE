@@ -158,7 +158,7 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.firstName && formik.errors.firstName}
                   fullWidth
                   onChange={(e: any) => {
-                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     const capitalized = capitalize(onlyLetters);
 
                     formik.setFieldValue('firstName', capitalized);
@@ -183,7 +183,7 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.middleName && formik.errors.middleName}
                   fullWidth
                   onChange={(e: any) => {
-                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     const capitalized = capitalize(onlyLetters);
                     formik.setFieldValue('middleName', capitalized);
                     formik.setFieldTouched('middleName', true);
@@ -205,7 +205,7 @@ const RenderGeneralFormFields = (props: any) => {
                   helperText={formik.touched.lastName && formik.errors.lastName}
                   fullWidth
                   onChange={(e: any) => {
-                    const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                    const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     const capitalized = capitalize(onlyLetters);
                     formik.setFieldValue('lastName', capitalized);
                     formik.setFieldTouched('lastName', true);
@@ -518,7 +518,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.familyCast && formik.errors.familyCast}
               fullWidth
               onChange={(e: any) => {
-                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                 const capitalized = capitalize(onlyLetters);
                 const newName = capitalized
                   .split(' ')
@@ -570,7 +570,6 @@ const RenderGeneralFormFields = (props: any) => {
             </FormControl>
           </ShakingTextField>
         </Grid>
-
         <Grid item xs={12} md={3}>
           <ShakingTextField
             error={formik.touched.nationality && Boolean(formik.errors.nationality)}
@@ -607,9 +606,14 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.birthPlace && formik.errors.birthPlace}
               fullWidth
               onChange={(e: any) => {
-                const newName = capitalize(e.target.value);
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                const newName = capitalized
+                  .split(' ')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ');
                 formik.setFieldValue('birthPlace', newName);
-                formik.setFieldTouched('birthPlace', true);
+                formik.setFieldTouched('birthPlace', true, true);
               }}
               disabled={!isIdentificationEditable.value}
             />
@@ -833,7 +837,16 @@ const RenderGeneralFormFields = (props: any) => {
               error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}
               helperText={formik.touched.previousSchool && formik.errors.previousSchool}
               fullWidth
-              onChange={formik.handleChange}
+              onChange={(e: any) => {
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                const newName = capitalized
+                  .split(' ')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ');
+                formik.setFieldValue('previousSchool', newName);
+                formik.setFieldTouched('previousSchool', true, true);
+              }}
               disabled={!isPreviousSchoolEditable.value}
             />
           </ShakingTextField>
@@ -852,7 +865,16 @@ const RenderGeneralFormFields = (props: any) => {
               error={formik.touched.lastClassPassed && Boolean(formik.errors.lastClassPassed)}
               helperText={formik.touched.lastClassPassed && formik.errors.lastClassPassed}
               fullWidth
-              onChange={formik.handleChange}
+              onChange={(e: any) => {
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                const newName = capitalized
+                  .split(' ')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ');
+                formik.setFieldValue('lastClassPassed', newName);
+                formik.setFieldTouched('lastClassPassed', true, true);
+              }}
               disabled={!isPreviousSchoolEditable.value}
             />
           </ShakingTextField>

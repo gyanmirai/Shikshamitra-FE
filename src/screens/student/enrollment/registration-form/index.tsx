@@ -101,7 +101,7 @@ const RegistrationFormScreen = () => {
       {registerFormDialog.value ? (
         <CustomBreadcrumbs
           heading="Move to Registration"
-          description="Move student from registration form issued to registration status. This step allows you to proceed with the formal registration process after initial inquiry."
+          description="Move students from Form Issuance to Registered Status to begin the formal admission process."
           links={[
             { name: 'Student', href: '/student/enrollment/dashboard/' },
             { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
@@ -119,13 +119,13 @@ const RegistrationFormScreen = () => {
       ) : (
         <CustomBreadcrumbs
           heading="Registration Form Issued"
-          description="An Registration Form Issued in a School ERP refers to a form provided to prospective students after inquiry, allowing them to officially apply for admission."
+          description="After an inquiry Registration Form in a School ERP is provided to the prospective students for the admission process. "
           links={[
             { name: 'Student', href: '/student/enrollment/dashboard/' },
             { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
             { name: 'Registration Form Issued' },
           ]}
-          sx={{ mb: 2 }}
+          sx={{ mb: 1 }}
         />
       )}
       {registerFormDialog.value ? (
@@ -309,7 +309,7 @@ const RegistrationFormScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Add or view communication notes and follow-up details for student registration issued."
+              title="Add and view communication notes and follow-ups related to students inquiries. "
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

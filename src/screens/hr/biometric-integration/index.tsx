@@ -286,8 +286,7 @@ const BiometricIntegrationScreen = () => {
             <CustomTooltip
               arrow
               placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+              title="Edit and update an employee’s in-time and out-time for the selected date."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

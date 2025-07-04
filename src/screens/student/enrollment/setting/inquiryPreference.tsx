@@ -162,8 +162,15 @@ const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Inquiry Preference</Typography>
-            <CustomTooltip arrow placement="right" title="?.">
+            <Typography variant="h5">
+              {' '}
+              {editData ? 'Update Inquiry Preference' : 'Add Inquiry Preference'}{' '}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Define how inquiries were received to better track student admission sources."
+            >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>

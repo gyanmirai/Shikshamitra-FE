@@ -45,11 +45,47 @@ const RenderBankDetails = (props: any) => {
       }
     >
       {[
-        { label: 'Bank Name', name: 'bankName' },
-        { label: 'Account No.', name: 'accountNo' },
-        { label: 'IFSC Code', name: 'ifscCode' },
+        {
+          label: 'Bank Name',
+          name: 'bankName',
+          inputProps: {
+            pattern: '[A-Za-z\\s]+',
+            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
+              e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+            },
+          },
+        },
+        {
+          label: 'Account No.',
+          name: 'accountNo',
+          inputProps: {
+            pattern: '[0-9]+',
+            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
+              e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            },
+          },
+        },
+        {
+          label: 'IFSC Code',
+          name: 'ifscCode',
+          inputProps: {
+            pattern: '[a-zA-Z0-9 ]+',
+            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
+              e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
+            },
+          },
+        },
         { label: 'Branch Name', name: 'branchName' },
-        { label: 'Account Holder Name', name: 'accountHolderName' },
+        {
+          label: 'Account Holder Name',
+          name: 'accountHolderName',
+          inputProps: {
+            pattern: '[A-Za-z\\s]+',
+            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
+              e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '');
+            },
+          },
+        },
       ].map((field) => (
         <Grid key={field.name} item xs={12} sm={6} md={4}>
           <TextField
