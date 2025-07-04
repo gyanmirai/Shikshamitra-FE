@@ -9,7 +9,15 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -28,11 +36,11 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddLeaveRequest from './leave-requst';
@@ -160,6 +168,8 @@ const LeaveHistory = (props: any) => {
           format="MMM-YYYY"
           value={date}
           views={['month', 'year']}
+          minDate={dayjs().startOf('year')}
+          maxDate={dayjs().endOf('year')}
           slotProps={{
             textField: {
               size: 'small',
@@ -383,6 +393,7 @@ const LeaveHistory = (props: any) => {
             <CustomTooltip
               arrow
               placement="right"
+              sx={{ textAlign: 'justify' }}
               title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -475,20 +486,22 @@ const ApproveRejectForm = ({
     },
   });
   return (
-    <Box component="form" sx={{ p: 2 }} onSubmit={handleSubmit}>
-      <TextField
-        fullWidth
-        multiline
-        rows={4}
-        label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
-        onChange={handleChange}
-        name="rejectionReason"
-        value={values.rejectionReason}
-        error={touched.rejectionReason && !!errors.rejectionReason}
-        helperText={touched.rejectionReason && errors.rejectionReason}
-        sx={{ mb: 2 }}
-      />
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+    <>
+      <DialogScrollContent>
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
+          onChange={handleChange}
+          name="rejectionReason"
+          value={values.rejectionReason}
+          error={touched.rejectionReason && !!errors.rejectionReason}
+          helperText={touched.rejectionReason && errors.rejectionReason}
+          sx={{ mb: 2 }}
+        />
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           variant="outlined"
           size="small"
@@ -514,7 +527,7 @@ const ApproveRejectForm = ({
         >
           {editData.type === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
         </LoadingButton>
-      </Box>
-    </Box>
+      </DialogActions>
+    </>
   );
 };

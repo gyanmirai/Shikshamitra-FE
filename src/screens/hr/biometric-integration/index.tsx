@@ -124,7 +124,7 @@ const BiometricIntegrationScreen = () => {
               return value || `__ __`;
             },
           },
-          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '10vw', align: 'left' },
+          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '9vw', align: 'left' },
           {
             id: 'status',
             label: 'Status',
@@ -392,7 +392,13 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
         <Button
           type="submit"
           variant="contained"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           size="small"
         >
           {editData ? 'Update' : 'Submit'}

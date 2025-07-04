@@ -40,6 +40,7 @@ interface ITimeTableView {
     rowIndex: number,
     colIndex: number
   ) => void;
+  // isDraggable: boolean;
   handleDeleteSlot?: (rowIndex: number, colIndex: number) => void;
   showThreeDots: boolean;
 }
@@ -52,6 +53,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
   isClassVisible,
   isDivisionVisible,
   onDrop,
+  // isDraggable,
   onTeacherSelect,
   onRoomSelect,
   handleDeleteSlot,
@@ -74,7 +76,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: '15%' }}>Time Slot</TableCell>
+                  <TableCell sx={{ width: '15%', textAlign: 'center' }}>Time Slot</TableCell>
                   {weekDays.map((day) => (
                     <TableCell key={day} align="center">
                       {day}
@@ -90,6 +92,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
                     </TableCell>
                     {(timeTableItem.isBreak ? [''] : timeTableItem.dayData).map((dayItem, ind) => (
                       <TimeTableCell
+                        // isDraggable={isDraggable}
                         key={ind}
                         timeSlot={`${timeTableItem.startTime} - ${timeTableItem.endTime}`}
                         day={typeof dayItem === 'string' ? dayItem : dayItem.day}

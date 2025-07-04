@@ -24,6 +24,7 @@ import {
   Autocomplete,
   FormHelperText,
   LinearProgress,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
@@ -381,6 +382,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             <Grid item xs={12} md={4}>
               <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
                 <FormControl
+                  disabled={!isBasicDetailsEditable.value}
                   fullWidth
                   sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
                 >
@@ -388,7 +390,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     id="gender-radio-group"
                     sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
                   >
-                    Gender
+                    Gender *
                   </FormLabel>
                   <RadioGroup
                     row
@@ -479,7 +481,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
                     // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
-                    const newName = e.target.value[0].toUpperCase() + e.target.value.slice(1);
+                    const newName = capitalize(e.target.value);
                     formik.setFieldValue('familyCast', newName);
                   }}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
@@ -586,10 +588,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               disabled={!isContactDetailsEditable.value}
               InputProps={{
                 startAdornment: (
-                  <>
-                    <Iconify icon="mdi-light:email" />{' '}
-                    <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                  </>
+                  <InputAdornment position="start">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Iconify icon="mdi-light:email" />
+                      <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                    </Box>
+                  </InputAdornment>
                 ),
               }}
             />
@@ -703,9 +707,19 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Department"
               {...formik.getFieldProps('department')}
               onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                formik.setFieldValue('department', newName);
+                const { value } = e.target;
+                if (/^[A-Za-z\s]*$/.test(value)) {
+                  const formattedValue = value
+                    .split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+                  formik.setFieldValue('department', formattedValue);
+                }
               }}
+              // onChange={(e) => {
+              //   const newName = capitalize(e.target.value);
+              //   formik.setFieldValue('department', newName);
+              // }}
               error={formik.touched.department && Boolean(formik.errors.department)}
               helperText={formik.touched.department && formik.errors.department}
               disabled={!isProfessionalDetailsEditable.value}
@@ -723,7 +737,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               {...formik.getFieldProps('designation')}
               onChange={(e) => {
                 const newName = capitalize(e.target.value);
-                formik.setFieldValue('designation', newName);
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('designation', newName);
+                }
               }}
               error={formik.touched.designation && Boolean(formik.errors.designation)}
               helperText={formik.touched.designation && formik.errors.designation}

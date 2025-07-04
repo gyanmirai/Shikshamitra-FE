@@ -8,12 +8,12 @@ export interface DayData {
   day: string;
   subjectColor: string;
   subjects: Subject[];
+  class?: string;
+  division?: string;
 }
 
 export interface TimetableSlot {
   startTime: string;
-  class?: string;
-  division?: string;
   endTime: string;
   isBreak: boolean;
   dayData: DayData[];

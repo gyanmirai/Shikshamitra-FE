@@ -59,7 +59,9 @@ const ShiftManagement = ({
             isSort: false,
             isFilter: false,
             sticky: true,
+            align: 'left',
             label: 'Actions',
+            minWidth: '70px',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -384,7 +386,13 @@ const ShiftManagementForm = ({
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           size="small"
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}

@@ -147,7 +147,7 @@ const HrAttendanceSettingScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
-        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
+        description="Manage settings for Attendance Types, Leave Policies, and Late Arrival Rules to support precise tracking and rule enforcement."
       />
       <Card
         sx={{

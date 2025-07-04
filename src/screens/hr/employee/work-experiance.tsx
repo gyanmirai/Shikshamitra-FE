@@ -46,37 +46,46 @@ const WorkExperiences = (props: any) => {
           />
         </Box>
       )}
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Add />}
-          disabled={!isEditable.value}
-          onClick={() => {
-            setFieldValue('experiences', [
-              ...values.experiences,
-              {
-                organizationName: '',
-                organizationAddress: '',
-                organizationCountry: { name: 'India', isoCode: 'IN' },
-                organizationState: { name: '', isoCode: '' },
-                organizationCity: { name: '' },
-                fromDate: null,
-                toDate: null,
-                department: '',
-                designation: '',
-              },
-            ]);
-          }}
-        >
-          Experience
-        </Button>
-      </Box>
+      {isEditable.value && (
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Add />}
+            // disabled={!isEditable.value}
+            onClick={() => {
+              setFieldValue('experiences', [
+                ...values.experiences,
+                {
+                  organizationName: '',
+                  organizationAddress: '',
+                  organizationCountry: { name: 'India', isoCode: 'IN' },
+                  organizationState: { name: '', isoCode: '' },
+                  organizationCity: { name: '' },
+                  fromDate: null,
+                  toDate: null,
+                  department: '',
+                  designation: '',
+                },
+              ]);
+            }}
+          >
+            Experience
+          </Button>
+        </Box>
+      )}
       {values.experiences.map((experience: any, index: number) => (
         <Paper
           key={index}
           elevation={3}
-          sx={{ display: 'flex', gap: 1, alignItems: 'center', position: 'relative', my: 2, p: 2 }}
+          sx={{
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            position: 'relative',
+            my: 0.3,
+            p: 2,
+          }}
         >
           <Box
             sx={{
@@ -246,6 +255,7 @@ const WorkExperiences = (props: any) => {
                 <DatePicker
                   label="Start Date *"
                   name={`experiences.${index}.fromDate`}
+                  disableFuture
                   format="DD-MM-YYYY"
                   value={experience.fromDate}
                   onChange={(date) => {
@@ -278,6 +288,7 @@ const WorkExperiences = (props: any) => {
                   label="End Date"
                   name={`experiences.${index}.toDate`}
                   format="DD-MM-YYYY"
+                  disableFuture
                   value={experience.toDate}
                   onChange={(date) => {
                     setFieldValue(`experiences.${index}.toDate`, date);

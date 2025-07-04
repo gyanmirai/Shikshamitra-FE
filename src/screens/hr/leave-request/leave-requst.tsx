@@ -144,7 +144,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 return true;
               }),
         }),
-      description: Yup.string().required('Description is required'),
+      description: Yup.string().required('Leave Description is required'),
       status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
       rejectionReason: Yup.string().test(
         'rejectionReason',
@@ -353,7 +353,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     setFieldValue('description', value);
                   }}
                   value={values.description}
-                  placeholder="Leave description"
+                  placeholder="Leave Description *"
                   error={touched.description && Boolean(errors.description)}
                   helperText={touched.description && errors.description}
                   editable={!editData}

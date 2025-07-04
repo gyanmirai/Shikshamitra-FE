@@ -29,6 +29,7 @@ const TimeTableCell = ({
   isDivisionVisible = false,
   timeSlot,
   day,
+  isDraggable = true,
   slotData,
   isBreak,
   onDrop,
@@ -146,7 +147,7 @@ const TimeTableCell = ({
 
         // '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
         padding: '4px',
-        cursor: slotData ? 'grab' : 'default',
+        cursor: isDrag && slotData ? 'grab' : 'default',
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -304,7 +305,15 @@ const TimeTableCell = ({
               )}
               {isClassVisible && isDivisionVisible && (
                 <Typography variant="caption" color="text.secondary">
-                  {item.class}-{item.division}
+                  {slotData?.subjects?.length
+                    ? slotData.subjects
+                        .map((sub: any) => {
+                          const className = sub?.class || 'No Class';
+                          const divisionName = sub?.division || 'No Division';
+                          return `${className}-${divisionName}`;
+                        })
+                        .join('/')
+                    : 'No Class/Division'}
                 </Typography>
               )}
             </Box>
