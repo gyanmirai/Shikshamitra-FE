@@ -42,7 +42,18 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
                 name="homeworkTypeName"
                 label="Name *"
                 value={formik.values.homeworkTypeName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z\s]/g, '')
+                    // Capitalize each word
+                    .split(' ')
+                    .map((word) =>
+                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                    )
+                    .join(' ');
+                  formik.setFieldValue('homeworkTypeName', value);
+                }}
                 error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
                 helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
               />

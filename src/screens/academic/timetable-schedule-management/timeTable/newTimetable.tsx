@@ -365,10 +365,38 @@ const TimeTableGrid = ({
           subjects: [],
         };
 
-        // Update only timetable for move operations, don't touch subject groups
+        // Update both timetable and subject groups for move operations
         setTimetable(cloneTimeTableData);
+        setSubjectsGroups(cloneSubjectGroups);
       } else {
         // NEW PLACEMENT: Dragging from subject list
+
+        // Count how many times this subject is already placed in timetable
+        const usedLectures = cloneTimeTableData.reduce(
+          (count: number, row: any) =>
+            count +
+            row.dayData.reduce((dayCount: number, dayData: any) => {
+              if (dayData.subjects && dayData.subjects.length > 0) {
+                const hasThisSubject = dayData.subjects.some((s: any) =>
+                  subject.subjects.some((subj: any) => subj.subject === s.subject)
+                );
+                return hasThisSubject ? dayCount + 1 : dayCount;
+              }
+              return dayCount;
+            }, 0),
+          0
+        );
+
+        // Check if subject has reached maximum lectures
+        const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
+          g.subjects.some((sub: Subject) => sub.subject === subject.subjects[0].subject)
+        );
+
+        if (group && usedLectures >= group.totalLectures) {
+          // Subject has reached maximum lectures, prevent placement
+          return;
+        }
+
         const cleanedSubjects = (subject.subjects || []).map((s: Subject) => ({
           subject: s.subject,
           subjectCode: s.subjectCode,
@@ -383,13 +411,9 @@ const TimeTableGrid = ({
         };
 
         // Update subject group allocation count for new placements
-        const firstSubject = cleanedSubjects[0];
-        const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
-          g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
-        );
-
         if (group) {
-          group.allocateLectures = Math.max(0, group.allocateLectures - 1);
+          // Set allocateLectures to the actual count from timetable + 1
+          group.allocateLectures = usedLectures + 1;
         }
 
         // Update both timetable and subject groups for new placements
@@ -401,25 +425,30 @@ const TimeTableGrid = ({
     }
   };
 
-  // Handles deletion of a subject from a time slot and updates remaining lectures count
   const handleDeleteSlot = (rowIndex: number, colIndex: number) => {
     const cloneTimeTableData = cloneDeep(timetable);
     const cloneSubjectGroups = cloneDeep(subjectsGroups);
     const cleanedSubjects = cloneTimeTableData[rowIndex]?.dayData?.[colIndex]?.subjects || [];
 
+    // Clear the slot
     cloneTimeTableData[rowIndex].dayData[colIndex] = {
       day: weekDays[colIndex],
       subjectColor: '',
       subjects: [],
     };
-    const firstSubject = cleanedSubjects[0];
-    const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
-      g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
-    );
 
-    if (group) {
-      group.allocateLectures = Math.max(0, group.allocateLectures + 1);
+    // Update subject group allocation count
+    if (cleanedSubjects.length > 0) {
+      const firstSubject = cleanedSubjects[0];
+      const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
+        g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
+      );
+
+      if (group) {
+        group.allocateLectures = Math.max(0, group.allocateLectures - 1);
+      }
     }
+
     setTimetable(cloneTimeTableData);
     setSubjectsGroups(cloneSubjectGroups);
   };
@@ -635,6 +664,7 @@ const TimeTableGrid = ({
                   onDragStart={handleDragStart}
                   subjectsGroups={subjectsGroups}
                   selectedClass={classes}
+                  timetable={timetable} // Add this prop
                 />
               </Box>
             </Paper>

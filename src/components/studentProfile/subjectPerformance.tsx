@@ -37,9 +37,8 @@ const SubjectPerformance = () => {
   };
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-        <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
-      </Box>
+      <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
+
       {selectedCourse && (
         <Box>
           <Typography variant="h6" gutterBottom>
@@ -60,21 +59,23 @@ const SubjectPerformance = () => {
               {
                 id: 'timeLine',
                 label: '',
+                minWidth: 200,
                 align: 'left',
                 filterType: 'date',
                 renderColumn: () => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     End Date
                     <CustomTooltip
+                      arrow
                       title={
                         <Box>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="error.main">
                             Red : Due within 7 days
                           </Typography>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="warning.main">
                             Yellow : Due within 30 days
                           </Typography>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" display="block" color="success.main">
                             Green : Due after 30 days
                           </Typography>
                         </Box>

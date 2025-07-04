@@ -46,7 +46,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '200px' }}>
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
@@ -57,7 +57,18 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     size="small"
                     // placeholder="Enter Exam Type"
                     value={formik.values.examType}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        // Capitalize each word
+                        .split(' ')
+                        .map((word) =>
+                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                        )
+                        .join(' ');
+                      formik.setFieldValue('examType', value);
+                    }}
                     error={formik.touched.examType && Boolean(formik.errors.examType)}
                     helperText={formik.touched.examType && formik.errors.examType}
                   />

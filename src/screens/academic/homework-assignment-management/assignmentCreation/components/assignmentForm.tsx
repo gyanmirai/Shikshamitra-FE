@@ -76,6 +76,7 @@ export const allStudentIds = [
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editData, onClose }) => {
   // State to control assignment type dialog visibility
   const assignmentTypeDialog = useBoolean();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -504,12 +505,19 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       >
                         <DateTimePicker
                           label="Publish Date"
+                          format="DD/MM/YYYY"
                           value={div.publishDate ? dayjs(div.publishDate) : null}
                           onChange={(val) =>
                             formik.setFieldValue(`divisions[${idx}].publishDate`, val)
                           }
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
                           minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
+                            popper: {
+                              placement: 'top-start',
+                              sx: { zIndex: 1300 },
+                            },
                             textField: {
                               fullWidth: true,
                               size: 'small',
@@ -540,10 +548,17 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       >
                         <DateTimePicker
                           label="Due Date"
+                          format="DD/MM/YYYY"
                           value={div.dueDate ? dayjs(div.dueDate) : null}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
                           minDateTime={dayjs()} // Prevent selecting dates before today
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
                           slotProps={{
+                            popper: {
+                              placement: 'top-start',
+                              sx: { zIndex: 1300 },
+                            },
                             textField: {
                               fullWidth: true,
                               size: 'small',

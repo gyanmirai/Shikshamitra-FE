@@ -45,7 +45,18 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
                 label="Name *"
                 // placeholder="Enter Assignment Type Name"
                 value={formik.values.assignmentTypeName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z\s]/g, '')
+                    // Capitalize each word
+                    .split(' ')
+                    .map((word) =>
+                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                    )
+                    .join(' ');
+                  formik.setFieldValue('assignmentTypeName', value);
+                }}
                 error={
                   formik.touched.assignmentTypeName && Boolean(formik.errors.assignmentTypeName)
                 }

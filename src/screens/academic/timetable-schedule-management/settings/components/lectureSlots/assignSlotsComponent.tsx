@@ -44,7 +44,9 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
     }),
     onSubmit: (values) => {
       console.log('Selected classes:', values.classNames);
-      shikshaMitraToast.success({ message: 'Slots assign successfully to class ' });
+      shikshaMitraToast.success({
+        message: `Slots assign successfully to class ${values.classNames}`,
+      });
       onClose?.(null, true);
     },
   });
@@ -63,7 +65,7 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
             label="Class"
             multiple
             labelKey="name"
-            valueKey="id"
+            valueKey="name"
             formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             error={formik.touched.classNames && Boolean(formik.errors.classNames)}
             helperText={

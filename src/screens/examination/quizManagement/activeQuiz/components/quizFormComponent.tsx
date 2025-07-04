@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { isNaN } from 'lodash';
 import { useSelector, useDispatch } from 'react-redux';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -16,6 +17,7 @@ import {
   Paper,
   Table,
   Stack,
+  Radio,
   Switch,
   Button,
   TableRow,
@@ -38,11 +40,11 @@ import { GlobalIcons } from 'src/utils/icons';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -54,6 +56,8 @@ import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
 
 const QuizInformation = ({ formik }: any) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -76,41 +80,8 @@ const QuizInformation = ({ formik }: any) => {
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Define available division options for the quiz
-  const divisionOption = [
-    { value: 'A', label: 'A' },
-    { value: 'B', label: 'B' },
-    { value: 'C', label: 'C' },
-    { value: 'D', label: 'D' },
-  ];
-
-  // Track if all divisions are selected by comparing initial values length with total options
-  const [isAllSelected, setIsAllSelected] = useState(
-    formik.initialValues?.division?.length === divisionOption.length
-  );
   // Handle changes in division selection
-  const handleDivisionChange = (selectedValues: string[]) => {
-    // Check if "All" or "Deselect All" option is selected
-    if (selectedValues.includes('all') || selectedValues.includes('deselectAll')) {
-      // Get array of all division values
-      const allDivision = divisionOption.map((org) => org.value);
 
-      // If all divisions are currently selected, clear selection
-      if (isAllSelected) {
-        formik.setFieldValue('division', []);
-      } else {
-        // Otherwise select all divisions
-        formik.setFieldValue('division', allDivision);
-      }
-      // Toggle the isAllSelected state
-      setIsAllSelected(!isAllSelected);
-    } else {
-      // Update division values with selected options
-      formik.setFieldValue('division', selectedValues);
-      // Set isAllSelected true if all divisions are selected
-      setIsAllSelected(selectedValues.length === divisionOption.length);
-    }
-  };
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
@@ -125,6 +96,8 @@ const QuizInformation = ({ formik }: any) => {
               onChange={(value) => {
                 formik.setFieldValue('quizStartDateTime', value);
               }}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               disablePast
               slotProps={{
                 textField: {
@@ -145,6 +118,8 @@ const QuizInformation = ({ formik }: any) => {
             <DateTimePicker
               label="End Date/Time *"
               format="DD/MM/YYYY HH:mm"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.quizEndDateTime}
               onChange={(value) => {
                 formik.setFieldValue('quizEndDateTime', value);
@@ -210,7 +185,7 @@ const QuizInformation = ({ formik }: any) => {
               }}
               label="Class *"
               labelKey="name"
-              valueKey="name"
+              valueKey="id"
               error={!!(formik.touched.className && formik.errors.className) || false}
               helperText={formik.touched.className && formik.errors.className}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -218,29 +193,69 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division) || false}>
             <CustomSelect
-              label="Divisions *"
+              label="Division *"
+              labelKey="name"
+              valueKey="id"
+              multiple
               disabled={!formik.values.className}
               options={[
-                {
-                  value: isAllSelected ? 'deselectAll' : 'all',
-                  label: isAllSelected ? 'Deselect All' : 'All',
-                },
-                ...divisionOption,
+                { id: 'all', name: 'All' },
+                ...(allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
+                  []),
               ]}
-              value={formik.values.division}
+              value={formik.values.division || []} // Added fallback empty array
               onChange={(val) => {
-                handleDivisionChange(val as string[]);
+                const value = val as string[];
+
+                const divisionOptions =
+                  allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
+                  [];
+
+                const allDivisionIds = divisionOptions.map((d) => d.id);
+                const isAllClicked = value.includes('all');
+                const wasAllPreviouslySelected = (formik.values.division || []).includes('all'); // Fixed field name and added fallback
+
+                if (isAllClicked && !wasAllPreviouslySelected) {
+                  // "All" was just clicked - select all divisions
+                  formik.setFieldValue('division', ['all', ...allDivisionIds]);
+                } else if (!isAllClicked && wasAllPreviouslySelected) {
+                  // "All" was just unchecked - deselect all divisions
+                  formik.setFieldValue('division', []);
+                } else if (isAllClicked && wasAllPreviouslySelected) {
+                  // Individual item was selected/deselected while "All" was already selected
+                  const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                  if (selectedWithoutAll.length === allDivisionIds.length) {
+                    // All individual items are selected, keep "All" selected
+                    formik.setFieldValue('division', ['all', ...allDivisionIds]);
+                  } else {
+                    // Not all individual items are selected, remove "All"
+                    formik.setFieldValue('division', selectedWithoutAll);
+                  }
+                } else {
+                  // "All" is not selected, handle individual selections
+                  const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                  if (selectedWithoutAll.length === allDivisionIds.length) {
+                    // All individual items are selected, add "All"
+                    formik.setFieldValue('division', ['all', ...allDivisionIds]);
+                  } else {
+                    // Not all items selected, just keep individual selections
+                    formik.setFieldValue('division', selectedWithoutAll);
+                  }
+                }
               }}
-              multiple
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              error={!!(formik.touched.division && formik.errors.division) || false}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '345px' } }}
+              error={!!(formik.touched.division && formik.errors.division)}
               helperText={
-                Array.isArray(formik.errors.division)
-                  ? formik.errors.division.join(', ')
-                  : (formik.touched.division && formik.errors.division) || undefined
+                formik.touched.division
+                  ? Array.isArray(formik.errors.division)
+                    ? formik.errors.division.join(', ')
+                    : formik.errors.division
+                  : undefined
               }
             />
           </ShakingTextField>
@@ -964,16 +979,29 @@ const QuizBuilder = ({ formik }: any) => {
         </Typography>
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Box display="flex" gap={1}>
-          <Typography variant="body2">Generate Question</Typography>
-          <Switch
-            size="small"
-            checked={formik.values.isQuestionUpload}
-            onChange={() =>
-              formik.setFieldValue('isQuestionUpload', !formik.values.isQuestionUpload)
+        <Box display="flex" gap={2}>
+          <FormControlLabel
+            value="generate"
+            control={
+              <Radio
+                size="small"
+                checked={!formik.values.isQuestionUpload}
+                onChange={() => formik.setFieldValue('isQuestionUpload', false)}
+              />
             }
+            label={<Typography variant="body2">Generate Question</Typography>}
           />
-          <Typography variant="body2">Upload Question</Typography>
+          <FormControlLabel
+            value="upload"
+            control={
+              <Radio
+                size="small"
+                checked={formik.values.isQuestionUpload}
+                onChange={() => formik.setFieldValue('isQuestionUpload', true)}
+              />
+            }
+            label={<Typography variant="body2">Upload Question</Typography>}
+          />
         </Box>
 
         <Box sx={{ display: 'flex' }}>
@@ -1064,26 +1092,16 @@ const QuizBuilder = ({ formik }: any) => {
           onEditQuestion={handleEditQuestion}
         />
       ) : (
-        <Upload
-          // {...uploadProps}
-          thumbnail
+        <FileUploader
+          // @ts-ignore
           value={formik.values.rubric}
-          onDrop={(acceptedFiles) => {
-            const file = acceptedFiles[0];
-            console.log('file', file);
-
-            if (!file) return;
-
-            formik.setFieldValue('rubric', file);
-          }}
           multiple={false}
-          onDelete={() => {
-            handleRemoveFile(formik.setFieldValue);
+          showVisibleDocumentCount={1}
+          onChange={(value: any) => {
+            formik.setFieldValue('rubric', value);
           }}
-          onRemoveAll={() => {}}
-          sx={{
-            p: 2,
-          }}
+          primaryText="Please Upload Your Questions"
+          secondaryText="Maximum file size is 5MB"
         />
       )}
     </Box>

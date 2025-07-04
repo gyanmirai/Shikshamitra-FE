@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 
-import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
+import { Box, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -11,6 +11,7 @@ import {
 } from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -174,10 +175,20 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
 
             return (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Tooltip
-                  title={value === PublishUnpublishStatusType.Published ? 'Published' : 'Draft'}
-                  placement="bottom"
+                <CustomTooltip
+                  title={value === 0 ? 'Published' : 'Draft'}
                   arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0], // Try 0 or adjust closer
+                        },
+                      },
+                    ],
+                  }}
                 >
                   <span>
                     {' '}
@@ -189,6 +200,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                           onSwitchToggle(row as IAssignment);
                         }
                       }}
+                      sx={{ p: 0 }}
                       disabled={value === PublishUnpublishStatusType.Published}
                     >
                       <Iconify
@@ -203,7 +215,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                       />
                     </IconButton>
                   </span>
-                </Tooltip>
+                </CustomTooltip>
               </Box>
             );
           },
