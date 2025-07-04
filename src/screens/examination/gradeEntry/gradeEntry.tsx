@@ -22,6 +22,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -227,16 +228,25 @@ const GradeEntry = (props: TabComponentType) => {
    * Closes all dialogs and resets selected student state
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedStudent(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       viewSubmissionDialog.onFalse();
-      setSelectedStudent(null);
       dialog.onFalse();
       bulkGradeDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
       viewSubmissionDialog.onFalse();
-      setSelectedStudent(null);
       dialog.onFalse();
       bulkGradeDialog.onFalse();
+      setTimeout(() => {
+        setSelectedStudent(null);
+      }, 200);
     }
   };
 
@@ -254,7 +264,7 @@ const GradeEntry = (props: TabComponentType) => {
               }}
             >
               {' '}
-              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon="mdi:arrow-right-circle" />
               Assign Marks
             </MenuItem>
           )}
@@ -416,19 +426,21 @@ const GradeEntry = (props: TabComponentType) => {
         open={viewSubmissionDialog.value}
         handleClose={() => {
           viewSubmissionDialog.onFalse();
-          setSelectedStudent(null);
+          setTimeout(() => {
+            setSelectedStudent(null);
+          }, 200); // Adjust timing based on dialog animation if needed
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent ? 'Update Marks' : 'Assign Marks'}
+              {selectedStudent?.marks ? 'Update Marks' : 'Assign Marks'}
             </Typography>
             <CustomTooltip
               sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
-                selectedStudent
+                selectedStudent?.marks
                   ? 'You can modify the existing marks, grades and feedback for this student.'
                   : 'You can enter marks, assign grades and provide feedback for this student.'
               }

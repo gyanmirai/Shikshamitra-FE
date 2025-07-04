@@ -8,7 +8,7 @@ import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem } from '@mui/material';
+import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -29,6 +29,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -175,7 +176,7 @@ const HrEmployee = () => {
                 Employee
               </Button>
             }
-            description="This section displays a list of employees. Click on the View action to access their detailed profile information."
+            description="This section displays the employees list. Click 'View' to see their detailed profile information."
           />
           <Box>
             <CustomizableTable
@@ -342,7 +343,6 @@ const HrEmployee = () => {
                     return <Label color={color}>{EmployeeStatusType[value]}</Label>;
                   },
                 },
-
                 {
                   id: 'actions',
                   label: 'Actions',
@@ -383,7 +383,19 @@ const HrEmployee = () => {
             <CustomDialog
               open={statusDialog.value}
               handleClose={handleCloseStatus}
-              title="Change Status"
+              title={
+                <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                  <Typography variant="h5">Change Status</Typography>
+                  <CustomTooltip
+                    arrow
+                    placement="right"
+                    sx={{ textAlign: 'justify' }}
+                    title="You can update the employee's current status to reflect their employment situation, such as active, inactive, left or retired"
+                  >
+                    <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                  </CustomTooltip>
+                </Box>
+              }
             >
               <ChangeStatusForm
                 handleClose={handleCloseStatus}

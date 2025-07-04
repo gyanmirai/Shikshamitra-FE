@@ -205,14 +205,29 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                           }
                         );
                       });
+
                       formik.setFieldValue('divisions', newDivisions);
+
+                      // ✅ If no division is selected, clear students
+                      if (selectedDivs.length === 0) {
+                        formik.setFieldValue('students', []);
+                      } else {
+                        formik.setFieldValue('students', allStudentIds);
+                      }
                     }}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                     helperText={
-                      formik.touched.divisions && typeof formik.errors.divisions === 'string'
+                      formik.touched.divisions &&
+                      (typeof formik.errors.divisions === 'string'
                         ? formik.errors.divisions
-                        : undefined
+                        : formik.errors.divisions?.some(
+                              (divErr: any) =>
+                                typeof divErr === 'object' &&
+                                (divErr?.publishDate || divErr?.dueDate)
+                            )
+                          ? 'Select schedule dates also'
+                          : undefined)
                     }
                   />
                 </ShakingTextField>
@@ -340,6 +355,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                 >
                   <ResponsiveMultiSelect
                     label="Students"
+                    disabled={!formik.values.divisions || formik.values.divisions.length === 0}
                     options={[
                       { id: 'all', name: 'All' },
                       { id: 'st1', name: 'Sharma Amit Raj' },

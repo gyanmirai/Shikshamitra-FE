@@ -6,7 +6,16 @@ import React, { useState } from 'react';
 
 import { Autocomplete, LoadingButton } from '@mui/lab';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
-import { Box, Chip, Stack, Button, Checkbox, TextField, DialogActions } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Stack,
+  Button,
+  Checkbox,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -57,6 +66,7 @@ const HrSetting = () => {
           <LoadingButton
             loading={isDeleteLoading}
             variant="contained"
+            size="small"
             color="error"
             onClick={async () => {
               await deleteDocument(deleteInformation?.id);
@@ -79,7 +89,7 @@ const HrSetting = () => {
           { name: 'Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="Add, Update and Delete Documents from employee"
+        description="Add, update OR delete documents associated with an employee."
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
             Document
@@ -155,7 +165,23 @@ const HrSetting = () => {
           setEditData(null);
           dialog.onFalse();
         }}
-        title={editData ? 'Update Document' : 'Add Document'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{editData ? 'Update Document' : 'Add Document'}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                editData
+                  ? 'You can update document details including name, size and accepted formats.'
+                  : 'You can create a new document by entering document name, size and accepted formats.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <DocumentForm
           handleClose={() => {
@@ -198,8 +224,8 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     validationSchema: Yup.object().shape({
       title: Yup.string().required('Document name is required'),
       documentType: Yup.array()
-        .min(1, 'At least one document type must be selected')
-        .required('Document type is required'),
+        .min(1, 'At least one Document Type must be selected')
+        .required('Document Type is required'),
       documentSize: Yup.number()
         .required('Document size is required')
         .min(1, 'Document size must be greater than 1 MB')
@@ -233,7 +259,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
   return (
     <>
       <DialogScrollContent>
-        <Stack spacing={2}>
+        <Stack spacing={3}>
           <ShakingTextField error={touched.title && Boolean(errors.title)}>
             <TextField
               fullWidth
@@ -328,13 +354,19 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           loading={isLoading || isUpdateLoading}
           variant="contained"
           onClick={(e: any) => handleSubmit(e)}
           size="small"
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </>

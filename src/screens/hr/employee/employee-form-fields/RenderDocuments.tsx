@@ -253,6 +253,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
         ]}
         data={tableData}
       />
+
       <CustomDialog
         title="Preview Document"
         open={viewDialog.value}

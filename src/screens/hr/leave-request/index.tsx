@@ -69,7 +69,7 @@ const LeaveRequest = () => {
         description={
           currentActiveComponent?.value === 'leaveRequest'
             ? 'On this screen, you can create new leave requests for employees. The screen also displays a list of all previously created requests, where you can approve or reject them as needed.'
-            : 'The Leave Calendar provides a visual overview of all employee leave requests. You can view the leave status for each employee on specific dates and track approved, pending, or rejected leaves.'
+            : 'The Leave Calendar visually displays employees leave requests and their statuses—approved, pending, or rejected—on specific dates.'
         }
       />
       <Card

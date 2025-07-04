@@ -41,7 +41,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right-bold" />
+            <Iconify icon="mdi:arrow-right-circle" sx={{ height: '16px', width: '16px' }} />
             Assign to other class
           </MenuItem>
         </MenuList>
@@ -116,6 +116,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
                     setDisabled(true);
                   }}
                   handleEditClick={() => {
+                    setDisabled(true);
                     setIsEdit(true);
                     addLectureSlotDialog.onTrue();
                   }}
@@ -170,16 +171,18 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         handleClose={() => {
           addLectureSlotDialog.onFalse();
           setIsEdit(false);
+          setDisabled(false);
         }}
         maxWidth="md"
       >
         <CreateSlotsForm
-        // onSave={handleSave}
-        // dialogValue={dialog.value}
-        // onClose={closeDialog}
-        // data={selectedEntry}
-        // isEdit={isEdit}
-        // allData={roomData}
+          disabled={disabled}
+          // onSave={handleSave}
+          // dialogValue={dialog.value}
+          // onClose={closeDialog}
+          // data={selectedEntry}
+          // isEdit={isEdit}
+          // allData={roomData}
         />
       </CustomDialog>
 
@@ -198,7 +201,10 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
           </Box>
         }
         open={viewSlotsDialog.value}
-        handleClose={viewSlotsDialog.onFalse}
+        handleClose={() => {
+          viewSlotsDialog.onFalse();
+          setDisabled(false);
+        }}
         maxWidth="md"
       >
         <CreateSlotsForm

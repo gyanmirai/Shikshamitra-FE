@@ -41,6 +41,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
@@ -74,13 +75,21 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust based on your dialog close animation duration
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
       dialog.onFalse();
-      setEditData(null);
+      resetState();
     } else if (!isChanges) {
       dialog.onFalse();
-      setEditData(null);
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
     }
   };
 
@@ -104,12 +113,17 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{editData?.leaveType || 'this policy'}</strong>?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
             color="error"
+            size="small"
             onClick={async () => {
               await deleteLeavePolicy(editData?.id);
               confirm.onFalse();
@@ -270,7 +284,10 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
         maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Policy</Typography>
+            <Typography variant="h5">
+              {' '}
+              {editData ? 'Update Leave Policy' : 'Add Leave Policy'}
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -283,7 +300,9 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
-          setEditData(null);
+          setTimeout(() => {
+            setEditData(null);
+          }, 200); // Adjust timing to match your dialog close animation
         }}
       >
         <LeavePolicyForm handleClose={handleClose} editData={editData} />
@@ -356,11 +375,12 @@ export const LeavePolicyForm = ({
     validationSchema,
     onSubmit: (values) => {
       console.log(values);
+      handleClose(null, true);
     },
   });
 
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <SectionCard title="General Policy Information">
           <Grid item xs={12} sm={4}>
@@ -373,8 +393,10 @@ export const LeavePolicyForm = ({
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControl fullWidth size="small">
-              <InputLabel>Applicable Roles</InputLabel>
+              <InputLabel id="applicable-roles-label">Applicable Roles</InputLabel>
               <Select
+                labelId="applicable-roles-label"
+                label="Applicable Roles"
                 name="applicableRoles"
                 value={formik.values.applicableRoles}
                 onChange={formik.handleChange}
@@ -387,14 +409,16 @@ export const LeavePolicyForm = ({
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} sm={4}>
             <FormControl fullWidth size="small">
-              <InputLabel>Leave Type</InputLabel>
+              <InputLabel id="leave-type-label">Leave Type</InputLabel>
               <Select
+                labelId="leave-type-label"
+                label="Leave Type"
                 name="leaveType"
                 value={formik.values.leaveType}
                 onChange={formik.handleChange}
-                label="Leave Type"
               >
                 {leaveTypes.map((type) => (
                   <MenuItem key={type} value={type}>
@@ -404,6 +428,7 @@ export const LeavePolicyForm = ({
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} sm={4}>
             <TextField
               size="small"
@@ -553,14 +578,17 @@ export const LeavePolicyForm = ({
             />
           </Grid>
 
-          <Grid item xs={4}>
-            <TextField
-              size="small"
-              label="Max Carry Forward"
-              fullWidth
-              {...formik.getFieldProps('maxCarryForward')}
-            />
-          </Grid>
+          {formik.values.carryForward && (
+            <Grid item xs={4}>
+              <TextField
+                size="small"
+                label="Max Carry Forward"
+                fullWidth
+                {...formik.getFieldProps('maxCarryForward')}
+              />
+            </Grid>
+          )}
+
           <Grid item xs={8} display="flex" gap={2}>
             <FormControlLabel
               control={
@@ -573,20 +601,24 @@ export const LeavePolicyForm = ({
               }
               label="Encashment Allowed?"
             />
-            <FormControl sx={{ flexGrow: 1 }} size="small">
-              <InputLabel>Encashment Month</InputLabel>
-              <Select
-                name="encashmentMonth"
-                value={formik.values.encashmentMonth}
-                onChange={formik.handleChange}
-              >
-                {months.map((month) => (
-                  <MenuItem key={month} value={month}>
-                    {month}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+
+            {formik.values.encashmentAllowed && (
+              <FormControl sx={{ flexGrow: 1 }} size="small">
+                <InputLabel>Encashment Month</InputLabel>
+                <Select
+                  label="Encashment Month"
+                  name="encashmentMonth"
+                  value={formik.values.encashmentMonth}
+                  onChange={formik.handleChange}
+                >
+                  {months.map((month) => (
+                    <MenuItem key={month} value={month}>
+                      {month}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
           </Grid>
         </SectionCard>
 
@@ -629,21 +661,29 @@ export const LeavePolicyForm = ({
                 <Checkbox
                   size="small"
                   checked={formik.values.sandwichRule}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    if (!e.target.checked) {
+                      formik.setFieldValue('sandwichCount', ''); // Optional: reset field
+                    }
+                  }}
                   name="sandwichRule"
                 />
               }
               label="Sandwich Rule Applied?"
             />
           </Grid>
-          <Grid item xs={4}>
-            <TextField
-              size="small"
-              label="Sandwich Allowed Count (per month)"
-              fullWidth
-              {...formik.getFieldProps('sandwichCount')}
-            />
-          </Grid>
+
+          {formik.values.sandwichRule && (
+            <Grid item xs={4}>
+              <TextField
+                size="small"
+                label="Sandwich Allowed Count (per month)"
+                fullWidth
+                {...formik.getFieldProps('sandwichCount')}
+              />
+            </Grid>
+          )}
         </SectionCard>
 
         <SectionCard title="Description & Notes">
@@ -665,19 +705,27 @@ export const LeavePolicyForm = ({
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose(null, false);
+          }}
         >
           Cancel
         </Button>
         <LoadingButton
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           variant="contained"
           type="submit"
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };

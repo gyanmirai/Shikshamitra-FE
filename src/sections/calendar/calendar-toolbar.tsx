@@ -1,5 +1,15 @@
+import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { IDateValue } from 'src/types/common';
+import type { Calendar } from '@fullcalendar/core';
+import type FullCalendar from '@fullcalendar/react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { ICalendarView } from 'src/types/calendar';
+import type { UsePopoverReturn } from 'src/components/custom-popover';
+
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 import Stack from '@mui/material/Stack';
@@ -8,7 +18,10 @@ import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { DateCalendar } from '@mui/x-date-pickers';
 import LinearProgress from '@mui/material/LinearProgress';
+
+import { formatStr } from 'src/utils/format-time';
 
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -36,6 +49,9 @@ type Props = {
   onChangeView: (newView: ICalendarView) => void;
   viewOptions?: typeof VIEW_OPTIONS;
   renderCompToHeader?: React.ReactNode;
+  calendarRef?: React.RefObject<Calendar | FullCalendar>;
+  format?: string;
+  setDate?: Dispatch<SetStateAction<string | Date>>;
 };
 
 export function CalendarToolbar({
@@ -50,10 +66,16 @@ export function CalendarToolbar({
   onOpenFilters,
   viewOptions = VIEW_OPTIONS,
   renderCompToHeader = null,
+  calendarRef,
+  format,
+  setDate,
 }: Props) {
   const popover = usePopover();
+  const datePopover = usePopover();
 
   const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
+
+  const dateValue = dayjs(date, format ?? formatStr.date);
 
   return (
     <>
@@ -81,7 +103,9 @@ export function CalendarToolbar({
             <Iconify icon="eva:arrow-ios-back-fill" />
           </IconButton>
 
-          <Typography variant="h6">{date}</Typography>
+          <Typography variant="h6" sx={{ cursor: 'pointer' }} onClick={datePopover.onOpen}>
+            {date}
+          </Typography>
 
           <IconButton onClick={onNextDate}>
             <Iconify icon="eva:arrow-ios-forward-fill" />
@@ -137,6 +161,74 @@ export function CalendarToolbar({
           ))}
         </MenuList>
       </CustomPopover>
+
+      <CustomPopover
+        open={datePopover.open}
+        anchorEl={datePopover.anchorEl}
+        onClose={datePopover.onClose}
+        slotProps={{ arrow: { placement: 'top-left' } }}
+      >
+        <CalenderDateView
+          dateValue={dateValue}
+          calendarRef={calendarRef}
+          format={format}
+          datePopover={datePopover}
+          setDate={setDate}
+        />
+      </CustomPopover>
     </>
   );
 }
+
+const CalenderDateView = ({
+  dateValue,
+  calendarRef,
+  format,
+  datePopover,
+  setDate,
+}: {
+  dateValue: Dayjs | null;
+  calendarRef?: React.RefObject<Calendar | FullCalendar>;
+  format?: string;
+  datePopover: UsePopoverReturn;
+  setDate?: Dispatch<SetStateAction<string | Date>>;
+}) => {
+  const [tempDate, setTempDate] = useState<Dayjs | null>(dateValue);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  return (
+    <Box>
+      <DateCalendar
+        views={['year', 'month']}
+        minDate={dayjs(currentYear.startDate)}
+        maxDate={dayjs(currentYear.endDate)}
+        value={tempDate}
+        sx={{
+          '& .MuiPickersCalendarHeader-root': {
+            pl: '12px !important',
+          },
+        }}
+        onChange={(val) => {
+          if (val) setTempDate(val);
+        }}
+      />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, p: 1 }}>
+        <Button size="small" onClick={datePopover.onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => {
+            // @ts-ignore
+            calendarRef?.current?.calendar?.gotoDate?.(tempDate?.format() || '');
+            setDate?.(tempDate?.format(format ?? formatStr.date) || '');
+            datePopover.onClose();
+          }}
+          sx={{ ml: 1 }}
+        >
+          OK
+        </Button>
+      </Box>
+    </Box>
+  );
+};

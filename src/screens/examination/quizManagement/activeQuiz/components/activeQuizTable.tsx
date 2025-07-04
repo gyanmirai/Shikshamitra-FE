@@ -18,6 +18,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -199,13 +200,13 @@ const QuizTable = ({
                   label: 'Quiz Title',
                   align: 'left',
                   filterType: 'string',
-                  minWidth: 120,
+                  // minWidth: 120,
                 },
                 {
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  minWidth: 160,
+                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -230,35 +231,35 @@ const QuizTable = ({
                   label: 'Created At',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 120,
+                  // minWidth: 120,
                 },
                 {
                   id: 'quizDate',
                   label: 'Start Date',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizEndDate',
                   label: 'End Date',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizTime',
                   label: 'Start Time',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizEndTime',
                   label: 'End Time',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizDuration',
@@ -271,14 +272,14 @@ const QuizTable = ({
                   label: 'Total Marks',
                   align: 'left',
                   filterType: 'number',
-                  minWidth: 120,
+                  // minWidth: 120,
                 },
                 {
                   id: 'passingMarks',
                   label: 'Passing Marks',
                   align: 'left',
                   filterType: 'number',
-                  minWidth: 140,
+                  // minWidth: 140,
                 },
                 {
                   id: 'action',
@@ -329,7 +330,7 @@ const QuizTable = ({
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  minWidth: 160,
+                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -425,12 +426,12 @@ const QuizTable = ({
                 },
                 {
                   id: 'actions',
-                  label: 'Action',
+                  label: 'Actions',
                   isSort: false,
                   sticky: true,
                   isFilter: false,
                   align: 'left',
-                  minWidth: 60,
+                  minWidth: 70,
                   render(value, row) {
                     return (
                       <ThreeDotsActions
@@ -446,7 +447,19 @@ const QuizTable = ({
       />
 
       <CustomDialog
-        title="View Student Submission"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Student Submission</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed submission information including student answers, marks obtained, and submission status"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewSubmissionDialog.value}
         handleClose={viewSubmissionDialog.onFalse}
         maxWidth="lg"

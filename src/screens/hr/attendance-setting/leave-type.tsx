@@ -8,25 +8,16 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import {
-  Box,
-  Grid,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import { AccurateRateType } from 'src/enums/accurate-rate';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { AccurateRateType, AccurateRateTypeArray } from 'src/enums/accurate-rate';
 import {
   useGetEmployeeLeavePolicyQuery,
   useAddEmployeeLeavePolicyMutation,
@@ -34,8 +25,8 @@ import {
   useDeleteEmployeeLeavePolicyMutation,
 } from 'src/redux/employee/employeeApi';
 
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -44,6 +35,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 interface ILeavePolicy {
   id: string;
@@ -75,13 +67,21 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Delay matches your dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
       dialog.onFalse();
-      setEditData(null);
+      resetState();
     } else if (!isChanges) {
       dialog.onFalse();
-      setEditData(null);
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
     }
   };
 
@@ -105,12 +105,17 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{editData?.leaveType}</strong>?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isDeleteLoading}
             color="error"
+            size="small"
             onClick={async () => {
               await deleteLeavePolicy(editData?.id);
               confirm.onFalse();
@@ -159,44 +164,58 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
           {
             id: 'leaveType',
             label: 'Leave Type',
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SubjectColorIndicator color={row.color || '#ccc'} />
+                <Typography variant="body2" fontSize={13}>
+                  {value || '-'}
+                </Typography>
+              </Box>
+            ),
           },
-          {
-            id: 'leaveDays',
-            label: 'Leave Days',
-            filterType: 'number',
-          },
-          {
-            id: 'isCarryForward',
-            label: 'Carry Forward',
-          },
-          {
-            id: 'accrualRateString',
-            label: 'Accrual Rate',
-          },
-          {
-            id: 'color',
-            label: 'Color',
-            isSort: false,
-            isFilter: false,
+          //  {
+          //   id: 'leaveTypeShortName',
+          //   label: 'Leave Type Short Name',
+          // },
+          // {
+          //   id: 'leaveDays',
+          //   label: 'Leave Days',
+          //   filterType: 'number',
+          // },
+          // {
+          //   id: 'isCarryForward',
+          //   label: 'Carry Forward',
+          // },
+          // {
+          //   id: 'accrualRateString',
+          //   label: 'Accrual Rate',
+          // },
+          // {
+          //   id: 'color',
+          //   label: 'Color',
+          //   isSort: false,
+          //   isFilter: false,
 
-            render(value, row) {
-              return (
-                <Box
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '50%',
-                    backgroundColor: value,
-                  }}
-                />
-              );
-            },
-          },
+          //   render(value, row) {
+          //     return (
+          //       <Box
+          //         sx={{
+          //           width: 20,
+          //           height: 20,
+          //           borderRadius: '50%',
+          //           backgroundColor: value,
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'action',
             label: 'Actions',
             isSort: false,
             isFilter: false,
+            minWidth: 60,
+            align: 'left',
             sticky: true,
 
             render(value, row) {
@@ -224,7 +243,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Type</Typography>
+            {editData ? 'Update Leave Type' : 'Add Leave Type'}
             <CustomTooltip
               arrow
               placement="right"
@@ -237,7 +256,9 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
-          setEditData(null);
+          setTimeout(() => {
+            setEditData(null);
+          }, 200); // Adjust the delay based on your dialog transition duration
         }}
       >
         <LeaveTypeForm handleClose={handleClose} editData={editData} />
@@ -280,17 +301,18 @@ const LeaveTypeForm = ({
       leaveDays: editData?.leaveDays || 0,
       carryForward: editData?.carryForward || false,
       accrualRate: editData?.accrualRate ?? AccurateRateType.Monthly,
-      color: editData?.color || 'white',
+      color: editData?.color || '',
       roles: editData?.roles || [],
       fieldType: editData?.fieldType || 'paid',
     },
     validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave type is required'),
-      leaveTypeShortName: Yup.string().required('Leave type short name is required'),
-      leaveDays: Yup.number()
-        .required('Leave days is required')
-        .min(1, 'Leave days must be greater than 0'),
+      leaveType: Yup.string().required('Leave Type is required'),
       color: Yup.string().required('Color is required'),
+      // leaveTypeShortName: Yup.string().required('Leave type short name is required'),
+      // leaveDays: Yup.number()
+      //   .required('Leave days is required')
+      //   .min(1, 'Leave days must be greater than 0'),
+      // color: Yup.string().required('Color is required'),
       //   roles: Yup.array().min(1, 'At least one role must be selected'),
       //   fieldType: Yup.string().required('Field type is required'),
     }),
@@ -310,6 +332,7 @@ const LeaveTypeForm = ({
               //   fieldType: values.fieldType,
             },
           });
+          shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
           await addLeavePolicy({
             leaveType: values.leaveType,
@@ -321,6 +344,7 @@ const LeaveTypeForm = ({
             // roles: values.roles,
             // fieldType: values.fieldType,
           });
+          shikshaMitraToast.success({ message: 'Leave Type added successfully' });
         }
         handleClose(null, true);
         formik.resetForm();
@@ -351,7 +375,7 @@ const LeaveTypeForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField
               error={formik.touched.leaveTypeShortName && Boolean(formik.errors.leaveTypeShortName)}
             >
@@ -370,9 +394,9 @@ const LeaveTypeForm = ({
                 }
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField error={formik.touched.leaveDays && Boolean(formik.errors.leaveDays)}>
               <TextField
                 name="leaveDays"
@@ -386,9 +410,9 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.leaveDays && formik.errors.leaveDays) as string}
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ShakingTextField
               error={formik.touched.accrualRate && Boolean(formik.errors.accrualRate)}
             >
@@ -403,10 +427,17 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.accrualRate && formik.errors.accrualRate) as string}
               />
             </ShakingTextField>
-          </Grid>
+          </Grid> */}
 
           <Grid item xs={12}>
             <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1 }}
+                color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
+              >
+                Leave Type Color
+              </Typography>
               <ColorPickerCircle
                 onSelect={(color: string) => formik.setFieldValue('color', color)}
                 initialColor={formik.values.color}
@@ -424,19 +455,6 @@ const LeaveTypeForm = ({
               /> */}
             </ShakingTextField>
           </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  name="carryForward"
-                  checked={formik.values.carryForward}
-                  onChange={formik.handleChange}
-                />
-              }
-              label="Enable Carry Forward"
-            />
-          </Grid>
         </Grid>
       </DialogScrollContent>
 
@@ -450,13 +468,19 @@ const LeaveTypeForm = ({
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           loading={isUpdateLoading || isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"
           size="small"
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

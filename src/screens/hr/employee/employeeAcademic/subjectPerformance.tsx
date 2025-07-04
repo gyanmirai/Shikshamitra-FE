@@ -372,7 +372,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
                 formik.setFieldValue('completePercentage', value);
               }}
               getAriaValueText={(value) => `${value}%`}
-              step={10}
+              step={1}
               valueLabelDisplay="auto"
               marks={marks}
               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}

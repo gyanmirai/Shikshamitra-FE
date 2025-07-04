@@ -1,10 +1,18 @@
+import dayjs from 'dayjs';
 import * as yup from 'yup';
 
 export const stepValidationSchemas = [
   yup.object().shape({
     attemptsAllowed: yup.number(),
 
-    quizStartDateTime: yup.date().required('Start Date/Time is required'),
+    quizStartDateTime: yup
+      .mixed()
+      .test(
+        'is-valid-date',
+        'Start Date/Time is required',
+        (value) => value && dayjs(value as any).isValid()
+      )
+      .required('Start Date/Time is required'),
     totalMarks: yup.number().required('Total Marks is required'),
     passingMarks: yup
       .number()
@@ -13,9 +21,17 @@ export const stepValidationSchemas = [
       .max(yup.ref('totalMarks'), 'Cannot exceed total marks'),
     quizTakenType: yup.string().required('Quiz Taken Type is Required'),
     quizEndDateTime: yup
-      .date()
+      .mixed()
+      .test(
+        'is-valid-date',
+        'End Date/Time is required',
+        (value) => value && dayjs(value as any).isValid()
+      )
       .required('End Date/Time is required')
-      .min(yup.ref('quizStartDateTime'), 'End date must be after start date'),
+      .test('is-after-start', 'End date must be after start date', function (value) {
+        const startDate = this.parent.quizStartDateTime;
+        return dayjs(value as any).isAfter(dayjs(startDate));
+      }),
     quizTitle: yup.string().required('Title is required'),
     className: yup.string().required('Class is required'),
     division: yup.array().of(yup.string()).min(1, 'At least one Division is required'),

@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 
 import { RemoveCircle } from '@mui/icons-material';
-import { Box, Tooltip, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+import { Box, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -14,6 +14,7 @@ import {
 } from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -79,7 +80,7 @@ const SubjectTable = ({
     ({ popover: pop, row }: any) => (
       <>
         {' '}
-        <MenuList>
+        <MenuList disablePadding dense>
           {/* Show Add Timetable option for Pending status */}
 
           <MenuItem
@@ -244,8 +245,25 @@ const SubjectTable = ({
                   : theme.palette.text.secondary;
 
               return (
-                <Tooltip title={value === 0 ? 'Published' : 'Draft'}>
-                  <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
+                <CustomTooltip
+                  title={value === 0 ? 'Published' : 'Draft'}
+                  arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0], // Try 0 or adjust closer
+                        },
+                      },
+                    ],
+                  }}
+                >
+                  <IconButton
+                    onClick={() => onToggleStatus(row as ISubjectFormValues)}
+                    sx={{ p: 0 }} // No padding
+                  >
                     <Iconify
                       icon={GlobalIcons.tick}
                       sx={{
@@ -256,7 +274,7 @@ const SubjectTable = ({
                       }}
                     />
                   </IconButton>
-                </Tooltip>
+                </CustomTooltip>
               );
             },
           },

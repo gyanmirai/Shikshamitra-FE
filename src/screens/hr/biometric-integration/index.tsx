@@ -1,15 +1,16 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
-// eslint-disable-next-line import/no-duplicates
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -30,7 +31,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const isDownLoadingTemplate = useBoolean();
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const open = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const handleDownloadTemplate = () => {
@@ -45,6 +46,7 @@ const BiometricIntegrationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Import Attendance"
+        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
@@ -52,23 +54,39 @@ const BiometricIntegrationScreen = () => {
         ]}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1, pl: 1, mt: 2 }}>
-        <DatePicker
-          label="Date"
-          value={date}
-          onChange={(newValue) => {
-            setDate(newValue);
-          }}
-          format="DD-MM-YYYY"
-          disableFuture
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
-        />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          mb: 2,
+          pl: 1,
+          mt: 2,
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Date Picker */}
+        <Box>
+          <DatePicker
+            label="Date"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
+            value={date}
+            onChange={(newValue) => setDate(newValue)}
+            format="DD-MM-YYYY"
+            views={['year', 'month', 'day']}
+            disableFuture
+            slotProps={{
+              textField: {
+                size: 'small',
+              },
+            }}
+          />
+        </Box>
 
-        <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>
+        {/* Buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <LoadingButton
             loading={isDownLoadingTemplate.value}
             variant="outlined"
@@ -78,6 +96,7 @@ const BiometricIntegrationScreen = () => {
           >
             Download Sample File
           </LoadingButton>
+
           <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
             Upload File
           </Button>
@@ -91,7 +110,13 @@ const BiometricIntegrationScreen = () => {
         columns={[
           { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
-          { id: 'contactNo', label: 'Mobile No.', align: 'left', minWidth: '8vw' },
+          {
+            id: 'contactNo',
+            label: 'Mobile No.',
+            align: 'left',
+            minWidth: '8vw',
+            filterType: 'number',
+          },
           {
             id: 'timeIn',
             label: 'In-Time',
@@ -110,7 +135,7 @@ const BiometricIntegrationScreen = () => {
               return value || `__ __`;
             },
           },
-          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '10vw', align: 'left' },
+          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '9vw', align: 'left' },
           {
             id: 'status',
             label: 'Status',
@@ -333,57 +358,82 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
             />
           </ShakingTextField>
           <ShakingTextField error={formik.touched.inTime && Boolean(formik.errors.inTime)}>
-            <MobileTimePicker
-              label="In Time"
+            <TimePicker
+              label="In Time *"
               value={formik.values.inTime}
-              onChange={(value) => formik.setFieldValue('inTime', value)}
+              format="hh:mm"
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+              onChange={(date) => formik.setFieldValue('inTime', date)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
-                  error: formik.touched.inTime && Boolean(formik.errors.inTime),
-                  helperText: formik.touched.inTime && formik.errors.inTime,
+                  name: 'inTime',
+                  helperText:
+                    formik.touched.inTime && formik.errors.inTime
+                      ? String(formik.errors.inTime)
+                      : undefined,
+                  error: !!formik.errors.inTime && formik.touched.inTime,
                 },
               }}
             />
           </ShakingTextField>
 
           <ShakingTextField error={formik.touched.outTime && Boolean(formik.errors.outTime)}>
-            <MobileTimePicker
-              label="Out Time"
+            <TimePicker
+              label="Out Time *"
               value={formik.values.outTime}
-              onChange={(value) => formik.setFieldValue('outTime', value)}
+              format="hh:mm"
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+              onChange={(date) => formik.setFieldValue('outTime', date)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
-                  error: formik.touched.outTime && Boolean(formik.errors.outTime),
-                  helperText: formik.touched.outTime && formik.errors.outTime,
+                  name: 'outTime',
+                  helperText:
+                    formik.touched.outTime && formik.errors.outTime
+                      ? String(formik.errors.outTime)
+                      : undefined,
+                  error: !!formik.errors.outTime && formik.touched.outTime,
                 },
               }}
             />
           </ShakingTextField>
-
-          <DialogActions>
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              size="small"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              size="small"
-            >
-              Submit
-            </Button>
-          </DialogActions>
         </Stack>
       </Box>
+      <DialogActions>
+        <Button
+          onClick={handleClose}
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          size="small"
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
     </Box>
   );
 };

@@ -1,10 +1,12 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import {
   Box,
   Grid,
@@ -18,13 +20,21 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import { GlobalIcons } from 'src/utils/icons';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
@@ -33,10 +43,60 @@ const ShiftManagement = ({
 }: {
   shiftManagementDialog: UseBooleanReturn;
 }) => {
+  const confirm = useBoolean();
   const [editData, setEditData] = useState(null);
+  const [deleteInformation, setDeleteInformation] = useState<any>(null);
+
+  // const [deleteRule] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useDeleteEmployeeCustomAttendanceRuleMutation,
+  // });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // optional delay to allow dialog closing animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
+  };
+
   return (
     <>
       <CustomizableTable
+        noDataText={
+          <>
+            No Shift Management Data Found{' '}
+            <Box
+              onClick={() => {
+                dialog.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Shift
+            </Box>
+          </>
+        }
         tableId="shift-management"
         columns={[
           { id: 'shiftName', label: 'Shift Name' },
@@ -48,7 +108,9 @@ const ShiftManagement = ({
             isSort: false,
             isFilter: false,
             sticky: true,
-            label: 'Action',
+            align: 'left',
+            label: 'Actions',
+            minWidth: '70px',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -60,7 +122,8 @@ const ShiftManagement = ({
                     dialog.onTrue();
                   }}
                   handleDeleteClick={() => {
-                    setEditData(row as any);
+                    setDeleteInformation(row);
+                    confirm.onTrue();
                   }}
                 />
               );
@@ -105,22 +168,58 @@ const ShiftManagement = ({
           },
         ]}
       />
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete <strong>{deleteInformation?.shiftName}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              confirm.onFalse();
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
       <CustomDialog
         maxWidth="md"
-        title={editData ? 'Update Shift Rule' : 'Add Shift Rule'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {editData ? 'Update Shift Rule' : 'Add Shift Rule'}
+            </Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title={
+                editData
+                  ? 'Define shift name, week start day, working days, and set day-wise timing here.'
+                  : 'Define shift name, week start day, working days, and set day-wise timing here.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         handleClose={() => {
-          setEditData(null);
           dialog.onFalse();
+          setTimeout(() => {
+            setEditData(null);
+          }, 200);
         }}
         open={dialog.value}
       >
-        <ShiftManagementForm
-          handleClose={() => {
-            setEditData(null);
-            dialog.onFalse();
-          }}
-          editData={editData}
-        />
+        <ShiftManagementForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </>
   );
@@ -132,7 +231,7 @@ const ShiftManagementForm = ({
   handleClose,
   editData,
 }: {
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
   const formik = useFormik({
@@ -164,11 +263,13 @@ const ShiftManagementForm = ({
     }),
     onSubmit: (values) => {
       console.log(values);
+      handleClose(null, true);
+      shikshaMitraToast.success({ message: 'Shift rule updated successfully' });
     },
   });
 
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Stack spacing={1}>
           <Box>
@@ -234,21 +335,24 @@ const ShiftManagementForm = ({
           </TextField> */}
 
           <SectionCard title="Working Days & Timing">
-            {Object.entries(formik.values.workingDays).map(([day, checked]) => (
-              <Grid item xs={6} sm={3} md={1.5} key={day}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={checked}
-                      onChange={formik.handleChange}
-                      name={`workingDays.${day}`}
-                    />
-                  }
-                  label={day.charAt(0).toUpperCase() + day.slice(1)}
-                />
-              </Grid>
-            ))}
+            <Grid item xs={12}>
+              <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+                {Object.entries(formik.values.workingDays).map(([day, checked]) => (
+                  <FormControlLabel
+                    key={day}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={checked}
+                        onChange={formik.handleChange}
+                        name={`workingDays.${day}`}
+                      />
+                    }
+                    label={day.charAt(0).toUpperCase() + day.slice(1)}
+                  />
+                ))}
+              </Box>
+            </Grid>
           </SectionCard>
 
           {/* <TextField
@@ -289,27 +393,45 @@ const ShiftManagementForm = ({
                   </TextField>
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField
-                    size="small"
-                    type="time"
-                    fullWidth
-                    name={`daySchedule.${index}.startTime`}
-                    value={schedule.startTime}
-                    onChange={formik.handleChange}
+                  <TimePicker
                     label="Start Time"
-                    InputLabelProps={{ shrink: true }}
+                    value={schedule.startTime}
+                    format="HH:mm"
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
+                    onChange={(date) =>
+                      formik.setFieldValue(`daySchedule.${index}.startTime`, date)
+                    }
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        name: `daySchedule.${index}.startTime`,
+                      },
+                    }}
                   />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField
-                    size="small"
-                    type="time"
-                    fullWidth
-                    name={`daySchedule.${index}.endTime`}
-                    value={schedule.endTime}
-                    onChange={formik.handleChange}
+                  <TimePicker
                     label="End Time"
-                    InputLabelProps={{ shrink: true }}
+                    value={schedule.endTime}
+                    format="HH:mm"
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
+                    onChange={(date) => formik.setFieldValue(`daySchedule.${index}.endTime`, date)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        name: `daySchedule.${index}.endTime`,
+                      },
+                    }}
                   />
                 </Grid>
               </>
@@ -322,19 +444,27 @@ const ShiftManagementForm = ({
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose(null, false);
+          }}
         >
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
           size="small"
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit
+          {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };

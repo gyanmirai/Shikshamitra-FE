@@ -12,7 +12,6 @@ import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/ma
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -62,6 +61,18 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     { name: 'Computer', subjectCode: 'COMP101', subjectColor: '#26c6da' },
     { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
     { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
+    { name: 'Physics', subjectCode: 'PHY101', subjectColor: '#5c6bc0' },
+    { name: 'Chemistry', subjectCode: 'CHEM101', subjectColor: '#ff7043' },
+    { name: 'Biology', subjectCode: 'BIO101', subjectColor: '#9ccc65' },
+    { name: 'History', subjectCode: 'HIST101', subjectColor: '#d4e157' },
+    { name: 'Geography', subjectCode: 'GEO101', subjectColor: '#26a69a' },
+    { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#ec407a' },
+    { name: 'Marathi', subjectCode: 'MAR101', subjectColor: '#ba68c8' },
+    { name: 'Physical Education', subjectCode: 'PE101', subjectColor: '#ffb74d' },
+    { name: 'Moral Science', subjectCode: 'MOR101', subjectColor: '#8e24aa' },
+    { name: 'Music', subjectCode: 'MUS101', subjectColor: '#f06292' },
+    { name: 'Sanskrit', subjectCode: 'SAN101', subjectColor: '#6d4c41' },
+    { name: 'Environmental Science', subjectCode: 'EVS101', subjectColor: '#aed581' },
   ];
 
   useEffect(() => {
@@ -174,43 +185,44 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box display="flex" flexDirection="column" gap={2}>
-        <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '450px' }}>
-            <Grid container spacing={1}>
-              <Grid item xs={12} md={4}>
-                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-                  <CustomSelect
-                    options={allClass}
-                    value={formik.values.className}
-                    onChange={(val) => {
-                      formik.setFieldValue('className', val as string);
+      <form onSubmit={formik.handleSubmit}>
+        <Box sx={{ height: '100%', p: 2 }}>
+          {/* <Scrollbar sx={{ p: 2, height: '450px' }}> */}
+          <Grid container spacing={1}>
+            <Grid item xs={12} md={4}>
+              <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+                <CustomSelect
+                  options={allClass}
+                  value={formik.values.className}
+                  onChange={(val) => {
+                    formik.setFieldValue('className', val as string);
 
-                      const dummySubjects = generateDummySubjects().map((subj, index) => ({
-                        id: `subject-${index}`,
-                        ...subj,
-                        noOfLecture: null,
-                      }));
-                      formik.setFieldValue('subjects', dummySubjects);
-                      formik.setFieldValue('totalLectures', 0);
-                    }}
-                    label="Class *"
-                    // isLoading={isLoading}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                    error={formik.touched.className && Boolean(formik.errors.className)}
-                    helperText={
-                      formik.touched.className && typeof formik.errors.className === 'string'
-                        ? formik.errors.className
-                        : undefined
-                    }
-                    disabled={disabled}
-                  />
-                </ShakingTextField>
-              </Grid>
-              {formik.values.className && (
-                <Grid item xs={12}>
+                    const dummySubjects = generateDummySubjects().map((subj, index) => ({
+                      id: `subject-${index}`,
+                      ...subj,
+                      noOfLecture: null,
+                    }));
+                    formik.setFieldValue('subjects', dummySubjects);
+                    formik.setFieldValue('totalLectures', 0);
+                  }}
+                  label="Class *"
+                  // isLoading={isLoading}
+                  labelKey="name"
+                  valueKey="name"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.className && Boolean(formik.errors.className)}
+                  helperText={
+                    formik.touched.className && typeof formik.errors.className === 'string'
+                      ? formik.errors.className
+                      : undefined
+                  }
+                  disabled={disabled}
+                />
+              </ShakingTextField>
+            </Grid>
+            {formik.values.className && (
+              <Grid item xs={12}>
+                <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
                   <CustomizableTable
                     tableId="table-subject-list"
                     isSearch={false}
@@ -239,42 +251,43 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                     ]}
                     data={formik.values.subjects}
                   />
-                </Grid>
-              )}
-            </Grid>
-          </Scrollbar>
-          {!disabled && (
-            <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-              <Button
-                onClick={() => {
-                  onClose?.(null, false);
-                }}
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              >
-                Cancel
-              </Button>
-              <Button
-                startIcon={
-                  <Iconify
-                    icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                    width={editData ? 16 : 20}
-                    height={editData ? 16 : 20}
-                  />
-                }
-                type="submit"
-                size="small"
-                variant="contained"
-              >
-                {editData ? 'Update' : 'Submit'}
-                {/* {isEdit ? 'Update' : 'Submit'} */}
-              </Button>
-              {/* <SubmitButton size="small" disabled={disabled} /> */}
-            </DialogActions>
-          )}
-        </form>
-      </Box>
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+          {/* </Scrollbar> */}
+        </Box>
+        {!disabled && (
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <Button
+              onClick={() => {
+                onClose?.(null, false);
+              }}
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <Button
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={editData ? 16 : 20}
+                  height={editData ? 16 : 20}
+                />
+              }
+              type="submit"
+              size="small"
+              variant="contained"
+            >
+              {editData ? 'Update' : 'Submit'}
+              {/* {isEdit ? 'Update' : 'Submit'} */}
+            </Button>
+            {/* <SubmitButton size="small" disabled={disabled} /> */}
+          </DialogActions>
+        )}
+      </form>
     </BackPopUpChecked>
   );
 };

@@ -135,7 +135,9 @@ const DateWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const dateValue = useMemo(
     () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
     [searchParams.date]
@@ -308,6 +310,9 @@ const DateWise = ({
             setSearchParams({ date: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ ml: 0 }}
           slotProps={{
             textField: {
@@ -437,6 +442,7 @@ const DateWise = ({
             sticky: true,
             isSort: false,
             isFilter: false,
+            minWidth: '100px',
             align: 'left',
             render(value, row) {
               return (
@@ -581,7 +587,9 @@ const EmployeeWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const startDate = useMemo(
     () =>
       searchParams.startDate
@@ -747,7 +755,7 @@ const EmployeeWise = ({
             name="organization"
             size="small"
             onChange={handleChange}
-            label="Organization" // ✅ Needed to link with InputLabel
+            label="Organization"
           >
             {medium?.educationMediumStages.length ? (
               medium?.educationMediumStages.map((org: any) => (
@@ -807,6 +815,9 @@ const EmployeeWise = ({
             setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {
@@ -823,6 +834,9 @@ const EmployeeWise = ({
             setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {
@@ -930,6 +944,7 @@ const EmployeeWise = ({
             },
             {
               id: 'timeIn',
+              align: 'left',
               label: 'In-time',
               minWidth: '6vw',
               render(value, row) {
@@ -938,18 +953,22 @@ const EmployeeWise = ({
             },
             {
               id: 'timeOut',
+              align: 'left',
               label: 'Out-time',
               minWidth: '8vw',
               render(value, row) {
                 return value || `__ __`;
               },
             },
-            { id: 'totalHoursWorked', label: 'Hours Worked', minWidth: '10vw' },
+            { id: 'totalHoursWorked', align: 'left', label: 'Hours Worked', minWidth: '10vw' },
             { id: 'description', label: 'Description' },
             {
               id: 'status',
               label: 'Status',
+              align: 'left',
+              minWidth: '100px',
               sticky: true,
+              isFilter: false,
               render(value, row) {
                 return (
                   <Label

@@ -311,15 +311,13 @@ function RenderFamilyInformation(props: any) {
   const isMotherDetailsEditable = useBoolean(isMainForm);
   const isGuardianDetailsEditable = useBoolean(isMainForm);
   const isSiblingDetailsEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-
-  const handelFatherDetailsCancel = () => {};
-  const handelMotherDetailsCancel = () => {};
-
-  const handelGuardianDetailsCancel = () => {};
-  const handelSiblingDetailsCancel = () => {};
+  const handleCancel = () => {
+    formik.resetForm();
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -331,7 +329,7 @@ function RenderFamilyInformation(props: any) {
               isLoading={formik.isSubmitting}
               isEdit={isFatherDetailsEditable}
               onSave={handleSave}
-              onCancel={handelFatherDetailsCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -681,7 +679,7 @@ function RenderFamilyInformation(props: any) {
               isLoading={formik.isSubmitting}
               isEdit={isMotherDetailsEditable}
               onSave={handleSave}
-              onCancel={handelMotherDetailsCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -911,7 +909,7 @@ function RenderFamilyInformation(props: any) {
               isLoading={formik.isSubmitting}
               isEdit={isGuardianDetailsEditable}
               onSave={handleSave}
-              onCancel={handelGuardianDetailsCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -1150,7 +1148,7 @@ function RenderFamilyInformation(props: any) {
               isLoading={formik.isSubmitting}
               isEdit={isSiblingDetailsEditable}
               onSave={handleSave}
-              onCancel={handelSiblingDetailsCancel}
+              onCancel={handleCancel}
             />
           )
         }

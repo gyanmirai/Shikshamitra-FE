@@ -50,7 +50,7 @@ export const CALENDAR_COLOR_OPTIONS = [
 ];
 type AddLeaveRequestProps = TabComponentType & {
   editData?: any;
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
 };
 
 interface FormValues {
@@ -69,7 +69,7 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Mutation hook for changing leave request status
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -115,36 +115,36 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
     },
     validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave type is required'),
+      leaveType: Yup.string().required('Leave Type is required'),
       isHalfDay: Yup.boolean(),
-      startDate: Yup.date().required('Start date is required'),
-      startTime: Yup.date().when('isHalfDay', {
-        is: true,
-        then: (schema) => schema.required('Start time is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      endTime: Yup.date().when('isHalfDay', {
-        is: true,
-        then: (schema) => schema.required('End time is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      endDate: Yup.date()
+      startDate: Yup.mixed()
+        .test(
+          'is-valid-dayjs',
+          'Start Date is required',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        .required('Start Date is required'),
+      endDate: Yup.mixed()
         .nullable()
         .when('isHalfDay', {
           is: true,
           then: (schema) => schema.nullable(),
           otherwise: (schema) =>
             schema
-              .required('End date is required')
-              .test('endDate', 'End date must be after start date', function (value) {
+              .test('is-valid-dayjs', 'End Date is required', (value) => {
+                if (!value) return false;
+                return dayjs(value as any).isValid();
+              })
+              .required('End Date is required')
+              .test('endDate', 'End Date must be after start date', function (value) {
                 const { startDate } = this.parent;
                 if (startDate && value) {
-                  return dayjs(value).isSameOrAfter(dayjs(startDate));
+                  return dayjs(value as any).isSameOrAfter(dayjs(startDate));
                 }
                 return true;
               }),
         }),
-      description: Yup.string().required('Description is required'),
+      description: Yup.string().required('Leave Description is required'),
       status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
       rejectionReason: Yup.string().test(
         'rejectionReason',
@@ -159,6 +159,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       ),
     }),
     onSubmit: async (formValues: FormValues, { resetForm }) => {
+      console.log('data=========', formValues);
+
       try {
         if (editData) {
           await changeStatus({
@@ -190,7 +192,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           });
           resetForm();
         }
-        handleClose?.();
+        handleClose?.(null, true);
       } catch (e) {
         console.log(e);
       }
@@ -200,7 +202,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     <>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
               <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                 <CustomSelect
@@ -248,6 +250,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     onChange={(value) => setFieldValue('startDate', value)}
                     format="DD-MM-YYYY"
                     views={['year', 'month', 'day']}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
                     value={values.startDate}
                     disabled={editData}
                     slotProps={{
@@ -308,6 +312,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       disablePast
                       onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       // views={['year', 'month', 'day']}
                       value={values.startDate}
                       disabled={editData}
@@ -330,6 +336,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       onChange={(value) => setFieldValue('endDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
                       // views={['year', 'month', 'day']}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       value={values.endDate}
                       disabled={editData}
                       slotProps={{
@@ -353,7 +361,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     setFieldValue('description', value);
                   }}
                   value={values.description}
-                  placeholder="Leave description"
+                  placeholder="Leave Description *"
                   error={touched.description && Boolean(errors.description)}
                   helperText={touched.description && errors.description}
                   editable={!editData}
@@ -513,7 +521,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => {
-            handleClose?.();
+            handleClose?.(null, false);
           }}
         >
           Cancel

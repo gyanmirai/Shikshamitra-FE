@@ -8,9 +8,9 @@ import { FormSlider } from 'src/screens/student/enrollment/register/register-for
 
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import AcademicTimetable from 'src/components/studentProfile/academicTimetable';
 
 import CourseProgress from './subjectPerformance';
+import EmployeeTimetable from './employeeTimetable';
 import DummyScheduledExamTable from './employeeExam';
 import HomeworkAssignment from './homeworkAssignment';
 
@@ -60,7 +60,7 @@ const EmployeeAcademicTabs = () => {
       >
         <Scrollbar sx={{ minHeight: 384 }}>
           <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-            {tabs.value === 'timetable' && <AcademicTimetable />}
+            {tabs.value === 'timetable' && <EmployeeTimetable />}
             {tabs.value === 'subjectPerformace' && <CourseProgress />}
             {tabs.value === 'homework/assignments' && <HomeworkAssignment />}
             {tabs.value === 'examination' && <DummyScheduledExamTable />}

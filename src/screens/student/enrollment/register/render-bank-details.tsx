@@ -25,11 +25,13 @@ export const bankDetailsFields: FieldsType[] = [
 const RenderBankDetails = (props: any) => {
   const { formik, isMainForm = false } = props;
   const isEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-
-  const handleCancel = () => {};
+  const handleCancel = () => {
+    formik.resetForm();
+  };
   return (
     <SectionCard
       title=""

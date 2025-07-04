@@ -6,6 +6,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -21,7 +22,15 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
       feedback: data?.feedback || '',
     },
     validationSchema,
-    onSubmit(values) {},
+    onSubmit(values) {
+      if (data?.marks) {
+        onClose?.(null, true);
+        shikshaMitraToast.success({ message: 'Marks updated successfully' });
+      } else {
+        onClose?.(null, true);
+        shikshaMitraToast.success({ message: 'Marks assigned successfully' });
+      }
+    },
   });
 
   return (
@@ -115,13 +124,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
               variant="contained"
               startIcon={
                 <Iconify
-                  icon={data ? GlobalIcons.edit : GlobalIcons.submit}
+                  icon={data?.marks ? GlobalIcons.edit : GlobalIcons.submit}
                   width={data ? 16 : 20}
                   height={data ? 16 : 20}
                 />
               }
             >
-              {data ? 'Update' : 'Submit'}
+              {data?.marks ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>
