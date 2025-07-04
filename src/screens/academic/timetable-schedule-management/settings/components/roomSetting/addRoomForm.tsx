@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -30,10 +31,10 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
 
   const formik = useFormik<IRoomCreationFormikValue>({
     initialValues: {
-      roomNumber: isEdit ? (data.roomNumber ?? 0) : 0,
+      roomNumber: isEdit ? (data.roomNumber ?? 0) : '',
       buildingName: isEdit ? (data.buildingName ?? '') : '',
-      floor: isEdit ? (data.floor ?? 0) : 0,
-      capacity: isEdit ? (data.capacity ?? 0) : 0,
+      floor: isEdit ? (data.floor ?? 0) : '',
+      capacity: isEdit ? (data.capacity ?? 0) : '',
     },
     validationSchema,
     onSubmit: (values) => {
@@ -45,12 +46,17 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
       if (!isEdit) {
         if (existingEntryIndex === -1) {
           setShowExistingEntryMessage(false);
+          onClose(null, true);
+          shikshaMitraToast.success({ message: 'Room updated successfully' });
           onSave(values);
         } else {
           setShowExistingEntryMessage(true);
         }
       } else {
-        onSave(values);
+        onClose(null, true);
+        shikshaMitraToast.success({ message: 'Room added successfully' });
+
+        // onSave(values);
       }
     },
   });
@@ -70,6 +76,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     size="small"
                     name="roomNumber"
                     type="number"
+                    inputProps={{ min: 0 }}
                     onKeyDown={(e) => {
                       if (['e', 'E', '+', '-'].includes(e.key)) {
                         e.preventDefault();
@@ -109,6 +116,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     disabled={isEdit}
                     name="floor"
                     label="Floor *"
+                    inputProps={{ min: 0 }}
                     // placeholder="Enter Floor"
                     size="small"
                     type="number"
@@ -133,6 +141,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     label="Room Capacity *"
                     // placeholder="Enter Room Capacity"
                     type="number"
+                    inputProps={{ min: 0 }}
                     size="small"
                     onKeyDown={(e) => {
                       if (['e', 'E', '+', '-'].includes(e.key)) {

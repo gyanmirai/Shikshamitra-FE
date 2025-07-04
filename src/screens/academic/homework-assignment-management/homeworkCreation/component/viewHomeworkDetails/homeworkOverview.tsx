@@ -260,7 +260,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
 
                 <Box sx={{ mb: 1.5 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Publish Date Time
+                    Published Date Time
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="mdi:calendar" />

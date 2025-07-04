@@ -92,6 +92,7 @@ export interface IHomeworkTableProps {
 export interface TStudentGrade {
   id: string;
   studentName: string;
+  rollNumber: string;
   assignments: string;
   subject: string;
   marks: number;

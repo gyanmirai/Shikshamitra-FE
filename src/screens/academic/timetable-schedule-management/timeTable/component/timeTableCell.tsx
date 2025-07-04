@@ -296,7 +296,7 @@ const TimeTableCell = ({
                               nameParts.length > 1
                                 ? `${nameParts[0]} ${nameParts[1]}`
                                 : teacherName;
-                            return `${shortName}`;
+                            return `${shortName}${index < slotData.subjects.length - 1 ? '/' : ''}`;
                           })
                         : 'No Teacher'}
                     </Typography>

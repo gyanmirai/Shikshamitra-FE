@@ -132,10 +132,38 @@ const ThreeDotsActions = ({
           popover.onClose();
           onClosePopover?.();
         }}
-        slotProps={{ arrow: { placement } }}
+        slotProps={{
+          arrow: { placement },
+          // sx: {
+          //   top: 8,
+          //   right: -4,
+          //   zIndex: 1000,
+          // },
+        }}
       >
         {actions?.({ popover })}
       </CustomPopover>
+      {/* <CustomPopover
+        open={popover.open}
+        anchorEl={popover.anchorEl}
+        onClose={() => {
+          popover.onClose();
+          onClosePopover?.();
+        }}
+        anchorOrigin={{
+          vertical: 'center',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'center',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          sx: { mt: 0 }, // optional tweak
+        }}
+      >
+        {actions?.({ popover })}
+      </CustomPopover> */}
     </Box>
   );
 };

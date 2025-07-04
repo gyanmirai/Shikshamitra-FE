@@ -45,6 +45,18 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '500px' }}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Name : </strong>
+                    {data?.studentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Roll No : </strong>
+                    {data?.rollNumber}
+                  </Typography>
+                </Box>
+              </Grid>
               <Grid item xs={12} mb={-2}>
                 <Typography variant="subtitle2">Student Submission</Typography>
               </Grid>
@@ -62,7 +74,7 @@ I have completed all answers as per the instructions.`}
                 />
               </Grid>
               <Grid item xs={12} mb={-2}>
-                <Typography variant="subtitle2">Description</Typography>
+                <Typography variant="subtitle2">Homework Description</Typography>
               </Grid>
               <Grid item xs={12}>
                 <Box

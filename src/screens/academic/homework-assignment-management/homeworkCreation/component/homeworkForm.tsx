@@ -184,9 +184,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                     helperText={
-                      typeof formik.errors.divisions === 'string'
+                      formik.touched.divisions &&
+                      (typeof formik.errors.divisions === 'string'
                         ? formik.errors.divisions
-                        : undefined
+                        : formik.errors.divisions?.some(
+                              (divErr: any) =>
+                                typeof divErr === 'object' &&
+                                (divErr?.publishDate || divErr?.dueDate)
+                            )
+                          ? 'Select schedule dates also'
+                          : undefined)
                     }
                   />
                 </ShakingTextField>

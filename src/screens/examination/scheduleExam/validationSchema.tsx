@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import * as yup from 'yup';
 
 export const validationSchema = [
@@ -25,14 +26,33 @@ export const validationSchema = [
             .string()
             .required('Subject color is required')
             .matches(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color'),
-          examDate: yup.date().required('Exam date is required'),
-          startTime: yup.date().required('Start time is required'),
+          examDate: yup
+            .mixed()
+            .test(
+              'is-valid-date',
+              'Exam date is required',
+              (value) => value && dayjs(value as any).isValid()
+            )
+            .required('Exam date is required'),
+          startTime: yup
+            .mixed()
+            .test(
+              'is-valid-time',
+              'Start time is required',
+              (value) => value && dayjs(value as any).isValid()
+            )
+            .required('Start time is required'),
           endTime: yup
-            .date()
+            .mixed()
+            .test(
+              'is-valid-dayjs',
+              'End time is required',
+              (value) => value && dayjs(value as any).isValid()
+            )
             .required('End time is required')
             .test('is-after-start', 'End time must be after start time', function (value) {
               const { startTime } = this.parent;
-              return value && startTime ? new Date(value) > new Date(startTime) : true;
+              return value && startTime ? dayjs(value as any).isAfter(dayjs(startTime)) : true;
             }),
           totalMarks: yup
             .number()
@@ -58,8 +78,8 @@ export const validationSchema = [
           const hasDuplicate = subjects.some((sub) => {
             if (!sub.examDate || !sub.startTime) return false;
 
-            const date = new Date(sub.examDate).toISOString().split('T')[0];
-            const time = new Date(sub.startTime).toTimeString().slice(0, 5);
+            const date = new Date(sub.examDate as any).toISOString().split('T')[0];
+            const time = new Date(sub.startTime as any).toTimeString().slice(0, 5);
             const key = `${date}-${time}`;
 
             if (seen.has(key)) return true;
