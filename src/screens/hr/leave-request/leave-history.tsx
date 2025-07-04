@@ -5,7 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -26,6 +26,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetEmployeeLeaveQuery,
   useEmployeeLeaveRequestStatusMutation,
@@ -59,6 +60,8 @@ const LeaveHistory = (props: any) => {
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const { modal } = props;
 
@@ -141,10 +144,28 @@ const LeaveHistory = (props: any) => {
     [data]
   );
 
-  const handleClose = () => {
-    setEditData(null);
-    modal?.onFalse?.();
-    setRejectionReason('');
+  const handleClose = (_e?: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        setRejectionReason('');
+      }, 200); // Optional delay for modal/dialog animation
+    };
+
+    const confirmLeave = () =>
+      isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'));
+
+    if (confirmLeave()) {
+      modal?.onFalse?.();
+      resetState();
+      dispatch(setIsChanges(false)); // Optional if used
+    } else if (!isChanges) {
+      modal?.onFalse?.();
+      setTimeout(() => {
+        setEditData(null);
+        setRejectionReason('');
+      }, 200);
+    }
   };
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -321,6 +342,7 @@ const LeaveHistory = (props: any) => {
             label: 'Status',
             id: 'statusValue',
             filterType: 'enum',
+            align: 'left',
             enumOptions: EmployeeLeaveStatusOptions,
             sticky: true,
             minWidth: '100px',
@@ -328,7 +350,6 @@ const LeaveHistory = (props: any) => {
               const color = EmployeeLeaveStatusTypeColor[
                 value as EmployeeLeaveStatusType
               ] as LabelColor;
-
               return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
@@ -386,7 +407,11 @@ const LeaveHistory = (props: any) => {
       )}
       <CustomDialog
         open={modal?.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          modal?.onFalse?.();
+          setEditData(null);
+          setRejectionReason('');
+        }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -455,7 +480,7 @@ const ApproveRejectForm = ({
   handleClose,
   editData,
 }: {
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
@@ -481,7 +506,7 @@ const ApproveRejectForm = ({
             rejectionReason: formikValues.rejectionReason,
           },
         }).unwrap();
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.log(error);
       }
@@ -507,7 +532,9 @@ const ApproveRejectForm = ({
         <Button
           variant="outlined"
           size="small"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose(null, false);
+          }}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel

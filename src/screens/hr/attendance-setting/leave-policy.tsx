@@ -41,6 +41,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
@@ -74,13 +75,21 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust based on your dialog close animation duration
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
       dialog.onFalse();
-      setEditData(null);
+      resetState();
     } else if (!isChanges) {
       dialog.onFalse();
-      setEditData(null);
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
     }
   };
 
@@ -291,7 +300,9 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
-          setEditData(null);
+          setTimeout(() => {
+            setEditData(null);
+          }, 200); // Adjust timing to match your dialog close animation
         }}
       >
         <LeavePolicyForm handleClose={handleClose} editData={editData} />
@@ -364,11 +375,12 @@ export const LeavePolicyForm = ({
     validationSchema,
     onSubmit: (values) => {
       console.log(values);
+      handleClose(null, true);
     },
   });
 
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <SectionCard title="General Policy Information">
           <Grid item xs={12} sm={4}>
@@ -693,7 +705,9 @@ export const LeavePolicyForm = ({
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose(null, false);
+          }}
         >
           Cancel
         </Button>
@@ -712,6 +726,6 @@ export const LeavePolicyForm = ({
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };
