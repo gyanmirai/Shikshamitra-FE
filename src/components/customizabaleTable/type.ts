@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { DatePickerProps } from '@mui/x-date-pickers';
-import type { TableRowProps, TextFieldProps } from '@mui/material';
+import type { TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
 export interface IColumnFilterAnchor {
@@ -32,6 +32,7 @@ export interface IData {
 }
 
 export interface ICustomizableTableProps {
+  tableContainerProps?: TableContainerProps;
   columns: IColumn[];
   data: IData[];
   serverSide?: boolean;
