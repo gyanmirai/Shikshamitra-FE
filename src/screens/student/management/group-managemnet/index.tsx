@@ -54,6 +54,8 @@ const GroupManagement = ({
   tableData: IInquiryData[];
   isLoading: boolean;
 }) => {
+  console.log('🚀 ~ tableData:', tableData);
+
   // State to store query parameters
   const [queryParams, setQueryParams] = useState({
     SkipCount: 0,
@@ -421,24 +423,24 @@ const GroupManagement = ({
             render: (value) => value || '-',
           },
           {
-            id: 'groupMembership.studentGroupName',
+            id: 'groupMembership.groupName',
             label: 'House Name',
             minWidth: '160px',
             align: 'left',
-            render(value) {
-              return (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  {value ? <Label color="info">{value} House</Label> : <Typography>-</Typography>}
-                </Box>
-              );
-            },
+            // render(value) {
+            //   return (
+            //     <Box
+            //       sx={{
+            //         display: 'flex',
+            //         gap: 1,
+            //         alignItems: 'center',
+            //         justifyContent: 'space-between',
+            //       }}
+            //     >
+            //       {value ? <Label color="info">{value} House</Label> : <Typography>-</Typography>}
+            //     </Box>
+            //   );
+            // },
           },
           {
             id: 'groupMembership.isDivisionLeader',
@@ -455,7 +457,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Typography>-</Typography>}
+                  {value ? <Label color="success">Yes</Label> : <Label color="default">No</Label>}
                 </Box>
               );
             },
@@ -475,7 +477,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Typography>-</Typography>}
+                  {value ? <Label color="success">Yes</Label> : <Label color="default">No</Label>}
                 </Box>
               );
             },

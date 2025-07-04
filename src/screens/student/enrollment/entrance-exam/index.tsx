@@ -11,7 +11,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
@@ -826,19 +825,21 @@ export const ExamForm = ({
                       padding={2}
                     >
                       <Typography variant="h6">Slots</Typography>
-                      <Button
+                      {/* <Button
                         size="small"
                         variant="outlined"
                         startIcon={<Add />}
                         onClick={dialog.onTrue}
                       >
                         Slot
-                      </Button>
+                      </Button> */}
                     </Box>
 
                     <Grid container spacing={2}>
                       {isStudentCountLoading ? (
-                        <Box className="loading" />
+                        <Grid xs={12}>
+                          <Box className="loader" height={24} />
+                        </Grid>
                       ) : formik.values.slots.length === 0 ? (
                         <EmptyContent title="Please select the date." />
                       ) : (

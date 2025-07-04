@@ -333,7 +333,7 @@ const FileUploader = <T extends boolean = true>({
                 <img
                   src={previewUrl}
                   alt={previewFile?.name}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', objectFit: 'cover' }}
                   onLoad={() => {
                     if (previewFile instanceof File) {
                       URL.revokeObjectURL(previewUrl);

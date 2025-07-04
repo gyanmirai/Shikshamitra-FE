@@ -15,17 +15,21 @@ import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/m
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
+import base64ToFile from 'src/utils/base64ToFile';
+import { fileToBase64 } from 'src/utils/file-to-base64';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetAllGroupQuery,
+  useDeleteGroupMutation,
   useAddStudentGroupMutation,
   useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -33,9 +37,10 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
-import type { IInquiryData } from '../enrollment/Inquiry';
 import type { IGroup } from '../management/group-managemnet/type';
 
 const HouseSetting = () => {
@@ -43,11 +48,18 @@ const HouseSetting = () => {
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
   });
+
+  const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteGroupMutation,
+  });
   const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
   // State to store group data being edited
-  const [editData, setEditData] = useState<null | IInquiryData>(null);
+
+  const isDeleteConfirm = useBoolean();
+  const [editData, setEditData] = useState<null | IGroup>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
@@ -113,7 +125,20 @@ const HouseSetting = () => {
         // }}
         onServerSort={async (column, sort) => {}}
         columns={[
-          { label: 'House Name', id: 'name' },
+          {
+            label: 'House Name',
+            id: 'name',
+            render(value, row) {
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              );
+            },
+          },
           {
             label: 'Actions',
             id: 'action',
@@ -207,22 +232,27 @@ const HouseSetting = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              confirm.onFalse();
+            loading={isDeleteLoading}
+            onClick={async () => {
+              try {
+                await deleteGroup(editData?.id).unwrap();
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'House Deleted Successfully',
+                });
+              } catch (error) {
+                console.log(error);
+              }
               setEditData(null);
-              shikshaMitraToast.success({
-                message: `House ${editData?.name} deleted successfully`,
-              });
-              // handle delete action
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
@@ -253,9 +283,13 @@ const GroupManagementForm = ({
     // Set initial name value from editData if exists, otherwise empty string
     initialValues: {
       name: editData?.name || '',
+      color: editData?.color || '#000000',
+      logo: editData?.logo ? base64ToFile(editData?.logo as string) : '',
+      description: editData?.description || '',
     },
     validationSchema: Yup.object().shape({
       name: Yup.string().required('House Name is required'),
+      color: Yup.string().required('Color is required'),
     }),
     // Handle form submission for both add and update operations
     onSubmit: async (values) => {
@@ -267,12 +301,20 @@ const GroupManagementForm = ({
             id: editData.id,
             body: {
               name: values.name,
+              color: values.color,
+              logo: values.logo ? await fileToBase64(values.logo as File) : '',
+              description: values.description,
             },
           }).unwrap();
           shikshaMitraToast.success({ message: `House Updated Successfully` });
         } else {
           // Add new group if no editData
-          await addGroup({ name: values.name }).unwrap();
+          await addGroup({
+            name: values.name,
+            color: values.color,
+            logo: values.logo ? await fileToBase64(values.logo as File) : '',
+            description: values.description,
+          }).unwrap();
           shikshaMitraToast.success({ message: `House Added Successfully` });
         }
         // Close dialog after successful operation
@@ -282,7 +324,7 @@ const GroupManagementForm = ({
       }
     },
   });
-
+  console.log(formik, '===============');
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -303,6 +345,37 @@ const GroupManagementForm = ({
               helperText={formik.touched.name && formik.errors.name}
             />
           </ShakingTextField>
+          <ColorPickerCircle
+            onSelect={(color: string) => formik.setFieldValue('color', color)}
+            initialColor={formik.values.color}
+          />
+          <FileUploader
+            value={formik.values.logo as File}
+            multiple={false}
+            onChange={(value) => {
+              // const reader = new FileReader();
+              formik.setFieldValue('logo', value);
+              // reader.readAsDataURL(value as File);
+              // reader.readAsDataURL(value as File);
+              // reader.onload = () => {
+              //   const base64String = reader.result;
+              // };
+            }}
+            primaryText="Please Upload Your logo"
+            secondaryText="Maximum file size is 3MB"
+          />
+          <TextField
+            multiline
+            rows={4}
+            size="small"
+            value={formik.values.description || ''}
+            name="description"
+            fullWidth
+            label="Description"
+            onChange={formik.handleChange}
+            error={formik.touched.description && Boolean(formik.errors.description)}
+            helperText={formik.touched.description && formik.errors.description}
+          />
         </Stack>
       </BackPopUpChecked>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
