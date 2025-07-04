@@ -9,7 +9,8 @@ import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
+// eslint-disable-next-line import/no-duplicates
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -20,6 +21,7 @@ import { EmployeeAttendanceStatusOptions } from 'src/enums/employee-attendance-s
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -253,7 +255,18 @@ const BiometricIntegrationScreen = () => {
       />
 
       <CustomDialog
-        title="Update Attendance"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Attendance</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Edit and update an employee’s in-time and out-time for the selected date."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={open.value}
         handleClose={() => {
           open.onFalse();

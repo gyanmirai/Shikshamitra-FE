@@ -83,11 +83,15 @@ const RenderMedicalFields = (props: any) => {
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           fullWidth
-          label="Haemoglobin (HB)"
+          label="Hemoglobin (HB)"
           name="haemoglobin"
+          type="number"
           size="small"
           value={formik.values.haemoglobin}
-          onChange={formik.handleChange}
+          onChange={(e) => {
+            const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
+            formik.setFieldValue('haemoglobin', onlyNumbers);
+          }}
           disabled={!isMedicalEditable.value}
         />
       </Grid>

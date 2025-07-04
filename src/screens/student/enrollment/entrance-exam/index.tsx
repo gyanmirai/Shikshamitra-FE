@@ -251,7 +251,7 @@ const EntranceExamScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        description="Manage students for the entrance exam as part of admission process."
+        description="Manage students participation in entrance exams for the admission process."
         heading="Entrance Exam"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
@@ -465,7 +465,7 @@ const EntranceExamScreen = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="Update entrance exam results by entering total, passing, and obtained marks for students."
+              title="Record entrance exam results by inputting total marks, pass marks, and students scores."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

@@ -23,6 +23,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import type { TabComponentType } from '.';
@@ -123,7 +124,19 @@ const LeaveCalender = (props: TabComponentType) => {
       <CustomDialog
         open={!!currentDateClick}
         handleClose={() => setCurrentDateClick(null)}
-        title="Leave Request Details"
+        // title="Leave Request Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Leave Request Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Displays detailed information about the employee’s leave request, including type, dates, reason, and approval status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <LeaveRequestForm editData={editData} />
       </CustomDialog>

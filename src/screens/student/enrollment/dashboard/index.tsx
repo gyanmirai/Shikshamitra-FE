@@ -27,7 +27,7 @@ const EnrollmentDashboardScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        description="Get a quick overview of student admissions, withdrawals, and enrollment trends — all in one place."
+        description="A glance of students admissions, withdrawals, and enrollments."
         heading="Dashboard"
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Dashboard' }]}
         sx={{ px: 1, mb: 2 }}

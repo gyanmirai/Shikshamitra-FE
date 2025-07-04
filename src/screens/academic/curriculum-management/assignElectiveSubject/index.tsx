@@ -96,7 +96,7 @@ const AssignElectiveSubject = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
-        description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
+        description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },

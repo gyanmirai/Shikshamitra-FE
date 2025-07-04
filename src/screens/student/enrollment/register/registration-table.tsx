@@ -38,7 +38,6 @@ const RegistrationTable = ({
   setEditData: (data: null | IInquiryData) => void;
 }) => {
   const [moveId, setMoveId] = useState<string | null>(null);
-  console.log('editData---', editData);
 
   const confirmMovePopup = useBoolean();
   const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
@@ -78,7 +77,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:calendar-clock" sx={{ mr: 2 }} />
+            <Iconify icon="mdi:calendar-clock" />
             Schedule Exam
           </MenuItem>
           <MenuItem
@@ -88,7 +87,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="clarity:note-edit-line" color="default.main" sx={{ mr: 2 }} />
+            <Iconify icon="clarity:note-edit-line" color="default.main" />
             Note
           </MenuItem>
         </MenuList>

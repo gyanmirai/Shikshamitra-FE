@@ -60,11 +60,12 @@ const RenderPreviousSchoolFields = (props: any) => {
         <TextField
           size="small"
           fullWidth
-          label="School Name"
+          label="Name"
           name="schoolName"
           value={formik.values.schoolName}
           onChange={(e: any) => {
-            const newName = capitalize(e.target.value);
+            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const newName = capitalize(onlyText);
             formik.setFieldValue('schoolName', newName);
           }}
           disabled={!isEditable.value}
@@ -74,7 +75,7 @@ const RenderPreviousSchoolFields = (props: any) => {
         <TextField
           size="small"
           fullWidth
-          label="School Address"
+          label="Address"
           name="schoolAddress"
           value={formik.values.schoolAddress}
           onChange={formik.handleChange}
@@ -85,12 +86,12 @@ const RenderPreviousSchoolFields = (props: any) => {
         <TextField
           size="small"
           fullWidth
-          label="School Board"
+          label="Board"
           name="schoolBoard"
           value={formik.values.schoolBoard}
           onChange={(e: any) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('schoolBoard', newName);
+            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            formik.setFieldValue('schoolBoard', onlyText);
           }}
           disabled={!isEditable.value}
         />
@@ -99,10 +100,13 @@ const RenderPreviousSchoolFields = (props: any) => {
         <TextField
           size="small"
           fullWidth
-          label="School Medium"
+          label="Medium"
           name="schoolMedium"
           value={formik.values.schoolMedium}
-          onChange={formik.handleChange}
+          onChange={(e: any) => {
+            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            formik.setFieldValue('schoolMedium', onlyText);
+          }}
           disabled={!isEditable.value}
         />
       </Grid>
@@ -113,7 +117,10 @@ const RenderPreviousSchoolFields = (props: any) => {
           label="TC Number"
           name="tcNumber"
           value={formik.values.tcNumber}
-          onChange={formik.handleChange}
+          onChange={(e: any) => {
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+            formik.setFieldValue('tcNumber', onlyText);
+          }}
           disabled={!isEditable.value}
         />
       </Grid>
@@ -124,7 +131,10 @@ const RenderPreviousSchoolFields = (props: any) => {
           label="Class"
           name="previousClass"
           value={formik.values.previousClass}
-          onChange={formik.handleChange}
+          onChange={(e: any) => {
+            const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
+            formik.setFieldValue('previousClass', onlyNumbers);
+          }}
           disabled={!isEditable.value}
         />
       </Grid>

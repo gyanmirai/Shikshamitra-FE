@@ -141,8 +141,6 @@ const StudentDocumentType = ({
         columns={[
           { id: 'documentName', label: 'Document Name' },
           { id: 'documentSize', label: 'Document Size' },
-
-          // { id: 'documentSize', label: 'Document Size' },
           {
             id: 'documentTypes',
             label: 'Accepted Format',
@@ -187,13 +185,13 @@ const StudentDocumentType = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {editData ? 'Edit Document Type' : 'Add New Document Type'}
+              {editData ? 'Update Document Type' : 'Add New Document Type'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This is the Document dialog, where you can update the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
+              title="In the Document Dialogue manage the list of required documents for registration and their types. Toggle to mark each as required or optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -499,7 +497,10 @@ export const DocumentForm = ({
                 label="Document Name *"
                 name="title"
                 value={values.title}
-                onChange={(e) => setFieldValue('title', e.target.value)}
+                onChange={(e) => {
+                  const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('title', onlyText);
+                }}
                 error={Boolean(touched.title && errors.title)}
                 helperText={touched.title && errors.title}
               />

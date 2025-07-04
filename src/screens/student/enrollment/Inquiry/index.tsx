@@ -274,7 +274,7 @@ const InquiryScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Inquiry"
-        description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
+        description="Streamlined management of admission related inquiries from the students and parents."
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
@@ -323,7 +323,7 @@ const InquiryScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Add or view communication notes and follow-up details for student inquiries."
+              title="Add and view communication notes and follow-ups related to students inquiries."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -352,7 +352,7 @@ const InquiryScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Generate and issue registration forms for student enrollment with necessary details and documentation."
+              title="Generate and issue students registration forms with all necessary information and supporting documents."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

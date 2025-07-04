@@ -344,7 +344,7 @@ function RenderFamilyInformation(props: any) {
               value={formik.values.fatherName}
               autoFocus
               onChange={(e) => {
-                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                 const capitalized = capitalize(onlyLetters);
                 formik.setFieldValue('fatherName', capitalized);
               }}
@@ -385,7 +385,7 @@ function RenderFamilyInformation(props: any) {
             label="Occupation"
             value={formik.values.fatherOccupation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
 
               formik.setFieldValue('fatherOccupation', capitalized);
@@ -425,8 +425,9 @@ function RenderFamilyInformation(props: any) {
             label="Qualification"
             value={formik.values.fatherQualification}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('fatherQualification', value);
+              const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(value);
+              formik.setFieldValue('fatherQualification', capitalized);
             }}
             error={formik.touched.fatherQualification && Boolean(formik.errors.fatherQualification)}
             helperText={formik.touched.fatherQualification && formik.errors.fatherQualification}
@@ -472,6 +473,7 @@ function RenderFamilyInformation(props: any) {
             label="Office No."
             error={formik.touched.fatherOfficeNo && Boolean(formik.errors.fatherOfficeNo)}
             disabled={!isFatherDetailsEditable.value}
+            helperText={formik.touched.fatherOfficeNo && formik.errors.fatherOfficeNo}
           />
         </Grid>
         <Grid item xs={12} md={4} lg={3}>
@@ -480,7 +482,7 @@ function RenderFamilyInformation(props: any) {
             label="Designation"
             value={formik.values.fatherDesignation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
               formik.setFieldValue('fatherDesignation', capitalized);
             }}
@@ -498,7 +500,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
             value={formik.values.fatherOrganization}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
               formik.setFieldValue('fatherOrganization', capitalized);
             }}
@@ -692,7 +694,7 @@ function RenderFamilyInformation(props: any) {
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherName}
               onChange={(e) => {
-                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                 const capitalized = capitalize(onlyLetters);
                 formik.setFieldValue('motherName', capitalized);
               }}
@@ -733,7 +735,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherOccupation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
               formik.setFieldValue('motherOccupation', capitalized);
             }}
@@ -772,8 +774,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherQualification}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('motherQualification', value);
+              const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(value);
+              formik.setFieldValue('motherQualification', capitalized);
             }}
             error={formik.touched.motherQualification && Boolean(formik.errors.motherQualification)}
             helperText={formik.touched.motherQualification && formik.errors.motherQualification}
@@ -816,8 +819,10 @@ function RenderFamilyInformation(props: any) {
             onChange={(value) => {
               formik.setFieldValue('motherOfficeNo', value);
             }}
+            onBlur={formik.handleBlur}
             label="Office No."
             error={formik.touched.motherOfficeNo && Boolean(formik.errors.motherOfficeNo)}
+            helperText={formik.touched.motherOfficeNo && formik.errors.motherOfficeNo}
           />
         </Grid>
         <Grid item xs={12} md={4} lg={3}>
@@ -827,8 +832,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherDesignation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('motherDesignation', value);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('motherDesignation', capitalized);
             }}
             error={formik.touched.motherDesignation && Boolean(formik.errors.motherDesignation)}
             helperText={formik.touched.motherDesignation && formik.errors.motherDesignation}
@@ -843,8 +849,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherOrganization}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('motherOrganization', value);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('motherOrganization', capitalized);
             }}
             error={formik.touched.motherOrganization && Boolean(formik.errors.motherOrganization)}
             helperText={formik.touched.motherOrganization && formik.errors.motherOrganization}
@@ -919,7 +926,7 @@ function RenderFamilyInformation(props: any) {
               disabled={!isGuardianDetailsEditable.value}
               value={formik.values.guardianName}
               onChange={(e) => {
-                const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                 const capitalized = capitalize(onlyLetters);
                 formik.setFieldValue('guardianName', capitalized);
               }}
@@ -962,7 +969,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianOccupation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[0-9]/g, '');
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
               formik.setFieldValue('guardianOccupation', capitalized);
             }}
@@ -1001,8 +1008,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianQualification}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('guardianQualification', value);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('guardianQualification', capitalized);
             }}
             error={
               formik.touched.guardianQualification && Boolean(formik.errors.guardianQualification)
@@ -1058,8 +1066,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianDesignation}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('guardianDesignation', value);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('guardianDesignation', capitalized);
             }}
             error={formik.touched.guardianDesignation && Boolean(formik.errors.guardianDesignation)}
             helperText={formik.touched.guardianDesignation && formik.errors.guardianDesignation}
@@ -1074,8 +1083,9 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianOrganization}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              formik.setFieldValue('guardianOrganization', value);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const capitalized = capitalize(onlyLetters);
+              formik.setFieldValue('guardianOrganization', capitalized);
             }}
             error={
               formik.touched.guardianOrganization && Boolean(formik.errors.guardianOrganization)

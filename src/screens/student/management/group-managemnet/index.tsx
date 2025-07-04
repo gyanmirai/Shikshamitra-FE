@@ -12,6 +12,7 @@ import {
   MenuItem,
   MenuList,
   TextField,
+  Typography,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -39,11 +40,11 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IGroup } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const GroupManagement = ({
@@ -259,7 +260,7 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveStudentFromHouse}
             color="error"
-            size="small" // ✅ same as Cancel
+            size="small"
             sx={{ px: 2, minWidth: 'auto' }}
             startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
@@ -290,7 +291,20 @@ const GroupManagement = ({
           isConfirmForDivisionLeader.onFalse();
           setEditData(null);
         }}
-        title="Assign Division Leader"
+        // title="Assign Division Leader"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Division Leader</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
             Are you sure want to Assign Division Leader to <b>{`${editData?.name}`}</b> ?
@@ -331,7 +345,19 @@ const GroupManagement = ({
           isConfirmForMainLeader.onFalse();
           setEditData(null);
         }}
-        title="Assign House Leader"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign House Leader</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
             Are you sure want to Assign House Leader to <b>{`${editData?.name}`}</b> ?
@@ -372,16 +398,34 @@ const GroupManagement = ({
         noDataText="No Student data available"
         isLoading={isLoading}
         columns={[
-          // { id: 'srNo', label: 'Sr. No.' },
-          { id: 'name', label: 'Name', align: 'left', minWidth: '160px', sticky: true },
-          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '120px' },
-          { id: 'grNoRecord', label: 'GR No.', align: 'left', minWidth: '110px' },
           {
-            id: 'groupMembership.groupName',
+            id: 'name',
+            label: 'Name',
+            align: 'left',
+            minWidth: '160px',
+            sticky: true,
+            render: (value) => value || '-',
+          },
+          {
+            id: 'rollNo',
+            label: 'Roll No.',
+            align: 'left',
+            minWidth: '120px',
+            render: (value) => value || '-',
+          },
+          {
+            id: 'grNoRecord',
+            label: 'GR No.',
+            align: 'left',
+            minWidth: '110px',
+            render: (value) => value || '-',
+          },
+          {
+            id: 'groupMembership.studentGroupName',
             label: 'House Name',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return (
                 <Box
                   sx={{
@@ -391,7 +435,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="info">{value} House</Label> : <Box />}
+                  {value ? <Label color="info">{value} House</Label> : <Typography>-</Typography>}
                 </Box>
               );
             },
@@ -401,7 +445,7 @@ const GroupManagement = ({
             label: 'Division Leader',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return (
                 <Box
                   sx={{
@@ -411,7 +455,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  {value ? <Label color="success">Yes</Label> : <Typography>-</Typography>}
                 </Box>
               );
             },
@@ -421,7 +465,7 @@ const GroupManagement = ({
             label: 'House Leader',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return (
                 <Box
                   sx={{
@@ -431,7 +475,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  {value ? <Label color="success">Yes</Label> : <Typography>-</Typography>}
                 </Box>
               );
             },
@@ -500,7 +544,6 @@ const GroupManagement = ({
                           Assign Division Leader
                         </MenuItem>
                       )}
-
                       {row?.groupMembership?.isLeader ? (
                         <MenuItem
                           onClick={() => {
@@ -517,7 +560,7 @@ const GroupManagement = ({
                             if (!row.groupMembership) {
                               shikshaMitraToast.error({ message: 'Please assign house first' });
                               popover.onClose();
-
+                              console.log('🚀 ~ tableData:', tableData);
                               return;
                             }
                             setEditData(row as IInquiryData);
@@ -647,7 +690,19 @@ const GroupManagement = ({
           setEditData(null);
           dispatch(StudentApi.util.invalidateTags(['Student']));
         }}
-        title="Assign House"
+        // title="Assign House"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign House</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Assign students to houses for inter-house competitions, events, and administrative grouping within the school."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AssignStudentForm
           editData={editData}
@@ -683,7 +738,7 @@ const GroupManagementForm = ({
   editData,
   handleClose,
 }: {
-  editData: IGroup | null;
+  editData: IInquiryData | null;
   handleClose: () => void;
 }) => {
   // Hooks for adding and updating student groups using custom query and mutation hook
@@ -857,8 +912,8 @@ const AssignStudentForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <Stack spacing={2}>
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <Stack spacing={2} p={2}>
         <Autocomplete
           noOptionsText="No House Found"
           fullWidth
@@ -878,14 +933,13 @@ const AssignStudentForm = ({
               fullWidth
               size="small"
               label="Search House"
-              placeholder="Search House"
               error={formik.touched.house && Boolean(formik.errors.house?.id)}
               helperText={formik.touched.house && formik.errors.house?.id}
             />
           )}
         />
       </Stack>
-      <DialogActions sx={{ px: 0, pb: 0 }}>
+      <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
@@ -901,7 +955,7 @@ const AssignStudentForm = ({
           loading={isLoading}
           startIcon={<Iconify icon="mdi:account-plus" width={18} />}
         >
-          Assign
+          assign
         </LoadingButton>
       </DialogActions>
     </Box>

@@ -70,7 +70,10 @@ const RenderAdditionalDetails = (props: any) => {
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.bplCardNo}
-          onChange={(e) => formik.setFieldValue('bplCardNo', e.target.value)}
+          onChange={(e) => {
+            const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
+            formik.setFieldValue('bplCardNo', onlyNumbers);
+          }}
           error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
           helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
         />
@@ -110,6 +113,7 @@ const RenderAdditionalDetails = (props: any) => {
           onChange={(value) => formik.setFieldValue('emergencyContactNo', value)}
           label="Emergency Contact No."
           error={formik.touched.emergencyContactNo && Boolean(formik.errors.emergencyContactNo)}
+          helperText={formik.touched.emergencyContactNo && formik.errors.emergencyContactNo}
         />
       </Grid>
 
@@ -120,7 +124,10 @@ const RenderAdditionalDetails = (props: any) => {
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relationName}
-          onChange={(e) => formik.setFieldValue('relationName', e.target.value)}
+          onChange={(e) => {
+            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            formik.setFieldValue('relationName', onlyText);
+          }}
           error={formik.touched.relationName && Boolean(formik.errors.relationName)}
           helperText={formik.touched.relationName && formik.errors.relationName}
         />
@@ -133,7 +140,10 @@ const RenderAdditionalDetails = (props: any) => {
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relation}
-          onChange={(e) => formik.setFieldValue('relation', e.target.value)}
+          onChange={(e) => {
+            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            formik.setFieldValue('relation', onlyText);
+          }}
           error={formik.touched.relation && Boolean(formik.errors.relation)}
           helperText={formik.touched.relation && formik.errors.relation}
         />

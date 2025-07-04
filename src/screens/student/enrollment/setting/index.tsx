@@ -110,7 +110,7 @@ const StudentEnrollmentSettingScreen = () => {
           { name: 'Setting' },
         ]}
         sx={{ mb: 2 }}
-        description="This is the Settings tab, where you can configure the necessary steps for the admission process, such as exam settings, document types, and other essential requirements for the admission."
+        description="Configure all essential admission steps in the Settings tab, including exam setup, document types, and other requirements."
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
       <Card
