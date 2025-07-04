@@ -135,7 +135,9 @@ const DateWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const dateValue = useMemo(
     () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
     [searchParams.date]
@@ -308,6 +310,9 @@ const DateWise = ({
             setSearchParams({ date: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ ml: 0 }}
           slotProps={{
             textField: {
@@ -582,7 +587,9 @@ const EmployeeWise = ({
   searchParams: Record<string, string>;
   setSearchParams: (obj: Record<string, any>) => void;
 }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const startDate = useMemo(
     () =>
       searchParams.startDate
@@ -808,6 +815,9 @@ const EmployeeWise = ({
             setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {
@@ -824,6 +834,9 @@ const EmployeeWise = ({
             setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
             // setDate(value);
           }}
+          views={['year', 'month', 'day']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
           slotProps={{
             textField: {

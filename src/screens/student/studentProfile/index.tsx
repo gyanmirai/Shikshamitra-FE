@@ -476,7 +476,7 @@ const StudentProfileView = () => {
         <Paper
           sx={{
             p: 1,
-            borderBottom: '1px dashed',
+            // borderBottom: '1px dashed',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',

@@ -22,13 +22,13 @@ const RenderCommunicationFields = (props: any) => {
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-  const handleCommunicationCancel = () => {};
-  const handleLocalAddressCancel = () => {};
-  const handlePermanentAddressCancel = () => {};
-  const handleEmergencyAddressCancel = () => {};
+  const handleCancel = () => {
+    formik.resetForm();
+  };
   return (
     <Box>
       <SectionCard
@@ -39,7 +39,7 @@ const RenderCommunicationFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isCommunicationEditable}
               onSave={handleSave}
-              onCancel={handleCommunicationCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -157,7 +157,7 @@ const RenderCommunicationFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isLocalAddressEditable}
               onSave={handleSave}
-              onCancel={handleLocalAddressCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -174,7 +174,7 @@ const RenderCommunicationFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isPermanentAddressEditable}
               onSave={handleSave}
-              onCancel={handlePermanentAddressCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -191,7 +191,7 @@ const RenderCommunicationFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isEmergencyAddressEditable}
               onSave={handleSave}
-              onCancel={handleEmergencyAddressCancel}
+              onCancel={handleCancel}
             />
           )
         }

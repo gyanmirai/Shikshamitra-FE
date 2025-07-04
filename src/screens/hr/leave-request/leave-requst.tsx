@@ -69,7 +69,7 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Mutation hook for changing leave request status
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -248,6 +248,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     onChange={(value) => setFieldValue('startDate', value)}
                     format="DD-MM-YYYY"
                     views={['year', 'month', 'day']}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
                     value={values.startDate}
                     disabled={editData}
                     slotProps={{
@@ -308,6 +310,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       disablePast
                       onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       // views={['year', 'month', 'day']}
                       value={values.startDate}
                       disabled={editData}
@@ -330,6 +334,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       onChange={(value) => setFieldValue('endDate', value)}
                       format="DD-MM-YYYY HH:mm:ss"
                       // views={['year', 'month', 'day']}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       value={values.endDate}
                       disabled={editData}
                       slotProps={{

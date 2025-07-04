@@ -11,14 +11,23 @@ const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
   const { values, handleChange } = formik;
   const isEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
+  };
+  const handleCancel = () => {
+    formik.resetForm();
   };
   return (
     <Box>
       {!isMainForm && (
         <Box display="flex" justifyContent="flex-end" p={1}>
-          <CardActions isLoading={formik.isSubmitting} isEdit={isEditable} onSave={handleSave} />
+          <CardActions
+            isLoading={formik.isSubmitting}
+            isEdit={isEditable}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         </Box>
       )}
       <Grid container spacing={2}>

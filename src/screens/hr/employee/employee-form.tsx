@@ -547,7 +547,7 @@ export default EmployeeFrom;
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 3 }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1 }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -580,7 +580,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                   gap={2}
                   width="100%"
                 >
-                  <Grid container spacing={3}>
+                  <Grid container spacing={0}>
                     {' '}
                     {allFields[step].map((field) => (
                       <Grid

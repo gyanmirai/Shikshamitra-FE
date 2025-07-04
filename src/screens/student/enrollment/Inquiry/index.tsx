@@ -53,7 +53,7 @@ export interface IInquiryData {
   // village: string;
   tempGrNo: number;
   grNoRecord: number;
-  rollNo: number;
+  rollNo: number | null;
   pinCode: number | null;
   address: string;
   addressLine1: string;

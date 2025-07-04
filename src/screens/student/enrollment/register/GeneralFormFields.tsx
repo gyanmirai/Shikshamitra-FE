@@ -57,13 +57,12 @@ const RenderGeneralFormFields = (props: any) => {
 
   const handleSave = async () => {
     await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-  const handleGeneralDetailCancel = () => {};
-  const handleStudentDetailCancel = () => {};
-  const handleContactDetailCancel = () => {};
-  const handleIdentificationDetailCancel = () => {};
-  const handleAddressDetailCancel = () => {};
-  const handlePreviousSchoolDetailCancel = () => {};
+  const handleCancel = () => {
+    formik.resetForm();
+  };
+
   return (
     <Box>
       <SectionCard
@@ -74,7 +73,7 @@ const RenderGeneralFormFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isGeneralFormEditable}
               onSave={handleSave}
-              onCancel={handleGeneralDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -116,7 +115,7 @@ const RenderGeneralFormFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isStudentDetailsEditable}
               onSave={handleSave}
-              onCancel={handleStudentDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -290,7 +289,7 @@ const RenderGeneralFormFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isContactDetailsEditable}
               onSave={handleSave}
-              onCancel={handleContactDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -385,7 +384,7 @@ const RenderGeneralFormFields = (props: any) => {
               isEdit={isIdentificationEditable}
               isLoading={formik.isSubmitting}
               onSave={handleSave}
-              onCancel={handleIdentificationDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -657,7 +656,7 @@ const RenderGeneralFormFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isAddressEditable}
               onSave={handleSave}
-              onCancel={handleAddressDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -815,7 +814,7 @@ const RenderGeneralFormFields = (props: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isPreviousSchoolEditable}
               onSave={handleSave}
-              onCancel={handlePreviousSchoolDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }

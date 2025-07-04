@@ -1,9 +1,11 @@
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -48,7 +50,7 @@ import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -167,9 +169,9 @@ const LeaveHistory = (props: any) => {
           label="Month-Year"
           format="MMM-YYYY"
           value={date}
-          views={['month', 'year']}
-          minDate={dayjs().startOf('year')}
-          maxDate={dayjs().endOf('year')}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
+          views={['year', 'month']}
           slotProps={{
             textField: {
               size: 'small',

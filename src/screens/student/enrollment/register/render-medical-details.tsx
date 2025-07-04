@@ -12,11 +12,13 @@ import type { FieldsType } from './type';
 const RenderMedicalFields = (props: any) => {
   const { formik, isMainForm = false } = props;
   const isMedicalEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-
-  const handleCancel = () => {};
+  const handleCancel = () => {
+    formik.resetForm();
+  };
   return (
     <SectionCard
       title=""

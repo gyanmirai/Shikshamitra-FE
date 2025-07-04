@@ -1,11 +1,13 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
@@ -29,7 +31,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const isDownLoadingTemplate = useBoolean();
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const open = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const handleDownloadTemplate = () => {
@@ -68,9 +70,12 @@ const BiometricIntegrationScreen = () => {
         <Box>
           <DatePicker
             label="Date"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             value={date}
             onChange={(newValue) => setDate(newValue)}
             format="DD-MM-YYYY"
+            views={['year', 'month', 'day']}
             disableFuture
             slotProps={{
               textField: {
