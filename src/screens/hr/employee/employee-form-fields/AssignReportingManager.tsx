@@ -26,8 +26,12 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
   );
 
   const isEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
+  };
+  const handleCancel = () => {
+    formik.resetForm();
   };
   return (
     <>
@@ -37,9 +41,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
             isEdit={isEditable}
             onSave={handleSave}
             isLoading={formik.isSubmitting}
-            onCancel={() => {
-              setFieldValue('reportingManager', editData?.reportingManager || '');
-            }}
+            onCancel={handleCancel}
           />
         </Box>
       )}

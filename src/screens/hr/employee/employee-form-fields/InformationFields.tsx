@@ -1,6 +1,5 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 import { useState, useEffect } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
@@ -31,7 +30,6 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fileToBase64 } from 'src/utils/file-to-base64';
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
@@ -190,57 +188,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
 
-  const handleBasicDetailCancel = () => {
-    formik.setFieldValue('photo', convertBase64Format(editData.profilePicture));
-    formik.setFieldValue('firstName', editData?.firstName);
-    formik.setFieldValue('middleName', editData?.middleName);
-    formik.setFieldValue('lastName', editData?.lastName);
-    formik.setFieldValue('shortName', editData?.shortName);
-    formik.setFieldValue('dob', dayjs(editData.dateOfBirth, 'YYYY-MM-DD'));
-    formik.setFieldValue('gender', editData.genderType);
-    formik.setFieldValue('maritalStatus', editData.maritalStatus);
-    formik.setFieldValue('castType', editData?.castType);
-    formik.setFieldValue('religion', editData?.religion);
-    formik.setFieldValue('bloodGroup', editData?.bloodGroup);
-    formik.setFieldValue('familyCast', editData?.familyCast);
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-
-  const handleContactDetailCancel = () => {
-    formik.setFieldValue('email', editData?.email);
-    formik.setFieldValue('mobileNo', editData?.mobileNo);
-    formik.setFieldValue('secondaryMobileNo', editData?.secondaryMobileNo);
-  };
-
-  const handleProfessionalDetailCancel = () => {
-    formik.setFieldValue(
-      'dateOfJoining',
-      editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : dayjs()
-    );
-    formik.setFieldValue('employeeGroup', editData?.employeeGroup);
-    formik.setFieldValue('department', editData.department);
-    formik.setFieldValue('designation', editData?.designation);
-    formik.setFieldValue('role', editData?.role?.id);
-    formik.setFieldValue('organization', editData?.educationMediumStageId);
-    formik.setFieldValue('shift', editData?.shift?.id);
-  };
-
-  const handleAddressDetailCancel = () => {
-    formik.setFieldValue('addressLine1', editData?.address1);
-    formik.setFieldValue('addressLine2', editData?.address2);
-    formik.setFieldValue('city', { name: editData?.city?.name });
-    formik.setFieldValue('state', {
-      name: editData?.state?.name,
-      iscCode: editData?.state?.iscCode,
-    });
-    formik.setFieldValue('country', {
-      name: editData?.country?.name,
-      iscCode: editData?.country?.iscCode,
-    });
-    formik.setFieldValue('pincode', editData?.pinCode);
-  };
-
-  const handleSave = () => {
-    formik.submitForm();
+  const handleCancel = () => {
+    formik.resetForm();
   };
 
   return (
@@ -253,7 +206,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               isEdit={isBasicDetailsEditable}
               isLoading={formik.isSubmitting}
               onSave={handleSave}
-              onCancel={handleBasicDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -571,7 +524,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isContactDetailsEditable}
               onSave={handleSave}
-              onCancel={handleContactDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -640,7 +593,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isProfessionalDetailsEditable}
               onSave={handleSave}
-              onCancel={handleProfessionalDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -767,7 +720,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               isLoading={formik.isSubmitting}
               isEdit={isAddressDetailsEditable}
               onSave={handleSave}
-              onCancel={handleAddressDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }

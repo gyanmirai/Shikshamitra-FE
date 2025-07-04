@@ -87,7 +87,7 @@ const RollNoGenerationScreen = ({
   }, [studentData]);
 
   // Handle roll number change for a specific student
-  const handleRollNoChange = (id: string, newValue: number) => {
+  const handleRollNoChange = (id: string, newValue: number | null) => {
     // Update the roll number for the specified student
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
@@ -269,7 +269,10 @@ const RollNoGenerationScreen = ({
                       variant="standard"
                       type="number"
                       value={row.rollNo}
-                      onChange={(e) => handleRollNoChange(row.id, +e.target.value)}
+                      inputProps={{ min: 0 }}
+                      onChange={(e) =>
+                        handleRollNoChange(row.id, e.target.value ? +e.target.value : null)
+                      }
                       error={Boolean(error[row.id])}
                       helperText={error[row.id]}
                       disabled={!isManual}

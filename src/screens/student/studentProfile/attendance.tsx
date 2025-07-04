@@ -13,7 +13,6 @@ import {
   alpha,
   Button,
   Divider,
-  Tooltip,
   useTheme,
   Typography,
   ButtonGroup,
@@ -139,6 +138,20 @@ const Attendance = (props: StudentTabsComponentType) => {
         elevation={2}
         sx={{ display: 'flex', gap: 2, mt: 2, p: 2, justifyContent: 'space-between' }}
       >
+        <DatePicker
+          format="MMM-YYYY"
+          views={['year', 'month']}
+          label="Select Month Year"
+          value={date}
+          onChange={(newValue) => {
+            setDate(newValue);
+          }}
+          slotProps={{
+            textField: {
+              size: 'small',
+            },
+          }}
+        />
         <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
           Overall Attendance&nbsp;
           <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -174,20 +187,6 @@ const Attendance = (props: StudentTabsComponentType) => {
             <Iconify icon="mdi:help-circle-outline" />
           </CustomTooltip>
         </Box>
-        <DatePicker
-          format="MMM-YYYY"
-          views={['year', 'month']}
-          label="Select Month Year"
-          value={date}
-          onChange={(newValue) => {
-            setDate(newValue);
-          }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
-        />
       </Paper>
       <Divider sx={{ my: 2 }} />
       <Grid container spacing={2} mb={2}>
@@ -324,6 +323,9 @@ const Attendance = (props: StudentTabsComponentType) => {
               borderRadius: 2,
             }}
           >
+            <Typography variant="subtitle1" sx={{ padding: '24px 24px 0px' }}>
+              Attendance Calender
+            </Typography>
             <DateCalendar
               value={date}
               disableFuture
@@ -367,7 +369,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     toolTipTitle = 'Public Holiday';
                   }
                   return (
-                    <Tooltip title={toolTipTitle} arrow placement="top">
+                    <CustomTooltip title={toolTipTitle} arrow placement="top">
                       <Badge
                         overlap="circular"
                         variant={isHoliday ? 'dot' : undefined}
@@ -382,6 +384,9 @@ const Attendance = (props: StudentTabsComponentType) => {
                             overflow: 'hidden',
                             fontWeight: disabled ? 400 : 600,
                             bgcolor: backgroundColor,
+                            '&:hover': {
+                              ...(absent ? { backgroundColor: 'unset' } : {}),
+                            },
                             // background: (theme) =>
                             //   absent
                             //     ? `${theme.palette.error.main} !important`
@@ -415,7 +420,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                           disabled={disabled}
                         />
                       </Badge>
-                    </Tooltip>
+                    </CustomTooltip>
                   );
                 },
               }}
@@ -434,7 +439,7 @@ const Attendance = (props: StudentTabsComponentType) => {
               }}
             >
               <Dot color="success.main" sx={{ marginLeft: 2 }}>
-                Present
+                Today
               </Dot>
               <Dot color="warning.main" sx={{ marginLeft: 2 }}>
                 Holiday

@@ -496,28 +496,12 @@ const FamilyMemberSection = ({
   const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
 
   const isEditable = useBoolean(!!isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
   const handleCancel = () => {
-    formik.setFieldValue(`${type}Name`, editData.fatherDetails.name || '');
-    formik.setFieldValue(`${type}Occupation`, editData.fatherDetails.occupation || '');
-    formik.setFieldValue(`${type}ContactNo`, editData.fatherDetails.contactNo || '');
-    formik.setFieldValue(`${type}Address1`, editData.fatherDetails.address1 || '');
-    formik.setFieldValue(`${type}Address2`, editData.fatherDetails.address2 || '');
-    formik.setFieldValue(`${type}Address3`, editData.fatherDetails.address3 || '');
-    formik.setFieldValue(`${type}Country`, {
-      name: editData?.fatherDetails?.countryName || '',
-      isoCode: editData?.fatherDetails?.countryIsoCode || '',
-    });
-    formik.setFieldValue(`${type}State`, {
-      name: editData?.fatherDetails?.stateName || '',
-      isoCode: editData?.fatherDetails?.stateIsoCode || '',
-    });
-    formik.setFieldValue(`${type}City`, {
-      name: editData?.fatherDetails?.city || '',
-    });
-    formik.setFieldValue(`${type}PinCode`, editData.fatherDetails.pinCode);
+    formik.resetForm();
   };
   return (
     <SectionCard

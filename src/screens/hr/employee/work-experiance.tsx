@@ -1,5 +1,4 @@
 import React from 'react';
-import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -19,20 +18,12 @@ const WorkExperiences = (props: any) => {
   const { formik, isMainForm, editData } = props;
   const { values, setFieldValue } = formik;
   const isEditable = useBoolean(isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
   const handleCancel = () => {
-    formik.setFieldValue(
-      'experiences',
-      editData
-        ? editData.workExperiences.map((i: any) => ({
-            ...i,
-            fromDate: i?.fromDate ? dayjs(i.fromDate, 'YYYY-MM-DD') : null,
-            toDate: i?.toDate ? dayjs(i.toDate, 'YYYY-MM-DD') : null,
-          }))
-        : []
-    );
+    formik.resetForm();
   };
   return (
     <Box>

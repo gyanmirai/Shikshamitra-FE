@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, Grid, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Grid, Button, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -75,12 +75,25 @@ const LeaveCalender = (props: TabComponentType) => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const onChangeView = useCallback((newView: any) => {
     setOrganization(newView);
   }, []);
   return (
     <>
+      <Button
+        size="small"
+        color="inherit"
+        onClick={popover.onOpen}
+        variant="outlined"
+        // startIcon={<Iconify icon={selectedItem.icon} />}
+        endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
+        sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
+      >
+        {organization || 'Organization'}
+      </Button>
       <CommonCalender
         data={calendarData}
         isLoading={isLoading}
@@ -106,18 +119,7 @@ const LeaveCalender = (props: TabComponentType) => {
           { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
           { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
         ]}
-        // renderCompToHeader={
-        //   <Button
-        //     size="small"
-        //     color="inherit"
-        //     onClick={popover.onOpen}
-        //     // startIcon={<Iconify icon={selectedItem.icon} />}
-        //     endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-        //     sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
-        //   >
-        //     {organization || 'Organization'}
-        //   </Button>
-        // }
+        validRange={{ start: currentYear?.startDate, end: currentYear?.endDate }}
       />
       <CustomDialog
         open={!!currentDateClick}

@@ -116,12 +116,6 @@ const GlobalAcademicSearch = () => {
   // Effect to update selected division when current selections change
   useEffect(() => {
     if (currentYear?.id && currentBoard?.id && currentMedium?.id) {
-      console.log(
-        '🚀 ~ GlobalAcademicSearch ~ currentYear, currentBoard, currentMedium:',
-        currentYear,
-        currentBoard,
-        currentMedium
-      );
       setSelectedDivision({
         label: `${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name}`,
         value: `${currentYear?.id}-${currentBoard?.id}-${currentMedium?.id}`,
