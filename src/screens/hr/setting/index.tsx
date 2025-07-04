@@ -229,6 +229,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
       documentSize: Yup.number()
         .required('Document size is required')
         .min(1, 'Document size must be greater than 1 MB')
+        .max(20, 'Document size must be less than 20 MB')
         .positive('Document size must be a positive number')
         .integer('Document size must be an integer'),
     }),
@@ -267,7 +268,10 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
               label="Document Name *"
               name="document.title"
               value={values.title}
-              onChange={(e) => setFieldValue('title', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFieldValue('title', value);
+              }}
               error={touched.title && Boolean(errors.title)}
               helperText={touched.title && errors.title}
             />
@@ -281,6 +285,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
               type="number"
               name="documentSize"
               fullWidth
+              inputProps={{ min: 1, max: 20 }}
               onChange={handleChange}
               helperText={touched.documentSize && errors.documentSize}
               error={touched.documentSize && Boolean(errors.documentSize)}

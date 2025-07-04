@@ -288,6 +288,11 @@ const HrEmployee = () => {
                   id: 'genderValue',
                   label: 'Gender',
                   align: 'left',
+                  filterType: 'enum',
+                  enumOptions: [
+                    { label: 'Male', value: 'Male' },
+                    { label: 'Female', value: 'Female' },
+                  ],
                 },
                 {
                   id: 'doi',

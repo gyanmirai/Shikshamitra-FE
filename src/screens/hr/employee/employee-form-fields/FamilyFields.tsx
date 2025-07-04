@@ -16,7 +16,14 @@ import type { FieldsType } from './types';
 
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForFather =
+    formik?.values?.addressLine1 === formik?.values?.fatherAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.fatherAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.fatherAddress3 &&
+    formik?.values?.country.name === formik?.values?.fatherCountry.name &&
+    formik?.values?.state.name === formik?.values?.fatherState.name &&
+    formik?.values?.city.name === formik?.values?.fatherCity.name &&
+    formik?.values?.pincode === formik?.values?.fatherPinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -24,7 +31,7 @@ function FatherAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsEmployeeAddressForFather}
+              checked={isSameAsEmployeeAddressForFather}
               onChange={(e) => {
                 formik.setFieldValue('sameAsEmployeeAddressForFather', e.target.checked);
                 if (e.target.checked) {
@@ -171,7 +178,14 @@ function FatherAddressComponent(props: any) {
 
 function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForMother =
+    formik?.values?.addressLine1 === formik?.values?.motherAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.motherAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.motherAddress3 &&
+    formik?.values?.country.name === formik?.values?.motherCountry.name &&
+    formik?.values?.state.name === formik?.values?.motherState.name &&
+    formik?.values?.city.name === formik?.values?.motherCity.name &&
+    formik?.values?.pincode === formik?.values?.motherPinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -179,7 +193,7 @@ function MotherAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsFatherAddressForMother}
+              checked={isSameAsEmployeeAddressForMother}
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForMother', e.target.checked);
                 if (e.target.checked) {
@@ -325,7 +339,14 @@ function MotherAddressComponent(props: any) {
 
 function SpouseAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForSpouse =
+    formik?.values?.addressLine1 === formik?.values?.spouseAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.spouseAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.spouseAddress3 &&
+    formik?.values?.country.name === formik?.values?.spouseCountry.name &&
+    formik?.values?.state.name === formik?.values?.spouseState.name &&
+    formik?.values?.city.name === formik?.values?.spouseCity.name &&
+    formik?.values?.pincode === formik?.values?.spousePinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -333,7 +354,7 @@ function SpouseAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsFatherAddressForSpouse}
+              checked={isSameAsEmployeeAddressForSpouse}
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
                 if (e.target.checked) {
@@ -534,7 +555,8 @@ const FamilyMemberSection = ({
             //   }
             // }}
             onChange={(e) => {
-              const value = e.target.value
+              const newValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const value = newValue
                 .split(' ')
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                 .join(' ');

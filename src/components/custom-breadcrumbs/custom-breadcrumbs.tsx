@@ -63,7 +63,7 @@ export function CustomBreadcrumbs({
   );
   if (isBack) {
     // @ts-ignore
-    slotProps.breadcrumbs.pl = '52px';
+    slotProps.breadcrumbs.pl = '47px';
   }
   const renderLinks = (
     <Breadcrumbs separator={<Separator />} sx={slotProps?.breadcrumbs} {...other}>

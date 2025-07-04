@@ -252,7 +252,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
         description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
         isBack
         onBack={() => setSearchParams({ employee: '' })}
-        sx={{ px: 1, pb: 1 }}
+        // sx={{ px: 1, pb: 1 }}
         // action={
         //   searchParams?.employee && (
         //     <Button

@@ -28,7 +28,7 @@ const EmployeeAcademicTabs = () => {
   );
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
-    <Card sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}>
+    <Card>
       <CustomTabs
         value={tabs.value}
         onChange={(...rest) => {
