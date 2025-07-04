@@ -17,7 +17,11 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
       dueDate: div.dueDate ? dayjs(div.dueDate) : null,
       status: div.status ?? 0,
     })) || [],
-  students: editData?.students?.length ? editData.students : allStudentIds,
+  students: editData?.students?.length
+    ? editData.students
+    : editData?.divisions?.length
+      ? allStudentIds
+      : [],
   subjects: editData?.subjects || '',
   submissionType: editData?.submissionType || 0,
   // dueDate: dayjs(editData?.dueDate) || null,

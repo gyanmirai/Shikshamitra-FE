@@ -38,46 +38,126 @@ import type { DayData, Subject, TimetableSlot, TSubjectGroup } from './type';
 
 export const subjectGroupsData: TSubjectGroup[] = [
   {
-    subjectName: 'Core Subjects',
-    subjectColor: '#ef5350',
-    allocateLectures: 7,
-    totalLectures: 7,
-    subjectType: 'core',
+    subjectName: 'Tech & Fitness Group',
+    subjectColor: '#1e88e5',
+    allocateLectures: 5,
+    totalLectures: 5,
+    subjectType: 'Elective',
     subjects: [
       {
-        subject: 'Math',
-        teachers: ['Mr. Smith', 'Mrs. Johnson'],
-        subjectCode: 'MATH101',
+        subject: 'Computer',
+        teachers: ['Mr. Rao', 'Ms. Patel'],
+        subjectCode: 'CS-12',
+      },
+      {
+        subject: 'Physical Training',
+        teachers: ['Coach Vivek'],
+        subjectCode: 'PE-12',
       },
     ],
     id: '1',
   },
   {
-    subjectName: 'Language Subjects',
-    subjectColor: '#42a5f5',
-    allocateLectures: 7,
-    totalLectures: 7,
+    subjectName: 'Language Enrichment Group',
+    subjectColor: '#ab47bc',
+    allocateLectures: 6,
+    totalLectures: 6,
     subjectType: 'Elective',
     subjects: [
       {
-        subject: 'English',
-        teachers: ['Ms. Wilson', 'Mr. Brown'],
-        subjectCode: 'ENG101',
+        subject: 'Hindi',
+        teachers: ['Mr. Mehta'],
+        subjectCode: 'HIN-12',
       },
       {
-        subject: 'Hindi',
-        teachers: ['Mr. Mehta', 'Mrs. Kapoor'],
-        subjectCode: 'HIN101',
+        subject: 'Sanskrit',
+        teachers: ['Ms. Sharma'],
+        subjectCode: 'SAN-12',
       },
     ],
     id: '2',
+  },
+  {
+    subjectName: 'Mathematics',
+    subjectColor: '#ffb300',
+    allocateLectures: 7,
+    totalLectures: 7,
+    subjectType: 'Core',
+    subjects: [
+      {
+        subject: 'Mathematics',
+        teachers: ['Mr. Mathur'],
+        subjectCode: 'MATH-10',
+      },
+    ],
+    id: '3',
+  },
+  {
+    subjectName: 'Science',
+    subjectColor: '#00acc1',
+    allocateLectures: 6,
+    totalLectures: 6,
+    subjectType: 'Core',
+    subjects: [
+      {
+        subject: 'Science',
+        teachers: ['Mrs. Rao'],
+        subjectCode: 'SCI-12',
+      },
+    ],
+    id: '4',
+  },
+  {
+    subjectName: 'Social Science',
+    subjectColor: '#8d6e63',
+    allocateLectures: 6,
+    totalLectures: 6,
+    subjectType: 'Core',
+    subjects: [
+      {
+        subject: 'Social Science',
+        teachers: ['Mr. Desai'],
+        subjectCode: 'SOC-12',
+      },
+    ],
+    id: '5',
+  },
+  {
+    subjectName: 'Gujarati',
+    subjectColor: '#43a047',
+    allocateLectures: 5,
+    totalLectures: 5,
+    subjectType: 'Core',
+    subjects: [
+      {
+        subject: 'Gujarati',
+        teachers: ['Ms. Trivedi'],
+        subjectCode: 'GUJ-12',
+      },
+    ],
+    id: '6',
+  },
+  {
+    subjectName: 'English',
+    subjectColor: '#3949ab',
+    allocateLectures: 6,
+    totalLectures: 6,
+    subjectType: 'Core',
+    subjects: [
+      {
+        subject: 'English',
+        teachers: ['Ms. Wilson'],
+        subjectCode: 'ENG-12',
+      },
+    ],
+    id: '7',
   },
 ];
 
 const timetableData: TimetableSlot[] = [
   {
-    startTime: '08:00 Am',
-    endTime: '09:00 Am',
+    startTime: '08:00 AM',
+    endTime: '09:00 AM',
     isBreak: false,
     dayData: [
       { day: 'Mon', subjects: [], subjectColor: '' },
@@ -89,8 +169,8 @@ const timetableData: TimetableSlot[] = [
     ],
   },
   {
-    startTime: '09:00 Am',
-    endTime: '10:00 Am',
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
     isBreak: false,
     dayData: [
       { day: 'Mon', subjects: [], subjectColor: '' },
@@ -102,14 +182,14 @@ const timetableData: TimetableSlot[] = [
     ],
   },
   {
-    startTime: '10:00 Am',
-    endTime: '10:15 Am',
+    startTime: '10:00 AM',
+    endTime: '10:15 AM',
     isBreak: true,
     dayData: [],
   },
   {
-    startTime: '10:15 Am',
-    endTime: '11:15 Am',
+    startTime: '10:15 AM',
+    endTime: '11:15 AM',
     isBreak: false,
     dayData: [
       { day: 'Mon', subjects: [], subjectColor: '' },
@@ -121,8 +201,8 @@ const timetableData: TimetableSlot[] = [
     ],
   },
   {
-    startTime: '11:15 Am',
-    endTime: '12:15 Pm',
+    startTime: '11:15 AM',
+    endTime: '12:15 PM',
     isBreak: false,
     dayData: [
       { day: 'Mon', subjects: [], subjectColor: '' },
@@ -493,7 +573,6 @@ const TimeTableGrid = ({
               justifyContent: 'space-between',
               alignItems: 'center',
               mb: 1,
-              mt: 2,
             }}
           >
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -699,8 +778,8 @@ const TimeTableGrid = ({
           draftTimetableDialog.onFalse();
           // setSelectedExam(null);
         }}
-        title="Publish"
-        content="Are you sure you want to Publish Timetable ?"
+        title="Draft"
+        content="Are you sure you want to Draft Timetable ?"
         action={
           <Button
             variant="contained"

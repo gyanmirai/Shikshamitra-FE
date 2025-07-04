@@ -154,8 +154,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     value={formik.values.chapterName}
                     onChange={(e) => {
                       const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        // Capitalize each word
                         .split(' ')
-                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .map((word) =>
+                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                        )
                         .join(' ');
                       formik.setFieldValue('chapterName', value);
                     }}
@@ -178,6 +183,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       formik.setFieldValue('startDate', newValue);
                     }}
                     minDate={dayjs()}
+                    maxDate={dayjs().endOf('year')}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {
@@ -201,6 +207,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     label="Chapter End Date *"
                     format="DD/MM/YYYY"
                     minDate={dayjs()}
+                    maxDate={dayjs().endOf('year')}
                     value={formik.values.endDate}
                     onChange={(newValue) => {
                       formik.setFieldValue('endDate', newValue);

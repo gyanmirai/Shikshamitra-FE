@@ -89,8 +89,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-              {subject?.subjectType === 'Elective' && (
+              {subject?.subjectType === 'Elective' ? (
                 <Typography fontWeight="bold">{subject.subjectName}</Typography>
+              ) : (
+                <Typography fontWeight="bold">Subject</Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography variant="body2" component="span">

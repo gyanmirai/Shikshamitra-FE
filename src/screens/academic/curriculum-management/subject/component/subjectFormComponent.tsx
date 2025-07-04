@@ -304,7 +304,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.subjectName} save as publish successfully for class ${values.className}`,
+          message: `${values.subjectName} published successfully for class ${values.className}`,
         });
       }
 
@@ -502,7 +502,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Core/Elective Subject *"
+                        label="Subject *"
                         name="subjectName"
                         error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                         helperText={formik.touched.subjectName && formik.errors.subjectName}
@@ -602,7 +602,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
                   onClick={() => {
                     setIsDraft(true);
                     formik.handleSubmit();

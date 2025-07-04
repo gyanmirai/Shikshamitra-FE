@@ -84,12 +84,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {row.status === ScheduleExamStatus['Needs Review'] && (
             <MenuItem
               onClick={() => {
+                setSelectedStudent(row);
                 viewSubmissionDialog.onTrue();
                 pop.onClose();
               }}
             >
               {' '}
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon="mdi:arrow-right-circle" />
               Assign Marks
             </MenuItem>
           )}
@@ -328,14 +329,14 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedStudent ? 'Edit Feedback & Marks' : 'Add Feedback & Marks'}
+              {selectedStudent?.marks ? 'Edit Feedback & Marks' : 'Add Feedback & Marks'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
               title={
-                selectedStudent
+                selectedStudent?.marks
                   ? 'You can modify the feedback & marks given to the student for their assignment submission.'
                   : "You can provide feedback & marks for the student's assignment submission."
               }

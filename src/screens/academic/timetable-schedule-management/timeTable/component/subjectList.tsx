@@ -53,18 +53,28 @@ const SubjectList: React.FC<SubjectListProps> = ({
               width: '100%',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: 0.5,
+                maxWidth: 150, // adjust as per your layout
+                lineHeight: 1.2,
+              }}
+            >
               {subject.subjects.map((sub: Subject, index: number) => (
                 <React.Fragment key={index}>
                   <CustomTooltip title={`${sub.subject} (${sub.subjectCode})`} placement="top">
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                       {sub.subject}
-                      {index < subject.subjects.length - 1 && ', '}
+                      {index < subject.subjects.length - 1 && ','}
                     </Typography>
                   </CustomTooltip>
                 </React.Fragment>
               ))}
             </Box>
+
             <Typography variant="body2">
               ({subject.allocateLectures} / {subject.totalLectures})
             </Typography>

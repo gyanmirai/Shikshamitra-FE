@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
-import { Box, Grid, Button, DialogActions } from '@mui/material';
+import { Stack, Button, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -51,55 +51,49 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
   });
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '120px' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={formik.touched.classNames && Boolean(formik.errors.classNames)}
-              >
-                <CustomSelect
-                  options={allClass}
-                  value={formik.values.classNames}
-                  onChange={(val) => formik.setFieldValue('classNames', val)}
-                  label="Class"
-                  multiple
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                  error={formik.touched.classNames && Boolean(formik.errors.classNames)}
-                  helperText={
-                    formik.touched.classNames && typeof formik.errors.classNames === 'string'
-                      ? formik.errors.classNames
-                      : undefined
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        </Scrollbar>
+    <Stack component="form" onSubmit={formik.handleSubmit} spacing={0}>
+      <Scrollbar sx={{ pt: 2, px: 2, pb: 0, maxHeight: '120px' }}>
+        <Stack spacing={0}>
+          <ShakingTextField error={formik.touched.classNames && Boolean(formik.errors.classNames)}>
+            <CustomSelect
+              options={allClass}
+              value={formik.values.classNames}
+              onChange={(val) => formik.setFieldValue('classNames', val)}
+              label="Class"
+              multiple
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+              helperText={
+                formik.touched.classNames && typeof formik.errors.classNames === 'string'
+                  ? formik.errors.classNames
+                  : undefined
+              }
+            />
+          </ShakingTextField>
+        </Stack>
+      </Scrollbar>
 
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            variant="outlined"
-            size="small"
-            onClick={() => onClose?.(null, false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            size="small"
-            type="submit"
-            variant="contained"
-          >
-            Submit
-          </Button>
-        </DialogActions>
-      </form>
-    </Box>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          size="small"
+          onClick={() => onClose?.(null, false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          size="small"
+          type="submit"
+          variant="contained"
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </Stack>
   );
 };
 

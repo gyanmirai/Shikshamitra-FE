@@ -3,7 +3,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -48,6 +48,18 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '280px' }}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Name : </strong>
+                    {data?.studentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Roll No : </strong>
+                    {data?.rollNumber}
+                  </Typography>
+                </Box>
+              </Grid>
               <Grid item xs={12}>
                 <Editor onChange={(value) => {}} value="Submission Data" editable={false} />
               </Grid>

@@ -162,6 +162,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
                     setSelectedWeeklyLecture(row as ISubjectFormValues);
                     setIsEdit(true);
                     addWeeklyLectureDialog.onTrue();
+                    setDisabled(true);
                   }}
                   placement="right-top"
                 />
@@ -296,6 +297,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
         <CreateNoOfLecture
           // onSave={handleSave}
           // dialogValue={dialog.value}
+          disabled={disabled}
           onClose={handleClose}
           editData={selectedWeeklyLecture}
           // data={selectedEntry}
