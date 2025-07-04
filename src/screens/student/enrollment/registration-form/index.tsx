@@ -174,7 +174,7 @@ const RegistrationFormScreen = () => {
               { id: 'standard.name', label: 'Class', align: 'left', filterType: 'number' },
               {
                 id: 'dobValue',
-                label: 'Date Of Birth',
+                label: 'Date of Birth',
                 minWidth: '128px',
                 align: 'left',
                 isFilter: true,
@@ -183,7 +183,7 @@ const RegistrationFormScreen = () => {
               { id: 'ageValue', label: 'Age', align: 'left' },
               {
                 id: 'doiValue',
-                label: 'Date Of Inquiry',
+                label: 'Date of Inquiry',
                 minWidth: '145px',
                 align: 'left',
                 isDateRangeFilter: true,

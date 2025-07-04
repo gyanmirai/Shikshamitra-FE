@@ -208,7 +208,7 @@ export const CommunicationForm = ({
     validationSchema: Yup.object({
       msg: Yup.string().required('Notes are required'),
       status: Yup.string().required('Status is required'),
-      dueDate: Yup.string(),
+      dueDate: Yup.string().required('Reminder Date is required'),
     }),
     enableReinitialize: true,
     onSubmit: async (values) => {

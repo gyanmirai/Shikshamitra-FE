@@ -383,7 +383,7 @@ export function StudentProfile() {
               },
               {
                 id: 'dobValue',
-                label: 'Date Of Birth',
+                label: 'Date of Birth',
                 minWidth: '10vw',
                 align: 'left',
                 filterType: 'date',
