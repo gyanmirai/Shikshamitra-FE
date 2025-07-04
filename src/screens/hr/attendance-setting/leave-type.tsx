@@ -8,16 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import {
-  Box,
-  Grid,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -35,6 +26,7 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -75,13 +67,21 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Delay matches your dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
       dialog.onFalse();
-      setEditData(null);
+      resetState();
     } else if (!isChanges) {
       dialog.onFalse();
-      setEditData(null);
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
     }
   };
 
@@ -256,7 +256,9 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
-          setEditData(null);
+          setTimeout(() => {
+            setEditData(null);
+          }, 200); // Adjust the delay based on your dialog transition duration
         }}
       >
         <LeaveTypeForm handleClose={handleClose} editData={editData} />
@@ -299,7 +301,7 @@ const LeaveTypeForm = ({
       leaveDays: editData?.leaveDays || 0,
       carryForward: editData?.carryForward || false,
       accrualRate: editData?.accrualRate ?? AccurateRateType.Monthly,
-      color: editData?.color || 'white',
+      color: editData?.color || '',
       roles: editData?.roles || [],
       fieldType: editData?.fieldType || 'paid',
     },
@@ -330,6 +332,7 @@ const LeaveTypeForm = ({
               //   fieldType: values.fieldType,
             },
           });
+          shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
           await addLeavePolicy({
             leaveType: values.leaveType,
@@ -341,6 +344,7 @@ const LeaveTypeForm = ({
             // roles: values.roles,
             // fieldType: values.fieldType,
           });
+          shikshaMitraToast.success({ message: 'Leave Type added successfully' });
         }
         handleClose(null, true);
         formik.resetForm();
@@ -450,19 +454,6 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.color && formik.errors.color) as string}
               /> */}
             </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  name="carryForward"
-                  checked={formik.values.carryForward}
-                  onChange={formik.handleChange}
-                />
-              }
-              label="Enable Carry Forward"
-            />
           </Grid>
         </Grid>
       </DialogScrollContent>

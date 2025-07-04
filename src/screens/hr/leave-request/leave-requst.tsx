@@ -50,7 +50,7 @@ export const CALENDAR_COLOR_OPTIONS = [
 ];
 type AddLeaveRequestProps = TabComponentType & {
   editData?: any;
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
 };
 
 interface FormValues {
@@ -115,31 +115,31 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
     },
     validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave type is required'),
+      leaveType: Yup.string().required('Leave Type is required'),
       isHalfDay: Yup.boolean(),
-      startDate: Yup.date().required('Start date is required'),
-      startTime: Yup.date().when('isHalfDay', {
-        is: true,
-        then: (schema) => schema.required('Start time is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      endTime: Yup.date().when('isHalfDay', {
-        is: true,
-        then: (schema) => schema.required('End time is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      endDate: Yup.date()
+      startDate: Yup.mixed()
+        .test(
+          'is-valid-dayjs',
+          'Start Date is required',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        .required('Start Date is required'),
+      endDate: Yup.mixed()
         .nullable()
         .when('isHalfDay', {
           is: true,
           then: (schema) => schema.nullable(),
           otherwise: (schema) =>
             schema
-              .required('End date is required')
-              .test('endDate', 'End date must be after start date', function (value) {
+              .test('is-valid-dayjs', 'End Date is required', (value) => {
+                if (!value) return false;
+                return dayjs(value as any).isValid();
+              })
+              .required('End Date is required')
+              .test('endDate', 'End Date must be after start date', function (value) {
                 const { startDate } = this.parent;
                 if (startDate && value) {
-                  return dayjs(value).isSameOrAfter(dayjs(startDate));
+                  return dayjs(value as any).isSameOrAfter(dayjs(startDate));
                 }
                 return true;
               }),
@@ -159,6 +159,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       ),
     }),
     onSubmit: async (formValues: FormValues, { resetForm }) => {
+      console.log('data=========', formValues);
+
       try {
         if (editData) {
           await changeStatus({
@@ -190,7 +192,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           });
           resetForm();
         }
-        handleClose?.();
+        handleClose?.(null, true);
       } catch (e) {
         console.log(e);
       }
@@ -200,7 +202,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     <>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid item xs={12}>
               <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                 <CustomSelect
@@ -519,7 +521,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => {
-            handleClose?.();
+            handleClose?.(null, false);
           }}
         >
           Cancel

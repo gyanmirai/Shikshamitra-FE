@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { DatePicker, MobileTimePicker } from '@mui/x-date-pickers';
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -110,7 +110,13 @@ const BiometricIntegrationScreen = () => {
         columns={[
           { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
           { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
-          { id: 'contactNo', label: 'Mobile No.', align: 'left', minWidth: '8vw' },
+          {
+            id: 'contactNo',
+            label: 'Mobile No.',
+            align: 'left',
+            minWidth: '8vw',
+            filterType: 'number',
+          },
           {
             id: 'timeIn',
             label: 'In-Time',
@@ -353,32 +359,52 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
             />
           </ShakingTextField>
           <ShakingTextField error={formik.touched.inTime && Boolean(formik.errors.inTime)}>
-            <MobileTimePicker
-              label="In Time"
+            <TimePicker
+              label="In Time *"
               value={formik.values.inTime}
-              onChange={(value) => formik.setFieldValue('inTime', value)}
+              format="hh:mm"
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+              onChange={(date) => formik.setFieldValue('inTime', date)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
-                  error: formik.touched.inTime && Boolean(formik.errors.inTime),
-                  helperText: formik.touched.inTime && formik.errors.inTime,
+                  name: 'inTime',
+                  helperText:
+                    formik.touched.inTime && formik.errors.inTime
+                      ? String(formik.errors.inTime)
+                      : undefined,
+                  error: !!formik.errors.inTime && formik.touched.inTime,
                 },
               }}
             />
           </ShakingTextField>
 
           <ShakingTextField error={formik.touched.outTime && Boolean(formik.errors.outTime)}>
-            <MobileTimePicker
-              label="Out Time"
+            <TimePicker
+              label="Out Time *"
               value={formik.values.outTime}
-              onChange={(value) => formik.setFieldValue('outTime', value)}
+              format="hh:mm"
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+              onChange={(date) => formik.setFieldValue('outTime', date)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
-                  error: formik.touched.outTime && Boolean(formik.errors.outTime),
-                  helperText: formik.touched.outTime && formik.errors.outTime,
+                  name: 'outTime',
+                  helperText:
+                    formik.touched.outTime && formik.errors.outTime
+                      ? String(formik.errors.outTime)
+                      : undefined,
+                  error: !!formik.errors.outTime && formik.touched.outTime,
                 },
               }}
             />
