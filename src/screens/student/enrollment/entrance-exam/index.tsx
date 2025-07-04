@@ -475,7 +475,19 @@ const EntranceExamScreen = () => {
       </CustomDialog>
 
       <ConfirmDialog
-        title="Move"
+        // title="Move"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Move</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Manage student exam details and move eligible ones to admission."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
             Are you sure want to move student <strong>{editData?.name || ''}</strong> in admission ?

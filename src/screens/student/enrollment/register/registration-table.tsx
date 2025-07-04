@@ -17,6 +17,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -218,7 +219,7 @@ const RegistrationTable = ({
           { id: 'standard.name', label: 'Class', align: 'left' },
           {
             id: 'dobValue',
-            label: 'Date Of Birth',
+            label: 'Date of Birth',
             minWidth: '130px',
             align: 'left',
             isFilter: true,
@@ -227,7 +228,7 @@ const RegistrationTable = ({
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'Date Of Inquiry',
+            label: 'Date of Inquiry',
             minWidth: '150px',
             align: 'left',
             filterType: 'date',
@@ -358,7 +359,19 @@ const RegistrationTable = ({
         data={tableData || []}
       />
       <ConfirmDialog
-        title="Move"
+        // title="Move"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Move</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Move the selected student from entrance exam to admission."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
             Are you sure want to move student{' '}
