@@ -86,6 +86,13 @@ export const studentGroupApi = createApi({
       }),
       invalidatesTags: ['studentGroup'],
     }),
+    deleteGroup: builder.mutation({
+      query: (groupId) => ({
+        url: `/app/student-group/${groupId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['studentGroup'],
+    }),
   }),
 });
 
@@ -100,4 +107,5 @@ export const {
   useRemoveDivisionLeaderMutation,
   useRemoveGroupLeaderMutation,
   useRemoveStudentFromGroupMutation,
+  useDeleteGroupMutation,
 } = studentGroupApi;

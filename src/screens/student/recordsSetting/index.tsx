@@ -22,6 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetAllGroupQuery,
+  useDeleteGroupMutation,
   useAddStudentGroupMutation,
   useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
@@ -47,10 +48,17 @@ const HouseSetting = () => {
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
   });
+
+  const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteGroupMutation,
+  });
   const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
   // State to store group data being edited
+
+  const isDeleteConfirm = useBoolean();
   const [editData, setEditData] = useState<null | IGroup>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -224,22 +232,27 @@ const HouseSetting = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              confirm.onFalse();
+            loading={isDeleteLoading}
+            onClick={async () => {
+              try {
+                await deleteGroup(editData?.id).unwrap();
+                confirm.onFalse();
+                shikshaMitraToast.success({
+                  message: 'House Deleted Successfully',
+                });
+              } catch (error) {
+                console.log(error);
+              }
               setEditData(null);
-              shikshaMitraToast.success({
-                message: `House ${editData?.name} deleted successfully`,
-              });
-              // handle delete action
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
