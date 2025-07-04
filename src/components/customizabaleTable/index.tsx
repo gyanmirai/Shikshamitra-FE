@@ -1086,7 +1086,12 @@ const ColumnFilterMenu: React.FC<{
       filterType: '',
     },
     validationSchema: yup.object({
-      filterType: yup.string().required('Filter type is required'),
+      filterType: yup.string().test('filterType', 'Filter type is required', (value) => {
+        if (anchorEl?.column.filterType === 'enum') {
+          return true;
+        }
+        return false;
+      }),
       min: yup.number().when('filterType', {
         is: 'between',
         then: (schema) => schema.required('Min value is required'),
@@ -1107,6 +1112,8 @@ const ColumnFilterMenu: React.FC<{
       handleApply();
     },
   });
+
+  console.log(formik, 'formik');
 
   const getFilterOptions = () => {
     if (!anchorEl) return [];

@@ -43,7 +43,7 @@ const personalInformationValidationSchema = Yup.object({
   qualification: Yup.string(),
   role: Yup.string().required('Role is required'),
   //   identificationMark1: Yup.string().required('Identification mark is required'),
-  addressLine1: Yup.string().required('Building No./Flat/House No. No is required'),
+  addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
   addressLine3: Yup.string(),
   country: Yup.object()

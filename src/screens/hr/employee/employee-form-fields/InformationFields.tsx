@@ -434,7 +434,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
                     // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
-                    const newName = capitalize(e.target.value);
+                    const value = e?.target?.value?.replace(/[^A-Za-z\s]/g, '') || '';
+                    const newName = value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
                     formik.setFieldValue('familyCast', newName);
                   }}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
