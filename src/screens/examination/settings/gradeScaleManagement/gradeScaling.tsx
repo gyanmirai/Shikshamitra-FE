@@ -176,6 +176,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       />
 
       <CustomDialog
+        maxWidth="sm"
         open={addGradeScalingDialog.value}
         handleClose={() => {
           addGradeScalingDialog.onFalse();
@@ -214,6 +215,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
 
       <CustomDialog
         open={viewDialog.value}
+        maxWidth="sm"
         handleClose={() => {
           viewDialog.onFalse();
           setTimeout(() => {

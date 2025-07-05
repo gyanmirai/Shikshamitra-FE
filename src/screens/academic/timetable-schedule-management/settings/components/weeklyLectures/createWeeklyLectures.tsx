@@ -27,6 +27,7 @@ import type { ISubjectFormValues, ICreateNoOfLectureProps } from './type';
 const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   open,
   onClose,
+  isEdit,
   disabled,
   editData,
   selectedClass,
@@ -152,7 +153,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             value={formik.values.subjects[index]?.noOfLecture ?? ''}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            disabled={disabled}
+            inputProps={{ min: 0 }}
+            disabled={disabled && !isEdit}
             error={
               !!formik.touched.subjects?.[index]?.noOfLecture &&
               !!(formik.errors.subjects?.[index] as any)?.noOfLecture
@@ -180,6 +182,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       formik.touched.subjects,
       formik.errors.subjects,
       disabled,
+      isEdit,
     ]
   );
 

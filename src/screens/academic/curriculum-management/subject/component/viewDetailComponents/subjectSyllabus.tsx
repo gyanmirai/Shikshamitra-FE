@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
@@ -38,10 +40,12 @@ const chapters = [
   },
 ];
 
-const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => (
-  <Box sx={{ height: '100%', overflow: 'hidden' }}>
-    <Scrollbar sx={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '0 5px' }}>
-      <Box sx={{ pb: 2 }}>
+const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <Box sx={{ height: '100%', overflow: 'hidden' }}>
+      {/* <Scrollbar ref={ref}> */}
+      <Box sx={{ height: '100%', overflow: 'auto', pb: 2 }}>
         {chapters.length > 0 ? (
           chapters.map((chapter, index) => (
             <Accordion
@@ -82,8 +86,9 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => (
           </Typography>
         )}
       </Box>
-    </Scrollbar>
-  </Box>
-);
+      {/* </Scrollbar> */}
+    </Box>
+  );
+};
 
 export default SubjectSyllabus;

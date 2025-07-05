@@ -7,8 +7,8 @@ export const validationSchema = Yup.object().shape({
     Yup.object().shape({
       minMarks: Yup.number().required('Min Marks is Required'),
       maxMarks: Yup.number()
-        .required('Max Marks is Required')
-        .min(Yup.ref('minMarks'), 'Max Marks must be greater than Min Marks'),
+        .required('Max Marks Required')
+        .min(Yup.ref('minMarks'), 'Cannot exceed total marks'),
       grade: Yup.string().required('Grade is Required'),
     })
   ),

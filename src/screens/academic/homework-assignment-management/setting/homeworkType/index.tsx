@@ -112,8 +112,8 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
               placement="right"
               title={
                 selectedData
-                  ? 'You can update the homework type details including name and other information'
-                  : 'You can create a new homework type by entering the name and other required details'
+                  ? 'You can update the homework type details including name.'
+                  : 'You can create a new homework type by entering the name.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

@@ -453,7 +453,7 @@ const Teacher = ({
         title="Reset"
         open={resetConfirmDialog.value}
         onClose={resetConfirmDialog.onFalse}
-        content="Are you sure you want to reset all changes?"
+        content="Are you sure you want to reset all changes ?"
         action={
           <Button
             variant="contained"
@@ -473,7 +473,7 @@ const Teacher = ({
         content={
           <>
             Are you sure you want to save the <strong>{getModifiedSubjects().join(', ')}</strong>{' '}
-            changes?
+            changes ?
           </>
         }
         action={

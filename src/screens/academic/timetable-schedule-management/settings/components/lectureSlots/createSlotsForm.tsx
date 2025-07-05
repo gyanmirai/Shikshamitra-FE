@@ -25,7 +25,7 @@ import { validationSchema } from './validationSchema';
 
 import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
-const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, disabled, handleClose }) => {
+const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, disabled }) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -88,14 +88,14 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, disabled, hand
       formik.setFieldValue('timeSlots', newSlots);
 
       // Trigger validation for all slots
-      setTimeout(() => {
-        newSlots.forEach((_, index) => {
-          formik.setFieldTouched(`timeSlots[${index}].startTime`, true);
-          formik.setFieldTouched(`timeSlots[${index}].endTime`, true);
-          formik.setFieldTouched(`timeSlots[${index}].slotType`, true);
-        });
-        formik.validateForm();
-      }, 0);
+      // setTimeout(() => {
+      //   newSlots.forEach((_, index) => {
+      //     formik.setFieldTouched(`timeSlots[${index}].startTime`, true);
+      //     formik.setFieldTouched(`timeSlots[${index}].endTime`, true);
+      //     formik.setFieldTouched(`timeSlots[${index}].slotType`, true);
+      //   });
+      //   formik.validateForm();
+      // }, 0);
 
       setShowTable(true);
     } else {
@@ -158,7 +158,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, disabled, hand
                     value={formik.values.schoolHours || '07:00 - 12:30'}
                     onChange={formik.handleChange}
                     size="small"
-                    disabled={disabled}
+                    disabled
                   />
                 </ShakingTextField>
               </Grid>
@@ -216,14 +216,13 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, disabled, hand
 
             {formik.values.totalSlots && showTable && (
               <>
-                <Typography variant="subtitle2" sx={{ mt: 3 }}>
+                <Typography variant="subtitle2" mt={2}>
                   Slot Times
                 </Typography>
                 <Box
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
-                    marginTop: 2,
                   }}
                 >
                   <CustomizableTable
@@ -489,9 +488,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, disabled, hand
       {!disabled && (
         <DialogActions>
           <Button
+            type="submit"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
-            disabled={disabled}
+            // disabled={disabled}
             size="small"
             onClick={() => {
               handleClose?.(null, false);

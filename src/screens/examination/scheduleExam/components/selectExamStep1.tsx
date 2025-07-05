@@ -192,10 +192,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 ...(allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
                   []),
               ]}
-              value={(formik.values.divisions.includes('all')
-                ? ['all', ...formik.values.divisions.filter((id) => id !== 'all')]
-                : formik.values.divisions
-              ).filter((id) => id !== 'all')}
+              value={formik.values.divisions}
               onChange={(val) => {
                 const value = val as string[];
 
@@ -204,15 +201,37 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   [];
 
                 const allDivisionIds = divisionOptions.map((d) => d.id);
-                const selectedWithoutAll = value.filter((id) => id !== 'all');
                 const isAllClicked = value.includes('all');
+                const wasAllPreviouslySelected = formik.values.divisions.includes('all');
 
-                if (isAllClicked && selectedWithoutAll.length !== allDivisionIds.length) {
+                if (isAllClicked && !wasAllPreviouslySelected) {
+                  // "All" was just clicked - select all divisions
                   formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
-                } else if (isAllClicked && selectedWithoutAll.length === allDivisionIds.length) {
+                } else if (!isAllClicked && wasAllPreviouslySelected) {
+                  // "All" was just unchecked - deselect all divisions
                   formik.setFieldValue('divisions', []);
+                } else if (isAllClicked && wasAllPreviouslySelected) {
+                  // Individual item was selected/deselected while "All" was already selected
+                  const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                  if (selectedWithoutAll.length === allDivisionIds.length) {
+                    // All individual items are selected, keep "All" selected
+                    formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
+                  } else {
+                    // Not all individual items are selected, remove "All"
+                    formik.setFieldValue('divisions', selectedWithoutAll);
+                  }
                 } else {
-                  formik.setFieldValue('divisions', selectedWithoutAll);
+                  // "All" is not selected, handle individual selections
+                  const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                  if (selectedWithoutAll.length === allDivisionIds.length) {
+                    // All individual items are selected, add "All"
+                    formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
+                  } else {
+                    // Not all items selected, just keep individual selections
+                    formik.setFieldValue('divisions', selectedWithoutAll);
+                  }
                 }
               }}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
