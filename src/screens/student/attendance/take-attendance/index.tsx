@@ -631,17 +631,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         tableId="student-attendance-list"
         noDataText="No Students Found"
         isLoading={isLoading}
-        tableProps={{
-          sx: {
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            '& .MuiTableContainer-root': {
-              flex: 1,
-              maxHeight: 'calc(100vh - 300px)', // Adjust based on header height
-            },
-          },
-        }}
         rowProps={(tableData: any) => ({
           sx: {
             background: (theme) =>
