@@ -567,7 +567,7 @@ const InquiryForm = ({
                     value={values.dateOfInquiry}
                     format="DD-MM-YYYY"
                     onChange={(newValue) => {
-                      setFieldValue('dateOfInquiry', newValue?.toDate() ?? null);
+                      setFieldValue('dateOfInquiry', newValue);
                       // setFieldValue('dateOfInquiry', newValue);
                       setFieldTouched('dateOfInquiry', true);
                     }}
@@ -663,14 +663,18 @@ const InquiryForm = ({
                     name="secondaryContactNumber"
                     value={values.secondaryContactNumber}
                     onChange={(value) => {
-                      setFieldValue('secondaryContactNumber', value);
+                      setFieldValue('secondaryContactNumber', value || '');
                       // setFieldTouched('secondaryContactNumber', true);
                     }}
-                    error={touched.secondaryContactNumber && Boolean(errors.secondaryContactNumber)}
-                    helperText={touched.secondaryContactNumber && errors.secondaryContactNumber}
+                    error={Boolean(touched.secondaryContactNumber && errors.secondaryContactNumber)}
+                    helperText={
+                      touched.secondaryContactNumber && errors.secondaryContactNumber
+                        ? errors.secondaryContactNumber
+                        : ''
+                    }
                     variant="outlined"
                     label="Secondary Contact No."
-                    onBlur={handleBlur}
+                    // onBlur={handleBlur}
                   />
                 </ShakingTextField>
               </Grid>
