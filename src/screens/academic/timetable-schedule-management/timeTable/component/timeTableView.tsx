@@ -143,11 +143,13 @@ const TimeTableView: React.FC<ITimeTableView> = ({
       )}
       <CustomDialog
         open={createSlotsDialog.value}
-        handleClose={createSlotsDialog.onFalse}
+        handleClose={(e, isSubmit) => {
+          createSlotsDialog.onFalse();
+        }}
         title="Create Slots"
         maxWidth="md"
       >
-        <CreateSlotsForm onClose={createSlotsDialog.onFalse} />
+        <CreateSlotsForm handleClose={() => createSlotsDialog.onFalse()} />
       </CustomDialog>
     </>
   );

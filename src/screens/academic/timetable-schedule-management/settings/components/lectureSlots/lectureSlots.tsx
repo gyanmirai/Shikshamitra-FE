@@ -177,6 +177,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
       >
         <CreateSlotsForm
           disabled={disabled}
+          handleClose={handleClose}
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}

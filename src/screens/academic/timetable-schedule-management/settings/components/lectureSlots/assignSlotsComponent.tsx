@@ -13,7 +13,6 @@ import { Stack, Button, DialogActions } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -52,28 +51,29 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
 
   return (
     <Stack component="form" onSubmit={formik.handleSubmit} spacing={0}>
-      <Scrollbar sx={{ pt: 2, px: 2, pb: 0, maxHeight: '120px' }}>
-        <Stack spacing={0}>
-          <ShakingTextField error={formik.touched.classNames && Boolean(formik.errors.classNames)}>
-            <CustomSelect
-              options={allClass}
-              value={formik.values.classNames}
-              onChange={(val) => formik.setFieldValue('classNames', val)}
-              label="Class"
-              multiple
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              error={formik.touched.classNames && Boolean(formik.errors.classNames)}
-              helperText={
-                formik.touched.classNames && typeof formik.errors.classNames === 'string'
-                  ? formik.errors.classNames
-                  : undefined
-              }
-            />
-          </ShakingTextField>
-        </Stack>
-      </Scrollbar>
+      <Stack spacing={0} p={2}>
+        <ShakingTextField error={formik.touched.classNames && Boolean(formik.errors.classNames)}>
+          <CustomSelect
+            options={allClass}
+            value={formik.values.classNames}
+            onChange={(val) => {
+              formik.setFieldValue('classNames', val);
+              formik.setFieldTouched('classNames', true, true);
+            }}
+            label="Class"
+            multiple
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+            error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+            helperText={
+              formik.touched.classNames && typeof formik.errors.classNames === 'string'
+                ? formik.errors.classNames
+                : undefined
+            }
+          />
+        </ShakingTextField>
+      </Stack>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button

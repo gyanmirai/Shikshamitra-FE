@@ -89,7 +89,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   isPagination = true,
   isFilter = true,
   isSearch = true,
-
+  tableContainerProps = {},
   isShowedDense = true,
   rowProps = () => {},
   tableId,
@@ -626,8 +626,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   />
                   <FormGroup>
                     {columns
-                      .filter((column) =>
-                        column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                      .filter(
+                        (column) =>
+                          column?.label?.trim() &&
+                          column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
                       )
                       .map((column) => (
                         <FormControlLabel
@@ -726,7 +728,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         onApplyFilter={handleApplyColumnFilter}
       />
       <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
-        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }}>
+        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }} {...tableContainerProps}>
           <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>
@@ -1086,12 +1088,7 @@ const ColumnFilterMenu: React.FC<{
       filterType: '',
     },
     validationSchema: yup.object({
-      filterType: yup.string().test('filterType', 'Filter type is required', (value) => {
-        if (anchorEl?.column.filterType === 'enum') {
-          return true;
-        }
-        return false;
-      }),
+      filterType: yup.string().required('Filter type is required'),
       min: yup.number().when('filterType', {
         is: 'between',
         then: (schema) => schema.required('Min value is required'),
@@ -1112,8 +1109,6 @@ const ColumnFilterMenu: React.FC<{
       handleApply();
     },
   });
-
-  console.log(formik, 'formik');
 
   const getFilterOptions = () => {
     if (!anchorEl) return [];
