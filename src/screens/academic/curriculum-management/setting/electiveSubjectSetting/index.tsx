@@ -42,17 +42,26 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
    * @param isSubmit - Flag indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelected(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust delay if your dialog animation is longer/shorter
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelected(null);
       addElectiveGroupDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
       setOpen(false);
-      setSelected(null);
       addElectiveGroupDialog.onFalse();
+      setTimeout(() => {
+        setSelected(null);
+      }, 200);
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end" mb={1}>
@@ -82,7 +91,7 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
         setEditData={setSelected}
         data={[
           {
-            title: 'Elective Group 1',
+            title: 'Tech & Fitness Group',
             subjectColor: '#1E90FF',
             subjects: [
               { name: 'Computer', subjectColor: '#4169E1' },
@@ -91,7 +100,7 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
             createdBy: 'Patel Jeena Rajeshbhai',
           },
           {
-            title: 'Elective Group 2',
+            title: 'Language Enrichment Group',
             subjectColor: '#FF4500',
             subjects: [
               { name: 'Hindi', subjectColor: '#FF4500' },
@@ -106,7 +115,9 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
         open={addElectiveGroupDialog.value}
         handleClose={() => {
           addElectiveGroupDialog.onFalse();
-          setSelected(null);
+          setTimeout(() => {
+            setSelected(null);
+          }, 200); // Adjust delay if your dialog has a different close animation duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -115,11 +126,12 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
             </Typography>
             <CustomTooltip
               arrow
+              sx={{ textAlign: 'justify' }}
               placement="right"
               title={
                 selected
-                  ? 'You can update the elective group details including title, subjects and other information'
-                  : 'You can create a new elective group by entering the group title, subjects and other required details'
+                  ? 'You can update the elective group details by entering group name, subjects and color.'
+                  : 'You can create a new elective group details by entering the group name, subjects and color.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

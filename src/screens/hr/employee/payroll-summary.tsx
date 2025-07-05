@@ -157,7 +157,7 @@ const PayrollSummary = ({ employee }: any) => {
               },
               {
                 id: 'totalDeduction',
-                label: 'Total Deduction',
+                label: 'Total',
                 filterType: 'number',
                 render(value, row) {
                   return formatCurrency(value);

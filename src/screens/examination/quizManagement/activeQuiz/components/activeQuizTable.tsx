@@ -18,6 +18,7 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -45,10 +46,10 @@ const QuizTable = ({
       <MenuList>
         {tabs.value === ScheduleExamStatus.Pending && (
           <>
-            <MenuItem onClick={() => onAttemptClick(row)}>
+            {/* <MenuItem onClick={() => onAttemptClick(row)}>
               <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
               Attempt Quiz
-            </MenuItem>
+            </MenuItem> */}
 
             <MenuItem onClick={() => {}}>
               <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
@@ -122,7 +123,7 @@ const QuizTable = ({
   return (
     <Box>
       {/* Tabs Section */}
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -153,7 +154,7 @@ const QuizTable = ({
             setOpenDialog(true);
           }}
           sx={{
-            mt: 0.5,
+            mt: 2,
           }}
         >
           Quiz
@@ -162,14 +163,6 @@ const QuizTable = ({
 
       <CustomizableTable
         tableId="quiz-table"
-        searchFieldProps={{
-          // placeholder: 'Search by Class, Division, Subject...',
-          label: 'Search by Class, Division, Subject...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Quiz Data Found{' '}
@@ -200,23 +193,20 @@ const QuizTable = ({
                   label: 'Divisions',
                   align: 'left',
                   filterType: 'string',
-                  render(value, row) {
-                    return (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {value?.length
-                          ? value.map((item: string) => (
-                              <Chip key={item} label={item} size="small" variant="outlined" />
-                            ))
-                          : '-'}
-                      </Box>
-                    );
-                  },
+                  render: (value) => <Box>{value.join(', ')}</Box>,
+                },
+                {
+                  id: 'quizTitle',
+                  label: 'Quiz Title',
+                  align: 'left',
+                  filterType: 'string',
+                  // minWidth: 120,
                 },
                 {
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  minWidth: 160,
+                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -229,7 +219,7 @@ const QuizTable = ({
                             backgroundColor: row.subjectColor,
                           }}
                         />
-                        <Typography variant="caption">
+                        <Typography variant="caption" sx={{ fontSize: '13px' }}>
                           {value} ({row.subjectCode})
                         </Typography>
                       </Box>
@@ -237,44 +227,43 @@ const QuizTable = ({
                   },
                 },
                 {
-                  id: 'quizTitle',
-                  label: 'Quiz Title',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
                   id: 'createdAt',
                   label: 'Created At',
                   align: 'left',
                   filterType: 'date',
+                  // minWidth: 120,
                 },
                 {
                   id: 'quizDate',
-                  label: 'Quiz Date',
+                  label: 'Start Date',
                   align: 'left',
                   filterType: 'date',
-                },
-                {
-                  id: 'quizTime',
-                  label: 'Quiz Time',
-                  align: 'left',
-                  filterType: 'date',
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizEndDate',
-                  label: 'Quiz End Date',
+                  label: 'End Date',
                   align: 'left',
                   filterType: 'date',
+                  // minWidth: 110,
+                },
+                {
+                  id: 'quizTime',
+                  label: 'Start Time',
+                  align: 'left',
+                  filterType: 'date',
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizEndTime',
-                  label: 'Quiz End Time',
+                  label: 'End Time',
                   align: 'left',
                   filterType: 'date',
+                  // minWidth: 110,
                 },
                 {
                   id: 'quizDuration',
-                  label: 'Quiz Duration',
+                  label: 'Duration',
                   align: 'left',
                   filterType: 'string',
                 },
@@ -283,12 +272,14 @@ const QuizTable = ({
                   label: 'Total Marks',
                   align: 'left',
                   filterType: 'number',
+                  // minWidth: 120,
                 },
                 {
                   id: 'passingMarks',
                   label: 'Passing Marks',
                   align: 'left',
                   filterType: 'number',
+                  // minWidth: 140,
                 },
                 {
                   id: 'action',
@@ -297,7 +288,7 @@ const QuizTable = ({
                   sticky: true,
                   isFilter: false,
                   align: 'left',
-                  minWidth: 100,
+                  minWidth: 70,
                   render(value, row) {
                     return (
                       <ThreeDotsActions
@@ -339,7 +330,7 @@ const QuizTable = ({
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  minWidth: 160,
+                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -435,12 +426,12 @@ const QuizTable = ({
                 },
                 {
                   id: 'actions',
-                  label: 'Action',
+                  label: 'Actions',
                   isSort: false,
                   sticky: true,
                   isFilter: false,
                   align: 'left',
-                  minWidth: 60,
+                  minWidth: 70,
                   render(value, row) {
                     return (
                       <ThreeDotsActions
@@ -456,7 +447,19 @@ const QuizTable = ({
       />
 
       <CustomDialog
-        title="View Student Submission"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Student Submission</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed submission information including student answers, marks obtained, and submission status"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewSubmissionDialog.value}
         handleClose={viewSubmissionDialog.onFalse}
         maxWidth="lg"

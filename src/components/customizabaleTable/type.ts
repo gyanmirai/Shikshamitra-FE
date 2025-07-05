@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { DatePickerProps } from '@mui/x-date-pickers';
-import type { TableRowProps, TextFieldProps } from '@mui/material';
+import type { TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
 export interface IColumnFilterAnchor {
@@ -33,6 +33,7 @@ export interface IData {
 }
 
 export interface ICustomizableTableProps {
+  tableContainerProps?: TableContainerProps;
   columns: IColumn[];
   data: IData[];
   serverSide?: boolean;
@@ -69,7 +70,12 @@ export type IParams = {
   filterType: string;
   dense: boolean;
   columnSearchTerm: string;
-  filters: Array<{ column: string; type: string; value: string; valueType: string }>;
+  filters: Array<{
+    column: string;
+    type: string;
+    value: string;
+    valueType: string;
+  }>;
   sorts: Array<{ column: string; direction: 'asc' | 'desc' }>;
   dateFilter: null | Dayjs;
   dateRangeFilter: { start: null | Dayjs; end: null | Dayjs };

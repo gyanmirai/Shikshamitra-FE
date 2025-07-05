@@ -1,12 +1,14 @@
 import dayjs from 'dayjs';
 
+import { allStudentIds } from './assignmentForm';
+
 import type { IAssignment } from '../type';
 
 export const getAssignmentInitialValues = (editData: IAssignment | null, classes: string) => ({
   title: editData?.title || '',
   description: editData?.description || '',
   class: editData?.class || classes || '',
-  totalMarks: editData?.totalMarks || 0,
+  totalMarks: editData?.totalMarks || '',
   divisions:
     editData?.divisions?.map((div) => ({
       divisionId: div.divisionId,
@@ -15,7 +17,11 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
       dueDate: div.dueDate ? dayjs(div.dueDate) : null,
       status: div.status ?? 0,
     })) || [],
-  students: editData?.students || [],
+  students: editData?.students?.length
+    ? editData.students
+    : editData?.divisions?.length
+      ? allStudentIds
+      : [],
   subjects: editData?.subjects || '',
   submissionType: editData?.submissionType || 0,
   // dueDate: dayjs(editData?.dueDate) || null,

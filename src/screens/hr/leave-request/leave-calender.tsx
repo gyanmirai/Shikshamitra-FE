@@ -6,11 +6,9 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { Box, Grid, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Grid, Button, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
@@ -23,6 +21,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import type { TabComponentType } from '.';
@@ -76,12 +75,25 @@ const LeaveCalender = (props: TabComponentType) => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const onChangeView = useCallback((newView: any) => {
     setOrganization(newView);
   }, []);
   return (
     <>
+      <Button
+        size="small"
+        color="inherit"
+        onClick={popover.onOpen}
+        variant="outlined"
+        // startIcon={<Iconify icon={selectedItem.icon} />}
+        endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
+        sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
+      >
+        {organization || 'Organization'}
+      </Button>
       <CommonCalender
         data={calendarData}
         isLoading={isLoading}
@@ -107,23 +119,23 @@ const LeaveCalender = (props: TabComponentType) => {
           { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
           { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
         ]}
-        // renderCompToHeader={
-        //   <Button
-        //     size="small"
-        //     color="inherit"
-        //     onClick={popover.onOpen}
-        //     // startIcon={<Iconify icon={selectedItem.icon} />}
-        //     endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-        //     sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
-        //   >
-        //     {organization || 'Organization'}
-        //   </Button>
-        // }
+        validRange={{ start: currentYear?.startDate, end: currentYear?.endDate }}
       />
       <CustomDialog
         open={!!currentDateClick}
         handleClose={() => setCurrentDateClick(null)}
-        title="Leave Request Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Leave Request Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Displays detailed information about the employee’s leave request, including type, dates, reason, and approval status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <LeaveRequestForm editData={editData} />
       </CustomDialog>
@@ -156,7 +168,7 @@ const LeaveCalender = (props: TabComponentType) => {
 export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => {
-  const isView = useBoolean(false);
+  const isView = useBoolean();
   return (
     <Box sx={{ p: 2 }} bgcolor="background.neutral">
       <Grid container spacing={3}>
@@ -292,7 +304,7 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </>
         )}
       </Grid>
-      <CustomDialog open={isView.value} handleClose={isView.onFalse} title="Document">
+      {/* <CustomDialog open={isView.value} handleClose={isView.onFalse} title="Document">
         <Box sx={{ p: 2 }} bgcolor="background.neutral">
           <iframe
             src={convertBase64Format(editData?.attachment)}
@@ -301,7 +313,7 @@ export const LeaveRequestForm = ({ editData }: any) => {
             title="Document"
           />
         </Box>
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };

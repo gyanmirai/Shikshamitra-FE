@@ -15,37 +15,42 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
-import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 
 import type { ISubjectDetail } from '../type';
 
 const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%' }}>
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={8}>
-        {/* <Typography
-              variant="subtitle1"
-              gutterBottom
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <Iconify
-                icon="mdi:information-outline"
-                sx={{ mr: 1, height: '22px', width: '22px' }}
+    <Grid container spacing={2} height="100%">
+      <Grid
+        item
+        xs={12}
+        md={8}
+        sx={{ mt: 0, pt: 0, pl: 0, pb: 2, height: '100%', overflow: 'auto' }}
+      >
+        <Card sx={{ height: '100%', boxShadow: 0, border: 'none' }}>
+          <Scrollbar sx={{ height: '100%', px: 0, pr: 2 }}>
+            <CardContent sx={{ p: 0 }}>
+              {' '}
+              {/* Adjust padding here */}
+              <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
+              <DetailRow
+                label="Description"
+                value={subject?.description}
+                icon="mdi:text-box-outline"
               />
-              Basic Information
-            </Typography>
-            <Divider sx={{ mb: 2 }} /> */}
-
-        <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
-        <DetailRow label="Description" value={subject?.description} icon="mdi:text-box-outline" />
-        <DetailRow
-          label="Prerequisites"
-          value={subject?.prerequisites}
-          icon="mdi:alert-decagram-outline"
-        />
-        <DetailRow label="Learning Goal" value={subject?.learningGoal} icon="mdi:target" />
+              <DetailRow
+                label="Prerequisites"
+                value={subject?.prerequisites}
+                icon="mdi:alert-decagram-outline"
+              />
+              <DetailRow label="Learning Goal" value={subject?.learningGoal} icon="mdi:target" />
+            </CardContent>
+          </Scrollbar>
+        </Card>
       </Grid>
 
       <Grid item xs={12} md={4}>
@@ -144,94 +149,94 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
             </Box>
 
             {/* Secondary Teachers */}
-            <Typography variant="subtitle2" gutterBottom>
-              Secondary Teacher
-            </Typography>
+            <Typography variant="subtitle2">Secondary Teacher</Typography>
 
-            {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
-              subject?.secondaryTeacher.map((teacher: TeacherProfile, idx: number) => (
-                <ListItem
-                  key={idx}
-                  // disablePadding
-                  sx={{
-                    borderRadius: '8px',
-                    p: 1,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    boxShadow: 3,
-                    my: 1,
-                  }}
-                >
-                  <ListItemAvatar>
-                    <TeacherHoverProfile
-                      avatarComp={
-                        <Badge
-                          key={teacher.status}
-                          overlap="circular"
-                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                          badgeContent={
-                            <Box
-                              sx={{
-                                width: 12,
-                                height: 12,
-                                borderRadius: '50%',
-                                border: '2px solid #fff',
-                                bgcolor:
-                                  teacher.status === 'Active'
-                                    ? 'success.main'
-                                    : teacher.status === 'Inactive'
-                                      ? 'warning.main'
-                                      : teacher.status === 'Left'
-                                        ? 'error.main'
-                                        : teacher.status === 'Retired'
-                                          ? 'grey.500'
-                                          : 'grey.300',
-                              }}
+            <Scrollbar sx={{ height: '200px' }}>
+              {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
+                subject?.secondaryTeacher.map((teacher: TeacherProfile, idx: number) => (
+                  <ListItem
+                    key={idx}
+                    // disablePadding
+                    sx={{
+                      borderRadius: '8px',
+                      p: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      boxShadow: 3,
+                      my: 1,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <TeacherHoverProfile
+                        avatarComp={
+                          <Badge
+                            key={teacher.status}
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  border: '2px solid #fff',
+                                  bgcolor:
+                                    teacher.status === 'Active'
+                                      ? 'success.main'
+                                      : teacher.status === 'Inactive'
+                                        ? 'warning.main'
+                                        : teacher.status === 'Left'
+                                          ? 'error.main'
+                                          : teacher.status === 'Retired'
+                                            ? 'grey.500'
+                                            : 'grey.300',
+                                }}
+                              />
+                            }
+                          >
+                            <Avatar
+                              src={teacher.name}
+                              alt={teacher.name}
+                              sx={{ width: 36, height: 36, cursor: 'pointer' }}
                             />
-                          }
-                        >
-                          <Avatar
-                            src={teacher.name}
-                            alt={teacher.name}
-                            sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                          />
-                        </Badge>
+                          </Badge>
+                        }
+                        teacher={{
+                          name: teacher.name,
+                          avatarUrl: teacher.avatarUrl,
+                          designation: teacher.designation,
+                          department: teacher.department,
+                          class: teacher.class,
+                          status: teacher.status,
+                          division: teacher.division,
+                          dailyStatus: teacher.dailyStatus,
+                          email: teacher.email,
+                          experience: teacher.experience,
+                          qualification: teacher.qualification,
+                          subjects: teacher.subjects,
+                        }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography variant="body2" sx={{ mb: -1 }}>
+                          {teacher.name}
+                        </Typography>
                       }
-                      teacher={{
-                        name: teacher.name,
-                        avatarUrl: teacher.avatarUrl,
-                        designation: teacher.designation,
-                        department: teacher.department,
-                        class: teacher.class,
-                        status: teacher.status,
-                        division: teacher.division,
-                        dailyStatus: teacher.dailyStatus,
-                        email: teacher.email,
-                        experience: teacher.experience,
-                        qualification: teacher.qualification,
-                        subjects: teacher.subjects,
-                      }}
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {teacher.department}
+                        </Typography>
+                      }
                     />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Typography variant="body2" sx={{ mb: -1 }}>
-                        {teacher.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography variant="caption" color="text.secondary">
-                        {teacher.department}
-                      </Typography>
-                    }
-                  />
-                </ListItem>
-              ))
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No secondary teachers assigned
-              </Typography>
-            )}
+                  </ListItem>
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No secondary teachers assigned
+                </Typography>
+              )}
+            </Scrollbar>
           </CardContent>
         </Card>
       </Grid>
@@ -355,15 +360,6 @@ export const TeacherHoverProfile: React.FC<{
               variant="outlined"
               sx={{ height: 20, fontSize: '0.75rem' }}
             />
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary">
-              Qualification :{' '}
-            </Typography>
-            <Typography variant="caption" color="text.primary">
-              {teacher.qualification}
-            </Typography>
           </Box>
         </Box>
       </Box>

@@ -72,7 +72,6 @@ export interface IFinanceAddBudgetSubcategoryInterface {
 
 export interface IFinanceAddBudgetSubcategoryDialogProps {
   data: IFinanceAddBudgetSubcategoryInterface | null;
-  categories: { id: string; name: string }[]; // List of categories for dropdown
   isEditMode: boolean;
   onClose: () => void;
   onSave: (formValues: IFinanceAddBudgetSubcategoryInterface) => void;

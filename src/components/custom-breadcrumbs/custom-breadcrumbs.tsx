@@ -49,7 +49,13 @@ export function CustomBreadcrumbs({
       )}
       {heading}{' '}
       {description && (
-        <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
+        <CustomTooltip
+          arrow
+          placement="right"
+          sx={{ textAlign: 'justify' }}
+          title={description}
+          {...tooltipProps}
+        >
           <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
         </CustomTooltip>
       )}
@@ -57,7 +63,7 @@ export function CustomBreadcrumbs({
   );
   if (isBack) {
     // @ts-ignore
-    slotProps.breadcrumbs.pl = '52px';
+    slotProps.breadcrumbs.pl = '47px';
   }
   const renderLinks = (
     <Breadcrumbs separator={<Separator />} sx={slotProps?.breadcrumbs} {...other}>

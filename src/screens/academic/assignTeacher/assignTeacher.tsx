@@ -2,64 +2,72 @@
 
 import type { Division, Standards } from 'src/types/school';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-import { Box } from '@mui/material';
+import { Save } from '@mui/icons-material';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const AssignTeacher = () => {
-  // Dialog state for assign teacher modal
   const assignTeacherDialog = useBoolean();
+  const resetConfirmDialog = useBoolean();
+  const saveConfirmDialog = useBoolean();
 
-  // Fetch class data using custom query hook
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // State for selected class
   const [classes, setClasses] = useState('');
-
-  // State for selected division
   const [division, setDivision] = useState('');
-
-  // State for available division options based on selected class
+  const [organization, setOrganization] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  // State to track selected students for notifications
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
-
-  // Dialog state for sending instant notifications
-  const sendInstantNotificationDialogValue = useBoolean(); // State to track if in edit mode
+  const [originalTeacherAssignments, setOriginalTeacherAssignments] = useState<{
+    [key: number]: string;
+  }>({});
+  const [focusedCells, setFocusedCells] = useState<number[]>([]);
+  const sendInstantNotificationDialogValue = useBoolean();
   const [isEdit, setIsEdit] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Update division options and selected division when class data or selected class changes
+  const [availableTeachers] = useState([
+    'Sharma Priya Rajesh',
+    'Patel Amit Kumar',
+    'Singh Neha Raj',
+    'Gupta Rahul Mohan',
+    'Verma Anita Suresh',
+    'Kumar Deepak Prakash',
+    'Mishra Pooja Dinesh',
+    'Joshi Vikram Shyam',
+  ]);
+
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
-        // If a class is selected, find the corresponding class data
         const selectedClass = classData.items.find((i: Standards) => i.id === classes);
-        // Set division options based on selected class
         setDivisionOptions(selectedClass?.divisions || []);
-        // Set first division as default if divisions exist
         if (selectedClass?.divisions?.length) {
           setDivision(selectedClass.divisions[0].id);
         }
       } else {
-        // If no class is selected, use the first class as default
         const firstClass = classData.items[0];
         setClasses(firstClass.id);
-        // Set division options based on first class
         setDivisionOptions(firstClass?.divisions || []);
-        // Set first division as default if divisions exist
         if (firstClass?.divisions?.length) {
           setDivision(firstClass.divisions[0].id);
         }
@@ -67,36 +75,71 @@ const AssignTeacher = () => {
     }
   }, [classData, classes]);
 
-  // Mock data for table display
   const [tableData, setTableData] = useState([
-    {
-      className: '1',
-      division: 'A',
-      classTeacher: '',
-    },
-    {
-      className: '1',
-      division: 'B',
-      classTeacher: '',
-    },
-    {
-      className: '3',
-      division: 'C',
-      classTeacher: '',
-    },
-    {
-      className: '4',
-      division: 'D',
-      classTeacher: '',
-    },
+    { className: '1', division: 'A', classTeacher: '' },
+    { className: '1', division: 'B', classTeacher: '' },
+    { className: '3', division: 'C', classTeacher: '' },
+    { className: '4', division: 'D', classTeacher: '' },
   ]);
 
-  // Handler function to show instant notification dialog when triggered
+  const handleTeacherChange = (val: string, rowIndex: number) => {
+    const newTableData = [...tableData];
+    if (!originalTeacherAssignments[rowIndex]) {
+      setOriginalTeacherAssignments((prev) => ({
+        ...prev,
+        [rowIndex]: newTableData[rowIndex].classTeacher,
+      }));
+    }
+    newTableData[rowIndex].classTeacher = val;
+    setTableData(newTableData);
+    setHasChanges(true);
+
+    if (val) {
+      setFocusedCells((prev) => [...prev, rowIndex]);
+    } else {
+      setFocusedCells((prev) => prev.filter((cell) => cell !== rowIndex));
+    }
+  };
+
+  const handleReset = () => {
+    const newTableData = [...tableData];
+    Object.entries(originalTeacherAssignments).forEach(([index, originalTeacher]) => {
+      newTableData[Number(index)].classTeacher = originalTeacher;
+    });
+    setTableData(newTableData);
+    setOriginalTeacherAssignments({});
+    setFocusedCells([]);
+    setHasChanges(false);
+    resetConfirmDialog.onFalse();
+    shikshaMitraToast.success({
+      message: 'Class Teacher assignments have been reset successfully',
+    });
+  };
+
+  const handleSave = () => {
+    setOriginalTeacherAssignments({});
+    setFocusedCells([]);
+    setHasChanges(false);
+    saveConfirmDialog.onFalse();
+    shikshaMitraToast.success({ message: 'Class Teacher assignments have been save successfully' });
+  };
+
+  const getModifiedSubjects = () =>
+    Object.entries(originalTeacherAssignments).map(([index]) => {
+      const row = tableData[Number(index)];
+      return `${row.className}-${row.division}`;
+    });
+
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const getAvailableTeachers = (currentRow: any) =>
+    availableTeachers.filter(
+      (teacher) => !tableData.some((row) => row.classTeacher === teacher && row !== currentRow)
+    );
 
   return (
     <Box>
@@ -106,22 +149,53 @@ const AssignTeacher = () => {
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Class Teacher Assignment' },
         ]}
+        description="Assign teachers to specific classes and divisions, manage class teacher allocations."
         sx={{ px: 1, mb: 2 }}
       />
-      <CustomSelect
-        label="Select Organization"
-        options={[
-          { value: 'Pre Primary', label: 'Pre Primary' },
-          { value: 'Primary', label: 'Primary' },
-          { value: 'Secondary', label: 'Secondary' },
-          { value: 'Higher Secondary', label: 'Higher Secondary' },
-        ]}
-        value=""
-        onChange={(val) => {
-          // formik.setFieldValue('organization', val);
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+          ml: 1,
         }}
-        formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-      />
+      >
+        <CustomSelect
+          label="Organization"
+          options={[
+            { value: 'Pre Primary', label: 'Pre Primary' },
+            { value: 'Primary', label: 'Primary' },
+            { value: 'Secondary', label: 'Secondary' },
+            { value: 'Higher Secondary', label: 'Higher Secondary' },
+          ]}
+          value={organization}
+          onChange={(val) => {
+            setOrganization(val as string);
+          }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+        />
+        <Box display="flex" gap={2} justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            onClick={resetConfirmDialog.onTrue}
+            size="small"
+            disabled={!hasChanges}
+          >
+            Reset
+          </Button>
+          <Button
+            startIcon={<Save />}
+            variant="contained"
+            size="small"
+            onClick={saveConfirmDialog.onTrue}
+            disabled={!hasChanges}
+          >
+            Save
+          </Button>
+        </Box>
+      </Box>
 
       <CustomizableTable
         onSendNotification={handlerSendNotification}
@@ -129,42 +203,6 @@ const AssignTeacher = () => {
         tableId="assignTeacherTable"
         noDataText={<>No Division Data Found Search By Organization and Class</>}
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   isSort: false,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             id: 'className',
             label: 'Class',
@@ -176,23 +214,52 @@ const AssignTeacher = () => {
           {
             id: 'classTeacher',
             label: 'Class Teacher',
-            render(value, row) {
-              return (
-                <CustomSelect
-                  label="Class Teacher"
-                  options={[
-                    { value: 'ABC', label: 'ABC' },
-                    { value: 'XYZ', label: 'XYZ' },
-                    { value: 'PQR', label: 'PQR' },
-                  ]}
-                  value=""
-                  onChange={(val) => {
-                    // formik.setFieldValue('organization', val);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                />
-              );
-            },
+            isSort: false,
+            isFilter: false,
+            render: (value, row: any) => (
+              <Autocomplete
+                options={getAvailableTeachers(row)}
+                value={row.classTeacher}
+                onChange={(event, newValue) =>
+                  handleTeacherChange(newValue || '', tableData.indexOf(row))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Class Teacher"
+                    fullWidth
+                    sx={{
+                      maxWidth: '280px',
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: focusedCells.includes(tableData.indexOf(row))
+                            ? 'primary.main'
+                            : 'rgba(0,0,0,0.23)',
+                          borderWidth: focusedCells.includes(tableData.indexOf(row)) ? 2 : 1,
+                        },
+                        '&:hover fieldset': {
+                          borderColor: focusedCells.includes(tableData.indexOf(row))
+                            ? 'primary.main'
+                            : undefined,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: focusedCells.includes(tableData.indexOf(row))
+                            ? 'primary.main'
+                            : undefined,
+                        },
+                      },
+                    }}
+                  />
+                )}
+                size="small"
+                ListboxProps={{
+                  style: {
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  },
+                }}
+              />
+            ),
           },
         ]}
         data={tableData}
@@ -206,78 +273,47 @@ const AssignTeacher = () => {
           userList={selectedStudents}
         />
       )}
+
+      <ConfirmDialog
+        title="Reset"
+        open={resetConfirmDialog.value}
+        onClose={resetConfirmDialog.onFalse}
+        content="Are you sure you want to reset the selected changes?"
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            onClick={handleReset}
+            size="small"
+          >
+            Reset
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        title="Save"
+        open={saveConfirmDialog.value}
+        onClose={saveConfirmDialog.onFalse}
+        content={
+          <>
+            Are you sure you want to save the <strong>{getModifiedSubjects().join(', ')}</strong>{' '}
+            changes?
+          </>
+        }
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        }
+      />
     </Box>
   );
 };
 
 export default AssignTeacher;
-
-// interface TeacherData {
-//   teacherName: string;
-// }
-
-// interface AssignTeacherFormProps {
-//   onSubmit: (values: any) => void;
-//   onClose: () => void;
-//   data: TeacherData | null;
-//   isEdit: boolean;
-// }
-
-// const AssignTeacherForm: React.FC<AssignTeacherFormProps> = ({
-//   onSubmit,
-//   onClose,
-//   data,
-//   isEdit,
-// }) => {
-//   const validationSchema = Yup.object().shape({
-//     teacherName: Yup.string().required('Teacher Name is Required'),
-//   });
-
-//   const formik = useFormik({
-//     initialValues: {
-//       teacherName: data?.teacherName || '',
-//     },
-//     validationSchema,
-//     enableReinitialize: true,
-//     onSubmit: (values) => {
-//       onSubmit(values);
-//     },
-//   });
-//   return (
-//     <Box display="flex" flexDirection="column" gap={1}>
-//       <form onSubmit={formik.handleSubmit}>
-//         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
-//           <Grid container spacing={1}>
-//             <Grid item xs={12}>
-//               <ShakingTextField
-//                 error={!!(formik.touched.teacherName && formik.errors.teacherName) || false}
-//               >
-//                 <CustomSelect
-//                   label="Teacher Name"
-//                   options={[
-//                     { value: 'ABC', label: 'ABC' },
-//                     { value: 'XYZ', label: 'XYZ' },
-//                     { value: 'PQR', label: 'PQR' },
-//                   ]}
-//                   onChange={(val) => {
-//                     formik.setFieldValue('teacherName', val);
-//                   }}
-//                   value={formik.values.teacherName}
-//                   formControlProps={{
-//                     sx: { width: '100%' },
-//                   }}
-//                 />
-//               </ShakingTextField>
-//             </Grid>
-//           </Grid>
-//         </Scrollbar>
-//         <DialogActions sx={{ px: 0 }}>
-//           <Button onClick={onClose}>Cancel</Button>
-//           <Button type="submit" variant="contained">
-//             {isEdit ? 'Update' : 'Assign'}
-//           </Button>
-//         </DialogActions>
-//       </form>
-//     </Box>
-//   );
-// };

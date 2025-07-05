@@ -5,7 +5,9 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
@@ -15,6 +17,7 @@ import AddPaymentStatusDialog from '../dialogs/finance-add-payment-status-dialog
 const ConfigurePaymentStatusComponent = () => {
   // Dialog state for delete confirmation popup
   const dialogForDeleteConfirmation = useBoolean();
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   // Dialog state for edit/add payment status popup
   const editDialog = useBoolean();
   // State to track if we are in edit mode or add mode
@@ -50,10 +53,9 @@ const ConfigurePaymentStatusComponent = () => {
             isShowedDense={false}
             isPagination={false}
             isFilter={false}
-            isSearch={false}
             columns={[
               {
-                id: 'paymentStatusOptionName',
+                id: 'paymentStatusName',
                 label: 'Payment Status',
                 render(value, row) {
                   return (
@@ -65,22 +67,24 @@ const ConfigurePaymentStatusComponent = () => {
               },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
                 sticky: true,
-                align: 'center',
-                minWidth: 100,
-                render(_, value) {
+                align: 'left',
+                minWidth: 50,
+                render(value, row) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
                       showDeleteIcon
                       handleDeleteClick={() => {
+                        setSelectedEntry(row);
                         dialogForDeleteConfirmation.onTrue();
                       }}
                       showEditIcon
                       handleEditClick={() => {
+                        setSelectedEntry(row);
                         editDialog.onTrue();
                         setIsEdit(true);
                       }}
@@ -89,47 +93,79 @@ const ConfigurePaymentStatusComponent = () => {
                 },
               },
             ]}
-            data={[]}
+            data={[
+              {
+                id: 1,
+                paymentStatusName: 'paid',
+              },
+              {
+                id: 2,
+                paymentStatusName: 'pending',
+              },
+              {
+                id: 3,
+                paymentStatusName: 'overdue',
+              },
+              {
+                id: 4,
+                paymentStatusName: 'cancelled',
+              },
+            ]}
           />
         </Grid>
       </Grid>
-      {editDialog.value && (
-        <CustomDialog
-          open={editDialog.value}
-          handleClose={() => {
+
+      <CustomDialog
+        open={editDialog.value}
+        handleClose={() => {
+          editDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isEdit ? 'Update Payment Status' : 'Add Payment Status'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Configure payment status options like 'Paid', 'Pending', 'Overdue' etc. These statuses help track and manage the payment lifecycle of fees and other financial transactions."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <AddPaymentStatusDialog
+          onClose={() => {
             editDialog.onFalse();
           }}
-          title={isEdit ? 'Edit Payment Status' : 'Add Payment Status'}
-          maxWidth="sm"
-        >
-          <AddPaymentStatusDialog
-            onClose={() => {
-              editDialog.onFalse();
-            }}
-            isEditMode={false}
-            data={null}
-            onSave={() => {
-              editDialog.onFalse();
-            }}
-          />
-        </CustomDialog>
-      )}
-
-      {dialogForDeleteConfirmation.value && (
-        <ConfirmDialog
-          open={dialogForDeleteConfirmation.value}
-          onClose={() => {
-            dialogForDeleteConfirmation.onFalse();
+          isEditMode={isEdit}
+          data={selectedEntry}
+          onSave={() => {
+            setSelectedEntry(null);
+            editDialog.onFalse();
           }}
-          title="Delete Item"
-          content="Are you sure you want to delete?"
-          action={
-            <LoadingButton variant="contained" color="error" onClick={() => {}}>
-              Yes
-            </LoadingButton>
-          }
         />
-      )}
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={dialogForDeleteConfirmation.value}
+        onClose={() => {
+          dialogForDeleteConfirmation.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete <strong>{selectedEntry?.paymentStatusName}</strong>{' '}
+            payment status?
+          </>
+        }
+        action={
+          <LoadingButton variant="contained" color="error" size="small" onClick={() => {}}>
+            Yes
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

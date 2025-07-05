@@ -33,16 +33,14 @@ import type { TeacherProfile, ISubjectFormProps, ISubjectFormValues } from './ty
 
 // Enhanced subject options with Core and Elective groups
 const subjectOptions = [
-  // Core subjects
   { label: 'Mathematics', value: 'Mathematics', type: 'Core', subjectColor: '#DEB887' },
   { label: 'Science', value: 'Science', type: 'Core', subjectColor: '#00CED1' },
   { label: 'Social Science', value: 'Social Science', type: 'Core', subjectColor: '#B22222' },
   { label: 'English', value: 'English', type: 'Core', subjectColor: '#4682B4' },
   { label: 'Gujarati', value: 'Gujarati', type: 'Core', subjectColor: '#3CB371' },
-  // Elective subject groups
   {
-    label: 'Elective Subject 1',
-    value: 'Elective Subject 1',
+    label: 'Tech & Fitness Group',
+    value: 'Tech & Fitness Group',
     type: 'Elective',
     subjects: [
       { name: 'Computer', code: 'COMP101', subjectColor: '#4169E1' },
@@ -50,8 +48,8 @@ const subjectOptions = [
     ],
   },
   {
-    label: 'Elective Subject 2',
-    value: 'Elective Subject 2',
+    label: 'Language Enrichment Group',
+    value: 'Language Enrichment Group',
     type: 'Elective',
     subjects: [
       { name: 'Sanskrit', code: 'SNSK101', subjectColor: '#DA70D6' },
@@ -302,11 +300,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       };
       if (isDraft) {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Draft Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} save as draft successfully for class ${values.className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.subjectName} Published Successfully to Class ${selectedClass}`,
+          message: `${values.subjectName} published successfully for class ${values.className}`,
         });
       }
 
@@ -504,7 +502,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Core/Elective Subject *"
+                        label="Subject *"
                         name="subjectName"
                         error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                         helperText={formik.touched.subjectName && formik.errors.subjectName}
@@ -604,7 +602,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
                   onClick={() => {
                     setIsDraft(true);
                     formik.handleSubmit();

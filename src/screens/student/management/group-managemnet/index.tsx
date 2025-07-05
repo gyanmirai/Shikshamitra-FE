@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import {
   Box,
   Stack,
@@ -13,6 +12,7 @@ import {
   MenuItem,
   MenuList,
   TextField,
+  Typography,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -40,11 +40,11 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IGroup } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const GroupManagement = ({
@@ -54,6 +54,8 @@ const GroupManagement = ({
   tableData: IInquiryData[];
   isLoading: boolean;
 }) => {
+  console.log('🚀 ~ tableData:', tableData);
+
   // State to store query parameters
   const [queryParams, setQueryParams] = useState({
     SkipCount: 0,
@@ -122,8 +124,8 @@ const GroupManagement = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
-        <Button
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 6 }}>
+        {/* <Button
           sx={{ width: '180px' }}
           size="small"
           startIcon={<Add />}
@@ -131,7 +133,7 @@ const GroupManagement = ({
           onClick={dialog.onTrue}
         >
           House
-        </Button>
+        </Button> */}
       </Box>
       <ConfirmDialog
         open={confirm.value}
@@ -184,6 +186,9 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveDivisionLeaderLoading}
             color="error"
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeDivisionLeader(editData?.groupMembership?.groupId).unwrap();
@@ -220,6 +225,7 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveLeaderLoading}
             color="error"
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeLeader(editData?.groupMembership?.groupId).unwrap();
@@ -256,6 +262,9 @@ const GroupManagement = ({
             variant="contained"
             loading={isRemoveStudentFromHouse}
             color="error"
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="material-symbols:delete-outline" width={18} />}
             onClick={async () => {
               try {
                 await removeStudentFromHouse({
@@ -284,7 +293,20 @@ const GroupManagement = ({
           isConfirmForDivisionLeader.onFalse();
           setEditData(null);
         }}
-        title="Assign Division Leader"
+        // title="Assign Division Leader"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Division Leader</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
             Are you sure want to Assign Division Leader to <b>{`${editData?.name}`}</b> ?
@@ -294,6 +316,9 @@ const GroupManagement = ({
           <LoadingButton
             variant="contained"
             loading={isAssignDivisionLeaderLoading}
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="mdi:account-plus" width={18} />}
             onClick={async () => {
               try {
                 await assignDivisionLeader({
@@ -322,16 +347,31 @@ const GroupManagement = ({
           isConfirmForMainLeader.onFalse();
           setEditData(null);
         }}
-        title="Assign Leader"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign House Leader</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         content={
           <>
-            Are you sure want to Assign Leader to <b>{`${editData?.name}`}</b> ?
+            Are you sure want to Assign House Leader to <b>{`${editData?.name}`}</b> ?
           </>
         }
         action={
           <LoadingButton
             variant="contained"
             loading={isAssignMainLeaderLoading}
+            size="small"
+            sx={{ px: 2, minWidth: 'auto' }}
+            startIcon={<Iconify icon="mdi:account-plus" width={18} />}
             onClick={async () => {
               try {
                 await assignMainLeader({
@@ -360,36 +400,54 @@ const GroupManagement = ({
         noDataText="No Student data available"
         isLoading={isLoading}
         columns={[
-          // { id: 'srNo', label: 'Sr. No.' },
-          { id: 'name', label: 'Name', align: 'left', minWidth: '160px', sticky: true },
-          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '120px' },
-          { id: 'grNoRecord', label: 'GR No.', align: 'left', minWidth: '110px' },
+          {
+            id: 'name',
+            label: 'Name',
+            align: 'left',
+            minWidth: '160px',
+            sticky: true,
+            render: (value) => value || '-',
+          },
+          {
+            id: 'rollNo',
+            label: 'Roll No.',
+            align: 'left',
+            minWidth: '120px',
+            render: (value) => value || '-',
+          },
+          {
+            id: 'grNoRecord',
+            label: 'GR No.',
+            align: 'left',
+            minWidth: '110px',
+            render: (value) => value || '-',
+          },
           {
             id: 'groupMembership.groupName',
             label: 'House Name',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
-              return (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  {value ? <Label color="info">{value} House</Label> : <Box />}
-                </Box>
-              );
-            },
+            // render(value) {
+            //   return (
+            //     <Box
+            //       sx={{
+            //         display: 'flex',
+            //         gap: 1,
+            //         alignItems: 'center',
+            //         justifyContent: 'space-between',
+            //       }}
+            //     >
+            //       {value ? <Label color="info">{value} House</Label> : <Typography>-</Typography>}
+            //     </Box>
+            //   );
+            // },
           },
           {
             id: 'groupMembership.isDivisionLeader',
             label: 'Division Leader',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return (
                 <Box
                   sx={{
@@ -399,7 +457,7 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  {value ? <Label color="success">Yes</Label> : <Label color="default">No</Label>}
                 </Box>
               );
             },
@@ -409,7 +467,7 @@ const GroupManagement = ({
             label: 'House Leader',
             minWidth: '160px',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return (
                 <Box
                   sx={{
@@ -419,15 +477,15 @@ const GroupManagement = ({
                     justifyContent: 'space-between',
                   }}
                 >
-                  {value ? <Label color="success">Yes</Label> : <Box />}
+                  {value ? <Label color="success">Yes</Label> : <Label color="default">No</Label>}
                 </Box>
               );
             },
           },
           {
             id: 'actions',
-            label: 'Actions',
-            minWidth: '80px',
+            label: 'Action',
+            minWidth: '40px',
             align: 'left',
             sticky: true,
             isFilter: false,
@@ -488,7 +546,6 @@ const GroupManagement = ({
                           Assign Division Leader
                         </MenuItem>
                       )}
-
                       {row?.groupMembership?.isLeader ? (
                         <MenuItem
                           onClick={() => {
@@ -505,7 +562,7 @@ const GroupManagement = ({
                             if (!row.groupMembership) {
                               shikshaMitraToast.error({ message: 'Please assign house first' });
                               popover.onClose();
-
+                              console.log('🚀 ~ tableData:', tableData);
                               return;
                             }
                             setEditData(row as IInquiryData);
@@ -635,7 +692,19 @@ const GroupManagement = ({
           setEditData(null);
           dispatch(StudentApi.util.invalidateTags(['Student']));
         }}
-        title="Assign House"
+        // title="Assign House"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign House</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Assign students to houses for inter-house competitions, events, and administrative grouping within the school."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AssignStudentForm
           editData={editData}
@@ -671,7 +740,7 @@ const GroupManagementForm = ({
   editData,
   handleClose,
 }: {
-  editData: IGroup | null;
+  editData: IInquiryData | null;
   handleClose: () => void;
 }) => {
   // Hooks for adding and updating student groups using custom query and mutation hook
@@ -723,7 +792,6 @@ const GroupManagementForm = ({
           size="small"
           value={formik.values.name}
           name="name"
-          placeholder="Enter House Name"
           label="House Name"
           autoFocus
           onChange={(e) => {
@@ -731,7 +799,7 @@ const GroupManagementForm = ({
             formik.setFieldValue('name', value);
           }}
         />
-        <DialogActions sx={{ p: 0 }}>
+        <DialogActions>
           <Button
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             size="small"
@@ -751,6 +819,25 @@ const GroupManagementForm = ({
           </LoadingButton>
         </DialogActions>
       </Stack>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading || isUpdateLoading}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+        >
+          {editData ? 'Update' : 'Add'}
+        </LoadingButton>
+      </DialogActions>
     </Box>
   );
 };
@@ -787,7 +874,6 @@ const AssignStudentForm = ({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
   });
-  console.log('🚀 ~ groupData:', groupData);
 
   /**
    * Formik instance for handling form state and validation
@@ -828,8 +914,8 @@ const AssignStudentForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-      <Stack spacing={2}>
+    <Box component="form" onSubmit={formik.handleSubmit}>
+      <Stack spacing={2} p={2}>
         <Autocomplete
           noOptionsText="No House Found"
           fullWidth
@@ -849,19 +935,29 @@ const AssignStudentForm = ({
               fullWidth
               size="small"
               label="Search House"
-              placeholder="Search House"
               error={formik.touched.house && Boolean(formik.errors.house?.id)}
               helperText={formik.touched.house && formik.errors.house?.id}
             />
           )}
         />
       </Stack>
-      <DialogActions sx={{ px: 0, pb: 0 }}>
-        <Button size="small" variant="outlined" onClick={handleClose}>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton size="small" type="submit" variant="contained" loading={isLoading}>
-          Assign
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading}
+          startIcon={<Iconify icon="mdi:account-plus" width={18} />}
+        >
+          assign
         </LoadingButton>
       </DialogActions>
     </Box>

@@ -48,17 +48,23 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setOpen(false);
+        setSelectedData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust delay as needed
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedData(null);
       addHomeworkTypeDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setOpen(false);
-      setSelectedData(null);
       addHomeworkTypeDialog.onFalse();
+      resetState();
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end">
@@ -91,7 +97,9 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
         open={addHomeworkTypeDialog.value}
         handleClose={() => {
           addHomeworkTypeDialog.onFalse();
-          setSelectedData(null);
+          setTimeout(() => {
+            setSelectedData(null);
+          }, 300); // Adjust delay if your dialog's animation is longer
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -99,12 +107,13 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
               {selectedData ? 'Update Homework Type' : 'Add Homework Type'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
                 selectedData
-                  ? 'You can update the homework type details including name and other information'
-                  : 'You can create a new homework type by entering the name and other required details'
+                  ? 'You can update the homework type details including name.'
+                  : 'You can create a new homework type by entering the name.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

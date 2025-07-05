@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -30,10 +31,10 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
 
   const formik = useFormik<IRoomCreationFormikValue>({
     initialValues: {
-      roomNumber: isEdit ? (data.roomNumber ?? 0) : 0,
+      roomNumber: isEdit ? (data.roomNumber ?? 0) : '',
       buildingName: isEdit ? (data.buildingName ?? '') : '',
-      floor: isEdit ? (data.floor ?? 0) : 0,
-      capacity: isEdit ? (data.capacity ?? 0) : 0,
+      floor: isEdit ? (data.floor ?? 0) : '',
+      capacity: isEdit ? (data.capacity ?? 0) : '',
     },
     validationSchema,
     onSubmit: (values) => {
@@ -45,12 +46,17 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
       if (!isEdit) {
         if (existingEntryIndex === -1) {
           setShowExistingEntryMessage(false);
+          onClose(null, true);
+          shikshaMitraToast.success({ message: 'Room updated successfully' });
           onSave(values);
         } else {
           setShowExistingEntryMessage(true);
         }
       } else {
-        onSave(values);
+        onClose(null, true);
+        shikshaMitraToast.success({ message: 'Room added successfully' });
+
+        // onSave(values);
       }
     },
   });
@@ -59,17 +65,23 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
+          <Scrollbar sx={{ p: 2, height: '150px' }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
                   <TextField
                     disabled={isEdit}
-                    label="Room Number *"
+                    label="Room No. *"
                     // placeholder="Enter Room Number"
                     size="small"
                     name="roomNumber"
                     type="number"
+                    inputProps={{ min: 0 }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.roomNumber}
                     onChange={formik.handleChange}
                     fullWidth
@@ -104,9 +116,15 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     disabled={isEdit}
                     name="floor"
                     label="Floor *"
+                    inputProps={{ min: 0 }}
                     // placeholder="Enter Floor"
                     size="small"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.floor}
                     onChange={formik.handleChange}
                     fullWidth
@@ -123,7 +141,13 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     label="Room Capacity *"
                     // placeholder="Enter Room Capacity"
                     type="number"
+                    inputProps={{ min: 0 }}
                     size="small"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.capacity}
                     onChange={formik.handleChange}
                     fullWidth
@@ -134,7 +158,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Close />}
               onClick={() => {
@@ -146,7 +170,13 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={isEdit ? 16 : 20}
+                  height={isEdit ? 16 : 20}
+                />
+              }
               type="submit"
               size="small"
               variant="contained"

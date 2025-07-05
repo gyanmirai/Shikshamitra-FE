@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -60,7 +60,7 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
                 size="small"
                 fullWidth
                 name="paymentMethodName"
-                label="Payment Method Name *"
+                label="Payment Method *"
                 value={values.paymentMethodName}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -72,24 +72,24 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
         </Grid>
       </Scrollbar>
 
-      <DialogActions>
-        <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={isSubmitting}
-          >
-            {isEditMode ? 'Update' : 'Submit'}
-          </Button>
-        </Box>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          disabled={isSubmitting}
+        >
+          {isEditMode ? 'Update' : 'Submit'}
+        </Button>
       </DialogActions>
     </form>
   );

@@ -14,7 +14,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({ data, onDele
     columns={[
       {
         id: 'assignmentTypeName',
-        label: 'Assignment Type Name',
+        label: 'Name',
         align: 'left',
       },
       {

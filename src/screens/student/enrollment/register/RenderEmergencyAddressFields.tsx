@@ -42,7 +42,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine1"
           label="Building No./Flat/House No."
-          value={formik.values.emergencyAddressLine1}
+          value={formik.values.emergencyAddressLine1 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine1 && Boolean(formik.errors.emergencyAddressLine1)
@@ -57,7 +57,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine2"
           label="Area/Locality/Road Name"
-          value={formik.values.emergencyAddressLine2}
+          value={formik.values.emergencyAddressLine2 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine2 && Boolean(formik.errors.emergencyAddressLine2)
@@ -72,7 +72,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
           name="emergencyAddressLine3"
           label="Landmark"
-          value={formik.values.emergencyAddressLine3}
+          value={formik.values.emergencyAddressLine3 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.emergencyAddressLine3 && Boolean(formik.errors.emergencyAddressLine3)
@@ -90,6 +90,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             formik.setFieldValue('emergencyState', null);
             formik.setFieldValue('emergencyCountry', value);
           }}
+          disabled={!isEdit}
           error={formik.touched.emergencyCountry && Boolean(formik.errors.emergencyCountry)}
           helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
         />
@@ -101,6 +102,7 @@ const RenderEmergencyAddressFields = (props: any) => {
             formik.setFieldValue('emergencyCity', null);
             formik.setFieldValue('emergencyState', value);
           }}
+          disabled={!isEdit}
           error={formik.touched.emergencyState && Boolean(formik.errors.emergencyState)}
           helperText={formik.touched.emergencyState && formik.errors.emergencyState}
           countryValue={formik.values.emergencyCountry}
@@ -113,14 +115,21 @@ const RenderEmergencyAddressFields = (props: any) => {
           error={formik.touched.emergencyCity && Boolean(formik.errors.emergencyCity)}
           helperText={formik.touched.emergencyCity && formik.errors.emergencyCity}
           stateValue={formik.values.emergencyState}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
         <TextField
           name="emergencyPincode"
           disabled={!isEdit}
-          value={formik.values.emergencyPincode}
-          onChange={formik.handleChange}
+          value={formik.values.emergencyPincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('emergencyPincode', value);
+          }}
           error={formik.touched.emergencyPincode && Boolean(formik.errors.emergencyPincode)}
           helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
           fullWidth

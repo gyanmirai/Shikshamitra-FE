@@ -1,7 +1,8 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
+import { useState, useEffect } from 'react';
+import { m as motion, AnimatePresence } from 'framer-motion';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import {
@@ -21,13 +22,14 @@ import {
   FormControl,
   Autocomplete,
   FormHelperText,
+  LinearProgress,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fileToBase64 } from 'src/utils/file-to-base64';
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
@@ -52,16 +54,26 @@ export const SectionCard = ({
   title,
   children,
   headerContent = null,
+  isLoading = false,
 }: {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   headerContent?: React.ReactNode;
+  isLoading?: boolean;
 }) => (
-  <Paper sx={{ p: 2, mb: 3 }} elevation={6}>
-    <Box display="flex" justifyContent="space-between" alignItems="center" pb={2}>
-      <Typography variant="h6" color="primary.main">
-        {title}
-      </Typography>
+  <Paper sx={{ p: 2, mb: 3, position: 'relative', overflow: 'hidden' }} elevation={6}>
+    {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
+    <Box
+      display="flex"
+      justifyContent={title ? 'space-between' : 'end'}
+      alignItems="center"
+      pb={title || headerContent ? 2 : 0}
+    >
+      {title && (
+        <Typography variant="h6" color="primary.main">
+          {title}
+        </Typography>
+      )}
       {headerContent}
     </Box>
     <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
@@ -69,52 +81,106 @@ export const SectionCard = ({
     </Grid>
   </Paper>
 );
+// Motion variants for subtle slide
+const editButtonVariant = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -10 },
+};
 
+const actionButtonsVariant = {
+  hidden: { opacity: 0, x: 20 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 10 },
+};
 export const CardActions = ({
   isEdit,
   onCancel = () => {},
   onSave = () => {},
+  isLoading = false,
 }: {
   isEdit: UseBooleanReturn;
   onSave?: () => void;
   onCancel?: () => void;
-}) => (
-  <Box sx={{ display: 'flex', gap: 1 }}>
-    {!isEdit.value ? (
-      <CustomTooltip title="Edit" placement="top">
-        <IconButton onClick={isEdit.onTrue} title="Edit">
-          <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} onClick={isEdit.onTrue} />
-        </IconButton>
-      </CustomTooltip>
-    ) : (
-      <>
-        <CustomTooltip title="Save" placement="top">
-          <IconButton
-            onClick={() => {
-              // Handle save logic here
-              onSave();
-              isEdit.onFalse();
-            }}
-            title="Save Changes"
+  isLoading?: boolean;
+}) => {
+  const isNewLoading = isLoading && isEdit.value;
+  const [isClickOnSave, setIsClickOnSave] = useState<string>('no');
+  useEffect(() => {
+    if (isClickOnSave === 'yes' && !isLoading) {
+      isEdit.onFalse();
+      setIsClickOnSave('no');
+    }
+  }, [isClickOnSave, isEdit, isLoading]);
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', minHeight: 40 }}>
+      <AnimatePresence mode="wait">
+        {!isEdit.value && (
+          <motion.div
+            key="edit"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={editButtonVariant}
+            transition={{ duration: 0.3 }}
           >
-            <Iconify icon="lets-icons:save" sx={{ cursor: 'pointer' }} />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Cancel" placement="top">
-          <IconButton
-            onClick={() => {
-              onCancel();
-              isEdit.onFalse();
-            }}
-            title="Cancel"
+            <CustomTooltip title="Edit" placement="top">
+              <IconButton onClick={isEdit.onTrue} title="Edit">
+                <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} />
+              </IconButton>
+            </CustomTooltip>
+          </motion.div>
+        )}
+
+        {isEdit.value && (
+          <motion.div
+            key="actions"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={actionButtonsVariant}
+            transition={{ duration: 0.3 }}
+            style={{ display: 'flex', gap: 8 }}
           >
-            <Iconify icon="game-icons:cancel" sx={{ cursor: 'pointer' }} />
-          </IconButton>
-        </CustomTooltip>
-      </>
-    )}
-  </Box>
-);
+            <CustomTooltip title="Save" placement="top">
+              <IconButton
+                onClick={() => {
+                  onSave();
+                  setIsClickOnSave('yes');
+                }}
+                disabled={isNewLoading && isClickOnSave === 'yes'}
+                title="Save Changes"
+              >
+                <Iconify
+                  icon={
+                    isNewLoading && isClickOnSave === 'yes'
+                      ? 'eos-icons:loading'
+                      : 'lets-icons:save'
+                  }
+                  width={20}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </IconButton>
+            </CustomTooltip>
+
+            <CustomTooltip title="Cancel" placement="top">
+              <IconButton
+                onClick={() => {
+                  onCancel();
+                  isEdit.onFalse();
+                }}
+                title="Cancel"
+              >
+                <Iconify icon="game-icons:cancel" width={20} sx={{ cursor: 'pointer' }} />
+              </IconButton>
+            </CustomTooltip>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Box>
+  );
+};
 
 const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
@@ -122,57 +188,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
 
-  const handleBasicDetailCancel = () => {
-    formik.setFieldValue('photo', convertBase64Format(editData.profilePicture));
-    formik.setFieldValue('firstName', editData?.firstName);
-    formik.setFieldValue('middleName', editData?.middleName);
-    formik.setFieldValue('lastName', editData?.lastName);
-    formik.setFieldValue('shortName', editData?.shortName);
-    formik.setFieldValue('dob', dayjs(editData.dateOfBirth, 'YYYY-MM-DD'));
-    formik.setFieldValue('gender', editData.genderType);
-    formik.setFieldValue('maritalStatus', editData.maritalStatus);
-    formik.setFieldValue('castType', editData?.castType);
-    formik.setFieldValue('religion', editData?.religion);
-    formik.setFieldValue('bloodGroup', editData?.bloodGroup);
-    formik.setFieldValue('familyCast', editData?.familyCast);
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
-
-  const handleContactDetailCancel = () => {
-    formik.setFieldValue('email', editData?.email);
-    formik.setFieldValue('mobileNo', editData?.mobileNo);
-    formik.setFieldValue('secondaryMobileNo', editData?.secondaryMobileNo);
-  };
-
-  const handleProfessionalDetailCancel = () => {
-    formik.setFieldValue(
-      'dateOfJoining',
-      editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : dayjs()
-    );
-    formik.setFieldValue('employeeGroup', editData?.employeeGroup);
-    formik.setFieldValue('department', editData.department);
-    formik.setFieldValue('designation', editData?.designation);
-    formik.setFieldValue('role', editData?.role?.id);
-    formik.setFieldValue('organization', editData?.educationMediumStageId);
-    formik.setFieldValue('shift', editData?.shift?.id);
-  };
-
-  const handleAddressDetailCancel = () => {
-    formik.setFieldValue('addressLine1', editData?.address1);
-    formik.setFieldValue('addressLine2', editData?.address2);
-    formik.setFieldValue('city', { name: editData?.city?.name });
-    formik.setFieldValue('state', {
-      name: editData?.state?.name,
-      iscCode: editData?.state?.iscCode,
-    });
-    formik.setFieldValue('country', {
-      name: editData?.country?.name,
-      iscCode: editData?.country?.iscCode,
-    });
-    formik.setFieldValue('pincode', editData?.pinCode);
-  };
-
-  const handleSave = () => {
-    formik.submitForm();
+  const handleCancel = () => {
+    formik.resetForm();
   };
 
   return (
@@ -183,8 +204,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           !isMainForm && (
             <CardActions
               isEdit={isBasicDetailsEditable}
+              isLoading={formik.isSubmitting}
               onSave={handleSave}
-              onCancel={handleBasicDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -313,6 +335,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             <Grid item xs={12} md={4}>
               <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
                 <FormControl
+                  disabled={!isBasicDetailsEditable.value}
                   fullWidth
                   sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
                 >
@@ -320,7 +343,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     id="gender-radio-group"
                     sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
                   >
-                    Gender
+                    Gender *
                   </FormLabel>
                   <RadioGroup
                     row
@@ -411,7 +434,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
                     // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
-                    const newName = e.target.value[0].toUpperCase() + e.target.value.slice(1);
+                    const value = e?.target?.value?.replace(/[^A-Za-z\s]/g, '') || '';
+                    const newName = value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
                     formik.setFieldValue('familyCast', newName);
                   }}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
@@ -498,9 +522,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isContactDetailsEditable}
               onSave={handleSave}
-              onCancel={handleContactDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -517,10 +542,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               disabled={!isContactDetailsEditable.value}
               InputProps={{
                 startAdornment: (
-                  <>
-                    <Iconify icon="mdi-light:email" />{' '}
-                    <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                  </>
+                  <InputAdornment position="start">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Iconify icon="mdi-light:email" />
+                      <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                    </Box>
+                  </InputAdornment>
                 ),
               }}
             />
@@ -564,9 +591,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isProfessionalDetailsEditable}
               onSave={handleSave}
-              onCancel={handleProfessionalDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }
@@ -633,9 +661,19 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Department"
               {...formik.getFieldProps('department')}
               onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                formik.setFieldValue('department', newName);
+                const { value } = e.target;
+                if (/^[A-Za-z\s]*$/.test(value)) {
+                  const formattedValue = value
+                    .split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+                  formik.setFieldValue('department', formattedValue);
+                }
               }}
+              // onChange={(e) => {
+              //   const newName = capitalize(e.target.value);
+              //   formik.setFieldValue('department', newName);
+              // }}
               error={formik.touched.department && Boolean(formik.errors.department)}
               helperText={formik.touched.department && formik.errors.department}
               disabled={!isProfessionalDetailsEditable.value}
@@ -653,7 +691,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               {...formik.getFieldProps('designation')}
               onChange={(e) => {
                 const newName = capitalize(e.target.value);
-                formik.setFieldValue('designation', newName);
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('designation', newName);
+                }
               }}
               error={formik.touched.designation && Boolean(formik.errors.designation)}
               helperText={formik.touched.designation && formik.errors.designation}
@@ -678,9 +718,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
         headerContent={
           !isMainForm && (
             <CardActions
+              isLoading={formik.isSubmitting}
               isEdit={isAddressDetailsEditable}
               onSave={handleSave}
-              onCancel={handleAddressDetailCancel}
+              onCancel={handleCancel}
             />
           )
         }

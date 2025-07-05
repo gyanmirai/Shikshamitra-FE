@@ -63,13 +63,19 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetAfterClose = () => {
+      setTimeout(() => {
+        setSelectedStudent(null);
+        dispatch(setIsChanges(false));
+      }, 300); // Delay matches dialog exit animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      resetAfterClose();
     } else if (!isChanges) {
-      setSelectedStudent(null);
       viewSubmissionDialog.onFalse();
+      resetAfterClose();
     }
   };
 
@@ -84,7 +90,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         <MenuList>
           {/* Show 'Assign Grade' option only when marks are not assigned (marksStatus=0)
               but submission is completed (submissionStatus!=0) */}
-          {row.status === ScheduleExamStatus.Submitted && (
+          {row.status === ScheduleExamStatus['Needs Review'] && (
             <MenuItem
               onClick={() => {
                 setSelectedStudent(row);
@@ -93,7 +99,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               }}
             >
               {' '}
-              <Iconify icon="mdi:arrow-right-bold" sx={{ height: '16px', width: '16px' }} />
+              <Iconify icon="mdi:arrow-right-circle" />
               Give Feedback
             </MenuItem>
           )}
@@ -154,15 +160,23 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           { id: 'homeworkType', label: 'Type', align: 'left' },
           {
             id: 'submissionDate',
+            label: 'Submission Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: 160,
+          },
+          {
+            id: 'dueDate',
             label: 'Due Date',
             align: 'left',
-            minWidth: 100,
+            filterType: 'date',
+            minWidth: 140,
           },
           {
             id: 'feedback',
             label: 'Feedback',
             render: (value, row) => (
-              <CustomTooltip title={value || '-'} arrow>
+              <CustomTooltip title={value || '-'} arrow sx={{ textAlign: 'justify' }}>
                 <Typography
                   variant="caption"
                   fontSize="13px"
@@ -196,7 +210,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'actions',
             label: 'Action',
-            minWidth: 40,
+            minWidth: 50,
             isSort: false,
             isFilter: false,
             align: 'left',
@@ -217,9 +231,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '1',
             studentName: 'Sharma Priya Rajesh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '22-05-2025',
+            submissionDate: '20-05-2025',
+            dueDate: '25-05-2025',
             marks: 45,
             totalMarks: 50,
             feedback: 'Excellent analysis!',
@@ -230,9 +245,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '2',
             studentName: 'Kumar Arjun Dinesh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
             submissionDate: '21-05-2025',
+            dueDate: '25-05-2025',
             marks: 28,
             totalMarks: 30,
             feedback: 'Great understanding of concepts',
@@ -243,22 +259,24 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             rollNumber: '3',
             studentName: 'Gupta Ananya Suresh',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
             submissionDate: '23-05-2025',
+            dueDate: '25-05-2025',
             marks: 0,
             totalMarks: 40,
             feedback: '',
-            status: ScheduleExamStatus.Submitted,
+            status: ScheduleExamStatus['Needs Review'],
           },
           {
             id: '4',
             rollNumber: '4',
             studentName: 'Singh Rohan Vikram',
             homework: selectedHomework?.value || '',
-            homeworkType: selectedHomework?.label || '',
+            homeworkType: 'Written Assignment',
             submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '22-05-2025',
+            submissionDate: '24-05-2025',
+            dueDate: '25-05-2025',
             marks: 24,
             totalMarks: 25,
             feedback: 'Excellent analysis!',
@@ -278,11 +296,38 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       <CustomDialog
         open={viewSubmissionDialog.value}
         handleClose={handleCloseDialog}
-        title={selectedStudent ? 'Edit Feedback' : 'Add Feedback'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedStudent?.feedback ? 'Edit Feedback' : 'Add Feedback'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedStudent?.feedback
+                  ? 'You can modify the feedback given to the student for their homework submission.'
+                  : "You can provide feedback for the student's homework submission."
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="sm"
       >
-        {selectedStudent?.submissionType === 'file_upload' ? (
-          <AssignGrade data={selectedStudent} onClose={handleClose} isEdit />
+        {selectedHomework?.submissionType === 'file_upload' ? (
+          <AssignGrade
+            data={selectedStudent}
+            onClose={() => {
+              viewSubmissionDialog.onFalse();
+              setTimeout(() => {
+                setSelectedStudent(null);
+              }, 300); // Adjust timing based on your dialog's transition (usually 200–300ms)
+            }}
+            isEdit
+          />
         ) : (
           <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />
         )}

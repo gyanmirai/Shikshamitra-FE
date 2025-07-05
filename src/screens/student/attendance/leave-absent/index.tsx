@@ -47,10 +47,10 @@ import {
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { editorClasses } from 'src/components/editor/classes';
@@ -199,7 +199,6 @@ const LeaveAndAbsentScreen = () => {
               );
             },
           },
-          { id: 'student.educationMedium.name', label: 'Medium' },
           { id: 'student.educationMediumStage.name', label: 'Organization' },
           { id: 'student.standard.name', label: 'Class' },
           { id: 'student.division.name', label: 'Division' },
@@ -231,6 +230,7 @@ const LeaveAndAbsentScreen = () => {
             id: 'status',
             label: 'Status',
             filterType: 'enum',
+            sticky: true,
             enumOptions: EmployeeLeaveStatusOptions,
             render(value, row) {
               const color = EmployeeLeaveStatusTypeColor[
@@ -442,9 +442,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         docs: '',
       },
       validationSchema: Yup.object({
-        leaveType: Yup.string().required('Leave type is required'),
+        leaveType: Yup.string().required('Leave Type is required'),
         isHalfDay: Yup.boolean(),
-        startDate: Yup.date().required('Start date is required'),
+        startDate: Yup.date().required('Start Date and Time is required'),
         endDate: Yup.string()
           .nullable()
           .test('endDate', '', (value, context) => {
@@ -462,7 +462,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
               );
             }
             if (!value && !isHalfDay) {
-              return context.createError({ message: 'End date is required' });
+              return context.createError({ message: 'End Date and Time is required' });
             }
             return true;
           }),
@@ -581,7 +581,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   name="leaveType"
                   select
                   fullWidth
-                  label="Leave Type"
+                  label="Leave Type *"
                   size="small"
                   value={values.leaveType}
                   onChange={(e) => setFieldValue('leaveType', e.target.value)}
@@ -589,11 +589,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   helperText={touched.leaveType && errors.leaveType}
                 >
                   {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                    <MenuItem
-                      key={option.type}
-                      value={option.id}
-                      sx={{ bgcolor: `${option.color}20` }}
-                    >
+                    <MenuItem key={option.type} value={option.id}>
                       {option.type}
                     </MenuItem>
                   ))}
@@ -643,8 +639,10 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     textField: {
                       size: 'small',
                       fullWidth: true,
+                      fullWidth: true,
                       helperText: touched.startDate && errors.startDate,
                       error: touched.startDate && Boolean(errors.startDate),
+                      sx: { width: '272px' },
                     },
                   }}
                 />
@@ -660,6 +658,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                         fullWidth: true,
                         helperText: touched.endDate && errors.endDate,
                         error: touched.endDate && Boolean(errors.endDate),
+                        sx: { width: '272px' },
                       },
                     }}
                   />
@@ -703,18 +702,18 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   {...uploadProps}
                   thumbnail
                   value={values.docs}
-                  onDrop={(acceptedFiles) => {
-                    const file = acceptedFiles[0];
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                      const base64String = reader.result;
-                      setFieldValue('docs', base64String);
-                    };
-                  }}
                   multiple={false}
-                  onRemove={(file) => handleRemoveFile(file, values, setFieldValue)}
-                  onRemoveAll={() => handleRemoveAllFiles(values, setFieldValue)}
+                  onChange={(value) => {
+                    // const reader = new FileReader();
+                    setFieldValue('docs', value);
+                    // reader.readAsDataURL(value as File);
+                    // reader.readAsDataURL(value as File);
+                    // reader.onload = () => {
+                    //   const base64String = reader.result;
+                    // };
+                  }}
+                  primaryText="Please Upload Your File"
+                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
             </Grid>
@@ -722,7 +721,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         )}
       </DialogScrollContent>
 
-      <DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"

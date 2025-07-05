@@ -6,13 +6,15 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import RegisterForm from './register-form';
@@ -71,10 +73,10 @@ const RegisterScreen = () => {
         description={
           formDialog.value
             ? 'Enter student information across the sections to complete the registration'
-            : 'View and manage student registrations. Track completion status and edit details for each record'
+            : 'View students registrations, manage completion status, and update details for each record.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 1 }}
         isBack={formDialog.value}
         onBack={handleClose}
         action={
@@ -99,6 +101,7 @@ const RegisterScreen = () => {
           dialog={dialog}
           followUpDialog={followUpDialog}
           setEditData={setEditData}
+          editData={editData}
           formDialog={formDialog}
         />
       )}
@@ -110,7 +113,19 @@ const RegisterScreen = () => {
           setEditData(null);
           dialog.onFalse();
         }}
-        title="Schedule Exam"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Schedule Exam</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Schedule and manage entrance exams — set dates, assign subjects, and monitor students performance."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ExamForm
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
@@ -128,7 +143,19 @@ const RegisterScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Note"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Notes</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Monitor communication history with follow-up notes and important updates for students enrollment."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="sm"
       >
         <CommunicationForm

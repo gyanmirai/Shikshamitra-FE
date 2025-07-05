@@ -14,6 +14,8 @@ import quizTableData from 'src/json/academic/examination/quizTableData.json';
 import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -50,13 +52,13 @@ const QuizManagement = (props: TabComponentType) => {
   const links = open
     ? [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Examination', href: '/academic/scheduleExam' },
         { name: 'Quiz Management' },
         { name: 'Quiz Form' },
       ]
     : [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/examinationDashboard' },
+        { name: 'Examination', href: '/academic/scheduleExam' },
         { name: 'Quiz Management' },
       ];
 
@@ -105,13 +107,35 @@ const QuizManagement = (props: TabComponentType) => {
           Back
         </Button>
       </Box>
-      <QuizPortal quizData={quizPortalData} />
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            {selectedQuiz?.quizTitle || 'Attempt Quiz'}{' '}
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title="Take the quiz by answering all questions within the allocated time. Your responses will be automatically submitted when the timer ends."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>{' '}
+          </Box>
+        }
+        handleClose={() => {
+          attemptQuizDialog.onFalse();
+          setSelectedQuiz(null);
+        }}
+        open={attemptQuizDialog.value}
+        fullScreen
+      >
+        <QuizPortal quizData={quizPortalData} />
+      </CustomDialog>
     </>
   ) : (
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading={selectedQuiz ? 'Update Quiz' : 'Add Quiz'}
+          heading="Quiz Management"
           description={
             selectedQuiz
               ? 'Update existing quiz information including title, questions, duration, and schedule. Make necessary modifications to keep assessments current and aligned with learning objectives.'
@@ -121,29 +145,26 @@ const QuizManagement = (props: TabComponentType) => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/scheduleExam' },
             { name: 'Quiz Management' },
-            { name: selectedQuiz ? 'Update Quiz' : 'Add Quiz' },
           ]}
           isBack
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ px: 1, mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
           heading="Quiz Management"
-          description="Manage your examination system by organizing quizzes and assessments. Create, update and track quiz progress across different subjects. Add various question types and set schedules to facilitate effective assessment."
+          description="View and manage all your quizzes in one place. Track pending quizzes that need to be administered and review completed quizzes with student performance data."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/scheduleExam' },
             { name: 'Quiz Management' },
           ]}
-          sx={{ px: 1, mb: 2 }}
         />
       )}
 
       {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <AddNewQuiz
             dialog={addNewQuiz}
             onClose={() => {
@@ -197,6 +218,7 @@ const QuizManagement = (props: TabComponentType) => {
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedQuiz?.id);

@@ -180,11 +180,16 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{deleteInformation?.name}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
+            size="small"
             onClick={() => {
               deleteRule(deleteInformation?.id);
               confirm.onFalse();
@@ -200,9 +205,10 @@ const AttendanceRule = ({ attendanceRuleDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Add Rule</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
-              title="Define the criteria for half-day and late attendance by creating rules here. "
+              title="Create rules to define the criteria for half-day and late attendance."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

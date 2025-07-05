@@ -6,8 +6,12 @@ import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -30,7 +34,7 @@ const TABS = [
 ];
 
 const HomeworkSetting = () => {
-  const [activeTab, setActiveTab] = useState('homeworkType');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkType' });
 
   const addHomeworkTypeDialog = useBoolean(false);
   const addAssignmentTypeDialog = useBoolean(false);
@@ -64,9 +68,15 @@ const HomeworkSetting = () => {
   );
 
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === activeTab),
-    [activeTab]
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
   );
+
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
 
   return (
     <Box>
@@ -74,8 +84,8 @@ const HomeworkSetting = () => {
         heading="Setting"
         description={
           currentActiveComponent?.value === 'homeworkType'
-            ? 'Create and manage homework types for assignments'
-            : 'Create and manage assignment types for evaluations'
+            ? 'Create and manage different types of homework to assign to students'
+            : 'Create and manage different types of assignments for student assessment'
         }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
@@ -83,7 +93,7 @@ const HomeworkSetting = () => {
           { name: 'Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        action={renderButton[activeTab as keyof typeof renderButton]}
+        action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
 
       <Card
@@ -92,24 +102,44 @@ const HomeworkSetting = () => {
         }}
       >
         <CustomTabs
-          value={activeTab}
-          onChange={(e, value) => setActiveTab(value)}
+          value={searchParams.tab}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-
-      <Box px={1} pt={2}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            addHomeworkTypeDialog={addHomeworkTypeDialog}
-            addAssignmentTypeDialog={addAssignmentTypeDialog}
-          />
-        )}
-      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              addHomeworkTypeDialog={addHomeworkTypeDialog}
+              addAssignmentTypeDialog={addAssignmentTypeDialog}
+            />
+          )}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

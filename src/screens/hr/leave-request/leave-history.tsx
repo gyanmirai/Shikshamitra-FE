@@ -1,21 +1,32 @@
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetEmployeeLeaveQuery,
   useEmployeeLeaveRequestStatusMutation,
@@ -28,11 +39,11 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import AddLeaveRequest from './leave-requst';
@@ -40,7 +51,7 @@ import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -49,6 +60,8 @@ const LeaveHistory = (props: any) => {
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const { modal } = props;
 
@@ -131,10 +144,28 @@ const LeaveHistory = (props: any) => {
     [data]
   );
 
-  const handleClose = () => {
-    setEditData(null);
-    modal?.onFalse?.();
-    setRejectionReason('');
+  const handleClose = (_e?: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        setRejectionReason('');
+      }, 200); // Optional delay for modal/dialog animation
+    };
+
+    const confirmLeave = () =>
+      isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'));
+
+    if (confirmLeave()) {
+      modal?.onFalse?.();
+      resetState();
+      dispatch(setIsChanges(false)); // Optional if used
+    } else if (!isChanges) {
+      modal?.onFalse?.();
+      setTimeout(() => {
+        setEditData(null);
+        setRejectionReason('');
+      }, 200);
+    }
   };
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -159,7 +190,9 @@ const LeaveHistory = (props: any) => {
           label="Month-Year"
           format="MMM-YYYY"
           value={date}
-          views={['month', 'year']}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
+          views={['year', 'month']}
           slotProps={{
             textField: {
               size: 'small',
@@ -309,6 +342,7 @@ const LeaveHistory = (props: any) => {
             label: 'Status',
             id: 'statusValue',
             filterType: 'enum',
+            align: 'left',
             enumOptions: EmployeeLeaveStatusOptions,
             sticky: true,
             minWidth: '100px',
@@ -316,7 +350,6 @@ const LeaveHistory = (props: any) => {
               const color = EmployeeLeaveStatusTypeColor[
                 value as EmployeeLeaveStatusType
               ] as LabelColor;
-
               return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
@@ -374,7 +407,11 @@ const LeaveHistory = (props: any) => {
       )}
       <CustomDialog
         open={modal?.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          modal?.onFalse?.();
+          setEditData(null);
+          setRejectionReason('');
+        }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -383,6 +420,7 @@ const LeaveHistory = (props: any) => {
             <CustomTooltip
               arrow
               placement="right"
+              sx={{ textAlign: 'justify' }}
               title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -405,9 +443,21 @@ const LeaveHistory = (props: any) => {
             setEditData(null);
           }}
           title={
-            editData.type === EmployeeLeaveStatusType.Rejected
-              ? 'Reject Leave Request'
-              : 'Approve Leave Request'
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">
+                {editData.type === EmployeeLeaveStatusType.Rejected
+                  ? 'Reject Leave Request'
+                  : 'Approve Leave Request'}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
           }
         >
           <ApproveRejectForm
@@ -430,7 +480,7 @@ const ApproveRejectForm = ({
   handleClose,
   editData,
 }: {
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
@@ -456,29 +506,35 @@ const ApproveRejectForm = ({
             rejectionReason: formikValues.rejectionReason,
           },
         }).unwrap();
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.log(error);
       }
     },
   });
   return (
-    <Box component="form" sx={{ p: 2 }} onSubmit={handleSubmit}>
-      <TextField
-        fullWidth
-        multiline
-        rows={4}
-        label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
-        onChange={handleChange}
-        value={values.rejectionReason}
-        error={touched.rejectionReason && !!errors.rejectionReason}
-        helperText={touched.rejectionReason && errors.rejectionReason}
-        sx={{ mb: 2 }}
-      />
-      <Box display="flex" justifyContent="flex-end" gap={2}>
+    <>
+      <DialogScrollContent>
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label={editData.type === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
+          onChange={handleChange}
+          name="rejectionReason"
+          value={values.rejectionReason}
+          error={touched.rejectionReason && !!errors.rejectionReason}
+          helperText={touched.rejectionReason && errors.rejectionReason}
+          sx={{ mb: 2 }}
+        />
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           variant="outlined"
-          onClick={handleClose}
+          size="small"
+          onClick={() => {
+            handleClose(null, false);
+          }}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel
@@ -487,6 +543,7 @@ const ApproveRejectForm = ({
           variant="contained"
           loading={isChangeStatusLoading}
           type="submit"
+          size="small"
           startIcon={
             <Iconify
               icon={
@@ -499,7 +556,7 @@ const ApproveRejectForm = ({
         >
           {editData.type === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
         </LoadingButton>
-      </Box>
-    </Box>
+      </DialogActions>
+    </>
   );
 };

@@ -88,12 +88,14 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             justifyContent="space-between"
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {subject?.subjectType === 'Elective' && subject?.subjectName && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
+              {subject?.subjectType === 'Elective' ? (
                 <Typography fontWeight="bold">{subject.subjectName}</Typography>
+              ) : (
+                <Typography fontWeight="bold">Subject</Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
+                <Typography variant="body2" component="span">
                   {subject?.className}- {subject?.subjectType}
                 </Typography>
               </Box>
@@ -109,6 +111,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                 }
                 sx={{
                   ml: 'auto',
+                  p: 2,
                 }}
               >
                 {
@@ -151,44 +154,45 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
         </Paper>
       </Grid>
       <Grid item xs={9} height="100%">
-        <Paper elevation={3} sx={{ height: '100%' }}>
-          <Scrollbar sx={{ height: 'calc(100% - 60px)', p: 1 }}>
-            {subject?.subjects?.map(
-              (sub) =>
-                expandedSubject === sub.subjectCode && (
-                  <Box key={sub.subjectCode}>
-                    <Tabs
-                      value={tabs.value}
-                      onChange={tabs.onChange}
-                      sx={{
-                        '& .MuiTabs-flexContainer': { gap: 1.5 },
-                        position: 'sticky',
-                        top: 0,
-                        backgroundColor: 'background.paper',
-                        zIndex: 1,
-                      }}
-                      role="tablist"
-                    >
-                      {TABS.map((tab) => (
-                        <Tab
-                          key={tab.value}
-                          value={tab.value}
-                          icon={tab.icon}
-                          label={tab.label}
-                          role="tab"
-                          sx={{ fontSize: '12px' }}
-                        />
-                      ))}
-                    </Tabs>
-                    <Divider sx={{ mb: 2 }} />
+        <Paper elevation={3} sx={{ height: '100%', p: 2 }}>
+          {subject?.subjects?.map(
+            (sub) =>
+              expandedSubject === sub.subjectCode && (
+                <Box
+                  key={sub.subjectCode}
+                  sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                >
+                  <Tabs
+                    value={tabs.value}
+                    onChange={tabs.onChange}
+                    sx={{
+                      '& .MuiTabs-flexContainer': { gap: 1.5 },
+                      position: 'sticky',
+                      top: 0,
+                      backgroundColor: 'background.paper',
+                      zIndex: 1,
+                    }}
+                    role="tablist"
+                  >
+                    {TABS.map((tab) => (
+                      <Tab
+                        key={tab.value}
+                        value={tab.value}
+                        icon={tab.icon}
+                        label={tab.label}
+                        role="tab"
+                        sx={{ fontSize: '12px' }}
+                      />
+                    ))}
+                  </Tabs>
+                  <Divider sx={{ mb: 2 }} />
 
-                    {currentActiveComponent?.component && (
-                      <currentActiveComponent.component tabs={tabs} subject={sub} />
-                    )}
-                  </Box>
-                )
-            )}
-          </Scrollbar>
+                  {currentActiveComponent?.component && (
+                    <currentActiveComponent.component tabs={tabs} subject={sub} />
+                  )}
+                </Box>
+              )
+          )}
         </Paper>
       </Grid>
     </Grid>

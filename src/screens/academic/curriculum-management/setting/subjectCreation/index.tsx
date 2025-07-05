@@ -37,17 +37,24 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedSubject(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedSubject(null);
       addSubjectDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setOpen(false);
-      setSelectedSubject(null);
       addSubjectDialog.onFalse();
+      setTimeout(() => {
+        setSelectedSubject(null);
+      }, 200);
     }
   };
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {/* <Box display="flex" justifyContent="flex-end" mb={1}>
@@ -85,7 +92,9 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
         open={addSubjectDialog.value}
         handleClose={() => {
           addSubjectDialog.onFalse();
-          setSelectedSubject(null);
+          setTimeout(() => {
+            setSelectedSubject(null);
+          }, 200); // Adjust the delay based on your dialog transition duration
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -95,10 +104,11 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
             <CustomTooltip
               arrow
               placement="right"
+              sx={{ textAlign: 'justify' }}
               title={
                 selectedSubject
-                  ? 'You can update the subject details including name, code and other information'
-                  : 'You can create a new subject by entering the subject name, code and other required details'
+                  ? 'You can update the subject details including name and color.'
+                  : 'You can create a new subject by entering the subject name and color.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -108,9 +118,7 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
       >
         <SettingSubjectForm
           open={addSubjectDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedSubject}
         />
       </CustomDialog>

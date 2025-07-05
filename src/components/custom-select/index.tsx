@@ -7,12 +7,12 @@ import {
   Select,
   MenuItem,
   Checkbox,
+  Skeleton,
   InputLabel,
   Typography,
   FormControl,
   ListItemText,
   FormHelperText,
-  CircularProgress,
 } from '@mui/material';
 
 export type CustomSelectProps<T extends string, J extends boolean> = Omit<
@@ -76,69 +76,70 @@ const CustomSelect = <T extends string, J extends boolean>({
       sx={{ width: '100%', position: 'relative' }}
       {...formControlProps}
     >
-      <InputLabel size="small" sx={{ fontSize: '14px' }}>
-        {label}
-      </InputLabel>
-      <Select
-        multiple={multiple}
-        value={value}
-        onChange={handleChange}
-        size="small"
-        label={label}
-        // sx={{ fontSize: '12px' }}
-        renderValue={
-          multiple
-            ? (selected: string | string[] | number | number[]) => (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {(Array.isArray(selected) ? selected : [selected]).map((val) => (
-                    <Chip
-                      key={val}
-                      size="small"
-                      variant="soft"
-                      label={options.find((option) => option[valueKey] === val)?.[labelKey]}
-                      onDelete={() => handleDelete(val)}
-                      onMouseDown={(event) => {
-                        event.stopPropagation();
-                      }}
+      {isLoading ? (
+        <Skeleton variant="rectangular" height={40} />
+      ) : (
+        <>
+          <InputLabel size="small">{label}</InputLabel>
+          <Select
+            multiple={multiple}
+            value={value}
+            onChange={handleChange}
+            size="small"
+            label={label}
+            renderValue={
+              multiple
+                ? (selected: string | string[] | number | number[]) => (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {(Array.isArray(selected) ? selected : [selected]).map((val) => (
+                        <Chip
+                          key={val}
+                          size="small"
+                          variant="soft"
+                          label={options.find((option) => option[valueKey] === val)?.[labelKey]}
+                          onDelete={() => handleDelete(val)}
+                          onMouseDown={(event) => {
+                            event.stopPropagation();
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )
+                : undefined
+            }
+            {...props}
+          >
+            {options?.length === 0 ? (
+              <MenuItem disabled>{noOptionsMessage}</MenuItem>
+            ) : (
+              options.map((option) => (
+                <MenuItem key={option[valueKey]} value={option[valueKey]}>
+                  {multiple && (
+                    <Checkbox
+                      checked={(value as string[])?.indexOf(option[valueKey] as string) > -1}
                     />
-                  ))}
-                </div>
-              )
-            : undefined
-        }
-        {...props}
-      >
-        {isLoading ? (
-          <MenuItem disabled>
-            <CircularProgress size={24} />
-          </MenuItem>
-        ) : options?.length === 0 ? (
-          <MenuItem disabled>{noOptionsMessage}</MenuItem>
-        ) : (
-          options.map((option) => (
-            <MenuItem key={option[valueKey]} value={option[valueKey]}>
-              {multiple && (
-                <Checkbox checked={(value as string[])?.indexOf(option[valueKey] as string) > -1} />
-              )}
-              <ListItemText primary={option[labelKey]} />
-            </MenuItem>
-          ))
-        )}
-      </Select>
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
+                  )}
+                  <ListItemText primary={option[labelKey]} />
+                </MenuItem>
+              ))
+            )}
+          </Select>
+          {helperText && <FormHelperText>{helperText}</FormHelperText>}
 
-      {addOtherItemText !== '' && (
-        <Typography
-          component="span"
-          fontWeight={500}
-          textAlign="right"
-          color="primary.main"
-          fontSize={12}
-          sx={{ cursor: 'pointer', position: 'absolute', bottom: '-20px', right: '0' }}
-          onClick={addOtherItemOnClick}
-        >
-          {addOtherItemText}
-        </Typography>
+          {addOtherItemText !== '' && (
+            <Typography
+              component="span"
+              fontWeight={500}
+              textAlign="right"
+              color="primary.main"
+              fontSize={12}
+              sx={{ cursor: 'pointer', position: 'absolute', bottom: '-20px', right: '0' }}
+              onClick={addOtherItemOnClick}
+            >
+              {addOtherItemText}
+            </Typography>
+          )}
+        </>
       )}
     </FormControl>
   );

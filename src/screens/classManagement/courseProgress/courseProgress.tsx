@@ -33,6 +33,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -46,7 +47,7 @@ import ViewChapterLogs from './components/viewChapterLogs';
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
-  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
+  const [courses, setCourses] = useState<any[]>(courseProgressTableData);
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
   // Props destructuring for search parameters
@@ -156,7 +157,7 @@ const CourseProgress = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       {/* Class and Division selection filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
         <CustomSelect
           options={allClass}
           label="Class"
@@ -191,18 +192,80 @@ const CourseProgress = (props: TabComponentType) => {
             tableId="course-progress-table"
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
-              { id: 'chapterName', label: 'Chapter Name', align: 'left' },
+              { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+              { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
               {
                 id: 'startDate',
                 label: 'Start Date',
                 align: 'left',
                 filterType: 'date',
+                minWidth: 170,
               },
               {
                 id: 'timeLine',
-                label: 'End Date',
+                label: '',
+                minWidth: 170,
                 align: 'left',
                 filterType: 'date',
+                renderColumn: () => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    End Date
+                    <CustomTooltip
+                      arrow
+                      title={
+                        <Box>
+                          <Typography variant="caption" display="block" color="error.main">
+                            Red : Due within 7 days
+                          </Typography>
+                          <Typography variant="caption" display="block" color="warning.main">
+                            Yellow : Due within 30 days
+                          </Typography>
+                          <Typography variant="caption" display="block" color="success.main">
+                            Green : Due after 30 days
+                          </Typography>
+                        </Box>
+                      }
+                    >
+                      <Iconify icon="eva:info-outline" width={16} />
+                    </CustomTooltip>
+                  </Box>
+                ),
+                render(value, row) {
+                  const [day, month, year] = value.split('-');
+                  const endDate = new Date(`${year}-${month}-${day}`);
+                  const today = new Date();
+                  endDate.setHours(0, 0, 0, 0);
+                  today.setHours(0, 0, 0, 0);
+
+                  const diffDays = Math.ceil(
+                    (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+
+                  // If progress is 100%, use normal text color
+                  if (row.progress === 100) {
+                    return (
+                      <Typography variant="caption" fontSize="13px">
+                        {value}
+                      </Typography>
+                    );
+                  }
+
+                  let color = 'text.secondary';
+
+                  if (diffDays <= 7) {
+                    color = 'error.main'; // red
+                  } else if (diffDays <= 30) {
+                    color = 'warning.main'; // yellow
+                  } else {
+                    color = 'success.main'; // green
+                  }
+
+                  return (
+                    <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                      {value}
+                    </Typography>
+                  );
+                },
               },
               {
                 id: 'progress',
@@ -240,7 +303,7 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'actions',
                 label: 'Action',
-                minWidth: 50,
+                minWidth: 40,
                 align: 'left',
                 sticky: true,
                 isFilter: false,
@@ -264,7 +327,19 @@ const CourseProgress = (props: TabComponentType) => {
         handleClose={() => {
           updateProgressDialog.onFalse();
         }}
-        title="Update Progress"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Progress (%)</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Update the completion percentage and add notes about the progress made in this chapter"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <UpdateProgress onClose={handleClose} />
       </CustomDialog>
@@ -275,7 +350,19 @@ const CourseProgress = (props: TabComponentType) => {
           viewLogsDialog.onFalse();
         }}
         maxWidth="sm"
-        title={`${selectedChapter?.chapterName} Logs`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{selectedChapter?.chapterName} Logs</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View the history of progress updates and changes made to this chapter's completion status"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
       </CustomDialog>
@@ -313,7 +400,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
+      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} gap={3} p={2}>
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
@@ -324,7 +411,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
                 formik.setFieldValue('completePercentage', value);
               }}
               getAriaValueText={(value) => `${value}%`}
-              step={2}
+              step={1}
               valueLabelDisplay="auto"
               marks={marks}
               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
@@ -345,16 +432,15 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
           error={!!(formik.touched.description && formik.errors.description)}
           helperText={formik.touched.description && formik.errors.description}
         />
-
-        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
-          <CancelButton
-            onClick={() => {
-              onClose(null, false);
-            }}
-          />
-          <SubmitButton onClick={() => {}} />
-        </DialogActions>
       </Box>
+      <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+        <CancelButton
+          onClick={() => {
+            onClose(null, false);
+          }}
+        />
+        <SubmitButton onClick={() => {}} />
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

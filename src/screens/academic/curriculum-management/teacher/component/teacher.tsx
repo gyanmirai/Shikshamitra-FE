@@ -6,7 +6,7 @@ import type { Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Save, RestartAlt } from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -45,9 +45,7 @@ const Teacher = ({
   searchParams?: Record<string, string>;
   setSearchParams?: (obj: Record<string, any>) => void;
 }) => {
-  // Dialog control states for reset and save confirmations
   const resetConfirmDialog = useBoolean();
-  // Dialog state for save confirmation popup
   const saveConfirmDialog = useBoolean();
 
   const teacherOptions: ITeacherOption[] = [
@@ -83,69 +81,91 @@ const Teacher = ({
     },
   ];
 
-  // Get global state values from Redux store
-  // currentBoard - Selected board (e.g. CBSE, ICSE)
-  // medium - Selected medium of instruction (e.g. English, Hindi)
-  // setMedium - Function to update the selected medium
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
-  // State for managing class data
-  const [allClass, setAllClass] = useState<Standards[]>([]); // Stores list of all available classes
-  const [classes, setClasses] = useState<string>(''); // Currently selected class
 
-  // Fetch class data using custom query hook
+  const [focusedCells, setFocusedCells] = useState<{ division: string; subject: string }[]>([]);
+
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // Initial mock data structure for teacher assignments
-  // Each object represents a division with subject-teacher mappings
-  // Empty strings indicate unassigned teachers
   const initialTableData = [
     {
       division: 'A',
       subjects: {
-        Math: 'teacher1',
-        English: '',
-        Science: 'teacher3',
-        History: 'teacher4',
-        Geography: '',
-        Computer: 'teacher2',
-        Physics: 'teacher5',
-        Chemistry: '',
-        Biology: 'teacher6',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
     {
       division: 'B',
       subjects: {
-        Math: 'teacher2',
-        English: 'teacher1',
-        Science: '',
-        History: '',
-        Geography: 'teacher3',
-        Computer: '',
-        Physics: 'teacher6',
-        Chemistry: 'teacher2',
-        Biology: '',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
     {
       division: 'C',
       subjects: {
-        Math: '',
-        English: 'teacher3',
-        Science: 'teacher2',
-        History: 'teacher1',
-        Geography: '',
-        Computer: 'teacher4',
-        Physics: '',
-        Chemistry: 'teacher5',
-        Biology: 'teacher3',
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
+      },
+    },
+    {
+      division: 'D',
+      subjects: {
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
+      },
+    },
+    {
+      division: 'E',
+      subjects: {
+        Math: [],
+        English: [],
+        Science: [],
+        History: [],
+        Geography: [],
+        Computer: [],
+        Physics: [],
+        Chemistry: [],
+        Biology: [],
       },
     },
   ];
@@ -153,7 +173,6 @@ const Teacher = ({
   const [tableData, setTableData] = useState(initialTableData);
   const [originalTableData, setOriginalTableData] = useState(initialTableData);
 
-  // Check if there are any changes in the table data
   const hasChanges = useMemo(
     () => JSON.stringify(tableData) !== JSON.stringify(originalTableData),
     [tableData, originalTableData]
@@ -167,7 +186,6 @@ const Teacher = ({
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
-  // Get modified subjects
   const getModifiedSubjects = () => {
     const modifiedSubjects = new Set<string>();
 
@@ -189,12 +207,14 @@ const Teacher = ({
 
   const handleReset = () => {
     setTableData(originalTableData);
+    setFocusedCells([]);
     resetConfirmDialog.onFalse();
     shikshaMitraToast.success({ message: 'Teachers assignment reset successfully' });
   };
 
   const handleSave = () => {
     setOriginalTableData(tableData);
+    setFocusedCells([]);
     saveConfirmDialog.onFalse();
     shikshaMitraToast.success({ message: 'Teachers assignment saved successfully' });
   };
@@ -210,9 +230,8 @@ const Teacher = ({
     { name: 'marathi', code: 'MAR', color: '#33FF33' },
     { name: 'sanskrit', code: 'SNS', color: '#3333FF' },
   ];
-  const divisionList = ['A', 'B', 'C', 'D', 'E'];
 
-  // Rest of your code remains the same until the buttons section
+  const divisionList = ['A', 'B', 'C', 'D', 'E'];
 
   return (
     <Box>
@@ -243,7 +262,7 @@ const Teacher = ({
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button
             variant="outlined"
-            startIcon={<RestartAlt />}
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={() => {
               resetConfirmDialog.onTrue();
             }}
@@ -273,109 +292,156 @@ const Teacher = ({
         isFilter={false}
         columns={[
           {
-            id: 'subject',
-            label: 'Subject',
+            id: 'division',
+            label: 'Division',
             filterType: 'string',
             align: 'left',
-            minWidth: '150px',
+            minWidth: '80px',
             sticky: true,
-            render: (value: string, row: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box
-                  sx={{
-                    width: 4,
-                    height: 18,
-                    borderRadius: 1,
-                    backgroundColor: row.subjectColor,
-                  }}
-                />
-                <Typography variant="caption">
-                  {value} ({row.subjectCode})
-                </Typography>
-              </Box>
+            render: (value: string) => (
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
             ),
           },
-          ...divisionList.map((div) => ({
-            id: div,
-            label: `Division ${div}`,
+          ...subjectList.map((subject) => ({
+            id: subject.name,
+            label: `${subject.name.charAt(0).toUpperCase() + subject.name.slice(1)} (${subject.code})`,
             isFilter: false,
             isSort: false,
-            render: (value: any, row: any) => (
-              <Autocomplete
-                multiple
-                disableCloseOnSelect
-                options={teacherOptions}
-                getOptionLabel={(option) => option.name}
-                value={row[div] ? teacherOptions.filter((opt) => row[div].includes(opt.value)) : []}
-                onChange={(_, newValue) => {
-                  const updatedTableData = tableData.map((divisionData) => {
-                    if (divisionData.division === div) {
-                      return {
-                        ...divisionData,
+            render: (_value: any, row: any) => {
+              const isCellFocused = focusedCells.some(
+                (cell) => cell.division === row.division && cell.subject === subject.name
+              );
+              return (
+                <Autocomplete
+                  multiple
+                  disableCloseOnSelect
+                  options={teacherOptions}
+                  getOptionLabel={(option) => option.name}
+                  value={
+                    row[subject.name]
+                      ? teacherOptions.filter((opt) => row[subject.name].includes(opt.value))
+                      : []
+                  }
+                  onChange={(_, newValue) => {
+                    const updatedTableData = [...tableData];
+                    const divisionIndex = updatedTableData.findIndex(
+                      (d) => d.division === row.division
+                    );
+
+                    if (divisionIndex !== -1) {
+                      updatedTableData[divisionIndex] = {
+                        ...updatedTableData[divisionIndex],
                         subjects: {
-                          ...divisionData.subjects,
-                          [row.subject]: newValue.map((teacher) => teacher.value),
+                          ...updatedTableData[divisionIndex].subjects,
+                          [subject.name.charAt(0).toUpperCase() + subject.name.slice(1)]:
+                            newValue.map((teacher) => teacher.value),
                         },
                       };
+                      setTableData(updatedTableData);
                     }
-                    return divisionData;
-                  });
 
-                  setTableData(updatedTableData);
-                }}
-                renderInput={(params) => (
-                  <TextField label="Select Teachers" {...params} variant="outlined" size="small" />
-                )}
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox
-                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                      checkedIcon={<CheckBoxIcon fontSize="small" />}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.name}
-                  </li>
-                )}
-                sx={{ width: '100%', minWidth: '330px' }} // Removed pr: 0 and reduced minWidth
-                renderTags={(val) => {
-                  if (val.length === 0) return null;
-                  const first = val[0];
-                  const remainingCount = val.length - 1;
-                  return [
-                    <Chip
-                      key={first.value}
-                      variant="soft"
-                      avatar={<Avatar>{first.name.charAt(0)}</Avatar>}
-                      label={first.name}
-                      sx={{ ml: 1 }}
+                    const newFocus = { division: row.division, subject: subject.name };
+                    setFocusedCells((prev) => {
+                      const exists = prev.some(
+                        (cell) =>
+                          cell.division === newFocus.division && cell.subject === newFocus.subject
+                      );
+
+                      if (newValue.length === 0) {
+                        return prev.filter(
+                          (cell) =>
+                            !(
+                              cell.division === newFocus.division &&
+                              cell.subject === newFocus.subject
+                            )
+                        );
+                      }
+
+                      if (!exists) {
+                        return [...prev, newFocus];
+                      }
+
+                      return prev;
+                    });
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      label="Select Teachers"
+                      {...params}
+                      variant="outlined"
                       size="small"
-                    />,
-                    remainingCount > 0 && (
-                      <TeacherListPopover
-                        key="more-count"
-                        teachers={val.slice(1)}
-                        count={remainingCount}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'rgba(0, 0, 0, 0.5)',
+                            borderWidth: '2px',
+                          },
+                        },
+                        width: '330px',
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                        checkedIcon={<CheckBoxIcon fontSize="small" />}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
                       />
-                    ),
-                  ];
-                }}
-              />
-            ),
+                      {option.name}
+                    </li>
+                  )}
+                  renderTags={(val, getTagProps) => {
+                    if (val.length === 0) return null;
+                    const first = val[0];
+                    const remainingCount = val.length - 1;
+                    return [
+                      <Chip
+                        avatar={<Avatar>{first.name.charAt(0)}</Avatar>}
+                        label={first.name}
+                        size="small"
+                        variant="soft"
+                        sx={{ ml: 1 }}
+                        {...getTagProps({ index: 0 })} // includes key + onDelete
+                      />,
+                      remainingCount > 0 && (
+                        <TeacherListPopover
+                          key="more-count"
+                          teachers={val.slice(1)}
+                          count={remainingCount}
+                        />
+                      ),
+                    ];
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: isCellFocused ? 'primary.main' : 'rgba(0,0,0,0.23)',
+                        borderWidth: isCellFocused ? 2 : 1,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isCellFocused ? 'primary.main' : undefined,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: isCellFocused ? 'primary.main' : undefined,
+                      },
+                    },
+                  }}
+                />
+              );
+            },
           })),
         ]}
-        data={subjectList.map((subject) => {
-          const formattedSubject = subject.name.charAt(0).toUpperCase() + subject.name.slice(1);
+        data={divisionList.map((division) => {
+          const divisionData = tableData.find((d) => d.division === division);
+          const row: any = { division };
 
-          const row: any = {
-            subject: formattedSubject,
-            subjectCode: subject.code,
-            subjectColor: subject.color,
-          };
-
-          divisionList.forEach((div) => {
-            const divisionData = tableData.find((d) => d.division === div);
-            row[div] =
+          subjectList.forEach((subject) => {
+            const formattedSubject = subject.name.charAt(0).toUpperCase() + subject.name.slice(1);
+            row[subject.name] =
               divisionData?.subjects[formattedSubject as keyof typeof divisionData.subjects] || [];
           });
 
@@ -387,7 +453,7 @@ const Teacher = ({
         title="Reset"
         open={resetConfirmDialog.value}
         onClose={resetConfirmDialog.onFalse}
-        content="Are you sure you want to reset all changes?"
+        content="Are you sure you want to reset all changes ?"
         action={
           <Button
             variant="contained"
@@ -407,7 +473,7 @@ const Teacher = ({
         content={
           <>
             Are you sure you want to save the <strong>{getModifiedSubjects().join(', ')}</strong>{' '}
-            changes?
+            changes ?
           </>
         }
         action={

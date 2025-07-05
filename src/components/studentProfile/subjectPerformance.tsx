@@ -1,13 +1,14 @@
 import type { ICourse } from 'src/screens/academic/course-management/courseProgress/type';
 
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 import { Box, Card, Stack, Divider, Typography, CircularProgress } from '@mui/material';
 
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
-import CourseCardsGrid from 'src/screens/academic/course-management/courseProgress/components/courseCardsGrid';
+import CourseCardsGrid from 'src/screens/classManagement/courseProgress/components/courseCardsGrid';
 
+import { Iconify } from '../iconify';
+import CustomTooltip from '../custom-tooltip';
 import CustomizableTable from '../customizabaleTable';
 
 import type { ISubject, ISubjectCardProps } from './type';
@@ -27,7 +28,7 @@ const subjectsProgress: ISubject[] = [
 
 const SubjectPerformance = () => {
   // State to track the currently selected subject and its details
-  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
+  const [courses, setCourses] = useState<any[]>(courseProgressTableData);
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
 
   // Handler for when a course card is selected
@@ -36,9 +37,8 @@ const SubjectPerformance = () => {
   };
   return (
     <Box>
-      <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-        <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
-      </Box>
+      <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
+
       {selectedCourse && (
         <Box>
           <Typography variant="h6" gutterBottom>
@@ -51,9 +51,80 @@ const SubjectPerformance = () => {
             columns={[
               { id: 'chapterName', label: 'Chapter Name', align: 'left' },
               {
+                id: 'startDate',
+                label: 'Start Date',
+                align: 'left',
+                filterType: 'date',
+              },
+              {
+                id: 'timeLine',
+                label: '',
+                minWidth: 200,
+                align: 'left',
+                filterType: 'date',
+                renderColumn: () => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    End Date
+                    <CustomTooltip
+                      arrow
+                      title={
+                        <Box>
+                          <Typography variant="caption" display="block" color="error.main">
+                            Red : Due within 7 days
+                          </Typography>
+                          <Typography variant="caption" display="block" color="warning.main">
+                            Yellow : Due within 30 days
+                          </Typography>
+                          <Typography variant="caption" display="block" color="success.main">
+                            Green : Due after 30 days
+                          </Typography>
+                        </Box>
+                      }
+                    >
+                      <Iconify icon="eva:info-outline" width={16} />
+                    </CustomTooltip>
+                  </Box>
+                ),
+                render(value, row) {
+                  const [day, month, year] = value.split('-');
+                  const endDate = new Date(`${year}-${month}-${day}`);
+                  const today = new Date();
+                  endDate.setHours(0, 0, 0, 0);
+                  today.setHours(0, 0, 0, 0);
+
+                  const diffDays = Math.ceil(
+                    (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+
+                  // If progress is 100%, use normal text color
+                  if (row.progress === 100) {
+                    return (
+                      <Typography variant="caption" fontSize="13px">
+                        {value}
+                      </Typography>
+                    );
+                  }
+
+                  let color = 'text.secondary';
+
+                  if (diffDays <= 7) {
+                    color = 'error.main'; // red
+                  } else if (diffDays <= 30) {
+                    color = 'warning.main'; // yellow
+                  } else {
+                    color = 'success.main'; // green
+                  }
+
+                  return (
+                    <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                      {value}
+                    </Typography>
+                  );
+                },
+              },
+              {
                 id: 'progress',
                 label: 'Progress',
-                align: 'left',
                 filterType: 'number',
                 render(value, row) {
                   return (
@@ -83,17 +154,6 @@ const SubjectPerformance = () => {
                     </Box>
                   );
                 },
-              },
-              {
-                id: 'timeLine',
-                label: 'Deadline',
-                align: 'left',
-                filterType: 'date',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD-MM-YYYY')}
-                  </Typography>
-                ),
               },
             ]}
             data={selectedCourse.details}

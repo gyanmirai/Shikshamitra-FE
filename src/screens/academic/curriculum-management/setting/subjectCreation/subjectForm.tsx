@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -10,6 +9,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -28,7 +28,14 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     validationSchema: subjectValidationSchema,
     // Handle form submission
     onSubmit: (values, formikHelpers) => {
-      console.log(values);
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Subject ${values.subjectName} updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({ message: `Subject ${values.subjectName} added successfully` });
+      }
+      onClose(null, true);
     },
   });
 
@@ -36,7 +43,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '150px' }}>
+          <Scrollbar sx={{ p: 2, height: '170px' }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <ShakingTextField
@@ -44,13 +51,21 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                 >
                   <TextField
                     fullWidth
-                    label="Subject Name"
+                    label="Subject Name *"
                     name="subjectName"
                     size="small"
                     value={formik.values.subjectName}
                     // placeholder="Enter Subject Name"
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        // Capitalize each word
+                        .split(' ')
+                        .map((word) =>
+                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                        )
+                        .join(' ');
                       formik.setFieldValue('subjectName', value);
                     }}
                     error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
@@ -71,7 +86,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
                         : 'text.primary'
                     }
                   >
-                    Subject Color
+                    Subject Color *
                   </Typography>
                   <ColorPickerCircle
                     onSelect={(color: string) => formik.setFieldValue('subjectColor', color)}
@@ -82,17 +97,25 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
             </Grid>
           </Scrollbar>
 
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={onClose}
+              onClick={() => {
+                onClose(null, false);
+              }}
               variant="outlined"
               size="small"
             >
               Cancel
             </Button>
             <Button
-              startIcon={<Iconify icon={editData ? GlobalIcons.edit : GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={editData ? 16 : 20}
+                  height={editData ? 16 : 20}
+                />
+              }
               type="submit"
               variant="contained"
               size="small"

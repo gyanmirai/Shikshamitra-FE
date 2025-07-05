@@ -7,8 +7,10 @@ import { documentsList } from 'src/screens/academic/curriculum-management/subjec
 
 import DocumentCard from 'src/components/preview-document/DocumentCard';
 
+import type { IChapter } from '../type';
+
 // Documents panel content
-const ChapterDocuments = ({ documents }: { documents: File[] | undefined }) => {
+const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
   // State to manage subject documents data initialized with mock data from JSON
   const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
 

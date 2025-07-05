@@ -1,3 +1,4 @@
+import type { BoxProps } from '@mui/material';
 import type { DragEvent, ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
@@ -22,6 +23,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from '../iconify';
+import { shikshaMitraToast } from '../toast';
 import CustomTooltip from '../custom-tooltip';
 import { FileThumbnail } from '../file-thumbnail';
 
@@ -45,6 +47,9 @@ interface FileUploaderProps<T extends boolean = true> {
   multiple?: T;
   value?: T extends true ? (File | FileData)[] : File | FileData;
   propertyPr?: string;
+  showVisibleDocumentCount?: number;
+  parentsProps?: BoxProps;
+  dragProps?: BoxProps;
 }
 
 const FileUploader = <T extends boolean = true>({
@@ -55,7 +60,12 @@ const FileUploader = <T extends boolean = true>({
   multiple = true as T,
   value,
   propertyPr,
+  showVisibleDocumentCount = 3,
+  parentsProps = {},
+  dragProps = {},
 }: FileUploaderProps<T>) => {
+  const { sx: parentSx = {}, ...remainingProps } = parentsProps;
+  const { sx = {}, ...dragRemainingProps } = dragProps;
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
@@ -67,10 +77,19 @@ const FileUploader = <T extends boolean = true>({
   };
 
   const handleFiles = (newFile: T extends true ? File[] | FileData[] : File | FileData) => {
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+
     if (multiple) {
       const existingFiles = (value || []) as (File | FileData)[];
       const newFiles = Array.isArray(newFile) ? newFile : [newFile];
       const filteredFiles = newFiles.filter((file: File | FileData) => {
+        const size = file instanceof File ? file.size : (file?.size ?? 0);
+        if (size > maxSizeInBytes) {
+          shikshaMitraToast.error({
+            message: `File exceeds the 5 MB size limit.`,
+          });
+          return false;
+        }
         if (file instanceof File) return allowedTypes.includes(file.type);
         if (file.type) return allowedTypes.includes(file.type);
         if (file.base64) {
@@ -82,6 +101,18 @@ const FileUploader = <T extends boolean = true>({
       const updatedFiles = [...existingFiles, ...filteredFiles];
       onChange(updatedFiles as any);
     } else {
+      let size = 0;
+
+      if (newFile instanceof File) {
+        size = newFile.size;
+      } else if (typeof newFile === 'object' && 'size' in newFile) {
+        size = (newFile as FileData).size ?? 0;
+      }
+
+      if (size > maxSizeInBytes) {
+        shikshaMitraToast.error({ message: 'File exceeds the 5 MB size limit.' });
+        return;
+      }
       onChange(newFile as any);
     }
   };
@@ -152,7 +183,7 @@ const FileUploader = <T extends boolean = true>({
       </IconButton> */}
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FileThumbnail file={normalizeFileForThumbnail(file)} sx={{ height: 25, width: 25 }} />
+        <FileThumbnail file={file} sx={{ height: 25, width: 25 }} />
         <Box sx={{ ml: 1.5, flex: 1 }}>
           <Tooltip title={file.name}>
             <Typography
@@ -196,7 +227,7 @@ const FileUploader = <T extends boolean = true>({
   const hasFiles = Array.isArray(value) ? value.length > 0 : !!value;
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', ...parentSx }} {...remainingProps}>
       <Box
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -211,11 +242,15 @@ const FileUploader = <T extends boolean = true>({
           transition: 'all 0.3s ease-in-out',
           display: 'flex',
           justifyContent: 'center',
+          // height: '100%',
           // flexDirection: !value || (Array.isArray(value) && value.length === 0) ? 'row' : 'column',
           alignItems: 'center',
           gap: 2,
+          height: value && (Array.isArray(value) ? value.length > 0 : value) ? 'auto' : '150px',
+          ...sx,
         }}
         onClick={() => document.getElementById('file-input')?.click()}
+        {...dragRemainingProps}
       >
         <Iconify
           icon="eva:cloud-upload-fill"
@@ -257,16 +292,18 @@ const FileUploader = <T extends boolean = true>({
           onChange={handleFileInput}
         />
       </Box>
-      <Stack spacing={1} mt={2}>
-        {Array.isArray(value) && value.slice(0, 3).map(renderFileCard)}
+      {(Array.isArray(value) ? value.length > 0 : value) && (
+        <Stack spacing={1} mt={2}>
+          {Array.isArray(value) && value.slice(0, showVisibleDocumentCount).map(renderFileCard)}
 
-        {Array.isArray(value) && value.length > 3 && (
-          <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
-            View All Files ({value.length})
-          </Button>
-        )}
-        {!Array.isArray(value) && value && renderFileCard(value, 0)}
-      </Stack>
+          {Array.isArray(value) && value.length > showVisibleDocumentCount && (
+            <Button variant="outlined" onClick={() => setShowAllDialog(true)}>
+              View All Files ({value.length})
+            </Button>
+          )}
+          {!Array.isArray(value) && value && renderFileCard(value, 0)}
+        </Stack>
+      )}
 
       <Dialog open={!!previewFile} onClose={() => setPreviewFile(null)} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -296,7 +333,7 @@ const FileUploader = <T extends boolean = true>({
                 <img
                   src={previewUrl}
                   alt={previewFile?.name}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', objectFit: 'cover' }}
                   onLoad={() => {
                     if (previewFile instanceof File) {
                       URL.revokeObjectURL(previewUrl);
@@ -327,7 +364,16 @@ const FileUploader = <T extends boolean = true>({
           <Stack spacing={2}>{Array.isArray(value) && value.map(renderFileCard)}</Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAllDialog(false)}>Close</Button>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              setShowAllDialog(false);
+            }}
+            variant="outlined"
+            size="small"
+          >
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

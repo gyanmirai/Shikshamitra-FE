@@ -113,7 +113,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           '&:before': {
             display: 'none', // remove default divider line at top
           },
-          mb: '2px',
+          mb: '16px',
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -222,6 +222,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
                   multiple
+                  // isOptionEqualToValue={(option, value) => option.id === value.id} // ✅ This is essential!
                   options={
                     teacherOptions?.filter((option) => subject.primaryTeacher?.id !== option.id) ||
                     []
@@ -232,7 +233,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   onChange={(event, newValue) =>
                     formik.setFieldValue(`subjects.${index}.secondaryTeacher`, newValue)
                   }
-                  // isOptionEqualToValue={(option, value) => option.value === value.value}
+                  isOptionEqualToValue={(option, value) => option.name === value.name}
                   renderOption={(props, option, { selected }) => (
                     <li {...props}>
                       <Checkbox
@@ -341,18 +342,26 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             {/* Description */}
             <Grid item xs={12} md={6}>
               <ShakingTextField error={!!getError('description')}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={7}
-                  label="Description"
-                  // placeholder="Enter Description"
-                  size="small"
+                <Editor
+                  onChange={(value) => handleChange('description', value)}
                   value={subject.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  disabled={isPublished}
+                  placeholder="Description"
                   error={!!getError('description')}
                   helperText={getError('description')}
+                  sx={{
+                    border: `1px solid ${theme.palette.grey[500]}`,
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: theme.palette.text.primary,
+                    },
+                    '&:focus-within': {
+                      borderColor: theme.palette.text.primary,
+                      borderWidth: 2,
+                    },
+                    ...(!!getError('description') && {
+                      borderColor: theme.palette.error.main,
+                    }),
+                  }}
                 />
               </ShakingTextField>
             </Grid>
@@ -362,6 +371,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 // @ts-ignore
                 value={subject.documents}
                 multiple
+                showVisibleDocumentCount={1}
                 onChange={(value) => {
                   formik.setFieldValue(`subjects.${index}.documents`, value);
                   // const reader = new FileReader();
@@ -406,6 +416,7 @@ export const TeacherListPopover = ({
   count: number;
 }) => (
   <CustomTooltip
+    sx={{ textAlign: 'justify' }}
     title={
       <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
         {teachers.map((teacher) => (

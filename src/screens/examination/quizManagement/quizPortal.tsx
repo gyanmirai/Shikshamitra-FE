@@ -25,8 +25,10 @@ interface QuestionNumberProps {
   theme?: any;
   children?: React.ReactNode;
   status: any;
+  onClick?: () => void;
+  sx?: any;
 }
-const QuestionNumber: React.FC<QuestionNumberProps> = styled(Paper)(({ theme, status }: any) => ({
+const QuestionNumber = styled(Paper)<QuestionNumberProps>(({ theme, status, onClick }: any) => ({
   padding: theme.spacing(1),
   textAlign: 'center',
   cursor: 'pointer',
@@ -51,21 +53,27 @@ const QuestionList = ({
   currentQuestion,
   answeredQuestions,
   skippedQuestions,
+  onQuestionSelect,
 }: any) => (
-  <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+  <Card sx={{ p: 2, mb: 2, height: '100%' }}>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Typography variant="subtitle1" gutterBottom>
-        Total Questions: {totalQuestions}
-      </Typography>
-      <Typography variant="subtitle1" color="primary">
-        <Iconify icon="mdi:clock-outline" color="black" height="20px" width="20px" /> 00:00:30
+      <Typography variant="subtitle2" gutterBottom>
+        Total Questions : {totalQuestions}
       </Typography>
     </Box>
 
     <Grid container spacing={1}>
       {Array.from({ length: totalQuestions }, (_, i) => (
-        <Grid item xs={0.4} key={i}>
+        <Grid item xs={0.9} key={i}>
           <QuestionNumber
+            onClick={() => onQuestionSelect(i + 1)}
+            sx={{
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+                boxShadow: (theme: any) => theme.shadows[3],
+              },
+            }}
             status={
               i + 1 === currentQuestion
                 ? 'current'
@@ -90,7 +98,7 @@ const QuestionList = ({
         <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
         <Typography variant="body2">Skipped</Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Box
           sx={{
             width: 16,
@@ -104,7 +112,7 @@ const QuestionList = ({
         <Typography variant="body2">Current</Typography>
       </Box>
     </Box>
-  </Paper>
+  </Card>
 );
 
 // QuestionDisplay Component
@@ -159,7 +167,7 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
   };
 
   return (
-    <Card elevation={3}>
+    <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h5">Question {question.questionNumber}</Typography>
@@ -188,13 +196,19 @@ const NavigationButtons = ({
   <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
     <Box>
       {currentQuestion > 1 && (
-        <Button variant="contained" onClick={onBack}>
+        <Button
+          variant="contained"
+          onClick={onBack}
+          size="small"
+          startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
+        >
           Back
         </Button>
       )}
     </Box>
     <Stack direction="row" spacing={2}>
       <Button
+        size="small"
         startIcon={<Iconify icon={GlobalIcons.skipIcon} />}
         variant="outlined"
         onClick={onSkip}
@@ -202,11 +216,17 @@ const NavigationButtons = ({
         Skip
       </Button>
       {currentQuestion === totalQuestions ? (
-        <Button variant="contained" color="success" onClick={onSubmit}>
+        <Button
+          size="small"
+          variant="contained"
+          color="success"
+          onClick={onSubmit}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+        >
           Submit
         </Button>
       ) : (
-        <Button variant="contained" onClick={onNext}>
+        <Button size="small" variant="contained" onClick={onNext}>
           Next
         </Button>
       )}
@@ -334,44 +354,51 @@ const QuizPortal = ({ quizData }: { quizData: any }) => {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={8}>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-            <Typography variant="h6">
-              Time Left: {Math.floor(timeLeft / 3600)}:
-              {Math.floor((timeLeft % 3600) / 60)
-                .toString()
-                .padStart(2, '0')}
-              :{(timeLeft % 60).toString().padStart(2, '0')}
-            </Typography>
-          </Box>
+    <>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Typography variant="h6">
+          Time Left: {Math.floor(timeLeft / 3600)}:
+          {Math.floor((timeLeft % 3600) / 60)
+            .toString()
+            .padStart(2, '0')}
+          :{(timeLeft % 60).toString().padStart(2, '0')}
+        </Typography>
+      </Box>
 
-          <QuestionDisplay
-            question={{ ...sampleQuizData[currentQuestion - 1], questionNumber: currentQuestion }}
-            onAnswer={handleAnswer}
-            currentAnswer={answers[currentQuestion]}
-            isSkipped={skippedQuestions.includes(currentQuestion)}
-          />
+      <Grid container spacing={2} padding={2}>
+        <Grid item xs={12} md={8}>
+          <Stack spacing={2}>
+            <QuestionDisplay
+              question={{ ...sampleQuizData[currentQuestion - 1], questionNumber: currentQuestion }}
+              onAnswer={handleAnswer}
+              currentAnswer={answers[currentQuestion]}
+              isSkipped={skippedQuestions.includes(currentQuestion)}
+            />
 
-          <NavigationButtons
-            currentQuestion={currentQuestion}
+            <NavigationButtons
+              currentQuestion={currentQuestion}
+              totalQuestions={sampleQuizData.length}
+              onNext={handleNext}
+              onBack={handleBack}
+              onSkip={handleSkip}
+              onSubmit={handleSubmit}
+              isAnswered={answeredQuestions.includes(currentQuestion)}
+              isSkipped={skippedQuestions.includes(currentQuestion)}
+            />
+          </Stack>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <QuestionList
             totalQuestions={sampleQuizData.length}
-            onNext={handleNext}
-            onBack={handleBack}
-            onSkip={handleSkip}
-            onSubmit={handleSubmit}
-            isAnswered={answeredQuestions.includes(currentQuestion)}
-            isSkipped={skippedQuestions.includes(currentQuestion)}
+            currentQuestion={currentQuestion}
+            answeredQuestions={answeredQuestions}
+            skippedQuestions={skippedQuestions}
+            onQuestionSelect={handleQuestionSelect}
           />
-        </Stack>
+        </Grid>
       </Grid>
-
-      {/* Right side remains the same */}
-      <Grid item xs={12} md={4}>
-        {/* ... existing right side code ... */}
-      </Grid>
-    </Grid>
+    </>
   );
 };
 

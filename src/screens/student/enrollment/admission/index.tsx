@@ -17,6 +17,7 @@ import {
   Tab,
   Tabs,
   Stack,
+  Paper,
   Button,
   Dialog,
   Divider,
@@ -24,7 +25,6 @@ import {
   useTheme,
   MenuList,
   MenuItem,
-  Skeleton,
   TextField,
   IconButton,
   Typography,
@@ -37,25 +37,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 import calculateAge from 'src/utils/calculate-age';
-import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { GenderType } from 'src/enums/gender';
 import { DocumentType } from 'src/enums/documnet-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
 import { RegistrationStatusType } from 'src/enums/registration-status-type';
+import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
 import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
-import {
-  useGetStudentDocumentsQuery,
-  useGetStudentDocumentByIdQuery,
-} from 'src/redux/student/registration/registration-api';
-import {
-  AdmissionPaymentStatusType,
-  AdmissionPaymentStatusOptions,
-  AdmissionPaymentStatusTypeColors,
-} from 'src/enums/admission-payment-statusType';
 import {
   useGetStudentAdmissionQuery,
   useChangeAdmissionStatusMutation,
@@ -67,6 +58,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -75,6 +67,7 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
+import { ViewDocuments } from '../register/RenderDocument';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -494,9 +487,6 @@ const AdmissionScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
   });
-
-  console.log('admissionData----', admissionData);
-
   const counts = useMemo(
     () => ({
       pending: admissionData?.items.filter(
@@ -546,6 +536,9 @@ const AdmissionScreen = () => {
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
           studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
           genderValue: GenderType[item?.genderType],
+          address: [item.addressLine1, item.addressLine2, item.addressLine3]
+            .filter(Boolean)
+            .join(', '),
         })) || [],
     [admissionData?.items, tabs.value]
   );
@@ -573,15 +566,17 @@ const AdmissionScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
           { name: 'Admission' },
         ]}
-        sx={{ px: 1, mb: 2 }}
-        description="Manage student admissions: Approve or reject applications here."
+        sx={{ mb: 2 }}
+        description="Manage students admissions, review applications and approve or reject them as needed."
       />
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Paper
+        elevation={2}
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1, mb: 2 }}
+      >
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            mb: 2,
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
           }}
@@ -616,7 +611,7 @@ const AdmissionScreen = () => {
         >
           Change Status
         </Button>
-      </Box>
+      </Paper>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
@@ -626,7 +621,7 @@ const AdmissionScreen = () => {
         columns={[
           {
             id: 'checkBox',
-            align: 'left',
+            align: 'center',
             minWidth: '60px',
             isSort: false,
             sticky: true,
@@ -661,6 +656,27 @@ const AdmissionScreen = () => {
               );
             },
           },
+          {
+            id: 'studentName',
+            label: 'Student Name',
+            minWidth: '160px',
+            align: 'left',
+            sticky: true,
+          },
+          { id: 'educationBoard.name', label: 'Board', align: 'left' },
+          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
+          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'division.name', label: 'Division', align: 'left' },
+          {
+            id: 'dobValue',
+            label: 'Date of Birth',
+            minWidth: '130px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
+          },
+          { id: 'ageValue', label: 'Age', align: 'left' },
+          { id: 'genderValue', label: 'Gender', align: 'left' },
           { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
           {
             id: 'inquiryNumber',
@@ -670,32 +686,21 @@ const AdmissionScreen = () => {
             filterType: 'string',
             align: 'left',
           },
-          { id: 'standard.name', label: 'Class', align: 'left' },
-          { id: 'division.name', label: 'Division', align: 'left' },
-          { id: 'studentName', label: 'Student Name', minWidth: '160px', align: 'left' },
-          {
-            id: 'dobValue',
-            label: 'DOB',
-            minWidth: '80px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'date',
-          },
-          { id: 'ageValue', label: 'Age', align: 'left' },
+
           {
             id: 'doiValue',
-            label: 'Inquiry Date',
+            label: 'Date of Inquiry',
             minWidth: '140px',
             align: 'left',
             isDateRangeFilter: true,
             filterType: 'date',
           },
-          { id: 'genderValue', label: 'Gender', align: 'left' },
-          { id: 'address', label: 'Address', minWidth: '100px', align: 'left' },
+
+          { id: 'address', label: 'Address', minWidth: '180px', align: 'left' },
           {
             id: 'primaryContactNumber',
             label: 'Primary Contact No.',
-            minWidth: '150px',
+            minWidth: '185px',
             align: 'left',
           },
           {
@@ -712,51 +717,52 @@ const AdmissionScreen = () => {
             align: 'left',
           },
 
-          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
+          // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
           // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
           // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
           // { id: 'Name', label: 'Name', align: 'left' },
-          { id: 'Code', label: 'Code', align: 'left' },
+          // { id: 'Code', label: 'Code', align: 'left' },
           // { id: 'class', label: 'Class', align: 'left' },
           // { id: 'Organization', label: 'Organization' },
-          {
-            id: 'totalAmount',
-            label: 'Total Amount',
-            minWidth: '135px',
-            filterType: 'number',
-            align: 'left',
-          },
-          {
-            id: 'paidAmount',
-            label: 'Paid Amount',
-            minWidth: '125px',
-            filterType: 'number',
-            align: 'left',
-          },
-          {
-            id: 'feeStatusType',
-            label: 'Payment Status',
-            minWidth: '150px',
-            filterType: 'enum',
-            sticky: true,
-            enumOptions: AdmissionPaymentStatusOptions,
-            align: 'left',
-            render(value, row) {
-              const color = AdmissionPaymentStatusTypeColors[
-                value as Partial<AdmissionPaymentStatusType>
-              ] as LabelColor;
+          // {
+          //   id: 'totalAmount',
+          //   label: 'Total Amount',
+          //   minWidth: '135px',
+          //   filterType: 'number',
+          //   align: 'left',
+          // },
+          // {
+          //   id: 'paidAmount',
+          //   label: 'Paid Amount',
+          //   minWidth: '125px',
+          //   filterType: 'number',
+          //   align: 'left',
+          // },
+          // {
+          //   id: 'feeStatusType',
+          //   label: 'Payment Status',
+          //   minWidth: '150px',
+          //   filterType: 'enum',
+          //   sticky: true,
+          //   enumOptions: AdmissionPaymentStatusOptions,
+          //   align: 'left',
+          //   render(value, row) {
+          //     const color = AdmissionPaymentStatusTypeColors[
+          //       value as Partial<AdmissionPaymentStatusType>
+          //     ] as LabelColor;
 
-              return (
-                <Label color={color}>
-                  {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
-                </Label>
-              );
-            },
-          },
+          //     return (
+          //       <Label color={color}>
+          //         {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
+          //       </Label>
+          //     );
+          //   },
+          // },
           {
             id: 'actions',
             label: 'Actions',
             isSort: false,
+            align: 'left',
             isFilter: false,
             sticky: true,
             minWidth: 70,
@@ -786,14 +792,14 @@ const AdmissionScreen = () => {
                         <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
                         Assign Division
                       </MenuItem>
-                      <MenuItem
+                      {/* <MenuItem
                         onClick={() => {
                           dialogForCollectFees.onTrue();
                         }}
                       >
                         <Iconify icon="tdesign:money" />
                         Pay Fees
-                      </MenuItem>
+                      </MenuItem> */}
                       <MenuItem
                         onClick={() => {
                           followUpDialog.onTrue();
@@ -835,7 +841,19 @@ const AdmissionScreen = () => {
           setEditData(null);
           setOpen(false);
         }}
-        title="Edit Details"
+        // title="Edit Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Update Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Edit a student’s admission, personal, and contact details across multiple tabs."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <RegisterForm
           editData={editData}
@@ -851,7 +869,19 @@ const AdmissionScreen = () => {
           divisionDialog.onFalse();
           setEditData(null);
         }}
-        title="Assign Division"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Division</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Assign students to specific divisions based on their selected class."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AssignDivisionForm
           handleClose={divisionDialog.onFalse}
@@ -863,7 +893,19 @@ const AdmissionScreen = () => {
       <CustomDialog
         open={statusDialog.value}
         handleClose={statusDialog.onFalse}
-        title="Change Status"
+        // title="Change Status"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Change Status</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Update the admission status of selected students to Pending, Approved, or Rejected for enrollment tracking and processing."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ChangeStatusForm
           handleClose={() => {
@@ -881,7 +923,20 @@ const AdmissionScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Note"
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Notes</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Maintain a detailed record of student communication, parent interactions, and critical admission updates."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <CommunicationForm
           handleCloseDialog={() => {
@@ -889,7 +944,8 @@ const AdmissionScreen = () => {
             followUpDialog.onFalse();
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
-        />{' '}
+          isStatus={false}
+        />
       </CustomDialog>
 
       {dialogForCollectFees.value && (
@@ -920,7 +976,19 @@ const AdmissionScreen = () => {
           setEditData(null);
           openDetails.onFalse();
         }}
-        title="Student Details"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Student Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View a student’s entrance exam result, submitted documents, and take action on the admission application."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <StudentDetails
           tabValue={tabs.value}
@@ -948,13 +1016,10 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
       <DialogScrollContent>
         <Typography variant="subtitle2" color="text.secondary">
           Name :{' '}
-          {editData?.firstName || `${editData?.lastName}` || `${editData?.middleName}` || '-'}
+          {`${editData?.lastName || ''} ${editData?.firstName || ''} ${editData?.middleName || ''}`}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary">
-          Class : {editData?.standard?.name}
-        </Typography>
-        <Typography variant="subtitle2" color="text.secondary">
-          Parent Name : {editData?.fatherDetails.name || '-'}
+          Class : {editData?.standard?.name} {editData?.division?.name}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary">
           Contact : {editData?.primaryContactNumber || '-'}
@@ -1075,6 +1140,7 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
       <DialogActions sx={{ p: 2 }}>
         <Button
           variant="outlined"
+          size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={async () => {
             onClose();
@@ -1084,6 +1150,7 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
         </Button>
         <Button
           variant="contained"
+          size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
             onClose();
@@ -1153,7 +1220,7 @@ const EntranceExamSections = ({ editData }: any) => {
         </IconButton>
       </Stack>
 
-      {exam.value && (
+      {entranceExamData ? (
         <Stack spacing={2} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 100, color: 'text.secondary', mr: 2 }}>
@@ -1174,6 +1241,12 @@ const EntranceExamSections = ({ editData }: any) => {
             </Box>
             {examData?.obtainMarks || 0}/{examData?.totalMarks || 0}
           </Stack>
+        </Stack>
+      ) : (
+        <Stack spacing={2} sx={{ p: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
+          <Box component="span" sx={{ textAlign: 'center', color: 'text.secondary' }}>
+            No Entrance Exam Found
+          </Box>
         </Stack>
       )}
     </Stack>
@@ -1272,28 +1345,6 @@ const DocumentsSections = ({ editData }: any) => {
   );
 };
 
-const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentByIdQuery,
-    params: { id, documentId: docId },
-  });
-
-  return (
-    <Box>
-      {isLoading ? (
-        <Skeleton variant="rectangular" height={300} />
-      ) : (
-        <iframe
-          src={convertBase64Format(documents.content)}
-          style={{ width: '100%', height: 500 }}
-          title="Employee Document"
-        />
-      )}
-    </Box>
-  );
-};
-
 const AssignDivisionForm = ({
   handleClose,
   standard,
@@ -1318,7 +1369,7 @@ const AssignDivisionForm = ({
       standardName: standard?.name || '',
     },
     validationSchema: Yup.object({
-      division: Yup.string().required('Required'),
+      division: Yup.string().required('Division is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -1353,7 +1404,7 @@ const AssignDivisionForm = ({
           options={standard?.divisions || []}
           value={formik.values.division}
           onChange={(val) => formik.setFieldValue('division', val)}
-          label="Division"
+          label="Division *"
           valueKey="id"
           labelKey="name"
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -1442,7 +1493,11 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
         <CustomSelect
-          options={getStatusOptions()}
+          options={[
+            { label: 'Approved', value: RegistrationStatusType.Approved },
+            { label: 'Pending', value: RegistrationStatusType.Pending },
+            { label: 'Rejected', value: RegistrationStatusType.Rejected },
+          ]}
           value={formik.values.status}
           onChange={(val) => {
             formik.setFieldValue('status', val);

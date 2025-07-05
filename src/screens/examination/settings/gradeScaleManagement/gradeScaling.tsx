@@ -3,14 +3,17 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -53,6 +56,9 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       setGrades(grades.filter((grade) => grade.id !== gradeData.id));
       deleteConfirmDialog.onFalse();
       setSelectedGrade(null);
+      shikshaMitraToast.success({
+        message: `Grade Scale : ${selectedGrade.name} delete successfully`,
+      });
     }
   };
 
@@ -62,15 +68,23 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedGrade(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust this if your dialog animation is different
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       viewDialog.onFalse();
       addGradeScalingDialog.onFalse();
-      dispatch(setIsChanges(false));
-      setSelectedGrade(null);
+      resetState();
     } else if (!isChanges) {
       viewDialog.onFalse();
       addGradeScalingDialog.onFalse();
-      setSelectedGrade(null);
+      setTimeout(() => {
+        setSelectedGrade(null);
+      }, 200);
     }
   };
 
@@ -99,14 +113,6 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       </Box> */}
       <CustomizableTable
         tableId="gradesTable"
-        searchFieldProps={{
-          // placeholder: 'Search by Grade Scale Title, Total Marks...',
-          label: 'Search by Grade Scale Title, Total Marks...',
-          sx: {
-            width: '100%',
-            maxWidth: '350px',
-          },
-        }}
         noDataText={
           <>
             No Grade Scaling Data Found{' '}
@@ -136,7 +142,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
             label: 'Actions',
             isSort: false,
             sticky: true,
-            minWidth: 90,
+            minWidth: 50,
             align: 'left',
             isFilter: false,
             render(value, row) {
@@ -170,12 +176,33 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       />
 
       <CustomDialog
+        maxWidth="sm"
         open={addGradeScalingDialog.value}
         handleClose={() => {
           addGradeScalingDialog.onFalse();
-          setSelectedGrade(null);
+          setTimeout(() => {
+            setSelectedGrade(null);
+          }, 200); // Adjust this delay if your dialog animation takes more/less time
         }}
-        title={selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
+            </Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title={
+                selectedGrade
+                  ? 'You can update the grade scale details including grade ranges, total marks and other grading parameters.'
+                  : 'You can create a new grade scale by defining grade ranges, total marks and other grading parameters.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <GradeForm
           onSubmit={handleSubmit}
@@ -188,11 +215,25 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
 
       <CustomDialog
         open={viewDialog.value}
+        maxWidth="sm"
         handleClose={() => {
           viewDialog.onFalse();
-          setSelectedGrade(null);
+          setTimeout(() => {
+            setSelectedGrade(null);
+          }, 200); // Match dialog close animation duration
         }}
-        title="View Grade Scale"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Grade Scale</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View grade scales, grade ranges, total marks, and related grading criteria"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <GradeForm
           onSubmit={handleSubmit}
@@ -209,11 +250,16 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
           handleCloseDialog();
         }}
         title="Delete"
-        content="Are you sure you want to Delete Grade Scaling?"
+        content={
+          <>
+            Are you sure you want to Delete Grade Scaling <strong>{selectedGrade?.name}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
             color="error"
+            size="small"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               if (selectedGrade) {

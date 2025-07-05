@@ -1,4 +1,4 @@
-import { Box, Grid, TextField, Typography } from '@mui/material';
+import { Box, Grid, TextField } from '@mui/material';
 
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -10,9 +10,6 @@ const RenderLocalAddressFields = (props: any) => {
   return (
     <Box>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="subtitle1">Local Address</Typography>
-        </Grid>
         <Grid item xs={12} md={4}>
           <TextField
             name="localAddressLine1"
@@ -60,6 +57,7 @@ const RenderLocalAddressFields = (props: any) => {
               formik.setFieldValue('localState', null);
               formik.setFieldValue('localCountry', value);
             }}
+            disabled={!isEdit}
             // error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
             // helperText={formik.touched.localCountry && formik.errors.localCountry}
           />
@@ -71,6 +69,7 @@ const RenderLocalAddressFields = (props: any) => {
               formik.setFieldValue('localCity', null);
               formik.setFieldValue('localState', value);
             }}
+            disabled={!isEdit}
             // error={formik.touched.localState && Boolean(formik.errors.localState)}
             // helperText={formik.touched.localState && formik.errors.localState}
             countryValue={formik.values.localCountry}
@@ -83,14 +82,21 @@ const RenderLocalAddressFields = (props: any) => {
             // error={formik.touched.localCity && Boolean(formik.errors.localCity)}
             // helperText={formik.touched.localCity && formik.errors.localCity}
             stateValue={formik.values.localState}
+            disabled={!isEdit}
           />
         </Grid>
         <Grid item xs={12} md={4}>
           <TextField
             disabled={!isEdit}
             name="localPincode"
-            value={formik.values.localPincode}
-            onChange={formik.handleChange}
+            value={formik.values.localPincode || ''}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 6) {
+                value = value.slice(0, 6);
+              }
+              formik.setFieldValue('localPincode', value);
+            }}
             error={formik.touched.localPincode && Boolean(formik.errors.localPincode)}
             helperText={formik.touched.localPincode && formik.errors.localPincode}
             fullWidth

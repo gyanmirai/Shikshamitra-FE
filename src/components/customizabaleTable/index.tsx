@@ -4,7 +4,9 @@ import type { Dayjs } from 'dayjs';
 
 import jsPDF from 'jspdf';
 import dayjs from 'dayjs';
+import * as yup from 'yup';
 import * as XLSX from 'xlsx';
+import { useFormik } from 'formik';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -54,6 +56,7 @@ import {
   InputLabel,
   FormControl,
   TableContainer,
+  FormHelperText,
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
@@ -86,7 +89,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   isPagination = true,
   isFilter = true,
   isSearch = true,
-
+  tableContainerProps = {},
   isShowedDense = true,
   rowProps = () => {},
   tableId,
@@ -350,6 +353,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           : filter.value;
         const isDateType = filter.valueType === 'date';
         const isFormattedNumber = filter.valueType === 'formattedNumber';
+        // const isBetweenfilter=
+        console.log(filter.valueType, 'filter.valueType');
 
         if (isDateType) {
           switch (filter.type) {
@@ -357,7 +362,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
 
             case 'after':
-              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(dayjs(filter.value, 'DD-MM-YYYY'));
+              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
+                dayjs(filter.value as string, 'DD-MM-YYYY')
+              );
             case 'before':
               return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
             default:
@@ -366,7 +373,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         }
         if (isFormattedNumber) {
           const parsedValue = parseFormattedNumber(value);
-          const parsedFilterValue = parseFormattedNumber(filter.value);
+          const parsedFilterValue = parseFormattedNumber(filter.value as string);
 
           switch (filter.type) {
             case 'equals':
@@ -381,17 +388,25 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         } else {
           switch (filter.type) {
             case 'contains':
-              return value.toString().toLowerCase().includes(filter.value.toLowerCase());
+              return value.toString().toLowerCase().includes(filter.value.toString().toLowerCase());
             case 'equals':
               return value.toString().toLowerCase() === filter.value.toString().toLowerCase();
             case 'startsWith':
-              return value.toString().toLowerCase().startsWith(filter.value.toLowerCase());
+              return value
+                .toString()
+                .toLowerCase()
+                .startsWith(filter.value.toString().toLowerCase());
             case 'endsWith':
-              return value.toString().toLowerCase().endsWith(filter.value.toLowerCase());
+              return value.toString().toLowerCase().endsWith(filter.value.toString().toLowerCase());
             case 'greaterThan':
               return valueAsNumber > filterValueAsNumber;
             case 'lessThan':
               return valueAsNumber < filterValueAsNumber;
+            case 'between':
+              return (
+                valueAsNumber >= (filter?.value as any)?.min &&
+                valueAsNumber <= (filter?.value as any)?.max
+              );
             default:
               return true;
           }
@@ -617,8 +632,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   />
                   <FormGroup>
                     {columns
-                      .filter((column) =>
-                        column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                      .filter(
+                        (column) =>
+                          column?.label?.trim() &&
+                          column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
                       )
                       .map((column) => (
                         <FormControlLabel
@@ -717,7 +734,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         onApplyFilter={handleApplyColumnFilter}
       />
       <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
-        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }}>
+        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }} {...tableContainerProps}>
           <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>
@@ -1021,17 +1038,26 @@ const FilterChips = ({
   >
     {filters.map((filter: any, index: number) => {
       const findColumn = columns.find((column: any) => column.id === filter.column);
-      const filterValue: string | number =
+      const filterValue: any =
         findColumn?.filterType === 'enum'
           ? findColumn.enumOptions?.find((i) => i.value === filter.value)?.label
-          : filter.value;
+          : (filter.value as string);
+
+      let label = '';
+      if (findColumn?.filterType === 'formattedNumber') {
+        label = formatNumber(filterValue, 'INR');
+      } else if (findColumn?.filterType === 'number' && filter.type === 'between') {
+        label = `Between ${filter?.value?.min} to ${filter?.value?.max}`;
+      } else {
+        label = String(filterValue);
+      }
 
       return (
         <Chip
           key={index}
           size="small"
           variant="soft"
-          label={`${findColumn?.label} :   ${findColumn?.filterType === 'formattedNumber' ? formatNumber(filterValue, 'INR') : filterValue}`}
+          label={`${findColumn?.label} :  ${label}`}
           onDelete={() => removeFilter(index)}
         />
       );
@@ -1055,14 +1081,40 @@ const ColumnFilterMenu: React.FC<{
   onClose: () => void;
   onApplyFilter: (columnId: string, filterType: string, value: any, valueType: string) => void;
 }> = ({ anchorEl, onClose, onApplyFilter }) => {
-  // Stores the selected filter type (contains, equals, startsWith, etc.)
-  const [filterType, setFilterType] = useState('');
-
-  // Stores the filter value entered by the user (can be string, date, or null)
-  const [filterValue, setFilterValue] = useState<null | string | Dayjs | number>(null);
-
-  // Stores the date range for date filters (currently unused)
-  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const formik = useFormik<{
+    min: number | null;
+    max: number | null;
+    filterValue: null | string | Dayjs | number | { min: number; max: number };
+    filterType: string;
+  }>({
+    initialValues: {
+      min: null,
+      max: null,
+      filterValue: null,
+      filterType: '',
+    },
+    validationSchema: yup.object({
+      filterType: yup.string().required('Filter type is required'),
+      min: yup.number().when('filterType', {
+        is: 'between',
+        then: (schema) => schema.required('Min value is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      max: yup.number().when('filterType', {
+        is: 'between',
+        then: (schema) => schema.required('Max value is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      filterValue: yup.string().when('filterType', {
+        is: 'between',
+        then: (schema) => schema.nullable(),
+        otherwise: (schema) => schema.required('value is required'),
+      }),
+    }),
+    onSubmit: (values) => {
+      handleApply();
+    },
+  });
 
   const getFilterOptions = () => {
     if (!anchorEl) return [];
@@ -1111,8 +1163,8 @@ const ColumnFilterMenu: React.FC<{
   const handleApply = () => {
     if (!anchorEl) return;
 
-    let value = filterValue;
-    let filterTypeValue = filterType;
+    let value: any = formik.values.filterValue;
+    let filterTypeValue = formik.values.filterType;
     if (anchorEl.column.filterType === 'date') {
       value = (value as Dayjs).format('DD-MM-YYYY');
     }
@@ -1122,18 +1174,31 @@ const ColumnFilterMenu: React.FC<{
     if (anchorEl.column.filterType === 'formattedNumber') {
       value = parseFormattedNumber(value);
     }
+    if (formik.values.filterType === 'between') {
+      value = { min: formik.values.min, max: formik.values.max };
+    }
 
     onApplyFilter(anchorEl.column.id, filterTypeValue, value, anchorEl.column.filterType as string);
-    setFilterType('');
-    setFilterValue(null);
-    setDateRange([null, null]);
+    formik.setFieldValue('filterValue', null);
+    formik.setFieldValue('filterType', '');
+    formik.setFieldValue('min', null);
+    formik.setFieldValue('max', null);
+    formik.resetForm();
+    onClose();
   };
 
   return (
     <Menu
       anchorEl={anchorEl?.element}
       open={Boolean(anchorEl)}
-      onClose={onClose}
+      onClose={() => {
+        formik.setFieldValue('filterValue', null);
+        formik.setFieldValue('filterType', '');
+        formik.setFieldValue('min', null);
+        formik.setFieldValue('max', null);
+        formik.resetForm();
+        onClose();
+      }}
       slotProps={{
         paper: {
           sx: {
@@ -1142,14 +1207,19 @@ const ColumnFilterMenu: React.FC<{
         },
       }}
     >
-      <Box sx={{ p: 2, maxWidth: 350 }}>
+      <Box component="form" sx={{ p: 2, maxWidth: 350 }} onSubmit={formik.handleSubmit}>
         {anchorEl?.column.filterType !== 'enum' && (
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <InputLabel>Filter Type</InputLabel>
+          <FormControl
+            fullWidth
+            size="small"
+            sx={{ mb: 2 }}
+            error={formik.touched.filterType && !!formik.errors.filterType}
+          >
+            <InputLabel>Filter Type *</InputLabel>
             <Select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              label="Filter Type"
+              value={formik.values.filterType}
+              onChange={(e) => formik.setFieldValue('filterType', e.target.value)}
+              label="Filter Type *"
             >
               {getFilterOptions().map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -1157,16 +1227,23 @@ const ColumnFilterMenu: React.FC<{
                 </MenuItem>
               ))}
             </Select>
+            {formik.touched.filterType && formik.errors.filterType && (
+              <FormHelperText error>{formik.errors.filterType}</FormHelperText>
+            )}
           </FormControl>
         )}
 
         {anchorEl?.column.filterType === 'enum' && (
-          <FormControl fullWidth size="small">
-            <InputLabel>{anchorEl.column.label}</InputLabel>
+          <FormControl
+            fullWidth
+            size="small"
+            error={formik.touched.filterValue && !!formik.errors.filterValue}
+          >
+            <InputLabel>{anchorEl.column.label} *</InputLabel>
             <Select
-              value={filterValue as string}
-              onChange={(e) => setFilterValue(e.target.value)}
-              label={anchorEl.column.label}
+              value={formik.values.filterValue}
+              onChange={(e) => formik.setFieldValue('filterValue', e.target.value)}
+              label={`${anchorEl.column.label} *`}
             >
               {anchorEl.column.enumOptions?.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -1174,61 +1251,82 @@ const ColumnFilterMenu: React.FC<{
                 </MenuItem>
               ))}
             </Select>
+            {formik.touched.filterValue && formik.errors.filterValue && (
+              <FormHelperText error>{formik.errors.filterValue}</FormHelperText>
+            )}
           </FormControl>
         )}
 
-        {filterType &&
+        {formik.values.filterType &&
           (anchorEl?.column.filterType === 'date' ? (
             <DatePicker
-              value={filterValue as null | Dayjs}
-              onChange={(newValue) => setFilterValue(newValue)}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              value={formik.values.filterValue as null | Dayjs}
+              onChange={(newValue) => formik.setFieldValue('filterValue', newValue)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  label: `${anchorEl?.column.label} *`,
+                  error: formik.touched.filterValue && Boolean(formik.errors.filterValue),
+                  helperText: formik.touched.filterValue && formik.errors.filterValue,
+                },
+              }}
               format="DD-MM-YYYY"
             />
+          ) : formik.values.filterType === 'between' ? (
+            <>
+              <TextField
+                fullWidth
+                size="small"
+                value={formik.values.min}
+                onChange={(e) => formik.setFieldValue('min', e.target.value)}
+                type="number"
+                label={`${anchorEl?.column.label} Min *`}
+                sx={{ mb: 2 }}
+                error={formik.touched.min && Boolean(formik.errors.min)}
+                helperText={formik.touched.min && formik.errors.min}
+              />
+
+              <TextField
+                fullWidth
+                size="small"
+                value={formik.values.max}
+                onChange={(e) => formik.setFieldValue('max', e.target.value)}
+                type="number"
+                label={`${anchorEl?.column.label} Max *`}
+                error={formik.touched.max && Boolean(formik.errors.max)}
+                helperText={formik.touched.max && formik.errors.max}
+              />
+            </>
           ) : (
             <TextField
               fullWidth
               size="small"
-              value={filterValue as string}
-              onChange={(e) => setFilterValue(e.target.value as string)}
+              value={formik.values.filterValue as string}
+              onChange={(e) => formik.setFieldValue('filterValue', e.target.value)}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
-              label={anchorEl?.column.label}
+              label={`${anchorEl?.column.label} *`}
+              error={formik.touched.filterValue && Boolean(formik.errors.filterValue)}
+              helperText={formik.touched.filterValue && formik.errors.filterValue}
               // placeholder={anchorEl?.column.label}
             />
           ))}
-
-        {/* {filterType === 'range' ? null : anchorEl?.column.filterType === 'date' ? (
-          <DatePicker
-            value={filterValue as null | Dayjs}
-            onChange={(newValue) => setFilterValue(newValue)}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            format="DD-MM-YYYY"
-          />
-        ) : (
-          <TextField
-            fullWidth
-            size="small"
-            value={filterValue as string}
-            onChange={(e) => setFilterValue(e.target.value as string)}
-            type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
-            label={anchorEl?.column.label}
-            placeholder={anchorEl?.column.label}
-          />
-        )} */}
 
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button
             size="small"
             onClick={() => {
-              setFilterType('');
-              setFilterValue(null);
-              setDateRange([null, null]);
+              formik.setFieldValue('filterValue', null);
+              formik.setFieldValue('filterType', '');
+              formik.setFieldValue('min', null);
+              formik.setFieldValue('max', null);
+              formik.resetForm();
               onClose();
             }}
           >
             Cancel
           </Button>
-          <Button variant="contained" size="small" onClick={handleApply}>
+          <Button variant="contained" size="small" type="submit">
             Apply
           </Button>
         </Box>

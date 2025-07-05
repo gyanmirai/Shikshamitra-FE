@@ -23,7 +23,13 @@ const RenderAcademicYear = (props: any) => {
       labelKey="name"
       valueKey="id"
       disabled={!isEdit}
-      onChange={(value) => setFieldValue('academicYear', value)}
+      onBlur={formik.handleBlur}
+      onChange={(value) => {
+        setFieldValue('academicYear', value);
+        setFieldValue('board', null);
+        setFieldValue('medium', null);
+        setFieldValue('class', null);
+      }}
       error={!!(touched.academicYear && errors.academicYear) || false}
       helperText={(touched.academicYear && errors.academicYear) || ''}
       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}

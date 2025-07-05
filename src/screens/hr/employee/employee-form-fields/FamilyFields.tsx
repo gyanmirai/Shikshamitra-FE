@@ -16,7 +16,14 @@ import type { FieldsType } from './types';
 
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForFather =
+    formik?.values?.addressLine1 === formik?.values?.fatherAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.fatherAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.fatherAddress3 &&
+    formik?.values?.country.name === formik?.values?.fatherCountry.name &&
+    formik?.values?.state.name === formik?.values?.fatherState.name &&
+    formik?.values?.city.name === formik?.values?.fatherCity.name &&
+    formik?.values?.pincode === formik?.values?.fatherPinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -24,7 +31,7 @@ function FatherAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsEmployeeAddressForFather}
+              checked={isSameAsEmployeeAddressForFather}
               onChange={(e) => {
                 formik.setFieldValue('sameAsEmployeeAddressForFather', e.target.checked);
                 if (e.target.checked) {
@@ -121,6 +128,7 @@ function FatherAddressComponent(props: any) {
             formik.setFieldValue('fatherState', value);
             formik.setFieldValue('fatherCity', null);
           }}
+          disabled={!!disabled}
           error={formik.touched.fatherState && Boolean(formik.errors.fatherState)}
           helperText={formik.touched.fatherState && formik.errors.fatherState}
         />
@@ -132,6 +140,7 @@ function FatherAddressComponent(props: any) {
           onChange={(_e: any, value: any) => {
             formik.setFieldValue('fatherCity', value);
           }}
+          disabled={!!disabled}
           stateValue={formik.values.fatherState}
           error={formik.touched.fatherCity && Boolean(formik.errors.fatherCity)}
           helperText={formik.touched.fatherCity && formik.errors.fatherCity}
@@ -146,7 +155,14 @@ function FatherAddressComponent(props: any) {
             name="fatherPinCode"
             label="Pincode"
             value={formik.values.fatherPinCode || ''}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              if (value.length <= 6) {
+                formik.handleChange(e);
+                formik.validateField('fatherPinCode');
+              }
+            }}
+            // onChange={formik.handleChange}
             error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
             helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
             fullWidth
@@ -162,7 +178,14 @@ function FatherAddressComponent(props: any) {
 
 function MotherAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForMother =
+    formik?.values?.addressLine1 === formik?.values?.motherAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.motherAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.motherAddress3 &&
+    formik?.values?.country.name === formik?.values?.motherCountry.name &&
+    formik?.values?.state.name === formik?.values?.motherState.name &&
+    formik?.values?.city.name === formik?.values?.motherCity.name &&
+    formik?.values?.pincode === formik?.values?.motherPinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -170,7 +193,7 @@ function MotherAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsFatherAddressForMother}
+              checked={isSameAsEmployeeAddressForMother}
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForMother', e.target.checked);
                 if (e.target.checked) {
@@ -251,6 +274,7 @@ function MotherAddressComponent(props: any) {
             formik.setFieldValue('motherState', null);
             formik.setFieldValue('motherCountry', value);
           }}
+          disabled={!!disabled}
           error={formik.touched.motherCountry && Boolean(formik.errors.motherCountry)}
           helperText={formik.touched.motherCountry && formik.errors.motherCountry}
           textFieldProps={{ label: 'Country' }}
@@ -263,6 +287,7 @@ function MotherAddressComponent(props: any) {
             formik.setFieldValue('motherState', value);
             formik.setFieldValue('motherCity', null);
           }}
+          disabled={!!disabled}
           value={formik.values.motherState}
           countryValue={formik.values.motherCountry}
           error={formik.touched.motherState && Boolean(formik.errors.motherState)}
@@ -275,6 +300,7 @@ function MotherAddressComponent(props: any) {
           onChange={(_e: any, value: any) => {
             formik.setFieldValue('motherCity', value);
           }}
+          disabled={!!disabled}
           value={formik.values.motherCity}
           stateValue={formik.values.motherState}
           error={formik.touched.motherCity && Boolean(formik.errors.motherCity)}
@@ -290,7 +316,14 @@ function MotherAddressComponent(props: any) {
             name="motherPinCode"
             label="Pincode"
             value={formik.values.motherPinCode || ''}
-            onChange={formik.handleChange}
+            // onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              if (value.length <= 6) {
+                formik.handleChange(e);
+                formik.validateField('motherPinCode');
+              }
+            }}
             error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
             helperText={formik.touched.motherPinCode && formik.errors.motherPinCode}
             fullWidth
@@ -306,7 +339,14 @@ function MotherAddressComponent(props: any) {
 
 function SpouseAddressComponent(props: any) {
   const { formik, disabled } = props;
-
+  const isSameAsEmployeeAddressForSpouse =
+    formik?.values?.addressLine1 === formik?.values?.spouseAddress1 &&
+    formik?.values?.addressLine2 === formik?.values?.spouseAddress2 &&
+    formik?.values?.addressLine3 === formik?.values?.spouseAddress3 &&
+    formik?.values?.country.name === formik?.values?.spouseCountry.name &&
+    formik?.values?.state.name === formik?.values?.spouseState.name &&
+    formik?.values?.city.name === formik?.values?.spouseCity.name &&
+    formik?.values?.pincode === formik?.values?.spousePinCode;
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
@@ -314,7 +354,7 @@ function SpouseAddressComponent(props: any) {
           disabled={!!disabled}
           control={
             <Checkbox
-              checked={formik.values.sameAsFatherAddressForSpouse}
+              checked={isSameAsEmployeeAddressForSpouse}
               onChange={(e) => {
                 formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
                 if (e.target.checked) {
@@ -395,6 +435,7 @@ function SpouseAddressComponent(props: any) {
             formik.setFieldValue('spouseState', null);
             formik.setFieldValue('spouseCountry', value);
           }}
+          disabled={!!disabled}
           error={formik.touched.spouseCountry && Boolean(formik.errors.spouseCountry)}
           helperText={formik.touched.spouseCountry && formik.errors.spouseCountry}
           textFieldProps={{ label: 'Country' }}
@@ -407,6 +448,7 @@ function SpouseAddressComponent(props: any) {
             formik.setFieldValue('spouseState', value);
             formik.setFieldValue('spouseCity', null);
           }}
+          disabled={!!disabled}
           value={formik.values.spouseState}
           countryValue={formik.values.spouseCountry}
           error={formik.touched.spouseState && Boolean(formik.errors.spouseState)}
@@ -419,6 +461,7 @@ function SpouseAddressComponent(props: any) {
           onChange={(_e: any, value: any) => {
             formik.setFieldValue('spouseCity', value);
           }}
+          disabled={!!disabled}
           value={formik.values.spouseCity}
           stateValue={formik.values.spouseState}
           error={formik.touched.spouseCity && Boolean(formik.errors.spouseCity)}
@@ -434,7 +477,14 @@ function SpouseAddressComponent(props: any) {
             name="spousePinCode"
             label="Pincode"
             value={formik.values.spousePinCode || ''}
-            onChange={formik.handleChange}
+            // onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              if (value.length <= 6) {
+                formik.handleChange(e);
+                formik.validateField('spousePinCode');
+              }
+            }}
             error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}
             helperText={formik.touched.spousePinCode && formik.errors.spousePinCode}
             fullWidth
@@ -467,36 +517,24 @@ const FamilyMemberSection = ({
   const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
 
   const isEditable = useBoolean(!!isMainForm);
-  const handleSave = () => {
-    formik.submitForm();
+  const handleSave = async () => {
+    await formik?.submitForm?.();
+    formik.resetForm({ values: formik.values });
   };
   const handleCancel = () => {
-    console.log('cancel', editData);
-    formik.setFieldValue(`${type}Name`, editData.fatherDetails.name || '');
-    formik.setFieldValue(`${type}Occupation`, editData.fatherDetails.occupation || '');
-    formik.setFieldValue(`${type}ContactNo`, editData.fatherDetails.contactNo || '');
-    formik.setFieldValue(`${type}Address1`, editData.fatherDetails.address1 || '');
-    formik.setFieldValue(`${type}Address2`, editData.fatherDetails.address2 || '');
-    formik.setFieldValue(`${type}Address3`, editData.fatherDetails.address3 || '');
-    formik.setFieldValue(`${type}Country`, {
-      name: editData?.fatherDetails?.countryName || '',
-      isoCode: editData?.fatherDetails?.countryIsoCode || '',
-    });
-    formik.setFieldValue(`${type}State`, {
-      name: editData?.fatherDetails?.stateName || '',
-      isoCode: editData?.fatherDetails?.stateIsoCode || '',
-    });
-    formik.setFieldValue(`${type}City`, {
-      name: editData?.fatherDetails?.city || '',
-    });
-    formik.setFieldValue(`${type}PinCode`, editData.fatherDetails.pinCode);
+    formik.resetForm();
   };
   return (
     <SectionCard
       title={title}
       headerContent={
         !isMainForm && (
-          <CardActions isEdit={isEditable} onSave={handleSave} onCancel={handleCancel} />
+          <CardActions
+            isEdit={isEditable}
+            isLoading={formik.isSubmitting}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
         )
       }
     >
@@ -510,11 +548,19 @@ const FamilyMemberSection = ({
             value={formik.values[`${type}Name`]}
             label={`Full Name `}
             // placeholder={`Enter ${capitalizedType} Name `}
+            // onChange={(e) => {
+            //   const value = capitalize(e.target.value);
+            //   if (/^[A-Za-z ]*$/.test(value)) {
+            //     formik.setFieldValue(`${type}Name`, value);
+            //   }
+            // }}
             onChange={(e) => {
-              const value = capitalize(e.target.value);
-              if (/^[A-Za-z ]*$/.test(value)) {
-                formik.setFieldValue(`${type}Name`, value);
-              }
+              const newValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const value = newValue
+                .split(' ')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              formik.setFieldValue(`${type}Name`, value);
             }}
             error={formik.touched[`${type}Name`] && Boolean(formik.errors[`${type}Name`])}
             helperText={formik.touched[`${type}Name`] && formik.errors[`${type}Name`]}
@@ -556,9 +602,11 @@ const FamilyMemberSection = ({
             label="Mobile No."
             onChange={(value) => {
               formik.setFieldValue(`${type}ContactNo`, value);
+              formik.validateField(`${type}ContactNo`);
             }}
             // placeholder={`Enter ${capitalizedType} Contact No.`}
             error={formik.touched[`${type}ContactNo`] && Boolean(formik.errors[`${type}ContactNo`])}
+            helperText={formik.touched[`${type}ContactNo`] && formik.errors[`${type}ContactNo`]}
             disabled={!isEditable.value}
           />
         </ShakingTextField>

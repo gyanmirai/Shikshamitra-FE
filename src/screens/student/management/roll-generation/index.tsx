@@ -62,7 +62,7 @@ const RollNoGenerationScreen = ({
     }
 
     // Sort students based on selected criteria (name, lastName, or GR number)
-    if (arrangeBy === 'name') {
+    if (arrangeBy === 'firstName') {
       filteredData.sort((a, b) => a.name.localeCompare(b.name));
     } else if (arrangeBy === 'lastName') {
       filteredData.sort((a, b) => a.lastName.localeCompare(b.lastName));
@@ -87,7 +87,7 @@ const RollNoGenerationScreen = ({
   }, [studentData]);
 
   // Handle roll number change for a specific student
-  const handleRollNoChange = (id: string, newValue: number) => {
+  const handleRollNoChange = (id: string, newValue: number | null) => {
     // Update the roll number for the specified student
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
@@ -147,7 +147,7 @@ const RollNoGenerationScreen = ({
     <Box>
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-          <Box display="flex" gap={2}>
+          <Box display="flex" gap={2} ml={1}>
             <CustomSelect
               options={[
                 { id: 'mix', name: 'Mix' },
@@ -159,20 +159,19 @@ const RollNoGenerationScreen = ({
               onChange={(val) => setArrangementType(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '200px' } }}
+              formControlProps={{ sx: { width: '250px' } }}
             />
             <CustomSelect
               options={[
-                { id: 'surname', name: 'Surname' },
-                { id: 'name', name: 'Name' },
-                { id: 'grNo', name: 'GR.No.' },
+                { id: 'firstName', name: 'First Name' },
+                { id: 'lastName', name: 'Last Name' },
               ]}
               label="Arrangement By"
               value={arrangeBy}
               onChange={(val) => setArrangeBy(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '200px' } }}
+              formControlProps={{ sx: { width: '250px' } }}
               disabled={!arrangementType}
             />
           </Box>
@@ -270,7 +269,10 @@ const RollNoGenerationScreen = ({
                       variant="standard"
                       type="number"
                       value={row.rollNo}
-                      onChange={(e) => handleRollNoChange(row.id, +e.target.value)}
+                      inputProps={{ min: 0 }}
+                      onChange={(e) =>
+                        handleRollNoChange(row.id, e.target.value ? +e.target.value : null)
+                      }
                       error={Boolean(error[row.id])}
                       helperText={error[row.id]}
                       disabled={!isManual}

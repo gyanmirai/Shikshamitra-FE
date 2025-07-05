@@ -1,15 +1,21 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Chip, Tabs, Button } from '@mui/material';
+import { Box, Tab, Tabs, Button, MenuList, MenuItem } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -26,10 +32,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   data,
   onViewTimetable,
 }) => {
+  const publishExamDialog = useBoolean();
+
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  // 🔼 Add this near the top with other useState hooks
+  const [selectedTimetableName, setSelectedTimetableName] = useState<string | null>(null);
+
   // Calculate counts of exams by status
   const examCounts = useMemo(
     () => ({
@@ -79,9 +90,40 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }
   };
 
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <>
+        {' '}
+        <MenuList>
+          {/* Show Add Timetable option for Pending status */}
+
+          <MenuItem
+            onClick={() => {
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.download} />
+            Print Timetable
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              publishExamDialog.onTrue();
+              setSelectedTimetableName(row.examName);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.publish} />
+            Publish Timetable
+          </MenuItem>
+        </MenuList>
+      </>
+    ),
+    [publishExamDialog]
+  );
+
   return (
     <Box>
-      <Box display="flex" gap={1} alignItems="flex-start">
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -118,7 +160,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             setOpenDialog(true);
           }}
           sx={{
-            mt: 0.5,
+            mt: 2,
           }}
         >
           Schedule Exam
@@ -126,14 +168,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       </Box>
       <CustomizableTable
         tableId="schedule-exam-table"
-        searchFieldProps={{
-          // placeholder: 'Search by Class, Division, Exam Type, Subject Name...',
-          label: 'Search by Class, Division, Exam Type,  Subject Name...',
-          sx: {
-            maxWidth: '500px',
-            width: '100%',
-          },
-        }}
         noDataText={
           <>
             No Exam Data Found{' '}
@@ -169,37 +203,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             id: 'divisions',
             label: 'Divisions',
             align: 'left',
-            render: (value) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value.map((division: string) => (
-                  <Chip key={division} label={division} size="small" variant="outlined" />
-                ))}
-              </Box>
-            ),
+            render: (value) => <Box>{value.join(', ')}</Box>,
           },
+          { id: 'examName', label: 'Exam Name', align: 'left' },
           { id: 'examType', label: 'Exam Type', align: 'left' },
-          // {
-          //   id: 'subjects',
-          //   label: 'Subjects',
-          //   align: 'left',
-          //   render: (value, row) => (
-          //     <Box sx={{ display: 'flex', gap: 1 }}>
-          //       {value.map((subject: ISubjectDetail) => (
-          //         <Box key={subject.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          //           <Box
-          //             sx={{
-          //               width: 4,
-          //               height: 18,
-          //               borderRadius: 1,
-          //               backgroundColor: subject.subjectColor,
-          //             }}
-          //           />
-          //           <Typography variant="body2">{subject.subjectName}</Typography>
-          //         </Box>
-          //       ))}
-          //     </Box>
-          //   ),
-          // },
           {
             id: 'action',
             label: 'Actions',
@@ -211,7 +218,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  showThreeDots={false}
+                  actions={(prop) => actions({ ...prop, row })}
                   placement="right-top"
                   // showViewIcon
                   showDeleteIcon
@@ -232,6 +239,39 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           },
         ]}
         data={tableData}
+      />
+
+      <ConfirmDialog
+        open={publishExamDialog.value}
+        onClose={() => {
+          publishExamDialog.onFalse();
+          // setSelectedAssignment(null);
+          setSelectedTimetableName(null);
+        }}
+        title="Publish"
+        content={
+          <>
+            Are you sure you want to publish{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {selectedTimetableName}
+            </Box>
+            ?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
+              publishExamDialog.onFalse();
+              setSelectedTimetableName(null);
+            }}
+            size="small"
+          >
+            Publish
+          </Button>
+        }
       />
     </Box>
   );

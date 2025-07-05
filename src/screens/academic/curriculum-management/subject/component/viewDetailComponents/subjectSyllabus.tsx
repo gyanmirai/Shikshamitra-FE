@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
@@ -38,47 +40,55 @@ const chapters = [
   },
 ];
 
-const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => (
-  <Box>
-    {chapters.length > 0 ? (
-      chapters.map((chapter, index) => (
-        <Accordion
-          key={chapter.id}
-          sx={{
-            mb: 2,
-            borderRadius: 1,
-            boxShadow: 3,
-            '&::before': {
-              display: 'none', // hides the ::before line
-            },
-          }}
-        >
-          <AccordionSummary
-            expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
-            aria-controls={`chapter-${chapter.id}-content`}
-            id={`chapter-${chapter.id}-header`}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Iconify icon="mdi:book-open-variant" sx={{ mr: 1 }} />
-              <Typography variant="subtitle2">{`${index + 1}. ${chapter.title}`}</Typography>
-            </Box>
-          </AccordionSummary>
+const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <Box sx={{ height: '100%', overflow: 'hidden' }}>
+      {/* <Scrollbar ref={ref}> */}
+      <Box sx={{ height: '100%', overflow: 'auto', pb: 2 }}>
+        {chapters.length > 0 ? (
+          chapters.map((chapter, index) => (
+            <Accordion
+              key={chapter.id}
+              sx={{
+                mb: 2,
+                borderRadius: 1,
+                overflow: 'visible',
+                boxShadow: 3,
+                '&::before': {
+                  display: 'none', // hides the ::before line
+                },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
+                aria-controls={`chapter-${chapter.id}-content`}
+                id={`chapter-${chapter.id}-header`}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Iconify icon="mdi:book-open-variant" sx={{ mr: 1.5 }} />
+                  <Typography variant="subtitle2">{`${index + 1}. ${chapter.title}`}</Typography>
+                </Box>
+              </AccordionSummary>
 
-          <AccordionDetails>
-            <Scrollbar sx={{ height: '150px' }}>
-              <Typography variant="body2" pl={5}>
-                {chapter.description || 'No description provided.'}
-              </Typography>
-            </Scrollbar>
-          </AccordionDetails>
-        </Accordion>
-      ))
-    ) : (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-        No chapters available for this subject.
-      </Typography>
-    )}
-  </Box>
-);
+              <AccordionDetails sx={{ pt: 0 }}>
+                <Scrollbar sx={{ height: '90px', pr: 2 }}>
+                  <Typography variant="body2" pl={5} textAlign="justify">
+                    {chapter.description || 'No description provided.'}
+                  </Typography>
+                </Scrollbar>
+              </AccordionDetails>
+            </Accordion>
+          ))
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+            No chapters available for this subject.
+          </Typography>
+        )}
+      </Box>
+      {/* </Scrollbar> */}
+    </Box>
+  );
+};
 
 export default SubjectSyllabus;

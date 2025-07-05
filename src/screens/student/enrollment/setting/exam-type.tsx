@@ -26,9 +26,9 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import type { IExamType } from './type';
 
-const ExamType = () => {
+const ExamType = ({ inquiryPreference }: any) => {
   // Dialog state for opening/closing modal
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for confirmation modal
   const confirm = useBoolean();
 
@@ -49,13 +49,14 @@ const ExamType = () => {
   //     currentQueryAndMutation: useDeleteInquiryPreferenceMutation,
   //   });
 
-  // Handler to close dialog and reset edit data
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      dialog.onFalse();
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      inquiryPreference.onFalse();
+      setEditData(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      dialog.onFalse();
+      inquiryPreference.onFalse();
+      setEditData(null);
     }
   };
 
@@ -85,7 +86,12 @@ const ExamType = () => {
         }
       />
       <Box display="flex" justifyContent="flex-end">
-        <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+        <Button
+          size="small"
+          startIcon={<Add />}
+          variant="contained"
+          onClick={inquiryPreference.onTrue}
+        >
           Entrance Exam Type
         </Button>
       </Box>
@@ -96,7 +102,7 @@ const ExamType = () => {
             No Entrance Exam Type Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                inquiryPreference.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -133,7 +139,7 @@ const ExamType = () => {
                   }}
                   handleEditClick={() => {
                     setEditData(row as IExamType);
-                    dialog.onTrue();
+                    inquiryPreference.onTrue();
                   }}
                   showThreeDots={false}
                 />
@@ -170,9 +176,9 @@ const ExamType = () => {
         ]}
       />{' '}
       <CustomDialog
-        open={dialog.value}
+        open={inquiryPreference.value}
         handleClose={() => {
-          dialog.onFalse();
+          inquiryPreference.onFalse();
           setEditData(null);
         }}
         title="Exam Type"

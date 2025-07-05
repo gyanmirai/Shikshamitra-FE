@@ -102,9 +102,9 @@ const GrNoGenerationScreen = ({
   };
 
   // Handle individual GR number changes in manual mode
-  const handleGrNumberChange = (id: string, newValue: number) => {
+  const handleGrNumberChange = (id: string, newValue: number | null) => {
     setTableData((prevData) =>
-      prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue } : item))
+      prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue ?? 0 } : item))
     );
   };
 
@@ -167,7 +167,6 @@ const GrNoGenerationScreen = ({
             onClick={handleSave}
             disabled={isSaving || !tableData.some((item) => item.grNoRecord)}
             size="small"
-            // sx={{ width: '180px' }}
           >
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
@@ -231,8 +230,11 @@ const GrNoGenerationScreen = ({
                     variant="standard"
                     placeholder="Enter New GR No."
                     type="number"
+                    inputProps={{ min: 0 }}
                     value={value}
-                    onChange={(e) => handleGrNumberChange(row.id, +e.target.value)}
+                    onChange={(e) =>
+                      handleGrNumberChange(row.id, e.target.value ? +e.target.value : null)
+                    }
                   />
                 ) : (
                   value

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
@@ -8,32 +8,41 @@ import { Tab, Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import LeaveType from './leave-type';
 import LeavePolicy from './leave-policy';
-import AttendanceRule from './attendance-rule';
+import ShiftManagement from './shift-management';
 
 const TABS = [
-  // {
-  //   value: 'notification',
-  //   label: 'Notification',
-  //   icon: <Iconify icon="mage:notification-bell-fill" width={20} />,
-  //   component: () => <Notification />,
-  // },
+  {
+    value: 'shiftManagement',
+    label: 'Shift Management',
+    icon: <Iconify icon="mdi:clock" width={20} />,
+    component: (props: any) => <ShiftManagement {...props} />,
+  },
   // {
   //   value: 'method',
   //   label: 'Notification Method',
   //   icon: <Iconify icon="hugeicons:configuration-02" width={20} />,
   //   component: () => <NotificationMethod />,
   // },
+  // {
+  //   value: 'rule',
+  //   label: 'Attendance Rule',
+  //   icon: <Iconify icon="carbon:rule-draft" width={20} />,
+  //   component: (props: any) => <AttendanceRule {...props} />,
+  // },
   {
-    value: 'rule',
-    label: 'Attendance Rule',
-    icon: <Iconify icon="carbon:rule-draft" width={20} />,
-    component: (props: any) => <AttendanceRule {...props} />,
+    value: 'leaveType',
+    label: 'Leave Type',
+    icon: <Iconify icon="fluent:notepad-edit-16-filled" width={20} />,
+    component: (props: any) => <LeaveType {...props} />,
   },
   {
     value: 'leavePolicy',
@@ -52,7 +61,13 @@ const TABS = [
 const HrAttendanceSettingScreen = () => {
   const attendanceRuleDialog = useBoolean(false);
   const leavePolicyDialog = useBoolean(false);
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'rule' });
+  const shiftManagementDialog = useBoolean(false);
+  const leaveTypeDialog = useBoolean(false);
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'shiftManagement' });
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
 
   const renderButton = useMemo(
     () => ({
@@ -78,14 +93,43 @@ const HrAttendanceSettingScreen = () => {
           Leave Policy
         </Button>
       ),
+      shiftManagement: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          size="small"
+          onClick={shiftManagementDialog.onTrue}
+        >
+          Shift
+        </Button>
+      ),
+      leaveType: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          size="small"
+          onClick={leaveTypeDialog.onTrue}
+        >
+          Leave Type
+        </Button>
+      ),
     }),
-    [attendanceRuleDialog.onTrue, leavePolicyDialog.onTrue]
+    [
+      attendanceRuleDialog.onTrue,
+      leavePolicyDialog.onTrue,
+      leaveTypeDialog.onTrue,
+      shiftManagementDialog.onTrue,
+    ]
   );
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
+  const [isBackClick, setIsBackClick] = useState(false);
 
   // console.log(data, 'data');
   // const handleClose = () => {
@@ -103,7 +147,7 @@ const HrAttendanceSettingScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
-        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
+        description="Manage settings for Attendance Types, Leave Policies, and Late Arrival Rules to support precise tracking and rule enforcement."
       />
       <Card
         sx={{
@@ -112,32 +156,47 @@ const HrAttendanceSettingScreen = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-            />
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Scrollbar sx={{ p: 1 }}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            attendanceRuleDialog={attendanceRuleDialog}
-            leavePolicyDialog={leavePolicyDialog}
-            // searchParams={searchParams}
-            // setSearchParams={setSearchParams}
-          />
-        )}
-      </Scrollbar>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              attendanceRuleDialog={attendanceRuleDialog}
+              leavePolicyDialog={leavePolicyDialog}
+              shiftManagementDialog={shiftManagementDialog}
+              leaveTypeDialog={leaveTypeDialog}
+              // searchParams={searchParams}
+              // setSearchParams={setSearchParams}
+            />
+          )}{' '}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

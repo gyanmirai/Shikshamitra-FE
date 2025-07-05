@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -21,7 +21,7 @@ import type {
 const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogProps> = ({
   isEditMode,
   data,
-  categories,
+
   onClose,
   onSave,
 }) => {
@@ -67,14 +67,17 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
             <ShakingTextField error={touched.budgetCategoryId && Boolean(errors.budgetCategoryId)}>
               <CustomSelect
                 label="Budget Category *"
-                options={
-                  categories.length > 0
-                    ? categories.map((category) => ({
-                        value: category.id,
-                        label: category.name,
-                      }))
-                    : []
-                }
+                options={[
+                  { value: 'income', label: 'Income' },
+                  { value: 'expense', label: 'Expense' },
+                  { value: 'asset', label: 'Asset' },
+                  { value: 'liability', label: 'Liability' },
+                  { value: 'equity', label: 'Equity' },
+                  { value: 'revenue', label: 'Revenue' },
+                  { value: 'cogs', label: 'Cost of Goods Sold' },
+                  { value: 'operating', label: 'Operating Expenses' },
+                  { value: 'other', label: 'Other' },
+                ]}
                 value={values.budgetCategoryId}
                 onChange={(value) => setFieldValue('budgetCategoryId', value)}
                 formControlProps={{ sx: { minWidth: 230 }, fullWidth: true }}
@@ -104,24 +107,24 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
         </Grid>
       </Scrollbar>
 
-      <DialogActions>
-        <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={isSubmitting}
-          >
-            {isEditMode ? 'Update' : 'Submit'}
-          </Button>
-        </Box>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          disabled={isSubmitting}
+          size="small"
+        >
+          {isEditMode ? 'Update' : 'Submit'}
+        </Button>
       </DialogActions>
     </form>
   );

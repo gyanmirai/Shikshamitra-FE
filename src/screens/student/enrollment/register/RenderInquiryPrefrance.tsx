@@ -26,6 +26,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
         labelKey="preferenceName"
         valueKey="id"
         multiple={false}
+        disabled={props?.disabled}
         onChange={(value) => formik.setFieldValue('inquiryPreference', value)}
         formControlProps={{
           fullWidth: true,

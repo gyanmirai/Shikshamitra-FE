@@ -30,18 +30,26 @@ import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
+import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
 // } from './employee-form-fields';
 import {
   payrollInitialValues,
   workExperienceInitialValues,
   familyInformationInitialValues,
   personalInformationInitialValues,
+  assignReportingManagerInitialValues,
 } from './employee-form';
 
 //   InformationFields,
 import type { FieldsType } from './employee-form-fields/types';
 
-const fields = [InformationFields, FamilyFields, WorkExperienceFields, PayrollFields];
+const fields = [
+  InformationFields,
+  FamilyFields,
+  WorkExperienceFields,
+  PayrollFields,
+  AssignReportingManager,
+];
 // const fields = [InformationFields];
 
 const TABS = [
@@ -49,6 +57,7 @@ const TABS = [
   { value: 'familyInformation', label: 'Family Information' },
   { value: 'workExperience', label: 'Work Experience' },
   { value: 'payroll', label: 'Payroll' },
+  { value: 'assignReportingManager', label: 'Assign Reporting Manager' },
   //   { value: 'performanceAndDevelopment', label: 'Performance and Development' },
 ];
 
@@ -282,11 +291,13 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       ...familyInformationInitialValues(editData),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
+      ...assignReportingManagerInitialValues(editData),
     },
     // Use validation schema based on active tab
     validationSchema: infoValidations[activeTabIndex],
-    onSubmit: (values) => {
-      onSubmit(values);
+    onSubmit: async (values, { setSubmitting }) => {
+      await onSubmit(values);
+      setSubmitting(false);
     },
   });
   return (
@@ -314,82 +325,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             ))}
           </CustomTabs>
 
-          {/* <Stack direction="row" justifyContent="flex-end" sx={{ px: 2, pt: 2 }}>
-            {isEdit && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={
-                  <Iconify
-                    icon={isEdit ? GlobalIcons.cancel : 'solar:pen-bold'}
-                    sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
-                  />
-                }
-                onClick={() => {
-                  formik.resetForm({
-                    values: {
-                      ...personalInformationInitialValues(editData),
-                      ...familyInformationInitialValues(editData),
-                      ...workExperienceInitialValues(editData),
-                      ...payrollInitialValues(editData),
-                    },
-                  });
-                  setIsEdit(false);
-                  // popover.onClose();
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-            &nbsp; &nbsp;
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={
-                <Iconify
-                  icon={isEdit ? GlobalIcons.submit : 'solar:pen-bold'}
-                  sx={{ cursor: 'pointer', height: '18px', width: '18px' }}
-                />
-              }
-              onClick={() => {
-                setIsEdit(!isEdit);
-                if (isEdit) {
-                  if (activeTabIndex === 0) {
-                    handelUpdateEmployee(formik.values, editData?.id);
-                  } else if (activeTabIndex === 1) {
-                    handleFamilyInformation(formik.values);
-                  } else if (activeTabIndex === 2) {
-                    console.log('2');
-                    handleWorkExperience(formik.values, formik);
-                  } else if (activeTabIndex === 3) {
-                    handleBankDetailsInformation(formik.values, formik);
-                  } else if (activeTabIndex === 4) {
-                    handleBankDetailsInformation(formik.values, formik);
-                  }
-                }
-                // popover.onClose();
-              }}
-            >
-              {isEdit ? 'Save' : 'Edit'}
-            </Button>{' '}
-          </Stack> */}
-          {/* <Card
-            sx={{ backgroundColor: (theme) => theme.palette.background.paper, boxShadow: 'none' }}
-          >
-            <CardContent
-              sx={{
-                width: '100%',
-                p: 2,
-                // '& .Mui-disabled': {
-                //   // color: (theme) => `${theme.palette.text.primary} !important`,
-                //   '-webkit-text-fill-color': 'unset',
-                //   cursor: 'no-drop',
-                // },
-                // '& .MuiInputLabel-shrink.Mui-disabled': {
-                //   // color: (theme) => `${theme.palette.text.disabled} !important`,
-                // },
-              }}
-            > */}
           <FormSlider
             steps={TABS}
             isBackClick={isBackClick}

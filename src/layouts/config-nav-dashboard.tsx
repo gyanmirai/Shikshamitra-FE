@@ -152,6 +152,8 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
+              disabled: !isDdvs,
+              caption: 'Coming Soon',
               path: '/student/enrollment/reports',
               _action: 'student-enrollment-reports',
               permission: 'Permission:StudentEnrollment.Reports',
@@ -216,8 +218,17 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
+              disabled: !isDdvs,
+              caption: 'Coming Soon',
               path: '/student/reports',
               _action: 'student-reports',
+              shortcutKey: 'Alt+S+R+6',
+              shortcutKeyName: 'Alt+S+R+6',
+            },
+            {
+              title: 'Setting',
+              path: '/student/studentRecords/setting',
+              _action: 'student-setting',
               shortcutKey: 'Alt+S+R+6',
               shortcutKeyName: 'Alt+S+R+6',
             },
@@ -251,6 +262,8 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
+              disabled: !isDdvs,
+              caption: 'Coming Soon',
               path: '/student/attendance/reports',
               _action: 'student-attendance-reports',
               shortcutKey: 'Alt+S+A+4',
@@ -609,29 +622,14 @@ const hrModule = (isDdvs: boolean) => ({
           disabled: !isDdvs,
           caption: 'Coming Soon',
         },
-        {
-          title: 'Events & Holidays',
-          _action: 'events-holidays',
-          path: '/hr/events-holidays',
-          shortcutKey: 'Alt+H+V',
-          shortcutKeyName: 'Alt+H+V',
-          // children: [
-          //   {
-          //     title: 'Create Events & Holidays',
-          //     path: '/hr/events-holidays',
-          //     _action: 'events-holidays',
-          //     shortcutKey: 'Alt+H+V+1',
-          //     shortcutKeyName: 'Alt+H+V+1',
-          //   },
-          //   {
-          //     title: 'Requests',
-          //     path: '/hr/events-holidays/request',
-          //     _action: 'events-holidays-request',
-          //     shortcutKey: 'Alt+H+V+2',
-          //     shortcutKeyName: 'Alt+H+V+2',
-          //   },
-          // ],
-        },
+        // {
+        //   title: 'Events & Holidays',
+        //   _action: 'events-holidays',
+        //   path: '/hr/events-holidays',
+        //   shortcutKey: 'Alt+H+V',
+        //   shortcutKeyName: 'Alt+H+V',
+
+        // },
         {
           title: 'Notification',
           path: '/hr/hr-notification',
@@ -680,7 +678,7 @@ const classManagementModule = {
           shortcutKeyName: 'Alt+A+C+2',
         },
         {
-          title: 'Assign Class Teacher',
+          title: 'Class Teacher Assignment',
           path: '/classManagement/assignClassTeacher',
           _action: 'assign-teacher',
           shortcutKey: 'Alt+A+Z',
@@ -750,6 +748,7 @@ const academicModule = (isDdvs: boolean) => ({
             {
               title: 'Resources',
               path: '/academic/learningResources',
+              caption: 'Coming Soon',
               _action: 'course-management-learningResources',
               shortcutKey: 'Alt+A+S+2',
               shortcutKeyName: 'Alt+A+S+2',
@@ -1038,6 +1037,13 @@ const communicationModule = {
           shortcutKey: 'Alt+C+E',
           shortcutKeyName: 'Alt+C+E',
           children: [
+            {
+              title: 'Events & Holidays',
+              _action: 'events-holidays',
+              path: '/communication/events-holidays',
+              shortcutKey: 'Alt+H+V',
+              shortcutKeyName: 'Alt+H+V',
+            },
             {
               title: 'All Events',
               path: '/communication/eventsAndCalendar/allEvents',

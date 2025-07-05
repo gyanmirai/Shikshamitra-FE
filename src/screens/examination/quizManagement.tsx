@@ -53,7 +53,7 @@ const QuizManagement = (props: TabComponentType) => {
           { name: 'Quiz Management' },
           { name: currentTab?.label || '' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        // sx={{ px: 1, mb: 2 }}
       />
       <Card
         sx={{

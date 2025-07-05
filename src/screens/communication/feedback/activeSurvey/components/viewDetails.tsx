@@ -4,7 +4,7 @@ import React from 'react';
 
 import { Box, Card, Chip, Button, Typography } from '@mui/material';
 
-import { DetailRow } from 'src/screens/communication/announcement/components/detailRow';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';

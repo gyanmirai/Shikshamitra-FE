@@ -3,7 +3,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -33,7 +33,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   const formik = useFormik({
     initialValues: {
       marks: data?.marks || '',
-      totalMarks: data?.totalMarks || '',
+      totalMarks: data?.totalMarks || 25,
       feedback: data?.feedback || '',
     },
     validationSchema: Yup.object({
@@ -46,8 +46,20 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '350px' }}>
+          <Scrollbar sx={{ p: 2, height: '280px' }}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Name : </strong>
+                    {data?.studentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Roll No : </strong>
+                    {data?.rollNumber}
+                  </Typography>
+                </Box>
+              </Grid>
               <Grid item xs={12}>
                 <Editor onChange={(value) => {}} value="Submission Data" editable={false} />
               </Grid>
@@ -72,9 +84,15 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                 <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
                   <TextField
                     // placeholder="Enter Marks"
-                    label="Marks *"
+                    label="Obtained Marks *"
                     fullWidth
+                    type="number"
                     name="marks"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     disabled={!isEdit}
                     size="small"
                     value={formik.values.marks}
@@ -106,7 +124,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               variant="outlined"
               onClick={() => {

@@ -50,7 +50,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
   const formik = useFormik({
     initialValues: {
       marks: data?.marks || '',
-      totalMarks: data?.totalMarks || '',
+      totalMarks: data?.totalMarks || 25,
       feedback: data?.feedback || '',
     },
     validationSchema: Yup.object({
@@ -67,8 +67,20 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '250px' }}>
+          <Scrollbar sx={{ p: 2, height: '280px' }}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Name : </strong>
+                    {data?.studentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Roll No : </strong>
+                    {data?.rollNumber}
+                  </Typography>
+                </Box>
+              </Grid>
               <Grid item xs={12}>
                 <Card
                   key={document.id}
@@ -127,10 +139,16 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
                   <TextField
                     // placeholder="Enter Marks"
-                    label="Marks"
+                    label="Obtained Marks *"
                     fullWidth
+                    type="number"
                     name="marks"
                     disabled={!isEdit}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     size="small"
                     value={formik.values.marks}
                     onChange={formik.handleChange}
@@ -161,7 +179,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               variant="outlined"
               onClick={() => {

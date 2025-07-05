@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 
-import { Box, Tooltip, useTheme, Typography, IconButton } from '@mui/material';
+import { Box, useTheme, Typography, IconButton } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -11,6 +11,7 @@ import {
 } from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -173,28 +174,49 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                 : theme.palette.text.secondary;
 
             return (
-              <Tooltip title={value === 0 ? 'Publish' : 'Draft'}>
-                <IconButton
-                  onClick={() => {
-                    // Only allow click action when status is draft (1)
-                    if (value === PublishUnpublishStatusType.Draft) {
-                      onSwitchToggle(row as IAssignment);
-                    }
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CustomTooltip
+                  title={value === 0 ? 'Published' : 'Draft'}
+                  arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0], // Try 0 or adjust closer
+                        },
+                      },
+                    ],
                   }}
-                  disabled={value === PublishUnpublishStatusType.Published}
                 >
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      cursor:
-                        value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
-                      color: statusColor,
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
+                  <span>
+                    {' '}
+                    {/* Wrap IconButton in span to ensure tooltip works with disabled button */}
+                    <IconButton
+                      onClick={() => {
+                        // Only allow click action when status is draft (1)
+                        if (value === PublishUnpublishStatusType.Draft) {
+                          onSwitchToggle(row as IAssignment);
+                        }
+                      }}
+                      sx={{ p: 0 }}
+                      disabled={value === PublishUnpublishStatusType.Published}
+                    >
+                      <Iconify
+                        icon={GlobalIcons.tick}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          cursor:
+                            value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                          color: statusColor,
+                        }}
+                      />
+                    </IconButton>
+                  </span>
+                </CustomTooltip>
+              </Box>
             );
           },
         },

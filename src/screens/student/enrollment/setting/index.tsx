@@ -1,68 +1,104 @@
 'use client';
 
-import React from 'react';
+'use client';
 
-import AddIcon from '@mui/icons-material/Add';
-import { Tab, Box, Card, Button, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { Add } from '@mui/icons-material';
+import { Tab, Box, Card, Button } from '@mui/material';
+
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSearchParam } from 'src/hooks/use-search-param';
+
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import StudentDocumentType, { DocumentForm } from './document-type';
-import EntranceExamSlots, { SlotsForm } from './entrance-exam-slots';
-import InquiryPreference, { InquiryPreferenceForm } from './inquiryPreference';
+import StudentDocumentType from './document-type';
+import InquiryPreference from './inquiryPreference';
+import EntranceExamSlots from './entrance-exam-slots';
 
+const TABS = [
+  {
+    value: 'defaultDocumentTypes',
+    label: 'Default Document Types',
+    icon: <Iconify icon="basil:document-outline" width={20} />,
+    buttonText: 'Document',
+    component: (props: any) => <StudentDocumentType {...props} />,
+  },
+  {
+    value: 'inquiryPreferenceDialog',
+    label: 'Inquiry Preference',
+    icon: <Iconify icon="ix:inquiry" width={20} />,
+    buttonText: 'Inquiry Preference',
+    component: (props: any) => <InquiryPreference {...props} />,
+  },
+  {
+    value: 'entranceExamSlots',
+    label: 'Entrance Exam Slots',
+    icon: <Iconify icon="healthicons:i-exam-qualification-outline" width={20} />,
+    buttonText: 'Slot',
+    component: (props: any) => <EntranceExamSlots {...props} />,
+  },
+];
 const StudentEnrollmentSettingScreen = () => {
-  const tabs = useTabs('defaultDocumentTypes');
-
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'defaultDocumentTypes' });
   const defaultDocumentTypes = useBoolean();
-  const inquiryPreference = useBoolean();
-  const entranceExamSlots = useBoolean();
-  const TABS = [
-    {
-      value: 'defaultDocumentTypes',
-      label: 'Default Document Types',
-      buttonText: 'Document',
-      onClick: () => {
-        defaultDocumentTypes.onTrue();
-      },
-      component: () => <StudentDocumentType />,
-    },
-    {
-      value: 'inquiryPreference',
-      label: 'Inquiry Preference',
-      buttonText: 'Inquiry Preference',
-      onClick: () => {
-        inquiryPreference.onTrue();
-      },
-      component: () => <InquiryPreference />,
-    },
-    {
-      value: 'entranceExamSlots',
-      label: 'Entrance Exam Slots',
-      buttonText: 'Slot',
-      onClick: () => {
-        entranceExamSlots.onTrue();
-      },
-      component: () => <EntranceExamSlots />,
-    },
-  ];
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-  const currentActiveComponent = TABS.find((tab) => tab.value === tabs.value);
+  const inquiryPreferenceDialog = useBoolean();
+  const entranceExamSlotsDialog = useBoolean();
 
-  // Handle click event for the add button in header
-  const handleClick = () => {
-    currentActiveComponent?.onClick?.(); // Safely call action if it exists
-  };
+  const renderButton = useMemo(
+    () => ({
+      defaultDocumentTypes: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          variant="contained"
+          onClick={defaultDocumentTypes.onTrue}
+          size="small"
+        >
+          Document
+        </Button>
+      ),
+      inquiryPreferenceDialog: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={inquiryPreferenceDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Inquiry Preference
+        </Button>
+      ),
+      entranceExamSlots: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={entranceExamSlotsDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Slot
+        </Button>
+      ),
+    }),
+    [defaultDocumentTypes.onTrue, entranceExamSlotsDialog.onTrue, inquiryPreferenceDialog.onTrue]
+  );
 
-  // Get the button text for the current active tab
-  const getButtonText = () => currentActiveComponent?.buttonText || 'Add';
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
 
   return (
     <Box>
@@ -73,19 +109,9 @@ const StudentEnrollmentSettingScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/setting' },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 2 }}
-        description="This is the Settings tab, where you can configure the necessary steps for the admission process, such as exam settings, document types, and other essential requirements for the admission."
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleClick}
-            startIcon={<AddIcon />}
-            sx={{ textTransform: 'capitalize', width: '180px' }}
-          >
-            {getButtonText()}
-          </Button>
-        }
+        sx={{ mb: 2 }}
+        description="Configure all essential admission steps in the Settings tab, including exam setup, document types, and other requirements."
+        action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
       <Card
         sx={{
@@ -94,97 +120,50 @@ const StudentEnrollmentSettingScreen = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
+          value={searchParams.tab}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+            setSearchParams({ tab: value });
+          }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+            />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
-        {CurrentComponent?.()}
-      </Box>
-
-      {defaultDocumentTypes.value && (
-        <CustomDialog
-          open={defaultDocumentTypes.value}
-          handleClose={() => {
-            defaultDocumentTypes.onFalse();
-          }}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Document</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-        >
-          <DocumentForm
-            handleClose={() => {
-              defaultDocumentTypes.onFalse();
-            }}
-            editData={null}
-          />
-        </CustomDialog>
-      )}
-      {inquiryPreference.value && (
-        <CustomDialog
-          open={inquiryPreference.value}
-          handleClose={() => {
-            inquiryPreference.onFalse();
-          }}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Inquiry Preference</Typography>
-              <CustomTooltip arrow placement="right" title="?.">
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-        >
-          <InquiryPreferenceForm
-            handleClose={() => {
-              inquiryPreference.onFalse();
-            }}
-            editData={null}
-          />
-        </CustomDialog>
-      )}
-      {entranceExamSlots.value && (
-        <CustomDialog
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Slots</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-          open={entranceExamSlots.value}
-          handleClose={() => {
-            entranceExamSlots.onFalse();
-          }}
-        >
-          <SlotsForm
-            handleClose={() => {
-              entranceExamSlots.onFalse();
-            }}
-            editData={null}
-          />
-        </CustomDialog>
-      )}
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              defaultDocumentTypes={defaultDocumentTypes}
+              inquiryPreferenceDialog={inquiryPreferenceDialog}
+              entranceExamSlotsDialog={entranceExamSlotsDialog}
+            />
+          )}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

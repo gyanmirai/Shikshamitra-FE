@@ -22,7 +22,7 @@ export function useCalendar({
 
   const smUp = useResponsive('up', 'sm');
 
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState<Date | string>(new Date());
 
   const [openForm, setOpenForm] = useState(false);
 
@@ -61,6 +61,7 @@ export function useCalendar({
   const onInitialView = useCallback(() => {
     if (calendarEl) {
       const calendarApi = calendarEl.getApi();
+      console.log('🚀 ~ onInitialView ~ calendarApi:', calendarApi);
 
       const newView = initialView || (smUp ? 'dayGridMonth' : 'listWeek');
       calendarApi.changeView(newView);
@@ -193,5 +194,6 @@ export function useCalendar({
     selectedRange,
     //
     onClickEventInFilters,
+    setDate,
   };
 }

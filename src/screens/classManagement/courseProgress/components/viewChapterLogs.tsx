@@ -62,7 +62,7 @@ interface ViewChapterLogsProps {
 
 const ViewChapterLogs = ({ onClose, selectedChapter }: ViewChapterLogsProps) => (
   <Scrollbar sx={{ height: '550px' }}>
-    <CustomizedTimeline data={CHAPTER_PROGRESS_TIMELINE.slice().reverse()} />
+    <CustomizedTimeline data={selectedChapter?.logs?.slice().reverse()} />
   </Scrollbar>
 );
 

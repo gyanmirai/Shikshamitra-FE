@@ -19,6 +19,7 @@ import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-tab
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -93,15 +94,20 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setOpen(false);
+        setSelectedHomework(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust delay as per your Dialog transition timing
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      setSelectedHomework(null);
       addHomeworkDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setOpen(false);
-      setSelectedHomework(null);
       addHomeworkDialog.onFalse();
+      resetState();
     }
   };
 
@@ -113,7 +119,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          mt: 1,
+          mb: 2,
           p: 1,
           gap: 2,
         }}
@@ -169,23 +176,14 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           sx={{ maxWidth: '250px' }}
         />
       </Box>
-      {/* <Box display="flex" justifyContent="flex-end">
-          <Button
-            variant="contained"
-            onClick={addHomeworkDialog.onTrue}
-            startIcon={<Add />}
-            size="small"
-            disabled={!date || dayjs(date).isBefore(dayjs().startOf('day'))}
-          >
-            Homework
-          </Button>
-        </Box> */}
 
       <CustomDialog
         open={addHomeworkDialog.value}
         handleClose={() => {
           addHomeworkDialog.onFalse();
-          setSelectedHomework(null);
+          setTimeout(() => {
+            setSelectedHomework(null);
+          }, 200); // Delay should match your dialog transition (usually 200–300ms)
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -193,6 +191,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
               {selectedHomework ? 'Update Homework' : 'Add Homework'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
@@ -211,9 +210,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           classes={classes}
           subject={subject}
           dialog={addHomeworkDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedHomework}
         />
       </CustomDialog>
@@ -255,7 +252,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to Delete <strong>{selectedHomework?.title}</strong>?
+            Are you sure you want to Delete Homework <strong>{selectedHomework?.title}</strong>?
           </>
         }
         action={
@@ -263,7 +260,12 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             variant="contained"
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {}}
+            onClick={() => {
+              deleteHomeworkDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Homework Deleted successfully for ${selectedHomework?.subject}!`,
+              });
+            }}
             size="small"
           >
             Yes
@@ -280,14 +282,19 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to Publish <strong>{selectedHomework?.title}</strong>?
+            Are you sure you want to Publish Homework <strong>{selectedHomework?.title}</strong>?
           </>
         }
         action={
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
+            onClick={() => {
+              publishHomeworkDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Homework Published successfully for ${selectedHomework?.subject}!`,
+              });
+            }}
             size="small"
           >
             Publish
@@ -301,6 +308,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Homework Details</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View complete details of the homework including title, description, due date, submission status and other information"

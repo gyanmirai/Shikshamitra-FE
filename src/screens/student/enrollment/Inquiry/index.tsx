@@ -12,7 +12,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -20,6 +20,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import InquiryForm from './inquiry-form';
@@ -52,7 +53,7 @@ export interface IInquiryData {
   // village: string;
   tempGrNo: number;
   grNoRecord: number;
-  rollNo: number;
+  rollNo: number | null;
   pinCode: number | null;
   address: string;
   addressLine1: string;
@@ -273,15 +274,15 @@ const InquiryScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Inquiry"
-        description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
+        description="Streamlined management of admission related inquiries from the students and parents."
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
           { name: 'Inquiry' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1 }}
         isBack={inquiryDialog.value}
-        onBack={() => handleClose()}
+        onBack={() => handleClose(null, false)}
         action={
           !inquiryDialog.value && (
             <Button
@@ -315,7 +316,19 @@ const InquiryScreen = () => {
           setEditData(null);
           followUpDialog.onFalse();
         }}
-        title="Notes"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Notes</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Add and view communication notes and follow-ups related to students inquiries."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <CommunicationForm
           handleCloseDialog={() => {
@@ -332,7 +345,19 @@ const InquiryScreen = () => {
           setEditData(null);
           issueRegistrationFormDialog.onFalse();
         }}
-        title="Issue Registration Form"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Issue Registration Form</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Generate and issue students registration forms with all necessary information and supporting documents."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <IssueRegistrationForm
           handleClose={() => {

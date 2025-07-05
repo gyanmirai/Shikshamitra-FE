@@ -1,69 +1,86 @@
 [
   {
     "subjectName": "Mathematics",
+    "subjectCode": "MATH101",
     "subjectColor": "#FFB74D",
     "noOfLecture": 0,
     "subjectType": "core",
     "subjects": [
       {
         "name": "Mathematics",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#FFB74D",
+        "subjectCode": "MATH101"
       }
     ],
     "id": "1"
   },
   {
     "subjectName": "Science",
+    "subjectCode": "SCI101",
     "subjectColor": "#81C784",
     "noOfLecture": 0,
     "subjectType": "core",
     "subjects": [
       {
         "name": "Science",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#81C784",
+        "subjectCode": "SCI101"
       }
     ],
     "id": "2"
   },
   {
     "subjectName": "English",
+    "subjectCode": "ENG101",
     "subjectColor": "#64B5F6",
     "noOfLecture": 0,
     "subjectType": "core",
     "subjects": [
       {
         "name": "English",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#64B5F6",
+        "subjectCode": "ENG101"
       },
       {
         "name": "Math",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#64B5F6",
+        "subjectCode": "MATH102"
       }
     ],
     "id": "3"
   },
   {
     "subjectName": "History",
+    "subjectCode": "HIST101",
     "subjectColor": "#E57373",
     "noOfLecture": 0,
     "subjectType": "core",
     "subjects": [
       {
         "name": "History",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#E57373",
+        "subjectCode": "HIST101"
       }
     ],
     "id": "4"
   },
   {
     "subjectName": "Geography",
+    "subjectCode": "GEO101",
     "subjectColor": "#BA68C8",
     "noOfLecture": 0,
     "subjectType": "core",
     "subjects": [
       {
         "name": "Geography",
-        "teachers": []
+        "teachers": [],
+        "subjectColor": "#BA68C8",
+        "subjectCode": "GEO101"
       }
     ],
     "id": "5"

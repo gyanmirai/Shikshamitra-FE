@@ -19,6 +19,7 @@ import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -90,13 +91,21 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedAssignment(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust duration to match your dialog animation timing
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setSelectedAssignment(null);
       addAssignmentDialog.onFalse();
+      setTimeout(() => {
+        setSelectedAssignment(null);
+      }, 200);
     }
   };
 
@@ -108,7 +117,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          mb: 2,
+          mt: 1,
           p: 1,
           gap: 2,
         }}
@@ -180,7 +190,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         open={addAssignmentDialog.value}
         handleClose={() => {
           addAssignmentDialog.onFalse();
-          setSelectedAssignment(null);
+          setTimeout(() => {
+            setSelectedAssignment(null);
+          }, 200); // Adjust delay to match your Dialog transition (typically 200–300ms)
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -188,6 +200,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
               {selectedAssignment ? 'Update Assignment' : 'Add Assignment'}
             </Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title={
@@ -205,9 +218,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         <AssignmentForm
           classes={classes}
           dialog={addAssignmentDialog}
-          onClose={() => {
-            handleClose(null, false);
-          }}
+          onClose={handleClose}
           editData={selectedAssignment}
         />
       </CustomDialog>
@@ -256,6 +267,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             color="error"
             size="small"
             onClick={() => {
+              deleteAssignmentDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Assignment Deleted successfully for ${selectedAssignment?.subjects}!`,
+              });
               // delete logic here
             }}
           >
@@ -283,6 +298,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
+              publishAssignmentDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Assignment Published successfully for ${selectedAssignment?.subjects}!`,
+              });
               // publish logic here
             }}
           >
@@ -310,6 +329,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Assignment Details</Typography>
             <CustomTooltip
+              sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View complete details of the assignment including title, description, due date, submission status and other information"

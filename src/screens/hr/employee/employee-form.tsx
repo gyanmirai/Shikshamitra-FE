@@ -177,13 +177,17 @@ export const payrollInitialValues = (editData: any) => ({
   shiftName: '',
 });
 
+export const assignReportingManagerInitialValues = (editData: any) => ({
+  reportingManager: editData ? editData?.reportingManager : '',
+});
+
 const steps = [
   'Personal Information',
   'Family Information',
   'Documents',
   'Work Experience',
   'Payroll',
-  // 'Performance and Development',
+  'Assign Reporting Manager',
 ];
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
@@ -228,6 +232,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       ...documentsInitialValues(),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
+      ...assignReportingManagerInitialValues(editData),
     }),
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,7 +304,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateName: values?.fatherState?.name,
             stateIsoCode: values?.fatherState?.isoCode,
             city: values?.fatherCity?.name,
-            pincode: values.fatherPinCode,
+            pincode: String(values.fatherPinCode),
           },
           motherDetails: {
             name: values.motherName,
@@ -315,7 +320,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateIsoCode: values?.motherState?.isoCode,
 
             city: values?.motherCity?.name,
-            pincode: values.motherPinCode,
+            pincode: String(values.motherPinCode),
           },
           spouseDetails: {
             name: values.spouseName,
@@ -329,7 +334,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             stateName: values?.spouseState?.name,
             stateIsoCode: values?.spouseState?.isoCode,
             city: values?.spouseCity?.name,
-            pincode: values.spousePinCode,
+            pincode: String(values.spousePinCode),
           },
         },
       }).unwrap();
@@ -542,7 +547,7 @@ export default EmployeeFrom;
 const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
   const containerRef = React.useRef<HTMLElement>(null);
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 3 }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1 }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -575,7 +580,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                   gap={2}
                   width="100%"
                 >
-                  <Grid container spacing={3}>
+                  <Grid container spacing={0}>
                     {' '}
                     {allFields[step].map((field) => (
                       <Grid

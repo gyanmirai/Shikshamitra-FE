@@ -7,6 +7,7 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -36,6 +37,8 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
         // Generate new ID if not editing existing record
         id: data?.id || Date.now(),
       });
+      shikshaMitraToast.success({ message: 'Exam type created successfully' });
+      onClose(null, true);
     },
   });
 
@@ -43,8 +46,8 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2}>
         <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
-            <Grid container spacing={2}>
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
               <Grid item xs={12}>
                 <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
                   <TextField
@@ -54,7 +57,18 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                     size="small"
                     // placeholder="Enter Exam Type"
                     value={formik.values.examType}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        // Capitalize each word
+                        .split(' ')
+                        .map((word) =>
+                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                        )
+                        .join(' ');
+                      formik.setFieldValue('examType', value);
+                    }}
                     error={formik.touched.examType && Boolean(formik.errors.examType)}
                     helperText={formik.touched.examType && formik.errors.examType}
                   />
@@ -67,7 +81,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
                 >
                   <TextField
                     fullWidth
-                    label="Description *"
+                    label="Description"
                     name="description"
                     size="small"
                     rows={4}
@@ -82,9 +96,10 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          <DialogActions>
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              size="small"
               onClick={(e) => onClose(e, false)}
               variant="outlined"
             >
@@ -93,7 +108,14 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
             <Button
               type="submit"
               variant="contained"
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              size="small"
+              startIcon={
+                <Iconify
+                  icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={isEdit ? 16 : 20}
+                  height={isEdit ? 16 : 20}
+                />
+              }
               onClick={(e) => {
                 // formik.handleSubmit();
               }}

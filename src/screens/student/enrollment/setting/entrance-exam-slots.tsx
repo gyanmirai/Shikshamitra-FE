@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { MobileTimePicker } from '@mui/x-date-pickers';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -22,7 +22,6 @@ import {
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -32,9 +31,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { ISlot } from './type';
 
-const EntranceExamSlots = () => {
+const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
   // Dialog state for opening/closing modal
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for confirmation modal
   const confirm = useBoolean();
   // State to store data being edited
@@ -61,7 +60,7 @@ const EntranceExamSlots = () => {
 
   // Handle closing of dialog and reset edit data
   const handleClose = () => {
-    dialog.onFalse();
+    entranceExamSlotsDialog.onFalse();
     setEditData(null);
   };
   return (
@@ -73,12 +72,21 @@ const EntranceExamSlots = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete exam slot{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {editData?.slotName}
+            </Box>
+            ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteSlotLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={async () => {
               await deleteSlot(editData?.id);
               confirm.onFalse();
@@ -98,7 +106,7 @@ const EntranceExamSlots = () => {
             No Entrance Exam Slots Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                entranceExamSlotsDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -115,13 +123,13 @@ const EntranceExamSlots = () => {
           </>
         }
         columns={[
-          { label: 'Slot Name', id: 'slotName' },
+          // { label: 'Slot Name', id: 'slotName' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
           { label: 'End Time', id: 'endTime', filterType: 'date' },
           { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
           { label: 'Room No', id: 'roomNo', filterType: 'number' },
           {
-            label: 'Action',
+            label: 'Actions',
             id: 'action',
             isSort: false,
             minWidth: 50,
@@ -138,7 +146,7 @@ const EntranceExamSlots = () => {
                     confirm.onTrue();
                   }}
                   handleEditClick={() => {
-                    dialog.onTrue();
+                    entranceExamSlotsDialog.onTrue();
                     setEditData(row as ISlot);
                   }}
                 />
@@ -151,7 +159,7 @@ const EntranceExamSlots = () => {
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Slots</Typography>
+            <Typography variant="h5">{editData ? 'Update Slots' : 'Add Slots'}</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -161,7 +169,7 @@ const EntranceExamSlots = () => {
             </CustomTooltip>
           </Box>
         }
-        open={dialog.value}
+        open={entranceExamSlotsDialog.value}
         handleClose={handleClose}
       >
         <SlotsForm handleClose={handleClose} editData={editData} />
@@ -176,7 +184,7 @@ export const SlotsForm = ({
   handleClose,
   editData,
 }: {
-  handleClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
   editData: ISlot | null;
 }) => {
   // Hook for adding a new entrance exam slot
@@ -220,7 +228,7 @@ export const SlotsForm = ({
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
-      roomNo: Yup.string().required('Room No is required'),
+      roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
       try {
@@ -244,7 +252,7 @@ export const SlotsForm = ({
             roomNo: values.roomNo,
           }).unwrap();
         }
-        handleClose?.();
+        handleClose?.(null, true);
       } catch (error) {
         console.log(error);
       }
@@ -275,10 +283,15 @@ export const SlotsForm = ({
           <ShakingTextField
             error={!!(formik.touched.startTime && formik.errors.startTime) || false}
           >
-            <MobileTimePicker
+            <TimePicker
               label="Start Time *"
               value={formik.values.startTime}
-              format="hh:mm A"
+              format="hh:mm"
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
               onChange={(date) => formik.setFieldValue('startTime', date)}
               slotProps={{
                 textField: {
@@ -296,10 +309,15 @@ export const SlotsForm = ({
           </ShakingTextField>
 
           <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
-            <MobileTimePicker
+            <TimePicker
               label="End Time *"
-              format="hh:mm A"
+              format="hh:mm "
               value={formik.values.endTime}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
               onChange={(date) => formik.setFieldValue('endTime', date)}
               slotProps={{
                 textField: {
@@ -340,7 +358,7 @@ export const SlotsForm = ({
           <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
             <TextField
               name="roomNo"
-              label="Room No *"
+              label="Room No. *"
               type="number"
               onBlur={formik.handleBlur}
               value={formik.values.roomNo}
@@ -359,12 +377,28 @@ export const SlotsForm = ({
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose?.(null, false);
+          }}
           size="small"
         >
           Cancel
         </Button>
-        <SubmitButton loading={isLoading || isUpdateSlotLoading} />
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isLoading || isUpdateSlotLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          type="submit"
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

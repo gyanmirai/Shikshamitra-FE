@@ -69,7 +69,7 @@ const CommonCalender = ({
     onResizeEvent,
     onInitialView,
     //
-
+    setDate,
     selectedRange,
     //
     // onClickEventInFilters,
@@ -97,6 +97,9 @@ const CommonCalender = ({
           {showCalendarToolbar && (
             <CalendarToolbar
               date={fDate(date, formate)}
+              format={formate}
+              setDate={setDate}
+              calendarRef={calendarRef}
               view={view}
               canReset
               loading={isLoading}

@@ -11,13 +11,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Add, Upload } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
-  Radio,
   Button,
   MenuItem,
   Checkbox,
@@ -27,6 +25,7 @@ import {
   Typography,
   DialogActions,
   FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -54,10 +53,12 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -75,7 +76,7 @@ const EntranceExamScreen = () => {
   const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
 
   // State for managing edit data and move operations
-  const [editData, setEditData] = useState(null);
+  const [editData, setEditData] = useState<any | null>(null);
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
   // State for managing the start date filter for entrance exams
@@ -126,6 +127,7 @@ const EntranceExamScreen = () => {
         name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
         medium: item.studentEnrollment.educationMedium.name,
         class: item.studentEnrollment.standard.name,
+        board: item.studentEnrollment.educationBoard.name,
         status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
         percentage:
           item.marksObtained === null
@@ -195,13 +197,14 @@ const EntranceExamScreen = () => {
             popover.onClose();
           }}
         >
-          <Iconify icon="carbon:result" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.upload} sx={{ height: '16px', width: '16px' }} />
           Upload Result
         </MenuItem>
 
         <MenuItem
           onClick={async () => {
             confirmMovePopup.onTrue();
+            setEditData(row);
             setMoveId(row.id);
             popover.onClose();
           }}
@@ -247,23 +250,23 @@ const EntranceExamScreen = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        description="Manage students for the entrance exam as part of admission process."
+        description="Manage students participation in entrance exams for the admission process."
         heading="Entrance Exam"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Enrollment', href: '/student/enrollment/entrance-exam/?view=calender' },
           { name: 'Entrance Exam' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
-      <Box display="flex" gap={2} justifyContent="space-between" alignItems="center">
+      <Box display="flex" gap={2} marginLeft={1} justifyContent="space-between" alignItems="center">
         <Box display="flex" gap={2}>
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
             slotProps={{
               textField: {
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '250px' },
                 size: 'small',
               },
             }}
@@ -276,7 +279,7 @@ const EntranceExamScreen = () => {
             format="DD-MM-YYYY"
             slotProps={{
               textField: {
-                sx: { width: '100%', maxWidth: '200px' },
+                sx: { width: '250px' },
                 size: 'small',
               },
             }}
@@ -285,9 +288,9 @@ const EntranceExamScreen = () => {
             }}
           />
         </Box>
-        <Button startIcon={<Upload />} variant="contained" size="small">
+        {/* <Button startIcon={<Upload />} variant="contained" size="small">
           Upload Results
-        </Button>
+        </Button> */}
       </Box>
       <Box mt={2}>
         <CustomizableTable
@@ -341,6 +344,17 @@ const EntranceExamScreen = () => {
               sticky: true,
               minWidth: 180,
             },
+
+            {
+              id: 'board',
+              label: 'Board',
+              align: 'left',
+            },
+            {
+              id: 'medium',
+              label: 'Medium',
+              align: 'left',
+            },
             {
               id: 'class',
               label: 'Class',
@@ -348,11 +362,7 @@ const EntranceExamScreen = () => {
             },
             { id: 'date', label: 'Date', filterType: 'date' },
             { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
-            {
-              id: 'medium',
-              label: 'Medium',
-              align: 'left',
-            },
+
             {
               id: 'passingMark',
               label: 'Passing Marks',
@@ -381,7 +391,32 @@ const EntranceExamScreen = () => {
               sticky: true,
               align: 'left',
               render(value, row) {
-                return `${value}%`;
+                return (
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
+                    <Box
+                      sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        component="small"
+                        color="text.secondary"
+                        sx={{ fontSize: '12px' }}
+                      >
+                        {value}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
               },
             },
             {
@@ -404,7 +439,8 @@ const EntranceExamScreen = () => {
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
+              align: 'left',
               isFilter: false,
               sticky: true,
               isSort: false,
@@ -417,24 +453,52 @@ const EntranceExamScreen = () => {
         />{' '}
       </Box>
       <CustomDialog
-        title="Result"
+        open={resultDialog.value}
         handleClose={() => {
           setEditData(null);
           resultDialog.onFalse();
         }}
-        open={resultDialog.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Result</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Record entrance exam results by inputting total marks, pass marks, and students scores."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <ResultForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
 
       <ConfirmDialog
-        title="Move"
-        content="Are you sure want to move in admission ?"
+        // title="Move"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Move</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Manage student exam details and move eligible ones to admission."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        content={
+          <>
+            Are you sure want to move student <strong>{editData?.name || ''}</strong> in admission ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isLoading}
-            color="error"
+            size="small"
+            startIcon={<Iconify icon="mdi:arrow-right-circle" />}
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();
@@ -773,19 +837,21 @@ export const ExamForm = ({
                       padding={2}
                     >
                       <Typography variant="h6">Slots</Typography>
-                      <Button
+                      {/* <Button
                         size="small"
                         variant="outlined"
                         startIcon={<Add />}
                         onClick={dialog.onTrue}
                       >
                         Slot
-                      </Button>
+                      </Button> */}
                     </Box>
 
                     <Grid container spacing={2}>
                       {isStudentCountLoading ? (
-                        <Box className="loading" />
+                        <Grid xs={12}>
+                          <Box className="loader" height={24} />
+                        </Grid>
                       ) : formik.values.slots.length === 0 ? (
                         <EmptyContent title="Please select the date." />
                       ) : (
@@ -905,16 +971,31 @@ const ResultForm = ({
       obtainedMarks: editData?.marksObtained ?? null,
       totalMarks: editData?.totalMarks,
       status: editData?.status,
+      passingMarks: editData?.passingMark,
     },
+    validateOnChange: true,
     validationSchema: Yup.object({
-      obtainedMarks: Yup.string().test(
-        'is-less-than-total',
-        'Obtained marks must be less than total marks',
-        (value, context) => {
-          const { totalMarks } = context.parent;
-          return value == null || (totalMarks != null && value <= totalMarks);
-        }
-      ),
+      obtainedMarks: Yup.number()
+        .test(
+          'is-less-than-total',
+          'Obtained marks must be less than total marks',
+          (value, context) => {
+            const { totalMarks } = context.parent;
+            return value ? value <= totalMarks : true;
+          }
+        )
+        .required('Obtained marks is required'),
+      passingMarks: Yup.number()
+        .test(
+          'is-less-than-total',
+          'Passing marks must be less than total marks',
+          (value, context) => {
+            const { totalMarks } = context.parent;
+            return value ? value <= totalMarks : true;
+          }
+        )
+        .required('Passing marks is required'),
+      totalMarks: Yup.number().required('Total marks is required'),
     }),
     onSubmit: async (values) => {
       console.log(values);
@@ -925,13 +1006,16 @@ const ResultForm = ({
             entranceExamSlotId: editData.entranceExamSlotId,
             studentEnrollmentId: editData.studentEnrollmentId,
             examDate: editData.examDate,
-            examType: editData.examType,
+            // examType: editData.examType,
+            passingMark: values.passingMarks,
             marksObtained: values.obtainedMarks,
             totalMarks: values.totalMarks,
-            examScheduleType: editData.examScheduleType,
-            passingMark: editData.passingMark,
+            // examScheduleType: editData.examScheduleType,
           },
         }).unwrap();
+        shikshaMitraToast.success({
+          message: `${editData?.name || ''}'s marks updated successfully`,
+        });
         handleClose(null, true);
       } catch (error) {
         console.log(error);
@@ -952,30 +1036,57 @@ const ResultForm = ({
     <>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <Box display="flex" flexDirection="column" gap={2}>
-            <TextField
-              label="Total Marks"
-              size="small"
-              fullWidth
-              name="totalMarks"
-              value={formik.values.totalMarks}
-              onChange={formik.handleChange}
-            />
-            <TextField
-              label="Obtained Marks"
-              size="small"
-              fullWidth
-              name="obtainedMarks"
-              value={formik.values.obtainedMarks}
-              onChange={formik.handleChange}
+          <Box display="flex" flexDirection="column" gap={3}>
+            <ShakingTextField
+              error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+            >
+              <TextField
+                label="Total Marks *"
+                size="small"
+                fullWidth
+                type="number"
+                name="totalMarks"
+                value={formik.values.totalMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                helperText={(formik.touched.totalMarks && formik.errors.totalMarks) as string}
+              />
+            </ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+            >
+              <TextField
+                label="Passing Marks *"
+                size="small"
+                fullWidth
+                name="passingMarks"
+                type="number"
+                value={formik.values.passingMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
+                helperText={(formik.touched.passingMarks && formik.errors.passingMarks) as string}
+              />
+            </ShakingTextField>
+            <ShakingTextField
               error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
-              helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
-            />
+            >
+              <TextField
+                label="Obtained Marks *"
+                size="small"
+                fullWidth
+                type="number"
+                name="obtainedMarks"
+                value={formik.values.obtainedMarks}
+                onChange={formik.handleChange}
+                error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
+                helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
+              />
+            </ShakingTextField>
             {/* <Typography variant="caption" color="error">
               {formik.errors.obtainedMarks as string}
             </Typography> */}
 
-            <Box>
+            {/* <Box>
               <FormControlLabel
                 control={
                   <Radio
@@ -994,17 +1105,16 @@ const ResultForm = ({
                 }
                 label="Fail"
               />
-            </Box>
+            </Box> */}
           </Box>
         </BackPopUpChecked>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2 }}>
+      <DialogActions>
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           variant="outlined"
           onClick={() => handleClose(null, false)}
-          style={{ marginTop: '1rem' }}
         >
           Cancel
         </Button>
@@ -1014,7 +1124,6 @@ const ResultForm = ({
           onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          style={{ marginTop: '1rem' }}
         >
           Submit
         </LoadingButton>

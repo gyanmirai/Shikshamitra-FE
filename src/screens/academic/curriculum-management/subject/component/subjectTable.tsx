@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 
 import { RemoveCircle } from '@mui/icons-material';
-import { Box, Tooltip, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+import { Box, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -14,6 +14,7 @@ import {
 } from 'src/enums/publishUnpublish-status';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -79,7 +80,7 @@ const SubjectTable = ({
     ({ popover: pop, row }: any) => (
       <>
         {' '}
-        <MenuList>
+        <MenuList disablePadding dense>
           {/* Show Add Timetable option for Pending status */}
 
           <MenuItem
@@ -98,204 +99,223 @@ const SubjectTable = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="subject-table"
-      noDataText={
-        <>
-          No Subject Found{' '}
-          <Box
-            onClick={() => {
-              addSubjectDialog.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Subject
-          </Box>
-        </>
-      }
-      columns={[
-        {
-          id: 'subjectType',
-          label: 'Subject Type',
-          align: 'left',
-          filterType: 'enum',
-          minWidth: 130,
-          enumOptions: SubjectTypeOptions,
-          sticky: true,
-          render: (value, row) => (
-            <Typography variant="caption" fontSize="13px">
-              {SubjectType[value]}
-            </Typography>
-          ),
-        },
-        {
-          id: 'subjectName',
-          label: 'Subject Name',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-              {row.subjectType === 'Core' ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={row.subjectColor} />
-                  <Typography variant="caption" fontSize="13px">
-                    {value} ({row.subjectCode})
-                  </Typography>
-                </Box>
-              ) : Array.isArray(value) ? (
-                <>
-                  <Typography variant="caption" fontSize="13px">
-                    ({row.subject})
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {value.map((subjectName: string, index: number) => {
-                      const subjectCode = Array.isArray(row.subjectCode)
-                        ? row.subjectCode[index]
-                        : row.subjectCode;
-
-                      const subjectColor = Array.isArray(row.subjectColor)
-                        ? row.subjectColor[index]
-                        : row.subjectColor;
-
-                      return (
-                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <SubjectColorIndicator color={subjectColor} />
-                          <Typography variant="caption" fontSize="13px">
-                            {subjectName} ({subjectCode})
-                          </Typography>
-                        </Box>
-                      );
-                    })}
+    <Box>
+      <CustomizableTable
+        tableId="subject-table"
+        noDataText={
+          <>
+            No Subject Found{' '}
+            <Box
+              onClick={() => {
+                addSubjectDialog.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Subject
+            </Box>
+          </>
+        }
+        columns={[
+          {
+            id: 'subjectType',
+            label: 'Subject Type',
+            align: 'left',
+            filterType: 'enum',
+            minWidth: 130,
+            enumOptions: SubjectTypeOptions,
+            sticky: true,
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {SubjectType[value]}
+              </Typography>
+            ),
+          },
+          {
+            id: 'subjectName',
+            label: 'Subject Name',
+            align: 'left',
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                {row.subjectType === 'Core' ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <SubjectColorIndicator color={row.subjectColor} />
+                    <Typography variant="caption" fontSize="13px">
+                      {value} ({row.subjectCode})
+                    </Typography>
                   </Box>
-                </>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {row.subjectType === 'Elective' && (
+                ) : Array.isArray(value) ? (
+                  <>
                     <Typography variant="caption" fontSize="13px">
                       ({row.subject})
                     </Typography>
-                  )}
-                  <SubjectColorIndicator color={row.subjectColor} />
-                  <Typography variant="caption" fontSize="13px">
-                    {value} ({row.subjectCode})
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          ),
-        },
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {value.map((subjectName: string, index: number) => {
+                        const subjectCode = Array.isArray(row.subjectCode)
+                          ? row.subjectCode[index]
+                          : row.subjectCode;
 
-        // {
-        //   id: 'primaryTeacher',
-        //   label: 'Primary Teacher',
-        //   align: 'left',
-        //   render: (value, row) => (
-        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        //       {row.subjectType === 'core' ? (
-        //         <Chip key={value} label={value} size="small" variant="outlined" />
-        //       ) : (
-        //         Array.isArray(value) &&
-        //         value.map((teacher: string) => (
-        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
-        //         ))
-        //       )}
-        //     </Box>
-        //   ),
-        // },
-        // {
-        //   id: 'secondaryTeacher',
-        //   label: 'Secondary Teacher',
-        //   align: 'left',
-        //   render: (value) => (
-        //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        //       {Array.isArray(value) && value.length > 0 ? (
-        //         value.map((teacher: string) => (
-        //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
-        //         ))
-        //       ) : (
-        //         <Chip label="None" size="small" variant="outlined" />
-        //       )}
-        //     </Box>
-        //   ),
-        // },
-        {
-          id: 'status',
-          label: 'Status',
-          align: 'left',
-          minWidth: 40,
-          isFilter: false,
-          sticky: true,
-          isSort: false,
-          filterType: 'enum',
-          enumOptions: PublishUnpublishStatusOptions,
-          render(value, row) {
-            const statusColor =
-              value === PublishUnpublishStatusType.Published
-                ? theme.palette.success.main
-                : theme.palette.text.secondary;
+                        const subjectColor = Array.isArray(row.subjectColor)
+                          ? row.subjectColor[index]
+                          : row.subjectColor;
 
-            return (
-              <Tooltip title={value === 0 ? 'Published' : 'Draft'}>
-                <IconButton onClick={() => onToggleStatus(row as ISubjectFormValues)}>
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      cursor: 'pointer',
-                      color: statusColor,
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
-            );
+                        return (
+                          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={subjectColor} />
+                            <Typography variant="caption" fontSize="13px">
+                              {subjectName} ({subjectCode})
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {row.subjectType === 'Elective' && (
+                      <Typography variant="caption" fontSize="13px">
+                        ({row.subject})
+                      </Typography>
+                    )}
+                    <SubjectColorIndicator color={row.subjectColor} />
+                    <Typography variant="caption" fontSize="13px">
+                      {value} ({row.subjectCode})
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            ),
           },
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 70,
-          align: 'left',
-          sticky: true,
-          isFilter: false,
-          isSort: false,
-          render(value, row) {
-            const subject = subjectTableData.find((s) => s.id === row.id);
-            return (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={(prop) => actions({ ...prop, row })}
-                showViewIcon
-                showEditIcon
-                // showThreeDots={false}
-                handleViewClick={() => {
-                  const originalFormData = data.find((item) => item.id === row.id);
-                  if (originalFormData) {
-                    onView(originalFormData);
-                  }
-                }}
-                handleEditClick={() => {
-                  const originalFormData = data.find((item) => item.id === row.id);
-                  if (originalFormData) {
-                    onEdit(originalFormData);
-                  }
-                }}
-                // handleDeleteClick={() => onDelete(row as ISubjectFormValues)}
-              />
-            );
+
+          // {
+          //   id: 'primaryTeacher',
+          //   label: 'Primary Teacher',
+          //   align: 'left',
+          //   render: (value, row) => (
+          //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+          //       {row.subjectType === 'core' ? (
+          //         <Chip key={value} label={value} size="small" variant="outlined" />
+          //       ) : (
+          //         Array.isArray(value) &&
+          //         value.map((teacher: string) => (
+          //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+          //         ))
+          //       )}
+          //     </Box>
+          //   ),
+          // },
+          // {
+          //   id: 'secondaryTeacher',
+          //   label: 'Secondary Teacher',
+          //   align: 'left',
+          //   render: (value) => (
+          //     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+          //       {Array.isArray(value) && value.length > 0 ? (
+          //         value.map((teacher: string) => (
+          //           <Chip key={teacher} label={teacher} size="small" variant="outlined" />
+          //         ))
+          //       ) : (
+          //         <Chip label="None" size="small" variant="outlined" />
+          //       )}
+          //     </Box>
+          //   ),
+          // },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            minWidth: 40,
+            isFilter: false,
+            sticky: true,
+            isSort: false,
+            filterType: 'enum',
+            enumOptions: PublishUnpublishStatusOptions,
+            render(value, row) {
+              const statusColor =
+                value === PublishUnpublishStatusType.Published
+                  ? theme.palette.success.main
+                  : theme.palette.text.secondary;
+
+              return (
+                <CustomTooltip
+                  title={value === 0 ? 'Published' : 'Draft'}
+                  arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0], // Try 0 or adjust closer
+                        },
+                      },
+                    ],
+                  }}
+                >
+                  <IconButton
+                    onClick={() => onToggleStatus(row as ISubjectFormValues)}
+                    sx={{ p: 0 }} // No padding
+                  >
+                    <Iconify
+                      icon={GlobalIcons.tick}
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        cursor: 'pointer',
+                        color: statusColor,
+                      }}
+                    />
+                  </IconButton>
+                </CustomTooltip>
+              );
+            },
           },
-        },
-      ]}
-      data={getSubjectTableData(data)}
-    />
+          {
+            id: 'action',
+            label: 'Actions',
+            minWidth: 70,
+            align: 'left',
+            sticky: true,
+            isFilter: false,
+            isSort: false,
+            render(value, row) {
+              const subject = subjectTableData.find((s) => s.id === row.id);
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={(prop) => actions({ ...prop, row })}
+                  showViewIcon
+                  showEditIcon
+                  // showThreeDots={false}
+                  handleViewClick={() => {
+                    const originalFormData = data.find((item) => item.id === row.id);
+                    if (originalFormData) {
+                      onView(originalFormData);
+                    }
+                  }}
+                  handleEditClick={() => {
+                    const originalFormData = data.find((item) => item.id === row.id);
+                    if (originalFormData) {
+                      onEdit(originalFormData);
+                    }
+                  }}
+                  // handleDeleteClick={() => onDelete(row as ISubjectFormValues)}
+                />
+              );
+            },
+          },
+        ]}
+        data={getSubjectTableData(data)}
+      />
+    </Box>
   );
 };
 

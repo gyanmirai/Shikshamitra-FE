@@ -20,6 +20,20 @@ export interface ICourse {
   color: string; // Color of the course
 }
 
+export interface ISubject {
+  id: number;
+  subjectName: string;
+  progress: number;
+}
+
+// Props expected by SubjectCard component
+export interface ISubjectCardProps {
+  selectedSubject: ISubject | null;
+  subjectId: number;
+  subjectName: string;
+  progress: number;
+}
+
 export interface ICourseCardsGridProps {
   courses: ICourse[];
   handleCardDetails: (course: ICourse) => void;

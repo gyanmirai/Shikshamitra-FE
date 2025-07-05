@@ -68,10 +68,18 @@ const AssignElectiveSubject = () => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
     const dummyStudents = [
-      { srNo: 1, grNo: 'GR001', name: 'Atre Prerna Bhanudas' },
-      { srNo: 2, grNo: 'GR002', name: 'Mehta Divya Hitesh' },
-      { srNo: 3, grNo: 'GR003', name: 'Patel Jiya Ganesh' },
+      { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas' },
+      { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh' },
+      { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh' },
+      { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav' },
+      { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj' },
+      { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir' },
+      { srNo: 7, rollNo: 'R007', name: 'Kapadia Reeva Suresh' },
+      { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh' },
+      { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav' },
+      { srNo: 10, rollNo: 'R010', name: 'Rathod Yashika Sanjay' },
     ];
+
     setElectiveSubject(electiveGroups[0].id);
 
     setStudents(dummyStudents);
@@ -88,7 +96,7 @@ const AssignElectiveSubject = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
-        description="Assign elective subjects to students based on their preferences and academic requirements. Manage and track student elective choices efficiently through this centralized system."
+        description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
@@ -161,7 +169,7 @@ const AssignElectiveSubject = () => {
         }}
         columns={[
           { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
-          { id: 'grNo', label: 'GR No.', minWidth: '120px', align: 'left' },
+          { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' },
           {
             id: 'electiveSubject',
             label: '',

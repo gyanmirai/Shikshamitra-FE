@@ -17,8 +17,10 @@ import {
   FormLabel,
   TextField,
   RadioGroup,
+  Typography,
   FormControl,
   DialogActions,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
@@ -47,10 +49,12 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { inquiryInitialValues } from './initialvalues';
 import { inquiryValidationSchema } from './validationSchema';
@@ -80,7 +84,7 @@ const InquiryForm = ({
 }) => {
   const dialog = useBoolean();
 
-  const initialValues: IInquiryFormValues = useMemo(
+  const initialInquiryValues: IInquiryFormValues = useMemo(
     () => inquiryInitialValues(editData),
     [editData]
   );
@@ -101,11 +105,6 @@ const InquiryForm = ({
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const classesData = useMemo(
-    () => [...(classes || [])]?.sort((a: any, b: any) => a.name.localeCompare(b.name)) || [],
-    [classes]
-  );
-
   /**
    * Hook to fetch academic year data
    */
@@ -113,13 +112,6 @@ const InquiryForm = ({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
   });
-
-  const years = useMemo(
-    () =>
-      [...(academicYear?.items || [])]?.sort((a: any, b: any) => b.name.localeCompare(a.name)) ||
-      [],
-    [academicYear?.items]
-  );
 
   /**
    * Handles form submission for both adding and updating student inquiries
@@ -205,8 +197,9 @@ const InquiryForm = ({
     handleSubmit,
     handleBlur,
     setFieldTouched,
-  } = useFormik({
     initialValues,
+  } = useFormik({
+    initialValues: initialInquiryValues,
     validationSchema: inquiryValidationSchema,
     onSubmit,
     validateOnChange: true,
@@ -214,10 +207,10 @@ const InquiryForm = ({
   });
 
   useMemo(() => {
-    if (years?.length) {
-      setFieldValue('academicYear', years[0].id);
+    if (academicYear?.items?.length) {
+      setFieldValue('academicYear', academicYear?.items[0].id);
     }
-  }, [setFieldValue, years]);
+  }, [setFieldValue, academicYear?.items]);
 
   /**
    * Custom hook to check for changes in form values
@@ -231,6 +224,23 @@ const InquiryForm = ({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
+  const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState([]);
+
+  // useMemo(() => {
+  //   if (years?.length) {
+  //     setFieldValue('academicYear', years[0].id);
+  //     const findBoards = board?.items.filter(
+  //       (item: Board) => item.academicYearId === editData?.academicYearId
+  //     );
+  //     setBoards(findBoards);
+  //   }
+  // }, [board?.items, editData?.academicYearId, setFieldValue, years]);
+
+  /**
+   * Custom hook to check for changes in form values
+   * @param initialValues - Initial form values
+   * @param currentValue - Current form values
 
   /**
    * Hook to add new student inquiry
@@ -251,7 +261,38 @@ const InquiryForm = ({
   /**
    * State to store filtered boards based on academic year
    */
-  const [boards, setBoards] = useState([]);
+
+  // useEffect(() => {
+  //   if (!board?.items?.length || !years?.length) return;
+
+  //   // If in edit mode
+  //   if (editData) {
+  //     const yearId = editData.academicYearId;
+  //     setFieldValue('academicYear', yearId);
+
+  //     const findBoards = board.items.filter((item: Board) => item.academicYearId === yearId);
+  //     setBoards(findBoards);
+  //     setFieldValue('board', editData.educationBoardId || '');
+
+  //     if (editData.educationBoardId) {
+  //       const selectedBoard = board.items.find(
+  //         (item: Board) => item.id === editData.educationBoardId
+  //       );
+  //       setMediums(selectedBoard?.educationMediums || []);
+  //     }
+
+  //     if (editData.educationMediumId) {
+  //       getClassByMedium(editData.educationMediumId);
+  //     }
+  //   } else {
+  //     // Default behavior when not editing
+  //     const yearId = years[0].id;
+  //     setFieldValue('academicYear', yearId);
+
+  //     const findBoards = board.items.filter((item: Board) => item.academicYearId === yearId);
+  //     setBoards(findBoards);
+  //   }
+  // }, [editData, years, board?.items, setFieldValue, getClassByMedium]);
 
   useEffect(() => {
     if (editData) {
@@ -269,8 +310,8 @@ const InquiryForm = ({
   }, [board?.items, editData, getClassByMedium]);
 
   return (
-    <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent' }}>
-      <CheckIsChanges initialValues={initialValues} currentValue={values}>
+    <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent', mt: 1 }}>
+      <BackPopUpChecked initialValues={initialValues} currentValues={values}>
         <Box
           component="form"
           sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
@@ -289,7 +330,7 @@ const InquiryForm = ({
                     name="academicYear"
                     label="Academic Year *"
                     isLoading={yearLoading}
-                    options={years}
+                    options={academicYear?.items || []}
                     value={values.academicYear}
                     labelKey="name"
                     valueKey="id"
@@ -300,6 +341,8 @@ const InquiryForm = ({
                       );
                       setBoards(findBoards);
                       setFieldValue('board', '');
+                      setFieldValue('medium', '');
+                      setFieldValue('class', '');
                       setFieldValue('academicYear', value);
                     }}
                     error={!!(touched.academicYear && errors.academicYear) || false}
@@ -320,6 +363,7 @@ const InquiryForm = ({
                     value={values.board}
                     onChange={(value) => {
                       setFieldValue('medium', '');
+                      setFieldValue('class', '');
                       setFieldValue('board', value);
                     }}
                     error={!!(touched.board && errors.board) || false}
@@ -344,6 +388,7 @@ const InquiryForm = ({
                     valueKey="id"
                     onChange={async (value) => {
                       setFieldValue('medium', value);
+                      setFieldValue('class', '');
                       await getClassByMedium(value);
                     }}
                     error={!!(touched.medium && errors.medium) || false}
@@ -361,14 +406,16 @@ const InquiryForm = ({
                     isLoading={classLoading}
                     labelKey="name"
                     valueKey="id"
-                    options={classesData || []}
+                    options={classes || []}
                     value={values.class}
                     onChange={(value) => {
                       setFieldValue('class', value);
-                      setFieldTouched('class', true);
+                      // setFieldTouched('class', true);
                     }}
                     error={!!(touched.class && errors.class) || false}
                     helperText={(touched.class && errors.class) || ''}
+                    // error={touched.class && Boolean(errors.class)}
+                    // helperText={(touched.class && errors.class) as string}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -380,13 +427,15 @@ const InquiryForm = ({
                     size="small"
                     name="firstName"
                     label="First Name *"
-                    error={touched.firstName && Boolean(errors.firstName)}
-                    helperText={touched.firstName && errors.firstName}
+                    error={!!(touched.firstName && errors.firstName) || false}
+                    helperText={(touched.firstName && errors.firstName) || ''}
                     value={values.firstName}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
-                      setFieldValue('firstName', value);
-                      setFieldTouched('firstName', true);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const capitalized = capitalize(onlyLetters);
+                      // const value = capitalize(e.target.value);
+                      setFieldValue('firstName', capitalized);
+                      // setFieldTouched('firstName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -397,14 +446,15 @@ const InquiryForm = ({
                     fullWidth
                     size="small"
                     name="middleName"
-                    label="Middle Name *"
+                    label="Middle Name"
                     error={touched.middleName && Boolean(errors.middleName)}
                     helperText={touched.middleName && errors.middleName}
                     value={values.middleName}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
-                      setFieldValue('middleName', value);
-                      setFieldTouched('middleName', true);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const capitalized = capitalize(onlyLetters);
+                      setFieldValue('middleName', capitalized);
+                      // setFieldTouched('middleName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -420,9 +470,10 @@ const InquiryForm = ({
                     helperText={touched.lastName && errors.lastName}
                     value={values.lastName}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
-                      setFieldValue('lastName', value);
-                      setFieldTouched('lastName', true);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const capitalized = capitalize(onlyLetters);
+                      setFieldValue('lastName', capitalized);
+                      // setFieldTouched('lastName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -441,15 +492,17 @@ const InquiryForm = ({
                         setFieldValue('age', age);
                       }
                       setFieldValue('dateOfBirth', newValue);
-                      setFieldTouched('dateOfBirth', true);
+                      // setFieldTouched('dateOfBirth', true);
                     }}
                     disableFuture
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         size: 'small',
-                        helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
-                        error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
+                        error: !!(touched.dateOfBirth && errors.dateOfBirth) || false,
+                        helperText: (touched.dateOfBirth && errors.dateOfBirth) || '',
+                        // helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
+                        // error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
                       },
                     }}
                   />
@@ -461,7 +514,12 @@ const InquiryForm = ({
                     fullWidth
                     sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}
                   >
-                    <FormLabel id="gender-radio-group">Gender</FormLabel>
+                    <FormLabel
+                      id="gender-radio-group"
+                      sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
+                    >
+                      Gender *
+                    </FormLabel>
                     <RadioGroup
                       row
                       aria-labelledby="gender-radio-group"
@@ -483,9 +541,10 @@ const InquiryForm = ({
                     fullWidth
                     value={values.previousSchool}
                     onChange={(e) => {
-                      const value = capitalize(e.target.value);
-                      setFieldValue('previousSchool', value);
-                      setFieldTouched('previousSchool', true);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const capitalized = capitalize(onlyLetters);
+                      setFieldValue('previousSchool', capitalized);
+                      // setFieldTouched('previousSchool', true);
                     }}
                     size="small"
                     name="previousSchool"
@@ -498,7 +557,7 @@ const InquiryForm = ({
             </SectionCard>
 
             <SectionCard title="Inquiry Details">
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={4} mb={1}>
                 <ShakingTextField
                   error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}
                 >
@@ -509,6 +568,7 @@ const InquiryForm = ({
                     format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
+                      // setFieldValue('dateOfInquiry', newValue);
                       setFieldTouched('dateOfInquiry', true);
                     }}
                     slotProps={{
@@ -522,7 +582,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={4} mb={1}>
                 <ShakingTextField>
                   <CustomSelect
                     label="Inquiry Preference"
@@ -543,7 +603,7 @@ const InquiryForm = ({
                       },
                     }}
                     addOtherItemOnClick={dialog.onTrue}
-                    addOtherItemText="add Inquiry Preference"
+                    addOtherItemText="Add Inquiry Preference"
                   />
                 </ShakingTextField>
               </Grid>
@@ -563,10 +623,12 @@ const InquiryForm = ({
                     helperText={touched.email && errors.email}
                     InputProps={{
                       startAdornment: (
-                        <>
-                          <Iconify icon="mdi-light:email" />{' '}
-                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                        </>
+                        <InputAdornment position="start">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Iconify icon="mdi-light:email" />
+                            <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                          </Box>
+                        </InputAdornment>
                       ),
                     }}
                   />
@@ -581,7 +643,7 @@ const InquiryForm = ({
                     value={values.primaryContactNumber}
                     onChange={(value) => {
                       setFieldValue('primaryContactNumber', value);
-                      setFieldTouched('primaryContactNumber', true);
+                      // setFieldTouched('primaryContactNumber', true);
                     }}
                     error={touched.primaryContactNumber && Boolean(errors.primaryContactNumber)}
                     helperText={touched.primaryContactNumber && errors.primaryContactNumber}
@@ -601,19 +663,23 @@ const InquiryForm = ({
                     name="secondaryContactNumber"
                     value={values.secondaryContactNumber}
                     onChange={(value) => {
-                      setFieldValue('secondaryContactNumber', value);
-                      setFieldTouched('secondaryContactNumber', true);
+                      setFieldValue('secondaryContactNumber', value || '');
+                      // setFieldTouched('secondaryContactNumber', true);
                     }}
-                    error={touched.secondaryContactNumber && Boolean(errors.secondaryContactNumber)}
-                    helperText={touched.secondaryContactNumber && errors.secondaryContactNumber}
+                    error={Boolean(touched.secondaryContactNumber && errors.secondaryContactNumber)}
+                    helperText={
+                      touched.secondaryContactNumber && errors.secondaryContactNumber
+                        ? errors.secondaryContactNumber
+                        : ''
+                    }
                     variant="outlined"
                     label="Secondary Contact No."
-                    onBlur={handleBlur}
+                    // onBlur={handleBlur}
                   />
                 </ShakingTextField>
               </Grid>
             </SectionCard>
-            <SectionCard title="Address">
+            <SectionCard title="Address Details">
               <Grid item xs={12} md={4}>
                 <ShakingTextField error={!!(touched.addressLine1 && errors.addressLine1) || false}>
                   <TextField
@@ -656,14 +722,17 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               <Grid item xs={4}>
                 <ShakingTextField error={!!(touched.country && errors.country) || false}>
                   <CountryComponent
                     value={values.country}
-                    onChange={(_e, value) => {
-                      setFieldValue('state', null);
-                      setFieldValue('country', value);
-                      setFieldTouched('country', true);
+                    onChange={(_e: any, value: any) => {
+                      setFieldValue('state', { name: '', isoCode: '' });
+                      setFieldValue('country', {
+                        name: value?.name,
+                        isoCode: value?.isoCode,
+                      });
                     }}
                     error={touched.country && Boolean(errors?.country?.name)}
                     helperText={(touched.country && errors?.country?.name) || ''}
@@ -674,14 +743,22 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
               <Grid item xs={4}>
-                <ShakingTextField error={!!(touched.state && errors?.state?.name) || false}>
+                <ShakingTextField error={!!(touched.state && errors?.state) || false}>
                   <StateComponent
                     value={values.state}
-                    onChange={(_e, value) => {
-                      setFieldValue('city', null);
-                      setFieldValue('state', value);
-                      setFieldTouched('state', true);
+                    onChange={(_e: any, value: any) => {
+                      setFieldValue('state', {
+                        ...(value || {}),
+                        name: value?.name,
+                        isoCode: value?.isoCode,
+                      });
+                      setFieldValue('city', { name: '' });
                     }}
+                    // onChange={(_e, value) => {
+                    //   setFieldValue('city', null);
+                    //   setFieldValue('state', value);
+                    //   setFieldTouched('state', true);
+                    // }}
                     error={touched.state && Boolean(errors?.state?.name)}
                     helperText={touched.state && errors?.state?.name}
                     countryValue={values.country}
@@ -695,9 +772,8 @@ const InquiryForm = ({
                 <ShakingTextField error={!!(touched.city && errors.city) || false}>
                   <CityComponent
                     value={values.city}
-                    onChange={(_e, value) => {
-                      setFieldValue('city', value);
-                      setFieldTouched('city', true);
+                    onChange={(_e: any, value: any) => {
+                      setFieldValue('city', { name: value?.name });
                     }}
                     error={touched.city && Boolean(errors?.city?.name)}
                     helperText={touched.city && errors?.city?.name}
@@ -716,7 +792,7 @@ const InquiryForm = ({
                     onChange={(e) => {
                       const { value } = e.target;
                       if (value.length <= 6) {
-                        handleChange(e);
+                        setFieldValue('pinCode', value);
                       }
                     }}
                     type="number"
@@ -754,9 +830,25 @@ const InquiryForm = ({
             </LoadingButton>
           </DialogActions>
         </Box>
-      </CheckIsChanges>
+      </BackPopUpChecked>
 
-      <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Inquiry Preference">
+      <CustomDialog
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Inquiry Preference</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Configure and manage inquiry preferences to categorize and track student inquiries effectively."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
       </CustomDialog>
     </Card>

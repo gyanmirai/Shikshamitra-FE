@@ -15,7 +15,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
 
 import PerformerCard from './component/performer-card';
-import TimeTableView from '../component/time-table-view';
 import { StudentPerformanceChart } from './component/student-performance';
 import UpcomingExamCard from '../student/component/exam-card-for-student';
 import UpcomingAssignmentCard from '../student/component/upcoming-assignment-card';
@@ -240,7 +239,7 @@ const MainDashboardTeacher = () => {
             </Button>
           </ButtonGroup>
         </Box>
-        <TimeTableView />
+        {/* <TimeTableView /> */}
       </Grid>
 
       {/* What’s New in Month, Performance Chart, and Payroll Overview */}

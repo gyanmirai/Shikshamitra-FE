@@ -1,3 +1,4 @@
+import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
@@ -6,18 +7,16 @@ import React, { useState } from 'react';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
-  Card,
   Grid,
-  Stack,
   Paper,
   Badge,
   alpha,
   Button,
   Divider,
-  Tooltip,
   useTheme,
   Typography,
   ButtonGroup,
+  CircularProgress,
 } from '@mui/material';
 
 import {
@@ -47,25 +46,19 @@ const Dot: React.FC<DotProps> = ({
   children = null,
   ...props
 }) => (
-  <Box display="flex" alignItems="center">
+  <Box display="flex" alignItems="center" sx={{ ...sx }} {...props}>
     <Box
       component="span"
       bgcolor={color}
       sx={{
-        height: '10px',
-        width: '10px',
+        height: '12px',
+        width: '12px',
         borderRadius: '50%',
         display: 'inline-block',
         marginRight: '5px',
-        wordWrap: 'normal',
-        whiteSpace: 'nowrap',
-
-        ...sx,
       }}
-      {...props}
     />
-    <Typography color={color} fontSize="12px !important" whiteSpace="nowrap">
-      {' '}
+    <Typography sx={{ color: '#000', fontSize: '12px', whiteSpace: 'nowrap' }}>
       {children}
     </Typography>
   </Box>
@@ -75,21 +68,18 @@ const Attendance = (props: StudentTabsComponentType) => {
   // State to track active view mode (monthly or yearly)
   const [activeButton, setActiveButton] = useState<'monthly' | 'yearly'>('monthly');
 
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
+
   // Get theme object for styling
   const theme = useTheme();
 
-  // State to store selected year (defaults to current year)
-  const [year, setYear] = useState<string>(dayjs().format('YYYY'));
-
-  // State to store selected month (defaults to current month)
-  const [month, setMonth] = useState<string>(dayjs().format('MM'));
   return (
     <Box
       sx={{
         mt: 1,
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="center">
+      {/* <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
           sx={{
@@ -107,9 +97,25 @@ const Attendance = (props: StudentTabsComponentType) => {
             <Stack>
               <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
                 Overall Attendance&nbsp;
-                <Label variant="soft" color="success">
-                  90%
-                </Label>
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress variant="determinate" value={90} />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="caption" component="div" color="text.secondary">
+                      {`${90}%`}
+                    </Typography>
+                  </Box>
+                </Box>
                 <CustomTooltip
                   placement="top"
                   title={
@@ -127,17 +133,18 @@ const Attendance = (props: StudentTabsComponentType) => {
             </Stack>
           </Stack>
         </Card>
-      </Stack>
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      </Stack> */}
+      <Paper
+        elevation={2}
+        sx={{ display: 'flex', gap: 2, mt: 2, p: 2, justifyContent: 'space-between' }}
+      >
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
           label="Select Month Year"
-          value={dayjs(new Date())}
-          onChange={(newValue) => {}}
-          sx={{
-            maxWidth: '300px',
-            width: '100%',
+          value={date}
+          onChange={(newValue) => {
+            setDate(newValue);
           }}
           slotProps={{
             textField: {
@@ -145,7 +152,42 @@ const Attendance = (props: StudentTabsComponentType) => {
             },
           }}
         />
-      </Box>
+        <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
+          Overall Attendance&nbsp;
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress variant="determinate" value={90} />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Typography variant="caption" component="div" color="text.secondary">
+                {`${90}%`}
+              </Typography>
+            </Box>
+          </Box>
+          <CustomTooltip
+            placement="top"
+            title={
+              <Box display="flex" alignItems="center" gap={1}>
+                <Dot color="primary.main"> {'>80% '}</Dot>
+                <Dot color="warning.main">70% - 80%</Dot>
+                <Dot color="info.main">50% - 70%</Dot>
+                <Dot color="error.main">{'<50%'}</Dot>
+              </Box>
+            }
+          >
+            <Iconify icon="mdi:help-circle-outline" />
+          </CustomTooltip>
+        </Box>
+      </Paper>
       <Divider sx={{ my: 2 }} />
       <Grid container spacing={2} mb={2}>
         <Grid item xs={12} sm={6}>
@@ -194,6 +236,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     { label: 'Absent', value: 10 },
                   ],
                 }}
+                sx={{ boxShadow: 'var(--shadows-2)', borderRadius: 2 }}
               />
             ) : (
               <YearlyAttendance
@@ -263,19 +306,35 @@ const Attendance = (props: StudentTabsComponentType) => {
                     },
                   ],
                 }}
-                sx={{ width: '100%' }}
+                sx={{ width: '100%', boxShadow: 'var(--shadows-2)', borderRadius: 2 }}
               />
             )}
           </Box>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Paper elevation={4} sx={{ flexGrow: 1, height: '100%' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              flexGrow: 1,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'var(--shadows-2)',
+              borderRadius: 2,
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ padding: '24px 24px 0px' }}>
+              Attendance Calender
+            </Typography>
             <DateCalendar
-              value={dayjs(new Date())}
+              value={date}
               disableFuture
               sx={{
                 width: '100%',
-                pt: '7%',
+                flexGrow: 2,
+                maxHeight: '100%',
+                height: '100%',
+                justifyContent: 'center',
                 '& .MuiPickersCalendarHeader-root': {
                   display: 'none', // Hides the header (Month, Year, and Arrows)
                 },
@@ -289,7 +348,6 @@ const Attendance = (props: StudentTabsComponentType) => {
               slots={{
                 day: (prop: any) => {
                   const { day, today } = prop;
-                  console.log('day----', day);
 
                   const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;
@@ -311,7 +369,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     toolTipTitle = 'Public Holiday';
                   }
                   return (
-                    <Tooltip title={toolTipTitle} arrow placement="top">
+                    <CustomTooltip title={toolTipTitle} arrow placement="top">
                       <Badge
                         overlap="circular"
                         variant={isHoliday ? 'dot' : undefined}
@@ -326,6 +384,9 @@ const Attendance = (props: StudentTabsComponentType) => {
                             overflow: 'hidden',
                             fontWeight: disabled ? 400 : 600,
                             bgcolor: backgroundColor,
+                            '&:hover': {
+                              ...(absent ? { backgroundColor: 'unset' } : {}),
+                            },
                             // background: (theme) =>
                             //   absent
                             //     ? `${theme.palette.error.main} !important`
@@ -359,11 +420,34 @@ const Attendance = (props: StudentTabsComponentType) => {
                           disabled={disabled}
                         />
                       </Badge>
-                    </Tooltip>
+                    </CustomTooltip>
                   );
                 },
               }}
             />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderTop: '1px dashed #ddd',
+                p: 3,
+                // height: '100%',
+                // mt: 9.3,
+                // pt: 3,
+                color: 'text.primary',
+              }}
+            >
+              <Dot color="success.main" sx={{ marginLeft: 2 }}>
+                Today
+              </Dot>
+              <Dot color="warning.main" sx={{ marginLeft: 2 }}>
+                Holiday
+              </Dot>
+              <Dot color="error.main" sx={{ marginLeft: 2 }}>
+                Absent/ Half-Day
+              </Dot>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
@@ -384,7 +468,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           },
         ]}
         columns={[
-          { id: 'date', label: 'Date', minWidth: '10%' },
+          { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
           {
             id: 'status',
             label: 'Status',

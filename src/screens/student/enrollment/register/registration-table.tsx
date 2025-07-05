@@ -17,6 +17,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -27,15 +28,18 @@ import type { IInquiryData } from '../Inquiry';
 const RegistrationTable = ({
   dialog,
   followUpDialog,
+  editData,
   setEditData,
   formDialog,
 }: {
+  editData: IInquiryData | null;
   dialog: UseBooleanReturn;
   formDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
   setEditData: (data: null | IInquiryData) => void;
 }) => {
   const [moveId, setMoveId] = useState<string | null>(null);
+
   const confirmMovePopup = useBoolean();
   const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -58,12 +62,13 @@ const RegistrationTable = ({
                 return;
               }
               confirmMovePopup.onTrue();
+              setEditData(row);
               // dialog.onTrue();
               setMoveId(row.id);
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right" sx={{ mr: 2 }} />
+            <Iconify icon="mdi:arrow-right-circle" />
             Move To Admission
           </MenuItem>
           <MenuItem
@@ -73,7 +78,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:calendar-clock" sx={{ mr: 2 }} />
+            <Iconify icon="mdi:calendar-clock" />
             Schedule Exam
           </MenuItem>
           <MenuItem
@@ -83,7 +88,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="clarity:note-edit-line" color="default.main" sx={{ mr: 2 }} />
+            <Iconify icon="clarity:note-edit-line" color="default.main" />
             Note
           </MenuItem>
         </MenuList>
@@ -214,7 +219,7 @@ const RegistrationTable = ({
           { id: 'standard.name', label: 'Class', align: 'left' },
           {
             id: 'dobValue',
-            label: 'Date Of Birth',
+            label: 'Date of Birth',
             minWidth: '130px',
             align: 'left',
             isFilter: true,
@@ -223,7 +228,7 @@ const RegistrationTable = ({
           { id: 'ageValue', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
-            label: 'Date Of Inquiry',
+            label: 'Date of Inquiry',
             minWidth: '150px',
             align: 'left',
             filterType: 'date',
@@ -288,7 +293,7 @@ const RegistrationTable = ({
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress variant="determinate" value={value} />
+                  <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
                   <Box
                     sx={{
                       top: 0,
@@ -333,7 +338,7 @@ const RegistrationTable = ({
             label: 'Actions',
             isSort: false,
             isFilter: false,
-            minWidth: 40,
+            minWidth: 50,
             align: 'left',
             sticky: true,
             render(value, row) {
@@ -354,17 +359,36 @@ const RegistrationTable = ({
         data={tableData || []}
       />
       <ConfirmDialog
-        title="Move"
-        content="Are you sure want to move in admission ?"
+        // title="Move"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Move</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Move the selected student from entrance exam to admission."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        content={
+          <>
+            Are you sure want to move student{' '}
+            <strong>{`${(editData as IInquiryData)?.lastName || ''} ${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''}`}</strong>{' '}
+            in admission ?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isMoveToAdmissionLoading}
-            color="error"
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();
             }}
+            startIcon={<Iconify icon="mdi:arrow-right-circle" />}
+            size="small"
           >
             Move
           </LoadingButton>

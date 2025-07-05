@@ -1,20 +1,23 @@
 import type { RootState } from 'src/redux/store';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { LoadingButton } from '@mui/lab';
+import { Autocomplete, LoadingButton } from '@mui/lab';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
+  Chip,
   Stack,
-  Switch,
   Button,
+  Checkbox,
   TextField,
   Typography,
   DialogActions,
-  FormControlLabel,
 } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -32,21 +35,23 @@ import {
 } from 'src/redux/student/document-type/document-type-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IStudentDocument } from './type';
 
-const StudentDocumentType = () => {
+const StudentDocumentType = ({
+  defaultDocumentTypes,
+}: {
+  defaultDocumentTypes: UseBooleanReturn;
+}) => {
   // Dialog state for add/edit form
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
   // State to store document being edited
@@ -70,11 +75,11 @@ const StudentDocumentType = () => {
   // Reset form and close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      defaultDocumentTypes.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      dialog.onFalse();
+      defaultDocumentTypes.onFalse();
       setEditData(null);
     }
   };
@@ -88,12 +93,17 @@ const StudentDocumentType = () => {
           setEditData(null);
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <strong>{editData?.documentName}</strong>?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteLoading}
             variant="contained"
             color="error"
+            size="small"
             onClick={async () => {
               await deleteDocument(editData?.id);
               confirm.onFalse();
@@ -111,7 +121,7 @@ const StudentDocumentType = () => {
             No Document Type Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                defaultDocumentTypes.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -129,17 +139,18 @@ const StudentDocumentType = () => {
         }
         isLoading={isLoading}
         columns={[
-          { id: 'documentName', label: 'Document' },
+          { id: 'documentName', label: 'Document Name' },
+          { id: 'documentSize', label: 'Document Size' },
           {
             id: 'documentTypes',
-            label: 'Type',
+            label: 'Accepted Format',
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
             },
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
             minWidth: 50,
@@ -156,7 +167,7 @@ const StudentDocumentType = () => {
                   showEditIcon
                   handleEditClick={() => {
                     setEditData(row as IStudentDocument);
-                    dialog.onTrue();
+                    defaultDocumentTypes?.onTrue();
                   }}
                 />
               );
@@ -166,18 +177,21 @@ const StudentDocumentType = () => {
         data={documents?.items || []}
       />{' '}
       <CustomDialog
-        open={dialog.value}
+        open={defaultDocumentTypes?.value}
         handleClose={() => {
-          dialog.onFalse();
+          defaultDocumentTypes.onFalse();
           setEditData(null);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Document</Typography>
+            <Typography variant="h5">
+              {editData ? 'Update Document Type' : 'Add New Document Type'}
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
-              title="This is the Document dialog, where you can add the required documents for registration along with their document types. By tapping the switch, you can mark a document as required or optional."
+              sx={{ textAlign: 'justify' }}
+              title="In the Document Dialogue manage the list of required documents for registration and their types. Toggle to mark each as required or optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -191,6 +205,208 @@ const StudentDocumentType = () => {
 };
 
 export default StudentDocumentType;
+
+// export const DocumentForm = ({
+//   editData,
+//   handleClose,
+// }: {
+//   editData: null | IStudentDocument;
+//   handleClose?: (e: any, isSubmit: boolean) => void;
+// }) => {
+//   const dispatch = useDispatch();
+//   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+//   const [addDocument, { isLoading }] = useQueryAndMutation({
+//     type: 'mutation',
+//     currentQueryAndMutation: useAddStudentDocumentTypeMutation,
+//   });
+//   const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+//     type: 'mutation',
+//     currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
+//   });
+
+//   const formik = useFormik<{
+//     title: string;
+//     documentType: DocumentType[];
+//     isRequired: boolean;
+//   }>({
+//     initialValues: {
+//       title: editData?.documentName || '',
+//       documentType: editData?.documentTypes || [],
+//       isRequired: editData?.isRequired || false,
+//     },
+//     validationSchema: Yup.object({
+//       title: Yup.string().required('Document name is required'),
+//       documentType: Yup.array().min(1, 'At least one document type is required'),
+//     }),
+//     onSubmit: async (formikValues, { resetForm, setSubmitting }) => {
+//       try {
+//         setSubmitting(true);
+
+//         if (editData) {
+//           // Update existing document and close popup
+//           await updateDocument({
+//             id: editData.id,
+//             body: {
+//               documentName: formikValues.title,
+//               documentTypes: formikValues.documentType,
+//               isRequired: formikValues.isRequired,
+//             },
+//           });
+//           handleClose?.(null, true);
+//           return;
+//         }
+
+//         // Add new document - DON'T close dialog
+//         await addDocument({
+//           documentName: formikValues.title,
+//           documentTypes: formikValues.documentType,
+//           isRequired: formikValues.isRequired,
+//         });
+
+//         // Show success message
+//         setShowSuccessMessage(true);
+
+//         // Reset form for next entry
+//         resetForm();
+
+//         // Reset the changes state so dialog doesn't prompt for confirmation
+//         dispatch(setIsChanges(false));
+
+//         // Hide success message after 3 seconds
+//         setTimeout(() => {
+//           setShowSuccessMessage(false);
+//         }, 3000);
+//       } catch (error) {
+//         console.error('Error saving document:', error);
+//       } finally {
+//         setSubmitting(false);
+//       }
+//     },
+//   });
+
+//   const { values, setFieldValue, handleSubmit, errors, touched } = formik;
+
+//   // Function to handle "Add Another" button
+//   const handleAddAnother = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     handleSubmit();
+//   };
+
+//   // Function to handle "Save & Close" button
+//   const handleSaveAndClose = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     if (editData) {
+//       handleSubmit();
+//       return;
+//     }
+//     handleSubmit();
+//     handleClose?.(null, true);
+//   };
+
+//   return (
+//     <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>
+//       <form onSubmit={handleSubmit}>
+//         <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+//           <Stack spacing={2}>
+//             {!editData && (
+//               <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+//                 {/* <Button
+//                   size="small"
+//                   variant="outlined"
+//                   startIcon={<Iconify icon="eva:plus-fill" />}
+//                   onClick={handleAddAnother}
+//                   disabled={isLoading || isUpdateLoading}
+//                 >
+//                   {isLoading ? 'Adding...' : 'Add Another'}
+//                 </Button> */}
+//               </Box>
+//             )}
+//             {/* Success Message */}
+//             {showSuccessMessage && (
+//               <Box
+//                 sx={{
+//                   p: 2,
+//                   bgcolor: 'success.lighter',
+//                   border: '1px solid',
+//                   borderColor: 'success.main',
+//                   borderRadius: 1,
+//                   display: 'flex',
+//                   alignItems: 'center',
+//                   gap: 1,
+//                 }}
+//               >
+//                 <Iconify icon="eva:checkmark-circle-2-fill" color="success.main" />
+//                 <Typography variant="body2" color="success.dark">
+//                   Document added successfully! You can add another document.
+//                 </Typography>
+//               </Box>
+//             )}
+
+//             <ShakingTextField error={!!(touched.title && errors.title) || false}>
+//               <TextField
+//                 fullWidth
+//                 size="small"
+//                 label="Document Name *"
+//                 name="title"
+//                 value={values.title}
+//                 onChange={(e) => setFieldValue('title', e.target.value)}
+//                 error={Boolean(errors.title && touched.title)}
+//                 helperText={(touched.title && errors.title) || ''}
+//               />
+//             </ShakingTextField>
+
+//             <ShakingTextField error={!!(touched.documentType && errors.documentType) || false}>
+//               <CustomSelect
+//                 options={DocumentTypeArray}
+//                 value={values.documentType}
+//                 multiple
+//                 label="Select document Type *"
+//                 onChange={(value) => setFieldValue('documentType', value)}
+//                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+//                 error={Boolean(errors.documentType && touched.documentType)}
+//                 helperText={(touched.documentType && errors.documentType) as string}
+//               />
+//             </ShakingTextField>
+
+//             <FormControlLabel
+//               control={
+//                 <Switch
+//                   checked={values.isRequired}
+//                   onChange={(e) => setFieldValue('isRequired', e.target.checked)}
+//                 />
+//               }
+//               label="Is Required"
+//             />
+//           </Stack>
+//         </Scrollbar>
+
+//         <DialogActions sx={{ px: 2 }}>
+//           <Button
+//             size="small"
+//             startIcon={<Iconify icon={GlobalIcons.cancel} />}
+//             variant="outlined"
+//             onClick={() => {
+//               handleClose?.(null, false);
+//             }}
+//           >
+//             Cancel
+//           </Button>
+//           <LoadingButton
+//             size="small"
+//             variant="contained"
+//             loading={isUpdateLoading || isLoading}
+//             startIcon={<Iconify icon={GlobalIcons.submit} />}
+//             onClick={handleSaveAndClose}
+//           >
+//             {editData ? 'Update' : 'Submit'}
+//           </LoadingButton>
+//         </DialogActions>
+//       </form>
+//     </BackPopUpChecked>
+//   );
+// };
 
 export const DocumentForm = ({
   editData,
@@ -206,6 +422,7 @@ export const DocumentForm = ({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentDocumentTypeMutation,
   });
+
   const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
@@ -213,56 +430,50 @@ export const DocumentForm = ({
 
   const formik = useFormik<{
     title: string;
-    documentType: DocumentType[];
+    documentType: { label: string; value: number }[];
+    documentSize: number;
     isRequired: boolean;
   }>({
     initialValues: {
       title: editData?.documentName || '',
-      documentType: editData?.documentTypes || [],
+      documentType:
+        editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
+        [],
+      documentSize: editData?.documentSize || 5,
       isRequired: editData?.isRequired || false,
     },
     validationSchema: Yup.object({
       title: Yup.string().required('Document name is required'),
-      documentType: Yup.array().min(1, 'At least one document type is required'),
+      documentType: Yup.array()
+        .min(1, 'At least one document type is required')
+        .required('Document type is required'),
+      documentSize: Yup.number()
+        .required('Document size is required')
+        .min(1, 'Document size must be greater than 1 MB')
+        .positive('Document size must be a positive number')
+        .integer('Document size must be an integer'),
     }),
-    onSubmit: async (formikValues, { resetForm, setSubmitting }) => {
+    onSubmit: async (values, { resetForm, setSubmitting }) => {
       try {
         setSubmitting(true);
+        const payload = {
+          documentName: values.title,
+          documentTypes: values.documentType.map((d) => d.value),
+          documentSize: values.documentSize,
+          isRequired: values.isRequired,
+        };
 
         if (editData) {
-          // Update existing document and close popup
-          await updateDocument({
-            id: editData.id,
-            body: {
-              documentName: formikValues.title,
-              documentTypes: formikValues.documentType,
-              isRequired: formikValues.isRequired,
-            },
-          });
+          await updateDocument({ id: editData.id, body: payload }).unwrap();
           handleClose?.(null, true);
           return;
         }
 
-        // Add new document - DON'T close dialog
-        await addDocument({
-          documentName: formikValues.title,
-          documentTypes: formikValues.documentType,
-          isRequired: formikValues.isRequired,
-        });
-
-        // Show success message
+        await addDocument(payload).unwrap();
         setShowSuccessMessage(true);
-
-        // Reset form for next entry
         resetForm();
-
-        // Reset the changes state so dialog doesn't prompt for confirmation
         dispatch(setIsChanges(false));
-
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
+        setTimeout(() => setShowSuccessMessage(false), 3000);
       } catch (error) {
         console.error('Error saving document:', error);
       } finally {
@@ -271,93 +482,93 @@ export const DocumentForm = ({
     },
   });
 
-  const { values, setFieldValue, handleSubmit, errors, touched } = formik;
-
-  // Function to handle "Add Another" button
-  const handleAddAnother = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSubmit();
-  };
-
-  // Function to handle "Save & Close" button
-  const handleSaveAndClose = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editData) {
-      handleSubmit();
-      return;
-    }
-    handleSubmit();
-    handleClose?.(null, true);
-  };
+  const { values, touched, errors, setFieldValue, handleChange, handleSubmit } = formik;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>
       <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-          <Stack spacing={2}>
-            {!editData && (
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon="eva:plus-fill" />}
-                  onClick={handleAddAnother}
-                  disabled={isLoading || isUpdateLoading}
-                >
-                  {isLoading ? 'Adding...' : 'Add Another'}
-                </Button>
-              </Box>
-            )}
-            {/* Success Message */}
-            {showSuccessMessage && (
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: 'success.lighter',
-                  border: '1px solid',
-                  borderColor: 'success.main',
-                  borderRadius: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <Iconify icon="eva:checkmark-circle-2-fill" color="success.main" />
-                <Typography variant="body2" color="success.dark">
-                  Document added successfully! You can add another document.
-                </Typography>
-              </Box>
-            )}
-
-            <ShakingTextField error={!!(touched.title && errors.title) || false}>
+        <DialogScrollContent>
+          <Stack spacing={3}>
+            {/* Document Name */}
+            <ShakingTextField error={Boolean(touched.title && errors.title)}>
               <TextField
                 fullWidth
                 size="small"
                 label="Document Name *"
-                placeholder="Enter Document Name"
                 name="title"
                 value={values.title}
-                onChange={(e) => setFieldValue('title', e.target.value)}
-                error={Boolean(errors.title && touched.title)}
-                helperText={(touched.title && errors.title) || ''}
+                onChange={(e) => {
+                  const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('title', onlyText);
+                }}
+                error={Boolean(touched.title && errors.title)}
+                helperText={touched.title && errors.title}
               />
             </ShakingTextField>
 
-            <ShakingTextField error={!!(touched.documentType && errors.documentType) || false}>
-              <CustomSelect
-                options={DocumentTypeArray}
-                value={values.documentType}
+            {/* Document Size */}
+            <ShakingTextField error={Boolean(touched.documentSize && errors.documentSize)}>
+              <TextField
+                label="Document Size (MB) *"
+                value={values.documentSize}
+                size="small"
+                type="number"
+                name="documentSize"
+                fullWidth
+                onChange={handleChange}
+                error={Boolean(touched.documentSize && errors.documentSize)}
+                helperText={touched.documentSize && errors.documentSize}
+              />
+            </ShakingTextField>
+
+            {/* Document Type */}
+            <ShakingTextField error={Boolean(touched.documentType && errors.documentType)}>
+              <Autocomplete
                 multiple
-                label="Select document Type *"
-                onChange={(value) => setFieldValue('documentType', value)}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                error={Boolean(errors.documentType && touched.documentType)}
-                helperText={(touched.documentType && errors.documentType) as string}
+                options={DocumentTypeArray}
+                disableCloseOnSelect
+                getOptionLabel={(option) => option.label}
+                value={values.documentType}
+                onChange={(_, newValue) => setFieldValue('documentType', newValue)}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon />}
+                      checkedIcon={<CheckBoxIcon />}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.label}
+                  </li>
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option.label}
+                      {...getTagProps({ index })}
+                      key={index}
+                      variant="soft"
+                      size="small"
+                    />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Accepted Format *"
+                    value={`${values.documentType?.length || 0} Document Selected`}
+                    size="small"
+                    error={Boolean(touched.documentType && errors.documentType)}
+                    helperText={(touched.documentType && errors.documentType) as string}
+                  />
+                )}
               />
             </ShakingTextField>
 
-            <FormControlLabel
+            {/* Is Required Switch */}
+            {/* Uncomment if needed */}
+            {/* <FormControlLabel
               control={
                 <Switch
                   checked={values.isRequired}
@@ -365,18 +576,16 @@ export const DocumentForm = ({
                 />
               }
               label="Is Required"
-            />
+            /> */}
           </Stack>
-        </Scrollbar>
+        </DialogScrollContent>
 
-        <DialogActions sx={{ px: 2 }}>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             variant="outlined"
-            onClick={() => {
-              handleClose?.(null, false);
-            }}
+            onClick={() => handleClose?.(null, false)}
           >
             Cancel
           </Button>
@@ -384,10 +593,16 @@ export const DocumentForm = ({
             size="small"
             variant="contained"
             loading={isUpdateLoading || isLoading}
-            startIcon={<Iconify icon="eva:save-fill" />}
-            onClick={handleSaveAndClose}
+            startIcon={
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                width={editData ? 16 : 20}
+                height={editData ? 16 : 20}
+              />
+            }
+            type="submit"
           >
-            {editData ? 'Update' : 'Save & Close'}
+            {editData ? 'Update' : 'Submit'}
           </LoadingButton>
         </DialogActions>
       </form>

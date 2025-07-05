@@ -3,7 +3,7 @@ import { Box, Chip, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import { DetailRow } from './detailRow';
+import DetailRow from './detailRow';
 
 const AnnouncementDetails = ({ announcement }: any) => (
   <Box>

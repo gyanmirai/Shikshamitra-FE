@@ -1,17 +1,17 @@
-// utils/validationSchema.ts
 import * as Yup from 'yup';
 
 export const noOfLectureValidationSchema = Yup.object().shape({
   className: Yup.string().required('Class is required'),
-  weeklyLectures: Yup.array()
+  subjects: Yup.array()
     .of(
       Yup.object().shape({
-        id: Yup.string().required('ID is required'),
-        weeklyLectures: Yup.number()
-          .typeError('Weekly lecture count must be a number')
-          .min(0, 'Lecture count must be 0 or more')
-          .required('Weekly lecture count is required'),
+        name: Yup.string().required('Subject name is required'),
+        subjectColor: Yup.string().required('Subject color is required'),
+        noOfLecture: Yup.number()
+          .required('Weekly Lectures are required')
+          .min(0, 'Weekly Lectures cannot be negative')
+          .max(100, 'Too many lectures'),
       })
     )
-    .required('Weekly lectures data is required'),
+    .required('At least one subject is required'),
 });

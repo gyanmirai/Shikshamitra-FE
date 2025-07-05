@@ -2,13 +2,16 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Tab, Box, Card } from '@mui/material';
 
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -38,6 +41,11 @@ const MarksFeedbackHomeworkAssignment = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
   return (
     <Box>
       <CustomBreadcrumbs
@@ -61,22 +69,43 @@ const MarksFeedbackHomeworkAssignment = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Box>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            searchParams={searchParams}
-            setSearchParams={setSearchParams}
-          />
-        )}{' '}
-      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              searchParams={searchParams}
+              setSearchParams={setSearchParams}
+            />
+          )}{' '}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

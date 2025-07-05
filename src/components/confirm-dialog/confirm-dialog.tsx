@@ -44,11 +44,11 @@ export function ConfirmDialog({
 
       <Divider />
       {content && (
-        <DialogContent sx={{ typography: 'body2', mt: 2, mb: 2 }}> {content} </DialogContent>
+        <DialogContent sx={{ typography: 'body2', p: 2, py: 2.5 }}> {content} </DialogContent>
       )}
       {/* <Divider /> */}
 
-      <DialogActions sx={{ flexShrink: 0, p: 1.5 }}>
+      <DialogActions>
         <Button
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

@@ -10,6 +10,6 @@ export interface ITimeSlot {
 
 export interface ICreateSlotsFormProps {
   open?: boolean;
-  onClose?: () => void;
+  handleClose?: (e: any, isSubmit: boolean) => void;
   disabled?: boolean;
 }

@@ -16,7 +16,7 @@ import { ConfirmDialog } from '../confirm-dialog';
 import { fileData, FileThumbnail } from '../file-thumbnail';
 
 interface DocumentCardProps {
-  file: File;
+  file: any;
 }
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
@@ -76,7 +76,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ file }) => {
         />
 
         <Box sx={{ ml: 1.5, flex: 1 }}>
-          <CustomTooltip title={file.name}>
+          <CustomTooltip title={file.name} sx={{ textAlign: 'justify' }}>
             <Typography
               variant="body2"
               noWrap

@@ -64,6 +64,7 @@ const RegisterForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   isComeFromIssueForm?: boolean;
 }) => {
+  console.log('============>', editData);
   const [activeStep, setActiveStep] = useState(0);
 
   const [addRegistration] = useQueryAndMutation({
@@ -451,7 +452,7 @@ const RegisterForm = ({
           shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
         } else if (activeStep === 7) {
           await handleBankDetailsFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          shikshaMitraToast.success({ message: 'Registration updated successfully' });
         }
         if (!isLastStep) {
           if (!isSaveButton) {
@@ -527,6 +528,7 @@ const RegisterForm = ({
                       formik,
                       field,
                       isEdit: true,
+                      isMainForm: true,
                     })
                   ) : field.type === 'date' ? (
                     <DatePicker

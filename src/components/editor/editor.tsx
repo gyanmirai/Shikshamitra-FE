@@ -160,8 +160,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
                 onClick={handleToggleToolbar}
                 style={{
                   position: 'absolute',
-                  bottom: 8,
-                  right: 8,
+                  bottom: 7,
+                  right: 15,
                   cursor: 'pointer',
                   zIndex: 1,
                 }}
@@ -186,6 +186,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               autoComplete="off"
               autoCapitalize="off"
               editor={editor}
+              style={{ textAlign: 'justify', fontSize: '0.98rem' }}
               className={editorClasses.content.root}
             />
 

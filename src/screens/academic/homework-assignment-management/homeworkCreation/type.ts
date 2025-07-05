@@ -42,7 +42,7 @@ export interface IHomeworkDetail {
   chapter: string; // list of chapter IDs or names
   homeworkType: string;
   submissionType: number; // 0 = Offline, 1 = Online
-  attachments?: File[]; // optional file uploads
+  attachments?: File; // optional file uploads
   content?: string | null;
   submission?: string | null;
   createdBy: TeacherProfile; // includes name, email, avatar, etc.
@@ -92,6 +92,7 @@ export interface IHomeworkTableProps {
 export interface TStudentGrade {
   id: string;
   studentName: string;
+  rollNumber: string;
   assignments: string;
   subject: string;
   marks: number;

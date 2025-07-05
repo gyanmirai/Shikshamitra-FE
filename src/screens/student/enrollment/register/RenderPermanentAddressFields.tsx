@@ -43,7 +43,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
           name="permanentAddressLine1"
           label="Building No./Flat/House No."
-          value={formik.values.permanentAddressLine1}
+          value={formik.values.permanentAddressLine1 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.permanentAddressLine1 && Boolean(formik.errors.permanentAddressLine1)
@@ -58,7 +58,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
           name="permanentAddressLine2"
           label="Area/Locality/Road Name"
-          value={formik.values.permanentAddressLine2}
+          value={formik.values.permanentAddressLine2 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.permanentAddressLine2 && Boolean(formik.errors.permanentAddressLine2)
@@ -73,7 +73,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
           name="permanentAddressLine3"
           label="Landmark"
-          value={formik.values.permanentAddressLine3}
+          value={formik.values.permanentAddressLine3 || ''}
           onChange={formik.handleChange}
           error={
             formik.touched.permanentAddressLine3 && Boolean(formik.errors.permanentAddressLine3)
@@ -93,6 +93,7 @@ const RenderPermanentAddressFields = (props: any) => {
           }}
           error={formik.touched.permanentCountry && Boolean(formik.errors.permanentCountry)}
           helperText={formik.touched.permanentCountry && formik.errors.permanentCountry}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -105,6 +106,7 @@ const RenderPermanentAddressFields = (props: any) => {
           error={formik.touched.permanentState && Boolean(formik.errors.permanentState)}
           helperText={formik.touched.permanentState && formik.errors.permanentState}
           countryValue={formik.values.permanentCountry}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -114,14 +116,21 @@ const RenderPermanentAddressFields = (props: any) => {
           error={formik.touched.permanentCity && Boolean(formik.errors.permanentCity)}
           helperText={formik.touched.permanentCity && formik.errors.permanentCity}
           stateValue={formik.values.permanentState}
+          disabled={!isEdit}
         />
       </Grid>
       <Grid item xs={12} md={4}>
         <TextField
           name="permanentPincode"
           disabled={!isEdit}
-          value={formik.values.permanentPincode}
-          onChange={formik.handleChange}
+          value={formik.values.permanentPincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('permanentPincode', value);
+          }}
           error={formik.touched.permanentPincode && Boolean(formik.errors.permanentPincode)}
           helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
           fullWidth

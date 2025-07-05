@@ -1,9 +1,9 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 
-import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, useTheme, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -63,7 +63,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         endDate: values.endDate,
         // documents,
       });
-      shikshaMitraToast.success({ message: 'Chapter added successfully !' });
+      if (initialValues) {
+        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} updated successfully` });
+      } else {
+        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} added successfully` });
+      }
       onClose(null, true);
     },
   });
@@ -124,6 +128,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     // placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     value={formik.values.chapterNo}
                     onChange={formik.handleChange}
                     size="small"
@@ -145,8 +154,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     value={formik.values.chapterName}
                     onChange={(e) => {
                       const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        // Capitalize each word
                         .split(' ')
-                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .map((word) =>
+                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                        )
                         .join(' ');
                       formik.setFieldValue('chapterName', value);
                     }}
@@ -168,14 +182,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     onChange={(newValue) => {
                       formik.setFieldValue('startDate', newValue);
                     }}
+                    minDate={dayjs()}
+                    maxDate={dayjs().endOf('year')}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         size: 'small',
                         // placeholder: 'Select Start Date',
-                        helperText: formik.touched.startDate && (formik.errors.startDate as string),
-                        error: formik.touched.startDate && Boolean(formik.errors.startDate),
+                        error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                        helperText: formik.touched.startDate && formik.errors.startDate,
                       },
                     }}
                   />
@@ -190,6 +206,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <DatePicker
                     label="Chapter End Date *"
                     format="DD/MM/YYYY"
+                    minDate={dayjs()}
+                    maxDate={dayjs().endOf('year')}
                     value={formik.values.endDate}
                     onChange={(newValue) => {
                       formik.setFieldValue('endDate', newValue);
@@ -235,6 +253,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               <Grid item xs={12} md={6}>
                 <FileUploader
                   // @ts-ignore
+                  showVisibleDocumentCount={1}
                   value={formik.values.documents}
                   multiple
                   onChange={(value) => {
@@ -267,7 +286,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               Cancel
             </Button>
             <Button
-              startIcon={initialValues ? <Create /> : <Iconify icon={GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={initialValues ? 16 : 20}
+                  height={initialValues ? 16 : 20}
+                />
+              }
               type="submit"
               size="small"
               variant="contained"

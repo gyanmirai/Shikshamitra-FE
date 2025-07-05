@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Add } from '@mui/icons-material';
 import { Tab, Box, Card, Button } from '@mui/material';
@@ -8,7 +8,10 @@ import { Tab, Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
 
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -19,7 +22,7 @@ const TABS = [
   {
     value: 'subjectSetting',
     label: 'Subject Creation',
-    icon: <Iconify icon="mdi:text-subject" width={20} />,
+    icon: <Iconify icon="carbon:document-subject" width={20} />,
     component: (props: any) => <SubjectCreation {...props} />,
   },
   {
@@ -68,11 +71,18 @@ const CurriculumSetting = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
-        description="Setting for creating global subjects, elective subject and notification setting"
+        description="Configure global subjects and elective groups for curriculum management. Create and manage subjects and elective groups that can be used across different classes."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
@@ -88,24 +98,45 @@ const CurriculumSetting = () => {
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component
-            addSubjectDialog={addSubjectDialog}
-            addElectiveGroupDialog={addElectiveGroupDialog}
-            // searchParams={searchParams}
-            // setSearchParams={setSearchParams}
-          />
-        )}{' '}
-      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              addSubjectDialog={addSubjectDialog}
+              addElectiveGroupDialog={addElectiveGroupDialog}
+              // searchParams={searchParams}
+              // setSearchParams={setSearchParams}
+            />
+          )}{' '}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };
