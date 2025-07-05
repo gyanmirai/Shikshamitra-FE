@@ -342,6 +342,7 @@ const TakeAttendanceScreen = () => {
             backgroundColor: 'primary.main',
             '&:hover': {
               backgroundColor: 'primary.dark',
+              boxShadow: 2,
             },
             '&:disabled': {
               backgroundColor: 'text.disabled',
@@ -352,9 +353,6 @@ const TakeAttendanceScreen = () => {
             fontSize: '0.8rem',
             py: 0.5,
             boxShadow: 1,
-            '&:hover': {
-              boxShadow: 2,
-            },
           }}
         >
           Save
