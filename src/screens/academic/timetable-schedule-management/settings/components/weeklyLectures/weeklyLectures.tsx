@@ -162,7 +162,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
                     setSelectedWeeklyLecture(row as ISubjectFormValues);
                     setIsEdit(true);
                     addWeeklyLectureDialog.onTrue();
-                    setDisabled(true);
+                    setDisabled(false);
                   }}
                   placement="right-top"
                 />
@@ -290,6 +290,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
           setTimeout(() => {
             setSelectedWeeklyLecture(null);
             setIsEdit(false);
+            setDisabled(false);
           }, 200); // Adjust duration if your dialog animation is longer
         }}
         maxWidth="sm"
@@ -301,7 +302,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
           onClose={handleClose}
           editData={selectedWeeklyLecture}
           // data={selectedEntry}
-          // isEdit={isEdit}
+          isEdit={isEdit}
           // allData={roomData}
         />
       </CustomDialog>
@@ -326,6 +327,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({ addWeeklyLectureDialog 
       >
         <CreateNoOfLecture
           disabled={disabled}
+          isEdit={false}
           onClose={handleClose}
           editData={selectedWeeklyLecture}
           // onSave={handleSave}

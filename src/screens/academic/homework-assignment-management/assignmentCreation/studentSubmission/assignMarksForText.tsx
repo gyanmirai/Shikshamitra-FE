@@ -84,7 +84,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                 <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
                   <TextField
                     // placeholder="Enter Marks"
-                    label="Marks *"
+                    label="Obtained Marks *"
                     fullWidth
                     type="number"
                     name="marks"

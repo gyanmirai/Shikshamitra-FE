@@ -70,9 +70,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 format="DD-MM-YYYY"
                 label="Date *"
                 onChange={(newTime) => {
-                  const updated = [...examSchedules];
-                  updated[row.id].examDate = newTime;
-                  formik.setFieldValue('subjects', updated);
+                  // const updated = [...examSchedules];
+                  // updated[row.id].examDate = newTime;
+                  formik.setFieldValue(`subjects.${row.id}.examDate`, newTime);
+                  // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 minDate={dayjs()}
                 slotProps={{
@@ -124,12 +128,17 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               // >
               <TimePicker
                 value={value ? dayjs(value) : null}
-                format="hh:mm"
+                format="hh:mm a"
                 label="Start Time *"
                 onChange={(newTime) => {
-                  const updated = [...examSchedules];
-                  updated[row.id].startTime = newTime;
-                  formik.setFieldValue('subjects', updated);
+                  // const updated = [...examSchedules];
+                  // updated[row.id].startTime = newTime;
+                  // formik.setFieldValue('subjects', updated);
+                  formik.setFieldValue(`subjects.${row.id}.startTime`, newTime);
+                  // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                 slotProps={{
@@ -180,12 +189,17 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               // >
               <TimePicker
                 value={value ? dayjs(value) : null}
-                format="hh:mm"
+                format="hh:mm a"
                 label="End Time *"
                 onChange={(newTime) => {
-                  const updated = [...examSchedules];
-                  updated[row.id].endTime = newTime;
-                  formik.setFieldValue('subjects', updated);
+                  // const updated = [...examSchedules];
+                  // updated[row.id].endTime = newTime;
+                  formik.setFieldValue(`subjects.${row.id}.endTime`, newTime);
+                  // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  // // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                 slotProps={{
@@ -239,10 +253,15 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 type="number"
                 label="Total Marks *"
                 onChange={(e) => {
-                  const updated = [...examSchedules];
+                  // const updated = [...examSchedules];
                   // updated[row.id].totalMarks = Number(e.target.value);
-                  updated[row.id].totalMarks = e.target.value;
-                  formik.setFieldValue('subjects', updated);
+                  // updated[row.id].totalMarks = e.target.value;
+                  formik.setFieldValue(`subjects.${row.id}.totalMarks`, Number(e.target.value));
+                  // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  // // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 onKeyDown={(e) => {
                   if (['e', 'E', '+', '-'].includes(e.key)) {
@@ -302,10 +321,16 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   }
                 }}
                 onChange={(e) => {
-                  const updated = [...examSchedules];
+                  // const updated = [...examSchedules];
                   // updated[row.id].passingMarks = Number(e.target.value);
-                  updated[row.id].passingMarks = e.target.value;
-                  formik.setFieldValue('subjects', updated);
+                  // updated[row.id].passingMarks = e.target.value;
+                  // formik.setFieldValue('subjects', updated);
+                  formik.setFieldValue(`subjects.${row.id}.passingMarks`, e.target.value);
+                  formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 size="small"
                 error={
@@ -335,7 +360,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           },
         },
       ]}
-      data={examSchedules}
+      data={formik.values.subjects}
     />
   );
 };

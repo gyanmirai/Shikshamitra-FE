@@ -314,7 +314,7 @@ const CourseProgress = () => {
         handleClose={() => {
           updateProgressDialog.onFalse();
         }}
-        title="Update Progress"
+        title="Update Progress (%)"
       >
         <UpdateProgress onClose={handleClose} />
       </CustomDialog>

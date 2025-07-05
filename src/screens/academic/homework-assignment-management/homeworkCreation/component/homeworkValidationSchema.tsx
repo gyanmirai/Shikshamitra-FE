@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const homeworkValidationSchema = Yup.object().shape({
@@ -8,11 +9,24 @@ export const homeworkValidationSchema = Yup.object().shape({
     .of(
       Yup.object().shape({
         divisionId: Yup.string().required('Division is required'),
-        publishDate: Yup.date().nullable().required('Publish Date is required'),
-        dueDate: Yup.date()
-          .nullable()
-          .required('Due Date is required')
-          .min(Yup.ref('publishDate'), 'Due Date cannot be before Publish Date'),
+        publishDate: Yup.mixed()
+          .test(
+            'is-valid-dayjs',
+            'Publish Date is required',
+            (value) => value && dayjs(value as any).isValid()
+          )
+          .required('Publish Date is required'),
+        dueDate: Yup.mixed()
+          .test(
+            'is-valid-dayjs',
+            'Due Date is required',
+            (value) => value && dayjs(value as any).isValid()
+          )
+          .test('after-publish-date', 'Due Date cannot be before Publish Date', function (value) {
+            const { publishDate } = this.parent;
+            return !value || !publishDate || dayjs(value as any).isAfter(dayjs(publishDate));
+          })
+          .required('Due Date is required'),
       })
     )
     .min(1, 'At least one Division is required')

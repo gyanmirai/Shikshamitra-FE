@@ -21,6 +21,7 @@ export interface ICreateNoOfLectureProps {
   disabled?: boolean;
   editData: ISubjectFormValues | null;
   selectedClass?: string;
+  isEdit: boolean;
 }
 
 export interface ISubjectFormValues {

@@ -8,7 +8,7 @@ export const getAssignmentInitialValues = (editData: IAssignment | null, classes
   title: editData?.title || '',
   description: editData?.description || '',
   class: editData?.class || classes || '',
-  totalMarks: editData?.totalMarks || 0,
+  totalMarks: editData?.totalMarks || '',
   divisions:
     editData?.divisions?.map((div) => ({
       divisionId: div.divisionId,

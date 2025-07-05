@@ -139,7 +139,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
                   <TextField
                     // placeholder="Enter Marks"
-                    label="Marks *"
+                    label="Obtained Marks *"
                     fullWidth
                     type="number"
                     name="marks"

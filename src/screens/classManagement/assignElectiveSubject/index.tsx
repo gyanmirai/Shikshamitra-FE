@@ -251,6 +251,7 @@ const AssignElectiveSubject = () => {
             variant="outlined"
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
             onClick={() => resetDialog.onTrue()}
+            disabled={!classes || !division || !electiveSubject || !hasStudentSelections}
             size="small"
           >
             Reset
@@ -350,7 +351,7 @@ const AssignElectiveSubject = () => {
         open={resetDialog.value}
         onClose={() => resetDialog.onFalse()}
         title="Reset"
-        content="Are you sure you want to reset all selections?"
+        content="Are you sure you want to reset all selections ?"
         action={
           <Button
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}

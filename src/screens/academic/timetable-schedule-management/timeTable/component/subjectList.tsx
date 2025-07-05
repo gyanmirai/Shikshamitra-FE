@@ -18,69 +18,127 @@ interface SubjectListProps {
   onDragStart: (e: any, subject: any) => void;
   subjectsGroups: any;
   selectedClass: any;
+  timetable: any; // Add timetable prop
 }
 
 const SubjectList: React.FC<SubjectListProps> = ({
   onDragStart,
   subjectsGroups,
   selectedClass,
+  timetable, // Add timetable prop
 }) => {
   const weeklyLecturesDialog = useBoolean();
+  console.log('subjectsGroups', subjectsGroups);
+
   return (
     <Stack spacing={1}>
-      {subjectsGroups.map((subject: any) => (
-        <Paper
-          key={subject.id}
-          elevation={1}
-          draggable
-          onDragStart={(e) => onDragStart(e, subject)}
-          sx={{
-            p: 1,
-            // boxShadow: 3,
-            cursor: 'move',
-            boxShadow: 'var(--shadows-10)',
-            // bgcolor: alpha(subject.subjectColor, 0.2),
-            // color: subject.subjectColor,
-            borderLeft: `4px solid ${subject.subjectColor}`, // 👈 Left border
-            borderRadius: '8px', // Optional for rounded corners like in image
-          }}
-        >
-          <Box
+      {subjectsGroups.map((subject: any) => {
+        // Count how many times this subject appears in the current timetable
+        const usedLectures =
+          timetable?.reduce(
+            (count: number, row: any) =>
+              count +
+              row.dayData.reduce((dayCount: number, dayData: any) => {
+                if (dayData.subjects && dayData.subjects.length > 0) {
+                  const hasThisSubject = dayData.subjects.some((s: any) =>
+                    subject.subjects.some((subj: any) => subj.subject === s.subject)
+                  );
+                  return hasThisSubject ? dayCount + 1 : dayCount;
+                }
+                return dayCount;
+              }, 0),
+            0
+          ) || 0;
+
+        // Check if subject has available lectures for dragging
+        const isDraggable = usedLectures < subject.totalLectures;
+
+        return (
+          <Paper
+            key={subject.id}
+            elevation={1}
+            draggable={isDraggable}
+            onDragStart={(e) => {
+              if (!isDraggable) {
+                e.preventDefault(); // 🔒 Prevent dragging
+                return;
+              }
+              onDragStart(e, subject);
+            }}
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
+              p: 1,
+              cursor: isDraggable ? 'move' : 'not-allowed',
+              boxShadow: 'var(--shadows-10)',
+              borderLeft: `4px solid ${subject.subjectColor}`,
+              borderRadius: '8px',
+              opacity: isDraggable ? 1 : 0.5,
+              backgroundColor: isDraggable ? 'background.paper' : 'action.disabledBackground',
+              '&:hover': {
+                opacity: isDraggable ? 0.9 : 0.5,
+              },
             }}
           >
             <Box
               sx={{
                 display: 'flex',
-                flexWrap: 'wrap',
                 alignItems: 'center',
-                gap: 0.5,
-                maxWidth: 150, // adjust as per your layout
-                lineHeight: 1.2,
+                justifyContent: 'space-between',
+                width: '100%',
               }}
             >
-              {subject.subjects.map((sub: Subject, index: number) => (
-                <React.Fragment key={index}>
-                  <CustomTooltip title={`${sub.subject} (${sub.subjectCode})`} placement="top">
-                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-                      {sub.subject}
-                      {index < subject.subjects.length - 1 && ','}
-                    </Typography>
-                  </CustomTooltip>
-                </React.Fragment>
-              ))}
-            </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  maxWidth: 150,
+                  lineHeight: 1.2,
+                }}
+              >
+                {subject.subjects.map((sub: Subject, index: number) => (
+                  <React.Fragment key={index}>
+                    <CustomTooltip title={`${sub.subject} (${sub.subjectCode})`} placement="top">
+                      <Typography
+                        variant="body2"
+                        noWrap={false}
+                        sx={{
+                          wordBreak: 'break-word',
+                          color: isDraggable ? 'text.primary' : 'text.disabled',
+                          maxWidth: '100%',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {sub.subject}
+                        {index < subject.subjects.length - 1 && ','}
+                      </Typography>
+                    </CustomTooltip>
+                  </React.Fragment>
+                ))}
+              </Box>
 
-            <Typography variant="body2">
-              ({subject.allocateLectures} / {subject.totalLectures})
-            </Typography>
-          </Box>
-        </Paper>
-      ))}
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isDraggable ? 'text.primary' : 'text.disabled',
+                  fontWeight: usedLectures >= subject.totalLectures ? 'bold' : 'normal',
+                }}
+              >
+                ({usedLectures} / {subject.totalLectures})
+                {usedLectures >= subject.totalLectures && (
+                  <Typography variant="caption" color="success.main" sx={{ ml: 0.5 }}>
+                    ✓ Complete
+                  </Typography>
+                )}
+              </Typography>
+            </Box>
+          </Paper>
+        );
+      })}
       <Typography
         variant="body2"
         fontWeight={500}
@@ -113,15 +171,10 @@ const SubjectList: React.FC<SubjectListProps> = ({
         maxWidth="sm"
       >
         <CreateNoOfLecture
+          isEdit
           editData={null}
           onClose={weeklyLecturesDialog.onFalse}
           selectedClass={selectedClass}
-          // onSave={handleSave}
-          // dialogValue={dialog.value}
-          // onClose={closeDialog}
-          // data={selectedEntry}
-          // isEdit={isEdit}
-          // allData={roomData}
         />
       </CustomDialog>
     </Stack>

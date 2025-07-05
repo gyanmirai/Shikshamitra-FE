@@ -193,18 +193,18 @@ const CourseProgress = (props: TabComponentType) => {
             noDataText={<>No Chapters Found For This Course Found </>}
             columns={[
               { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
-              { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 300 },
+              { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
               {
                 id: 'startDate',
                 label: 'Start Date',
                 align: 'left',
                 filterType: 'date',
-                minWidth: 200,
+                minWidth: 170,
               },
               {
                 id: 'timeLine',
                 label: '',
-                minWidth: 200,
+                minWidth: 170,
                 align: 'left',
                 filterType: 'date',
                 renderColumn: () => (
@@ -303,7 +303,7 @@ const CourseProgress = (props: TabComponentType) => {
               {
                 id: 'actions',
                 label: 'Action',
-                minWidth: 50,
+                minWidth: 40,
                 align: 'left',
                 sticky: true,
                 isFilter: false,
@@ -329,7 +329,7 @@ const CourseProgress = (props: TabComponentType) => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Update Progress</Typography>
+            <Typography variant="h5">Update Progress (%)</Typography>
             <CustomTooltip
               arrow
               placement="right"

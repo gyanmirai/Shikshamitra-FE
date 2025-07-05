@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 
 export const examTypeValidationSchema = Yup.object().shape({
-  examType: Yup.string().required('Exam type is required'),
+  examType: Yup.string().required('Exam Type is required'),
 });
 
 export const assessmentTypeValidationSchema = Yup.object().shape({

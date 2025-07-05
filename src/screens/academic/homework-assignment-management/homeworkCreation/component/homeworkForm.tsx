@@ -54,6 +54,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
   // Configuration for file upload component
@@ -404,6 +406,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       >
                         <DateTimePicker
                           label="Publish Date *"
+                          format="DD/MM/YYYY"
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
                           value={div.publishDate ? dayjs(div.publishDate) : null}
                           onChange={(val) =>
                             formik.setFieldValue(`divisions[${idx}].publishDate`, val)
@@ -412,7 +417,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
                             popper: {
-                              disablePortal: true, // <-- correct place
+                              placement: 'top-start',
+                              sx: { zIndex: 1300 },
                             },
                             textField: {
                               fullWidth: true,
@@ -443,13 +449,20 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       >
                         <DateTimePicker
                           label="Due Date *"
+                          format="DD/MM/YYYY"
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
                           value={div.dueDate ? dayjs(div.dueDate) : null}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
                           minDateTime={dayjs()} // Prevent selecting dates before today
                           ampm={false}
                           slotProps={{
+                            // popper: {
+                            //   disablePortal: true, // <-- correct place
+                            // },
                             popper: {
-                              disablePortal: true, // <-- correct place
+                              placement: 'top-start',
+                              sx: { zIndex: 1300 },
                             },
                             textField: {
                               fullWidth: true,

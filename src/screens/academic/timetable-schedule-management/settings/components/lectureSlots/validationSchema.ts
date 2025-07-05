@@ -6,7 +6,8 @@ export const validationSchema = Yup.object().shape({
   schoolHours: Yup.string().required('School hours are required'),
   totalSlots: Yup.number()
     .required('Total slots are required')
-    .min(1, 'At least one slot is required'),
+    .min(1, 'At least one slot is required')
+    .max(12, 'Max 12 slots can add'),
   timeSlots: Yup.array()
     .of(
       Yup.object().shape({

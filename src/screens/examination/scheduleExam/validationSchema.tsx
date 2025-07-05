@@ -8,13 +8,13 @@ export const validationSchema = [
     examName: yup.string().required('Exam Name is required'),
     className: yup.string().required('Class is required'),
     divisions: yup.array().min(1, 'At least one division is required'),
-    // 👇 Only check for minimum one subject in Step 1, no .of() or .test()
     subjects: yup
       .array()
       .required('Subjects is required')
       .min(1, 'At least one subject is required'),
   }),
 
+  // Step 1: Exam Details - Enhanced validation
   yup.object().shape({
     subjects: yup
       .array()
@@ -33,6 +33,10 @@ export const validationSchema = [
               'Exam date is required',
               (value) => value && dayjs(value as any).isValid()
             )
+            .test('is-future-date', 'Exam date cannot be in the past', (value) => {
+              if (!value) return true;
+              return dayjs(value as any).isSameOrAfter(dayjs().startOf('day'));
+            })
             .required('Exam date is required'),
           startTime: yup
             .mixed()
@@ -41,7 +45,43 @@ export const validationSchema = [
               'Start time is required',
               (value) => value && dayjs(value as any).isValid()
             )
-            .required('Start time is required'),
+            .required('Start time is required')
+            .test(
+              'no-time-conflict',
+              'Time conflicts with another subject on the same date',
+              function (value) {
+                const { examDate } = this.parent;
+                const allSubjects = (this.options as any).from?.[1]?.value?.subjects || []; // Get all subjects from the form root with type assertion
+
+                if (!value || !examDate || !allSubjects) return true;
+
+                const currentDate = dayjs(examDate as any).format('YYYY-MM-DD');
+                const currentStart = dayjs(value as any);
+                const currentPath = this.path; // e.g., "subjects[0].startTime"
+                const currentIndex = parseInt(currentPath.match(/\[(\d+)\]/)?.[1] || '0', 10);
+
+                // Check against other subjects
+                for (let i = 0; i < allSubjects.length; i += 1) {
+                  if (i === currentIndex) {
+                    return true; // Skip validation for current subject
+                  }
+
+                  const otherSubject = allSubjects[i];
+                  if (!otherSubject?.examDate || !otherSubject?.startTime) {
+                    return true;
+                  }
+
+                  const otherDate = dayjs(otherSubject.examDate as any).format('YYYY-MM-DD');
+                  const otherStart = dayjs(otherSubject.startTime as any);
+
+                  // Check for same date and same start time
+                  if (currentDate === otherDate && currentStart.isSame(otherStart)) {
+                    return false;
+                  }
+                }
+                return true;
+              }
+            ),
           endTime: yup
             .mixed()
             .test(
@@ -52,86 +92,69 @@ export const validationSchema = [
             .required('End time is required')
             .test('is-after-start', 'End time must be after start time', function (value) {
               const { startTime } = this.parent;
-              return value && startTime ? dayjs(value as any).isAfter(dayjs(startTime)) : true;
-            }),
+              if (!value || !startTime) return true;
+
+              const startDateTime = dayjs(startTime as any);
+              const endDateTime = dayjs(value as any);
+
+              return endDateTime.isAfter(startDateTime);
+            })
+            .test(
+              'minimum-duration',
+              'Exam duration must be at least 30 minutes',
+              function (value) {
+                const { startTime } = this.parent;
+                if (!value || !startTime) return true;
+
+                const startDateTime = dayjs(startTime as any);
+                const endDateTime = dayjs(value as any);
+                const diffMinutes = endDateTime.diff(startDateTime, 'minute');
+
+                return diffMinutes >= 30;
+              }
+            ),
           totalMarks: yup
             .number()
             .required('Total Marks is required')
-            .min(0, 'Total marks cannot be negative')
+            .min(1, 'Total marks must be at least 1')
+            .max(1000, 'Total marks cannot exceed 1000')
+            .integer('Total marks must be a whole number')
             .typeError('Must be a number'),
           passingMarks: yup
             .number()
             .required('Passing Marks is required')
-            .min(0, 'Passing marks cannot be negative')
-            .max(yup.ref('totalMarks'), 'Cannot exceed total marks')
-            .typeError('Must be a number'),
+            .min(1, 'Passing marks must be at least 1')
+            .integer('Passing marks must be a whole number')
+            .typeError('Must be a number')
+            .test('not-exceed-total', 'Passing marks cannot exceed total marks', function (value) {
+              const { totalMarks } = this.parent;
+              if (!value || !totalMarks) return true;
+              return value <= totalMarks;
+            }),
         })
       )
-      .test(
-        'no-duplicate-time',
-        'Subjects cannot have same date and start time',
-        function (subjects) {
-          if (!Array.isArray(subjects)) return true;
-
-          const seen = new Set();
-
-          const hasDuplicate = subjects.some((sub) => {
-            if (!sub.examDate || !sub.startTime) return false;
-
-            const date = new Date(sub.examDate as any).toISOString().split('T')[0];
-            const time = new Date(sub.startTime as any).toTimeString().slice(0, 5);
-            const key = `${date}-${time}`;
-
-            if (seen.has(key)) return true;
-            seen.add(key);
-            return false;
-          });
-
-          return hasDuplicate
-            ? this.createError({
-                message: 'Subjects cannot have same date and start time',
-                path: `subjects`,
-              })
-            : true;
-        }
-      ),
+      .required('At least one subject is required'),
   }),
 
+  // Step 2: Additional validation (if needed)
   yup.object().shape({}),
-
-  // Step 2: Evaluation Criteria
-  //   yup.object().shape({
-  //     subjects: yup.array().of(
-  //       yup.object().shape({
-  //         examDate: yup.date().required('Exam date is required'),
-  //         examTime: yup.string().required('Exam time is required'),
-  //         examDuration: yup
-  //           .number()
-  //           .required('Exam duration is required')
-  //           .positive('Duration must be positive'),
-  //         totalMarks: yup
-  //           .number()
-  //           .required('Total marks required')
-  //           .positive('Total marks must be positive'),
-  //         passingMarks: yup
-  //           .number()
-  //           .required('Passing marks required')
-  //           .min(0, 'Must be at least 0')
-  //           .max(yup.ref('totalMarks'), 'Passing marks must be less than total'),
-  //       })
-  //     ),
-  //   }),
 
   // Step 3: Assign Teacher & Review
   yup.object().shape({}),
-
-  //   yup.object().shape({
-  //     subjects: yup.array().of(
-  //       yup.object().shape({
-  //         invigilationTeacher: yup.string().required('Invigilation teacher is required'),
-  //         teacher: yup.string().required('Subject teacher is required'),
-  //       })
-  //     ),
-  //     description: yup.string().required('Description is required'),
-  //   }),
 ];
+
+// Helper function to validate with context
+export const validateSubjectsWithContext = (subjects: any, currentIndex = null) => {
+  const schema = validationSchema[1]; // Step 1 schema
+
+  return schema.validate(
+    { subjects },
+    {
+      abortEarly: false,
+      context: {
+        subjects,
+        currentIndex,
+      },
+    }
+  );
+};

@@ -25,8 +25,11 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
     initialValues: getInitialValues(data),
     validationSchema,
     onSubmit: (values) => {
-      onSubmit(values);
-      shikshaMitraToast.success({ message: 'Grade scale created successfully' });
+      if (data) {
+        shikshaMitraToast.success({ message: 'Grade scale updated successfully' });
+      } else {
+        shikshaMitraToast.success({ message: 'Grade scale created successfully' });
+      }
       onClose(null, true);
     },
   });
@@ -34,7 +37,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
   const handleAddGradingScale = () => {
     const updatedGradingScale = [
       ...formik.values.gradingScale,
-      { minMarks: 0, maxMarks: 0, grade: '' },
+      { minMarks: '', maxMarks: '', grade: '' },
     ];
     formik.setFieldValue('gradingScale', updatedGradingScale);
   };
@@ -112,7 +115,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
               <Grid item xs={12} mt={-3}>
                 {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => (
                   <Grid container spacing={3} key={index} mb={2}>
-                    <Grid item xs={12} md={3.5}>
+                    <Grid item xs={12} md={3.6}>
                       <ShakingTextField
                         error={
                           !!(
@@ -130,7 +133,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                           name={`gradingScale.${index}.minMarks`}
                           disabled={disabled}
                           size="small"
-                          value={scale.minMarks}
+                          value={formik.values.gradingScale[index].minMarks}
                           onChange={formik.handleChange}
                           error={
                             !!(
@@ -165,7 +168,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                       </ShakingTextField>
                     </Grid>
 
-                    <Grid item xs={12} md={3.5}>
+                    <Grid item xs={12} md={3.6}>
                       <ShakingTextField
                         error={
                           !!(
@@ -183,7 +186,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                           name={`gradingScale.${index}.maxMarks`}
                           disabled={disabled}
                           size="small"
-                          value={scale.maxMarks}
+                          value={formik.values.gradingScale[index].maxMarks}
                           onChange={formik.handleChange}
                           onKeyDown={(e) => {
                             if (['e', 'E', '+', '-'].includes(e.key)) {
@@ -218,7 +221,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                       </ShakingTextField>
                     </Grid>
 
-                    <Grid item xs={12} md={3.5}>
+                    <Grid item xs={12} md={3.6}>
                       <ShakingTextField
                         error={
                           !!(
@@ -250,7 +253,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                           name={`gradingScale.${index}.grade`}
                           size="small"
                           disabled={disabled}
-                          value={scale.grade}
+                          value={formik.values.gradingScale[index].grade}
                           onChange={(val) => {
                             formik.setFieldValue(`gradingScale.${index}.grade`, val);
                           }}
@@ -282,7 +285,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                       </ShakingTextField>
                     </Grid>
 
-                    <Grid item xs={12} md={1}>
+                    <Grid item xs={12} md={0.6}>
                       <IconButton
                         disabled={disabled}
                         onClick={() => {
@@ -290,7 +293,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                           updatedGradingScale.splice(index, 1);
                           formik.setFieldValue('gradingScale', updatedGradingScale);
                         }}
-                        sx={{ mt: 1, color: 'error.main', width: '30px', height: '30px' }}
+                        sx={{ mt: 0.5, color: 'error.main', width: '30px', height: '30px' }}
                       >
                         <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
                       </IconButton>
