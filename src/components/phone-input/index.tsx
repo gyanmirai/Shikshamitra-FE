@@ -6,12 +6,18 @@ import { MuiTelInput } from 'mui-tel-input';
 
 type PhoneInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'placeholder'> & {
   value: string;
-  onChange: (value: string, info?: MuiTelInputInfo) => void;
+  onChange: (value: string | undefined, info?: MuiTelInputInfo) => void;
   placeholder?: string;
 };
 
 const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: PhoneInputProps) => {
   const handleChange = (newPhone: string, info: MuiTelInputInfo) => {
+    console.log('🚀 ~ handleChange ~ newPhone:', newPhone);
+    if (newPhone === '+91') {
+      onChange(undefined, info);
+      return;
+    }
+
     // Extract digits excluding the country code
     const digitsOnly = newPhone.replace(/\D/g, ''); // e.g., "+91 1234567890" => "911234567890"
 
@@ -22,7 +28,7 @@ const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: Pho
       : digitsOnly;
 
     if (nationalNumber.length <= 10) {
-      onChange(newPhone);
+      onChange(newPhone, info);
     }
   };
 
@@ -36,6 +42,7 @@ const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: Pho
       error={error}
       helperText={helperText}
       fullWidth
+      onlyCountries={['IN']}
       // variant="outlined"
       label={label}
       sx={{

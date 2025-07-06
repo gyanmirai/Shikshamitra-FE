@@ -98,10 +98,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   searchFieldProps = {},
   noDataText = <>No data available</>,
 }) => {
+  const { sx, ...other } = tableContainerProps;
   columns = useMemo(
     () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
     [columns]
   );
+  // const tableRef = useRef<any>(null);
+  const [tableRef, setTableRef] = useState<any>(null);
+  console.log('🚀 ~ tableRef:', tableRef);
 
   const theme = useTheme();
 
@@ -546,7 +550,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   };
 
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }}>
+    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }} ref={setTableRef}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: 1, gap: 1 }}>
         {isSearch && (
           <TextField
@@ -728,7 +732,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         onApplyFilter={handleApplyColumnFilter}
       />
       <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
-        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px' }} {...tableContainerProps}>
+        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px', ...sx }} {...other}>
           <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>
@@ -944,8 +948,16 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyContent title={noDataText} />
+                  <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+                    <EmptyContent
+                      title={noDataText}
+                      sx={{
+                        width: tableRef?.getBoundingClientRect?.()?.width,
+                        position: 'sticky',
+                        left: '0',
+                        padding: '0',
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -1088,7 +1100,12 @@ const ColumnFilterMenu: React.FC<{
       filterType: '',
     },
     validationSchema: yup.object({
-      filterType: yup.string().required('Filter type is required'),
+      filterType: yup.string().test('filterType', 'Filter type is required', (value) => {
+        if (anchorEl?.column.filterType === 'enum') {
+          return true;
+        }
+        return false;
+      }),
       min: yup.number().when('filterType', {
         is: 'between',
         then: (schema) => schema.required('Min value is required'),
