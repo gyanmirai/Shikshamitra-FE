@@ -40,3 +40,5 @@ build
 tsconfig.tsbuildinfo
 
 tokenSet.json
+
+.cursorrules

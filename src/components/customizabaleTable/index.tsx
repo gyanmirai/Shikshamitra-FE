@@ -192,13 +192,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     dateFilter: null,
     dateRangeFilter: { start: null, end: null },
     filterValue: '',
-    columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+    columnVisibility: columns.reduce(
+      (acc, column) => ({ ...acc, [column.id]: !column.defaultHidden }),
+      {}
+    ),
   });
 
   useEffect(() => {
     setTableConfig((pre) => ({
       ...pre,
-      columnVisibility: columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {}),
+      columnVisibility: columns.reduce(
+        (acc, column) => ({ ...acc, [column.id]: !column.defaultHidden }),
+        {}
+      ),
     }));
   }, [columns]);
 
