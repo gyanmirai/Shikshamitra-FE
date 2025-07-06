@@ -10,7 +10,7 @@ export const noOfLectureValidationSchema = Yup.object().shape({
         noOfLecture: Yup.number()
           .required('Weekly Lectures are required')
           .min(0, 'Weekly Lectures cannot be negative')
-          .max(100, 'Too many lectures'),
+          .max(20, 'Max 20 Lectures can be add'),
       })
     )
     .required('At least one subject is required'),

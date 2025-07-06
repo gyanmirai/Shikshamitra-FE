@@ -82,7 +82,7 @@ const CurriculumSetting = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
-        description="Configure global subjects and elective groups for curriculum management. Create and manage subjects and elective groups that can be used across different classes."
+        description="Set up global subjects and elective groups to manage curriculum consistently across different classes."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },

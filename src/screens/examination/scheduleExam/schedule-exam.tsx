@@ -90,7 +90,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         ) : (
           <CustomBreadcrumbs
             heading="Schedule Exam"
-            description="View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary."
+            description="Manage all scheduled exams with complete details—subjects, timings. Add, edit, or delete exams as required."
             links={[
               { name: 'Academics', href: '/academic/dashboard' },
               { name: 'Examination', href: '/academic/examinationDashboard' },

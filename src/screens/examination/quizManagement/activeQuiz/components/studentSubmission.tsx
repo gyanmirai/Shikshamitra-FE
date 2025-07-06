@@ -161,14 +161,7 @@ export const StudentSubmissions = () => {
       <Scrollbar sx={{ p: 2 }}>
         <CustomizableTable
           tableId="student-table"
-          searchFieldProps={{
-            placeholder: 'Search by Gr No, Student Name, Total Marks...',
-            label: 'Search by Gr No, Student Name, Total Marks...',
-            sx: {
-              maxWidth: '400px',
-              width: '100%',
-            },
-          }}
+          noDataText={<>Student Submission Data Not Found</>}
           columns={[
             {
               id: 'GrNo',

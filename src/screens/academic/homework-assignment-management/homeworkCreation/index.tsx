@@ -87,7 +87,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
           heading="Learning Tasks"
           description={
             currentActiveComponent?.value === 'homeworkCreation'
-              ? 'Create and manage daily homework tasks to enhance student learning and track their academic progress'
+              ? 'Assign and track daily homework to reinforce learning and evaluate students progress.'
               : 'Design comprehensive assignments to assess student understanding and measure their academic performance'
           }
           links={[

@@ -94,7 +94,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
       tableId="assignment-management"
       noDataText={
         <>
-          No Assignments Created
+          Assignment Data Not Found
           <Box
             onClick={dialog.onTrue}
             color="primary.main"
@@ -200,7 +200,27 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                           onSwitchToggle(row as IAssignment);
                         }
                       }}
-                      sx={{ p: 0 }}
+                      sx={{
+                        p: 0.6, // some padding for a more clickable area
+                        borderRadius: '50%',
+                        backgroundColor:
+                          value === PublishUnpublishStatusType.Draft
+                            ? 'rgba(0,0,0,0.06)'
+                            : 'transparent',
+                        transition:
+                          value === PublishUnpublishStatusType.Draft
+                            ? 'transform 0.2s ease-in-out, background-color 0.2s'
+                            : 'none',
+                        cursor:
+                          value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
+                        '&:hover':
+                          value === PublishUnpublishStatusType.Draft
+                            ? {
+                                transform: 'scale(1.1)',
+                                backgroundColor: 'rgba(0,0,0,0.08)',
+                              }
+                            : {},
+                      }}
                       disabled={value === PublishUnpublishStatusType.Published}
                     >
                       <Iconify

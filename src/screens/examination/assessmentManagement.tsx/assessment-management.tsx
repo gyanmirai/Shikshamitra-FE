@@ -196,7 +196,7 @@ const AssessmentManagement = (props: TabComponentType) => {
         description={
           open
             ? 'Create or update exam details, including the exam title, date, duration, and assigned subjects. Easily manage exam schedules and make adjustments as needed.'
-            : 'View and manage all scheduled exams, including exam details, assigned subjects, and timings. Add new exams, update existing ones, or remove them as necessary.'
+            : 'Manage all scheduled exams with complete details—subjects, timings. Add, edit, or delete exams as required.'
         }
         links={links}
         sx={{ px: 1, mb: 2 }}

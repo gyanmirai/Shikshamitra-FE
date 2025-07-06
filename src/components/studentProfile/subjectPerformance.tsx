@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Box, Card, Stack, Divider, Typography, CircularProgress } from '@mui/material';
 
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
-import CourseCardsGrid from 'src/screens/classManagement/courseProgress/components/courseCardsGrid';
+import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
 
 import { Iconify } from '../iconify';
 import CustomTooltip from '../custom-tooltip';
@@ -37,7 +37,8 @@ const SubjectPerformance = () => {
   };
   return (
     <Box>
-      <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
+      {/* <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} /> */}
+      <CourseProgressComponent courseData={courses} isAction={false} />
 
       {selectedCourse && (
         <Box>

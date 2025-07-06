@@ -786,7 +786,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+A+T',
           children: [
             {
-              title: 'Manage Timetable',
+              title: 'Timetable Management',
               path: '/academic/newTimetable',
               _action: 'timetable-schedule-management',
               shortcutKey: 'Alt+A+T+2',

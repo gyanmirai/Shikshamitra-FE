@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -20,16 +21,26 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import CreateSlotsForm from './createSlotsForm';
 import AssignSlots from './assignSlotsComponent';
 
-const LectureSlots = ({ addLectureSlotDialog }: any) => {
-  // Dialog state for creating new slots
-  // const addLectureSlotDialog = useBoolean();
+const LectureSlots = ({ addLectureSlotDialog, isEdit, setIsEdit }: any) => {
+  // State to track if form is in edit mode
+  // const [isEdit, setIsEdit] = useState(false);
+  const [editData, setEditData] = useState(null);
+  // State to control form input fields being disabled/enabled
   const [disabled, setDisabled] = useState(false);
+
   // Dialog state for assigning slots to other classes
   const assignSlotsDialog = useBoolean();
-  const [isEdit, setIsEdit] = useState(false);
+
+  // Dialog state for viewing slot details
   const viewSlotsDialog = useBoolean();
+
+  // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function
   const dispatch = useDispatch();
+
+  // Memoized actions menu component for the table
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
@@ -37,6 +48,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         <MenuList>
           <MenuItem
             onClick={() => {
+              // Open assign slots dialog and close popover
               assignSlotsDialog.onTrue();
               pop.onClose();
             }}
@@ -49,12 +61,25 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
     ),
     [assignSlotsDialog]
   );
-
+  /**
+   * Handles closing of lecture slot dialogs and resetting state
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   *
+   * This method:
+   * 1. Defines a resetState helper to clear changes flag after dialog animation
+   * 2. Closes dialogs and resets state if:
+   *    - Form was submitted successfully
+   *    - User confirms leaving with unsaved changes
+   *    - No unsaved changes exist
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
+        setIsEdit(false);
+        setDisabled(false);
+        setEditData(null);
         dispatch(setIsChanges(false));
-        // Add any other state resets here if needed
       }, 200); // Match this with dialog close animation
     };
 
@@ -65,6 +90,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
     } else if (!isChanges) {
       addLectureSlotDialog.onFalse();
       assignSlotsDialog.onFalse();
+      resetState();
     }
   };
 
@@ -74,7 +100,7 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         tableId="time-schedule-management-setting-table"
         noDataText={
           <>
-            No Lecture Slots Found{' '}
+            Lecture Slots Data Not Found{' '}
             <Box
               onClick={() => {
                 addLectureSlotDialog.onTrue();
@@ -114,10 +140,13 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
                   handleViewClick={() => {
                     viewSlotsDialog.onTrue();
                     setDisabled(true);
+                    setIsEdit(false);
+                    setEditData(row as any);
                   }}
                   handleEditClick={() => {
-                    setDisabled(true);
+                    setDisabled(false);
                     setIsEdit(true);
+                    setEditData(row as any);
                     addLectureSlotDialog.onTrue();
                   }}
                   placement="right-top"
@@ -130,20 +159,169 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
           {
             id: 1,
             className: 1,
-            periodSlots: 6, // Number of periods
-            breakSlots: 2, // Number of breaks
+            periodSlots: 6,
+            breakSlots: 2,
+            timeSlots: [
+              {
+                id: 0,
+                startTime: dayjs('2024-01-01T07:00'),
+                endTime: dayjs('2025-07-05T08:40'),
+                slotType: 'period',
+              },
+              {
+                id: 1,
+                startTime: dayjs('2025-07-05T08:40'),
+                endTime: dayjs('2025-07-05T09:20'),
+                slotType: 'period',
+              },
+              {
+                id: 2,
+                startTime: dayjs('2025-07-05T09:20'),
+                endTime: dayjs('2025-07-05T09:30'),
+                slotType: 'break',
+                breakType: 'short',
+              },
+              {
+                id: 3,
+                startTime: dayjs('2025-07-05T09:30'),
+                endTime: dayjs('2025-07-05T10:10'),
+                slotType: 'period',
+              },
+              {
+                id: 4,
+                startTime: dayjs('2025-07-05T10:10'),
+                endTime: dayjs('2025-07-05T10:50'),
+                slotType: 'period',
+              },
+              {
+                id: 5,
+                startTime: dayjs('2025-07-05T10:50'),
+                endTime: dayjs('2025-07-05T11:30'),
+                slotType: 'period',
+              },
+              {
+                id: 6,
+                startTime: dayjs('2025-07-05T11:30'),
+                endTime: dayjs('2025-07-05T12:00'),
+                slotType: 'break',
+                breakType: 'lunch',
+              },
+              {
+                id: 7,
+                startTime: dayjs('2025-07-05T12:00'),
+                endTime: dayjs('2024-01-01T12:30'),
+                slotType: 'period',
+              },
+            ],
           },
           {
             id: 2,
             className: 2,
             periodSlots: 5,
             breakSlots: 1,
+            timeSlots: [
+              {
+                id: 0,
+                startTime: dayjs('2024-01-01T07:00'),
+                endTime: dayjs('2025-07-05T08:40'),
+                slotType: 'period',
+              },
+              {
+                id: 1,
+                startTime: dayjs('2025-07-05T08:40'),
+                endTime: dayjs('2025-07-05T09:20'),
+                slotType: 'period',
+              },
+              {
+                id: 2,
+                startTime: dayjs('2025-07-05T09:20'),
+                endTime: dayjs('2025-07-05T09:50'),
+                slotType: 'break',
+                breakType: 'short',
+              },
+              {
+                id: 3,
+                startTime: dayjs('2025-07-05T09:50'),
+                endTime: dayjs('2025-07-05T10:30'),
+                slotType: 'period',
+              },
+              {
+                id: 4,
+                startTime: dayjs('2025-07-05T10:30'),
+                endTime: dayjs('2025-07-05T11:10'),
+                slotType: 'period',
+              },
+              {
+                id: 5,
+                startTime: dayjs('2025-07-05T11:10'),
+                endTime: dayjs('2024-01-01T07:00'),
+                slotType: 'period',
+              },
+            ],
           },
           {
             id: 3,
             className: 3,
             periodSlots: 7,
             breakSlots: 2,
+            timeSlots: [
+              {
+                id: 0,
+                startTime: dayjs('2024-01-01T07:00'),
+                endTime: dayjs('2025-07-05T08:40'),
+                slotType: 'period',
+              },
+              {
+                id: 1,
+                startTime: dayjs('2025-07-05T08:40'),
+                endTime: dayjs('2025-07-05T09:20'),
+                slotType: 'period',
+              },
+              {
+                id: 2,
+                startTime: dayjs('2025-07-05T09:20'),
+                endTime: dayjs('2025-07-05T09:30'),
+                slotType: 'break',
+                breakType: 'short',
+              },
+              {
+                id: 3,
+                startTime: dayjs('2025-07-05T09:30'),
+                endTime: dayjs('2025-07-05T10:10'),
+                slotType: 'period',
+              },
+              {
+                id: 4,
+                startTime: dayjs('2025-07-05T10:10'),
+                endTime: dayjs('2025-07-05T10:50'),
+                slotType: 'period',
+              },
+              {
+                id: 5,
+                startTime: dayjs('2025-07-05T10:50'),
+                endTime: dayjs('2025-07-05T11:30'),
+                slotType: 'period',
+              },
+              {
+                id: 6,
+                startTime: dayjs('2025-07-05T11:30'),
+                endTime: dayjs('2025-07-05T12:00'),
+                slotType: 'break',
+                breakType: 'lunch',
+              },
+              {
+                id: 7,
+                startTime: dayjs('2025-07-05T12:00'),
+                endTime: dayjs('2025-07-05T12:40'),
+                slotType: 'period',
+              },
+              {
+                id: 8,
+                startTime: dayjs('2025-07-05T12:40'),
+                endTime: dayjs('2024-01-01T12:30'),
+                slotType: 'period',
+              },
+            ],
           },
         ]}
       />
@@ -170,8 +348,11 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         open={addLectureSlotDialog.value}
         handleClose={() => {
           addLectureSlotDialog.onFalse();
-          setIsEdit(false);
-          setDisabled(false);
+          setTimeout(() => {
+            setIsEdit(false);
+            setDisabled(false);
+            setEditData(null);
+          }, 200); // Match this with dialog close animation
         }}
         maxWidth="md"
       >
@@ -181,8 +362,8 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}
-          // data={selectedEntry}
-          // isEdit={isEdit}
+          data={editData}
+          isEdit={isEdit}
           // allData={roomData}
         />
       </CustomDialog>
@@ -204,12 +385,18 @@ const LectureSlots = ({ addLectureSlotDialog }: any) => {
         open={viewSlotsDialog.value}
         handleClose={() => {
           viewSlotsDialog.onFalse();
-          setDisabled(false);
+          setTimeout(() => {
+            setDisabled(false);
+            setEditData(null);
+            setIsEdit(false);
+          }, 200); // Match this with dialog close animation
         }}
         maxWidth="md"
       >
         <CreateSlotsForm
           disabled={disabled}
+          isEdit={isEdit}
+          data={editData}
           // onSave={handleSave}
           // dialogValue={dialog.value}
           // onClose={closeDialog}

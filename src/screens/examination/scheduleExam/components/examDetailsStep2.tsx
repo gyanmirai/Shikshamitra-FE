@@ -264,7 +264,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                     e.preventDefault();
                   }
                 }}
@@ -316,7 +316,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 type="number"
                 label="Passing Marks *"
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-'].includes(e.key)) {
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                     e.preventDefault();
                   }
                 }}

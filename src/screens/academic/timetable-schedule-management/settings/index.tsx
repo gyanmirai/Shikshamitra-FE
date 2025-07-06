@@ -43,6 +43,7 @@ const TABS = [
 const TimetableSettingScreen = () => {
   // URL search parameter state for managing active tab, defaults to 'weeklyLectures'
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'weeklyLectures' });
+  const [isEdit, setIsEdit] = useState(false);
 
   // Dialog visibility states for adding different types of entries
   const addWeeklyLectureDialog = useBoolean(false);
@@ -65,7 +66,10 @@ const TimetableSettingScreen = () => {
           sx={{ width: '160px' }}
           startIcon={<Add />}
           variant="contained"
-          onClick={addWeeklyLectureDialog.onTrue}
+          onClick={() => {
+            addWeeklyLectureDialog.onTrue();
+            setIsEdit(false);
+          }}
           size="small"
         >
           Weekly Lecture
@@ -75,7 +79,10 @@ const TimetableSettingScreen = () => {
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
-          onClick={addLectureSlotDialog.onTrue}
+          onClick={() => {
+            addLectureSlotDialog.onTrue();
+            setIsEdit(false);
+          }}
           variant="contained"
           size="small"
         >
@@ -94,7 +101,7 @@ const TimetableSettingScreen = () => {
         </Button>
       ),
     }),
-    [addWeeklyLectureDialog.onTrue, addLectureSlotDialog.onTrue, addRoomDialog.onTrue]
+    [addRoomDialog.onTrue, addWeeklyLectureDialog, addLectureSlotDialog]
   );
 
   const currentActiveTab = useMemo(
@@ -106,7 +113,7 @@ const TimetableSettingScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Setting"
-        description="Configure timetable settings including weekly lectures, lecture slots and room details."
+        description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Timetable', href: '/academic/newTimetable' },
@@ -157,6 +164,8 @@ const TimetableSettingScreen = () => {
               addWeeklyLectureDialog={addWeeklyLectureDialog}
               addLectureSlotDialog={addLectureSlotDialog}
               addRoomDialog={addRoomDialog}
+              isEdit={isEdit}
+              setIsEdit={setIsEdit}
             />
           )}
         </Scrollbar>

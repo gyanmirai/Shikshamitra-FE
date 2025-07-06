@@ -31,7 +31,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
   };
 
   useEffect(() => {
-    if (courses.length > 0 && selectedCourseId === null) {
+    if (courses?.length > 0 && selectedCourseId === null) {
       setSelectedCourseId(courses[0].id);
       handleCardDetails(courses[0]);
     }
@@ -71,7 +71,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {courses.map((course) => {
+        {courses?.map((course) => {
           const isSelected = selectedCourseId === course.id;
 
           return (

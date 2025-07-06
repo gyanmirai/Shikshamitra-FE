@@ -1,9 +1,11 @@
 'use client';
 
+import type { FormikErrors } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -20,17 +22,24 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { initialValues } from './initialValues';
+import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
 
 import type { ITimeSlot, ICreateSlotsFormProps } from './type';
 
-const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, disabled }) => {
+const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
+  open,
+  handleClose,
+  disabled,
+  isEdit,
+  data,
+}) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  // Get current board, medium and medium setter from global state
+
+  // Get current board, medium and medium setter from global state for managing education settings
   const {
     currentBoard,
     currentMedium: medium,
@@ -47,8 +56,11 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
+  console.log('classes---', classes);
+
   const formik = useFormik({
-    initialValues,
+    initialValues: getInitialValues(data, classes),
+    // enableReinitialize: true,
     validationSchema,
     validateOnBlur: true,
     validateOnChange: true,
@@ -68,50 +80,39 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
    */
   const handleCreateSlots = (e: any) => {
     const inputValue = e.target.value;
-    formik.setFieldValue('totalSlots', inputValue);
-
     const slotsCount = parseInt(inputValue, 10);
 
-    if (slotsCount > 0) {
-      const newSlots = Array(slotsCount)
-        .fill(null)
-        .map((_, index) => ({
-          id: index,
-          startTime: index === 0 ? dayjs('2024-01-01T07:00') : null,
-          endTime: index === slotsCount - 1 ? dayjs('2024-01-01T12:30') : null,
-          slotType: 'period',
-          breakType: '',
-        }));
+    formik.setFieldValue('totalSlots', inputValue);
 
-      setTimeSlots(newSlots);
-      // Set the timeSlots in formik values
-      formik.setFieldValue('timeSlots', newSlots);
-
-      // Trigger validation for all slots
-      // setTimeout(() => {
-      //   newSlots.forEach((_, index) => {
-      //     formik.setFieldTouched(`timeSlots[${index}].startTime`, true);
-      //     formik.setFieldTouched(`timeSlots[${index}].endTime`, true);
-      //     formik.setFieldTouched(`timeSlots[${index}].slotType`, true);
-      //   });
-      //   formik.validateForm();
-      // }, 0);
-
-      setShowTable(true);
-    } else {
-      setTimeSlots([]);
+    // Block invalid or empty input
+    if (!inputValue || isNaN(slotsCount) || slotsCount < 1 || slotsCount > 20) {
+      formik.setFieldValue('timeSlots', []);
       setShowTable(false);
+      return;
     }
+
+    const newSlots = Array(slotsCount)
+      .fill(null)
+      .map((_, index) => ({
+        id: index,
+        startTime: index === 0 ? dayjs('2024-01-01T07:00') : null,
+        endTime: index === slotsCount - 1 ? dayjs('2024-01-01T12:30') : null,
+        slotType: 'period',
+        breakType: '',
+      }));
+
+    formik.setFieldValue('timeSlots', newSlots);
+    setShowTable(true);
   };
 
   // Helper function to check if it's the last row
-  const isLastRow = (rowIndex: number) => rowIndex === timeSlots.length - 1;
+  const isLastRow = (rowIndex: number) => rowIndex === formik.values.timeSlots.length - 1;
 
   // Helper function to check if it's the first row
   const isFirstRow = (rowIndex: number) => rowIndex === 0;
 
   return (
-    <>
+    <form onSubmit={formik.handleSubmit} noValidate>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Box
@@ -142,7 +143,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                         ? formik.errors.className
                         : undefined
                     }
-                    disabled={disabled}
+                    disabled={disabled || (isEdit && !!data)}
                   />
                 </ShakingTextField>
               </Grid>
@@ -184,7 +185,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                         ? formik.errors.previousClassSlots
                         : undefined
                     }
-                    disabled={disabled}
+                    disabled={disabled || (isEdit && !!data)}
                   />
                 </ShakingTextField>
               </Grid>
@@ -196,25 +197,26 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                     label="Total Slots *"
                     name="totalSlots"
                     type="number"
+                    inputProps={{ min: 0, max: 20 }}
                     value={formik.values.totalSlots}
                     onChange={(e) => {
                       handleCreateSlots(e);
                     }}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
                     error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
-                    helperText={formik.touched.totalSlots && formik.errors.totalSlots}
+                    helperText={(formik.touched.totalSlots && formik.errors.totalSlots) as string}
                     size="small"
-                    disabled={disabled}
+                    disabled={disabled || (isEdit && !!data)}
                   />
                 </ShakingTextField>
               </Grid>
             </Grid>
 
-            {formik.values.totalSlots && showTable && (
+            {showTable && formik.values.timeSlots.length > 0 && (
               <>
                 <Typography variant="subtitle2" mt={2}>
                   Slot Times
@@ -228,6 +230,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                   <CustomizableTable
                     tableContainerProps={{ sx: { maxHeight: '300px' } }}
                     tableId="time-schedule-management-setting"
+                    // noDataText={<>No Subject&apos;s weekly lectures Found </>}
                     isSearch={false}
                     // isShowedDense={false}
                     isFilter={false}
@@ -236,94 +239,102 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                       {
                         id: 'startTime',
                         label: 'Start Time',
+                        isFilter: false,
+                        isSort: false,
                         render(value, row) {
                           const rowIndex = row.id;
                           const fieldPath = `timeSlots[${rowIndex}].startTime`;
-                          const isTouched = formik.touched.timeSlots?.[rowIndex]?.startTime;
-                          const fieldError =
-                            typeof formik.errors.timeSlots?.[rowIndex] === 'object'
-                              ? (formik.errors.timeSlots[rowIndex] as any)?.startTime
-                              : undefined;
+                          const isTouched =
+                            Array.isArray(formik.touched.timeSlots) &&
+                            formik.touched.timeSlots[rowIndex]?.startTime;
 
-                          return (
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                minWidth: '150px',
-                                width: '100%',
-                                mb: 1,
-                              }}
-                            >
-                              <ShakingTextField error={!!(isTouched && fieldError)}>
-                                <TimePicker
-                                  value={value || null}
-                                  format="hh:mm a"
-                                  views={['hours', 'minutes']}
-                                  ampm
-                                  onChange={(newTime) => {
-                                    const updated = [...formik.values.timeSlots];
-                                    if (!updated[rowIndex]) {
-                                      updated[rowIndex] = {
-                                        id: rowIndex,
-                                        startTime: null,
-                                        endTime: null,
-                                        slotType: 'period',
-                                        breakType: '',
-                                      };
-                                    }
-                                    updated[rowIndex].startTime = newTime;
-                                    formik.setFieldValue('timeSlots', updated);
-                                    formik.setFieldTouched(fieldPath, true);
-                                    // Trigger validation
-                                    setTimeout(() => formik.validateForm(), 0);
-                                  }}
-                                  slotProps={{
-                                    textField: {
-                                      size: 'small',
-                                      error: !!(isTouched && fieldError),
-                                      helperText: isTouched && fieldError ? fieldError : '',
-                                      FormHelperTextProps: {
-                                        sx: {
-                                          margin: 0,
-                                          marginTop: '4px',
-                                          lineHeight: '1.25rem',
-                                          whiteSpace: 'normal',
-                                        },
-                                      },
-                                      InputLabelProps: {
-                                        sx: { lineHeight: '1.2em' },
-                                      },
-                                    },
-                                  }}
-                                  viewRenderers={{
-                                    hours: renderTimeViewClock,
-                                    minutes: renderTimeViewClock,
-                                    seconds: renderTimeViewClock,
-                                  }}
-                                  disabled={disabled || isFirstRow(rowIndex)}
-                                />
-                              </ShakingTextField>
-                            </Box>
-                          );
-                        },
-                      },
-                      {
-                        id: 'endTime',
-                        label: 'End Time',
-                        render(value, row) {
-                          const rowIndex = row.id;
-                          const fieldPath = `timeSlots[${rowIndex}].endTime`;
-                          const isTouched = formik.touched.timeSlots?.[rowIndex]?.endTime;
                           const fieldError =
-                            typeof formik.errors.timeSlots?.[rowIndex] === 'object'
-                              ? (formik.errors.timeSlots[rowIndex] as any)?.endTime
+                            Array.isArray(formik.errors.timeSlots) &&
+                            typeof formik.errors.timeSlots[rowIndex] === 'object'
+                              ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.startTime
                               : undefined;
 
                           return (
                             <ShakingTextField error={!!(isTouched && fieldError)}>
                               <TimePicker
                                 value={value || null}
+                                format="hh:mm a"
+                                views={['hours', 'minutes']}
+                                disabled={(disabled && !isEdit) || isFirstRow(rowIndex)}
+                                ampm
+                                onChange={(newTime) => {
+                                  const updated = [...formik.values.timeSlots];
+                                  if (!updated[rowIndex]) {
+                                    updated[rowIndex] = {
+                                      id: rowIndex,
+                                      startTime: null,
+                                      endTime: null,
+                                      slotType: 'period',
+                                      breakType: '',
+                                    };
+                                  }
+
+                                  updated[rowIndex].startTime = newTime;
+                                  formik.setFieldValue('timeSlots', updated);
+                                  // formik.setFieldTouched(fieldPath, true);
+                                  // Trigger validation
+                                  setTimeout(() => formik.validateForm(), 0);
+                                }}
+                                slotProps={{
+                                  textField: {
+                                    size: 'small',
+                                    error: !!(isTouched && fieldError),
+                                    helperText: (isTouched && fieldError
+                                      ? fieldError
+                                      : '') as string,
+                                    FormHelperTextProps: {
+                                      sx: {
+                                        margin: 0,
+                                        marginTop: '4px',
+                                        lineHeight: '1.25rem',
+                                        whiteSpace: 'normal',
+                                      },
+                                    },
+                                    InputLabelProps: {
+                                      sx: { lineHeight: '1.2em' },
+                                    },
+                                    sx: { minWidth: '100px', width: '100%', mb: 1 },
+                                  },
+                                }}
+                                viewRenderers={{
+                                  hours: renderTimeViewClock,
+                                  minutes: renderTimeViewClock,
+                                  seconds: renderTimeViewClock,
+                                }}
+                                // disabled={disabled || isFirstRow(rowIndex)}
+                              />
+                            </ShakingTextField>
+                          );
+                        },
+                      },
+                      {
+                        id: 'endTime',
+                        label: 'End Time',
+                        isFilter: false,
+                        isSort: false,
+                        render(value, row) {
+                          const rowIndex = row.id;
+                          const fieldPath = `timeSlots[${rowIndex}].endTime`;
+                          const isTouched =
+                            Array.isArray(formik.touched.timeSlots) &&
+                            formik.touched.timeSlots[rowIndex]?.endTime;
+
+                          const fieldError =
+                            Array.isArray(formik.errors.timeSlots) &&
+                            typeof formik.errors.timeSlots[rowIndex] === 'object'
+                              ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.endTime
+                              : undefined;
+
+                          return (
+                            <ShakingTextField error={!!(isTouched && fieldError)}>
+                              <TimePicker
+                                value={value || null}
+                                disabled={(disabled && !isEdit) || isLastRow(rowIndex)}
                                 viewRenderers={{
                                   hours: renderTimeViewClock,
                                   minutes: renderTimeViewClock,
@@ -345,7 +356,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                   }
                                   updated[rowIndex].endTime = newTime;
                                   formik.setFieldValue('timeSlots', updated);
-                                  formik.setFieldTouched(fieldPath, true);
+                                  // formik.setFieldTouched(fieldPath, true);
                                   // Trigger validation
                                   setTimeout(() => formik.validateForm(), 0);
                                 }}
@@ -353,7 +364,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                   textField: {
                                     size: 'small',
                                     error: !!(isTouched && fieldError),
-                                    helperText: isTouched && fieldError ? fieldError : '',
+                                    helperText: (isTouched && fieldError
+                                      ? fieldError
+                                      : '') as string,
                                     FormHelperTextProps: {
                                       sx: {
                                         margin: 0,
@@ -365,9 +378,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                     InputLabelProps: {
                                       sx: { lineHeight: '1.2em' },
                                     },
+                                    sx: { minWidth: '100px', width: '100%', mb: 1 },
                                   },
                                 }}
-                                disabled={disabled || isLastRow(rowIndex)}
                               />
                             </ShakingTextField>
                           );
@@ -376,23 +389,31 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                       {
                         id: 'slotType',
                         label: 'Slot Type',
+                        isFilter: false,
+                        isSort: false,
                         render(value, row) {
                           const rowIndex = row.id;
                           const slotTypeFieldPath = `timeSlots[${rowIndex}].slotType`;
                           const breakTypeFieldPath = `timeSlots[${rowIndex}].breakType`;
 
-                          const isSlotTypeTouched = formik.touched.timeSlots?.[rowIndex]?.slotType;
+                          const isSlotTypeTouched =
+                            Array.isArray(formik.touched.timeSlots) &&
+                            formik.touched.timeSlots[rowIndex]?.slotType;
+
                           const isBreakTypeTouched =
-                            formik.touched.timeSlots?.[rowIndex]?.breakType;
+                            Array.isArray(formik.touched.timeSlots) &&
+                            formik.touched.timeSlots[rowIndex]?.breakType;
 
                           const slotTypeError =
-                            typeof formik.errors.timeSlots?.[rowIndex] === 'object'
-                              ? (formik.errors.timeSlots[rowIndex] as any)?.slotType
+                            Array.isArray(formik.errors.timeSlots) &&
+                            typeof formik.errors.timeSlots[rowIndex] === 'object'
+                              ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.slotType
                               : undefined;
 
                           const breakTypeError =
-                            typeof formik.errors.timeSlots?.[rowIndex] === 'object'
-                              ? (formik.errors.timeSlots[rowIndex] as any)?.breakType
+                            Array.isArray(formik.errors.timeSlots) &&
+                            typeof formik.errors.timeSlots[rowIndex] === 'object'
+                              ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.breakType
                               : undefined;
 
                           return (
@@ -404,6 +425,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                     { value: 'period', label: 'Period' },
                                     { value: 'break', label: 'Break' },
                                   ]}
+                                  disabled={disabled && !isEdit}
                                   value={value}
                                   onChange={(val: any) => {
                                     const updated = [...formik.values.timeSlots];
@@ -416,22 +438,30 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                         breakType: '',
                                       };
                                     }
+
                                     updated[rowIndex].slotType = val;
                                     // Reset breakType when changing from break to period
                                     if (val !== 'break') {
                                       updated[rowIndex].breakType = '';
                                     }
                                     formik.setFieldValue('timeSlots', updated);
-                                    formik.setFieldTouched(slotTypeFieldPath, true);
+                                    // formik.setFieldTouched(slotTypeFieldPath, true);
                                     // Trigger validation
                                     setTimeout(() => formik.validateForm(), 0);
                                   }}
                                   error={!!(isSlotTypeTouched && slotTypeError)}
                                   helperText={
-                                    isSlotTypeTouched && slotTypeError ? slotTypeError : ''
+                                    (isSlotTypeTouched && slotTypeError
+                                      ? slotTypeError
+                                      : '') as string
                                   }
-                                  formControlProps={{ sx: { minWidth: '150px' } }}
-                                  disabled={disabled}
+                                  formControlProps={{
+                                    sx: {
+                                      minWidth: '150px',
+                                      width: '100%',
+                                      mb: 1,
+                                    },
+                                  }}
                                 />
                               </ShakingTextField>
 
@@ -459,15 +489,23 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                                       }
                                       updated[rowIndex].breakType = val;
                                       formik.setFieldValue('timeSlots', updated);
-                                      formik.setFieldTouched(breakTypeFieldPath, true);
+                                      // formik.setFieldTouched(breakTypeFieldPath, true);
                                       // Trigger validation
                                       setTimeout(() => formik.validateForm(), 0);
                                     }}
                                     error={!!(isBreakTypeTouched && breakTypeError)}
                                     helperText={
-                                      isBreakTypeTouched && breakTypeError ? breakTypeError : ''
+                                      (isBreakTypeTouched && breakTypeError
+                                        ? breakTypeError
+                                        : '') as string
                                     }
-                                    formControlProps={{ sx: { minWidth: '150px' } }}
+                                    formControlProps={{
+                                      sx: {
+                                        minWidth: '150px',
+                                        width: '100%',
+                                        mb: 1,
+                                      },
+                                    }}
                                     disabled={disabled}
                                   />
                                 </ShakingTextField>
@@ -477,7 +515,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
                         },
                       },
                     ]}
-                    data={timeSlots}
+                    data={formik.values.timeSlots}
                   />
                 </Box>
               </>
@@ -500,19 +538,23 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({ open, handleClose, d
             Cancel
           </Button>
           <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            // type="submit"
-            onClick={(e: any) => {
-              formik.handleSubmit(e);
-            }}
+            startIcon={
+              <Iconify
+                icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
+                width={isEdit ? 16 : 20}
+                height={isEdit ? 16 : 20}
+              />
+            }
+            type="submit"
             size="small"
             variant="contained"
           >
-            Submit
+            {isEdit ? 'Update' : 'Submit'}
+            {/* {isEdit ? 'Update' : 'Submit'} */}
           </Button>
         </DialogActions>
       )}
-    </>
+    </form>
   );
 };
 

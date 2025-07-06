@@ -155,7 +155,7 @@ const Subject = (props: TabComponentType) => {
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
           heading="Subject Assignment"
-          description="Create and manage subject assignments by specifying subject details like name, code, type (theory/practical), and curriculum mapping. Configure assessment criteria, assign teachers, and set up subject requirements to ensure comprehensive academic planning and delivery."
+          description="Create and manage subject assignments by entering key details, mapping them to the curriculum, assigning teachers, and configuring assessment criteria for effective academic delivery."
           isBack
           onBack={() => {
             handleClose(null, false);
@@ -174,8 +174,8 @@ const Subject = (props: TabComponentType) => {
           heading="Subject Assignment"
           description={
             showSubjectDialog.value
-              ? 'View comprehensive details of the selected subject, including subject name, code, curriculum mapping, and assessment criteria. This information helps ensure proper subject organization and academic planning.'
-              : 'Create and manage academic subjects by assigning them to specific classes, defining subject codes, and setting up curriculum requirements. This systematic approach helps maintain educational standards and streamlines the teaching-learning process.'
+              ? 'Access detailed information on the selected subject, such as name, code, curriculum mapping, and assessment criteria to support structured academic planning.'
+              : 'Define and organize academic subjects by linking them to classes, setting subject codes, and outlining curriculum requirements to ensure effective teaching-learning process.'
           }
           links={[
             // Links when form is open

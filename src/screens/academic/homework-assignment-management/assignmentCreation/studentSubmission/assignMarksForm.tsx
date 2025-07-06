@@ -145,7 +145,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                     name="marks"
                     disabled={!isEdit}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -197,9 +197,15 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               onClick={() => {
                 formik.handleSubmit();
               }}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              startIcon={
+                <Iconify
+                  icon={data?.marks ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={data?.marks ? 16 : 20}
+                  height={data?.marks ? 16 : 20}
+                />
+              }
             >
-              Submit
+              {data?.marks ? 'Update' : 'Submit'}
             </Button>
           </DialogActions>
         </form>

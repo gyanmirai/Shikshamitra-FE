@@ -442,7 +442,7 @@ const GradeEntry = (props: TabComponentType) => {
               title={
                 selectedStudent?.marks
                   ? 'You can modify the existing marks, grades and feedback for this student.'
-                  : 'You can enter marks, assign grades and provide feedback for this student.'
+                  : 'Input marks, assign grades, and give feedback for the student.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
