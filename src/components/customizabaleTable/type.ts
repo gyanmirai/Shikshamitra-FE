@@ -25,6 +25,7 @@ export interface IColumn {
   isDateFilter?: boolean;
   isDateRangeFilter?: boolean;
   enumOptions?: { label: string; value: any }[];
+  defaultHidden?: boolean;
 }
 
 export interface IData {

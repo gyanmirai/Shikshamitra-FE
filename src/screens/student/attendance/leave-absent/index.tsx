@@ -10,7 +10,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import {
   Box,
@@ -47,12 +47,13 @@ import {
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { editorClasses } from 'src/components/editor/classes';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -292,7 +293,7 @@ const LeaveAndAbsentScreen = () => {
         handleClose={dialog.onFalse}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Request</Typography>
+            <Typography variant="h5">Add Leave Request</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -503,11 +504,11 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
   return (
     <>
       <DialogScrollContent>
-        <Grid container spacing={3}>
+        <Grid container spacing={2} sx={{ my: 2 }}>
           <Grid item xs={12} sm={6} md={3}>
             <CustomSelect
               options={allOrganization}
-              label="Organization *"
+              label="Organization"
               value={organization}
               onChange={(val) => setOrganization(val as string)}
               labelKey="name"
@@ -519,7 +520,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           <Grid item xs={12} sm={6} md={3}>
             <CustomSelect
               options={allClass}
-              label="Class *"
+              label="Class"
               value={classes}
               onChange={(val) => setClass(val as string)}
               labelKey="name"
@@ -531,7 +532,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           <Grid item xs={12} sm={6} md={3}>
             <CustomSelect
               options={allDivision}
-              label="Division *"
+              label="Division"
               value={division}
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
@@ -554,7 +555,13 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                 `${option?.firstName || ''} ${option?.lastName || ''}`
               }
               renderInput={(params) => (
-                <TextField {...params} size="small" label="Student *" fullWidth />
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Student"
+                  placeholder="Search  Student"
+                  fullWidth
+                />
               )}
               renderOption={(prop: any, option: any) => (
                 <li {...prop} key={option.id}>
@@ -564,10 +571,12 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
             />
           </Grid>
         </Grid>
+
         {student?.id && (
-          <Box component="form" mt={3}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={4}>
+          <Box component="form">
+            <Grid container spacing={2}>
+              {/* Row 1: Leave Type and Half Day Button */}
+              <Grid item xs={8}>
                 <TextField
                   name="leaveType"
                   select
@@ -585,28 +594,46 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  textAlign="right"
-                  color="primary.main"
-                  fontSize={12}
-                  sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    dialog.onTrue();
-                  }}
-                >
-                  Add Leave Type ?
-                </Typography>
                 <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
                   <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
                 </CustomDialog>
               </Grid>
+              <Grid
+                item
+                xs={4}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Button
+                  variant={values.isHalfDay ? 'contained' : 'outlined'}
+                  color={values.isHalfDay ? 'primary' : 'inherit'}
+                  size="small"
+                  fullWidth
+                  onClick={() => {
+                    setFieldValue('isHalfDay', !values.isHalfDay);
+                    if (!values.isHalfDay) {
+                      setFieldValue('endDate', null);
+                    }
+                  }}
+                  sx={{
+                    height: '36px',
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    border: values.isHalfDay ? 'none' : '1px solid #e0e0e0',
+                    '&:hover': {
+                      backgroundColor: values.isHalfDay ? 'primary.dark' : 'action.hover',
+                    },
+                  }}
+                >
+                  Half Day
+                </Button>
+              </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <DateTimePicker
-                  format="DD-MM-YYYY hh:mm"
-                  label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
+              {/* Row 2: Date Fields - Full Width */}
+              <Grid item xs={values.isHalfDay ? 12 : 6}>
+                <DatePicker
+                  label={values.isHalfDay ? 'Date' : 'Start Date'}
                   onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
                     textField: {
@@ -619,50 +646,73 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                {!values.isHalfDay && (
-                  <DateTimePicker
-                    format="DD-MM-YYYY hh:mm"
-                    label="End Date and Time *"
+              {!values.isHalfDay && (
+                <Grid item xs={6}>
+                  <DatePicker
+                    label="End Date"
                     onChange={(value) => setFieldValue('endDate', value)}
                     slotProps={{
                       textField: {
                         size: 'small',
+                        fullWidth: true,
                         helperText: touched.endDate && errors.endDate,
                         error: touched.endDate && Boolean(errors.endDate),
                         sx: { width: '272px' },
                       },
                     }}
                   />
-                )}
-              </Grid>
-              <Grid item xs={6}>
-                <FileUploader
-                  // disabled={editData}
-                  // @ts-ignore
-                  value={values.docs}
-                  multiple={false}
-                  onChange={(value) => {
-                    // const reader = new FileReader();
-                    setFieldValue('docs', value);
-                    // reader.readAsDataURL(value as File);
-                    // reader.readAsDataURL(value as File);
-                    // reader.onload = () => {
-                    //   const base64String = reader.result;
-                    // };
-                  }}
-                  primaryText="Please Upload Your File"
-                  secondaryText="Maximum file size is 5MB"
-                />
-              </Grid>
-              <Grid item xs={6}>
+                </Grid>
+              )}
+
+              {/* Row 3: Description and Upload Document */}
+              <Grid item xs={9} sx={{ mt: 2, display: 'flex', flexDirection: 'column' }}>
                 <Editor
                   onChange={(value) => {
                     setFieldValue('description', value);
                   }}
-                  placeholder="Description *"
+                  placeholder="Leave description"
                   error={touched.description && Boolean(errors.description)}
                   helperText={touched.description && errors.description}
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    [`& .${editorClasses.content.root}`]: {
+                      minHeight: '200px',
+                      height: '100%',
+                      flex: 1,
+                      '& .tiptap': {
+                        '&.ProseMirror': {
+                          padding: '16px',
+                          paddingBottom: '24px',
+                          minHeight: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-start',
+                        },
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={3} sx={{ mt: 2, display: 'flex', flexDirection: 'column' }}>
+                <Upload
+                  {...uploadProps}
+                  thumbnail
+                  value={values.docs}
+                  multiple={false}
+                  onDrop={(acceptedFiles) => {
+                    if (acceptedFiles.length > 0) {
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const base64String = reader.result;
+                        setFieldValue('docs', base64String);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                 />
               </Grid>
             </Grid>

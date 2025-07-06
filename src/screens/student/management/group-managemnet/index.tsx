@@ -155,6 +155,7 @@ const GroupManagement = ({
             onClick={async () => {
               try {
                 await deleteGroup(editData?.id).unwrap();
+                dispatch(StudentApi.util.invalidateTags(['Student']));
                 confirm.onFalse();
                 shikshaMitraToast.success({
                   message: 'House Deleted Successfully',
@@ -875,6 +876,8 @@ const AssignStudentForm = ({
     currentQueryAndMutation: useGetAllGroupQuery,
   });
 
+  const dispatch = useDispatch();
+
   /**
    * Formik instance for handling form state and validation
    * Manages student selection and form submission
@@ -906,6 +909,7 @@ const AssignStudentForm = ({
           isDivisionLeader: false,
         }).unwrap();
         shikshaMitraToast.success({ message: `Student Assigned Successfully` });
+        dispatch(StudentApi.util.invalidateTags(['Student']));
         handleClose();
       } catch (error) {
         console.log(error);
