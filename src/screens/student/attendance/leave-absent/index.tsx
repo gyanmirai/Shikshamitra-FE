@@ -47,10 +47,10 @@ import {
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
+import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { editorClasses } from 'src/components/editor/classes';
@@ -639,7 +639,6 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                     textField: {
                       size: 'small',
                       fullWidth: true,
-                      fullWidth: true,
                       helperText: touched.startDate && errors.startDate,
                       error: touched.startDate && Boolean(errors.startDate),
                       sx: { width: '272px' },
@@ -703,17 +702,17 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
                   thumbnail
                   value={values.docs}
                   multiple={false}
-                  onChange={(value) => {
-                    // const reader = new FileReader();
-                    setFieldValue('docs', value);
-                    // reader.readAsDataURL(value as File);
-                    // reader.readAsDataURL(value as File);
-                    // reader.onload = () => {
-                    //   const base64String = reader.result;
-                    // };
+                  onDrop={(acceptedFiles) => {
+                    if (acceptedFiles.length > 0) {
+                      const file = acceptedFiles[0];
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const base64String = reader.result;
+                        setFieldValue('docs', base64String);
+                      };
+                      reader.readAsDataURL(file);
+                    }
                   }}
-                  primaryText="Please Upload Your File"
-                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
             </Grid>
