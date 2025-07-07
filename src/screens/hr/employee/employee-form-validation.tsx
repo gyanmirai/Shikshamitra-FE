@@ -129,7 +129,7 @@ const familyInformationValidationSchema = Yup.object({
 export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
-      organizationName: Yup.string().required('Organization name is required'),
+      organizationName: Yup.string().required('Organization Name is required'),
       organizationAddress: Yup.string(),
       organizationCountry: Yup.object().shape({
         name: Yup.string(),

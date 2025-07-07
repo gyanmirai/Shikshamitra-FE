@@ -141,7 +141,7 @@ const RegistrationTable = ({
         tableId="student-registration-table"
         noDataText={
           <>
-            i No Regstration Data Found{' '}
+            No Regstration Data Found{' '}
             <Box
               onClick={() => {
                 formDialog.onTrue();
