@@ -156,7 +156,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isFilter: false,
             minWidth: '3vw',
             align: 'left',
