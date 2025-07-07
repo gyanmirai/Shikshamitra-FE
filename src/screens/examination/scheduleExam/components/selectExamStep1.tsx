@@ -97,7 +97,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               name="examName"
               // placeholder="Enter Exam Name"
               value={formik.values.examName}
-              onChange={formik.handleChange}
+              onChange={(e) => {
+                const value = e.target.value
+                  // Remove everything except letters and spaces
+                  .replace(/[^a-zA-Z0-9\s]/g, '');
+                formik.setFieldValue('examName', value);
+              }}
+              // onChange={formik.handleChange}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
               helperText={formik.touched.examName && formik.errors.examName}
               size="small"

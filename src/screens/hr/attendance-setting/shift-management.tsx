@@ -247,14 +247,14 @@ const ShiftManagementForm = ({
         saturday: editData?.workingDays?.saturday || false,
         sunday: editData?.workingDays?.sunday || false,
       },
-      daySchedule: editData?.daySchedule || [
-        { day: 'Monday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Tuesday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Wednesday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Thursday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Friday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Saturday', dayType: '', startTime: '', endTime: '' },
-        { day: 'Sunday', dayType: '', startTime: '', endTime: '' },
+      daySchedule: [
+        { day: 'Monday', dayType: null, startTime: null, endTime: null },
+        { day: 'Tuesday', dayType: null, startTime: null, endTime: null },
+        { day: 'Wednesday', dayType: null, startTime: null, endTime: null },
+        { day: 'Thursday', dayType: null, startTime: null, endTime: null },
+        { day: 'Friday', dayType: null, startTime: null, endTime: null },
+        { day: 'Saturday', dayType: null, startTime: null, endTime: null },
+        { day: 'Sunday', dayType: null, startTime: null, endTime: null },
       ],
     },
     validationSchema: Yup.object({

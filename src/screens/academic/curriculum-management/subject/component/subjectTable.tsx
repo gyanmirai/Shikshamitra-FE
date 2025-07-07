@@ -262,14 +262,23 @@ const SubjectTable = ({
                 >
                   <IconButton
                     onClick={() => onToggleStatus(row as ISubjectFormValues)}
-                    sx={{ p: 0 }} // No padding
+                    sx={{
+                      p: 0.6, // some padding for a more clickable area
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
+                      transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        backgroundColor: 'rgba(0,0,0,0.08)',
+                      },
+                    }}
                   >
                     <Iconify
                       icon={GlobalIcons.tick}
                       sx={{
                         width: 20,
                         height: 20,
-                        cursor: 'pointer',
                         color: statusColor,
                       }}
                     />

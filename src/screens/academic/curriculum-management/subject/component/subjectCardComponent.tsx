@@ -288,7 +288,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
 
             {/* Learning Goal */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} mb={-2}>
+              <Typography variant="subtitle2">Learning Goal</Typography>
+            </Grid>
+            <Grid item xs={12}>
               <ShakingTextField error={!!getError('learningGoal')}>
                 <Editor
                   onChange={(value) => handleChange('learningGoal', value)}
@@ -314,7 +317,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </ShakingTextField>
             </Grid>
             {/* Prerequisites */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} mb={-2}>
+              <Typography variant="subtitle2">Prerequisites</Typography>
+            </Grid>
+            <Grid item xs={12}>
               <ShakingTextField error={!!getError('prerequisites')}>
                 <Editor
                   onChange={(value) => handleChange('prerequisites', value)}
@@ -340,7 +346,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </ShakingTextField>
             </Grid>
             {/* Description */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} mb={-2}>
+              <Typography variant="subtitle2">Description</Typography>
+            </Grid>
+            <Grid item xs={12}>
               <ShakingTextField error={!!getError('description')}>
                 <Editor
                   onChange={(value) => handleChange('description', value)}
@@ -366,7 +375,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </ShakingTextField>
             </Grid>
             {/* Upload Document */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <FileUploader
                 // @ts-ignore
                 value={subject.documents}
@@ -381,7 +390,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   //   const base64String = reader.result;
                   // };
                 }}
-                primaryText="Please Upload Your File"
+                primaryText="Please Upload Your Subject Documents"
                 secondaryText="Maximum file size is 5MB"
               />
             </Grid>

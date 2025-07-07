@@ -80,7 +80,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                       width: '100%',
                     }}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}

@@ -147,7 +147,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length !== 0}
         tableId="student-submissions"
-        noDataText="No Submission Data Found"
+        noDataText="Homework Submission Data Not Found"
         columns={[
           {
             id: 'studentName',

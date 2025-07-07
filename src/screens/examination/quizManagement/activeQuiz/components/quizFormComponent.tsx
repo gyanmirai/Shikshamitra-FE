@@ -139,6 +139,24 @@ const QuizInformation = ({ formik }: any) => {
 
         <Grid item xs={12} md={4}>
           <ShakingTextField
+            error={!!(formik.touched.quizTitle && formik.errors.quizTitle) || false}
+          >
+            <TextField
+              fullWidth
+              label="Title *"
+              // placeholder="Enter Quiz Title"
+              name="quizTitle"
+              value={formik.values.quizTitle}
+              onChange={formik.handleChange}
+              error={formik.touched.quizTitle && Boolean(formik.errors.quizTitle)}
+              helperText={formik.touched.quizTitle && formik.errors.quizTitle}
+              size="small"
+            />
+          </ShakingTextField>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <ShakingTextField
             error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType) || false}
           >
             <CustomSelect
@@ -156,23 +174,7 @@ const QuizInformation = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <ShakingTextField
-            error={!!(formik.touched.quizTitle && formik.errors.quizTitle) || false}
-          >
-            <TextField
-              fullWidth
-              label="Title *"
-              // placeholder="Enter Quiz Title"
-              name="quizTitle"
-              value={formik.values.quizTitle}
-              onChange={formik.handleChange}
-              error={formik.touched.quizTitle && Boolean(formik.errors.quizTitle)}
-              helperText={formik.touched.quizTitle && formik.errors.quizTitle}
-              size="small"
-            />
-          </ShakingTextField>
-        </Grid>
+
         <Grid item xs={12} md={4}>
           <ShakingTextField
             error={!!(formik.touched.className && formik.errors.className) || false}
@@ -193,7 +195,7 @@ const QuizInformation = ({ formik }: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={4}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division) || false}>
             <CustomSelect
               label="Division *"
@@ -248,7 +250,7 @@ const QuizInformation = ({ formik }: any) => {
                   }
                 }
               }}
-              formControlProps={{ fullWidth: true, sx: { minWidth: '345px' } }}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.division && formik.errors.division)}
               helperText={
                 formik.touched.division
@@ -328,7 +330,7 @@ const QuizInformation = ({ formik }: any) => {
               helperText={formik.touched.totalMarks && formik.errors.totalMarks}
               size="small"
               onKeyDown={(e) => {
-                if (['e', 'E', '+', '-'].includes(e.key)) {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                   e.preventDefault();
                 }
               }}
@@ -352,7 +354,7 @@ const QuizInformation = ({ formik }: any) => {
               helperText={formik.touched.passingMarks && formik.errors.passingMarks}
               size="small"
               onKeyDown={(e) => {
-                if (['e', 'E', '+', '-'].includes(e.key)) {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                   e.preventDefault();
                 }
               }}
@@ -376,7 +378,7 @@ const QuizInformation = ({ formik }: any) => {
               helperText={formik.touched.quizDuration && formik.errors.quizDuration}
               size="small"
               onKeyDown={(e) => {
-                if (['e', 'E', '+', '-'].includes(e.key)) {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                   e.preventDefault();
                 }
               }}
@@ -711,7 +713,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                   error={!!errors.marks}
                   helperText={errors.marks}
                   onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                       e.preventDefault();
                     }
                   }}
@@ -731,7 +733,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                   error={!!errors.questionTime}
                   helperText={errors.questionTime}
                   onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-'].includes(e.key)) {
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                       e.preventDefault();
                     }
                   }}

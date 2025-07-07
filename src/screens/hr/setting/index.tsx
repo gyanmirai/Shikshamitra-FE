@@ -61,7 +61,11 @@ const HrSetting = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content={`Are you sure you want to delete ${deleteInformation?.documentName} ?`}
+        content={
+          <>
+            Are you sure you want to delete <strong>{deleteInformation?.documentName}</strong> ?
+          </>
+        }
         action={
           <LoadingButton
             loading={isDeleteLoading}

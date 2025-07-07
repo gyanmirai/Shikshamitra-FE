@@ -1,9 +1,9 @@
 import type { ITimeSlot } from './type';
 
-export const initialValues = {
-  className: '',
-  schoolHours: '',
-  previousClassSlots: '',
-  totalSlots: '',
-  timeSlots: [] as ITimeSlot[],
-};
+export const getInitialValues = (classes: string, editData?: any) => ({
+  className: editData?.className ? editData.className : classes || '',
+  schoolHours: editData?.schoolHours || '',
+  previousClassSlots: editData?.previousClassSlots || '',
+  totalSlots: editData ? (editData.breakSlots || 0) + (editData.periodSlots || 0) : '',
+  timeSlots: editData?.timeSlots || ([] as ITimeSlot[]),
+});

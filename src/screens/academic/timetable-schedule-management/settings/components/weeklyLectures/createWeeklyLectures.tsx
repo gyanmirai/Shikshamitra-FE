@@ -43,68 +43,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  const generateDummySubjects = () => [
-    { name: 'Mathematics', subjectCode: 'MTH101', subjectColor: '#42a5f5' },
-    { name: 'Science', subjectCode: 'SCI101', subjectColor: '#66bb6a' },
-    { name: 'English', subjectCode: 'ENG101', subjectColor: '#ef5350' },
-    { name: 'Social Studies', subjectCode: 'SST101', subjectColor: '#ab47bc' },
-    { name: 'Gujarati', subjectCode: 'GUJ101', subjectColor: '#ffa726' },
-    { name: 'Computer', subjectCode: 'COMP101', subjectColor: '#26c6da' },
-    { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
-    { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
-    { name: 'Physics', subjectCode: 'PHY101', subjectColor: '#5c6bc0' },
-    { name: 'Chemistry', subjectCode: 'CHEM101', subjectColor: '#ff7043' },
-    { name: 'Biology', subjectCode: 'BIO101', subjectColor: '#9ccc65' },
-    { name: 'History', subjectCode: 'HIST101', subjectColor: '#d4e157' },
-    { name: 'Geography', subjectCode: 'GEO101', subjectColor: '#26a69a' },
-    { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#ec407a' },
-    { name: 'Marathi', subjectCode: 'MAR101', subjectColor: '#ba68c8' },
-    { name: 'Physical Education', subjectCode: 'PE101', subjectColor: '#ffb74d' },
-    { name: 'Moral Science', subjectCode: 'MOR101', subjectColor: '#8e24aa' },
-    { name: 'Music', subjectCode: 'MUS101', subjectColor: '#f06292' },
-    { name: 'Sanskrit', subjectCode: 'SAN101', subjectColor: '#6d4c41' },
-    { name: 'Environmental Science', subjectCode: 'EVS101', subjectColor: '#aed581' },
-  ];
-
-  useEffect(() => {
-    if (!editData && selectedClass) {
-      const dummySubjects = generateDummySubjects().map((subj, index) => ({
-        id: `subject-${index}`,
-        ...subj,
-        noOfLecture: null,
-      }));
-
-      formik.setFieldValue('className', selectedClass);
-      formik.setFieldValue('subjects', dummySubjects);
-      formik.setFieldValue('totalLectures', 0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClass, editData]); // only run when selectedClass or editData changes
-
-  // const initialValues = useMemo(() => {
-  //   const base = getNoOfLectureInitialValues(editData, selectedClass);
-  //   if (!editData && selectedClass) {
-  //     return {
-  //       ...base,
-  //       subjects: generateDummySubjects(),
-  //       totalLectures: 40,
-  //     };
-  //   }
-  //   return base;
-  // }, [editData, selectedClass]);
-
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getNoOfLectureInitialValues(editData, selectedClass),
+    initialValues: getNoOfLectureInitialValues(editData, selectedClass || classes),
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
     onSubmit: (values) => {
@@ -126,6 +66,43 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       onClose?.(null, true);
     },
   });
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.name || '');
+  }, [medium]);
+
+  useEffect(() => {
+    if (!editData && selectedClass) {
+      const dummySubjects = generateDummySubjects().map((subj, index) => ({
+        id: `subject-${index}`,
+        ...subj,
+        noOfLecture: null,
+      }));
+
+      formik.setFieldValue('className', selectedClass);
+      formik.setFieldValue('subjects', dummySubjects);
+      formik.setFieldValue('totalLectures', 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClass, editData, classes]); // only run when selectedClass or editData changes
+
+  // const initialValues = useMemo(() => {
+  //   const base = getNoOfLectureInitialValues(editData, selectedClass);
+  //   if (!editData && selectedClass) {
+  //     return {
+  //       ...base,
+  //       subjects: generateDummySubjects(),
+  //       totalLectures: 40,
+  //     };
+  //   }
+  //   return base;
+  // }, [editData, selectedClass]);
 
   // // Update total lectures whenever subject lectures change
   // useEffect(() => {
@@ -151,7 +128,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             label="Weekly Lectures *"
             name={`subjects[${index}].noOfLecture`}
             value={formik.values.subjects[index]?.noOfLecture ?? ''}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              formik.setFieldValue(`subjects[${index}].noOfLecture`, e.target.value);
+              // formik.setFieldTouched(`subjects[${index}].noOfLecture`, true);
+            }}
             onBlur={formik.handleBlur}
             inputProps={{ min: 0 }}
             disabled={disabled && !isEdit}
@@ -166,24 +146,16 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                 : ''
             }
             onKeyDown={(e) => {
-              if (['e', 'E', '+', '-'].includes(e.key)) {
+              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                 e.preventDefault();
               }
             }}
-            sx={{ minWidth: '100px', width: '100%', mb: 1.5, mt: 0.3 }}
+            sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
           />
         </ShakingTextField>
       );
     },
-    [
-      formik.values.subjects,
-      formik.handleChange,
-      formik.handleBlur,
-      formik.touched.subjects,
-      formik.errors.subjects,
-      disabled,
-      isEdit,
-    ]
+    [formik, disabled, isEdit]
   );
 
   return (
@@ -219,7 +191,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                       ? formik.errors.className
                       : undefined
                   }
-                  disabled={disabled}
+                  disabled={disabled || (isEdit && !!editData)}
                 />
               </ShakingTextField>
             </Grid>
@@ -230,11 +202,14 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                     tableId="table-subject-list"
                     isSearch={false}
                     isShowedDense={false}
+                    noDataText={<>No Subject&apos;s weekly lectures Found </>}
                     isFilter={false}
                     columns={[
                       {
                         id: 'name',
                         label: 'Subject',
+                        isFilter: false,
+                        // isSort: false,
                         render: (value, row) => (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <SubjectColorIndicator color={row.subjectColor} />
@@ -296,3 +271,26 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 };
 
 export default CreateNoOfLecture;
+
+export const generateDummySubjects = () => [
+  { name: 'Mathematics', subjectCode: 'MTH101', subjectColor: '#42a5f5' },
+  { name: 'Science', subjectCode: 'SCI101', subjectColor: '#66bb6a' },
+  { name: 'English', subjectCode: 'ENG101', subjectColor: '#ef5350' },
+  { name: 'Social Studies', subjectCode: 'SST101', subjectColor: '#ab47bc' },
+  { name: 'Gujarati', subjectCode: 'GUJ101', subjectColor: '#ffa726' },
+  { name: 'Computer', subjectCode: 'COMP101', subjectColor: '#26c6da' },
+  { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
+  { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
+  { name: 'Physics', subjectCode: 'PHY101', subjectColor: '#5c6bc0' },
+  { name: 'Chemistry', subjectCode: 'CHEM101', subjectColor: '#ff7043' },
+  { name: 'Biology', subjectCode: 'BIO101', subjectColor: '#9ccc65' },
+  { name: 'History', subjectCode: 'HIST101', subjectColor: '#d4e157' },
+  { name: 'Geography', subjectCode: 'GEO101', subjectColor: '#26a69a' },
+  { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#ec407a' },
+  { name: 'Marathi', subjectCode: 'MAR101', subjectColor: '#ba68c8' },
+  { name: 'Physical Education', subjectCode: 'PE101', subjectColor: '#ffb74d' },
+  { name: 'Moral Science', subjectCode: 'MOR101', subjectColor: '#8e24aa' },
+  { name: 'Music', subjectCode: 'MUS101', subjectColor: '#f06292' },
+  { name: 'Sanskrit', subjectCode: 'SAN101', subjectColor: '#6d4c41' },
+  { name: 'Environmental Science', subjectCode: 'EVS101', subjectColor: '#aed581' },
+];

@@ -81,7 +81,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
       // Custom no data message with action to create new homework
       noDataText={
         <>
-          No Homework Created
+          Homework Data Not Found
           <Box
             onClick={() => {
               dialog.onTrue();
@@ -187,7 +187,17 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
                         handleSwitchChange(row as IHomework);
                       }
                     }}
-                    sx={{ p: 0 }}
+                    sx={{
+                      p: 0.6, // some padding for a more clickable area
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
+                      transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        backgroundColor: 'rgba(0,0,0,0.08)',
+                      },
+                    }}
                     disabled={value === PublishUnpublishStatusType.Published}
                   >
                     <Iconify

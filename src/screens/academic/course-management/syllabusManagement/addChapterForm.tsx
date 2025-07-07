@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Button, useTheme, TextField, Typography, DialogActions } from '@mui/material';
@@ -40,6 +43,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   // State for managing rich text editor content
@@ -128,8 +132,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     // placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
+                    inputProps={{ min: 0 }}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -182,8 +187,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     onChange={(newValue) => {
                       formik.setFieldValue('startDate', newValue);
                     }}
-                    minDate={dayjs()}
-                    maxDate={dayjs().endOf('year')}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {
@@ -206,8 +211,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   <DatePicker
                     label="Chapter End Date *"
                     format="DD/MM/YYYY"
-                    minDate={dayjs()}
-                    maxDate={dayjs().endOf('year')}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
                     value={formik.values.endDate}
                     onChange={(newValue) => {
                       formik.setFieldValue('endDate', newValue);
@@ -226,7 +231,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Grid>
 
               {/* Rich Text Editor for Chapter Content */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} mb={-2}>
+                <Typography variant="subtitle2">Description</Typography>
+              </Grid>
+              <Grid item xs={12}>
                 <Editor
                   value={formik.values.description}
                   onChange={(value) => {
@@ -250,7 +258,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 />
               </Grid>
               {/* Document Upload Section */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <FileUploader
                   // @ts-ignore
                   showVisibleDocumentCount={1}
@@ -265,7 +273,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     //   const base64String = reader.result;
                     // };
                   }}
-                  primaryText="Please Upload Your File"
+                  primaryText="Please Upload Your Chapter Documents"
                   secondaryText="Maximum file size is 5MB"
                 />
               </Grid>

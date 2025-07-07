@@ -146,7 +146,7 @@ const HrEmployee = () => {
               { name: 'Employee', href: '/hr/employee/' },
               { name: 'Employee List', href: '/hr/employee/' },
             ]}
-            description="Fill in the employee enrollment form with personal details, contact information, and employment specifics. All required fields are marked with an asterisk (*)"
+            description="Fill in the employee enrollment form with personal details, contact information, and employment specifics. All required fields are marked with an asterisk."
             isBack
             onBack={handleClose}
           />

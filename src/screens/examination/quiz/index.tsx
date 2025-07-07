@@ -154,7 +154,7 @@ const QuizManagement = (props: TabComponentType) => {
       ) : (
         <CustomBreadcrumbs
           heading="Quiz Management"
-          description="View and manage all your quizzes in one place. Track pending quizzes that need to be administered and review completed quizzes with student performance data."
+          description="Access to manage all quizzes and track pending quizzes and analyze students performance on completed ones."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/scheduleExam' },

@@ -338,7 +338,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     size="small"
                     type="number"
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -445,7 +445,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
           {/* Description Section */}
           <SectionCard title="Description and Document">
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               {' '}
               <ShakingTextField
                 error={!!(formik.touched.description && formik.errors.description) || false}
@@ -461,7 +461,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
             </Grid>
 
             {/* File Upload */}
-            <Grid item xs={12} md={6} mt={1}>
+            <Grid item xs={12}>
               <FileUploader
                 // @ts-ignore
                 value={formik.values.attachments}
@@ -504,7 +504,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         }
                       >
                         <DateTimePicker
-                          label="Publish Date"
+                          label="Publish Date *"
                           format="DD/MM/YYYY"
                           value={div.publishDate ? dayjs(div.publishDate) : null}
                           onChange={(val) =>
@@ -547,7 +547,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         }
                       >
                         <DateTimePicker
-                          label="Due Date"
+                          label="Due Date *"
                           format="DD/MM/YYYY"
                           value={div.dueDate ? dayjs(div.dueDate) : null}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}

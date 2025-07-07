@@ -89,7 +89,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                     type="number"
                     name="marks"
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}

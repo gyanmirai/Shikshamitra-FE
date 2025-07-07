@@ -24,7 +24,7 @@ const HostelIncidentTable: React.FC<ISubjectTableProps> = ({
     tableId="hostel-subject-data-table"
     noDataText={
       <>
-        No Subject Data Found{' '}
+        Subject Data Not Found{' '}
         <Box
           onClick={() => {
             onAddSubject.onTrue();

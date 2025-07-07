@@ -207,7 +207,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                         : uploadDocument({ id: employeeId, body: formData }),
                       {
                         loading: `Uploading Document ${row.documentName} `,
-                        success: () => `${row.documentName} Uploaded Successfully!`,
+                        success: () => `${row.documentName} Uploaded Successfully.`,
                         error: 'Error',
                         closeButton: true,
                       }

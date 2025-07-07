@@ -37,9 +37,13 @@ const QuizTable = ({
   openDialog,
   setOpenDialog,
 }: any) => {
-  // Initialize tabs with default value of 'Pending'
+  // Initialize tabs state with default value of Pending status
   const tabs = useTabs(ScheduleExamStatus.Pending);
+
+  // Boolean state to control view submission dialog visibility
   const viewSubmissionDialog = useBoolean();
+
+  // Boolean state to control view analytics dialog visibility
   const viewAnalyticsDialog = useBoolean();
   const actions = ({ row, popover }: any) => (
     <Box>
@@ -165,7 +169,7 @@ const QuizTable = ({
         tableId="quiz-table"
         noDataText={
           <>
-            No Quiz Data Found{' '}
+            Quiz Data Not Found{' '}
             <Box
               onClick={() => {
                 addQuizDialog.onTrue();
@@ -197,7 +201,7 @@ const QuizTable = ({
                 },
                 {
                   id: 'quizTitle',
-                  label: 'Quiz Title',
+                  label: 'Title',
                   align: 'left',
                   filterType: 'string',
                   // minWidth: 120,
@@ -352,7 +356,7 @@ const QuizTable = ({
                 },
                 {
                   id: 'quizTitle',
-                  label: 'Quiz Title',
+                  label: 'Title',
                   align: 'left',
                   filterType: 'string',
                 },
@@ -364,31 +368,31 @@ const QuizTable = ({
                 },
                 {
                   id: 'quizDate',
-                  label: 'Quiz Date',
+                  label: 'Date',
                   align: 'left',
                   filterType: 'date',
                 },
                 {
                   id: 'quizTime',
-                  label: 'Quiz Time',
+                  label: 'Time',
                   align: 'left',
                   filterType: 'date',
                 },
                 {
                   id: 'quizEndDate',
-                  label: 'Quiz End Date',
+                  label: 'End Date',
                   align: 'left',
                   filterType: 'date',
                 },
                 {
                   id: 'quizEndTime',
-                  label: 'Quiz End Time',
+                  label: 'End Time',
                   align: 'left',
                   filterType: 'date',
                 },
                 {
                   id: 'quizDuration',
-                  label: 'Quiz Duration',
+                  label: 'Duration',
                   align: 'left',
                   filterType: 'string',
                 },
@@ -449,7 +453,7 @@ const QuizTable = ({
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Student Submission</Typography>
+            <Typography variant="h5">View Quiz Submission</Typography>
             <CustomTooltip
               arrow
               placement="right"

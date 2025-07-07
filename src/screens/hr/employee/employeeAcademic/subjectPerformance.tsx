@@ -10,40 +10,21 @@ import type {
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
 
-import {
-  Box,
-  Slider,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-  sliderClasses,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Slider, TextField, DialogActions, sliderClasses } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
-import CourseCardsGrid from 'src/screens/classManagement/courseProgress/components/courseCardsGrid';
-import ViewChapterLogs from 'src/screens/classManagement/courseProgress/components/viewChapterLogs';
+import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
 
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ComponentBlock } from 'src/components/component-block';
 import ShakingTextField from 'src/components/shaking-text-field';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const CourseProgress = () => {
@@ -52,6 +33,8 @@ const CourseProgress = () => {
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
+  console.log('CourseProgressComponent---', CourseProgressComponent);
+
   // Handler for when a course card is selected
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
@@ -95,55 +78,6 @@ const CourseProgress = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes, setDivision]);
 
-  // Callback function to render action menu items
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {/* Reminder action item */}
-        <MenuItem onClick={() => {}}>
-          {' '}
-          <Iconify icon={GlobalIcons.bell} />
-          Reminder
-        </MenuItem>
-        {row.progress > 0 && (
-          <MenuItem
-            onClick={() => {
-              viewLogsDialog.onTrue();
-              setSelectedChapter(row);
-              pop.onClose();
-            }}
-          >
-            {' '}
-            <Iconify icon={GlobalIcons.eye} />
-            View Logs
-          </MenuItem>
-        )}
-
-        {/* Update progress action item */}
-        <MenuItem
-          onClick={() => {
-            updateProgressDialog.onTrue();
-            pop.onClose();
-          }}
-        >
-          {' '}
-          <Iconify icon={GlobalIcons.edit} />
-          Update Progress
-        </MenuItem>
-      </MenuList>
-    ),
-    [updateProgressDialog, viewLogsDialog]
-  );
-
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      updateProgressDialog.onFalse();
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      updateProgressDialog.onFalse();
-    }
-  };
-
   return (
     <Box>
       {/* Class and Division selection filters */}
@@ -168,167 +102,7 @@ const CourseProgress = () => {
           disabled={!classes}
         />
       </Box>
-      {/* Grid of course cards showing progress */}
-      <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
-
-      {/* Selected course details section */}
-      {selectedCourse && (
-        <>
-          <Typography variant="h6">{selectedCourse.name} Details</Typography>
-          <Box ml={0.1}>
-            {/* Table showing chapter-wise progress details */}
-            <CustomizableTable
-              tableId="course-progress-table"
-              noDataText={<>No Chapters Found For This Course Found </>}
-              columns={[
-                { id: 'chapterNumber', label: 'Chapter No.', align: 'left' },
-                { id: 'chapterName', label: 'Chapter Name', align: 'left' },
-                {
-                  id: 'startDate',
-                  label: 'Start Date',
-                  align: 'left',
-                  filterType: 'date',
-                },
-                {
-                  id: 'timeLine',
-                  label: '',
-                  align: 'left',
-                  filterType: 'date',
-                  renderColumn: () => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      End Date
-                      <CustomTooltip
-                        title={
-                          <Box>
-                            <Typography variant="caption" display="block">
-                              Red : Due within 7 days
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                              Yellow : Due within 30 days
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                              Green : Due after 30 days
-                            </Typography>
-                          </Box>
-                        }
-                      >
-                        <Iconify icon="eva:info-outline" width={16} />
-                      </CustomTooltip>
-                    </Box>
-                  ),
-                  render(value, row) {
-                    const [day, month, year] = value.split('-');
-                    const endDate = new Date(`${year}-${month}-${day}`);
-                    const today = new Date();
-                    endDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-
-                    const diffDays = Math.ceil(
-                      (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                    );
-
-                    // If progress is 100%, use normal text color
-                    if (row.progress === 100) {
-                      return (
-                        <Typography variant="caption" fontSize="13px">
-                          {value}
-                        </Typography>
-                      );
-                    }
-
-                    let color = 'text.secondary';
-
-                    if (diffDays <= 7) {
-                      color = 'error.main'; // red
-                    } else if (diffDays <= 30) {
-                      color = 'warning.main'; // yellow
-                    } else {
-                      color = 'success.main'; // green
-                    }
-
-                    return (
-                      <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                        {value}
-                      </Typography>
-                    );
-                  },
-                },
-                {
-                  id: 'progress',
-                  label: 'Progress',
-                  filterType: 'number',
-                  render(value, row) {
-                    return (
-                      // Circular progress indicator with percentage
-                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                        <CircularProgress variant="determinate" value={value} />
-                        <Box
-                          sx={{
-                            top: 0,
-                            left: 0,
-                            bottom: 0,
-                            right: 0,
-                            position: 'absolute',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            component="div"
-                            sx={{ color: 'text.secondary' }}
-                          >
-                            {value}%
-                          </Typography>
-                        </Box>
-                      </Box>
-                    );
-                  },
-                },
-                {
-                  id: 'actions',
-                  label: 'Action',
-                  minWidth: 40,
-                  align: 'left',
-                  sticky: true,
-                  isFilter: false,
-                  render(value: any, row: any) {
-                    return (
-                      <ThreeDotsActions
-                        actions={(prop) => actions({ ...prop, row })}
-                        placement="right-top"
-                      />
-                    );
-                  },
-                },
-              ]}
-              data={selectedCourse.details}
-            />{' '}
-          </Box>
-        </>
-      )}
-      {/* Dialog for updating progress */}
-      <CustomDialog
-        open={updateProgressDialog.value}
-        handleClose={() => {
-          updateProgressDialog.onFalse();
-        }}
-        title="Update Progress (%)"
-      >
-        <UpdateProgress onClose={handleClose} />
-      </CustomDialog>
-
-      <CustomDialog
-        open={viewLogsDialog.value}
-        handleClose={() => {
-          viewLogsDialog.onFalse();
-        }}
-        maxWidth="sm"
-        title={`${selectedChapter?.chapterName} Logs`}
-      >
-        <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
-      </CustomDialog>
+      <CourseProgressComponent courseData={courses} />
     </Box>
   );
 };
