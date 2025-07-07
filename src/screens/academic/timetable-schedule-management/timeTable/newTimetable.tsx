@@ -565,11 +565,11 @@ const TimeTableGrid = ({
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Manage Timetable"
+          heading="Timetable Management"
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Timetable' },
-            { name: 'Manage Timetable' },
+            { name: 'Timetable Management' },
           ]}
           description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
           sx={{ px: 1, mb: 2 }}

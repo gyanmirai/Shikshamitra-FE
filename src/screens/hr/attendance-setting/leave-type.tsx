@@ -118,6 +118,9 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
             size="small"
             onClick={async () => {
               await deleteLeavePolicy(editData?.id);
+              shikshaMitraToast.success({
+                message: `${editData?.leaveType} leave type deleted successfully}`,
+              });
               confirm.onFalse();
             }}
           >

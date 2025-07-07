@@ -21,7 +21,7 @@ const ChapterTable = ({
       tableId="chapterTable"
       noDataText={
         <>
-          No Chapters Found{' '}
+          Chapters Data Not Found{' '}
           <Box
             onClick={() => {
               addChapterDialog.onTrue();

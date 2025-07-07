@@ -302,7 +302,7 @@ const GroupManagement = ({
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+              title="View and download learning materials, worksheets, and other educational resources."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -355,7 +355,7 @@ const GroupManagement = ({
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+              title="View and download learning materials, worksheets, and other educational resources."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

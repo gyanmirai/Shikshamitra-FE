@@ -43,7 +43,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
     ref
   ) => {
     const [fullScreen, setFullScreen] = useState(false);
-    const [showToolbar, setShowToolbar] = useState(false);
+    const [showToolbar, setShowToolbar] = useState(true);
     const [isHovering, setIsHovering] = useState(false);
 
     const handleToggleFullScreen = useCallback(() => {

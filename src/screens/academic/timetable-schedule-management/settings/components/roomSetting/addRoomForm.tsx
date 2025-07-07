@@ -78,7 +78,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     type="number"
                     inputProps={{ min: 0 }}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -121,7 +121,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     size="small"
                     type="number"
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -144,7 +144,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
                     inputProps={{ min: 0 }}
                     size="small"
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}

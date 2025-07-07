@@ -347,7 +347,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <Grid item xs={12}>
             <SectionCard title="Description and Document">
               {/* Description */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.description && formik.errors.description) ||
@@ -367,7 +367,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               </Grid>
 
               {/* File Uploader */}
-              <Grid item xs={12} md={6} mt={1}>
+              <Grid item xs={12}>
                 <FileUploader
                   // @ts-ignore
                   value={formik.values.attachments}

@@ -84,7 +84,7 @@ const HomeworkSetting = () => {
         heading="Setting"
         description={
           currentActiveComponent?.value === 'homeworkType'
-            ? 'Create and manage different types of homework to assign to students'
+            ? 'Design and organize various types of homework for students.'
             : 'Create and manage different types of assignments for student assessment'
         }
         links={[

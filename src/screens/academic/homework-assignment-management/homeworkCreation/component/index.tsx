@@ -311,7 +311,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
               sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
-              title="View complete details of the homework including title, description, due date, submission status and other information"
+              title="View homework details — title, description, due date, submission status, and more."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

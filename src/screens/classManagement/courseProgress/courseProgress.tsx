@@ -1,13 +1,11 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
-import type { Division, Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   Box,
@@ -26,11 +24,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -38,7 +34,6 @@ import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import CourseCardsGrid from './components/courseCardsGrid';
@@ -46,12 +41,11 @@ import ViewChapterLogs from './components/viewChapterLogs';
 
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
-const CourseProgress = (props: TabComponentType) => {
-  const [courses, setCourses] = useState<any[]>(courseProgressTableData);
+const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
+  const [courses, setCourses] = useState<any[]>(courseData);
+
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
-  // Props destructuring for search parameters
-  const { searchParams, setSearchParams } = props;
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
   // Handler for when a course card is selected
@@ -64,38 +58,9 @@ const CourseProgress = (props: TabComponentType) => {
   // Get dispatch function to dispatch Redux actions
   const dispatch = useDispatch();
 
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
   const viewLogsDialog = useBoolean();
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes, setDivision]);
 
   // Callback function to render action menu items
   const actions = useCallback(
@@ -146,180 +111,294 @@ const CourseProgress = (props: TabComponentType) => {
 
   return (
     <Box>
-      {/* Custom breadcrumbs navigation component */}
-      <CustomBreadcrumbs
-        heading="Chapters Progress"
-        description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
-        links={[
-          { name: 'Class Management', href: '/classManagement/dashboard' },
-          { name: 'Chapters Progress' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-      />
-      {/* Class and Division selection filters */}
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClasses(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!classes}
-        />
-      </Box>
       {/* Grid of course cards showing progress */}
       <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
 
-      {/* Selected course details section */}
       {selectedCourse && (
-        <Box>
+        <>
           <Typography variant="h6" gutterBottom>
             {selectedCourse.name} Details
           </Typography>
-          {/* Table showing chapter-wise progress details */}
-          <CustomizableTable
-            tableId="course-progress-table"
-            noDataText={<>No Chapters Found For This Course Found </>}
-            columns={[
-              { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
-              { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
-              {
-                id: 'startDate',
-                label: 'Start Date',
-                align: 'left',
-                filterType: 'date',
-                minWidth: 170,
-              },
-              {
-                id: 'timeLine',
-                label: '',
-                minWidth: 170,
-                align: 'left',
-                filterType: 'date',
-                renderColumn: () => (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    End Date
-                    <CustomTooltip
-                      arrow
-                      title={
-                        <Box>
-                          <Typography variant="caption" display="block" color="error.main">
-                            Red : Due within 7 days
-                          </Typography>
-                          <Typography variant="caption" display="block" color="warning.main">
-                            Yellow : Due within 30 days
-                          </Typography>
-                          <Typography variant="caption" display="block" color="success.main">
-                            Green : Due after 30 days
-                          </Typography>
-                        </Box>
-                      }
-                    >
-                      <Iconify icon="eva:info-outline" width={16} />
-                    </CustomTooltip>
-                  </Box>
-                ),
-                render(value, row) {
-                  const [day, month, year] = value.split('-');
-                  const endDate = new Date(`${year}-${month}-${day}`);
-                  const today = new Date();
-                  endDate.setHours(0, 0, 0, 0);
-                  today.setHours(0, 0, 0, 0);
+          {isAction ? (
+            <CustomizableTable
+              tableId="course-progress-table"
+              noDataText={<>No Chapters Found For This Course Found </>}
+              columns={[
+                { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+                { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
+                {
+                  id: 'startDate',
+                  label: 'Start Date',
+                  align: 'left',
+                  filterType: 'date',
+                  minWidth: 170,
+                },
+                {
+                  id: 'timeLine',
+                  label: '',
+                  minWidth: 170,
+                  align: 'left',
+                  filterType: 'date',
+                  renderColumn: () => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      End Date
+                      <CustomTooltip
+                        arrow
+                        title={
+                          <Box display="flex" flexDirection="column">
+                            <Typography variant="caption">
+                              <Box component="span" color="error.main">
+                                Red :{' '}
+                              </Box>
+                              <Box component="span">Due within 7 days</Box>
+                            </Typography>
 
-                  const diffDays = Math.ceil(
-                    (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                  );
+                            <Typography variant="caption">
+                              <Box component="span" color="warning.main">
+                                Yellow :{' '}
+                              </Box>
+                              <Box component="span">Due within 30 days</Box>
+                            </Typography>
 
-                  // If progress is 100%, use normal text color
-                  if (row.progress === 100) {
+                            <Typography variant="caption">
+                              <Box component="span" color="success.main">
+                                Green :{' '}
+                              </Box>
+                              <Box component="span">Due after 30 days</Box>
+                            </Typography>
+
+                            <Typography variant="caption">
+                              <Box component="span">Black : </Box>
+                              <Box component="span">Completed Successfully</Box>
+                            </Typography>
+                          </Box>
+                        }
+                      >
+                        <Iconify icon="eva:info-outline" width={16} />
+                      </CustomTooltip>
+                    </Box>
+                  ),
+                  render(value, row) {
+                    const [day, month, year] = value.split('-');
+                    const endDate = new Date(`${year}-${month}-${day}`);
+                    const today = new Date();
+                    endDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+
+                    const diffDays = Math.ceil(
+                      (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+
+                    // If progress is 100%, use normal text color
+                    if (row.progress === 100) {
+                      return (
+                        <Typography variant="caption" fontSize="13px">
+                          {value}
+                        </Typography>
+                      );
+                    }
+
+                    let color = 'text.secondary';
+
+                    if (diffDays <= 7) {
+                      color = 'error.main'; // red
+                    } else if (diffDays <= 30) {
+                      color = 'warning.main'; // yellow
+                    } else {
+                      color = 'success.main'; // green
+                    }
                     return (
-                      <Typography variant="caption" fontSize="13px">
+                      <Typography variant="caption" fontSize="13px" sx={{ color }}>
                         {value}
                       </Typography>
                     );
-                  }
-
-                  let color = 'text.secondary';
-
-                  if (diffDays <= 7) {
-                    color = 'error.main'; // red
-                  } else if (diffDays <= 30) {
-                    color = 'warning.main'; // yellow
-                  } else {
-                    color = 'success.main'; // green
-                  }
-
-                  return (
-                    <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                      {value}
-                    </Typography>
-                  );
+                  },
                 },
-              },
-              {
-                id: 'progress',
-                label: 'Progress',
-                filterType: 'number',
-                render(value, row) {
-                  return (
-                    // Circular progress indicator with percentage
-                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                      <CircularProgress variant="determinate" value={value} />
-                      <Box
-                        sx={{
-                          top: 0,
-                          left: 0,
-                          bottom: 0,
-                          right: 0,
-                          position: 'absolute',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          component="div"
-                          sx={{ color: 'text.secondary' }}
+                {
+                  id: 'progress',
+                  label: 'Progress',
+                  filterType: 'number',
+                  render(value, row) {
+                    return (
+                      // Circular progress indicator with percentage
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress variant="determinate" value={value} />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
                         >
-                          {value}%
-                        </Typography>
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {value}%
+                          </Typography>
+                        </Box>
                       </Box>
+                    );
+                  },
+                },
+                {
+                  id: 'actions',
+                  label: 'Actions',
+                  minWidth: 40,
+                  align: 'left',
+                  sticky: true,
+                  isFilter: false,
+                  render(value: any, row: any) {
+                    return (
+                      <ThreeDotsActions
+                        actions={(prop) => actions({ ...prop, row })}
+                        placement="right-center"
+                      />
+                    );
+                  },
+                },
+              ]}
+              data={selectedCourse.details}
+            />
+          ) : (
+            <CustomizableTable
+              tableId="course-progress-table"
+              noDataText={<>No Chapters Found For This Course Found </>}
+              columns={[
+                { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+                { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
+                {
+                  id: 'startDate',
+                  label: 'Start Date',
+                  align: 'left',
+                  filterType: 'date',
+                  minWidth: 170,
+                },
+                {
+                  id: 'timeLine',
+                  label: '',
+                  minWidth: 170,
+                  align: 'left',
+                  filterType: 'date',
+                  renderColumn: () => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      End Date
+                      <CustomTooltip
+                        arrow
+                        title={
+                          <Box display="flex" flexDirection="column">
+                            <Typography variant="caption">
+                              <Box component="span" color="error.main">
+                                Red :{' '}
+                              </Box>
+                              <Box component="span">Due within 7 days</Box>
+                            </Typography>
+
+                            <Typography variant="caption">
+                              <Box component="span" color="warning.main">
+                                Yellow :{' '}
+                              </Box>
+                              <Box component="span">Due within 30 days</Box>
+                            </Typography>
+
+                            <Typography variant="caption">
+                              <Box component="span" color="success.main">
+                                Green :{' '}
+                              </Box>
+                              <Box component="span">Due after 30 days</Box>
+                            </Typography>
+
+                            <Typography variant="caption">
+                              <Box component="span">Black : </Box>
+                              <Box component="span">Completed Successfully</Box>
+                            </Typography>
+                          </Box>
+                        }
+                      >
+                        <Iconify icon="eva:info-outline" width={16} />
+                      </CustomTooltip>
                     </Box>
-                  );
+                  ),
+                  render(value, row) {
+                    const [day, month, year] = value.split('-');
+                    const endDate = new Date(`${year}-${month}-${day}`);
+                    const today = new Date();
+                    endDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+
+                    const diffDays = Math.ceil(
+                      (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+
+                    // If progress is 100%, use normal text color
+                    if (row.progress === 100) {
+                      return (
+                        <Typography variant="caption" fontSize="13px">
+                          {value}
+                        </Typography>
+                      );
+                    }
+
+                    let color = 'text.secondary';
+
+                    if (diffDays <= 7) {
+                      color = 'error.main'; // red
+                    } else if (diffDays <= 30) {
+                      color = 'warning.main'; // yellow
+                    } else {
+                      color = 'success.main'; // green
+                    }
+                    return (
+                      <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                        {value}
+                      </Typography>
+                    );
+                  },
                 },
-              },
-              {
-                id: 'actions',
-                label: 'Action',
-                minWidth: 40,
-                align: 'left',
-                sticky: true,
-                isFilter: false,
-                render(value: any, row: any) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                    />
-                  );
+                {
+                  id: 'progress',
+                  label: 'Progress',
+                  filterType: 'number',
+                  render(value, row) {
+                    return (
+                      // Circular progress indicator with percentage
+                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                        <CircularProgress variant="determinate" value={value} />
+                        <Box
+                          sx={{
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            position: 'absolute',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {value}%
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  },
                 },
-              },
-            ]}
-            data={selectedCourse.details}
-          />{' '}
-        </Box>
+              ]}
+              data={selectedCourse.details}
+            />
+          )}
+        </>
       )}
       {/* Dialog for updating progress */}
       <CustomDialog
@@ -370,7 +449,7 @@ const CourseProgress = (props: TabComponentType) => {
   );
 };
 
-export default CourseProgress;
+export default CourseProgressComponent;
 
 const marks = [
   { value: 0, label: '0' },

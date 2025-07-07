@@ -195,7 +195,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
               placement="right"
               title={
                 selectedGrade
-                  ? 'You can update the grade scale details including grade ranges, total marks and other grading parameters.'
+                  ? 'Modify grade ranges, total marks, and grading parameters as needed.'
                   : 'You can create a new grade scale by defining grade ranges, total marks and other grading parameters.'
               }
             >
@@ -228,7 +228,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
             <CustomTooltip
               arrow
               placement="right"
-              title="View grade scales, grade ranges, total marks, and related grading criteria"
+              title="View grade scales, ranges, total marks, and grading criteria in one place."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

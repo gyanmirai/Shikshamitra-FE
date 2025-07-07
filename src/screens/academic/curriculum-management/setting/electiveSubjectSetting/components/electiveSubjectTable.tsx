@@ -32,7 +32,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
     // }}
     noDataText={
       <>
-        No Elective Subject Found{' '}
+        Elective Subject Data Not Found{' '}
         <Box
           onClick={() => {
             onAddElective.onTrue();

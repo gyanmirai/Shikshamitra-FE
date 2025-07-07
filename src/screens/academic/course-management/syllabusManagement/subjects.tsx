@@ -194,7 +194,7 @@ const Subjects = (props: TabComponentType) => {
       ) : (
         <CustomBreadcrumbs
           heading="Chapters Management"
-          description="Add and organize chapters for your subjects. Select a class and subject, then add chapter details like name, chapter number and learning materials."
+          description="Select a class and subject to manage chapters, including the chapter name, number, and associated learning materials."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
@@ -333,7 +333,7 @@ const Subjects = (props: TabComponentType) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View and manage learning materials, worksheets, and other educational resources associated with this chapter"
+              title="View and download learning materials, worksheets, and other educational resources."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

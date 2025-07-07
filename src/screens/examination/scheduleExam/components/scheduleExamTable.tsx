@@ -170,7 +170,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         tableId="schedule-exam-table"
         noDataText={
           <>
-            No Exam Data Found{' '}
+            Exam Data Not Found{' '}
             <Box
               onClick={() => {
                 setOpenDialog(true);

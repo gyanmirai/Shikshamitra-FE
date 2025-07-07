@@ -79,7 +79,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                     type="number"
                     disabled={disabled}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
@@ -145,7 +145,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                             )
                           }
                           onKeyDown={(e) => {
-                            if (['e', 'E', '+', '-'].includes(e.key)) {
+                            if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                               e.preventDefault();
                             }
                           }}
@@ -189,7 +189,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                           value={formik.values.gradingScale[index].maxMarks}
                           onChange={formik.handleChange}
                           onKeyDown={(e) => {
-                            if (['e', 'E', '+', '-'].includes(e.key)) {
+                            if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                               e.preventDefault();
                             }
                           }}
