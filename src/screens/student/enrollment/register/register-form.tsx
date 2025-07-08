@@ -64,7 +64,6 @@ const RegisterForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   isComeFromIssueForm?: boolean;
 }) => {
-  console.log('============>', editData);
   const [activeStep, setActiveStep] = useState(0);
 
   const [addRegistration] = useQueryAndMutation({
@@ -295,7 +294,7 @@ const RegisterForm = ({
         await updateCommunicationDetails({
           id: editData?.id || values?.id,
           body: {
-            primaryContactNo: values.primaryContactNumber,
+            primaryContactNo: values.commPrimaryContactNumber,
             parentContactNo: values.parentContactNumber,
             parentEmail: values.parentEmail,
             studentContactNo: values.studentContactNo,
