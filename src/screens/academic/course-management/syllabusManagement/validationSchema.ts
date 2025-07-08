@@ -5,11 +5,13 @@ import * as Yup from 'yup';
 export const validationSchema = Yup.object({
   chapterNo: Yup.number().required('Chapter Number is required'),
   chapterName: Yup.string().required('Chapter Name is required'),
-  startDate: Yup.mixed().test(
-    'is-valid-dayjs',
-    'Chapter Start Date is required',
-    (value) => value && dayjs(value as any).isValid()
-  ),
+  startDate: Yup.mixed()
+    .required('Chapter Start Date is required')
+    .test(
+      'is-valid-dayjs',
+      'Chapter Start Date must be a valid date',
+      (value) => value && dayjs(value as any).isValid()
+    ),
   endDate: Yup.mixed()
     .test(
       'is-valid-dayjs',

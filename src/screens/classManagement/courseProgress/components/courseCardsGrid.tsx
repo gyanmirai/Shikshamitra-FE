@@ -23,11 +23,14 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
   };
 
   const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth);
-    }
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+
+    // Add some tolerance (1-2px)
+    setShowLeftArrow(scrollLeft > 1);
+    setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 1);
   };
 
   useEffect(() => {
@@ -65,7 +68,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
           overflowX: 'auto',
           scrollBehavior: 'smooth',
           gap: 2,
-          px: 0.5,
+          px: 2, // ✅ Increased to prevent shadow cut
           flexGrow: 1,
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },

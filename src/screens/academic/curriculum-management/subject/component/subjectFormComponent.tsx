@@ -372,6 +372,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     formik.setFieldValue('subjectName', newValue.value);
     formik.setFieldValue('subjectType', newValue.type);
     setSelectedOption(newValue);
+    formik.setFieldTouched('subjectName', false);
 
     // Determine if this is a Core subject or an Elective group
     if (newValue.type === 'Core') {
