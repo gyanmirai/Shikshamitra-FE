@@ -97,7 +97,12 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
                 name="budgetSubcategoryName"
                 label="Budget Subcategory Name *"
                 value={values.budgetSubcategoryName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('budgetSubcategoryName', value);
+                }}
                 onBlur={handleBlur}
                 error={isSubcategoryNameError}
                 helperText={touched.budgetSubcategoryName && errors.budgetSubcategoryName}

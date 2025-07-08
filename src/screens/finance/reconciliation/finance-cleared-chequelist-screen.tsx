@@ -28,32 +28,23 @@ const FinanceClearedChequeListScreen = () => (
       noDataText={
         <>There are no cleared cheques recorded for the selected class and division at this time.</>
       }
-      searchFieldProps={{
-        placeholder: 'Search by Gr Number, Name...',
-        label: 'Search by Gr Number, Name...',
-        sx: {
-          maxWidth: '400px',
-          width: '100%',
-        },
-      }}
       tableId="finance-cleared-checklist-tab"
       columns={[
         //  {id:"srNo", label:"SR No"},
 
-        { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
-        { id: 'studentName', label: 'Student Name' },
-        { id: 'class', label: 'Class' },
-        { id: 'division', label: 'Division' },
-        { id: 'chequeNumber', label: 'Cheque Number' },
-        { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
-        { id: 'clearedDate', label: 'Cleared Date', filterType: 'date' },
-        { id: 'feeHead', label: 'Fee Head' },
-
+        { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true, align: 'left' },
+        { id: 'studentName', label: 'Student Name', align: 'left' },
+        { id: 'class', label: 'Class', align: 'left' },
+        { id: 'division', label: 'Division', align: 'left' },
+        { id: 'chequeNumber', label: 'Cheque Number', align: 'left' },
+        { id: 'chequeDate', label: 'Cheque Date', filterType: 'date', align: 'left' },
+        { id: 'clearedDate', label: 'Cleared Date', filterType: 'date', align: 'left' },
+        { id: 'feeHead', label: 'Fee Head', align: 'left' },
         {
           id: 'amount',
           label: 'Amount',
           filterType: 'formattedNumber',
-          align: 'right',
+          align: 'left',
           render(value, row) {
             return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
           },

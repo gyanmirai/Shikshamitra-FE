@@ -39,6 +39,8 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
     handleBlur,
     isSubmitting,
     setSubmitting,
+    setFieldValue,
+    setFieldTouched,
   } = useFormik<IFinanceFeeSetHeadInterface>({
     initialValues,
     validationSchema: setFeeHeadValidationSchema,
@@ -106,7 +108,12 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
                 name="feeHeadName"
                 label="Fee Head *"
                 value={values.feeHeadName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('feeHeadName', value);
+                }}
                 onBlur={handleBlur}
                 error={isFeeHeadNameError}
                 helperText={touched.feeHeadName && errors.feeHeadName}

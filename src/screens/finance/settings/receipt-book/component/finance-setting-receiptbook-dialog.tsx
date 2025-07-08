@@ -5,15 +5,14 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Grid, TextField, DialogActions } from '@mui/material';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
-import capitalizeWords from 'src/utils/capitalizeText';
+import { GlobalIcons } from 'src/utils/icons';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { receiptBookValidationSchema } from '../validationSchema';
@@ -37,9 +36,11 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   // Memoized initial values for the form based on whether editing existing or creating new
   const initialValues = useMemo<IReceiptBook>(
     () => ({
-      id: isEdit ? data.id : Math.floor(Math.random() * 10000),
-      receiptBookName: isEdit ? (data.receiptBookName ?? '') : '',
-      receiptBookCode: isEdit ? (data.receiptBookCode ?? '') : '',
+      id: isEdit
+        ? (data?.id ?? Math.floor(Math.random() * 10000))
+        : Math.floor(Math.random() * 10000),
+      receiptBookName: isEdit ? (data?.receiptBookName ?? '') : '',
+      receiptBookCode: isEdit ? (data?.receiptBookCode ?? '') : '',
     }),
     [data, isEdit]
   );
@@ -59,8 +60,10 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       if (!exists || isEdit) {
         setShowErrorMessage(false);
         onSave(values);
+        onClose(null, true);
       } else {
         setShowErrorMessage(true);
+        onClose(null, true);
       }
     },
   });
@@ -70,20 +73,10 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
     dispatch(setIsChanges(!isEqual(formik.values, initialValues)));
   }, [formik.values, initialValues, dispatch]);
 
-  // Handler for closing the dialog with unsaved changes confirmation
-  const handleClose = () => {
-    if (isChanges && window.confirm('Are you sure you want to leave?')) {
-      dispatch(setIsChanges(false));
-      onClose();
-    } else if (!isChanges) {
-      onClose();
-    }
-  };
-
   return (
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, height: '100%' }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Receipt Book Name Field */}
           <Grid item xs={12} sm={12}>
             {(() => {
@@ -97,9 +90,14 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     fullWidth
                     autoFocus
                     name={field}
-                    label="Receipt Book Name"
+                    label="Receipt Book Name *"
                     value={formik.values[field]}
-                    onChange={(e) => formik.setFieldValue(field, capitalizeWords(e.target.value))}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z0-9\s]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
                     error={error}
                     helperText={helperText}
                   />
@@ -120,9 +118,14 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     size="small"
                     fullWidth
                     name={field}
-                    label="Receipt Book Code"
+                    label="Receipt Book Code *"
                     value={formik.values[field]}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z0-9\s]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
                     error={error}
                     helperText={helperText}
                   />
@@ -133,9 +136,31 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
         </Grid>
       </Scrollbar>
 
-      <DialogActions>
-        <CancelButton onClick={onClose} />
-        <SubmitButton />
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            onClose(null, false);
+          }}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={
+            <Iconify
+              icon={data ? GlobalIcons.edit : GlobalIcons.submit}
+              width={data ? 16 : 20}
+              height={data ? 16 : 20}
+            />
+          }
+          type="submit"
+          variant="contained"
+          size="small"
+        >
+          {data ? 'Update' : 'Submit'}
+        </Button>
       </DialogActions>
     </form>
   );

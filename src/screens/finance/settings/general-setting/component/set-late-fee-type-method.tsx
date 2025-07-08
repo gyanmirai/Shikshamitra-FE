@@ -57,9 +57,6 @@ const SetLateFeeTypeMethod = () => {
             }
             isLoading={false}
             tableId="late-fee-type"
-            isShowedDense={false}
-            isPagination={false}
-            isFilter={false}
             columns={[
               {
                 id: 'lateFeeTypeName',

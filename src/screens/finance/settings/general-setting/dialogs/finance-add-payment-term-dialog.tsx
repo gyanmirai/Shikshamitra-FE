@@ -36,6 +36,7 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
     handleBlur, // Input blur handler
     isSubmitting, // Flag indicating if form is currently submitting
     setSubmitting, // Function to update submission state
+    setFieldValue,
   } = useFormik<IFinanceAddPaymentTermInterface>({
     initialValues,
     validationSchema: addPaymentTermValidationSchema,
@@ -68,7 +69,12 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
                 name="paymentTermName"
                 label="Payment Term Name *"
                 value={values.paymentTermName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('paymentTermName', value);
+                }}
                 onBlur={handleBlur}
                 error={isPaymentTermNameError}
                 helperText={touched.paymentTermName && errors.paymentTermName}

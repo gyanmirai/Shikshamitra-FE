@@ -1,29 +1,28 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import React from 'react';
 
-import { Box, Tab, Typography } from '@mui/material';
+import { Box, Card } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { Iconify } from 'src/components/iconify/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { feestructureDummyData } from '../data/fee-structure-data';
 import EditableFeeStructureTable from './editable-fee-structure-table';
-import ReadOnlyFeeStructureTable from './read-only-fee-structure-table';
 
 interface FinanceEditFeeStructureSettingDialogProps {
-  dialogValue: boolean;
-  onClose: () => void;
+  dialogValue: UseBooleanReturn;
+  onClose: (e: any, isSubmit: boolean) => void;
   data: any; // Data passed to the dialog (likely a list of fee structures)
+  setSelectedEntry: (data: any) => void;
 }
 
 const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSettingDialogProps> = ({
   dialogValue,
   onClose,
   data,
+  setSelectedEntry,
 }) => {
   // Define tab options
   const TABS = [
@@ -34,42 +33,26 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
   const tabs = useTabs('editable'); // Initialize tabs with default value
 
   return (
-    <CustomDialog
-      fullWidth
-      maxWidth="xl"
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h5">
-            {tabs.value === 'editable' ? 'Edit For Class 1' : 'Details For Class 1'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title="You can edit and modify the existing fee structure for Class 1. While making edits, if you want to track the changes you've made, you can view the details in the Reference Table."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
-      open={dialogValue}
-      handleClose={onClose}
-    >
-      <CustomTabs
-        value={tabs.value}
-        onChange={tabs.onChange}
-        variant="fullWidth"
-        slotProps={{ tab: { px: 0 } }}
-      >
-        {TABS.map((tab) => (
-          <Tab key={tab.value} value={tab.value} label={tab.label} />
-        ))}
-      </CustomTabs>
-
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '700px' }}>
-        {tabs.value === 'editable' && <EditableFeeStructureTable data={feestructureDummyData} />}
-        {tabs.value === 'reference' && <ReadOnlyFeeStructureTable data={feestructureDummyData} />}
-      </Scrollbar>
-    </CustomDialog>
+    <Box>
+      <CustomBreadcrumbs
+        heading="Fee Structure"
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Setting', href: '/finance/settings/create-fee-structure/' },
+          { name: 'Fee Structure' },
+        ]}
+        description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
+        sx={{ px: 1, mb: 2 }}
+        isBack
+        onBack={() => {
+          dialogValue.onFalse();
+          setSelectedEntry(null);
+        }}
+      />
+      <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <EditableFeeStructureTable data={feestructureDummyData} onClose={onClose} />
+      </Card>
+    </Box>
   );
 };
 

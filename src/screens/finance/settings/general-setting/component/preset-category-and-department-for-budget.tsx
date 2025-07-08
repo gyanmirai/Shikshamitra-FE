@@ -30,7 +30,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Budget Category Found
+                No Budget Category Data Found
                 <Box
                   onClick={() => {
                     setIsEdit(false);

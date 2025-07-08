@@ -1,20 +1,26 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, Switch, Typography } from '@mui/material';
+import { Box, Button, Switch, useTheme, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import initialData from 'src/json/finance/settings/fee-structure/feeStructureData.json';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -31,10 +37,14 @@ const FinanceNewFeeStructureSetting = () => {
   const financeEditFeeStructureDialog = useBoolean();
   const finanveViewFeeStructureDialog = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
+  const activeDialog = useBoolean();
+  const theme = useTheme();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
-  const [selectedEntry, setSelectedEntry] = useState<any[]>(initialData);
+  const [selectedEntry, setSelectedEntry] = useState<IFeeStructure | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  const [tableData, setTableData] = useState<any[]>(initialData);
+  const [tableData, setTableData] = useState<IFeeStructure[]>(initialData);
 
   const [open, setOpen] = useState(false);
 
@@ -48,25 +58,53 @@ const FinanceNewFeeStructureSetting = () => {
     setOpen(true);
   };
 
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedEntry(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      setOpen(false);
+      setIsEdit(false);
+      dialog.onFalse();
+      financeEditFeeStructureDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      setOpen(false);
+      setIsEdit(false);
+      dialog.onFalse();
+      financeEditFeeStructureDialog.onFalse();
+      setTimeout(() => {
+        setSelectedEntry(null);
+      }, 200);
+    }
+  };
+
   return (
     <>
-      {open ? (
+      {!financeEditFeeStructureDialog.value && dialog.value && (
         <FinanceAddFeeCategorySettingDialog
           onSave={() => {}}
-          dialogValue={dialog.value}
-          onClose={closeHandler}
+          dialogValue={dialog}
+          onClose={handleClose}
           data={selectedEntry}
           isEdit={isEdit}
           allData={tableData}
+          setSelectedEntry={setSelectedEntry}
         />
-      ) : (
+      )}
+      {!financeEditFeeStructureDialog.value && !dialog.value && (
         <>
           <CustomBreadcrumbs
-            heading="Create Fee Structure"
+            heading="Fee Structure"
             links={[
               { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Settings', href: '/finance/settings/create-fee-structure/' },
-              { name: 'Create Fee Structure' },
+              { name: 'Setting', href: '/finance/settings/create-fee-structure/' },
+              { name: 'Fee Structure' },
             ]}
             description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
             sx={{ px: 1, mb: 2 }}
@@ -76,11 +114,11 @@ const FinanceNewFeeStructureSetting = () => {
                 variant="contained"
                 startIcon={<Add />}
                 onClick={() => {
+                  dialog.onTrue();
                   setIsEdit(false);
-                  setOpen(true);
                 }}
               >
-                New Fee Structure
+                Fee Structure
               </Button>
             }
           />
@@ -88,7 +126,7 @@ const FinanceNewFeeStructureSetting = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Fee Structure Found.
+                No Fee Structure Data Found.
                 <Box
                   onClick={() => {
                     setIsEdit(false);
@@ -109,14 +147,6 @@ const FinanceNewFeeStructureSetting = () => {
               </>
             }
             tableId="finance-fee-structure-setting-tab"
-            searchFieldProps={{
-              placeholder: 'Search by Class...',
-              label: 'Search by Class...',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             columns={[
               {
                 id: 'bookRecipt',
@@ -154,14 +184,58 @@ const FinanceNewFeeStructureSetting = () => {
                   );
                 },
               },
-
               {
                 id: 'isActive',
                 label: 'Active',
                 isFilter: false,
                 isSort: false,
-                render(statusToggle) {
-                  return <Switch value={statusToggle} />;
+                render(value, row) {
+                  const statusColor =
+                    value === true ? theme.palette.success.main : theme.palette.text.secondary;
+                  return (
+                    <CustomTooltip
+                      title={value === true ? 'Active' : 'InActive'}
+                      arrow
+                      placement="left"
+                      PopperProps={{
+                        modifiers: [
+                          {
+                            name: 'offset',
+                            options: {
+                              offset: [0, 0], // Try 0 or adjust closer
+                            },
+                          },
+                        ],
+                      }}
+                    >
+                      <IconButton
+                        onClick={() => {
+                          activeDialog.onTrue();
+                          setSelectedEntry(row as any);
+                        }}
+                        sx={{
+                          p: 0.6, // some padding for a more clickable area
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
+                          transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            backgroundColor: 'rgba(0,0,0,0.08)',
+                          },
+                        }}
+                      >
+                        <Iconify
+                          icon={GlobalIcons.tick}
+                          sx={{
+                            width: 20,
+                            height: 20,
+                            color: statusColor,
+                          }}
+                        />
+                      </IconButton>
+                    </CustomTooltip>
+                  );
                 },
               },
               {
@@ -173,13 +247,14 @@ const FinanceNewFeeStructureSetting = () => {
                   return <Switch value={statusToggle} />;
                 },
               },
-
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
                 sticky: true,
+                align: 'left',
+                minWidth: 70,
                 // align: 'center',
                 render(value, row: any) {
                   return (
@@ -224,7 +299,13 @@ const FinanceNewFeeStructureSetting = () => {
           title="Delete Item"
           content="Are you sure you want to delete?"
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+            <LoadingButton
+              variant="contained"
+              loading={false}
+              color="error"
+              onClick={() => {}}
+              size="small"
+            >
               Yes
             </LoadingButton>
           }
@@ -233,12 +314,72 @@ const FinanceNewFeeStructureSetting = () => {
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}
-          dialogValue={financeEditFeeStructureDialog.value}
-          onClose={() => {
-            financeEditFeeStructureDialog.onFalse();
-          }}
+          dialogValue={financeEditFeeStructureDialog}
+          onClose={handleClose}
+          setSelectedEntry={setSelectedEntry}
         />
       )}
+
+      <ConfirmDialog
+        open={activeDialog.value}
+        onClose={() => {
+          setTimeout(() => {
+            setSelectedEntry(null);
+            setIsEdit(false);
+          }, 200); // Adjust delay (in ms) as needed
+          activeDialog.onFalse();
+        }}
+        title={selectedEntry?.isActive === true ? 'InActive' : 'Active'}
+        content={
+          selectedEntry && Array.isArray(selectedEntry.applicableGrade) ? (
+            <>
+              Are you sure you want move <strong>Class {selectedEntry.applicableGrade}</strong> fee
+              structure to {selectedEntry.isActive === true ? 'InActive' : 'Active'} ?
+            </>
+          ) : (
+            <>
+              Are you sure you want move <strong>Class {selectedEntry?.applicableGrade}</strong> fee
+              structure to {selectedEntry?.isActive === true ? 'InActive' : 'Active'} ?
+            </>
+          )
+        }
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={
+              <Iconify
+                icon={
+                  selectedEntry?.isActive === true ? GlobalIcons.draftIcon : GlobalIcons.publish
+                }
+              />
+            }
+            onClick={() => {
+              const status = selectedEntry?.isActive === true ? 'InActive' : 'Active';
+              shikshaMitraToast.success({
+                message:
+                  selectedEntry && Array.isArray(selectedEntry.applicableGrade) ? (
+                    <>
+                      Class {selectedEntry.applicableGrade} fee structure moved to {status}{' '}
+                      successfully.
+                    </>
+                  ) : (
+                    <>
+                      Class {selectedEntry?.applicableGrade} fee structure moved to {status}{' '}
+                      successfully.
+                    </>
+                  ),
+              });
+              setTimeout(() => {
+                setSelectedEntry(null);
+              }, 200); // Adjust delay (in ms) as needed
+              activeDialog.onFalse();
+            }}
+          >
+            {selectedEntry?.isActive === true ? 'InActive' : 'Active'}
+          </Button>
+        }
+      />
 
       <CustomDialog
         maxWidth="xl"

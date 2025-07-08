@@ -40,7 +40,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
       <CustomizableTable
         noDataText={
           <>
-            No Budget Sub-Category Found
+            No Budget Sub-Category Data Found
             <Box
               onClick={() => {
                 setIsEdit(false);

@@ -29,7 +29,7 @@ const ConfigurePaymentStatusComponent = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Payment Status Found
+                No Payment Status Data Found
                 <Box
                   onClick={() => {
                     setIsEdit(false);
@@ -50,9 +50,6 @@ const ConfigurePaymentStatusComponent = () => {
               </>
             }
             tableId="payment-status"
-            isShowedDense={false}
-            isPagination={false}
-            isFilter={false}
             columns={[
               {
                 id: 'paymentStatusName',

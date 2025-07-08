@@ -85,14 +85,6 @@ const FinanceExpenseTrackingScreen = () => {
           />
 
           <CustomizableTable
-            searchFieldProps={{
-              placeholder: 'Search by Expense Category...',
-              label: 'Search by Expense Category...',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             noDataText={
               <>
                 No Expense Found{' '}
@@ -152,10 +144,10 @@ const FinanceExpenseTrackingScreen = () => {
               // },
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
-                minWidth: '140px',
+                minWidth: '50px',
                 sticky: true,
                 render(value, row: any) {
                   return (

@@ -49,26 +49,19 @@ const FinanceFeeCollectionCharges = () => {
           </>
         }
         tableId="finance-fee-collection-charges"
-        searchFieldProps={{
-          placeholder: 'Search by Status, Fee Head...',
-          label: 'Search by Status, Fee Head...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
-          { id: 'dueDate', label: 'Due Date', filterType: 'date' },
-          { id: 'chargeType', label: 'Charge Type' }, // was incorrectly 'Due Date'
+          { id: 'dueDate', label: 'Due Date', filterType: 'date', align: 'left' },
+          { id: 'chargeType', label: 'Charge Type', align: 'left' }, // was incorrectly 'Due Date'
           {
             id: 'feeHead',
             label: 'Charge Head',
+            align: 'left',
           },
           {
             id: 'dayOverView',
             label: 'Days Overview', // changed to meaningful label
             filterType: 'number',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return <Typography fontSize="12px">{value}</Typography>; // fixed to render value
             },
@@ -77,7 +70,7 @@ const FinanceFeeCollectionCharges = () => {
             id: 'chargesPerDay',
             label: 'Charges Per Day', // fixed label
             filterType: 'formattedNumber',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
             },
@@ -86,18 +79,17 @@ const FinanceFeeCollectionCharges = () => {
             id: 'totalCharges',
             label: 'Total Charges Amount', // fixed label
             filterType: 'formattedNumber',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
             },
           },
-
           {
             id: 'status',
             label: 'Status',
             filterType: 'enum',
             enumOptions: FinancePaymentHistoryStatusOptions,
-            minWidth: '100px',
+            minWidth: '90px',
             align: 'left',
             isSort: false,
             sticky: true,
