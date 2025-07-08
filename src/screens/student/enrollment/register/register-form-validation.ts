@@ -33,14 +33,13 @@ export const generalFieldValidation = Yup.object({
 
   remarks: Yup.string(),
   primaryContactNumber: Yup.string()
-    .test('primaryContactNumber', 'Primary contact no. is not valid', (value) => {
+    .test('primaryContactNumber', 'Primary contact No. is not valid', (value) => {
       console.log(value, '=========>');
       return value ? matchIsValidTel(value as string) : true;
     })
-    .required('Primary Contact no. is required'),
+    .required('Primary Contact No. is required'),
   secondaryContactNumber: Yup.string()
     .nullable()
-
     .test('Mobile NO', 'Secondary Contact No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     )
