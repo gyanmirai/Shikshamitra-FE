@@ -35,6 +35,7 @@ const AddLateFeeTypeDialog: React.FC<IFinanceAddLateFeeTypeDialogProps> = ({
     handleBlur, // Input blur handler
     isSubmitting, // Boolean indicating if form is currently submitting
     setSubmitting, // Function to manually set submission state
+    setFieldValue,
   } = useFormik<IFinanceAddLateFeeTypeInterface>({
     initialValues,
     validationSchema: addLateFeeTypeValidationSchema, // Validation schema for form fields
@@ -66,7 +67,12 @@ const AddLateFeeTypeDialog: React.FC<IFinanceAddLateFeeTypeDialogProps> = ({
                 name="lateFeeTypeName"
                 label="Late Fee Type Name *"
                 value={values.lateFeeTypeName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('lateFeeTypeName', value);
+                }}
                 onBlur={handleBlur}
                 error={isLateFeeTypeNameError}
                 helperText={touched.lateFeeTypeName && errors.lateFeeTypeName}

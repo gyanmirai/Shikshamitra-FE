@@ -37,6 +37,7 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
     handleBlur, // Input blur handler
     isSubmitting, // Submission state
     setSubmitting, // Function to update submission state
+    setFieldValue,
   } = useFormik<IFinanceAddBudgetCategoryInterface>({
     initialValues,
     validationSchema: addBudgetCategoryValidationSchema, // Schema for form validation
@@ -69,7 +70,12 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
                 name="budgetCategoryName"
                 label="Budget Category Name *"
                 value={values.budgetCategoryName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('budgetCategoryName', value);
+                }}
                 onBlur={handleBlur}
                 error={isBudgetCategoryNameError}
                 helperText={touched.budgetCategoryName && errors.budgetCategoryName}

@@ -32,10 +32,11 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'bookRecipt',
             label: 'Receipt Book',
             isFilter: false,
+            align: 'left',
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'uppercase' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'uppercase' }}>
                   {row.bookRecipt}
                 </Typography>
               );
@@ -45,10 +46,12 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'applicableGrade',
             label: 'Class',
             isFilter: false,
+            align: 'left',
+
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
                   {row.applicableGrade}
                 </Typography>
               );
@@ -58,10 +61,12 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'feeHead',
             label: 'Fee Head',
             isFilter: false,
+            align: 'left',
+
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
                   {row.feeHead}
                 </Typography>
               );
@@ -70,11 +75,12 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           {
             id: 'grossFee',
             label: 'Gross Fee (₹)',
+            align: 'left',
             isFilter: false,
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '13px' }}>
                   {formatNumber(row.grossFee, 'INR')}
                 </Typography>
               );
@@ -84,10 +90,12 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'payableFee',
             label: 'Payable Fee (₹)',
             isFilter: false,
+            align: 'left',
+
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '13px' }}>
                   {formatNumber(row.payableFee, 'INR')}
                 </Typography>
               );
@@ -98,9 +106,11 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             label: 'Discount Amount (₹)',
             isFilter: false,
             isSort: false,
+            align: 'left',
+
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '13px' }}>
                   {formatNumber(row.discountAmount, 'INR')}
                 </Typography>
               );
@@ -113,7 +123,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
                   {row.discountRemark}
                 </Typography>
               );
@@ -122,6 +132,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           {
             id: 'paymentMethod',
             label: 'Payment Method',
+            align: 'left',
+
             isFilter: false,
             isSort: false,
             render(value, row) {
@@ -129,21 +141,21 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
                 ? row.paymentMethod.join(', ')
                 : row.paymentMethod;
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
                   {paymentMethods}
                 </Typography>
               );
             },
           },
-
           {
             id: 'lateFeeChargesType',
             label: 'Late Fee Type',
+            align: 'left',
             isFilter: false,
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
                   {row.lateFeeChargesType}
                 </Typography>
               );
@@ -152,11 +164,12 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           {
             id: 'lateFeeChargesAmount',
             label: 'Late Fee Amount (₹)',
+            align: 'left',
             isFilter: false,
             isSort: false,
             render(value, row) {
               return (
-                <Typography sx={{ fontSize: '12px' }}>
+                <Typography sx={{ fontSize: '13px' }}>
                   {formatNumber(row.lateFeeChargesAmount, 'INR')}
                 </Typography>
               );
@@ -168,9 +181,9 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'action',
             label: 'Action',
             isFilter: false,
+            align: 'left',
             isSort: false,
             sticky: true,
-            align: 'right',
             render(value, row) {
               return (
                 <ThreeDotsActions

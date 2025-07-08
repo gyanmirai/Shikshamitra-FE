@@ -34,6 +34,7 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
     handleSubmit, // Form submission handler
     handleChange, // Input change handler
     handleBlur, // Input blur handler
+    setFieldValue,
     isSubmitting, // Flag indicating if form is currently submitting
     setSubmitting, // Function to manually set submission state
   } = useFormik<IFinanceAddPaymentMethodInterface>({
@@ -62,7 +63,12 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
                 name="paymentMethodName"
                 label="Payment Method *"
                 value={values.paymentMethodName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('paymentMethodName', value);
+                }}
                 onBlur={handleBlur}
                 error={isMethodNameError}
                 helperText={touched.paymentMethodName && errors.paymentMethodName}

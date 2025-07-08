@@ -152,11 +152,6 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
         </Box>
         <CustomizableTable
           tableId="fee-refund-table"
-          isFilter={false}
-          isShowedDense={false}
-          isPagination={false}
-          isScrollbar={false}
-          isSearch={false}
           columns={[
             // { id: 'grNumber', label: 'Gr Number' },
             // { id: 'studentName', label: 'Student Name' },

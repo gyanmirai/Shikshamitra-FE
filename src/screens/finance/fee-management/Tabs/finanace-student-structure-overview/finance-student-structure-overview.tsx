@@ -8,7 +8,7 @@ import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-st
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
-import { Box, Checkbox, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -80,32 +80,32 @@ const FinanceStudentFeeManagement = () => {
 
   // Table column configuration with rendering logic for each column
   const tableColumns = [
-    {
-      id: 'checkBox',
-      align: 'left',
-      minWidth: '60px',
-      isSort: false,
-      isFilter: false,
-      sticky: true,
-      label: '',
-      // Render checkbox for selecting all students
-      renderColumn: () => (
-        <Checkbox
-          checked={
-            !!studentFeeStructureData?.length &&
-            selectedStudents?.length === studentFeeStructureData?.length
-          }
-          onChange={(e) => handleSelectAllStudents(e.target.checked)}
-        />
-      ),
-      // Render checkbox for individual student selection
-      render: (value: any, row: StudentForFeeStructure) => (
-        <Checkbox
-          checked={selectedStudents.some((i) => i.studentId === row.studentId)}
-          onChange={(e) => handleStudentSelection(row, e.target.checked)}
-        />
-      ),
-    },
+    // {
+    //   id: 'checkBox',
+    //   align: 'left',
+    //   minWidth: '60px',
+    //   isSort: false,
+    //   isFilter: false,
+    //   sticky: true,
+    //   label: '',
+    //   // Render checkbox for selecting all students
+    //   renderColumn: () => (
+    //     <Checkbox
+    //       checked={
+    //         !!studentFeeStructureData?.length &&
+    //         selectedStudents?.length === studentFeeStructureData?.length
+    //       }
+    //       onChange={(e) => handleSelectAllStudents(e.target.checked)}
+    //     />
+    //   ),
+    //   // Render checkbox for individual student selection
+    //   render: (value: any, row: StudentForFeeStructure) => (
+    //     <Checkbox
+    //       checked={selectedStudents.some((i) => i.studentId === row.studentId)}
+    //       onChange={(e) => handleStudentSelection(row, e.target.checked)}
+    //     />
+    //   ),
+    // },
     // {
     //   id: 'grNo',
     //   label: 'Gr No',
@@ -121,6 +121,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'rollNo',
       label: 'Roll No',
       filterType: 'number',
+      align: 'left',
       minWidth: '30px',
       render: (value: string) => (
         <Typography minWidth="120px" fontSize="12px">
@@ -132,12 +133,14 @@ const FinanceStudentFeeManagement = () => {
     {
       id: 'grade',
       label: 'Class',
+      align: 'left',
       filterType: 'number',
-      minWidth: '30px',
+      minWidth: '80px',
     },
     {
       id: 'division',
       label: 'Division',
+      align: 'left',
       minWidth: '30px',
       render: () => (
         <Typography minWidth="120px" fontSize="12px">
@@ -149,18 +152,18 @@ const FinanceStudentFeeManagement = () => {
       id: 'name',
       label: 'Student Name',
       minWidth: '150px',
+      align: 'left',
       render: (value: string, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px">
           {row.name}
         </Typography>
       ),
     },
-
     {
       id: 'totalFees',
       label: 'Gross Fees',
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       minWidth: '130px',
       // Render formatted total fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
@@ -173,8 +176,8 @@ const FinanceStudentFeeManagement = () => {
       id: 'finalFees',
       label: 'Payable Fees',
       filterType: 'formattedNumber',
-      align: 'right',
       minWidth: '130px',
+      align: 'left',
       // Render formatted final fees in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
         <Typography minWidth="120px" fontSize="12px">
@@ -186,7 +189,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalGeneralDiscount',
       label: 'Total General Discount',
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       minWidth: '130px',
       // Render formatted general discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
@@ -199,7 +202,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalAdditionalDiscount',
       label: 'Total Additional Discount',
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       minWidth: '130px',
       // Render formatted additional discount amount in INR currency
       render: (value: number, row: StudentForFeeStructure) => (
@@ -212,7 +215,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalPaid',
       label: 'Total Paid',
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       minWidth: '130px',
       // Render formatted total paid amount in INR currency with green color
       render: (value: number, row: StudentForFeeStructure) => (
@@ -225,7 +228,7 @@ const FinanceStudentFeeManagement = () => {
       id: 'totalPending',
       label: 'Total Pending',
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       minWidth: '130px',
       // Render formatted pending amount in INR currency with red color
       render: (value: number, row: StudentForFeeStructure) => (
@@ -345,14 +348,6 @@ const FinanceStudentFeeManagement = () => {
       </Box>
 
       <CustomizableTable
-        searchFieldProps={{
-          placeholder: 'Search by Gr No, Roll No, Class..',
-          label: 'Search by Gr No, Roll No, Class..',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         onSendNotification={handleSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-fee-management"

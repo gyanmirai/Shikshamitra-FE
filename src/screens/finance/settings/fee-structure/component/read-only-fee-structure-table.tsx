@@ -20,10 +20,12 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'feeHead',
       label: 'Fee Head',
       isFilter: false,
+      align: 'left',
     },
     {
       id: 'grossFee',
       label: 'Gross Fee',
+      align: 'left',
       isFilter: false,
       render(value: number) {
         return (
@@ -34,6 +36,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
     {
       id: 'generalDiscount',
       label: 'General Discount',
+      align: 'left',
       isFilter: false,
       render(value: number) {
         return (
@@ -45,6 +48,8 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'payableFee',
       label: 'Payable Fee',
       isFilter: false,
+      align: 'left',
+
       render(value: number) {
         return (
           <Typography sx={{ fontSize: '12px' }}>{formatNumber(Number(value), 'INR')}</Typography>
@@ -55,6 +60,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'monthly',
       label: 'Monthly Payable Fee',
       isFilter: false,
+      align: 'left',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -67,6 +73,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'quartly',
       label: 'Quarterly Payable Fee',
       isFilter: false,
+      align: 'left',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -79,6 +86,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'bi-annual',
       label: 'Bi-Annually Payable Fee',
       isFilter: false,
+      align: 'left',
       render(value: number, row: any) {
         return (
           <Typography sx={{ fontSize: '12px' }}>
@@ -91,6 +99,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'paymentMethod',
       label: 'Payment Method',
       isFilter: false,
+      align: 'left',
       render(value: any, row: any) {
         if (row.paymentMethod.length > 2) {
           return (
@@ -121,6 +130,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'lateFeeCharges',
       label: 'Late Fee Charges',
       isFilter: false,
+      align: 'left',
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -133,6 +143,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'lateFeeChargesType',
       label: 'Late Fee Charges Type',
       isFilter: false,
+      align: 'left',
       render(value: any, row: any) {
         return (
           <Typography sx={{ fontSize: '12px', textTransform: 'capitalize' }}>
@@ -145,6 +156,7 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
       id: 'discountReason',
       label: 'Discount Reason',
       isFilter: false,
+      align: 'left',
       render(value: any, row: any) {
         const fullText = row.discountReason || '';
         const wordLimit = 15;
@@ -185,10 +197,6 @@ const ReadOnlyFeeStructureTable: React.FC<IReadOnlyFeeStructureTableProps> = ({ 
   return (
     <CustomizableTable
       tableId="readOnlyTableForFeeStructure"
-      isSearch={false}
-      isFilter={false}
-      isPagination={false}
-      isShowedDense={false}
       columns={column as IColumn[]}
       data={data}
     />

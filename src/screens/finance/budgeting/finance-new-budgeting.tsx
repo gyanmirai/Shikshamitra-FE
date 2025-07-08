@@ -195,11 +195,6 @@ const FinanceNewBudgetingScreen = () => {
 
       <Box>
         <CustomizableTable
-          searchFieldProps={{
-            placeholder: `Search by ${tabs.value} category...`,
-            label: `Search by ${tabs.value} category...`,
-            sx: { maxWidth: '400px', width: '100%' },
-          }}
           noDataText={
             <>
               No budget has been created yet for {tabs.value} categories. Please set up a budget to

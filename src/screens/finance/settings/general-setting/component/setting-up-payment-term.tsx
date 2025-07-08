@@ -32,7 +32,7 @@ const SetPaymentTerm = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Payment Term Found
+                No Payment Term Data Found
                 <Box
                   onClick={() => {
                     setIsEdit(false);
@@ -54,9 +54,6 @@ const SetPaymentTerm = () => {
             }
             isLoading={false}
             tableId="payment-term"
-            isShowedDense={false}
-            isPagination={false}
-            isFilter={false}
             columns={[
               {
                 id: 'paymentTermName',

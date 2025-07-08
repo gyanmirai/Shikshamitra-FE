@@ -2,8 +2,8 @@ import * as Yup from 'yup';
 
 export const feeStructurevalidationSchema = Yup.object({
   bookRecipt: Yup.string().required('Receipt Book is required'),
-  applicableGrade: Yup.string().required('Applicable Grade is required'),
-  feeHead: Yup.string().required('Fee Category is required'),
+  applicableGrade: Yup.string().required('Class is required'),
+  feeHead: Yup.string().required('Fee Head is required'),
   grossFee: Yup.string().required('Gross Fee is required'),
   discountAmount: Yup.string()
     .transform((value) => value.replace(/[^0-9.]/g, ''))

@@ -73,12 +73,9 @@ const SetDefaultFeeComponent = () => {
         <Grid item xs={12}>
           <Box>
             <CustomizableTable
-              noDataText={<>No Fee Head Found</>}
+              noDataText={<>No Fee Head Data Found</>}
               isLoading={isFeeHeadLoading}
               tableId="set-default-fee"
-              isShowedDense={false}
-              isPagination={false}
-              isFilter={false}
               columns={[
                 {
                   id: 'feeHeadName',
