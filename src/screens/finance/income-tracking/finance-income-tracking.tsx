@@ -84,14 +84,6 @@ const FinanceIncomeTrackingScreen = () => {
           />
 
           <CustomizableTable
-            searchFieldProps={{
-              placeholder: 'Search by Income Source...',
-              label: 'Search by Income Source...',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             noDataText={
               <>
                 No Income Found{' '}
@@ -137,7 +129,7 @@ const FinanceIncomeTrackingScreen = () => {
                 label: 'Action',
                 isFilter: false,
                 isSort: false,
-                minWidth: '140px',
+                minWidth: '70px',
                 sticky: true,
                 render(value, row: any) {
                   return (

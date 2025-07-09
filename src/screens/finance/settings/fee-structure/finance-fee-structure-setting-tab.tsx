@@ -285,11 +285,12 @@ const FinanceFeeStructureSettingTab = () => {
       {open ? (
         <FinanceAddFeeCategorySettingDialog
           onSave={handleSave}
-          dialogValue={dialog.value}
+          dialogValue={dialog}
           onClose={closeHandler}
           data={selectedEntry}
           isEdit={isEdit}
           allData={tableData}
+          setSelectedEntry={setSelectedEntry}
         />
       ) : (
         <>
@@ -428,10 +429,11 @@ const FinanceFeeStructureSettingTab = () => {
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}
-          dialogValue={financeEditFeeStructureDialog.value}
+          dialogValue={financeEditFeeStructureDialog}
           onClose={() => {
             financeEditFeeStructureDialog.onFalse();
           }}
+          setSelectedEntry={setSelectedEntry}
         />
       )}
     </>

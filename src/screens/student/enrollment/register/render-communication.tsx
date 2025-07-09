@@ -221,7 +221,7 @@ const RenderCommunicationFields = (props: any) => {
 
 export const communicationFields: FieldsType[] = [
   {
-    name: 'primaryContactNumber',
+    name: 'commPrimaryContactNumber',
     label: 'Primary Contact No.',
     type: 'text',
     gridProps: { xs: 12, sm: 12, md: 12 },

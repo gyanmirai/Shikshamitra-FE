@@ -57,7 +57,6 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => {
     lastClassPassed: editData?.lastClassPassed || '',
   };
 };
-
 export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({
   documents: [],
 });
@@ -128,7 +127,8 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
 });
 
 export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  primaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
+  // primaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
+  commPrimaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
   parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo || '',
   parentEmail: editData?.studentCommunicationDetails?.parentEmail || '',
   studentContactNo: editData?.studentCommunicationDetails?.studentContactNo || '',

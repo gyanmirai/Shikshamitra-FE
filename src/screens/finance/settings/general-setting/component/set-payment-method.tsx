@@ -75,9 +75,6 @@ const SetPaymentMethodComponent = () => {
             }
             isLoading={false}
             tableId="payment-methods"
-            isShowedDense={false}
-            isPagination={false}
-            isFilter={false}
             columns={[
               {
                 id: 'paymentMethodName',

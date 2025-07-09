@@ -59,16 +59,7 @@ const FinanceStudentFeeBreakdownTab = () => {
     <>
       <CustomizableTable
         tableId="finance-student-fee-breakdown-tab"
-        isFilter={false}
         isPagination={false}
-        searchFieldProps={{
-          placeholder: 'Search by Due Date, Fee Head...',
-          label: 'Search by Due Date, Fee Head...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { id: 'date', label: 'Due Date', filterType: 'date' },
           {
@@ -141,7 +132,6 @@ const FinanceStudentFeeBreakdownTab = () => {
               );
             },
           },
-
           {
             id: 'amount',
             label: 'Payable Fee',

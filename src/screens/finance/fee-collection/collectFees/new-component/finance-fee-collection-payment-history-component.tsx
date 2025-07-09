@@ -46,14 +46,6 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
           </>
         }
         tableId="finance-fee-collection-payment-history"
-        searchFieldProps={{
-          placeholder: 'Search by Status, Date...',
-          label: 'Search by Status, Date...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
           { id: 'date', label: 'Paid Date', filterType: 'date' },
 
@@ -103,9 +95,9 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
             label: 'Action',
             isFilter: false,
             isSort: false,
-            align: 'center',
+            align: 'left',
             sticky: true,
-            minWidth: 100,
+            minWidth: 50,
             render: (value, row) => (
               <ThreeDotsActions
                 placement="right-top"

@@ -1,10 +1,13 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
 export interface IFinanceAddFeeCategorySettingDialogProps {
-  dialogValue: boolean;
+  dialogValue: UseBooleanReturn;
   data: any;
   onSave: (values: any) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: false) => void;
   isEdit: boolean;
   allData: any;
+  setSelectedEntry: (data: any) => void;
 }
 
 export interface IFormikValue {
@@ -52,6 +55,7 @@ export interface IFeeItem {
 
 export interface IEditableFeeStructureTableProps {
   data: IFeeItem[];
+  onClose: (e: null, isSubmit: boolean) => void;
 }
 
 export interface IReadOnlyFeeStructureTableProps {

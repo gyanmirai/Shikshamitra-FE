@@ -7,9 +7,9 @@ export interface IReceiptBook {
 }
 
 export interface IProps {
-  data: IReceiptBook;
+  data: IReceiptBook | null;
   onSave: (values: IReceiptBook) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   isEdit: boolean;
   allData: IReceiptBook[];
 }

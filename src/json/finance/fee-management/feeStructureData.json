@@ -1,136 +1,152 @@
 [
   {
     "id": 1,
-    "amount": 3000,
-    "discountAmount": 2000,
+    "totalPayableFee": 30000,
+    "totaldiscountAmount": 2000,
     "grossFee": 15000,
     "applicableGrade": "1",
     "bookRecipt": "CBSE",
-    "paymentDueDate": "20-12-2025",
-    "payableFees": 30000,
+    "isActive": true,
     "feeSubCategoryList": [
       {
+        "id": 1,
+        "receiptBook": "CBSE",
         "feeHead": "Admission",
         "grossFee": 1000,
         "payableFee": 1000,
         "generalDiscount": 0,
-        "paymentMethod": [
-          "Cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "fixed",
         "lateFeeChargesAmount": "1000",
         "isActive": true,
-        "discountReason": "-"
+        "paymentDueDate": "20-05-2025",
+        "applicableClass": ["1"]
       },
       {
+        "id": 2,
+        "receiptBook": "CBSE",
         "feeHead": "Tuition",
         "grossFee": 5000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "Cash",
-          "Online",
-          "Cheque",
-          "UPI"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash", "Online", "Cheque", "UPI"],
         "lateFeeChargesType": "perDay",
         "lateFeeChargesAmount": "1",
-        "discountReason": "-",
-        "isActive": true
+        "isActive": true,
+        "paymentDueDate": "20-05-2025",
+        "applicableClass": ["1", "2"]
       },
       {
+        "id": 3,
+        "receiptBook": "CBSE",
         "feeHead": "Sports",
         "grossFee": 5000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "perDay",
         "lateFeeChargesAmount": "1",
-        "discountReason": "-",
-        "isActive": false
+        "isActive": false,
+        "paymentDueDate": "20-06-2025",
+        "applicableClass": ["1"]
       },
       {
+        "id": 4,
+        "receiptBook": "CBSE",
         "feeHead": "Transport",
         "grossFee": 5000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "fixed",
         "lateFeeChargesAmount": "1000",
-        "discountReason": "-",
-        "isActive": false
+        "isActive": false,
+        "paymentDueDate": "20-07-2025",
+        "applicableClass": ["1"]
       }
-    ],
-    "isActive": true
+    ]
   },
   {
     "id": 2,
-    "amount": 3000,
-    "discountAmount": 2000,
+    "totalPayableFee": 40000,
+    "totaldiscountAmount": 2000,
     "grossFee": 5000,
     "applicableGrade": "2",
     "bookRecipt": "CBSE",
-    "paymentDueDate": "20-12-2024",
-    "payableFees": 40000,
+    "isActive": true,
     "feeSubCategoryList": [
       {
+        "id": 5,
+        "receiptBook": "CBSE",
         "feeHead": "Admission",
         "grossFee": 1000,
         "payableFee": 1000,
         "generalDiscount": 0,
-        "paymentMethod": [
-          "cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "fixed",
         "lateFeeChargesAmount": "1000",
-        "discountReason": "-",
-        "isActive": true
+        "isActive": true,
+        "paymentDueDate": "20-04-2024",
+        "applicableClass": ["2"]
       },
       {
+        "id": 6,
+        "receiptBook": "CBSE",
         "feeHead": "Tuition",
         "grossFee": 5000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "cash",
-          "online"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash", "Online"],
         "lateFeeChargesType": "perDay",
         "lateFeeChargesAmount": "1",
-        "discountReason": "-",
-        "isActive": true
+        "isActive": true,
+        "paymentDueDate": "20-05-2024",
+        "applicableClass": ["2"]
       },
       {
+        "id": 7,
+        "receiptBook": "CBSE",
         "feeHead": "Sports",
         "grossFee": 4000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "perDay",
         "lateFeeChargesAmount": "1",
-        "discountReason": "-",
-        "isActive": false
+        "isActive": false,
+        "paymentDueDate": "20-06-2024",
+        "applicableClass": ["2"]
       },
       {
+        "id": 8,
+        "receiptBook": "CBSE",
         "feeHead": "Transport",
         "grossFee": 6000,
         "payableFee": 4500,
         "generalDiscount": 500,
-        "paymentMethod": [
-          "cash"
-        ],
+        "discountAmount": 0,
+        "discountRemark": "-",
+        "paymentMethod": ["Cash"],
         "lateFeeChargesType": "fixed",
         "lateFeeChargesAmount": "1000",
-        "discountReason": "-",
-        "isActive": false
+        "isActive": false,
+        "paymentDueDate": "20-07-2024",
+        "applicableClass": ["2"]
       }
-    ],
-    "isActive": true
+    ]
   }
 ]

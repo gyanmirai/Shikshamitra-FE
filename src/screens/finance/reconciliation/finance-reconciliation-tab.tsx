@@ -61,41 +61,38 @@ const FinanceChequeTransectionScreen = () => {
           </>
         }
         tableId="reconciliationTable"
-        searchFieldProps={{
-          placeholder: 'Search by Gr Number, Name...',
-          label: 'Search by Gr Number, Name...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         columns={[
-          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
+          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true, align: 'left' },
+          { id: 'studentName', label: 'Student Name', align: 'left' },
+          { id: 'class', label: 'Class', align: 'left' },
+          { id: 'division', label: 'Division', align: 'left' },
+          { id: 'chequeNo', label: 'Cheque No', align: 'left' },
+          { id: 'bankName', label: 'Bank Name', align: 'left' },
+          { id: 'chequeDate', label: 'Cheque Date', filterType: 'date', align: 'left' },
+          {
+            id: 'receivedChequeDate',
+            label: 'Received Cheque Date',
+            filterType: 'date',
+            align: 'left',
+          },
 
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'chequeNo', label: 'Cheque No' },
-          { id: 'bankName', label: 'Bank Name' },
-          { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
-          { id: 'receivedChequeDate', label: 'Received Cheque Date', filterType: 'date' },
-
-          { id: 'feeHead', label: 'Fee Head' },
+          { id: 'feeHead', label: 'Fee Head', align: 'left' },
           {
             id: 'amount',
             label: 'Amount',
             filterType: 'formattedNumber',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
             isSort: false,
             isFilter: false,
             sticky: true,
+            align: 'left',
             render(value, row: any) {
               return (
                 <ThreeDotsActions

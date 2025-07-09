@@ -72,35 +72,27 @@ const FinanceBounceScreen = () => {
         noDataText={
           <>There are no Bounce cheque recorded for the selected class and division at this time.</>
         }
-        searchFieldProps={{
-          placeholder: 'Search by Gr Number, Name...',
-          label: 'Search by Gr Number, Name...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
-        }}
         tableId="finance-bounce-checklist-tab"
         columns={[
           //  {id:"srNo", label:"SR No"},
 
-          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true },
-          { id: 'studentName', label: 'Student Name' },
-          { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'parentsContactNumber', label: 'Contact Number' },
-          { id: 'chequeNumber', label: 'Cheque Number' },
-          { id: 'chequeDate', label: 'Cheque Date', filterType: 'date' },
+          { id: 'grNumber', label: 'GR No', filterType: 'number', sticky: true, align: 'left' },
+          { id: 'studentName', label: 'Student Name', align: 'left' },
+          { id: 'class', label: 'Class', align: 'left' },
+          { id: 'division', label: 'Division', align: 'left' },
+          { id: 'parentsContactNumber', label: 'Contact Number', align: 'left' },
+          { id: 'chequeNumber', label: 'Cheque Number', align: 'left' },
+          { id: 'chequeDate', label: 'Cheque Date', filterType: 'date', align: 'left' },
 
-          { id: 'feeHead', label: 'Fee Head' },
+          { id: 'feeHead', label: 'Fee Head', align: 'left' },
 
-          { id: 'bounceDate', label: 'Bounce Date', filterType: 'date' },
-          { id: 'reason', label: 'Reason' },
+          { id: 'bounceDate', label: 'Bounce Date', filterType: 'date', align: 'left' },
+          { id: 'reason', label: 'Reason', align: 'left' },
           {
             id: 'chargesAmount',
             label: 'Charges',
             filterType: 'formattedNumber',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return (
                 <Typography fontSize="12px">{formatNumber(row.chargesAmount, 'INR')}</Typography>
@@ -111,7 +103,7 @@ const FinanceBounceScreen = () => {
             id: 'amount',
             label: 'Amount',
             filterType: 'formattedNumber',
-            align: 'right',
+            align: 'left',
             render(value, row) {
               return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
@@ -120,7 +112,7 @@ const FinanceBounceScreen = () => {
             id: 'conversation',
             label: 'Follow up',
             isSort: false,
-            align: 'center',
+            align: 'left',
             isFilter: false,
             sticky: true,
             render(value, row) {

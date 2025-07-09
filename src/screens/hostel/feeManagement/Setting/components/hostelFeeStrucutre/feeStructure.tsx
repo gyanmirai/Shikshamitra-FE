@@ -366,10 +366,11 @@ const HostelFeeStructure = (props: TabComponentType) => {
       {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}
-          dialogValue={financeEditFeeStructureDialog.value}
+          dialogValue={financeEditFeeStructureDialog}
           onClose={() => {
             financeEditFeeStructureDialog.onFalse();
           }}
+          setSelectedEntry={setSelectedEntry}
         />
       )}
     </>

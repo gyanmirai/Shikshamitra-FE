@@ -36,6 +36,7 @@ const AddPaymentStatusDialog: React.FC<IFinanceAddPaymentStatusDialogProps> = ({
     handleBlur, // Input blur handler
     isSubmitting, // Form submission status
     setSubmitting, // Function to update submission status
+    setFieldValue,
   } = useFormik<IFinanceAddPaymentStatusInterface>({
     initialValues,
     validationSchema: addPaymentStatusValidationSchema,
@@ -68,7 +69,12 @@ const AddPaymentStatusDialog: React.FC<IFinanceAddPaymentStatusDialogProps> = ({
                 name="paymentStatusName"
                 label="Payment Status Name *"
                 value={values.paymentStatusName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '');
+                  setFieldValue('paymentStatusName', value);
+                }}
                 onBlur={handleBlur}
                 error={isPaymentStatusNameError}
                 helperText={touched.paymentStatusName && errors.paymentStatusName}

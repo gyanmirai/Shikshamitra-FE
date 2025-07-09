@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import Add from '@mui/icons-material/Add';
-import { Box, Button, Tooltip, MenuItem, MenuList, Checkbox, Typography } from '@mui/material';
+import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -170,8 +170,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
             <CustomizableTable
               noDataText={
                 <>
-                  No refund requests have been made yet. If a refund is requested by student, it
-                  will be shown here.
+                  No refund requests have been made yet.
                   <Box
                     component="a"
                     href="/finance/fee-refund"
@@ -191,21 +190,13 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
               }
               tableId="student-refund-table"
               isShowedDense={false}
-              isFilter={false}
-              searchFieldProps={{
-                placeholder: 'Search by Requested On, Status...',
-                label: 'Search by Requested On, Status...',
-                sx: {
-                  maxWidth: '400px',
-                  width: '100%',
-                },
-              }}
               data={[]}
               columns={[
                 {
                   id: 'requestedOn',
                   label: 'Requested On',
                   filterType: 'date',
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Typography minWidth="150px" fontSize="12px">
@@ -217,6 +208,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'reason',
                   label: 'Reason',
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Tooltip title={value} arrow>
@@ -230,6 +222,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 {
                   id: 'reasonForRejection',
                   label: 'Reason For Rejection',
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Tooltip title={value} arrow>
@@ -244,7 +237,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   id: 'askForRefund',
                   label: 'Refund Amount',
                   filterType: 'formattedNumber',
-                  align: 'right',
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px" textAlign="center">
@@ -257,7 +250,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   id: 'approvedAmount',
                   label: 'Approved Amount',
                   filterType: 'number',
-                  align: 'right',
+                  align: 'left',
                   render(value, row) {
                     return (
                       <Typography minWidth="100px" fontSize="12px">
@@ -271,7 +264,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   label: 'Status',
                   filterType: 'enum',
                   enumOptions: FinancePaymentHistoryStatusOptions,
-
+                  minWidth: 70,
                   isSort: false,
                   sticky: true,
                   render(value, row) {
@@ -291,8 +284,8 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   label: 'Action',
                   isFilter: false,
                   isSort: false,
-                  align: 'center',
-                  minWidth: 100,
+                  align: 'left',
+                  minWidth: 40,
                   sticky: true,
                   render: (row: any, popover) => (
                     <ThreeDotsActions
@@ -363,14 +356,6 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 />
               </Box>
               <CustomizableTable
-                searchFieldProps={{
-                  placeholder: 'Search by Roll No, Status...',
-                  label: 'Search by Roll No, Status...',
-                  sx: {
-                    maxWidth: '400px',
-                    width: '100%',
-                  },
-                }}
                 noDataText={
                   <>
                     No refund requests have been made yet for the selected filter.
@@ -397,50 +382,50 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                 tableId="student-refund-table"
                 data={studentRefundData}
                 columns={[
-                  {
-                    id: 'checkBox',
-                    align: 'left',
-                    minWidth: '60px',
-                    isSort: false,
-                    isFilter: false,
-                    label: '',
-                    renderColumn() {
-                      return (
-                        <Checkbox
-                          checked={
-                            !!studentRefundData?.length &&
-                            selectedStudent?.length === studentRefundData?.length
-                          }
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedStudent(studentRefundData || []);
-                            } else {
-                              setSelectedStudent([]);
-                            }
-                          }}
-                        />
-                      );
-                    },
-                    render(value, row) {
-                      return (
-                        <Checkbox
-                          checked={
-                            Array.isArray(selectedStudent) &&
-                            selectedStudent.some((i) => i.id === row.id)
-                          }
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedStudent([...selectedStudent, row]);
-                            } else {
-                              setSelectedStudent(
-                                selectedStudent.filter((i: any) => i.id !== row.id)
-                              );
-                            }
-                          }}
-                        />
-                      );
-                    },
-                  },
+                  // {
+                  //   id: 'checkBox',
+                  //   align: 'left',
+                  //   minWidth: '60px',
+                  //   isSort: false,
+                  //   isFilter: false,
+                  //   label: '',
+                  //   renderColumn() {
+                  //     return (
+                  //       <Checkbox
+                  //         checked={
+                  //           !!studentRefundData?.length &&
+                  //           selectedStudent?.length === studentRefundData?.length
+                  //         }
+                  //         onChange={(e) => {
+                  //           if (e.target.checked) {
+                  //             setSelectedStudent(studentRefundData || []);
+                  //           } else {
+                  //             setSelectedStudent([]);
+                  //           }
+                  //         }}
+                  //       />
+                  //     );
+                  //   },
+                  //   render(value, row) {
+                  //     return (
+                  //       <Checkbox
+                  //         checked={
+                  //           Array.isArray(selectedStudent) &&
+                  //           selectedStudent.some((i) => i.id === row.id)
+                  //         }
+                  //         onChange={(e) => {
+                  //           if (e.target.checked) {
+                  //             setSelectedStudent([...selectedStudent, row]);
+                  //           } else {
+                  //             setSelectedStudent(
+                  //               selectedStudent.filter((i: any) => i.id !== row.id)
+                  //             );
+                  //           }
+                  //         }}
+                  //       />
+                  //     );
+                  //   },
+                  // },
                   // {
                   //   id: 'rollNo',
                   //   label: 'Roll No',
@@ -573,7 +558,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
                   },
                   {
                     id: 'action',
-                    label: 'Action',
+                    label: 'Actions',
                     isSort: false,
                     isFilter: false,
                     sticky: true,
