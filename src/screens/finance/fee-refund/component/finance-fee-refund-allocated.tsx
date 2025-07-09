@@ -237,6 +237,7 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
           onClick={() => {
             feeRefundReceiptDialog.onTrue();
           }}
+          size="small"
         >
           View Receipt
         </Button>

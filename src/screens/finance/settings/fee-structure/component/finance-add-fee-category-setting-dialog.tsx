@@ -197,7 +197,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
                     helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
                     // addOtherItemText="Add Receipt Book"
-                    addOtherItemOnClick={receiptBookDialog.onTrue}
+                    // addOtherItemOnClick={receiptBookDialog.onTrue}
                   />
                 </ShakingTextField>
                 {receiptBookDialog.value && (

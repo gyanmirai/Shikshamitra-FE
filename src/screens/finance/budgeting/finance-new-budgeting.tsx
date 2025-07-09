@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import { Box, Tab, Button, Tooltip, useTheme, Typography } from '@mui/material';
@@ -11,12 +14,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 
 import budgetData from 'src/json/finance/budget/budgetData.json';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import budgetExpenseData from 'src/json/finance/budget/budgetIncomeData.json';
 import budgetIncomeData from 'src/json/finance/budget/budgetExpenseData.json';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -52,6 +57,9 @@ const FinanceNewBudgetingScreen = () => {
     setSelectedEntry(entry);
     budgetDialog.onTrue();
   };
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const renderTabLabel = (tab: (typeof TABS)[0]) => (
     <Box
@@ -115,6 +123,24 @@ const FinanceNewBudgetingScreen = () => {
     </Box>
   );
 
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedEntry(null);
+        setIsEdit(false);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      budgetDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      budgetDialog.onFalse();
+      resetState();
+    }
+  };
+
   const renderTableColumns = (type: 'income' | 'expenses') => {
     const commonColumns = {
       name: { id: 'name', label: type === 'income' ? 'Income Category' : 'Expense Category' },
@@ -139,6 +165,7 @@ const FinanceNewBudgetingScreen = () => {
       id,
       label,
       filterType: 'formattedNumber',
+      align: 'right',
       render: (value: number) => (
         <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
       ),
@@ -150,7 +177,34 @@ const FinanceNewBudgetingScreen = () => {
           formatColumn('totalAmountExpected', 'Total Expected'),
           formatColumn('collectedAmount', 'Collected'),
           formatColumn('outstandingAmount', 'Outstanding'),
-          { id: 'receivedPercantage', label: 'Received Percantage' },
+          {
+            id: 'receivedPercantage',
+            label: 'Received Percantage',
+            // render(value, row) {
+            //   return (
+            //     // Circular progress indicator with percentage
+            //     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            //       <CircularProgress variant="determinate" value={value} />
+            //       <Box
+            //         sx={{
+            //           top: 0,
+            //           left: 0,
+            //           bottom: 0,
+            //           right: 0,
+            //           position: 'absolute',
+            //           display: 'flex',
+            //           alignItems: 'center',
+            //           justifyContent: 'center',
+            //         }}
+            //       >
+            //         <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+            //           {value}%
+            //         </Typography>
+            //       </Box>
+            //     </Box>
+            //   );
+            // },
+          },
           commonColumns.action,
         ]
       : [
@@ -176,10 +230,10 @@ const FinanceNewBudgetingScreen = () => {
         value={tabs.value}
         onChange={tabs.onChange}
         variant="fullWidth"
-        sx={{ my: 3, borderRadius: 2 }}
+        sx={{ borderRadius: 2 }}
         slotProps={{
           indicator: { borderRadius: 1.5, boxShadow: theme.customShadows.z4 },
-          tab: { p: 3 },
+          tab: { p: 2 },
         }}
       >
         {TABS.map((tab) => (
@@ -187,58 +241,70 @@ const FinanceNewBudgetingScreen = () => {
         ))}
       </CustomTabs>
 
-      <Box py="15px" gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
+      <Box mt={2} mb={2} display="flex" justifyContent="flex-end">
         <Button startIcon={<Add />} onClick={handleNewEntry} variant="contained" size="small">
           Budget
         </Button>
       </Box>
 
-      <Box>
-        <CustomizableTable
-          noDataText={
-            <>
-              No budget has been created yet for {tabs.value} categories. Please set up a budget to
-              track expected vs. actual collections.
-              <Box
-                color="primary.main"
-                fontWeight={600}
-                onClick={() => setOpen(true)}
-                sx={{
-                  textDecoration: 'none',
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Create Budget
-              </Box>
-            </>
-          }
-          tableId={`${tabs.value}-table`}
-          columns={renderTableColumns(tabs.value as 'income' | 'expenses')}
-          data={tabs.value === 'income' ? budgetIncomeData : budgetExpenseData}
-        />
-      </Box>
+      <CustomizableTable
+        noDataText={
+          <>
+            No budget has been created yet for {tabs.value} categories. Please set up a budget to
+            track expected vs. actual collections.
+            <Box
+              color="primary.main"
+              fontWeight={600}
+              onClick={() => setOpen(true)}
+              sx={{
+                textDecoration: 'none',
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Create Budget
+            </Box>
+          </>
+        }
+        tableId={`${tabs.value}-table`}
+        columns={renderTableColumns(tabs.value as 'income' | 'expenses')}
+        data={tabs.value === 'income' ? budgetIncomeData : budgetExpenseData}
+      />
 
-      {budgetDialog.value && (
-        <CustomDialog
-          handleClose={budgetDialog.onFalse}
-          open={budgetDialog.value}
-          title={isEdit ? 'Edit Budget' : 'Create Budget'}
-          maxWidth="md"
-        >
-          <FinanceNewBudgetCreateDialog
-            onSave={() => {}}
-            dialogValue={open}
-            onClose={() => setOpen(false)}
-            data={selectedEntry}
-            edit={isEdit}
-            activeTab={tabs.value as string}
-          />
-        </CustomDialog>
-      )}
+      <CustomDialog
+        handleClose={budgetDialog.onFalse}
+        open={budgetDialog.value}
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{isEdit ? 'Edit Budget' : 'Create Budget'}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                isEdit
+                  ? 'You can modify the budget details including allocated amounts and categories for better financial planning.'
+                  : 'Create a new budget entry by specifying the category and allocating amounts to track income/expenses effectively.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <FinanceNewBudgetCreateDialog
+          onSave={() => {}}
+          dialogValue={open}
+          onClose={handleClose}
+          data={selectedEntry}
+          edit={isEdit}
+          activeTab={tabs.value as string}
+        />
+      </CustomDialog>
     </>
   );
 };

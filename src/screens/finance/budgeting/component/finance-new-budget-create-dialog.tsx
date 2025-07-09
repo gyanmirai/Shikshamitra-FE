@@ -3,12 +3,15 @@ import { useFormik } from 'formik';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, DialogActions } from '@mui/material';
+import { Box, Button, DialogActions } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchemaForNewBudget } from '../budget_validation';
 
@@ -47,7 +50,7 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
         ? data.id.includes('expense')
           ? data.allocatedAmount
           : data.totalAmountExpected
-        : 0,
+        : '',
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -85,79 +88,103 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
   }, [activeTab]);
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Box sx={{ p: 2 }}>
-        <Grid2 container spacing={2}>
-          <Grid2 xs={6}>
-            <ShakingTextField
-              error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
-            >
-              <CustomSelect
-                label="Category Type *"
-                options={[
-                  { value: '123', label: 'Income' },
-                  { value: '345', label: 'Expense' },
-                ]}
-                value={formik.values.categoryType}
-                onChange={(value) => formik.setFieldValue('categoryType', value)}
-                disabled={edit}
-                autoFocus
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <form onSubmit={formik.handleSubmit}>
+        <Box sx={{ p: 2 }}>
+          <Grid2 container spacing={2}>
+            <Grid2 xs={6}>
+              <ShakingTextField
                 error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
-                helperText={
-                  formik.touched.categoryType && formik.errors.categoryType
-                    ? String(formik.errors.categoryType)
-                    : ''
-                }
-              />
-            </ShakingTextField>
-          </Grid2>
-          <Grid2 xs={6}>
-            <ShakingTextField
-              error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-            >
-              <CustomSelect
-                label="Select Category *"
-                options={categoryListBasedOnType}
-                value={formik.values.categoryName}
-                onChange={(value) => formik.setFieldValue('categoryName', value)}
-                disabled={edit}
+              >
+                <CustomSelect
+                  label="Category Type *"
+                  options={[
+                    { value: '123', label: 'Income' },
+                    { value: '345', label: 'Expense' },
+                  ]}
+                  value={formik.values.categoryType}
+                  onChange={(value) => formik.setFieldValue('categoryType', value)}
+                  disabled={edit}
+                  autoFocus
+                  error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
+                  helperText={
+                    formik.touched.categoryType && formik.errors.categoryType
+                      ? String(formik.errors.categoryType)
+                      : ''
+                  }
+                />
+              </ShakingTextField>
+            </Grid2>
+            <Grid2 xs={6}>
+              <ShakingTextField
                 error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
-                helperText={
-                  formik.touched.categoryName && formik.errors.categoryName
-                    ? String(formik.errors.categoryName)
-                    : ''
-                }
-              />{' '}
-            </ShakingTextField>
-          </Grid2>
+              >
+                <CustomSelect
+                  label="Select Category *"
+                  options={categoryListBasedOnType}
+                  value={formik.values.categoryName}
+                  onChange={(value) => formik.setFieldValue('categoryName', value)}
+                  disabled={edit}
+                  error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
+                  helperText={
+                    formik.touched.categoryName && formik.errors.categoryName
+                      ? String(formik.errors.categoryName)
+                      : ''
+                  }
+                />{' '}
+              </ShakingTextField>
+            </Grid2>
 
-          <Grid2 xs={6}>
-            <ShakingTextField
-              error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
-            >
-              <NumericFormatCustom
-                size="small"
-                label="Fund Allocation *"
-                name="fundAllocation"
-                value={formik.values.fundAllocation}
-                onChange={formik.handleChange}
-                fullWidth
+            <Grid2 xs={6}>
+              <ShakingTextField
                 error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
-                helperText={
-                  formik.touched.fundAllocation && formik.errors.fundAllocation
-                    ? String(formik.errors.fundAllocation)
-                    : ''
-                }
-              />
-            </ShakingTextField>
+              >
+                <NumericFormatCustom
+                  size="small"
+                  label="Fund Allocation *"
+                  name="fundAllocation"
+                  value={formik.values.fundAllocation}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
+                  helperText={
+                    formik.touched.fundAllocation && formik.errors.fundAllocation
+                      ? String(formik.errors.fundAllocation)
+                      : ''
+                  }
+                />
+              </ShakingTextField>
+            </Grid2>
           </Grid2>
-        </Grid2>
-
-        <DialogActions>
-          <SubmitButton />
+        </Box>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              onClose(null, false);
+            }}
+            variant="outlined"
+            size="small"
+          >
+            Cancel
+          </Button>
+          <Button
+            startIcon={
+              <Iconify
+                icon={edit ? GlobalIcons.edit : GlobalIcons.submit}
+                width={edit ? 16 : 20}
+                height={edit ? 16 : 20}
+              />
+            }
+            type="submit"
+            variant="contained"
+            size="small"
+          >
+            {edit ? 'Update' : 'Submit'}
+          </Button>
         </DialogActions>
-      </Box>
-    </form>
+      </form>
+    </BackPopUpChecked>
   );
 };
 

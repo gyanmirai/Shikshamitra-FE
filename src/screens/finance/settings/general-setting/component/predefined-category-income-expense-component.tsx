@@ -154,7 +154,7 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
             editDialog.onFalse();
             setSelectedBudgetCategory(null);
           }}
-          isEditMode={false}
+          isEditMode={isEdit}
           data={selectedBudgetCategory}
           onSave={(newData) => {
             // Handle save logic here, e.g., refresh list or update state

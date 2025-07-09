@@ -7,11 +7,12 @@ import { GenderType } from 'src/enums/gender';
 import type { IInquiryData } from '.';
 import type { IInquiryFormValues } from './type';
 
-export const inquiryInitialValues: (editData: IInquiryData | null) => IInquiryFormValues = (
-  editData: IInquiryData | null
-) => ({
+export const inquiryInitialValues: (
+  editData: IInquiryData | null,
+  academicYearId: string
+) => IInquiryFormValues = (editData: IInquiryData | null, academicYearId: string) => ({
   medium: editData?.educationMediumId || '',
-  academicYear: editData?.academicYearId || '',
+  academicYear: editData?.academicYearId || academicYearId,
   class: editData?.standardId || '',
   lastName: editData?.lastName || '',
   city: editData ? { name: editData?.city } : { name: '' },

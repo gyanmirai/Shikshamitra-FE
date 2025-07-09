@@ -28,7 +28,7 @@ const FinanceExpenseTrackingScreen = () => {
   // Dialog control for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
   // State to store the currently selected expense data
-  const [selectedExpense, setSelectedExpense] = useState(expenseData);
+  const [selectedExpense, setSelectedExpense] = useState<any>();
   // Flag to determine if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
   // State to store all expense data for the table
@@ -118,7 +118,7 @@ const FinanceExpenseTrackingScreen = () => {
                 filterType: 'formattedNumber',
                 align: 'right',
                 render(value) {
-                  return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+                  return <Typography fontSize="13px">{formatNumber(value, 'INR')}</Typography>;
                 },
               },
 
@@ -162,6 +162,7 @@ const FinanceExpenseTrackingScreen = () => {
                       showDeleteIcon
                       handleDeleteClick={() => {
                         dialogForDeleteConfirmation.onTrue();
+                        setSelectedExpense(row);
                         // handleDelete(row);
                       }}
                       showEditIcon
@@ -185,11 +186,23 @@ const FinanceExpenseTrackingScreen = () => {
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
+            setSelectedExpense(null);
           }}
-          title="Delete Item"
-          content="Are you sure you want to delete?"
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete expense{' '}
+              <strong>{selectedExpense?.expenseCategory}</strong> ?
+            </>
+          }
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={false}
+              color="error"
+              onClick={() => {}}
+            >
               Yes
             </LoadingButton>
           }

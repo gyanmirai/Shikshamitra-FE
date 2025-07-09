@@ -15,6 +15,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -111,7 +112,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
   };
   const budgetCategoryDialog = useBoolean();
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
+    <Box display="flex" flexDirection="column" height="100%">
       {/* Header Section */}
 
       <CustomBreadcrumbs
@@ -119,7 +120,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Income Tracking' },
-          { name: 'Income Tracking Form' },
+          // { name: 'Income Tracking Form' },
         ]}
         sx={{ px: 1, mb: 2 }}
         description="The Income Tracking allows you to add and manage income records. Enter the income source, amount, date, and relevant details to keep the system updated with accurate financial data"
@@ -130,7 +131,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
       {/* Form Card */}
       <form
         onSubmit={formik.handleSubmit}
-        style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+        style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <Card
           sx={{
@@ -140,129 +141,124 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
             flexDirection: 'column',
           }}
         >
-          <Box display="flex" flexDirection="column" gap={2} height="100%" flexGrow={1}>
-            <Box flexGrow={1} p={2}>
-              <Grid container spacing={3} pt="10px">
-                <Grid item xs={6}>
-                  <ShakingTextField
-                    error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
-                  >
-                    <CustomSelect
-                      label="Income Category *"
-                      options={[
-                        { label: 'Donation', value: 'Donation' },
-                        { label: 'Fees', value: 'Fees' },
-                      ]}
-                      value={formik.values.incomeSource}
-                      autoFocus
-                      onChange={(value) => formik.setFieldValue('incomeSource', value)}
-                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                      disabled={isEdit}
-                      error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
-                      helperText={
-                        formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''
-                      }
-                      addOtherItemOnClick={budgetCategoryDialog.onTrue}
-                      addOtherItemText="Add New Category"
-                    />
-                  </ShakingTextField>
-                  {budgetCategoryDialog.value && (
-                    <CustomDialog
-                      title="Add Budget Category "
-                      open={budgetCategoryDialog.value}
-                      handleClose={budgetCategoryDialog.onFalse}
-                    >
-                      <BudgetCategoryDialog />
-                    </CustomDialog>
-                  )}
-                </Grid>
-                <Grid item xs={6}>
-                  <ShakingTextField
-                    error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
-                  >
-                    <TextField
-                      name="incomeName"
-                      label="Income Name *"
-                      value={formik.values.incomeName}
-                      onChange={(e) =>
-                        formik.setFieldValue('incomeName', capitalizeWords(e.target.value))
-                      }
-                      size="small"
-                      fullWidth
-                      error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
-                      helperText={formik.touched.incomeName && formik.errors.incomeName}
-                    />
-                  </ShakingTextField>
-                </Grid>
-                <Grid item xs={6}>
-                  <ShakingTextField
-                    error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
-                  >
-                    <NumericFormatCustom
-                      size="small"
-                      label="Income Amount *"
-                      name="incomeAmount"
-                      value={formik.values.incomeAmount}
-                      onChange={formik.handleChange}
-                      fullWidth
-                      error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
-                      helperText={formik.touched.incomeAmount && formik.errors.incomeAmount}
-                    />
-                  </ShakingTextField>
-                </Grid>
-                <Grid item xs={6}>
-                  <ShakingTextField
-                    error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                  >
-                    <CustomSelect
-                      label="Payment Method *"
-                      options={[{ label: 'Online', value: 'Online' }]}
-                      value={formik.values.paymentMethod}
-                      onChange={(value) => formik.setFieldValue('paymentMethod', value)}
-                      formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                      disabled={isEdit}
-                      error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                      helperText={
-                        formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''
-                      }
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid item xs={6}>
-                  <DatePicker
-                    label="Date *"
-                    value={formik.values.date}
-                    onChange={(newValue) => formik.setFieldValue('date', newValue)}
-                    format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={6}>
+                <ShakingTextField
+                  error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
+                >
+                  <CustomSelect
+                    label="Income Category *"
+                    options={[
+                      { label: 'Donation', value: 'Donation' },
+                      { label: 'Fees', value: 'Fees' },
+                    ]}
+                    value={formik.values.incomeSource}
+                    autoFocus
+                    onChange={(value) => formik.setFieldValue('incomeSource', value)}
+                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
                     disabled={isEdit}
-                    // error={Boolean(formik.touched.date && formik.errors.date)}
-                    // helperText={formik.touched.date ? formik.errors.date || '' : ''}
+                    error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
+                    helperText={formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''}
+                    // addOtherItemOnClick={budgetCategoryDialog.onTrue}
+                    // addOtherItemText="Add New Category"
                   />
-                </Grid>
-
-                <Grid item xs={12}>
+                </ShakingTextField>
+                {budgetCategoryDialog.value && (
+                  <CustomDialog
+                    title="Add Budget Category "
+                    open={budgetCategoryDialog.value}
+                    handleClose={budgetCategoryDialog.onFalse}
+                  >
+                    <BudgetCategoryDialog />
+                  </CustomDialog>
+                )}
+              </Grid>
+              <Grid item xs={6}>
+                <ShakingTextField
+                  error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
+                >
                   <TextField
-                    multiline
-                    rows={4}
-                    name="notes"
-                    label="Notes"
-                    value={formik.values.notes}
-                    onChange={(e) => {
-                      formik.setFieldValue('notes', capitalizeWords(e.target.value));
-                    }}
+                    name="incomeName"
+                    label="Income Name *"
+                    value={formik.values.incomeName}
+                    onChange={(e) =>
+                      formik.setFieldValue('incomeName', capitalizeWords(e.target.value))
+                    }
                     size="small"
                     fullWidth
-                    error={formik.touched.notes && Boolean(formik.errors.notes)}
-                    helperText={formik.touched.notes && formik.errors.notes}
+                    error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
+                    helperText={formik.touched.incomeName && formik.errors.incomeName}
                   />
-                </Grid>
+                </ShakingTextField>
               </Grid>
-            </Box>
+              <Grid item xs={6}>
+                <ShakingTextField
+                  error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
+                >
+                  <NumericFormatCustom
+                    size="small"
+                    label="Income Amount *"
+                    name="incomeAmount"
+                    value={formik.values.incomeAmount}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
+                    helperText={formik.touched.incomeAmount && formik.errors.incomeAmount}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid item xs={6}>
+                <ShakingTextField
+                  error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                >
+                  <CustomSelect
+                    label="Payment Method *"
+                    options={[{ label: 'Online', value: 'Online' }]}
+                    value={formik.values.paymentMethod}
+                    onChange={(value) => formik.setFieldValue('paymentMethod', value)}
+                    formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
+                    disabled={isEdit}
+                    error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
+                    helperText={
+                      formik.touched.paymentMethod ? formik.errors.paymentMethod || '' : ''
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            {/* CTA Section */}
-          </Box>
+              <Grid item xs={6}>
+                <DatePicker
+                  label="Date *"
+                  value={formik.values.date}
+                  onChange={(newValue) => formik.setFieldValue('date', newValue)}
+                  format="DD-MM-YYYY"
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                  disabled={isEdit}
+                  // error={Boolean(formik.touched.date && formik.errors.date)}
+                  // helperText={formik.touched.date ? formik.errors.date || '' : ''}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  multiline
+                  rows={4}
+                  name="notes"
+                  label="Notes"
+                  value={formik.values.notes}
+                  onChange={(e) => {
+                    formik.setFieldValue('notes', capitalizeWords(e.target.value));
+                  }}
+                  size="small"
+                  fullWidth
+                  error={formik.touched.notes && Boolean(formik.errors.notes)}
+                  helperText={formik.touched.notes && formik.errors.notes}
+                />
+              </Grid>
+            </Grid>
+          </Scrollbar>
+
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
             <CancelButton onClick={onClose} />
             <SubmitButton onClick={() => {}} />
