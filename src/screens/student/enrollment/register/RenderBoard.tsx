@@ -13,10 +13,14 @@ const RenderBoard = (props: any) => {
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
+  console.log('boards data--', board.items);
 
   const filteredBoard = board?.items?.filter(
     (item: any) => item.academicYearId === values.academicYear
   );
+
+  console.log('filteredBoard----', filteredBoard);
+
   return (
     <CustomSelect
       name="board"

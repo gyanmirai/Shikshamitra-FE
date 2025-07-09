@@ -26,5 +26,5 @@ export const addBudgetCategoryValidationSchema = Yup.object({
 
 export const addBudgetSubcategoryValidationSchema = Yup.object({
   budgetCategoryId: Yup.string().required('Budget Category is required'),
-  budgetSubcategoryName: Yup.string().required('Budget Subcategory Name is required'),
+  budgetSubcategoryName: Yup.string().required('Budget Sub Category Name is required'),
 });

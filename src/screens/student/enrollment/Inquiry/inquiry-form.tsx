@@ -84,11 +84,6 @@ const InquiryForm = ({
 }) => {
   const dialog = useBoolean();
 
-  const initialInquiryValues: IInquiryFormValues = useMemo(
-    () => inquiryInitialValues(editData),
-    [editData]
-  );
-
   /**
    * Hook to fetch inquiry preference data
    */
@@ -112,6 +107,11 @@ const InquiryForm = ({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
   });
+
+  const initialInquiryValues: IInquiryFormValues = useMemo(
+    () => inquiryInitialValues(editData, academicYear?.items[0].id),
+    [academicYear?.items, editData]
+  );
 
   /**
    * Handles form submission for both adding and updating student inquiries
@@ -206,11 +206,11 @@ const InquiryForm = ({
     validateOnBlur: true,
   });
 
-  useMemo(() => {
-    if (academicYear?.items?.length) {
-      setFieldValue('academicYear', academicYear?.items[0].id);
-    }
-  }, [setFieldValue, academicYear?.items]);
+  // useMemo(() => {
+  //   if (academicYear?.items?.length) {
+  //     setFieldValue('academicYear', academicYear?.items[0].id);
+  //   }
+  // }, [setFieldValue, academicYear?.items]);
 
   /**
    * Custom hook to check for changes in form values

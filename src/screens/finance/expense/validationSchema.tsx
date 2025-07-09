@@ -17,7 +17,7 @@ export const addExpenseDialogValidationSchema = Yup.object().shape({
 
   paymentStatus: Yup.string().required('Payment status is required'),
 
-  expenseName: Yup.string().required('Expense name is required'),
+  expenseName: Yup.string().required('Expense Name is required'),
 
   notes: Yup.string().nullable(),
 });

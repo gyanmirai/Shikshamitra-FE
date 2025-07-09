@@ -57,7 +57,7 @@ const FinanceGeneralSettingTab = () => {
         onClick: () => {
           setFeeHeadDialog.onTrue();
         },
-        component: () => <SetDefaultFeeComponent />,
+        component: (props: any) => <SetDefaultFeeComponent {...props} />,
       },
       {
         value: 'setPaymentMethodComponents',
@@ -68,7 +68,7 @@ const FinanceGeneralSettingTab = () => {
           setPaymentMethodDialog.onTrue();
           console.log('Add Payment Method clicked');
         },
-        component: () => <SetPaymentMethodComponent />,
+        component: (props: any) => <SetPaymentMethodComponent {...props} />,
       },
       {
         value: 'lateFeeType',
@@ -79,7 +79,7 @@ const FinanceGeneralSettingTab = () => {
           setLateFeeTypeDialog.onTrue();
           console.log('Add Late Fee Type clicked');
         },
-        component: () => <SetLateFeeTypeMethod />,
+        component: (props: any) => <SetLateFeeTypeMethod {...props} />,
       },
       {
         value: 'setPaymentTerm',
@@ -90,7 +90,7 @@ const FinanceGeneralSettingTab = () => {
           setPaymentTermDialog.onTrue();
           console.log('Add Payment Term clicked');
         },
-        component: () => <SetPaymentTerm />,
+        component: (props: any) => <SetPaymentTerm {...props} />,
       },
       {
         value: 'configurePaymentStatusOptions',
@@ -101,7 +101,7 @@ const FinanceGeneralSettingTab = () => {
           setPaymentStatusDialog.onTrue();
           console.log('Add Payment Status Option clicked');
         },
-        component: () => <ConfigurePaymentStatusComponent />,
+        component: (props: any) => <ConfigurePaymentStatusComponent {...props} />,
       },
       {
         value: 'presentCategoriesandDepartmentsforBudgeting',
@@ -117,7 +117,7 @@ const FinanceGeneralSettingTab = () => {
           presetCategoryAndDepartmentForBudgetDialog.onTrue();
           console.log('Add Budget Category clicked');
         },
-        component: () => <PresetCategoryAndDepartmentForBudget />,
+        component: (props: any) => <PresetCategoryAndDepartmentForBudget {...props} />,
       },
       {
         value: 'predefinedCategoriesForincomeandexpenses',
@@ -133,7 +133,7 @@ const FinanceGeneralSettingTab = () => {
           predefinedCategoryIncomeExpenseDialog.onTrue();
           console.log('Add Income/Expense Category clicked');
         },
-        component: () => <PredefinedCategoryIncomeExpenseComponent />,
+        component: (props: any) => <PredefinedCategoryIncomeExpenseComponent {...props} />,
       },
     ],
     [
@@ -227,10 +227,15 @@ const FinanceGeneralSettingTab = () => {
         <Scrollbar sx={{ p: 1 }}>
           {currentTab?.component && (
             <currentTab.component
-            // addSubjectDialog={addSubjectDialog}
-            // addElectiveGroupDialog={addElectiveGroupDialog}
-            // searchParams={searchParams}
-            // setSearchParams={setSearchParams}
+              setFeeHeadDialog={setFeeHeadDialog}
+              setPaymentMethodDialog={setPaymentMethodDialog}
+              setLateFeeTypeDialog={setLateFeeTypeDialog}
+              setPaymentTermDialog={setPaymentTermDialog}
+              setPaymentStatusDialog={setPaymentStatusDialog}
+              presetCategoryAndDepartmentForBudgetDialog={
+                presetCategoryAndDepartmentForBudgetDialog
+              }
+              predefinedCategoryIncomeExpenseDialog={predefinedCategoryIncomeExpenseDialog}
             />
           )}{' '}
         </Scrollbar>

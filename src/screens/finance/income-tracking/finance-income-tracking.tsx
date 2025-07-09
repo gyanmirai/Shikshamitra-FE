@@ -119,17 +119,17 @@ const FinanceIncomeTrackingScreen = () => {
                 align: 'right',
                 render(value, row) {
                   return (
-                    <Typography fontSize="12px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
+                    <Typography fontSize="13px">{formatNumber(row.incomeAmount, 'INR')}</Typography>
                   );
                 },
               },
-
               {
                 id: 'action',
-                label: 'Action',
+                label: 'Actions',
                 isFilter: false,
                 isSort: false,
-                minWidth: '70px',
+                minWidth: 70,
+                align: 'left',
                 sticky: true,
                 render(value, row: any) {
                   return (
@@ -144,6 +144,7 @@ const FinanceIncomeTrackingScreen = () => {
                       showDeleteIcon
                       handleDeleteClick={() => {
                         dialogForDeleteConfirmation.onTrue();
+                        setSelectedEntry(row);
                       }}
                       showEditIcon
                       handleEditClick={() => {
@@ -167,10 +168,20 @@ const FinanceIncomeTrackingScreen = () => {
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
           }}
-          title="Delete Item"
-          content="Are you sure you want to delete?"
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete <strong>{selectedEntry.incomeSource}?</strong>
+            </>
+          }
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={false}
+              color="error"
+              onClick={() => {}}
+            >
               Yes
             </LoadingButton>
           }

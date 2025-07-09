@@ -1110,7 +1110,7 @@ const ColumnFilterMenu: React.FC<{
         if (anchorEl?.column.filterType === 'enum') {
           return true;
         }
-        return false;
+        return !!value;
       }),
       min: yup.number().when('filterType', {
         is: 'between',

@@ -54,6 +54,7 @@ const RenderGeneralFormFields = (props: any) => {
   const isIdentificationEditable = useBoolean(isMainForm);
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
+  console.log('formik ---register values--', formik.values);
 
   const handleSave = async () => {
     await formik?.submitForm?.();

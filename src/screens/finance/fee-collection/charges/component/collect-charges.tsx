@@ -389,6 +389,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
           <Button
             disabled={selectedChargesAmount < 1}
             type="submit"
+            size="small"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.receiptIcon} />}
             onClick={() => {

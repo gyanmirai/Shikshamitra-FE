@@ -80,9 +80,7 @@ const FinanceFeeStructureOverviewComponent = () => {
               label: 'Receipt Book',
               filterType: 'string',
             },
-
             { id: 'applicableGrade', label: 'Class', filterType: 'number' },
-
             {
               id: 'grossFee',
               label: 'Gross Fees',
@@ -90,7 +88,7 @@ const FinanceFeeStructureOverviewComponent = () => {
               align: 'right',
               render(value, row) {
                 return (
-                  <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
+                  <Typography sx={{ fontSize: '13px' }}>{formatNumber(value, 'INR')}</Typography>
                 );
               },
             },
@@ -101,7 +99,7 @@ const FinanceFeeStructureOverviewComponent = () => {
               align: 'right',
               render(value, row) {
                 return (
-                  <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
+                  <Typography sx={{ fontSize: '13px' }}>{formatNumber(value, 'INR')}</Typography>
                 );
               },
             },
@@ -112,17 +110,15 @@ const FinanceFeeStructureOverviewComponent = () => {
               align: 'right',
               render(value, row) {
                 return (
-                  <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
+                  <Typography sx={{ fontSize: '13px' }}>{formatNumber(value, 'INR')}</Typography>
                 );
               },
             },
-
             {
               id: 'action',
               label: 'Action',
               isSort: false,
               isFilter: false,
-
               sticky: true,
               render(value, row: any) {
                 return (

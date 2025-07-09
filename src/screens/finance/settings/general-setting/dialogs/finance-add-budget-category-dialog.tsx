@@ -98,7 +98,13 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
           <Button
             type="submit"
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            startIcon={
+              <Iconify
+                icon={isEditMode ? GlobalIcons.edit : GlobalIcons.submit}
+                width={isEditMode ? 16 : 20}
+                height={isEditMode ? 16 : 20}
+              />
+            }
             disabled={isSubmitting}
             size="small"
           >
