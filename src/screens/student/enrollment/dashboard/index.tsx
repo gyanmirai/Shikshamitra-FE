@@ -12,67 +12,38 @@ import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
 import 'src/utils/convertABPPermissionToNavigation';
 
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
+import EntranceExamCard from './entranceExamCard';
 import AdmissionOverTime from './admission-over-time';
 import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
+import EnrollmentActivities from '../../studentProfile/studentDashbordComponent/recentEnrollmentActivities';
 
 const EnrollmentDashboardScreen = () => {
   const router = useRouter();
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        description="A glance of students admissions, withdrawals, and enrollments."
-        heading="Dashboard"
-        links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <DashBoardQuickAction
-            actions={[
-              {
-                icon: 'mdi:user-add',
-                label: 'Add New Inquiry',
-                href: '/student/enrollment/inquiry',
-                color: 'success',
-              },
-              {
-                icon: 'mingcute:search-line',
-                label: 'Track Enrollment',
-                href: '/student/enrollment/enrollment-status-tracking',
-                color: 'warning',
-              },
-              {
-                icon: 'simple-icons:googledocs',
-                label: 'General Reports',
-                href: '/student/enrollment/reports',
-                color: 'secondary',
-              },
-              // {
-              //   icon: 'uis:calender',
-              //   label: 'Schedule Exam',
-              //   href: '/student/enrollment/schedule-exam',
-              // }
-            ]}
-          />
-        }
-      />
       <Grid2 container spacing={2} sx={{ mb: 2 }}>
         <Grid2 xs={12}>
           <Overview />
         </Grid2>
-        <Grid2 xs={15} md={6}>
+        <Grid2 xs={12}>
+          <AdmissionOverTime />
+        </Grid2>
+        <Grid2 xs={12} md={6}>
           <BoardEnrollmentStatus />
         </Grid2>
-        <Grid2 xs={15} md={6}>
+        <Grid2 xs={12} md={6}>
           <OrganizationStatus />
         </Grid2>
         <Grid2 xs={12}>
-          <AdmissionOverTime />
+          <EntranceExamCard />
+        </Grid2>
+        <Grid2 xs={12}>
+          <EnrollmentActivities />
         </Grid2>
       </Grid2>
 

@@ -1,25 +1,41 @@
-import type { CardProps } from '@mui/material';
-import type { ChartOptions } from 'src/components/chart';
+import React, { useState, useEffect } from 'react';
 
-import React, { useState, useCallback } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Card, useTheme, CardHeader } from '@mui/material';
+import { Box, Card, useTheme, CardHeader, Typography } from '@mui/material';
 
 import { fCurrency } from 'src/utils/format-number';
 
-import { Chart, useChart, ChartSelect } from 'src/components/chart';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-const EnrollmentsTrends = () => (
-  <Grid2 xs={12} md={6}>
+import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
+
+const EnrollmentsTrends = () => {
+  const [selectedClass, setSelectedClass] = useState('1');
+  const [divisionOptions, setDivisionOptions] = useState([]);
+
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
+
+  useEffect(() => {
+    if (classData?.items?.length && !selectedClass) {
+      setSelectedClass(classData.items[0].name); // Assuming name is the ID
+    }
+  }, [classData, selectedClass]);
+
+  return (
     <AttendanceGraph
       title="Enrollment Trends"
-      // subheader="Statistics on balance over time"
-      selectedSeriesName="Last 6 Months"
+      classId={selectedClass}
+      onClassChange={(value) => {
+        setSelectedClass(value);
+      }}
+      classOptions={classData?.items || []}
       chart={{
-        series: [
-          {
-            name: 'Last 12 Months',
+        seriesByClass: {
+          '1': {
             categories: [
               'Jan',
               'Feb',
@@ -34,72 +50,83 @@ const EnrollmentsTrends = () => (
               'Nov',
               'Dec',
             ],
-            data: [
-              { name: '', data: [24, 41, 35, 151, 49, 151, 49, 151, 49, 151, 49, 151] },
-              // { name: 'Savings', data: [24, 56, 77, 88, 99] },
-              // { name: 'Investment', data: [40, 34, 77, 88, 99] },
-            ],
+            data: [{ name: '', data: [24, 41, 35, 151, 49, 151, 49, 151, 49, 151, 49, 151] }],
           },
-          {
-            name: 'Last 6 Months',
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-            data: [
-              { name: '', data: [83, 112, 119, 88, 103, 112] },
-              // { name: 'Savings', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-              // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
+          '2': {
+            categories: [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
             ],
+            data: [{ name: '', data: [83, 112, 119, 88, 103, 112, 90, 111, 88, 103, 112, 105] }],
           },
-        ],
+        },
       }}
       sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}
     />
-  </Grid2>
-);
+  );
+};
 
 export default EnrollmentsTrends;
 
-type Props3 = CardProps & {
-  title?: string;
+type Props3 = {
+  title: string;
   subheader?: string;
   chart: {
-    colors?: string[];
-    series: {
-      name: string;
-      categories: string[];
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
-    options?: ChartOptions;
+    seriesByClass: {
+      [classId: string]: {
+        categories: string[];
+        data: { name: string; data: number[] }[];
+      };
+    };
   };
-  selectedSeriesName?: string;
+  classId: string;
+  classOptions: any[]; // Array of classes for dropdown
+  onClassChange: (value: any) => void;
+  sx?: any;
 };
 
-export function AttendanceGraph({ title, subheader, chart, selectedSeriesName, ...other }: Props3) {
+export function AttendanceGraph({
+  title,
+  subheader,
+  chart,
+  classId,
+  classOptions,
+  onClassChange,
+  ...other
+}: Props3) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState(selectedSeriesName || 'Yearly');
+  const [selectedClass, setSelectedClass] = useState('');
 
-  const currentSeries = chart.series.find((i) => i.name === selectedSeries);
+  const { data: classData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassQuery,
+  });
 
-  const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    theme.palette.warning.main,
-    theme.palette.info.main,
-  ];
+  // const [selectedSeries, setSelectedSeries] = useState(selectedSeriesName || 'Yearly');
+
+  const currentSeries = chart.seriesByClass[classId];
 
   const chartOptions = useChart({
     stroke: { width: 2, colors: ['transparent'] },
-    colors: chartColors,
-    xaxis: { categories: currentSeries?.categories },
-    tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
-    ...chart.options,
+    colors: [theme.palette.primary.main],
+    xaxis: { categories: currentSeries?.categories || [] },
+    tooltip: {
+      y: {
+        formatter: (value: number) => fCurrency(value),
+      },
+    },
   });
-
-  const handleChangeSeries = useCallback((newValue: string) => {
-    setSelectedSeries(newValue);
-  }, []);
 
   return (
     <Card {...other}>
@@ -107,13 +134,18 @@ export function AttendanceGraph({ title, subheader, chart, selectedSeriesName, .
         title={title}
         subheader={subheader}
         action={
-          <ChartSelect
-            options={chart.series.map((item) => item.name)}
-            value={selectedSeries}
-            onChange={handleChangeSeries}
+          <CustomSelect
+            label="Class"
+            name="className"
+            size="small"
+            options={classOptions}
+            labelKey="name"
+            valueKey="name"
+            value={classId}
+            onChange={onClassChange}
+            formControlProps={{ sx: { minWidth: 200 } }}
           />
         }
-        sx={{ mb: 3 }}
       />
 
       {/* <ChartLegends
@@ -124,14 +156,22 @@ export function AttendanceGraph({ title, subheader, chart, selectedSeriesName, .
           sx={{ px: 3, gap: 3 }}
         /> */}
 
-      <Chart
-        type="bar"
-        series={currentSeries?.data}
-        options={chartOptions}
-        height={320}
-        loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
-      />
+      {currentSeries ? (
+        <Chart
+          type="bar"
+          series={currentSeries.data}
+          options={chartOptions}
+          height={320}
+          loadingProps={{ sx: { p: 2.5 } }}
+          sx={{ py: 2.5, pl: 1, pr: 2.5 }}
+        />
+      ) : (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            No data available for selected class.
+          </Typography>
+        </Box>
+      )}
     </Card>
   );
 }

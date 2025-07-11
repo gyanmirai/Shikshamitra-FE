@@ -9,24 +9,31 @@ import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart } from 'src/components/chart';
 
-import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
+import { AnalyticsCurrentVisits } from './organization-status';
 
-const BoardEnrollmentStatus = () => (
-  <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
-    <AppCurrentDownload
-      title="Board Enrollment Status"
-      chart={{
-        series: [
-          { label: 'Enrolled', value: 44 },
-          { label: 'Pending', value: 32 },
-          { label: 'Declined', value: 11 },
-        ],
-        colors: ['#34c759', '#ff9500', '#ff3b30'], // Optional: customize
-      }}
-      sx={{ height: '100%' }}
-    />
-  </Card>
-);
+const BoardEnrollmentStatus = () => {
+  const theme = useTheme();
+  return (
+    <Card sx={{ height: '100%' }}>
+      <AnalyticsCurrentVisits
+        title="Entrance Exam Status"
+        chart={{
+          series: [
+            { label: 'Passed (35%)', value: 35 },
+            { label: 'Failed (25%)', value: 25 },
+            { label: 'Awaiting Result (15%)', value: 15 },
+          ],
+          colors: [
+            theme.palette.success.main,
+            theme.palette.warning.main,
+            theme.palette.error.main,
+          ],
+        }}
+        sx={{ boxShadow: 'none' }}
+      />
+    </Card>
+  );
+};
 
 export default BoardEnrollmentStatus;
 
