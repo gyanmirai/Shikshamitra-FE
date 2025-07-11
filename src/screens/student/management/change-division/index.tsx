@@ -1,9 +1,10 @@
 'use client';
 
 import type { Division } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 
-import { useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
@@ -49,6 +50,8 @@ const ChangeDivisionScreen = ({
     currentQueryAndMutation: useChangeDivisionMutation,
   });
 
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
   // Handle save button click to update student divisions
   const handelSave = async () => {
     try {
@@ -88,6 +91,7 @@ const ChangeDivisionScreen = ({
             variant="contained"
             onClick={handelSave}
             size="small"
+            disabled={!isChanges}
           >
             Save
           </LoadingButton>

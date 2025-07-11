@@ -11,7 +11,7 @@ export const generalFieldValidation = Yup.object({
   firstName: Yup.string().required('First Name is required'),
   lastName: Yup.string().required('Last Name is required'),
   middleName: Yup.string(),
-  dateOfBirth: Yup.mixed()
+  dob: Yup.mixed()
     .test(
       'is-valid-dayjs',
       'Date of Birth is required',
