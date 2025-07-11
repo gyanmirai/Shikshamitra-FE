@@ -2,8 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -13,6 +13,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 
 import { Iconify } from 'src/components/iconify';
@@ -47,6 +48,7 @@ const FinanceReceiptBookSetting = () => {
   // State to store all receipt book entries for the table
   const [tableData, setTableData] = useState(initialData);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   // Dialog state for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
@@ -56,6 +58,7 @@ const FinanceReceiptBookSetting = () => {
       setTimeout(() => {
         setSelectedEntry(null);
         setIsEdit(false);
+        dispatch(setIsChanges(false));
       }, 200); // Adjust delay to match your dialog animation
     };
 
@@ -68,18 +71,6 @@ const FinanceReceiptBookSetting = () => {
       receiptBookDialog.onFalse();
       resetState();
     }
-  };
-
-  // Effect to handle changes in selected entry or edit mode
-  useEffect(() => {}, [selectedEntry, isEdit]);
-
-  // Deprecated: Legacy open state for dialog - consider removing
-  const [open, setOpen] = useState(false);
-
-  // Deprecated: Legacy close handler - consider removing
-  const closeHandler = () => {
-    setIsEdit(false);
-    setOpen(false);
   };
   return (
     <>
@@ -102,7 +93,7 @@ const FinanceReceiptBookSetting = () => {
               }}
               variant="contained"
             >
-              New Receipt Book
+              Receipt Book
             </Button>
           }
           description="Manage your receipt books - create, edit and control active status of receipt books for financial transactions"
@@ -255,13 +246,14 @@ const FinanceReceiptBookSetting = () => {
             receiptBookDialog.onFalse();
             setTimeout(() => {
               setSelectedEntry(null);
+              setIsEdit(false);
             }, 200); // 200ms delay – adjust if needed
           }}
           open={receiptBookDialog.value}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">
-                {isEdit ? 'Edit Receipt Book' : 'Add Receipt Book'}
+                {isEdit ? 'Update Receipt Book' : 'Add Receipt Book'}
               </Typography>
               <CustomTooltip
                 arrow

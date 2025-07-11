@@ -136,7 +136,13 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
           type="submit"
           variant="contained"
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={isEditMode ? GlobalIcons.edit : GlobalIcons.submit}
+              width={isEditMode ? 16 : 20}
+              height={isEditMode ? 16 : 20}
+            />
+          }
           disabled={isSubmitting}
         >
           {isEditMode ? 'Update' : 'Submit'}

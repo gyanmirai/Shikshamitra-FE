@@ -23,7 +23,6 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
     <>
       <CustomizableTable
         noDataText="No Fee Head Added"
-        isFilter={false}
         isShowedDense={false}
         isSearch={false}
         tableId="added-fee-head-for-fee-structure-table"
@@ -45,9 +44,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           {
             id: 'applicableGrade',
             label: 'Class',
-            isFilter: false,
             align: 'left',
-
+            isFilter: false,
             isSort: false,
             render(value, row) {
               return (
@@ -89,9 +87,8 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           {
             id: 'payableFee',
             label: 'Payable Fee (₹)',
-            isFilter: false,
             align: 'left',
-
+            isFilter: false,
             isSort: false,
             render(value, row) {
               return (
@@ -121,6 +118,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             label: 'Discount Remark',
             isFilter: false,
             isSort: false,
+            align: 'left',
             render(value, row) {
               return (
                 <Typography sx={{ fontSize: '13px', textTransform: 'capitalize' }}>
@@ -133,7 +131,6 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'paymentMethod',
             label: 'Payment Method',
             align: 'left',
-
             isFilter: false,
             isSort: false,
             render(value, row) {
@@ -151,7 +148,7 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
             id: 'lateFeeChargesType',
             label: 'Late Fee Type',
             align: 'left',
-            isFilter: false,
+
             isSort: false,
             render(value, row) {
               return (
@@ -175,7 +172,6 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
               );
             },
           },
-
           // { id: 'paymentDueDate', label: 'Payment Due Date' },
           {
             id: 'action',
@@ -209,10 +205,16 @@ const FinanceAddedFeeHeadForFeeStructure: React.FC<IFinanceAddedFeeHeadForFeeStr
           onClose={() => {
             dialogForDeleteConfirmation.onFalse();
           }}
-          title="Delete Item"
+          title="Delete"
           content="Are you sure you want to delete?"
           action={
-            <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={false}
+              color="error"
+              onClick={() => {}}
+            >
               Yes
             </LoadingButton>
           }

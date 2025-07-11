@@ -15,6 +15,7 @@ import capitalizeWords from 'src/utils/capitalizeText';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -107,17 +108,16 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
 
   const budgetCategoryDialog = useBoolean();
   return (
-    <Box display="flex" flexDirection="column" gap={2} height="100%">
-      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <CustomBreadcrumbs
-          heading="Expense Tracking"
-          links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
-          sx={{ px: 1, mb: 2 }}
-          isBack
-          onBack={handleCloseDialog}
-          description="The Expense Tracking dialog allows you to add and manage expense records. Enter the expense category, amount, date, and relevant details to ensure accurate financial tracking."
-        />
-      </Box>
+    <Box display="flex" flexDirection="column" height="100%">
+      <CustomBreadcrumbs
+        heading="Expense Tracking"
+        links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
+        sx={{ px: 1, mb: 2 }}
+        isBack
+        onBack={handleCloseDialog}
+        description="The Expense Tracking dialog allows you to add and manage expense records. Enter the expense category, amount, date, and relevant details to ensure accurate financial tracking."
+      />
+
       {/* <Box px="20px">
         {showExistingEntryMessage ? (
           <Typography component="span" fontSize="14" color="red">
@@ -129,7 +129,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
       </Box> */}
       <form
         onSubmit={formik.handleSubmit}
-        style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+        style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
       >
         <Card
           sx={{
@@ -139,8 +139,8 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
             flexDirection: 'column',
           }}
         >
-          <Box display="flex" flexDirection="column" gap={2} height="100%" flexGrow={1} p={2}>
-            <Grid container spacing={3} pt="10px">
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
               <Grid item xs={6}>
                 <ShakingTextField
                   error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
@@ -157,8 +157,8 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                     helperText={
                       formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
                     }
-                    addOtherItemOnClick={budgetCategoryDialog.onTrue}
-                    addOtherItemText="Add New Category"
+                    // addOtherItemOnClick={budgetCategoryDialog.onTrue}
+                    // addOtherItemText="Add New Category"
                   />
                 </ShakingTextField>
                 {budgetCategoryDialog.value && (
@@ -265,7 +265,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                 />
               </Grid>
             </Grid>
-          </Box>
+          </Scrollbar>
 
           <Box display="flex" justifyContent="flex-end" gap={2} p={2}>
             <CancelButton onClick={onClose} />

@@ -18,11 +18,12 @@ import SetFeeHeadDialog from '../dialogs/set-fee-head-dialog';
 
 import type { IFinanceFeeSetHeadInterface } from '../dialogs/finance-general-settings-interface';
 
-const SetDefaultFeeComponent = () => {
+const SetDefaultFeeComponent = ({ setFeeHeadDialog }: any) => {
   // Dialog control for fee head add/edit form
-  const setFeeHeadDialog = useBoolean();
+  // const setFeeHeadDialog = useBoolean();
   // Dialog control for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
+  const [isEdit, setIsEdit] = useState(false);
 
   // State to store selected fee head for editing
   const [selectedFeeHead, setSelectedFeeHead] = useState<IFinanceFeeSetHeadInterface | null>(null);
@@ -73,7 +74,28 @@ const SetDefaultFeeComponent = () => {
         <Grid item xs={12}>
           <Box>
             <CustomizableTable
-              noDataText={<>No Fee Head Data Found</>}
+              noDataText={
+                <>
+                  No Late Fee Type Found
+                  <Box
+                    onClick={() => {
+                      setIsEdit(false);
+                      setFeeHeadDialog.onTrue();
+                    }}
+                    color="primary.main"
+                    fontWeight={600}
+                    sx={{
+                      '&:hover': {
+                        cursor: 'pointer',
+                        color: 'primary.main',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Add Late Fee Type
+                  </Box>
+                </>
+              }
               isLoading={isFeeHeadLoading}
               tableId="set-default-fee"
               columns={[
@@ -105,6 +127,7 @@ const SetDefaultFeeComponent = () => {
                         handleEditClick={() => {
                           setSelectedFeeHead(row as IFinanceFeeSetHeadInterface);
                           setFeeHeadDialog.onTrue();
+                          setIsEdit(true);
                         }}
                         handleDeleteClick={() => {
                           setSelectedFeeHeadId(row.id);
@@ -157,7 +180,7 @@ const SetDefaultFeeComponent = () => {
             setFeeHeadDialog.onFalse();
             setSelectedFeeHead(null);
           }}
-          isEditMode
+          isEditMode={isEdit}
           data={selectedFeeHead}
           onSave={handleSaveFeeHead}
         />

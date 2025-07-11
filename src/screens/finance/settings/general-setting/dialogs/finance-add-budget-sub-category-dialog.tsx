@@ -62,21 +62,21 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
           height: '100%',
         }}
       >
-        <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
             <ShakingTextField error={touched.budgetCategoryId && Boolean(errors.budgetCategoryId)}>
               <CustomSelect
                 label="Budget Category *"
                 options={[
-                  { value: 'income', label: 'Income' },
-                  { value: 'expense', label: 'Expense' },
-                  { value: 'asset', label: 'Asset' },
-                  { value: 'liability', label: 'Liability' },
-                  { value: 'equity', label: 'Equity' },
-                  { value: 'revenue', label: 'Revenue' },
-                  { value: 'cogs', label: 'Cost of Goods Sold' },
-                  { value: 'operating', label: 'Operating Expenses' },
-                  { value: 'other', label: 'Other' },
+                  { value: 'Income', label: 'Income' },
+                  { value: 'Expense', label: 'Expense' },
+                  { value: 'Asset', label: 'Asset' },
+                  { value: 'Liability', label: 'Liability' },
+                  { value: 'Equity', label: 'Equity' },
+                  { value: 'Revenue', label: 'Revenue' },
+                  { value: 'Cost of Goods Sold', label: 'Cost of Goods Sold' },
+                  { value: 'Operating Expenses', label: 'Operating Expenses' },
+                  { value: 'Other', label: 'Other' },
                 ]}
                 value={values.budgetCategoryId}
                 onChange={(value) => setFieldValue('budgetCategoryId', value)}
@@ -89,13 +89,13 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid item xs={12}>
             <ShakingTextField error={isSubcategoryNameError}>
               <TextField
                 size="small"
                 fullWidth
                 name="budgetSubcategoryName"
-                label="Budget Subcategory Name *"
+                label="Budget Sub Category Name *"
                 value={values.budgetSubcategoryName}
                 onChange={(e) => {
                   const value = e.target.value
@@ -124,7 +124,13 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
         <Button
           type="submit"
           variant="contained"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={isEditMode ? GlobalIcons.edit : GlobalIcons.submit}
+              width={isEditMode ? 16 : 20}
+              height={isEditMode ? 16 : 20}
+            />
+          }
           disabled={isSubmitting}
           size="small"
         >
