@@ -11,22 +11,12 @@ import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
 
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 import OverviewCard from './overview';
 import StudentBirthDate from './student-birthdate';
-import EnrollmentsTrends from './enrollments-trends';
+import RecentActivities from './recent-activities';
+import HouseDistribution from './house-distribution';
 import StudentStrengthClassWise from './student-strength-class-wise';
-import RecentActivitiesNotification from './recent-activities-notification';
-
-const dashBoardSections = [
-  <OverviewCard />,
-  <RecentActivitiesNotification />,
-  <StudentBirthDate />,
-  <EnrollmentsTrends />,
-  <StudentStrengthClassWise />,
-];
 
 const Overview = () => {
   const [sections, setSections] = useState([
@@ -53,57 +43,28 @@ const Overview = () => {
   ]);
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Dashboard"
-        description="Quick access to each students profile enrollment details grades and more  all in one place."
-        links={[{ name: 'Student Record' }, { name: 'Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <DashBoardQuickAction
-            actions={[
-              {
-                icon: 'mdi:user-add',
-                label: 'Add New Inquiry',
-                href: '/student/enrollment/inquiry',
-                color: 'primary',
-              },
-              {
-                icon: 'mingcute:search-line',
-                label: 'Track Enrollment',
-                href: '/student/enrollment/enrollment-status-tracking',
-                color: 'warning',
-              },
-              {
-                icon: 'simple-icons:googledocs',
-                label: 'General Reports',
-                href: '/student/reports',
-                color: 'secondary',
-              },
-            ]}
-          />
-        }
-      />
       {/* <CustomizableView sections={sections} setSections={setSections} /> */}
-      {/* <Grid2 container spacing={3}>
+      <Grid2 container spacing={2} sx={{ mb: 2 }}>
         <Grid2 xs={12}>
           <OverviewCard />
         </Grid2>
+
         <Grid2 xs={12} md={6}>
-          <RecentActivitiesNotification />
+          <HouseDistribution />
         </Grid2>
-        <Grid2 xs={12} md={6} lg={4}>
-          <StudentBirthDate />
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={4}>
-          <EnrollmentsTrends />
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={4}>
+        <Grid2 xs={12} md={6}>
           <StudentStrengthClassWise />
         </Grid2>
-      </Grid2> */}
-      <Grid2 container spacing={3}>
-        {sections.map((section: any) => dashBoardSections[section.id])}
+        <Grid2 xs={12} md={6}>
+          <StudentBirthDate />
+        </Grid2>
+        <Grid2 xs={12} md={6}>
+          <RecentActivities />
+        </Grid2>
       </Grid2>
+      {/* <Grid2 container spacing={2} sx={{ mb: 2 }}>
+        <Grid2 xs={12}>{sections.map((section: any) => dashBoardSections[section.id])}</Grid2>
+      </Grid2> */}
     </Box>
   );
 };

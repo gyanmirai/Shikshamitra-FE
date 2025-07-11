@@ -19,7 +19,7 @@ const ViewAllBirthday = () => (
           label: 'Class',
         },
         {
-          id: 'Division',
+          id: 'division',
           label: 'division',
         },
       ]}

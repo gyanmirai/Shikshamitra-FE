@@ -14,7 +14,7 @@ export const ScheduleExamStatusColor = {
   [ScheduleExamStatus.Published]: 'info',
   [ScheduleExamStatus.Submitted]: 'success',
   [ScheduleExamStatus.Reviewed]: 'success',
-  [ScheduleExamStatus.Completed]: 'sucess',
+  [ScheduleExamStatus.Completed]: 'success',
   [ScheduleExamStatus['Needs Review']]: 'warning',
 };
 
