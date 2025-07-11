@@ -3,56 +3,69 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState } from 'react';
 
-import { Box, Card, Divider, useTheme, CardHeader, Typography } from '@mui/material';
+import { Card, Divider, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
 
-import CustomSelect from 'src/components/custom-select';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+
 const OrganizationStatus = () => {
+  const theme = useTheme();
+
   const { data: organization, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOrganizationQuery,
   });
+  const ecommerceChart = {
+    series: [
+      { label: `Inquiry ${45}%`, value: 45 },
+      { label: `Registered ${30}%`, value: 30 },
+      { label: `Admission ${20}%`, value: 20 },
+    ],
+    colors: [
+      [theme.palette.success.light, theme.palette.success.main], // Inquiry (Green)
+      [theme.palette.info.light, theme.palette.info.main], // Registered (Purple)
+      [theme.palette.primary.light, theme.palette.primary.main], // Admission (Cyan/Blue)
+    ],
+  };
 
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   return (
-    <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
-      <Box display="flex" justifyContent="space-between" alignContent="center">
-        <Typography variant="h6">Organization Status</Typography>
-        <CustomSelect
-          options={organization?.items || []}
-          value={selectedOrganization}
-          onChange={(val) => {
-            setSelectedOrganization(val as string);
-          }}
-          isLoading={isLoading}
-          label="Select organization"
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{
-            sx: {
-              maxWidth: '200px',
-              width: '100%',
-            },
-          }}
-        />
-      </Box>
-
-      <AnalyticsCurrentVisits
-        title=""
+    <Card sx={{ height: '100%' }}>
+      <AnalyticsWebsiteVisits
+        title="Class-wise Participation"
+        subheader=""
         chart={{
+          categories: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
           series: [
-            { label: 'active', value: 100 },
-            { label: 'inactive', value: 200 },
-            { label: 'pending', value: 300 },
+            {
+              name: 'Participation',
+              data: [9, 2, 8, 9, 8], // Adjust based on actual participation bar height (from the image)
+            },
           ],
+          options: {
+            tooltip: {
+              custom: ({ series, seriesIndex, dataPointIndex }) => {
+                const participants = [30, 10, 25, 28, 26]; // Example data for each class
+                const scores = [80, 70, 75, 85, 78]; // Average scores for each class
+
+                return `
+            <div style="padding: 8px; font-size: 13px;">
+              <strong>Class ${dataPointIndex + 1}</strong><br/>
+              <span style="color: green;">●</span> Participant: ${participants[dataPointIndex]}<br/>
+              <span style="color: orange;">●</span> Average Score: ${scores[dataPointIndex]}%
+            </div>
+          `;
+              },
+            },
+          },
         }}
-        sx={{ boxShadow: 'none', height: '100%' }}
+        sx={{ height: '100%' }}
       />
     </Card>
   );

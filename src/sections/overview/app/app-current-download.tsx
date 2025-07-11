@@ -76,7 +76,7 @@ export function AppCurrentDownload({ title, icon, subheader, chart, ...other }: 
 
   return (
     <Card {...other}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         {icon && <Iconify icon={icon} width={32} height={32} sx={{ color: 'primary.main' }} />}
         <CardHeader title={title} subheader={subheader} sx={{ mb: 3 }} />
       </Box>

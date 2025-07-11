@@ -3,14 +3,12 @@ import type { ChartOptions } from 'src/components/chart';
 
 import { useState, useCallback } from 'react';
 
-import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
-import { Iconify } from 'src/components/iconify';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -66,33 +64,24 @@ export function EcommerceYearlySales({
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
   return (
     <Card {...other}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
-        <Iconify icon="mdi:trending-up" width={32} height={32} sx={{ color: 'primary.main' }} />
-        <CardHeader
-          title={title}
-          subheader={subheader}
-          action={
-            <ChartSelect
-              options={chart.series.map((item) => item.name)}
-              value={selectedSeries}
-              onChange={handleChangeSeries}
-            />
-          }
-          sx={{ mb: 3 }}
-        />
-      </Box>
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        action={
+          <ChartSelect
+            options={chart.series.map((item) => item.name)}
+            value={selectedSeries}
+            onChange={handleChangeSeries}
+          />
+        }
+        sx={{ mb: 3 }}
+      />
 
-      {isShowChartLegend ? (
+      {isShowChartLegend && (
         <ChartLegends
           colors={chartOptions?.colors}
           labels={chart.series[0].data.map((item) => item.name)}
           values={[fShortenNumber(1234), fShortenNumber(6789)]}
-          sx={{ px: 3, gap: 3 }}
-        />
-      ) : (
-        <ChartLegends
-          colors={chartOptions?.colors}
-          labels={chart.series[0].data.map((item) => item.name)}
           sx={{ px: 3, gap: 3 }}
         />
       )}

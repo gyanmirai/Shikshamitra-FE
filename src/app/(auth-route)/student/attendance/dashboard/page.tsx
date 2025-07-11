@@ -1,7 +1,7 @@
 import React from 'react';
 
-import StudentAttendanceDashboardScreen from 'src/screens/student/attendance/dashboard';
+import StudentAttendanceDashboard from 'src/screens/student/attendance/attendanceDashboard';
 
-const StudentAttendanceDashboard = () => <StudentAttendanceDashboardScreen />;
+const StudentAttendanceDashboardPage = () => <StudentAttendanceDashboard />;
 
-export default StudentAttendanceDashboard;
+export default StudentAttendanceDashboardPage;

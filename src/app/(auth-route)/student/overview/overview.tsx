@@ -1,58 +1,102 @@
-import React from 'react';
+import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
+import React, { useState } from 'react';
 
-import { CONFIG } from 'src/config-global';
+import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
 
-import { AnalyticsWidgetSummary } from 'src/sections/overview/analytics/analytics-widget-summary';
+import CustomizableView from 'src/components/customizable-view';
 
-const Overview = () => (
-  <>
-    <Grid2 xs={12} md={6} lg={4}>
-      <AnalyticsWidgetSummary
-        title="Total Students"
-        percent={2.6}
-        total={714000}
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
+const Overview = () => {
+  const [cards, setCards] = useState<ICardItem[]>([
+    {
+      id: '0',
+      icon: 'mdi:graduation-cap', // Total Students
+      title: 'Total Students',
+      count: 1247,
+      color: 'success.main',
+      bgColor: 'success',
+      href: '/student/enrollment/students',
+      width: 4,
+      labels: [],
+    },
+    {
+      id: '1',
+      icon: 'fluent:document-bullet-list-24-filled', // GR Numbers Generated
+      title: 'GR Numbers Generated',
+      count: 1189,
+      color: 'info.main',
+      bgColor: 'info',
+      href: '/student/enrollment/gr-numbers',
+      width: 4,
+      labels: [],
+    },
+    {
+      id: '2',
+      icon: 'material-symbols:bookmark-outline', // Roll Numbers Generated
+      title: 'Roll Numbers Generated',
+      count: 1203,
+      color: 'warning.main',
+      bgColor: 'warning',
+      href: '/student/enrollment/roll-numbers',
+      width: 4,
+      labels: [],
+    },
+    {
+      id: '3',
+      icon: 'tabler:arrows-exchange-2', // Division Change
+      title: 'Division Change',
+      count: 47,
+      color: 'info.main',
+      bgColor: 'info',
+      href: '/student/enrollment/division-change',
+      width: 4,
+      labels: [],
+    },
+    {
+      id: '4',
+      icon: 'icon-park-outline:exchange', // Class Change This Term
+      title: 'Class Change This Term',
+      count: 23,
+      color: 'error.main',
+      bgColor: 'error',
+      href: '/student/enrollment/class-change',
+      width: 4,
+      labels: [],
+    },
+    {
+      id: '5',
+      icon: 'iconoir:add-square', // Add New Card
+      title: 'Add New Card',
+      count: 560,
+      color: 'success.main',
+      bgColor: 'success',
+      href: '/student/enrollment/add-card',
+      width: 4,
+      labels: [],
+    },
+  ]);
+
+  const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card, index) => {
+    acc[card.id] = (
+      <StudentEnrollmentCard
+        icon={card.icon}
+        title={card.title}
+        count={card.count}
+        color={card.color}
+        bgColor={card.bgColor}
+        href={card.href}
+        labels={card.labels}
       />
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={4}>
-      <AnalyticsWidgetSummary
-        title="Total Male Students"
-        percent={2.6}
-        total={714000}
-        color="warning"
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
-      />
-    </Grid2>
-    <Grid2 xs={12} md={6} lg={4}>
-      <AnalyticsWidgetSummary
-        title="Total Female Students"
-        percent={2.6}
-        total={714000}
-        color="error"
-        icon={
-          <img alt="icon" src={`${CONFIG.site.basePath}/assets/icons/glass/ic-glass-bag.svg`} />
-        }
-        chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-          series: [22, 8, 35, 50, 82, 84, 77, 12],
-        }}
-      />
-    </Grid2>
-  </>
-);
+    );
+    return acc;
+  }, {});
+  return (
+    <CustomizableView
+      sections={cards}
+      setSections={setCards}
+      dashBoardSections={dashBoardSections}
+    />
+  );
+};
 
 export default Overview;

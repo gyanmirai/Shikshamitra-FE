@@ -3,7 +3,6 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState, useCallback } from 'react';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { Card, useTheme, CardHeader } from '@mui/material';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
@@ -11,70 +10,64 @@ import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart
 const AdmissionOverTime = () => {
   const theme = useTheme();
   return (
-    <Grid2 xs={12}>
-      <EcommerceYearlySales
-        title="Admission over time"
-        subheader="(+43%) than last year"
-        chart={{
-          categories: [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
-          ],
-          series: [
-            {
-              name: '2022',
-              data: [
-                {
-                  name: 'Admission',
-                  data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                },
-                {
-                  name: 'Inquiry',
-                  data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                },
-                {
-                  name: 'Registration',
-                  data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                },
-              ],
-            },
-            {
-              name: '2023',
-              data: [
-                {
-                  name: 'Admission',
-                  data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-                },
-                {
-                  name: 'Inquiry',
-                  data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-                },
-                {
-                  name: 'Registration',
-                  data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51],
-                },
-              ],
-            },
-          ],
-          colors: [
-            theme.palette.primary.main,
-            theme.palette.warning.main,
-            theme.palette.error.main,
-          ],
-        }}
-        sx={{ height: '100%', boxShadow: 'var(--shadows-2)' }}
-      />
-    </Grid2>
+    <EcommerceYearlySales
+      title="Admission over time"
+      subheader="(+43%) than last year"
+      chart={{
+        categories: [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ],
+        series: [
+          {
+            name: '2022',
+            data: [
+              {
+                name: 'Admission',
+                data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
+              },
+              {
+                name: 'Inquiry',
+                data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
+              },
+              {
+                name: 'Registration',
+                data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
+              },
+            ],
+          },
+          {
+            name: '2023',
+            data: [
+              {
+                name: 'Admission',
+                data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
+              },
+              {
+                name: 'Inquiry',
+                data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
+              },
+              {
+                name: 'Registration',
+                data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51],
+              },
+            ],
+          },
+        ],
+        colors: [theme.palette.primary.main, theme.palette.warning.main, theme.palette.error.main],
+      }}
+      sx={{ height: '100%', boxShadow: 'var(--shadows-2)' }}
+    />
   );
 };
 

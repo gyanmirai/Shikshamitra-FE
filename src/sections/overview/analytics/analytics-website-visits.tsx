@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
 import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
-import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 
@@ -76,9 +75,8 @@ export function AnalyticsWebsiteVisits({
   });
   return (
     <Box>
-      <Box display="flex" alignItems="center" justifyContent="space-between" pr="20px" pt="10px">
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, ml: 3 }}>
-          <Iconify icon={icon || ''} width={32} height={32} sx={{ color: 'primary.main' }} />
+      <Box display="flex" alignItems="center" justifyContent="space-between" pr="20px">
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <CardHeader title={title} subheader={subheader} mb={3} />
         </Box>
         {firstDropdownOptions.length > 0 && firstDropdownOnChange && (
