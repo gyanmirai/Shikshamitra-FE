@@ -52,7 +52,7 @@ export interface IInquiryData {
   state: IState;
   // village: string;
   tempGrNo: number;
-  grNoRecord: number;
+  grNoRecord: number | null;
   rollNo: number | null;
   pinCode: number | null;
   address: string;
