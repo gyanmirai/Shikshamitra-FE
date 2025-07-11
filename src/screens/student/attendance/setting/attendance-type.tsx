@@ -179,7 +179,7 @@ const AttendanceType = ({ dialog }: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {editData ? `Update "${editData.type}" Leave Type` : 'Add New Leave Type'}
+              {editData ? `Update Leave Type` : 'Add Leave Type'}
             </Typography>
             <CustomTooltip
               arrow

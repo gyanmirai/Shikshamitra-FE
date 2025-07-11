@@ -116,7 +116,7 @@ const FinanceFeeStructureOverviewComponent = () => {
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,

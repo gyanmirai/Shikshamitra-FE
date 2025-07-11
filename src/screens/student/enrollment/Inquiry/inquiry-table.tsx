@@ -1,6 +1,5 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
@@ -13,13 +12,7 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
-import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -51,10 +44,19 @@ const InquiryTable = ({
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        secondaryContactNumber: item.secondaryContactNumber ? item.secondaryContactNumber : '-',
+        secondaryContactNumber: item.secondaryContactNumber
+          ? item.secondaryContactNumber
+          : undefined,
         studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType],
-        address: [item.addressLine1, item.addressLine2, item.addressLine3]
+        genderValue: GenderType[item?.genderType as any],
+        address: [
+          item.addressLine1,
+          item.addressLine2,
+          item.addressLine3,
+          item.city,
+          item.state?.name,
+          item.country?.name,
+        ]
           .filter(Boolean)
           .join(', '),
       })),
@@ -154,7 +156,15 @@ const InquiryTable = ({
             minWidth: '200px',
             align: 'left',
           },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
+          {
+            id: 'previousSchoolName',
+            label: 'Previous School',
+            minWidth: '150px',
+            align: 'left',
+            render(value, row) {
+              return value || '-';
+            },
+          },
           {
             id: 'inquiryPreference.preferenceName',
             label: 'Inquiry Preference',
@@ -163,24 +173,24 @@ const InquiryTable = ({
           },
           {
             id: 'lastFollowUpDate',
-            label: 'Last Follow Up Date',
+            label: 'Next Reminder Date',
             minWidth: '180px',
             align: 'left',
             filterType: 'date',
           },
-          {
-            id: 'followUpStatusType',
-            label: 'Status',
-            filterType: 'enum',
-            enumOptions: FollowUpStatusTypeOptions,
-            minWidth: '100px',
-            align: 'left',
-            sticky: true,
-            render(value, row) {
-              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-            },
-          },
+          // {
+          //   id: 'followUpStatusType',
+          //   label: 'Status',
+          //   filterType: 'enum',
+          //   enumOptions: FollowUpStatusTypeOptions,
+          //   minWidth: '100px',
+          //   align: 'left',
+          //   sticky: true,
+          //   render(value, row) {
+          //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+          //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+          //   },
+          // },
           {
             id: 'actions',
             label: 'Actions',
