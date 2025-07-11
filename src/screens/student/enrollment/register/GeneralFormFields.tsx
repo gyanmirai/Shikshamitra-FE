@@ -5,7 +5,6 @@ import {
   Box,
   Grid,
   Radio,
-  Select,
   Divider,
   MenuItem,
   TextField,
@@ -19,7 +18,6 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import calculateAge from 'src/utils/calculate-age';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
@@ -32,6 +30,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
@@ -56,6 +55,8 @@ const RenderGeneralFormFields = (props: any) => {
   const isPreviousSchoolEditable = useBoolean(isMainForm);
   // console.log('formik ---register values--', formik.values);
   console.log('formik.erroes..validation----', formik.errors);
+
+  console.log(formik, 'formik================');
 
   const handleSave = async () => {
     await formik?.submitForm?.();
@@ -88,6 +89,7 @@ const RenderGeneralFormFields = (props: any) => {
               label="Form No.*"
               name="formNo"
               value={formik.values.formNo}
+              onBlur={formik.handleBlur}
               onChange={formik.handleChange}
               error={formik.touched.formNo && Boolean(formik.errors.formNo)}
               helperText={formik.touched.formNo && formik.errors.formNo}
@@ -224,6 +226,7 @@ const RenderGeneralFormFields = (props: any) => {
                   value={formik.values.dob}
                   disabled={!isStudentDetailsEditable.value}
                   format="DD-MM-YYYY"
+                  onClose={() => formik.handleBlur('dob')}
                   slotProps={{
                     textField: {
                       fullWidth: true,
@@ -234,11 +237,12 @@ const RenderGeneralFormFields = (props: any) => {
                     },
                   }}
                   onChange={(newValue) => {
-                    const date = newValue?.format();
-                    if (date) {
-                      const age = calculateAge(date);
-                      formik.setFieldValue('age', age);
-                    }
+                    // const date = newValue
+                    // if (date) {
+                    //   const age = calculateAge(date);
+                    //   formik.setFieldValue('age', age);
+
+                    // }
                     formik.setFieldValue('dob', newValue);
                     formik.setFieldTouched('dob', true);
                   }}
@@ -333,9 +337,10 @@ const RenderGeneralFormFields = (props: any) => {
               disabled={!isContactDetailsEditable.value}
               onChange={(value) => {
                 formik.setFieldValue('secondaryContactNumber', value);
-                formik.setFieldTouched('secondaryContactNumber', true);
+                formik.setFieldTouched('secondaryContactNumber', true, true);
               }}
               label="Secondary Contact No."
+              onBlur={formik.handleBlur}
               error={
                 formik.touched.secondaryContactNumber &&
                 Boolean(formik.errors.secondaryContactNumber)
@@ -396,21 +401,27 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="adharNo"
               size="small"
+              type="number"
               label="Aadhar No."
               name="adharNo"
-              type="number"
               value={formik.values.adharNo}
               onBlur={formik.handleBlur}
               error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}
               helperText={formik.touched.adharNo && formik.errors.adharNo}
               fullWidth
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               onChange={(e) => {
                 let value = e.target.value.replace(/\D/g, '');
                 if (value.length > 12) {
                   value = value.slice(0, 12);
                 }
+
                 formik.setFieldValue('adharNo', value);
-                formik.setFieldTouched('adharNo', true, true);
+                // formik.setFieldTouched('adharNo', true, true);
               }}
               inputProps={{
                 maxLength: 12,
@@ -425,6 +436,7 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="apparId"
               size="small"
+              type="number"
               label="Appar Id"
               name="apparId"
               value={formik.values.apparId}
@@ -432,7 +444,24 @@ const RenderGeneralFormFields = (props: any) => {
               error={formik.touched.apparId && Boolean(formik.errors.apparId)}
               helperText={formik.touched.apparId && formik.errors.apparId}
               fullWidth
-              onChange={formik.handleChange}
+              // onChange={formik.handleChange}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 12) {
+                  value = value.slice(0, 12);
+                }
+                formik.setFieldValue('apparId', value);
+                // formik.setFieldTouched('apparId', true, true);
+              }}
+              inputProps={{
+                maxLength: 12,
+                pattern: '[0-9]*',
+              }}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
@@ -475,36 +504,32 @@ const RenderGeneralFormFields = (props: any) => {
         </Grid>
         <Grid item xs={12} md={3}>
           <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
-            <FormControl
-              fullWidth
-              disabled={!isIdentificationEditable.value}
-              error={!!formik.errors.religion && formik.touched.religion}
-            >
-              <InputLabel id="religion-label" size="small">
-                Religion
-              </InputLabel>
-              <Select
-                labelId="religion-label"
-                id="religion"
-                value={formik.values.religion}
-                onChange={formik.handleChange}
-                size="small"
-                label="Religion "
-                name="religion"
-              >
-                <MenuItem value="Hinduism">Hinduism</MenuItem>
-                <MenuItem value="Islam">Islam</MenuItem>
-                <MenuItem value="Christianity">Christianity</MenuItem>
-                <MenuItem value="Sikhism">Sikhism</MenuItem>
-                <MenuItem value="Buddhism">Buddhism</MenuItem>
-                <MenuItem value="Jainism">Jainism</MenuItem>
-                <MenuItem value="Judaism">Judaism</MenuItem>
-                <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
-              </Select>
-              {formik.touched.religion && formik.errors.religion && (
-                <FormHelperText>{formik.errors.religion}</FormHelperText>
-              )}
-            </FormControl>
+            <CustomSelect
+              labelId="religion-label"
+              // id="religion"
+              value={formik.values.religion}
+              onChange={(value) => {
+                formik.setFieldValue('religion', value);
+              }}
+              size="small"
+              onBlur={formik.handleBlur}
+              label="Religion "
+              name="religion"
+              options={[
+                { id: 'Hinduism', name: 'Hinduism' },
+                { id: 'Islam', name: 'Islam' },
+                { id: 'Christianity', name: 'Christianity' },
+                { id: 'Sikhism', name: 'Sikhism' },
+                { id: 'Buddhism', name: 'Buddhism' },
+                { id: 'Jainism', name: 'Jainism' },
+                { id: 'Judaism', name: 'Judaism' },
+                { id: 'Zoroastrianism', name: 'Zoroastrianism' },
+              ]}
+              valueKey="id"
+              labelKey="name"
+              error={formik?.touched?.religion && formik.errors?.religion}
+              helperText={formik?.touched?.religion && formik?.errors?.religion}
+            />
           </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={3}>
@@ -549,23 +574,25 @@ const RenderGeneralFormFields = (props: any) => {
               >
                 Cast Category *
               </InputLabel>
-              <Select
+              <CustomSelect
                 labelId="dropdown-label"
                 id="dropdown"
                 value={formik.values.castCategory}
                 onChange={formik.handleChange}
                 size="small"
+                onBlur={formik.handleBlur}
                 label="Cast Category *"
                 name="castCategory"
                 error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
                 disabled={!isIdentificationEditable.value}
+                options={[]}
               >
                 {EmployeeCastTypeArray.map((i, index) => (
                   <MenuItem key={i} value={index}>
                     {EmployeeCastType[index]}
                   </MenuItem>
                 ))}
-              </Select>
+              </CustomSelect>
               <FormHelperText>
                 {formik.touched.castCategory && formik.errors.castCategory}
               </FormHelperText>
@@ -625,31 +652,27 @@ const RenderGeneralFormFields = (props: any) => {
           <ShakingTextField
             error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
           >
-            <FormControl
-              fullWidth
-              size="small"
-              error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
-              disabled={!isIdentificationEditable.value}
-            >
-              <InputLabel id="mother-tongue-label">Mother Tongue</InputLabel>
-              <Select
-                labelId="mother-tongue-label"
-                id="motherTongue"
-                name="motherTongue"
-                value={formik.values.motherTongue}
-                label="Mother Tongue"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              >
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Gujarati">Gujarati</MenuItem>
-                <MenuItem value="Marathi">Marathi</MenuItem>
-                <MenuItem value="Hindi">Hindi</MenuItem>
-              </Select>
-              <FormHelperText>
-                {formik.touched.motherTongue && formik.errors.motherTongue}
-              </FormHelperText>
-            </FormControl>
+            <CustomSelect
+              labelId="mother-tongue-label"
+              // id="motherTongue"
+              name="motherTongue"
+              value={formik.values.motherTongue}
+              label="Mother Tongue"
+              onChange={(value) => {
+                formik.setFieldValue('motherTongue', value);
+              }}
+              onBlur={formik.handleBlur}
+              options={[
+                { id: 'English', name: 'English' },
+                { id: 'Gujarati', name: 'Gujarati' },
+                { id: 'Marathi', name: 'Marathi' },
+                { id: 'Hindi', name: 'Hindi' },
+              ]}
+              valueKey="id"
+              labelKey="name"
+              error={formik?.touched?.motherTongue && formik.errors?.motherTongue}
+              helperText={formik?.touched?.motherTongue && formik?.errors?.motherTongue}
+            />
           </ShakingTextField>
         </Grid>
       </SectionCard>
@@ -755,6 +778,7 @@ const RenderGeneralFormFields = (props: any) => {
                 });
                 formik.setFieldValue('city', { name: '' });
               }}
+              onBlur={formik.handleBlur}
               countryValue={formik.values.country}
               error={formik.touched.state && Boolean(formik.errors?.state?.name)}
               helperText={formik.touched.state && formik.errors?.state?.name}
@@ -772,6 +796,7 @@ const RenderGeneralFormFields = (props: any) => {
               onChange={(e, value) => {
                 formik.setFieldValue('city', { name: value?.name });
               }}
+              onBlur={formik.handleBlur}
               stateValue={formik.values.state}
               error={formik.touched.city && Boolean(formik.errors?.city?.name)}
               helperText={formik.touched.city && formik.errors?.city?.name}
@@ -787,7 +812,7 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="pinCode"
               size="small"
-              label="Pin Code"
+              label="PIN Code"
               name="pinCode"
               value={formik.values.pinCode}
               onBlur={formik.handleBlur}

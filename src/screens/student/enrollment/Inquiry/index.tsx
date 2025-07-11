@@ -43,7 +43,7 @@ export interface IInquiryData {
   previousSchoolName: string;
   dateOfBirth: string;
   dateOfInquiry: string;
-  genderType: GenderType;
+  genderType: GenderType | string;
   primaryContactNumber: string;
   secondaryContactNumber: string;
   dueDate?: string;

@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { matchIsValidTel } from 'mui-tel-input';
 
+const MIN_DOB = dayjs('1947-01-01');
+
 export const inquiryValidationSchema = Yup.object().shape({
   inquiryNumber: Yup.string(),
   organization: Yup.string(),
@@ -16,6 +18,11 @@ export const inquiryValidationSchema = Yup.object().shape({
       'Date of Birth is required',
       (value) => value && dayjs(value as any).isValid()
     )
+    .test(
+      'min-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isAfter(MIN_DOB.subtract(1, 'day'))
+    )
     .required('Date of Birth is required'),
   // dateOfBirth: Yup.date().required('Date of Birth is required'),
   age: Yup.string().required('Age is required'),
@@ -27,7 +34,10 @@ export const inquiryValidationSchema = Yup.object().shape({
     )
     .required('Date of Inquiry is required'),
   // dateOfInquiry: Yup.date().required('Date of inquiry is required'),
-  email: Yup.string().email('Invalid email'),
+  email: Yup.string().matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Please enter a valid email'
+  ),
   gender: Yup.string()
     // .oneOf(['male', 'female', 'other'], 'Invalid gender')
     .required('Gender is required'),
@@ -52,7 +62,7 @@ export const inquiryValidationSchema = Yup.object().shape({
   previousSchool: Yup.string(),
   inquiryPreferences: Yup.string(),
   pinCode: Yup.number()
-    .test('picode', 'Must be exactly 6 numbers', (value) =>
+    .test('pincode', 'Must be exactly 6 numbers', (value) =>
       value ? !!`${value}`.match(/\b\d{6}\b/) : true
     )
     .nullable(),

@@ -82,7 +82,7 @@ const RegistrationFormScreen = () => {
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
         studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType],
+        genderValue: GenderType[item?.genderType as any],
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),

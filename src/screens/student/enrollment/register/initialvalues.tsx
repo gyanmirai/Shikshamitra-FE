@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 
 import calculateAge from 'src/utils/calculate-age';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
 import { GenderType } from 'src/enums/gender';
 import { Category } from 'src/enums/studnet-category';
@@ -29,7 +30,9 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => {
     temporaryGr: editData?.temporaryGr || '',
     remarks: editData?.remarks || '',
     primaryContactNumber: editData?.primaryContactNumber || '',
-    secondaryContactNumber: editData?.secondaryContactNumber || '',
+    secondaryContactNumber: editData?.secondaryContactNumber
+      ? validatePhoneNumber(editData?.secondaryContactNumber)
+      : '',
     email: editData?.email || '',
     userId: editData?.userId || null,
     id: editData?.id || null,
@@ -68,7 +71,9 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
     : null,
   fatherOccupation: editData?.fatherDetails?.occupation || '',
   fatherQualification: editData?.fatherDetails?.qualification || '',
-  fatherContactNo: editData?.fatherDetails?.contactNo || '',
+  fatherContactNo: editData?.fatherDetails?.contactNo
+    ? validatePhoneNumber(editData?.fatherDetails?.contactNo)
+    : '',
   fatherEmail: editData?.fatherDetails?.email || '',
   fatherPassOutYear: editData?.fatherDetails?.passOutYear || '',
   fatherOfficeNo: editData?.fatherDetails?.officeNo || '',
@@ -90,7 +95,9 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
     : null,
   motherOccupation: editData?.motherDetails?.occupation || '',
   motherQualification: editData?.motherDetails?.qualification || '',
-  motherContactNo: editData?.motherDetails?.contactNo || '',
+  motherContactNo: editData?.motherDetails?.contactNo
+    ? validatePhoneNumber(editData?.motherDetails?.contactNo)
+    : '',
   motherEmail: editData?.motherDetails?.email || '',
   motherPassOutYear: editData?.motherDetails?.passOutYear || '',
   motherOfficeNo: editData?.motherDetails?.officeNo || '',
@@ -110,7 +117,9 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
     : null,
   guardianOccupation: editData?.guardianDetails?.occupation || '',
   guardianQualification: editData?.guardianDetails?.qualification || '',
-  guardianContactNo: editData?.guardianDetails?.contactNo || '',
+  guardianContactNo: editData?.guardianDetails?.contactNo
+    ? validatePhoneNumber(editData?.guardianDetails?.contactNo)
+    : '',
   guardianEmail: editData?.guardianDetails?.email || '',
   guardianPassOutYear: editData?.guardianDetails?.passOutYear || '',
   guardianOfficeNo: editData?.guardianDetails?.officeNo || '',
@@ -129,11 +138,15 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
 export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null) => ({
   // primaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
   commPrimaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
-  parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo || '',
+  parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo
+    ? validatePhoneNumber(editData?.studentCommunicationDetails?.parentContactNo)
+    : '',
   parentEmail: editData?.studentCommunicationDetails?.parentEmail || '',
   studentContactNo: editData?.studentCommunicationDetails?.studentContactNo || '',
   studentEmail: editData?.studentCommunicationDetails?.studentEmail || '',
-  whatsAppContactNo: editData?.studentCommunicationDetails?.whatsAppNo || '',
+  whatsAppContactNo: editData?.studentCommunicationDetails?.whatsAppNo
+    ? validatePhoneNumber(editData?.studentCommunicationDetails?.whatsAppNo)
+    : '',
 
   localCountry: editData?.studentCommunicationDetails?.localCountry?.name
     ? {
@@ -200,7 +213,9 @@ export const additionalDetailsInitialValues = (editData?: IInquiryData | null) =
   bplCardNo: editData?.studentAdditionalDetails?.bplCardNo || '',
   personWithDisability: editData?.studentAdditionalDetails?.personWithDisability || false,
   secondLanguage: editData?.studentAdditionalDetails?.secondLanguage || '',
-  emergencyContactNo: editData?.studentAdditionalDetails?.emergencyContactNo || '',
+  emergencyContactNo: editData?.studentAdditionalDetails?.emergencyContactNo
+    ? validatePhoneNumber(editData?.studentAdditionalDetails?.emergencyContactNo)
+    : '',
   relationName: editData?.studentAdditionalDetails?.relationName || '',
   relation: editData?.studentAdditionalDetails?.relation || '',
   singleParentChild: editData?.studentAdditionalDetails?.singleParentChild || false,
