@@ -429,6 +429,8 @@ const RegisterForm = ({
       setIsLoading: (val: boolean) => void,
       isSaveButton: boolean = false
     ) => {
+      console.log('handleSave----calling in registation---');
+
       setIsLoading(true);
       try {
         if (activeStep === 0) {

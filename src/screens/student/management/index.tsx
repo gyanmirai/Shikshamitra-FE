@@ -14,6 +14,7 @@ import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -22,6 +23,7 @@ import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
 import RollNoGenerationScreen from './roll-generation';
+import { FormSlider } from '../enrollment/register/register-form';
 
 import type { IInquiryData } from '../enrollment/Inquiry';
 
@@ -93,8 +95,6 @@ const StudentManagementScreen = () => {
   const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
 
-  const [value, setValue] = React.useState(0);
-
   const {
     currentBoard,
     currentMedium: medium,
@@ -126,7 +126,10 @@ const StudentManagementScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
@@ -145,11 +148,20 @@ const StudentManagementScreen = () => {
       })) || [],
     [StudentsData?.items]
   );
+
+  // Memoize the current active component based on searchParams.tab
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+
+  const [isBackClick, setIsBackClick] = useState(false);
+
   return (
     <Box>
       <CustomBreadcrumbs
         heading="Student Management"
-        description="Manage student records by class and division. Generate GR numbers manually or automatically, and perform actions like changing class, division, or house allocation"
+        description="Manage student records by class and division. Generate GR numbers manually or automatically, and perform actions like changing class, division, or house allocation."
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Records', href: '/student/overview/' },
@@ -191,24 +203,58 @@ const StudentManagementScreen = () => {
       </Box>
       <Card
         sx={{
-          mt: 1,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
         <CustomTabs
           value={searchParams.tab}
-          onChange={(_, val) => setSearchParams({ tab: val })}
-          // variant=""
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} icon={tab.icon} value={tab.value} label={tab.label} />
+            <Tab
+              // sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
           ))}
         </CustomTabs>
       </Card>
-      <Box pb={2} mt={2}>
-        {CurrentComponent?.({ tableData, isLoading, allDivision, division, allClass, classes })}
-      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent?.component && (
+            <CurrentComponent
+              tableData={tableData}
+              isLoading={isLoading}
+              allDivision={allDivision}
+              division={division}
+              allClass={allClass}
+              classes={classes}
+            />
+          )}
+        </Scrollbar>
+      </FormSlider>
     </Box>
   );
 };

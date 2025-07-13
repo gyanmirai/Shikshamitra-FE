@@ -1,11 +1,13 @@
 import type { Board } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import { isEqual, cloneDeep, capitalize } from 'lodash';
 
 import { LoadingButton } from '@mui/lab';
+// FormHelperText is already imported via the destructured import from @mui/material below
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -108,10 +110,12 @@ const InquiryForm = ({
     currentQueryAndMutation: useGetYearQuery,
   });
 
-  const initialInquiryValues: IInquiryFormValues = useMemo(
-    () => inquiryInitialValues(editData, academicYear?.items[0].id),
-    [academicYear?.items, editData]
-  );
+  const initialInquiryValues: IInquiryFormValues = useMemo(() => {
+    const latestYearId = academicYear?.items?.length
+      ? academicYear.items[academicYear.items.length - 1].id
+      : undefined;
+    return inquiryInitialValues(editData, latestYearId);
+  }, [academicYear?.items, editData]);
 
   /**
    * Handles form submission for both adding and updating student inquiries
@@ -389,6 +393,7 @@ const InquiryForm = ({
                     onChange={async (value) => {
                       setFieldValue('medium', value);
                       setFieldValue('class', '');
+                      setFieldTouched('medium', false);
                       await getClassByMedium(value);
                     }}
                     error={!!(touched.medium && errors.medium) || false}
@@ -495,6 +500,7 @@ const InquiryForm = ({
                       // setFieldTouched('dateOfBirth', true);
                     }}
                     disableFuture
+                    minDate={dayjs('1947-01-01')}
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -516,7 +522,13 @@ const InquiryForm = ({
                   >
                     <FormLabel
                       id="gender-radio-group"
-                      sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
+                      sx={{
+                        color: (theme) =>
+                          touched.gender && errors.gender
+                            ? '#ff563d !important'
+                            : `${theme.palette.common.black} !important`,
+                        mr: 1,
+                      }}
                     >
                       Gender *
                     </FormLabel>
@@ -541,9 +553,9 @@ const InquiryForm = ({
                     fullWidth
                     value={values.previousSchool}
                     onChange={(e) => {
-                      const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                      const capitalized = capitalize(onlyLetters);
-                      setFieldValue('previousSchool', capitalized);
+                      const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+
+                      setFieldValue('previousSchool', onlyLetters);
                       // setFieldTouched('previousSchool', true);
                     }}
                     size="small"
@@ -566,6 +578,7 @@ const InquiryForm = ({
                     name="dateOfInquiry"
                     value={values.dateOfInquiry}
                     format="DD-MM-YYYY"
+                    disabled
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
                       // setFieldValue('dateOfInquiry', newValue);
@@ -603,7 +616,7 @@ const InquiryForm = ({
                       },
                     }}
                     addOtherItemOnClick={dialog.onTrue}
-                    addOtherItemText="Add Inquiry Preference"
+                    // addOtherItemText="Add Inquiry Preference"
                   />
                 </ShakingTextField>
               </Grid>
@@ -615,6 +628,7 @@ const InquiryForm = ({
                   <TextField
                     value={values.email}
                     fullWidth
+                    // type='email'
                     size="small"
                     name="email"
                     label="Email"
@@ -799,8 +813,13 @@ const InquiryForm = ({
                     error={touched.pinCode && Boolean(errors.pinCode)}
                     helperText={touched.pinCode && errors.pinCode}
                     fullWidth
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     size="small"
-                    label="Pincode"
+                    label="PIN Code"
                     inputProps={{
                       maxLength: 6,
                       min: 0,

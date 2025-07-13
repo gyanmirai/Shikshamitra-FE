@@ -240,7 +240,12 @@ export const InquiryPreferenceForm = ({
                 label="Preference Name *"
                 name="fieldName"
                 value={values.fieldName}
-                onChange={(e) => setFieldValue('fieldName', e.target.value)}
+                onChange={(e) => {
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+
+                  setFieldValue('fieldName', onlyLetters);
+                  // setFieldTouched('previousSchool', true);
+                }}
                 error={Boolean(errors.fieldName && touched.fieldName)}
                 helperText={(touched.fieldName && errors.fieldName) || ''}
               />

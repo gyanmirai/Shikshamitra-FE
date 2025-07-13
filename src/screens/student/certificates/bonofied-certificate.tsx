@@ -1,16 +1,19 @@
 import type { RootState } from 'src/redux/store';
 import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+
+import { GlobalIcons } from 'src/utils/icons';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -21,6 +24,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const BonofiedCertificate = () => {
@@ -30,12 +34,12 @@ const BonofiedCertificate = () => {
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button
           sx={{ width: '180px' }}
-          startIcon={<Create />}
+          startIcon={<Iconify icon="mdi:plus" />}
           size="small"
           variant="contained"
           onClick={dialog.onTrue}
         >
-          Create Bonafide
+          Bonafide
         </Button>
       </Box>
       <CustomizableTable
@@ -109,16 +113,27 @@ const BonofiedForm = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const { values, setFieldValue, handleSubmit, handleChange } = useFormik({
+  const { values, setFieldValue, handleSubmit, handleChange, touched, errors } = useFormik({
     initialValues: {
       organization: '',
       classes: '',
       division: '',
       grNo: '',
-      creationDate: null,
+      creationDate: dayjs(),
       reason: '',
       student: null,
     },
+    validationSchema: Yup.object().shape({
+      organization: Yup.string().required('Organization is required'),
+      classes: Yup.string().required('Class is required'),
+      division: Yup.string().required('Division is required'),
+      creationDate: Yup.mixed().nullable().required('Creation date is required'),
+      reason: Yup.string()
+        .required('Reason is required')
+        .min(10, 'Reason must be at least 10 characters')
+        .max(500, 'Reason cannot exceed 500 characters'),
+      student: Yup.object().nullable().required('Student selection is required'),
+    }),
     onSubmit: (val: any) => {
       // submit form logic
       // fresetForm();
@@ -180,23 +195,25 @@ const BonofiedForm = () => {
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           <Grid xs={3}>
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={organization}
-              onChange={(val) => setFieldValue('organization', val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{
-                fullWidth: true,
-                sx: {
-                  maxWidth: 'unset',
-                },
-              }}
-              disabled={!medium}
-            />
+            <ShakingTextField error={!!(touched.organization && errors.organization)}>
+              <CustomSelect
+                options={allOrganization}
+                label="Organization"
+                value={organization}
+                onChange={(val) => setFieldValue('organization', val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{
+                  fullWidth: true,
+                  sx: { maxWidth: 'unset' },
+                }}
+                error={!!(touched.organization && errors.organization)}
+                helperText={(touched.organization && errors.organization) as string}
+                disabled={!medium}
+              />
+            </ShakingTextField>
           </Grid>
           <Grid xs={3}>
             <CustomSelect
@@ -208,11 +225,11 @@ const BonofiedForm = () => {
               valueKey="id"
               formControlProps={{
                 fullWidth: true,
-                sx: {
-                  maxWidth: 'unset',
-                },
+                sx: { maxWidth: 'unset' },
               }}
               disabled={!organization}
+              error={!!(touched.classes && errors.classes)}
+              helperText={(touched.classes && errors.classes) as string}
             />
           </Grid>
           <Grid xs={3}>
@@ -223,8 +240,13 @@ const BonofiedForm = () => {
               onChange={(val) => setFieldValue('division', val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
+              formControlProps={{
+                fullWidth: true,
+                sx: { maxWidth: 'unset', width: '100%' },
+              }}
               disabled={!classes}
+              error={!!(touched.division && errors.division)}
+              helperText={(touched.division && errors.division) as string}
             />
           </Grid>
           <Grid xs={3}>
@@ -243,8 +265,9 @@ const BonofiedForm = () => {
                   {...params}
                   size="small"
                   label="Student"
-                  placeholder="Search  Student"
                   fullWidth
+                  error={!!(touched.student && errors.student)}
+                  helperText={(touched.student && errors.student) as string}
                 />
               )}
               renderOption={(prop: any, option: any) => (
@@ -254,20 +277,11 @@ const BonofiedForm = () => {
               )}
             />
           </Grid>
-          {/* <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.grNo}
-              onChange={handleChange}
-              name="grNo"
-              label="GR No"
-              fullWidth
-            />
-          </Grid> */}
           <Grid xs={3}>
             <DatePicker
               label="Creation Date"
               value={values.creationDate}
+              disabled
               onChange={(newValue) => {
                 setFieldValue('creationDate', newValue);
               }}
@@ -275,6 +289,8 @@ const BonofiedForm = () => {
                 textField: {
                   size: 'small',
                   fullWidth: true,
+                  error: !!(touched.creationDate && errors.creationDate),
+                  helperText: (touched.creationDate && errors.creationDate) as string,
                 },
               }}
             />
@@ -289,10 +305,14 @@ const BonofiedForm = () => {
               rows={3}
               label="Reason"
               fullWidth
+              error={!!(touched.reason && errors.reason)}
+              helperText={(touched.reason && errors.reason) as string}
             />
           </Grid>
           <Grid xs={3}>
-            <Button variant="contained">Generate</Button>
+            <Button variant="contained" size="small" type="submit">
+              Generate
+            </Button>
           </Grid>
           <Grid xs={12}>
             <BonofiedCertificateTemplate1 />
@@ -300,7 +320,12 @@ const BonofiedForm = () => {
         </Grid>
       </Scrollbar>
       <DialogActions>
-        <Button startIcon={<Create />} variant="contained" type="submit">
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          variant="contained"
+          type="submit"
+          size="small"
+        >
           Create
         </Button>
       </DialogActions>

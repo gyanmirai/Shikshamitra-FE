@@ -43,7 +43,7 @@ export interface IInquiryData {
   previousSchoolName: string;
   dateOfBirth: string;
   dateOfInquiry: string;
-  genderType: GenderType;
+  genderType: GenderType | string;
   primaryContactNumber: string;
   secondaryContactNumber: string;
   dueDate?: string;
@@ -52,7 +52,7 @@ export interface IInquiryData {
   state: IState;
   // village: string;
   tempGrNo: number;
-  grNoRecord: number;
+  grNoRecord: number | null;
   rollNo: number | null;
   pinCode: number | null;
   address: string;

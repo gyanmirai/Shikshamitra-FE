@@ -13,7 +13,7 @@ export interface IInquiryFormValues {
   dateOfBirth: Dayjs | null;
   age: string | number;
   dateOfInquiry: Dayjs | null;
-  gender: GenderType;
+  gender: GenderType | string;
   address: string;
   primaryContactNumber: string;
   secondaryContactNumber: string;

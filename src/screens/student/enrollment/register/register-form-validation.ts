@@ -11,7 +11,7 @@ export const generalFieldValidation = Yup.object({
   firstName: Yup.string().required('First Name is required'),
   lastName: Yup.string().required('Last Name is required'),
   middleName: Yup.string(),
-  dateOfBirth: Yup.mixed()
+  dob: Yup.mixed()
     .test(
       'is-valid-dayjs',
       'Date of Birth is required',
@@ -21,22 +21,20 @@ export const generalFieldValidation = Yup.object({
   // dob: Yup.date().required('Date of Birth is required'),
   age: Yup.string(),
   gender: Yup.string().required('Gender is required'),
+  apparId: Yup.string().matches(/\b\d{12}\b/, 'Appar Id must be 12 digits'),
   adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   religion: Yup.string(),
   familyCast: Yup.string().required('Family Cast is required'),
-  castCategory: Yup.string()
-
-    .required('Cast Category is required'),
+  castCategory: Yup.string().required('Cast Category is required'),
   motherTongue: Yup.string(),
   nationality: Yup.string(),
   birthPlace: Yup.string(),
 
   remarks: Yup.string(),
   primaryContactNumber: Yup.string()
-    .test('primaryContactNumber', 'Primary contact No. is not valid', (value) => {
-      console.log(value, '=========>');
-      return value ? matchIsValidTel(value as string) : true;
-    })
+    .test('primaryContactNumber', 'Primary contact No. is not valid', (value) =>
+      value ? matchIsValidTel(value as string) : true
+    )
     .required('Primary Contact No. is required'),
   secondaryContactNumber: Yup.string()
     .nullable()

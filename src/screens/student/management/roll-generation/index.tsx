@@ -1,8 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { toast } from 'sonner';
-import { useDispatch } from 'react-redux';
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Button, TextField } from '@mui/material';
 import { Save, Refresh, Grading } from '@mui/icons-material';
@@ -67,7 +69,9 @@ const RollNoGenerationScreen = ({
     } else if (arrangeBy === 'lastName') {
       filteredData.sort((a, b) => a.lastName.localeCompare(b.lastName));
     } else if (arrangeBy === 'grNo') {
-      filteredData.sort((a, b) => a.grNoRecord.toString().localeCompare(b.grNoRecord.toString()));
+      filteredData.sort((a, b) =>
+        (a.grNoRecord?.toString() || '').localeCompare(b.grNoRecord?.toString() || '')
+      );
     }
 
     // Assign sequential roll numbers starting from 1
@@ -85,6 +89,8 @@ const RollNoGenerationScreen = ({
       setTableData(studentData);
     }
   }, [studentData]);
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Handle roll number change for a specific student
   const handleRollNoChange = (id: string, newValue: number | null) => {
@@ -198,7 +204,7 @@ const RollNoGenerationScreen = ({
                 startIcon={<Save />}
                 variant="contained"
                 onClick={handleSave}
-                disabled={isSaving || !tableData.some((item) => item.rollNo)}
+                disabled={isSaving || !isChanges}
                 size="small"
               >
                 {isSaving ? 'Saving...' : 'Save'}
@@ -214,45 +220,6 @@ const RollNoGenerationScreen = ({
             noDataText={<>No Roll Genaration Data Found </>}
             tableId="roll-no-generation-table"
             columns={[
-              // {
-              //   id: 'checkBox',
-              //   align: 'left',
-              //   minWidth: '60px',
-              //   isSort: false,
-              //   isFilter: false,
-              //   label: '',
-              //   sticky: true,
-              //   renderColumn() {
-              //     return (
-              //       <Checkbox
-              //         checked={
-              //           !!tableData?.length && selectedStudents?.length === tableData?.length
-              //         }
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents(tableData || []);
-              //           } else {
-              //             setSelectedStudents([]);
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              //   render(value, row) {
-              //     return (
-              //       <Checkbox
-              //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents([...selectedStudents, row]);
-              //           } else {
-              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              // },
               { id: 'grNoRecord', label: 'GR No.' },
               { id: 'name', label: 'Name' },
               {

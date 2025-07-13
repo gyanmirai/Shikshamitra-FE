@@ -25,6 +25,7 @@ const RenderClass = (props: any) => {
       options={classes || []}
       value={values.class}
       onChange={(value) => setFieldValue('class', value)}
+      onBlur={formik.handleBlur}
       error={!!(touched.class && errors.class) || false}
       helperText={(touched.class && errors.class) || ''}
       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
