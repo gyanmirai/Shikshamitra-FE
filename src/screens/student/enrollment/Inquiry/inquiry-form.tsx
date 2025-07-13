@@ -101,6 +101,11 @@ const InquiryForm = ({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
+  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  const [boards, setBoards] = useState([]);
 
   /**
    * Hook to fetch academic year data
@@ -114,8 +119,10 @@ const InquiryForm = ({
     const latestYearId = academicYear?.items?.length
       ? academicYear.items[academicYear.items.length - 1].id
       : undefined;
+    const findBoards = board?.items.filter((item: Board) => item.academicYearId === latestYearId);
+    setBoards(findBoards);
     return inquiryInitialValues(editData, latestYearId);
-  }, [academicYear?.items, editData]);
+  }, [academicYear.items, board?.items, editData]);
 
   /**
    * Handles form submission for both adding and updating student inquiries
@@ -224,11 +231,7 @@ const InquiryForm = ({
   /**
    * Hook to fetch board data
    */
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-  });
-  const [boards, setBoards] = useState([]);
+
   const [mediums, setMediums] = useState([]);
 
   // useMemo(() => {

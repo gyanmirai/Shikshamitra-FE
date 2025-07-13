@@ -6,12 +6,9 @@ import {
   Grid,
   Radio,
   Divider,
-  MenuItem,
   TextField,
   FormLabel,
-  InputLabel,
   RadioGroup,
-  FormControl,
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
@@ -562,41 +559,25 @@ const RenderGeneralFormFields = (props: any) => {
           <ShakingTextField
             error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
           >
-            <FormControl
-              fullWidth
+            <CustomSelect
+              labelId="dropdown-label"
+              id="dropdown"
+              value={formik.values.castCategory}
+              onChange={(val) => {
+                formik.setFieldValue('castCategory', val);
+              }}
+              size="small"
+              onBlur={formik.handleBlur}
+              label="Cast Category *"
+              name="castCategory"
               error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
-              disabled={!isGeneralFormEditable.value}
-            >
-              <InputLabel
-                id="dropdown-label"
-                size="small"
-                error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
-              >
-                Cast Category *
-              </InputLabel>
-              <CustomSelect
-                labelId="dropdown-label"
-                id="dropdown"
-                value={formik.values.castCategory}
-                onChange={formik.handleChange}
-                size="small"
-                onBlur={formik.handleBlur}
-                label="Cast Category *"
-                name="castCategory"
-                error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
-                disabled={!isIdentificationEditable.value}
-                options={[]}
-              >
-                {EmployeeCastTypeArray.map((i, index) => (
-                  <MenuItem key={i} value={index}>
-                    {EmployeeCastType[index]}
-                  </MenuItem>
-                ))}
-              </CustomSelect>
-              <FormHelperText>
-                {formik.touched.castCategory && formik.errors.castCategory}
-              </FormHelperText>
-            </FormControl>
+              helperText={formik.touched.castCategory && formik.errors.castCategory}
+              disabled={!isIdentificationEditable.value}
+              options={EmployeeCastTypeArray.map((i, index) => ({
+                value: index,
+                label: EmployeeCastType[index],
+              }))}
+            />
           </ShakingTextField>
         </Grid>
         <Grid item xs={12} md={3}>
