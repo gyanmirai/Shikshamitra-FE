@@ -1,17 +1,30 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import React, { useMemo, useState, useEffect } from 'react';
 
-import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Button,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Iconify } from 'src/components/iconify';
@@ -19,21 +32,47 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const LeavingCertificate = () => {
   const dialog = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setTimeout(() => {
+        // setSelectedSubject(null);
+      }, 200);
+    }
+  };
   return (
     <Box>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button
           sx={{ width: '180px' }}
-          startIcon={<Create />}
+          startIcon={<Iconify icon="mdi:plus" />}
           size="small"
           variant="contained"
           onClick={dialog.onTrue}
         >
-          Create Leaving
+          Leaving Certificate
         </Button>
       </Box>
       <CustomizableTable
@@ -61,7 +100,7 @@ const LeavingCertificate = () => {
         }
         columns={[
           { id: 'medium', label: 'Medium' },
-          { id: 'organization', label: 'organization' },
+          { id: 'organization', label: 'Organization' },
           { id: 'class', label: 'Class' },
           { id: 'division', label: 'Division' },
           { id: 'grNo', label: 'GR.No.' },
@@ -94,7 +133,7 @@ const LeavingCertificate = () => {
         open={dialog.value}
         handleClose={dialog.onFalse}
       >
-        <LeavingForm />
+        <LeavingForm onClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -102,15 +141,30 @@ const LeavingCertificate = () => {
 
 export default LeavingCertificate;
 
-const LeavingForm = () => {
+const LeavingForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const { values, setFieldValue, handleSubmit, handleChange } = useFormik({
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+  const {
+    touched,
+    setFieldTouched,
+    initialValues,
+    values,
+    errors,
+    setFieldValue,
+    handleSubmit,
+    handleChange,
+  } = useFormik({
     initialValues: {
       medium: '',
-      organization: '',
-      classes: '',
+      organization: medium?.educationMediumStages?.[0]?.id || '',
+      classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '',
+      division: medium?.educationMediumStages?.[0]?.standards?.[0]?.divisions?.[0]?.id || '',
       grNo: '',
       lcNo: '',
       lcDate: null,
@@ -122,248 +176,381 @@ const LeavingForm = () => {
       remarks: '',
       bookNumber: '',
       feesDetails: '',
-      division: '',
+      student: [],
     },
+    validationSchema: Yup.object().shape({
+      organization: Yup.string().required('Organization is required'),
+      classes: Yup.string().required('Class is required'),
+      division: Yup.string().required('Division is required'),
+      student: Yup.array().min(1, 'Please select at least one student'),
+      lcNo: Yup.string().required('LC No. is required'),
+      lcDate: Yup.mixed().nullable().required('LC Date is required'),
+      leftdate: Yup.mixed().nullable().required('Left Date is required'),
+      lcCopy: Yup.string().required('LC Copy is required'),
+      behavior: Yup.string().required('Behavior is required'),
+      progress: Yup.string().required('Progress is required'),
+      lcReason: Yup.string().required('LC Reason is required'),
+      bookNumber: Yup.string().required('Book Number is required'),
+    }),
     onSubmit: (val: any) => {
       // submit form logic
       // fresetForm();
     },
   });
   const { division, organization, classes } = values;
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
-
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
-    setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
+    // setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
   }, [medium, setFieldValue]);
 
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setFieldValue(
-      'classes',
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
+    // setFieldValue(
+    //   'classes',
+    //   allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+    // );
   }, [organization, allOrganization, setFieldValue]);
 
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setFieldValue(
-      'division',
-      allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
-    );
+    // setFieldValue(
+    //   'division',
+    //   allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
+    // );
   }, [allClass, classes, setFieldValue]);
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Grid container spacing={2}>
-          <Grid xs={3}>
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={organization}
-              onChange={(val) => setFieldValue('organization', val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{
-                fullWidth: true,
-              }}
-              disabled={!medium}
-            />
-          </Grid>
-          <Grid xs={3}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setFieldValue('classes', val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{
-                fullWidth: true,
-              }}
-              disabled={!organization}
-            />
-          </Grid>
-          <Grid xs={3}>
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setFieldValue('division', val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
-              disabled={!classes}
-            />
-          </Grid>
-          <Grid xs={3}>
-            <Autocomplete
-              loading={false}
-              noOptionsText="No Student Found"
-              fullWidth
-              // value={props.formik.values.sponsorStudent}
-              // onChange={(e, value: any) => {
-              //   props.formik.setFieldValue('sponsorStudent', value);
-              // }}
-              options={[]}
-              getOptionLabel={(option: any) => option?.firstName || ''}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  label="Student"
-                  placeholder="Search  Student"
-                  fullWidth
-                />
-              )}
-              renderOption={(prop: any, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.firstName}
-                </li>
-              )}
-            />
-          </Grid>
-          {/* <Grid xs={6}>
-            <TextField
-              size="small"
-              value={values.grNo}
-              onChange={handleChange}
-              name="grNo"
-              label="GR No"
-              fullWidth
-            />
-          </Grid> */}
-          <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.lcNo}
-              onChange={handleChange}
-              name="lcNo"
-              label="LC No"
-              fullWidth
-            />
-          </Grid>
-          <Grid xs={3}>
-            <DatePicker
-              label="LC Date"
-              value={values.lcDate}
-              format="DD-MM-YYYY"
-              onChange={(newValue) => {
-                setFieldValue('lcDate', newValue);
-              }}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                },
-              }}
-            />
-          </Grid>
-          <Grid xs={3}>
-            <DatePicker
-              label="Left Date"
-              value={values.leftdate}
-              format="DD-MM-YYYY"
-              onChange={(newValue) => {
-                setFieldValue('leftdate', newValue);
-              }}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                },
-              }}
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.lcCopy}
-              onChange={handleChange}
-              name="lcCopy"
-              label="LC Copy"
-              fullWidth
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              value={values.behavior}
-              name="behavior"
-              label="Behavior"
-              fullWidth
-              onChange={handleChange}
-              size="small"
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              value={values.progress}
-              name="progress"
-              label="Progress"
-              fullWidth
-              onChange={handleChange}
-              size="small"
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.lcReason}
-              onChange={handleChange}
-              name="lcReason"
-              multiline
-              rows={3}
-              label="LC Reason"
-              fullWidth
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.remarks}
-              onChange={handleChange}
-              name="remarks"
-              multiline
-              rows={3}
-              label="Remarks"
-              fullWidth
-            />
-          </Grid>
-          <Grid xs={3}>
-            <TextField
-              size="small"
-              value={values.bookNumber}
-              onChange={handleChange}
-              name="bookNumber"
-              label="Book Number"
-              fullWidth
-            />
-          </Grid>
 
-          <Grid xs={3}>
-            <TextField
+  useEffect(() => {
+    if (division && classes && organization) {
+      getStudents({
+        educationMediumStageId: organization,
+        standardId: classes,
+        divisionId: division,
+      });
+    }
+  }, [division, classes, organization, getStudents]);
+
+  const tableData = useMemo(
+    () =>
+      StudentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+      })) || [],
+    [StudentsData?.items]
+  );
+  return (
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+      <Box component="form" onSubmit={handleSubmit}>
+        <Scrollbar sx={{ p: 2 }}>
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button
+              variant="contained"
               size="small"
-              value={values.feesDetails}
-              onChange={handleChange}
-              name="feesDetails"
-              label="Fees Details"
-              fullWidth
-            />
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Generate
+            </Button>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.organization && errors.organization)}>
+                <CustomSelect
+                  options={allOrganization}
+                  label="Organization *"
+                  value={organization}
+                  onChange={(val) => {
+                    const selectedOrg = allOrganization.find((org: any) => org?.id === val);
+                    const selectedClass = selectedOrg?.standards?.[0];
+                    const selectedDivision = selectedClass?.divisions?.[0];
+
+                    setFieldValue('organization', val as string);
+                    setFieldValue('classes', selectedClass?.id || '');
+                    setFieldTouched('classes', false);
+                    setFieldValue('division', selectedDivision?.id || '');
+                    setFieldTouched('division', false);
+                  }}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{
+                    fullWidth: true,
+                  }}
+                  disabled={!medium}
+                  error={!!(touched.organization && errors.organization)}
+                  helperText={(touched.organization && errors.organization) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.classes && errors.classes)}>
+                <CustomSelect
+                  options={allClass}
+                  label="Class *"
+                  value={classes}
+                  onChange={(val) => {
+                    const selectedClass = allClass.find((cls: any) => cls.id === val);
+                    const firstDivision = selectedClass?.divisions?.[0];
+
+                    setFieldValue('classes', val as string);
+                    setFieldValue('division', firstDivision?.id || '');
+                  }}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{
+                    fullWidth: true,
+                  }}
+                  disabled={!organization}
+                  error={!!(touched.classes && errors.classes)}
+                  helperText={(touched.classes && errors.classes) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.division && errors.division)}>
+                <CustomSelect
+                  options={allDivision}
+                  label="Division *"
+                  value={division}
+                  onChange={(val) => setFieldValue('division', val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{
+                    fullWidth: true,
+                    sx: { maxWidth: 'unset', width: '100%' },
+                  }}
+                  disabled={!classes}
+                  error={!!(touched.division && errors.division)}
+                  helperText={(touched.division && errors.division) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.student && errors.student)}>
+                <Autocomplete
+                  loading={isLoading}
+                  noOptionsText="No Student Found"
+                  multiple
+                  fullWidth
+                  value={values.student}
+                  onChange={(e, value: any) => {
+                    setFieldValue('student', value);
+                  }}
+                  renderTags={(tagValue, getTagProps) =>
+                    tagValue.map((option, index) => (
+                      <Chip
+                        label={option.name}
+                        variant="soft"
+                        size="small"
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  options={tableData}
+                  getOptionLabel={(option: any) => option?.name || ''}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      label="Student *"
+                      fullWidth
+                      error={!!(touched.student && errors.student)}
+                      helperText={(touched.student && errors.student) as string}
+                    />
+                  )}
+                  renderOption={(prop: any, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.name}
+                    </li>
+                  )}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.lcNo && errors.lcNo)}>
+                <TextField
+                  size="small"
+                  value={values.lcNo}
+                  onChange={handleChange}
+                  name="lcNo"
+                  label="LC No *"
+                  fullWidth
+                  error={!!(touched.lcNo && errors.lcNo)}
+                  helperText={(touched.lcNo && errors.lcNo) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.lcDate && errors.lcDate)}>
+                <DatePicker
+                  label="LC Date *"
+                  value={values.lcDate}
+                  format="DD-MM-YYYY"
+                  onChange={(newValue) => {
+                    setFieldValue('lcDate', newValue);
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: !!(touched.lcDate && errors.lcDate),
+                      helperText: (touched.lcDate && errors.lcDate) as string,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.leftdate && errors.leftdate)}>
+                <DatePicker
+                  label="Left Date *"
+                  value={values.leftdate}
+                  format="DD-MM-YYYY"
+                  onChange={(newValue) => {
+                    setFieldValue('leftdate', newValue);
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      error: !!(touched.leftdate && errors.leftdate),
+                      helperText: (touched.leftdate && errors.leftdate) as string,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.lcCopy && errors.lcCopy)}>
+                <TextField
+                  size="small"
+                  value={values.lcCopy}
+                  onChange={handleChange}
+                  name="lcCopy"
+                  label="LC Copy *"
+                  fullWidth
+                  error={!!(touched.lcCopy && errors.lcCopy)}
+                  helperText={(touched.lcCopy && errors.lcCopy) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.behavior && errors.behavior)}>
+                <TextField
+                  value={values.behavior}
+                  name="behavior"
+                  label="Behavior *"
+                  fullWidth
+                  onChange={handleChange}
+                  size="small"
+                  error={!!(touched.behavior && errors.behavior)}
+                  helperText={(touched.behavior && errors.behavior) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.progress && errors.progress)}>
+                <TextField
+                  value={values.progress}
+                  name="progress"
+                  label="Progress *"
+                  fullWidth
+                  onChange={handleChange}
+                  size="small"
+                  error={!!(touched.progress && errors.progress)}
+                  helperText={(touched.progress && errors.progress) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.bookNumber && errors.bookNumber)}>
+                <TextField
+                  size="small"
+                  value={values.bookNumber}
+                  onChange={handleChange}
+                  name="bookNumber"
+                  label="Book Number *"
+                  fullWidth
+                  error={!!(touched.bookNumber && errors.bookNumber)}
+                  helperText={(touched.bookNumber && errors.bookNumber) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={3}>
+              <ShakingTextField error={!!(touched.feesDetails && errors.feesDetails)}>
+                <TextField
+                  size="small"
+                  value={values.feesDetails}
+                  onChange={handleChange}
+                  name="feesDetails"
+                  label="Fees Details"
+                  fullWidth
+                  error={!!(touched.feesDetails && errors.feesDetails)}
+                  helperText={(touched.feesDetails && errors.feesDetails) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <ShakingTextField error={!!(touched.lcReason && errors.lcReason)}>
+                <TextField
+                  size="small"
+                  value={values.lcReason}
+                  onChange={handleChange}
+                  name="lcReason"
+                  multiline
+                  rows={3}
+                  label="LC Reason *"
+                  fullWidth
+                  error={!!(touched.lcReason && errors.lcReason)}
+                  helperText={(touched.lcReason && errors.lcReason) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <ShakingTextField error={!!(touched.remarks && errors.remarks)}>
+                <TextField
+                  size="small"
+                  value={values.remarks}
+                  onChange={handleChange}
+                  name="remarks"
+                  multiline
+                  rows={3}
+                  label="Remarks"
+                  fullWidth
+                  error={!!(touched.remarks && errors.remarks)}
+                  helperText={(touched.remarks && errors.remarks) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid xs={12}>
+              <BonofiedCertificateTemplate1 />
+            </Grid>
           </Grid>
-          <Grid xs={12}>
-            <BonofiedCertificateTemplate1 />
-          </Grid>
-        </Grid>
-      </Scrollbar>
-      <DialogActions>
-        <Button startIcon={<Create />} variant="contained" type="submit">
-          Create
-        </Button>
-      </DialogActions>
-    </Box>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              onClose(null, false);
+            }}
+            variant="outlined"
+            size="small"
+          >
+            Cancel
+          </Button>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            variant="contained"
+            type="submit"
+            size="small"
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </Box>
+    </BackPopUpChecked>
   );
 };

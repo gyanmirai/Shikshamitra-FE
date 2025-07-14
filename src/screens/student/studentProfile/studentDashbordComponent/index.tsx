@@ -10,7 +10,7 @@ const Overview = () => {
   const [cards, setCards] = useState<ICardItem[]>([
     {
       id: 'attendance-today',
-      icon: 'mdi:account-check-outline',
+      icon: 'lucide:user-round-check',
       title: 'Today Attendance',
       count: 'Present',
       color: 'success.main',
@@ -21,7 +21,7 @@ const Overview = () => {
     },
     {
       id: 'academic-performance',
-      icon: 'mdi:graduation-cap-outline',
+      icon: 'hugeicons:chart-evaluation',
       title: 'Current Academic Performance',
       count: '86%',
       color: 'info.main',
@@ -37,7 +37,7 @@ const Overview = () => {
     },
     {
       id: 'fee-status',
-      icon: 'mdi:credit-card-outline',
+      icon: 'streamline-plump:payment-recieve-7-remix',
       title: 'Fee Status',
       count: '10,000',
       color: 'success.main',
@@ -57,7 +57,7 @@ const Overview = () => {
     },
     {
       id: 'document',
-      icon: 'ic:baseline-insert-drive-file',
+      icon: 'ion:document',
       title: 'Document',
       count: '08',
       color: 'warning.main',
@@ -77,7 +77,7 @@ const Overview = () => {
     },
     {
       id: 'class-teacher',
-      icon: 'mdi:account-outline',
+      icon: 'mdi:user-outline',
       title: 'Class Teacher',
       count: 'Dharmik Jinjala',
       color: 'info.main',

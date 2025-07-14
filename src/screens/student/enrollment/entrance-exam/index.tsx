@@ -16,9 +16,9 @@ import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
   Box,
   Paper,
+  Radio,
   Button,
   MenuItem,
-  Checkbox,
   MenuList,
   useTheme,
   TextField,
@@ -686,268 +686,198 @@ export const ExamForm = ({
   };
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      {/* <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}> */}
-      <Paper sx={{ p: 2 }}>
-        <Box display="flex" gap={4}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="subtitle2" color="text.primary">
-              Student Name :
-            </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              {studentName}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="subtitle2" color="text.primary">
-              Board :
-            </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              {educationBoard?.name}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="subtitle2" color="text.primary">
-              Medium :
-            </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              {educationMedium?.name}
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle2" color="text.primary">
-              Class :
-            </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              {' '}
-              {standardName}
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
-      <Scrollbar
-        sx={{
-          p: 2,
-          bgcolor: 'background.neutral',
-        }}
-      >
-        <Grid container spacing={3}>
-          <Grid xs={4}>
-            <Paper>
-              <DateCalendar
-                value={formik.values.examDate}
-                onChange={(value) => {
-                  formik.setFieldValue('examDate', value);
-                  handleGetAllStudentCount(value);
-                }}
-                disablePast
-                slots={{
-                  day: (props: any) => {
-                    const { day } = props;
-                    const absent = day.format('DD-MM-YYYY') === '11-09-2024';
-                    return (
-                      <PickersDay
-                        {...props}
-                        sx={absent ? { bgcolor: 'error.main', color: 'white' } : {}}
-                      />
-                    );
-                  },
-                }}
-              />
-            </Paper>
-            {formik.touched.examDate && formik.errors.examDate && (
-              <Typography variant="caption" color="error">
-                {formik.errors.examDate}
+    <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}>
+      <form onSubmit={formik.handleSubmit}>
+        <Paper sx={{ p: 2 }}>
+          <Box display="flex" gap={4}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Typography variant="subtitle2" color="text.primary">
+                Student Name :
               </Typography>
-            )}
-          </Grid>
-          <Grid xs={8}>
-            <Paper sx={{ p: 1, height: '100%' }}>
-              <Grid container spacing={2}>
-                {/* <Grid xs={4}>
-                  <TextField
-                    name="examType"
-                    value={formik.values.examType}
-                    onChange={formik.handleChange}
-                    error={formik.touched.examType && Boolean(formik.errors.examType)}
-                    helperText={formik.touched.examType && formik.errors.examType}
-                    label="Exam Type"
-                    size="small"
-                    fullWidth
-                  />
-                </Grid>
-                <Grid xs={4}>
-                  <TextField
-                    name="totalMarks"
-                    type="number"
-                    value={formik.values.totalMarks}
-                    onChange={formik.handleChange}
-                    label="Total Marks"
-                    error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                    helperText={formik.touched.totalMarks && formik.errors.totalMarks}
-                    size="small"
-                    fullWidth
-                  />
-                </Grid> */}
-                {/* <Grid xs={4}>
-                  <Autocomplete
-                    options={scheduleTypeOptions || []}
-                    getOptionLabel={(option) => option.name}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Schedule Type"
-                        placeholder="Search Schedule Type"
-                        size="small"
-                        fullWidth
-                        sx={{ width: '100%', minWidth: '200px' }}
-                      />
-                    )}
-                    onChange={(e, value) => {
-                      formik.setFieldValue('scheduleType', value?.id);
-                    }}
-                  />
-                </Grid> */}
-                {/* <Grid xs={4}>
-                  <TextField
-                    name="passingMarks"
-                    type="number"
-                    value={formik.values.passingMarks}
-                    onChange={formik.handleChange}
-                    label="Passing Marks"
-                    error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
-                    helperText={formik.touched.passingMarks && formik.errors.passingMarks}
-                    size="small"
-                    fullWidth
-                  />
-                  <Typography variant="caption" color="error">
-                    {formik.errors.passingMarks}
-                  </Typography>
-                </Grid> */}
-                {/* <Grid xs={12}>
-                  <Divider sx={{ my: 0.5 }} />
-                </Grid> */}
-                <Grid xs={12}>
-                  <Box>
-                    <Box
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      padding={2}
-                    >
-                      <Typography variant="h6">Slots</Typography>
-                      {/* <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Add />}
-                        onClick={dialog.onTrue}
-                      >
-                        Slot
-                      </Button> */}
-                    </Box>
+              <Typography variant="subtitle2" color="text.secondary">
+                {studentName}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Typography variant="subtitle2" color="text.primary">
+                Board :
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                {educationBoard?.name}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Typography variant="subtitle2" color="text.primary">
+                Medium :
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                {educationMedium?.name}
+              </Typography>
+            </Box>
 
-                    <Grid container spacing={2}>
-                      {isStudentCountLoading ? (
-                        <Grid xs={12}>
-                          <Box className="loader" height={24} />
-                        </Grid>
-                      ) : formik.values.slots.length === 0 ? (
-                        <EmptyContent title="Please select the date." />
-                      ) : (
-                        formik.values.slots.map((slot: any, index: number) => (
-                          <Grid xs={6} key={index}>
-                            <FormControlLabel
-                              sx={{ marginLeft: 1 }}
-                              control={
-                                <Checkbox
-                                  checked={slot.value === formik.values.slot}
-                                  size="small"
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      formik.setFieldValue('slot', slot.value);
-                                    } else {
-                                      formik.setFieldValue('slot', '');
-                                    }
-                                  }}
-                                />
-                              }
-                              label={slot.label}
-                            />
-                            <Label variant="soft" color="success">
-                              {slot.studentCount} / {slot.studentLimit}
-                            </Label>
-                          </Grid>
-                        ))
-                      )}
-                    </Grid>
-                    {formik.touched.slot && formik.errors.slot && (
-                      <Typography variant="caption" color="error">
-                        {formik.errors.slot}
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Scrollbar>
-      <DialogActions sx={{ flexShrink: 0 }}>
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => {
-            handleClose(null, false);
-          }}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isAddLoading}
-          type="submit"
-          variant="contained"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          size="small"
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-      <CustomDialog
-        title={
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="h6">Slot</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2" color="text.primary">
+                Class :
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                {' '}
+                {standardName}
+              </Typography>
+            </Box>
           </Box>
-        }
-        open={dialog.value}
-        handleClose={dialog.onFalse}
-      >
-        <SlotsForm handleClose={dialog.onFalse} editData={null} />
-      </CustomDialog>
-
-      <CustomDialog
-        open={addExamTypeDialog.value}
-        handleClose={() => {
-          addExamTypeDialog.onFalse();
-        }}
-        title="Exam Type"
-      >
-        <ExamTypeForm
-          handleClose={() => {
-            handleCloseExamType(null, false);
+        </Paper>
+        <Scrollbar
+          sx={{
+            p: 2,
+            bgcolor: 'background.neutral',
           }}
-          editData={null}
-        />
-      </CustomDialog>
-      {/* </BackPopUpChecked> */}
-    </form>
+        >
+          <Grid container spacing={3}>
+            <Grid xs={4}>
+              <Paper>
+                <DateCalendar
+                  value={formik.values.examDate}
+                  onChange={(value) => {
+                    formik.setFieldValue('examDate', value);
+                    handleGetAllStudentCount(value);
+                  }}
+                  disablePast
+                  slots={{
+                    day: (props: any) => {
+                      const { day } = props;
+                      const absent = day.format('DD-MM-YYYY') === '11-09-2024';
+                      return (
+                        <PickersDay
+                          {...props}
+                          sx={absent ? { bgcolor: 'error.main', color: 'white' } : {}}
+                        />
+                      );
+                    },
+                  }}
+                />
+              </Paper>
+              {formik.touched.examDate && formik.errors.examDate && (
+                <Typography variant="caption" color="error">
+                  {formik.errors.examDate}
+                </Typography>
+              )}
+            </Grid>
+            <Grid xs={8}>
+              <Paper sx={{ p: 1, height: '100%' }}>
+                <Grid container spacing={2}>
+                  <Grid xs={12}>
+                    <Box>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        padding={2}
+                      >
+                        <Typography variant="h6">Slots</Typography>
+                      </Box>
+
+                      <Grid container spacing={2}>
+                        {isStudentCountLoading ? (
+                          <Grid xs={12}>
+                            <Box className="loader" height={24} />
+                          </Grid>
+                        ) : formik.values.slots.length === 0 ? (
+                          <EmptyContent title="Please select the date." />
+                        ) : (
+                          formik.values.slots.map((slot: any, index: number) => (
+                            <Grid xs={6} key={index}>
+                              <FormControlLabel
+                                sx={{ marginLeft: 1 }}
+                                control={
+                                  <Radio
+                                    checked={slot.value === formik.values.slot}
+                                    size="small"
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        formik.setFieldValue('slot', slot.value);
+                                      } else {
+                                        formik.setFieldValue('slot', '');
+                                      }
+                                    }}
+                                  />
+                                }
+                                label={slot.label}
+                              />
+                              <Label variant="soft" color="success">
+                                {slot.studentCount} / {slot.studentLimit}
+                              </Label>
+                            </Grid>
+                          ))
+                        )}
+                      </Grid>
+                      {formik.touched.slot && formik.errors.slot && (
+                        <Typography variant="caption" color="error">
+                          {formik.errors.slot}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions sx={{ flexShrink: 0 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              handleClose(null, false);
+            }}
+            size="small"
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isAddLoading}
+            type="submit"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            size="small"
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+        <CustomDialog
+          title={
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="h6">Slot</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+          open={dialog.value}
+          handleClose={dialog.onFalse}
+        >
+          <SlotsForm handleClose={dialog.onFalse} editData={null} />
+        </CustomDialog>
+
+        <CustomDialog
+          open={addExamTypeDialog.value}
+          handleClose={() => {
+            addExamTypeDialog.onFalse();
+          }}
+          title="Exam Type"
+        >
+          <ExamTypeForm
+            handleClose={() => {
+              handleCloseExamType(null, false);
+            }}
+            editData={null}
+          />
+        </CustomDialog>
+      </form>
+    </BackPopUpChecked>
   );
 };
 

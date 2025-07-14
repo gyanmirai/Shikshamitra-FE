@@ -7,7 +7,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -33,6 +33,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 import {
   EmployeeLeaveStatusType,
@@ -47,16 +48,18 @@ import {
 
 import { Label } from 'src/components/label';
 import { Editor } from 'src/components/editor';
-import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { editorClasses } from 'src/components/editor/classes';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
@@ -80,6 +83,8 @@ const LeaveAndAbsentScreen = () => {
 
   // Boolean state to control instant notification dialog visibility
   const sendInstantNotificationDialogValue = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   // Handler to open the instant notification dialog when students are selected
   const handlerSendNotification = () => {
@@ -92,6 +97,25 @@ const LeaveAndAbsentScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentLeaveQuery,
   });
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setWhichStatus(null);
+        setLeaveId('');
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dialog.onFalse();
+      confirmRejectDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      dialog.onFalse();
+      confirmRejectDialog.onFalse();
+    }
+  };
 
   const tableData = useMemo(
     () =>
@@ -304,7 +328,7 @@ const LeaveAndAbsentScreen = () => {
           </Box>
         }
       >
-        <LeaveRequestForm handleClose={dialog.onFalse} />
+        <LeaveRequestForm handleClose={handleClose} />
       </CustomDialog>
       <CustomDialog
         title="Remarks"
@@ -315,15 +339,7 @@ const LeaveAndAbsentScreen = () => {
           setLeaveId('');
         }}
       >
-        <LeaveAbsent
-          handleClose={() => {
-            setWhichStatus(null);
-            confirmRejectDialog.onFalse();
-            setLeaveId('');
-          }}
-          leaveId={leaveId}
-          status={whichStatus}
-        />
+        <LeaveAbsent handleClose={handleClose} leaveId={leaveId} status={whichStatus} />
       </CustomDialog>
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -344,7 +360,11 @@ const uploadProps = {
   multiple: true,
   accept: { 'image/*': [] },
 };
-const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
+const LeaveRequestForm = ({
+  handleClose,
+}: {
+  handleClose: (e: any, isSubmit: boolean) => void;
+}) => {
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
@@ -429,7 +449,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
     []
   );
 
-  const { errors, touched, setFieldValue, values, submitForm, handleSubmit } =
+  const { initialValues, errors, touched, setFieldValue, values, submitForm, handleSubmit } =
     useFormik<IFormValues>({
       initialValues: {
         leaveType: '',
@@ -444,16 +464,27 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
       validationSchema: Yup.object({
         leaveType: Yup.string().required('Leave Type is required'),
         isHalfDay: Yup.boolean(),
-        startDate: Yup.date().required('Start Date and Time is required'),
-        endDate: Yup.string()
+        startDate: Yup.mixed()
+          .required('Start Date is required')
+          .test(
+            'is-valid-dayjs',
+            'Start Date must be a valid date',
+            (value) => value && dayjs(value as any).isValid()
+          ),
+        endDate: Yup.mixed()
           .nullable()
+          .test(
+            'is-valid-dayjs',
+            'End Date must be a valid date',
+            (value) => !value || dayjs(value as any).isValid()
+          )
           .test('endDate', '', (value, context) => {
             const { isHalfDay } = context.parent;
             const { startDate } = context.parent;
             if (isHalfDay) return true;
             if (startDate && value) {
               const fullStartDate = dayjs(startDate);
-              const endDate = dayjs(value);
+              const endDate = dayjs(value as any);
 
               const isAfter = endDate.isAfter(fullStartDate);
 
@@ -462,7 +493,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
               );
             }
             if (!value && !isHalfDay) {
-              return context.createError({ message: 'End Date and Time is required' });
+              return context.createError({ message: 'End Date is required' });
             }
             return true;
           }),
@@ -495,16 +526,16 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
             description: val.description,
             attachment: val.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
           }).unwrap();
-          handleClose();
+          handleClose(null, true);
         } catch (err) {
           console.log(err);
         }
       },
     });
   return (
-    <>
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
-        <Grid container spacing={2} sx={{ my: 2 }}>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
             <CustomSelect
               options={allOrganization}
@@ -542,67 +573,61 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Autocomplete
-              loading={false}
-              noOptionsText="No Student Found"
-              sx={{ width: '100%' }}
-              value={student}
-              onChange={(e, value: any) => {
-                setStudent(value);
-              }}
-              options={StudentsData?.items || []}
-              getOptionLabel={(option: any) =>
-                `${option?.firstName || ''} ${option?.lastName || ''}`
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  label="Student"
-                  placeholder="Search  Student"
-                  fullWidth
-                />
-              )}
-              renderOption={(prop: any, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.firstName || ''} {option.lastName || ''}
-                </li>
-              )}
-            />
+            <CustomTooltip placement="top" title={student ? `${student}` : undefined}>
+              <Autocomplete
+                loading={false}
+                noOptionsText="No Student Found"
+                sx={{ width: '100%' }}
+                value={student}
+                onChange={(e, value: any) => {
+                  setStudent(value);
+                }}
+                options={StudentsData?.items || []}
+                getOptionLabel={(option: any) =>
+                  `${option?.firstName || ''} ${option?.lastName || ''}`
+                }
+                renderInput={(params) => (
+                  <TextField {...params} size="small" label="Student" fullWidth />
+                )}
+                renderOption={(prop: any, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.firstName || ''} {option.lastName || ''}
+                  </li>
+                )}
+              />
+            </CustomTooltip>
           </Grid>
         </Grid>
 
         {student?.id && (
-          <Box component="form">
-            <Grid container spacing={2}>
+          <Box component="form" mt={3}>
+            <Grid container spacing={3}>
               {/* Row 1: Leave Type and Half Day Button */}
-              <Grid item xs={8}>
-                <TextField
-                  name="leaveType"
-                  select
-                  fullWidth
-                  label="Leave Type *"
-                  size="small"
-                  value={values.leaveType}
-                  onChange={(e) => setFieldValue('leaveType', e.target.value)}
-                  error={touched.leaveType && Boolean(errors.leaveType)}
-                  helperText={touched.leaveType && errors.leaveType}
-                >
-                  {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                    <MenuItem key={option.type} value={option.id}>
-                      {option.type}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              <Grid item xs={12} sm={values.isHalfDay ? 4 : 3}>
+                <ShakingTextField error={!!(touched.leaveType && errors.leaveType) || false}>
+                  <TextField
+                    name="leaveType"
+                    select
+                    fullWidth
+                    label="Leave Type *"
+                    size="small"
+                    value={values.leaveType}
+                    onChange={(e) => setFieldValue('leaveType', e.target.value)}
+                    error={touched.leaveType && Boolean(errors.leaveType)}
+                    helperText={touched.leaveType && errors.leaveType}
+                  >
+                    {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
+                      <MenuItem key={option.type} value={option.id}>
+                        {option.type}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </ShakingTextField>
                 <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
                   <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
                 </CustomDialog>
               </Grid>
-              <Grid
-                item
-                xs={4}
-                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
+              <Grid item xs={values.isHalfDay ? 4 : 3}>
                 <Button
                   variant={values.isHalfDay ? 'contained' : 'outlined'}
                   color={values.isHalfDay ? 'primary' : 'inherit'}
@@ -631,88 +656,97 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
               </Grid>
 
               {/* Row 2: Date Fields - Full Width */}
-              <Grid item xs={values.isHalfDay ? 12 : 6}>
-                <DatePicker
-                  label={values.isHalfDay ? 'Date' : 'Start Date'}
-                  onChange={(value) => setFieldValue('startDate', value)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      helperText: touched.startDate && errors.startDate,
-                      error: touched.startDate && Boolean(errors.startDate),
-                      sx: { width: '272px' },
-                    },
-                  }}
-                />
-              </Grid>
-              {!values.isHalfDay && (
-                <Grid item xs={6}>
+              <Grid item xs={values.isHalfDay ? 4 : 3}>
+                <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                   <DatePicker
-                    label="End Date"
-                    onChange={(value) => setFieldValue('endDate', value)}
+                    label={values.isHalfDay ? 'Date *' : 'Start Date *'}
+                    onChange={(value) => setFieldValue('startDate', value)}
                     slotProps={{
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        helperText: touched.endDate && errors.endDate,
-                        error: touched.endDate && Boolean(errors.endDate),
-                        sx: { width: '272px' },
+                        helperText: touched.startDate && errors.startDate,
+                        error: touched.startDate && Boolean(errors.startDate),
                       },
                     }}
+                    disablePast
                   />
+                </ShakingTextField>
+              </Grid>
+              {!values.isHalfDay && (
+                <Grid item xs={values.isHalfDay ? 4 : 3}>
+                  <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
+                    <DatePicker
+                      label="End Date *"
+                      onChange={(value) => setFieldValue('endDate', value)}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          helperText: touched.endDate && errors.endDate,
+                          error: touched.endDate && Boolean(errors.endDate),
+                        },
+                      }}
+                      disablePast
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {/* Row 3: Description and Upload Document */}
-              <Grid item xs={9} sx={{ mt: 2, display: 'flex', flexDirection: 'column' }}>
-                <Editor
-                  onChange={(value) => {
-                    setFieldValue('description', value);
-                  }}
-                  placeholder="Leave description"
-                  error={touched.description && Boolean(errors.description)}
-                  helperText={touched.description && errors.description}
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    [`& .${editorClasses.content.root}`]: {
-                      minHeight: '200px',
+              <Grid item xs={12} mb={-2}>
+                <Typography variant="subtitle2">Leave Description</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <ShakingTextField error={touched.description && Boolean(errors.description)}>
+                  <Editor
+                    onChange={(value) => {
+                      setFieldValue('description', value);
+                    }}
+                    placeholder="Leave description *"
+                    error={touched.description && Boolean(errors.description)}
+                    helperText={touched.description && errors.description}
+                    sx={{
                       height: '100%',
-                      flex: 1,
-                      '& .tiptap': {
-                        '&.ProseMirror': {
-                          padding: '16px',
-                          paddingBottom: '24px',
-                          minHeight: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      [`& .${editorClasses.content.root}`]: {
+                        minHeight: '200px',
+                        height: '100%',
+                        flex: 1,
+                        '& .tiptap': {
+                          '&.ProseMirror': {
+                            padding: '16px',
+                            paddingBottom: '24px',
+                            minHeight: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-start',
+                          },
                         },
                       },
-                    },
-                  }}
-                />
+                    }}
+                  />
+                </ShakingTextField>
               </Grid>
-              <Grid item xs={3} sx={{ mt: 2, display: 'flex', flexDirection: 'column' }}>
-                <Upload
-                  {...uploadProps}
-                  thumbnail
+              <Grid item xs={12}>
+                <FileUploader
+                  // disabled={editData}
+                  // @ts-ignore
                   value={values.docs}
                   multiple={false}
-                  onDrop={(acceptedFiles) => {
-                    if (acceptedFiles.length > 0) {
-                      const file = acceptedFiles[0];
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        const base64String = reader.result;
-                        setFieldValue('docs', base64String);
-                      };
-                      reader.readAsDataURL(file);
-                    }
+                  onChange={(value) => {
+                    // const reader = new FileReader();
+                    setFieldValue('docs', value);
+                    // reader.readAsDataURL(value as File);
+                    // reader.readAsDataURL(value as File);
+                    // reader.onload = () => {
+                    //   const base64String = reader.result;
+                    // };
                   }}
+                  primaryText="Please Upload Your File"
+                  secondaryText="Maximum file size is 5MB"
                 />
               </Grid>
             </Grid>
@@ -724,7 +758,9 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
-          onClick={handleClose}
+          onClick={() => {
+            handleClose(null, false);
+          }}
           variant="outlined"
         >
           Cancel
@@ -739,7 +775,7 @@ const LeaveRequestForm = ({ handleClose }: { handleClose: () => void }) => {
           Submit
         </Button>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };
 
@@ -748,7 +784,7 @@ const LeaveAbsent = ({
   status,
   leaveId,
 }: {
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
   status: EmployeeLeaveStatusType | null;
   leaveId: string;
 }) => {
@@ -764,7 +800,7 @@ const LeaveAbsent = ({
   // values: contains form field values
   // handleChange: handles input field changes
   // handleSubmit: handles form submission
-  const { values, handleChange, handleSubmit } = useFormik({
+  const { initialValues, values, handleChange, handleSubmit } = useFormik({
     // Set initial form values
     initialValues: {
       remarks: '',
@@ -779,7 +815,7 @@ const LeaveAbsent = ({
             rejectionReason: values.remarks,
           },
         }).unwrap();
-        handleClose();
+        handleClose(null, true);
         shikshaMitraToast.success({
           message: `Leave Request ${EmployeeLeaveStatusType[status as EmployeeLeaveStatusType]}  successfully`,
         });
@@ -790,24 +826,41 @@ const LeaveAbsent = ({
   });
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={3}>
-          <TextField
-            value={values.remarks}
-            onChange={handleChange}
-            label="Remarks"
-            multiline
-            fullWidth
-            rows={4}
-          />
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={handleClose}>
-          Cancel
-        </Button>
-      </DialogActions>
-    </Box>
+    <BackPopUpChecked initiavalues={initialValues} values={values}>
+      <Box component="form" onSubmit={handleSubmit}>
+        <Scrollbar sx={{ p: 2 }}>
+          <Stack spacing={3}>
+            <TextField
+              value={values.remarks}
+              onChange={handleChange}
+              label="Remarks *"
+              multiline
+              fullWidth
+              rows={4}
+            />
+          </Stack>
+        </Scrollbar>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => {
+              handleClose(null, false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={(e: any) => handleSubmit(e)}
+            variant="contained"
+            size="small"
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </Box>
+    </BackPopUpChecked>
   );
 };

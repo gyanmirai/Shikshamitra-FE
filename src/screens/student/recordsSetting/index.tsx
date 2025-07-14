@@ -394,7 +394,13 @@ const GroupManagementForm = ({
           type="submit"
           variant="contained"
           loading={isLoading || isUpdateLoading}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
