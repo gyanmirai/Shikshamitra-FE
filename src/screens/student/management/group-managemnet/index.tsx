@@ -428,6 +428,22 @@ const GroupManagement = ({
             label: 'House Name',
             minWidth: '160px',
             align: 'left',
+            render(value, row) {
+              console.log('value---', value);
+
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {/* <SubjectColorIndicator color={row.color} /> */}
+                  {value ? (
+                    <Typography variant="caption" fontSize="13px">
+                      {value}
+                    </Typography>
+                  ) : (
+                    '-'
+                  )}
+                </Box>
+              );
+            },
             // render(value) {
             //   return (
             //     <Box
@@ -449,6 +465,8 @@ const GroupManagement = ({
             minWidth: '160px',
             align: 'left',
             render(value) {
+              console.log('Division Leader---', value);
+
               return (
                 <Box
                   sx={{

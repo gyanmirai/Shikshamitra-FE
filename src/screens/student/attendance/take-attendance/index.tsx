@@ -134,6 +134,7 @@ const TakeAttendanceScreen = () => {
       setStudentData(
         data?.items?.map((item: any) => ({
           ...item,
+          rollNo: item?.student?.rollNo || '-',
           name: `${item?.student?.firstName} ${item?.student?.lastName} ${item?.student?.middleName}`,
           percentage: (item.presentDays / item.totalDays) * 100,
           // Ensure isPresent reflects the actual attendance data from API
@@ -338,22 +339,22 @@ const TakeAttendanceScreen = () => {
           disabled={
             studentData.length === 0 || studentData.every((item: any) => item.isPresent === null)
           }
-          sx={{
-            backgroundColor: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-              boxShadow: 2,
-            },
-            '&:disabled': {
-              backgroundColor: 'text.disabled',
-              color: 'text.secondary',
-            },
-            minWidth: '70px',
-            fontWeight: 600,
-            fontSize: '0.8rem',
-            py: 0.5,
-            boxShadow: 1,
-          }}
+          // sx={{
+          //   backgroundColor: 'primary.main',
+          //   '&:hover': {
+          //     backgroundColor: 'primary.dark',
+          //     boxShadow: 2,
+          //   },
+          //   '&:disabled': {
+          //     backgroundColor: 'text.disabled',
+          //     color: 'text.secondary',
+          //   },
+          //   minWidth: '70px',
+          //   fontWeight: 600,
+          //   fontSize: '0.8rem',
+          //   py: 0.5,
+          //   boxShadow: 1,
+          // }}
         >
           Save
         </Button>
@@ -376,7 +377,7 @@ const TakeAttendanceScreen = () => {
         <Box
           sx={{
             display: 'flex',
-            gap: 2,
+            gap: 1,
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'center',
@@ -389,14 +390,14 @@ const TakeAttendanceScreen = () => {
             sx={{
               minWidth: '90px',
               textAlign: 'center',
-              py: 1,
+              py: 1.7,
               px: 2,
               borderRadius: 2,
               fontSize: '14px',
               fontWeight: 600,
             }}
           >
-            Present: {studentData.filter((item: any) => item.isPresent === true).length}
+            Present : {studentData.filter((item: any) => item.isPresent === true).length}
           </Label>
           <Label
             color="error"
@@ -404,7 +405,8 @@ const TakeAttendanceScreen = () => {
             sx={{
               minWidth: '80px',
               textAlign: 'center',
-              py: 1,
+              py: 1.7,
+
               px: 2,
               borderRadius: 2,
               fontSize: '14px',
@@ -419,7 +421,7 @@ const TakeAttendanceScreen = () => {
             sx={{
               minWidth: '100px',
               textAlign: 'center',
-              py: 1,
+              py: 1.7,
               px: 2,
               borderRadius: 2,
               fontSize: '14px',
@@ -629,7 +631,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent.length !== 0}
         tableId="student-attendance-list"
-        noDataText="No Students Found"
+        noDataText="No Students Found for Attendance"
         isLoading={isLoading}
         rowProps={(tableData: any) => ({
           sx: {
@@ -684,7 +686,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           //   },
           // },
           {
-            id: 'student.rollNo',
+            id: 'rollNo',
             label: 'Roll No',
             align: 'left',
             minWidth: '100px',
@@ -742,6 +744,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             minWidth: '280px',
             isFilter: false,
             isSort: false,
+            align: 'left',
             render(value, row) {
               return row.isPresent === false ? (
                 <TextField

@@ -204,6 +204,7 @@ const StudentManagementScreen = () => {
       <Card
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          mb: 1,
         }}
       >
         <CustomTabs

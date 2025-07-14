@@ -435,7 +435,9 @@ const RegisterForm = ({
       try {
         if (activeStep === 0) {
           await handleGeneralFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Student details updated successfully' });
+          if (!isComeFromIssueForm) {
+            shikshaMitraToast.success({ message: 'Student details updated successfully' });
+          }
         } else if (activeStep === 2) {
           await handleFamilyFormSubmit(values, formik);
           shikshaMitraToast.success({ message: 'Family details updated successfully' });
@@ -478,6 +480,7 @@ const RegisterForm = ({
       handleGeneralFormSubmit,
       handleMedicalFormSubmit,
       handlePreviousSchoolFormSubmit,
+      isComeFromIssueForm,
     ]
   );
 

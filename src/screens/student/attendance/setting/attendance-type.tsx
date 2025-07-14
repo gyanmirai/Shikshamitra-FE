@@ -24,6 +24,7 @@ import {
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -60,13 +61,21 @@ const AttendanceType = ({ dialog }: any) => {
 
   // Close dialog and reset edit data
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on dialog close animation
+    };
+
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dispatch(setIsChanges(false));
-      setEditData(null);
       dialog?.onFalse();
+      resetState();
     } else if (!isChanges) {
-      setEditData(null);
       dialog?.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
     }
   };
 
@@ -162,6 +171,9 @@ const AttendanceType = ({ dialog }: any) => {
             size="small"
             onClick={async () => {
               await deleteAttendanceType(editData?.id);
+              shikshaMitraToast.success({
+                message: `${editData?.type} leave type deleted sucessfully`,
+              });
               confirm.onFalse();
               setEditData(null);
             }}
@@ -244,8 +256,10 @@ export const AttendanceTypeForm = ({
             id: editData.id,
             body: value,
           });
+          shikshaMitraToast.success({ message: `${value.type} leave type updated sucessfully` });
         } else {
           await addAttendanceType(value);
+          shikshaMitraToast.success({ message: `${value.type} leave type created sucessfully` });
         }
         handleClose(null, true);
       } catch (error) {
@@ -279,15 +293,13 @@ export const AttendanceTypeForm = ({
                 sx={{ mb: 1 }}
                 color={touched.color && errors.color ? 'error.main' : 'text.primary'}
               >
-                Leave Type Color
+                Leave Type Color *
               </Typography>
 
               {/* Color Picker */}
               <ColorPickerCircle
                 onSelect={(color: string) => {
                   setFieldValue('color', color);
-                  handleBlur({ target: { name: 'color' } });
-                  setFieldTouched('color', true);
                 }}
                 initialColor={values.color}
               />
