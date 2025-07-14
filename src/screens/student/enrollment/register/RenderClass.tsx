@@ -2,6 +2,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 const RenderClass = (props: any) => {
   const { formik, isEdit } = props;
@@ -15,21 +16,23 @@ const RenderClass = (props: any) => {
     params: values.medium,
   });
   return (
-    <CustomSelect
-      name="class"
-      label="Class *"
-      isLoading={classLoading}
-      disabled={!values.medium || !isEdit}
-      labelKey="name"
-      valueKey="id"
-      options={classes || []}
-      value={values.class}
-      onChange={(value) => setFieldValue('class', value)}
-      onBlur={formik.handleBlur}
-      error={!!(touched.class && errors.class) || false}
-      helperText={(touched.class && errors.class) || ''}
-      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-    />
+    <ShakingTextField error={!!(touched.class && errors.class) || false}>
+      <CustomSelect
+        name="class"
+        label="Class *"
+        isLoading={classLoading}
+        disabled={!values.medium || !isEdit}
+        labelKey="name"
+        valueKey="id"
+        options={classes || []}
+        value={values.class}
+        onChange={(value) => setFieldValue('class', value)}
+        onBlur={formik.handleBlur}
+        error={!!(touched.class && errors.class) || false}
+        helperText={(touched.class && errors.class) || ''}
+        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+      />
+    </ShakingTextField>
   );
 };
 

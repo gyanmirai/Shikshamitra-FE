@@ -2,6 +2,7 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 const RenderBoard = (props: any) => {
   // Destructure formik from props
@@ -22,25 +23,27 @@ const RenderBoard = (props: any) => {
   console.log('filteredBoard----', filteredBoard);
 
   return (
-    <CustomSelect
-      name="board"
-      label="Board *"
-      isLoading={boardLoading}
-      options={filteredBoard || []}
-      disabled={!values.academicYear || !isEdit}
-      labelKey="name"
-      valueKey="id"
-      value={values.board}
-      onBlur={formik.handleBlur}
-      onChange={(value) => {
-        setFieldValue('board', value);
-        setFieldValue('medium', null);
-        setFieldValue('class', null);
-      }}
-      error={!!(touched.board && errors.board) || false}
-      helperText={(touched.board && errors.board) || ''}
-      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-    />
+    <ShakingTextField error={!!(touched.board && errors.board) || false}>
+      <CustomSelect
+        name="board"
+        label="Board *"
+        isLoading={boardLoading}
+        options={filteredBoard || []}
+        disabled={!values.academicYear || !isEdit}
+        labelKey="name"
+        valueKey="id"
+        value={values.board}
+        onBlur={formik.handleBlur}
+        onChange={(value) => {
+          setFieldValue('board', value);
+          setFieldValue('medium', null);
+          setFieldValue('class', null);
+        }}
+        error={!!(touched.board && errors.board) || false}
+        helperText={(touched.board && errors.board) || ''}
+        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+      />
+    </ShakingTextField>
   );
 };
 
