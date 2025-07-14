@@ -7,6 +7,8 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { useTheme, Skeleton, TextField, Autocomplete } from '@mui/material';
 
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
+
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -28,6 +30,7 @@ import type { GlobalAcademicSearchOption } from './types';
 const GlobalAcademicSearch = () => {
   // Custom hooks for UI components
   const theme = useTheme();
+  const [showConfirm, ConfirmDialog] = useConfirmDialog();
 
   const dispatch = useDispatch();
 
@@ -56,34 +59,6 @@ const GlobalAcademicSearch = () => {
     }));
     return mergedData || [];
   }, [boardData?.items, years?.items]);
-
-  // // Effect to handle academic selection updates
-  // useEffect(() => {
-  //   if (!isYearLoading && !isBoardLoading && allData.length && currentMedium?.id) {
-  //     const findValues = (items: any[], id: string): any =>
-  //       items.find(
-  //         (item: any) =>
-  //           item.id === id ||
-  //           ((item?.boards || item?.educationMediums)?.length &&
-  //             findValues(item?.boards || item?.educationMediums, id))
-  //       );
-
-  //     const values = findValues(allData, currentMedium?.id);
-
-  //     if (values) {
-  //       const { boards, ...year } = values;
-  //       const selectedBoard = boards.find((item: any) =>
-  //         item.educationMediums.find((i: any) => i.id === currentMedium?.id)
-  //       );
-  //       dispatch(setCurrentYear(year));
-  //       dispatch(setCurrentBoard(selectedBoard));
-  //     } else {
-  //       dispatch(setCurrentYear(null));
-  //       dispatch(setCurrentBoard(null));
-  //       dispatch(setCurrentMedium(null));
-  //     }
-  //   }
-  // }, [allData, currentMedium, dispatch, isBoardLoading, isYearLoading]);
 
   /**
    * Generates options for the division autocomplete
@@ -129,31 +104,41 @@ const GlobalAcademicSearch = () => {
   return isYearLoading || isBoardLoading ? (
     <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
   ) : (
-    <Autocomplete
-      options={options}
-      getOptionLabel={(option) => option.label}
-      value={selectedDivision}
-      loading={isYearLoading || isBoardLoading}
-      clearIcon={false}
-      disableClearable
-      size="small"
-      onChange={(event, newValue) => {
-        dispatch(setCurrentYear(newValue?.academicYear));
-        dispatch(setCurrentBoard(newValue?.board));
-        dispatch(setCurrentMedium(newValue?.medium));
-        setSelectedDivision(newValue);
-      }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          variant="filled"
-          size="small"
-          label="Academic Year, Board and Medium"
-          // placeholder="Select a academic year, board and medium"
-        />
-      )}
-      sx={{ minWidth: '250px', width: '100%', '& *': { fontSize: '14px !important' } }}
-    />
+    <>
+      {ConfirmDialog}
+      <Autocomplete
+        options={options}
+        getOptionLabel={(option) => option.label}
+        value={selectedDivision}
+        loading={isYearLoading || isBoardLoading}
+        clearIcon={false}
+        disableClearable
+        size="small"
+        onChange={async (event, newValue) => {
+          const confirmed = await showConfirm({
+            title: 'Change Academic Year, Board and Medium',
+            message: 'Are you sure you want to change academic year, board and medium?',
+            icon: 'warning',
+          });
+          if (confirmed) {
+            dispatch(setCurrentYear(newValue?.academicYear));
+            dispatch(setCurrentBoard(newValue?.board));
+            dispatch(setCurrentMedium(newValue?.medium));
+            setSelectedDivision(newValue);
+          }
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="filled"
+            size="small"
+            label="Academic Year, Board and Medium"
+            // placeholder="Select a academic year, board and medium"
+          />
+        )}
+        sx={{ minWidth: '250px', width: '100%', '& *': { fontSize: '14px !important' } }}
+      />
+    </>
   );
 };
 export default GlobalAcademicSearch;

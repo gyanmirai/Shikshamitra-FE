@@ -24,6 +24,7 @@ import {
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -92,6 +93,9 @@ const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
             size="small"
             onClick={async () => {
               await deletePreference(editData?.id);
+              shikshaMitraToast.success({
+                message: `${editData?.preferenceName} inquiry preference deleted successfully`,
+              });
               confirm.onFalse();
               setEditData(null);
             }}

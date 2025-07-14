@@ -15,6 +15,7 @@ import { Add } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -232,6 +233,7 @@ export interface StudentAdditionalDetails {
   sponsorName?: string; // Add any additional fields as required
 }
 const InquiryScreen = () => {
+  const [showConfirm, ConfirmDialog] = useConfirmDialog();
   // Dialog state for inquiry form modal
   const inquiryDialog = useBoolean();
 
@@ -259,8 +261,16 @@ const InquiryScreen = () => {
    * If no unsaved changes:
    * - Simply closes dialog and clears edit data
    */
-  const handleClose = (_e?: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const handleClose = async (_e?: any, isSubmit?: boolean) => {
+    if (
+      isSubmit ||
+      (isChanges &&
+        (await showConfirm({
+          title: 'Alert',
+          message: 'Are you sure you want to leave this page?',
+          icon: 'warning',
+        })))
+    ) {
       dispatch(setIsChanges(false));
       inquiryDialog.onFalse();
       setEditData(null);
@@ -272,6 +282,7 @@ const InquiryScreen = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {ConfirmDialog}
       <CustomBreadcrumbs
         heading="Inquiry"
         description="Streamlined management of admission related inquiries from the students and parents."

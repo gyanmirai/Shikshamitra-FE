@@ -29,7 +29,7 @@ import { FileThumbnail } from '../file-thumbnail';
 
 const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
 
-interface FileData {
+export interface FileData {
   name: string;
   size?: number;
   type?: string;

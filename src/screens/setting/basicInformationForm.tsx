@@ -1,10 +1,12 @@
 'use client';
 
+import type { FileData } from 'src/components/custom-upload';
+
 // @ts-nocheck
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
-import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 
 import Grid from '@mui/material/Unstable_Grid2';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
@@ -27,6 +29,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useAddTenantMutation,
   useGetAllTenantsQuery,
+  useGetTenantByIdQuery,
   useUpdateTenantMutation,
 } from 'src/redux/tenant/tenantApi';
 
@@ -34,10 +37,10 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
-import FileUploader from 'src/components/custom-upload';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import FileUploader1 from 'src/components/custom-upload/custom-upload';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -70,19 +73,21 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   });
   const formik = useFormik<IFormValues>({
     initialValues: {
-      instituteName: editData?.name || '',
+      instituteName: editData?.extraProperties?.InstituteName || '',
       instituteLogo: editData?.extraProperties?.Logo || [],
       instituteBanner: editData?.extraProperties?.Banner || [],
       addressLine1: editData?.extraProperties?.Address1 || '',
       addressLine2: editData?.extraProperties?.Address2 || '',
       addressLine3: editData?.extraProperties?.Address3 || '',
-      city: editData?.extraProperties?.City ? { name: editData?.extraProperties?.City } : undefined,
+      city: editData?.extraProperties?.City
+        ? { name: editData?.extraProperties?.City }
+        : { name: '' },
       stateProvince: editData?.extraProperties?.State
         ? {
             name: editData?.extraProperties?.State?.name,
             isoCode: editData?.extraProperties?.State?.isoCode,
           }
-        : undefined,
+        : { name: '', isoCode: '' },
       zipPostalCode: editData?.extraProperties?.PostalCode || '',
       country: editData?.extraProperties?.Country
         ? {
@@ -95,6 +100,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       password: '',
       principleSign: editData?.extraProperties?.PrincipleSign || [],
     },
+    enableReinitialize: true,
     validationSchema: basicInformationvalidationSchema,
     onSubmit: async (formValues: IFormValues) => {
       try {
@@ -103,7 +109,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
             id: editData.id,
             body: {
               name: formValues.instituteName,
-              adminEmailAddress: formValues.emailAddress,
+              email: formValues.emailAddress,
               adminPassword: formValues.password,
               extraProperties: {
                 Country: {
@@ -187,7 +193,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                   <TextField
                     fullWidth
                     size="small"
-                    name="instituteName"
+                    name="instituteName *"
                     label="Institute Name"
                     value={values.instituteName}
                     onChange={(e) => {
@@ -203,7 +209,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     fullWidth
                     size="small"
                     name="addressLine1"
-                    label="Building No./Flat/House No."
+                    label="Building No./Flat/House No. *"
                     value={values.addressLine1}
                     onChange={(e) => {
                       const newValue = capitalize(e.target.value);
@@ -218,7 +224,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     fullWidth
                     size="small"
                     name="addressLine2"
-                    label="Area/Locality/Road Name"
+                    label="Area/Locality/Road Name *"
                     value={values.addressLine2}
                     onChange={(e) => {
                       const newValue = capitalize(e.target.value);
@@ -247,6 +253,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                   <CountryComponent
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
+                      setFieldValue('city', null);
                       setFieldValue('country', value);
                     }}
                     size="small"
@@ -257,7 +264,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     // @ts-ignore
                     helperText={touched.country && errors?.country?.name}
                     // fieldProps={{ size: 'small' }}
-                    textFieldProps={{ label: 'Country', size: 'small' }}
+                    textFieldProps={{ label: 'Country *', size: 'small' }}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -269,10 +276,11 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     value={values.stateProvince}
                     countryValue={values.country}
                     fullWidth
-                    // @ts-ignore
-                    error={touched?.stateProvince && Boolean(errors?.stateProvince?.name)}
-                    // @ts-ignore
-                    helperText={touched?.stateProvince && errors?.stateProvince?.name}
+                    error={touched.stateProvince && Boolean((errors?.stateProvince as any)?.name)}
+                    helperText={
+                      (touched.stateProvince && (errors?.stateProvince as any)?.name) || ''
+                    }
+                    textFieldProps={{ label: 'State *', size: 'small' }}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -285,6 +293,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     error={touched.city && Boolean(errors.city?.name)}
                     // @ts-ignore
                     helperText={touched.city && errors.city?.name}
+                    textFieldProps={{ label: 'City *', size: 'small' }}
                   />
                 </Grid>
                 <Grid xs={12} sm={6} md={4} lg={3}>
@@ -292,9 +301,14 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     fullWidth
                     size="small"
                     name="zipPostalCode"
-                    label="ZIP/Postal Code"
+                    label="ZIP/Postal Code *"
                     value={values.zipPostalCode}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 6) {
+                        setFieldValue('zipPostalCode', value);
+                      }
+                    }}
                     type="number"
                     error={touched.zipPostalCode && Boolean(errors.zipPostalCode)}
                     helperText={touched.zipPostalCode && errors.zipPostalCode}
@@ -308,11 +322,10 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     onChange={(value) => {
                       setFieldValue('contactNumber', value);
                     }}
-                    placeholder="Contact No."
                     error={touched.contactNumber && Boolean(errors.contactNumber)}
                     helperText={touched.contactNumber && errors.contactNumber}
                     variant="outlined"
-                    label="Contact No."
+                    label="Contact No. *"
                     size="small"
                   />
                 </Grid>
@@ -321,7 +334,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     fullWidth
                     size="small"
                     name="emailAddress"
-                    label="Email Address"
+                    label="Email Address *"
                     value={values.emailAddress}
                     onChange={handleChange}
                     error={touched.emailAddress && Boolean(errors.emailAddress)}
@@ -356,18 +369,26 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
               </Grid>
             </Box>
           </Grid>
-          <Grid xs={4}>
-            <BasicInformationAssets
-              formik={formik}
-              name="instituteLogo"
-              title="Upload Institute Logo"
-            />
-          </Grid>
-          <Grid xs={4}>
+          {[
+            { name: 'instituteLogo', title: 'Upload Institute Logo' },
+            { name: 'instituteBanner', title: 'Upload Institute Banner' },
+            { name: 'principleSign', title: 'Upload Principle Sign' },
+          ].map((item, index) => (
+            <Grid xs={4}>
+              <BasicInformationAssets
+                formik={formik}
+                name={item.name}
+                title={item.title}
+                key={item.name}
+              />
+            </Grid>
+          ))}
+          {/* <Grid xs={4}>
             <BasicInformationAssets
               formik={formik}
               name="instituteBanner"
               title="Upload Institute Banner"
+              key="instituteBanner"
             />
           </Grid>
           <Grid xs={4}>
@@ -375,8 +396,9 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
               formik={formik}
               name="principleSign"
               title="Upload Principle Sign"
+              key="principleSign"
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Scrollbar>
 
@@ -415,15 +437,18 @@ const BasicInformation = () => {
   // State to store data for editing an institute
   const [editData, setEditData] = useState<any>(null);
 
-  // const { data: tenantDetail, isLoading: isTenantLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetTenantByIdQuery,
-  //   params: store?.user?.profile.tenantid,
-  //   options: {
-  //     skip: !store?.user?.profile.tenantid,
-  //   },
-  // });
-  // console.log('🚀 ~ BasicInformation ~ tenantDetail:', tenantDetail);
+  const { data: tenantDetail, isLoading: isTenantLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTenantByIdQuery,
+    params: store?.user?.profile.tenantid,
+    options: {
+      skip: !store?.user?.profile.tenantid,
+    },
+  });
+  console.log('🚀 ~ BasicInformation ~ tenantDetail:', tenantDetail);
+  useEffect(() => {
+    setEditData(tenantDetail);
+  }, [tenantDetail]);
 
   /**
    * Handles closing the form and resetting edit data
@@ -496,14 +521,6 @@ const BasicInformation = () => {
               </>
             }
             tableId="institute-setup"
-            searchFieldProps={{
-              placeholder: 'Search Institute',
-              label: 'Search Institute',
-              sx: {
-                maxWidth: '400px',
-                width: '100%',
-              },
-            }}
             columns={[
               { label: 'Institute Name', id: 'name' },
               {
@@ -619,22 +636,38 @@ export default BasicInformation;
  * @param {string} name - Field name for the form values
  * @param {string} title - Title to display above the upload section
  */
-const BasicInformationAssets = ({ formik, name, title }: any) => (
-  <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }}>
-    <FileUploader
-      onChange={(values) => {
-        formik.setFieldValue(name, values);
-      }}
-      multiple
-      parentsProps={{ sx: { width: '100%' } }}
-      showVisibleDocumentCount={2}
-      value={formik.values[name]}
-      primaryText="Upload Institute Logo"
-      secondaryText="maximum upload size (5mb)"
-      error={formik.touched[name] && formik.errors[name]}
-    />
-  </Card>
-);
+const BasicInformationAssets = ({ formik, name, title }: any) => {
+  console.log(name, 'name==============>');
+  const handleChange = (values: (File | FileData)[]) => {
+    console.log('🚀 ~ BasicInformationAssets ~ values:', name, values);
+    formik.setFieldValue(name, values);
+  };
+  return (
+    <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }} key={name}>
+      <FileUploader1
+        multiple
+        previewCount={3}
+        onChange={(files) => formik.setFieldValue(name, files)}
+        value={formik.values[name]}
+        error={formik.touched[name] && formik.errors[name]}
+        helperText={formik.touched[name] && formik.errors[name]}
+        label={title}
+        outputFormat="base64"
+      />
+      {/* <FileUploader1
+        onChange={handleChange}
+        multiple
+        parentsProps={{ sx: { width: '100%' } }}
+        showVisibleDocumentCount={2}
+        value={formik.values[name]}
+        primaryText={title}
+        secondaryText="maximum upload size (5mb)"
+        error={formik.touched[name] && formik.errors[name]}
+        key={name}
+      /> */}
+    </Card>
+  );
+};
 
 // ImageSlider component displays a modal dialog with image carousel functionality
 const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {
