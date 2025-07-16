@@ -20,11 +20,17 @@ import {
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { infoValidations } from './employee-form-validation';
 // import {
 //   FamilyFields,
 //   PayrollFields,
+
+import type { RootState } from 'src/redux/store';
+
+import { useSelector, useDispatch } from 'react-redux';
+
+import { infoValidations } from './employee-form-validation';
 //   WorkExperienceFields,
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
@@ -70,6 +76,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
   // State to control edit mode
   const [isEdit, setIsEdit] = useState(false);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const [isBackClick, setIsBackClick] = useState(false);
 
@@ -295,6 +303,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     },
     // Use validation schema based on active tab
     validationSchema: infoValidations[activeTabIndex],
+
     onSubmit: async (values, { setSubmitting }) => {
       await onSubmit(values);
       setSubmitting(false);
@@ -307,127 +316,129 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     //   '& label': { fontSize: '12px' },
     // }}
     >
-      <form onSubmit={formik.handleSubmit}>
-        <Card
-          sx={{
-            px: 0,
-            // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          }}
-        >
-          <CustomTabs
-            value={tabs.value}
-            onChange={handleTabChange}
-            variant="fullWidth"
-            // slotProps={{ tab: { px: 0 } }}
-          >
-            {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} />
-            ))}
-          </CustomTabs>
-
-          <FormSlider
-            steps={TABS}
-            isBackClick={isBackClick}
-            step={activeTabIndex}
-            containerProps={{
-              sx: {
-                p: 0,
-              },
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <form onSubmit={formik.handleSubmit}>
+          <Card
+            sx={{
+              px: 0,
+              // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
             }}
           >
-            <Grid container spacing={2} p={2}>
-              {' '}
-              {fields[activeTabIndex].map((field: FieldsType, index: number) => (
-                <Grid
-                  item
-                  xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                  md={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                  key={field.name}
-                  {...field.gridProps}
-                  mb="15px"
-                >
-                  {field.renderComp ? (
-                    field.renderComp({
-                      formik,
-                      field,
-                      editData,
-                    })
-                  ) : field.type === 'date' ? (
-                    <ShakingTextField
-                      error={
-                        formik.touched[field.name as keyof typeof formik.values] &&
-                        Boolean(formik.errors[field.name as keyof typeof formik.values])
-                      }
-                    >
-                      <DatePicker
-                        label={field.label}
-                        name={field.name}
-                        value={formik.values[field.name as keyof typeof formik.values]}
-                        format="DD-MM-YYYY"
-                        onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                        sx={{
-                          ...((field?.sx as any) || {}),
-                        }}
-                        disabled={!isEdit}
-                        slotProps={{
-                          textField: {
-                            placeholder: field.placeholder,
-                            fullWidth: true,
-                            size: 'small',
-                            helperText:
-                              formik.touched[field.name as keyof typeof formik.values] &&
-                              formik.errors[field.name as keyof typeof formik.values]
-                                ? String(formik.errors[field.name as keyof typeof formik.values])
-                                : undefined,
-                            error:
-                              formik.touched[field.name as keyof typeof formik.values] &&
-                              Boolean(formik.errors[field.name as keyof typeof formik.values]),
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                  ) : (
-                    <ShakingTextField
-                      error={
-                        formik.touched[field.name as keyof typeof formik.values] &&
-                        Boolean(formik.errors[field.name as keyof typeof formik.values])
-                      }
-                    >
-                      <TextField
-                        key={field.name}
-                        type={field.type}
-                        size="small"
-                        label={field.label}
-                        name={field.name}
-                        disabled={!isEdit}
-                        placeholder={field.placeholder}
-                        value={formik.values[field.name as keyof typeof formik.values]}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+            <CustomTabs
+              value={tabs.value}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              // slotProps={{ tab: { px: 0 } }}
+            >
+              {TABS.map((tab) => (
+                <Tab key={tab.value} value={tab.value} label={tab.label} />
+              ))}
+            </CustomTabs>
+
+            <FormSlider
+              steps={TABS}
+              isBackClick={isBackClick}
+              step={activeTabIndex}
+              containerProps={{
+                sx: {
+                  p: 0,
+                },
+              }}
+            >
+              <Grid container spacing={2} p={2}>
+                {' '}
+                {fields[activeTabIndex].map((field: FieldsType, index: number) => (
+                  <Grid
+                    item
+                    xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                    md={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                    key={field.name}
+                    {...field.gridProps}
+                    mb="15px"
+                  >
+                    {field.renderComp ? (
+                      field.renderComp({
+                        formik,
+                        field,
+                        editData,
+                      })
+                    ) : field.type === 'date' ? (
+                      <ShakingTextField
                         error={
                           formik.touched[field.name as keyof typeof formik.values] &&
                           Boolean(formik.errors[field.name as keyof typeof formik.values])
                         }
-                        helperText={
+                      >
+                        <DatePicker
+                          label={field.label}
+                          name={field.name}
+                          value={formik.values[field.name as keyof typeof formik.values]}
+                          format="DD-MM-YYYY"
+                          onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                          sx={{
+                            ...((field?.sx as any) || {}),
+                          }}
+                          disabled={!isEdit}
+                          slotProps={{
+                            textField: {
+                              placeholder: field.placeholder,
+                              fullWidth: true,
+                              size: 'small',
+                              helperText:
+                                formik.touched[field.name as keyof typeof formik.values] &&
+                                formik.errors[field.name as keyof typeof formik.values]
+                                  ? String(formik.errors[field.name as keyof typeof formik.values])
+                                  : undefined,
+                              error:
+                                formik.touched[field.name as keyof typeof formik.values] &&
+                                Boolean(formik.errors[field.name as keyof typeof formik.values]),
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    ) : (
+                      <ShakingTextField
+                        error={
                           formik.touched[field.name as keyof typeof formik.values] &&
-                          formik.errors[field.name as keyof typeof formik.values]
-                            ? String(formik.errors[field.name as keyof typeof formik.values])
-                            : undefined
+                          Boolean(formik.errors[field.name as keyof typeof formik.values])
                         }
-                        fullWidth
-                        sx={{ ...(field?.sx || {}) }}
-                        {...(field?.otherProps || {})}
-                      />
-                    </ShakingTextField>
-                  )}
-                </Grid>
-              ))}{' '}
-            </Grid>
-          </FormSlider>
-          {/* </CardContent>
+                      >
+                        <TextField
+                          key={field.name}
+                          type={field.type}
+                          size="small"
+                          label={field.label}
+                          name={field.name}
+                          disabled={!isEdit}
+                          placeholder={field.placeholder}
+                          value={formik.values[field.name as keyof typeof formik.values]}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={
+                            formik.touched[field.name as keyof typeof formik.values] &&
+                            Boolean(formik.errors[field.name as keyof typeof formik.values])
+                          }
+                          helperText={
+                            formik.touched[field.name as keyof typeof formik.values] &&
+                            formik.errors[field.name as keyof typeof formik.values]
+                              ? String(formik.errors[field.name as keyof typeof formik.values])
+                              : undefined
+                          }
+                          fullWidth
+                          sx={{ ...(field?.sx || {}) }}
+                          {...(field?.otherProps || {})}
+                        />
+                      </ShakingTextField>
+                    )}
+                  </Grid>
+                ))}{' '}
+              </Grid>
+            </FormSlider>
+            {/* </CardContent>
           </Card> */}
-        </Card>
-      </form>
+          </Card>
+        </form>
+      </BackPopUpChecked>
     </Box>
   );
 };

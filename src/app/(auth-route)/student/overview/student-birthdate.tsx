@@ -11,17 +11,7 @@ import ViewAllBirthday from './view-all-birthday';
 import BirthdayCardProfile from './studentProfileBirthdayCard';
 import ViewAllBirthdayWithDate from './view-all-birthday-date';
 
-const todayBirthdays = [
-  { name: 'Arjun Sharma', age: 15, className: '5A' },
-  { name: 'Priya Patel', age: 14, className: '5A' },
-];
-
-const upcomingBirthdays = [
-  { name: 'Arjun Sharma', age: 15, className: '5A', dateLabel: 'Tomorrow' },
-  { name: 'Priya Patel', age: 14, className: '5A', dateLabel: 'Dec 28' },
-];
-
-const BirthdaySection = () => {
+const BirthdaySection = ({ todaysBirthdays, upcomingBirthdays, title }: any) => {
   const viewAllBirthdayDialog = useBoolean();
   const viewAllBirthdayUpcomingDialog = useBoolean();
   return (
@@ -30,10 +20,10 @@ const BirthdaySection = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
           <Iconify icon="mdi:cake-variant" width={32} height={32} sx={{ color: 'primary.main' }} />
           <Typography variant="h6" mt={1}>
-            Student Birthdays
+            {title}
           </Typography>
         </Box>
-        <Scrollbar sx={{ height: '440px' }}>
+        <Scrollbar sx={{ height: '300px' }}>
           <Box
             sx={{
               width: '100%',
@@ -55,7 +45,7 @@ const BirthdaySection = () => {
             </Button>
           </Box>
           <Stack spacing={2} mt={1} mb={3}>
-            {todayBirthdays.map((student, idx) => (
+            {todaysBirthdays?.map((student: any, idx: any) => (
               <BirthdayCardProfile
                 key={idx}
                 name={student.name}
@@ -88,7 +78,7 @@ const BirthdaySection = () => {
             </Button>
           </Box>
           <Stack spacing={2} mt={1}>
-            {upcomingBirthdays.map((student, idx) => (
+            {upcomingBirthdays?.map((student: any, idx: any) => (
               <BirthdayCardProfile
                 key={idx}
                 name={student.name}
