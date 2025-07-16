@@ -16,6 +16,8 @@ import type { FieldsType } from './types';
 
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
+  console.log('formik values of employe---', formik.values);
+
   const isSameAsEmployeeAddressForFather =
     formik?.values?.addressLine1 === formik?.values?.fatherAddress1 &&
     formik?.values?.addressLine2 === formik?.values?.fatherAddress2 &&
@@ -33,8 +35,9 @@ function FatherAddressComponent(props: any) {
             <Checkbox
               checked={isSameAsEmployeeAddressForFather}
               onChange={(e) => {
+                const isChecked = e.target.checked;
                 formik.setFieldValue('sameAsEmployeeAddressForFather', e.target.checked);
-                if (e.target.checked) {
+                if (isChecked) {
                   formik.setFieldValue('fatherAddress1', formik.values.addressLine1);
                   formik.setFieldValue('fatherAddress2', formik.values.addressLine2);
                   formik.setFieldValue('fatherAddress3', formik.values.addressLine3);
@@ -42,6 +45,14 @@ function FatherAddressComponent(props: any) {
                   formik.setFieldValue('fatherState', formik.values.state);
                   formik.setFieldValue('fatherCity', formik.values.city);
                   formik.setFieldValue('fatherPinCode', formik.values.pincode);
+                } else {
+                  formik.setFieldValue('fatherAddress1', '');
+                  formik.setFieldValue('fatherAddress2', '');
+                  formik.setFieldValue('fatherAddress3', '');
+                  formik.setFieldValue('fatherCountry', { name: '', isoCode: '' });
+                  formik.setFieldValue('fatherState', { name: '', isoCode: '' });
+                  formik.setFieldValue('fatherCity', '');
+                  formik.setFieldValue('fatherPinCode', '');
                 }
               }}
               name="sameAsEmployeeAddressForFather"
@@ -57,7 +68,7 @@ function FatherAddressComponent(props: any) {
           <TextField
             name="fatherAddress1"
             label="Building No./Flat/House No."
-            value={formik.values.fatherAddress1 || ''}
+            value={formik.values.fatherAddress1}
             // InputLabelProps={{ shrink: !!formik.values.fatherAddress1 }}
             onChange={formik.handleChange}
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
@@ -65,7 +76,7 @@ function FatherAddressComponent(props: any) {
             fullWidth
             size="small"
             disabled={!!disabled}
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={{ shrink: formik.values.fatherAddress1 }}
           />
         </ShakingTextField>
       </Grid>
@@ -153,13 +164,18 @@ function FatherAddressComponent(props: any) {
         >
           <TextField
             name="fatherPinCode"
-            label="Pincode"
+            label="PIN Code"
             value={formik.values.fatherPinCode || ''}
             onChange={(e) => {
               const { value } = e.target;
               if (value.length <= 6) {
                 formik.handleChange(e);
                 formik.validateField('fatherPinCode');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                e.preventDefault();
               }
             }}
             // onChange={formik.handleChange}
@@ -195,8 +211,9 @@ function MotherAddressComponent(props: any) {
             <Checkbox
               checked={isSameAsEmployeeAddressForMother}
               onChange={(e) => {
-                formik.setFieldValue('sameAsFatherAddressForMother', e.target.checked);
-                if (e.target.checked) {
+                const isChecked = e.target.checked;
+                formik.setFieldValue('sameAsEmployeeAddressForMother', e.target.checked);
+                if (isChecked) {
                   formik.setFieldValue('motherAddress1', formik.values.addressLine1);
                   formik.setFieldValue('motherAddress2', formik.values.addressLine2);
                   formik.setFieldValue('motherAddress3', formik.values.addressLine3);
@@ -204,6 +221,14 @@ function MotherAddressComponent(props: any) {
                   formik.setFieldValue('motherState', formik.values.state);
                   formik.setFieldValue('motherCity', formik.values.city);
                   formik.setFieldValue('motherPinCode', formik.values.pincode);
+                } else {
+                  formik.setFieldValue('motherAddress1', '');
+                  formik.setFieldValue('motherAddress2', '');
+                  formik.setFieldValue('motherAddress3', '');
+                  formik.setFieldValue('motherCountry', { name: '', isoCode: '' });
+                  formik.setFieldValue('motherState', { name: '', isoCode: '' });
+                  formik.setFieldValue('motherCity', '');
+                  formik.setFieldValue('motherPinCode', '');
                 }
               }}
               name="sameAsFatherAddressForMother"
@@ -314,14 +339,19 @@ function MotherAddressComponent(props: any) {
         >
           <TextField
             name="motherPinCode"
-            label="Pincode"
-            value={formik.values.motherPinCode || ''}
+            label="PIN Code"
+            value={formik.values.motherPinCode}
             // onChange={formik.handleChange}
             onChange={(e) => {
               const { value } = e.target;
               if (value.length <= 6) {
                 formik.handleChange(e);
                 formik.validateField('motherPinCode');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                e.preventDefault();
               }
             }}
             error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
@@ -356,8 +386,9 @@ function SpouseAddressComponent(props: any) {
             <Checkbox
               checked={isSameAsEmployeeAddressForSpouse}
               onChange={(e) => {
-                formik.setFieldValue('sameAsFatherAddressForSpouse', e.target.checked);
-                if (e.target.checked) {
+                const isChecked = e.target.checked;
+                formik.setFieldValue('sameAsEmployeeAddressForSpouse', e.target.checked);
+                if (isChecked) {
                   formik.setFieldValue('spouseAddress1', formik.values.addressLine1);
                   formik.setFieldValue('spouseAddress2', formik.values.addressLine2);
                   formik.setFieldValue('spouseAddress3', formik.values.addressLine3);
@@ -365,6 +396,14 @@ function SpouseAddressComponent(props: any) {
                   formik.setFieldValue('spouseState', formik.values.state);
                   formik.setFieldValue('spouseCity', formik.values.city);
                   formik.setFieldValue('spousePinCode', formik.values.pincode);
+                } else {
+                  formik.setFieldValue('spouseAddress1', '');
+                  formik.setFieldValue('spouseAddress2', '');
+                  formik.setFieldValue('spouseAddress3', '');
+                  formik.setFieldValue('spouseCountry', { name: '', isoCode: '' });
+                  formik.setFieldValue('spouseState', { name: '', isoCode: '' });
+                  formik.setFieldValue('spouseCity', '');
+                  formik.setFieldValue('spousePinCode', '');
                 }
               }}
               name="sameAsFatherAddressForSpouse"
@@ -475,7 +514,7 @@ function SpouseAddressComponent(props: any) {
         >
           <TextField
             name="spousePinCode"
-            label="Pincode"
+            label="PIN Code"
             value={formik.values.spousePinCode || ''}
             // onChange={formik.handleChange}
             onChange={(e) => {
@@ -483,6 +522,11 @@ function SpouseAddressComponent(props: any) {
               if (value.length <= 6) {
                 formik.handleChange(e);
                 formik.validateField('spousePinCode');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                e.preventDefault();
               }
             }}
             error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}

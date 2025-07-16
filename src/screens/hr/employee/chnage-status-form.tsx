@@ -130,7 +130,7 @@ const ChangeStatusForm = ({
           Cancel
         </Button>
         <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.edit} />}
+          startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
           loading={isLoading}
           variant="contained"
           type="submit"

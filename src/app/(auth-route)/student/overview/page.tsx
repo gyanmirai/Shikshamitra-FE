@@ -13,11 +13,93 @@ import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 import OverviewCard from './overview';
-import StudentBirthDate from './student-birthdate';
+import BirthdaySection from './student-birthdate';
 import RecentActivities from './recent-activities';
 import HouseDistribution from './house-distribution';
 import StudentStrengthClassWise from './student-strength-class-wise';
 
+const todayBirthdays = [
+  { name: 'Arjun Sharma', age: 15, className: '5A' },
+  { name: 'Priya Patel', age: 14, className: '5A' },
+];
+
+const upcomingBirthdays = [
+  { name: 'Arjun Sharma', age: 15, className: '5A', dateLabel: 'Tomorrow' },
+  { name: 'Priya Patel', age: 14, className: '5A', dateLabel: 'Dec 28' },
+];
+
+const activities = [
+  {
+    color: 'success',
+    title: 'Roll No. assigned to Yuvraj Singh',
+    subtitle: 'Class 5-B · Roll No.-12',
+    timeAgo: '2 hours ago',
+    date: '06-07-2025',
+  },
+  {
+    color: 'info',
+    title: 'Division Changed for Meera Patel',
+    subtitle: 'Class 4-B ➝ 4-C',
+    timeAgo: '4 hours ago',
+    date: '06-07-2025',
+  },
+  {
+    color: 'success',
+    title: 'New Student added to Blue House',
+    subtitle: 'Anjali Sharma · Class 3-A',
+    timeAgo: '6 hours ago',
+    date: '06-07-2025',
+  },
+  {
+    color: 'success',
+    title: 'GR No. generated for Kiran Kumar',
+    subtitle: 'GR2025001847',
+    timeAgo: '1 day ago',
+    date: '05-07-2025',
+  },
+  {
+    color: 'warning',
+    title: 'House change request pending',
+    subtitle: 'Anjali Sharma · Green to Red House',
+    timeAgo: '2 days ago',
+    date: '04-07-2025',
+  },
+  {
+    color: 'error',
+    title: 'Attendance marked absent',
+    subtitle: 'Rahul Verma · Class 6-A',
+    timeAgo: '3 days ago',
+    date: '03-07-2025',
+  },
+  {
+    color: 'info',
+    title: 'Fee payment received',
+    subtitle: 'Priya Shah · Term 2 Fees',
+    timeAgo: '4 days ago',
+    date: '02-07-2025',
+  },
+  {
+    color: 'success',
+    title: 'Sports team selection',
+    subtitle: 'Arjun Kumar · Football Team',
+    timeAgo: '5 days ago',
+    date: '01-07-2025',
+  },
+  {
+    color: 'warning',
+    title: 'Parent meeting scheduled',
+    subtitle: 'Neha Gupta · Class 7-B',
+    timeAgo: '1 week ago',
+    date: '29-06-2025',
+  },
+  {
+    color: 'info',
+    title: 'Academic achievement',
+    subtitle: 'Sanya Malhotra · Science Quiz Winner',
+    timeAgo: '1 week ago',
+    date: '29-06-2025',
+  },
+] as const;
 const Overview = () => {
   const [sections, setSections] = useState([
     {
@@ -56,10 +138,14 @@ const Overview = () => {
           <StudentStrengthClassWise />
         </Grid2>
         <Grid2 xs={12} md={6}>
-          <StudentBirthDate />
+          <BirthdaySection
+            todaysBirthdays={todayBirthdays}
+            upcomingBirthdays={upcomingBirthdays}
+            title="Student's Birthdays"
+          />
         </Grid2>
         <Grid2 xs={12} md={6}>
-          <RecentActivities />
+          <RecentActivities activities={activities} />
         </Grid2>
       </Grid2>
       {/* <Grid2 container spacing={2} sx={{ mb: 2 }}>

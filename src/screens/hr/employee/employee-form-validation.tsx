@@ -2,8 +2,21 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { matchIsValidTel } from 'mui-tel-input';
 
+const MIN_DOB = dayjs('1947-01-01');
+
 const personalInformationValidationSchema = Yup.object({
-  photo: Yup.string().required('Photo is required'),
+  photo: Yup.string()
+    .required('Photo is required')
+    .test('fileSize', 'Photo size must be less than 3MB', (value) => {
+      if (!value) return true;
+      try {
+        const base64Data = value.split(',')[1];
+        const sizeInBytes = Buffer.from(base64Data, 'base64').length;
+        return sizeInBytes <= 3 * 1024 * 1024;
+      } catch {
+        return false;
+      }
+    }),
   //   code: Yup.string().required('Code is required'),
   lastName: Yup.string().required('Last Name is required'),
   firstName: Yup.string().required('First Name is required'),
@@ -17,6 +30,16 @@ const personalInformationValidationSchema = Yup.object({
       'Date of Birth is required',
       (value) => value && dayjs(value as any).isValid()
     )
+    .test(
+      'min-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isAfter(MIN_DOB.subtract(1, 'day'))
+    )
+    .test(
+      'max-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isBefore(dayjs())
+    )
     .required('Date of Birth is required'),
   // dob: Yup.date().nullable().required('Date of birth is required'),
   familyCast: Yup.string().required('Family Cast is required'),
@@ -26,19 +49,44 @@ const personalInformationValidationSchema = Yup.object({
   maritalStatus: Yup.string().required('Marital Status is required'),
   bloodGroup: Yup.string(),
   mobileNo: Yup.string()
-    .test('mobileNo', 'Primary Contact No. is not valid', (value) =>
-      matchIsValidTel(value as string)
-    )
+    .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
+      if (!value) return false;
+
+      const digits = value.replace(/\D/g, '');
+      const national = digits.replace(/^91/, '');
+
+      return matchIsValidTel(value, { onlyCountries: ['IN'] }) && national.length === 10;
+    })
     .required('Primary Contact No. is required'),
   secondaryMobileNo: Yup.string()
     .nullable()
-    .test('secondaryMobileNo', 'Secondary Contact No. is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
+    .test('Mobile NO', 'Secondary Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    })
+    .test(
+      'unique',
+      'Secondary Contact No. cannot be same as primary contact no.',
+      function (value) {
+        return !value || value !== this.parent.mobileNo;
+      }
     ),
-  email: Yup.string().email('Invalid email').required('Email is required'),
+  email: Yup.string()
+    .matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please enter a valid email')
+    .required('Email is required'),
+  // email: Yup.string().email('Invalid email').required('Email is required'),
   department: Yup.string(),
   designation: Yup.string(),
-  dateOfJoining: Yup.date().nullable().required('Date of joining is required'),
+  dateOfJoining: Yup.mixed()
+    .test(
+      'is-valid-dayjs',
+      'Date of Joining is required',
+      (value) => value && dayjs(value as any).isValid()
+    )
+    .required('Date of Joining is required'),
   employeeGroup: Yup.string().required('Employee Group is required'),
   qualification: Yup.string(),
   role: Yup.string().required('Role is required'),
@@ -71,10 +119,14 @@ const familyInformationValidationSchema = Yup.object({
   fatherName: Yup.string().nullable(),
   //   fatherOccupation: Yup.string().required('Father occupation is required'),
   fatherContactNo: Yup.string()
-    .test('fatherContactNo', 'Mobile No. is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
-    .nullable(),
+    .nullable()
+    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   // fatherAddress1: Yup.string(),
   // fatherAddress2: Yup.string(),
 
@@ -90,10 +142,14 @@ const familyInformationValidationSchema = Yup.object({
   motherName: Yup.string().nullable(),
   //   motherOccupation: Yup.string().required('Mother occupation is required'),
   motherContactNo: Yup.string()
-    .test('motherContactNo', 'Mobile No. is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
-    .nullable(),
+    .nullable()
+    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   // motherAddress1: Yup.string(),
   // motherAddress2: Yup.string(),
   // motherAddress3: Yup.string(),
@@ -108,10 +164,14 @@ const familyInformationValidationSchema = Yup.object({
   spouseName: Yup.string().nullable(),
   //   spouseOccupation: Yup.string().required('Spouse occupation is required'),
   spouseContactNo: Yup.string()
-    .test('spouseContactNo', 'Mobile No. is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
-    .nullable(),
+    .nullable()
+    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   // spouseAddress1: Yup.string(),
   // spouseAddress2: Yup.string(),
   // spouseAddress3: Yup.string(),
@@ -142,13 +202,22 @@ export const workExperienceValidationSchema = Yup.object({
       organizationCity: Yup.object().shape({
         name: Yup.string(),
       }),
-      fromDate: Yup.date().nullable().required('Start date is required'),
-      toDate: Yup.date()
+      fromDate: Yup.mixed()
+        .test(
+          'is-valid-dayjs',
+          'Start Date is required',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        .required('Start date is required'),
+      toDate: Yup.mixed()
         .nullable()
-        .test('toDate', 'End date must be greater than start date', function () {
+        .test('is-valid-dayjs', 'End Date is required', (value) =>
+          value ? dayjs(value as any).isValid() : false
+        )
+        .test('toDate', 'End Date must be greater than start date', function () {
           const { fromDate, toDate } = this.parent as any;
           if (fromDate && toDate) {
-            return toDate > fromDate;
+            return dayjs(toDate).isAfter(dayjs(fromDate));
           }
           return true;
         }),
