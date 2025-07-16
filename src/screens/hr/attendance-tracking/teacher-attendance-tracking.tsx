@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import { useMemo, useEffect } from 'react';
 
@@ -8,7 +10,6 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { varAlpha } from 'src/theme/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { useLazyGetAttendanceByEmployeeIdQuery } from 'src/redux/employee/employeeApi';
 import {
   EmployeeAttendanceStatus,
@@ -157,50 +158,21 @@ const TeacherAttendanceTracking = ({
             id: 'status',
             label: 'Status',
             render(value: number, row) {
-              const status = EmployeeAttendanceStatus[row.statusType];
+              const statusKey = value as unknown as keyof typeof EmployeeAttendanceStatus;
+              const colorKey = value as keyof typeof EmployeeAttendanceStatusColor;
+
               return (
-                <Label
-                  variant="soft"
-                  color={
-                    EmployeeAttendanceStatusColor[
-                      status as keyof typeof EmployeeAttendanceStatusColor
-                    ]
-                  }
-                >
-                  {status}
+                <Label variant="soft" color={EmployeeAttendanceStatusColor[colorKey] as LabelColor}>
+                  {EmployeeAttendanceStatus[statusKey]}
                 </Label>
               );
             },
           },
-          // {
-          //   id: 'action',
-          //   label: 'Action',
-          //   render(value, row) {
-          //     return (
-          //       <ThreeDotsActions
-          //         actions={(props: any) => {
-          //           const { popover }: any = props;
-          //           return (
-          //             <MenuList>
-          //               <MenuItem
-          //                 onClick={() => {
-          //                   popover?.close?.();
-          //                 }}
-          //               >
-          //                 <Iconify icon="carbon:view" /> View
-          //               </MenuItem>
-          //             </MenuList>
-          //           );
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
         ]}
         data={
           data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
             ...i,
-            status: EmployeeLeaveStatusType[i.statusType],
+            status: EmployeeAttendanceStatus[i.statusType as keyof typeof EmployeeAttendanceStatus],
           })) || []
         }
       />

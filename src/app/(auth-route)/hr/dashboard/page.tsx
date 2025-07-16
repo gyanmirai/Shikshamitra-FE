@@ -1,7 +1,7 @@
 import React from 'react';
 
-import HrDashboard from 'src/screens/hr/dashboard/dashboard';
+import HRDashboardScreen from 'src/screens/hr/hr-dashboard';
 
-const EmployeeDashboard = () => <HrDashboard />;
+const EmployeeDashboard = () => <HRDashboardScreen />;
 
 export default EmployeeDashboard;

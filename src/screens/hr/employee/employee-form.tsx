@@ -8,7 +8,6 @@ import { Box, Grid, Slide, TextField } from '@mui/material';
 
 import { convertBase64Format } from 'src/utils/base64Formate';
 
-import { GenderType } from 'src/enums/gender';
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
@@ -44,7 +43,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   dob: editData ? dayjs(editData.dateOfBirth, 'YYYY-MM-DD') : null,
   familyCast: editData ? editData.familyCast : '',
   castType: editData ? editData.castType : '',
-  gender: editData ? editData.genderType : GenderType.Male,
+  gender: editData?.genderType ?? '',
   religion: editData ? editData.religion : '',
   maritalStatus: editData ? editData.maritalStatus : '',
   bloodGroup: editData ? editData.bloodGroup : '',
@@ -446,36 +445,36 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         setIsLoading(true);
         if (editData && activeStep === 0) {
           await handelUpdateEmployee(values, formik, editData.id);
-          if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-          }
+          // if (isSaveButton) {
+          shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+          // }
         } else if (activeStep === 0) {
           if (values.employeeId) {
             await handelUpdateEmployee(values, formik, values.employeeId);
-            if (isSaveButton) {
-              shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-            }
+            // if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+            // }
           } else {
             await handleBasicInformation(values, formik);
-            if (isSaveButton) {
-              shikshaMitraToast.success({ message: 'Employee added successfully' });
-            }
+            // if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Employee added successfully' });
+            // }
           }
         } else if (activeStep === 1) {
           await handleFamilyInformation(values, formik);
-          if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Family information updated successfully' });
-          }
+          // if (isSaveButton) {
+          shikshaMitraToast.success({ message: 'Family information updated successfully' });
+          // }
         } else if (activeStep === 3) {
           await handleWorkExperience(values, formik);
-          if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Work experience updated successfully' });
-          }
+          // if (isSaveButton) {
+          shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+          // }
         } else if (activeStep === 4) {
           await handleBankDetailsInformation(values, formik);
-          if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
-          }
+          // if (isSaveButton) {
+          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          // }
         }
         if (isLastStep && !isSaveButton) {
           shikshaMitraToast.success({

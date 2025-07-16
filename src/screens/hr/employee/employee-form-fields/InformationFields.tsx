@@ -1,5 +1,6 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 import { useState, useEffect } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
@@ -187,8 +188,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
+  console.log('formik erroes---', formik.errors);
 
   const handleSave = async () => {
+    formik.validateForm();
     await formik?.submitForm?.();
     formik.resetForm({ values: formik.values });
   };
@@ -215,15 +218,22 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           <UploadAvatar
             maxSize={3145728}
             onDrop={async (acceptedFiles: File[]) => {
-              const value = acceptedFiles[0];
-              const base64 = await fileToBase64(value);
-              formik.setFieldValue('photo', base64);
+              const file = acceptedFiles?.[0];
+              if (!file) return;
+
+              const base64 = await fileToBase64(file);
+
+              formik.setFieldValue('photo', base64); // set value
+              formik.setFieldTouched('photo', true, false); // mark as touched
+              await formik.validateField('photo'); // force Yup validation
             }}
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
+            // helperText={formik.touched.photo && formik.errors.photo}
             sx={{ m: 'initial' }}
             disabled={!isBasicDetailsEditable.value}
           />
+          {/* <FormHelperText>{formik.touched.photo && formik.errors.photo}</FormHelperText> */}
         </Grid>
         <Grid item xs={12} md={10}>
           <Grid container spacing={3}>
@@ -317,16 +327,19 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   value={formik.values.dob}
                   onChange={(value) => {
                     formik.setFieldValue('dob', value);
-                    formik.setFieldTouched('dob', true);
+                    // formik.setFieldTouched('dob', true);
                   }}
+                  disableFuture
+                  minDate={dayjs('1947-01-01')}
+                  maxDate={dayjs()}
                   disabled={!isBasicDetailsEditable.value}
                   format="DD-MM-YYYY"
                   slotProps={{
                     textField: {
                       size: 'small',
                       fullWidth: true,
-                      error: formik.touched.dob && Boolean(formik.errors.dob),
-                      helperText: formik.touched.dob && formik.errors.dob,
+                      error: !!(formik.touched.dob && formik.errors.dob) || false,
+                      helperText: (formik.touched.dob && formik.errors.dob) || '',
                     },
                   }}
                 />
@@ -341,7 +354,13 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 >
                   <FormLabel
                     id="gender-radio-group"
-                    sx={{ color: (theme) => `${theme.palette.common.black} !important`, mr: 1 }}
+                    sx={{
+                      color: (theme) =>
+                        formik.touched.gender && formik.errors.gender
+                          ? '#ff563d !important'
+                          : `${theme.palette.common.black} !important`,
+                      mr: 1,
+                    }}
                   >
                     Gender *
                   </FormLabel>
@@ -613,8 +632,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 textField: {
                   size: 'small',
                   fullWidth: true,
-                  error: formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining),
-                  helperText: formik.touched.dateOfJoining && formik.errors.dateOfJoining,
+                  error: !!(formik.touched.dateOfJoining && formik.errors.dateOfJoining) || false,
+                  helperText: (formik.touched.dateOfJoining && formik.errors.dateOfJoining) || '',
                 },
               }}
             />
@@ -690,10 +709,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Designation"
               {...formik.getFieldProps('designation')}
               onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                if (/^[A-Za-z ]*$/.test(newName)) {
-                  formik.setFieldValue('designation', newName);
-                }
+                const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                formik.setFieldValue('designation', value);
               }}
               error={formik.touched.designation && Boolean(formik.errors.designation)}
               helperText={formik.touched.designation && formik.errors.designation}
@@ -735,10 +752,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               size="small"
               label="Building No./Flat/House No. *"
               {...formik.getFieldProps('addressLine1')}
-              onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                formik.setFieldValue('addressLine1', newName);
-              }}
+              onChange={formik.handleChange}
               error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
               helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
               disabled={!isAddressDetailsEditable.value}
@@ -754,10 +768,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               size="small"
               label="Area/Locality/Road Name *"
               {...formik.getFieldProps('addressLine2')}
-              onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                formik.setFieldValue('addressLine2', newName);
-              }}
+              onChange={formik.handleChange}
               error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
               helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
               disabled={!isAddressDetailsEditable.value}
@@ -773,10 +784,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               size="small"
               label="Landmark"
               {...formik.getFieldProps('addressLine3')}
-              onChange={(e) => {
-                const newName = capitalize(e.target.value);
-                formik.setFieldValue('addressLine3', newName);
-              }}
+              onChange={formik.handleChange}
               error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
               helperText={formik.touched.addressLine3 && formik.errors.addressLine3}
               disabled={!isAddressDetailsEditable.value}
@@ -847,7 +855,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             <TextField
               fullWidth
               size="small"
-              label="Pincode"
+              label="PIN Code"
               type="number"
               {...formik.getFieldProps('pincode')}
               error={formik.touched.pincode && Boolean(formik.errors.pincode)}
@@ -859,6 +867,11 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 if (value.length <= 6) {
                   formik.handleChange(e);
                   formik.validateField('pincode');
+                }
+              }}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                  e.preventDefault();
                 }
               }}
               inputProps={{

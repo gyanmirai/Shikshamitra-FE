@@ -3,10 +3,11 @@ import type { LabelColor } from 'src/components/label';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-import { Box, Tooltip, Skeleton, IconButton } from '@mui/material';
+import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { convertBase64Format } from 'src/utils/base64Formate';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,6 +25,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface ViewDocumentsProps {
@@ -76,6 +78,7 @@ interface RenderDocumentsProps {
 
 export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
   const viewDialog = useBoolean();
+  const downloadDialog = useBoolean();
   const [docId, setDocId] = useState<null | string>(null);
 
   const [uploadDocument] = useQueryAndMutation({
@@ -168,14 +171,19 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                   disableFocusRipple
                   disableTouchRipple
                   sx={{
-                    textAlign: 'left',
-                    marginLeft: '0px',
-                    paddingLeft: '0px',
-                    justifyContent: 'flex-start',
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
                     display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'transparent',
+                    transition: 'background-color 0.2s ease',
                     '&:hover': {
-                      backgroundColor: 'transparent',
+                      backgroundColor: '#e0e0e0',
                     },
+                    p: 0, // no extra padding
+                    minWidth: 0, // prevent MUI buttons from stretching
                   }}
                   onChange={async (e) => {
                     const file = e.target.files[0];
@@ -250,12 +258,52 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
               );
             },
           },
+          {
+            id: 'dowload',
+            label: 'Download',
+            isFilter: false,
+            isSort: false,
+            minWidth: '6vw',
+            align: 'left',
+            render(value, row) {
+              return (
+                <IconButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    // paddingLeft: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
+                  disabled={!row.uploadDocument}
+                  onClick={() => {
+                    setDocId(row.uploadDocument.id);
+                    downloadDialog.onTrue();
+                  }}
+                >
+                  <Iconify icon={GlobalIcons.download} />
+                </IconButton>
+              );
+            },
+          },
         ]}
         data={tableData}
       />
 
       <CustomDialog
-        title="Preview Document"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Preview Document</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View and examine the uploaded document in detail"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
         maxWidth="lg"

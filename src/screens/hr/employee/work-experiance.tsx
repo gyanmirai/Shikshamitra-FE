@@ -1,5 +1,5 @@
-import React from 'react';
 import { capitalize } from 'lodash';
+import React, { useState } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { Add, RemoveCircle } from '@mui/icons-material';
@@ -7,6 +7,7 @@ import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -15,6 +16,8 @@ import CountryComponent from 'src/components/stardard-address/country-component'
 import { CardActions } from './employee-form-fields/InformationFields';
 
 const WorkExperiences = (props: any) => {
+  const deleteExperienceDialog = useBoolean();
+  const [selectedExperience, setSelectedExperience] = useState<number | null>();
   const { formik, isMainForm, editData } = props;
   const { values, setFieldValue } = formik;
   const isEditable = useBoolean(isMainForm);
@@ -65,140 +68,197 @@ const WorkExperiences = (props: any) => {
           </Button>
         </Box>
       )}
-      {values.experiences.map((experience: any, index: number) => (
-        <Paper
-          key={index}
-          elevation={3}
-          sx={{
-            display: 'flex',
-            gap: 1,
-            alignItems: 'center',
-            position: 'relative',
-            my: 0.3,
-            p: 2,
-          }}
-        >
-          <Box
+      <Box display="flex" flexDirection="column" gap={2}>
+        {values.experiences.map((experience: any, index: number) => (
+          <Paper
+            key={index}
+            elevation={3}
             sx={{
-              height: '24px',
-              minWidth: '24px',
-              borderRadius: '50%',
-              background: (theme) => theme.palette.primary.main,
-              color: 'white',
+              gap: 2,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
+              // position: 'relative',
+              p: 2,
             }}
           >
-            {index + 1}
-          </Box>
-
-          <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 3 }}>
-            <Box sx={{ width: '200px' }}>
-              <ShakingTextField
-                error={
-                  formik?.touched?.experiences?.[index] && formik?.errors?.experiences?.[index]
-                }
-              >
-                <TextField
-                  fullWidth
-                  size="small"
-                  name={`experiences.${index}.organizationName`}
-                  label="Organization Name *"
-                  value={experience.organizationName}
-                  onChange={(event) => {
-                    const val = capitalize(event.target.value);
-                    if (/^[A-Za-z ]*$/.test(val)) {
-                      setFieldValue(`experiences.${index}.organizationName`, val);
-                    }
-                  }}
-                  error={
-                    formik?.touched?.experiences?.[index]?.organizationName &&
-                    formik?.errors?.experiences?.[index]?.organizationName
-                  }
-                  helperText={
-                    formik?.touched?.experiences?.[index]?.organizationName &&
-                    formik?.errors?.experiences?.[index]?.organizationName
-                  }
-                  disabled={!isEditable.value}
-                />
-              </ShakingTextField>
+            <Box
+              sx={{
+                height: '24px',
+                minWidth: '24px',
+                borderRadius: '50%',
+                background: (theme) => theme.palette.primary.main,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+              }}
+            >
+              {index + 1}
             </Box>
-            <Box sx={{ width: '200px' }}>
-              <ShakingTextField
-                error={
-                  formik?.touched?.experiences?.[index]?.designation &&
-                  formik?.errors?.experiences?.[index]?.designation
-                }
-              >
-                <TextField
-                  fullWidth
-                  size="small"
-                  name={`experiences.${index}.designation`}
-                  label="Designation *"
-                  value={experience.designation}
-                  disabled={!isEditable.value}
-                  onChange={(event) => {
-                    const val = capitalize(event.target.value);
-                    if (/^[A-Za-z ]*$/.test(val)) {
-                      setFieldValue(`experiences.${index}.designation`, val);
+
+            <Box sx={{ display: 'flex', flexGrow: 1, flexWrap: 'wrap', gap: 3 }}>
+              <Box sx={{ width: '200px' }}>
+                <ShakingTextField
+                  error={
+                    formik?.touched?.experiences?.[index] && formik?.errors?.experiences?.[index]
+                  }
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name={`experiences.${index}.organizationName`}
+                    label="Organization Name *"
+                    value={experience.organizationName}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (/^[A-Za-z\s]*$/.test(value)) {
+                        const formattedValue = value
+                          .split(' ')
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                          .join(' ');
+                        setFieldValue(`experiences.${index}.organizationName`, formattedValue);
+                      }
+                    }}
+                    error={
+                      formik?.touched?.experiences?.[index]?.organizationName &&
+                      formik?.errors?.experiences?.[index]?.organizationName
                     }
-                  }}
+                    helperText={
+                      formik?.touched?.experiences?.[index]?.organizationName &&
+                      formik?.errors?.experiences?.[index]?.organizationName
+                    }
+                    FormHelperTextProps={{
+                      sx: {
+                        margin: 0,
+                        position: 'static', // ✅ override default absolute
+                        // marginTop: '4px',
+                        whiteSpace: 'normal',
+                      },
+                    }}
+                    InputLabelProps={{
+                      sx: { lineHeight: '1.2em' },
+                    }}
+                    disabled={!isEditable.value}
+                  />
+                </ShakingTextField>
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <ShakingTextField
                   error={
                     formik?.touched?.experiences?.[index]?.designation &&
                     formik?.errors?.experiences?.[index]?.designation
                   }
-                  helperText={
-                    formik?.touched?.experiences?.[index]?.designation &&
-                    formik?.errors?.experiences?.[index]?.designation
-                  }
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name={`experiences.${index}.designation`}
+                    label="Designation *"
+                    value={experience.designation}
+                    disabled={!isEditable.value}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      setFieldValue(`experiences.${index}.designation`, value);
+                    }}
+                    error={
+                      formik?.touched?.experiences?.[index]?.designation &&
+                      formik?.errors?.experiences?.[index]?.designation
+                    }
+                    helperText={
+                      formik?.touched?.experiences?.[index]?.designation &&
+                      formik?.errors?.experiences?.[index]?.designation
+                    }
+                    FormHelperTextProps={{
+                      sx: {
+                        margin: 0,
+                        position: 'static', // ✅ override default absolute
+                        // marginTop: '4px',
+                        whiteSpace: 'normal',
+                      },
+                    }}
+                    InputLabelProps={{
+                      sx: { lineHeight: '1.2em' },
+                    }}
+                  />
+                </ShakingTextField>
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  name={`experiences.${index}.department`}
+                  label="Department"
+                  value={experience.department}
+                  disabled={!isEditable.value}
+                  onChange={(event) => {
+                    const val = capitalize(event.target.value);
+                    if (/^[A-Za-z ]*$/.test(val)) {
+                      setFieldValue(`experiences.${index}.department`, val);
+                    }
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      position: 'static', // ✅ override default absolute
+                      // marginTop: '4px',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
                 />
-              </ShakingTextField>
-            </Box>
-            <Box sx={{ width: '200px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                name={`experiences.${index}.department`}
-                label="Department"
-                value={experience.department}
-                disabled={!isEditable.value}
-                onChange={(event) => {
-                  const val = capitalize(event.target.value);
-                  if (/^[A-Za-z ]*$/.test(val)) {
-                    setFieldValue(`experiences.${index}.department`, val);
-                  }
-                }}
-              />
-            </Box>
+              </Box>
 
-            <Box sx={{ width: '200px' }}>
-              <CountryComponent
-                value={experience.organizationCountry}
-                onChange={(e, value) => {
-                  setFieldValue(`experiences.${index}.organizationCountry`, value);
-                }}
-                disabled={!isEditable.value}
-                textFieldProps={{
-                  label: 'Country',
-                }}
-              />
-            </Box>
-            <Box sx={{ width: '200px' }}>
-              <StateComponent
-                value={experience.organizationState}
-                onChange={(e, value) => {
-                  setFieldValue(`experiences.${index}.organizationState`, value);
-                  setFieldValue(`experiences.${index}.organizationCity`, { name: '' });
-                }}
-                disabled={!isEditable.value || !experience.organizationCountry}
-                countryValue={experience.organizationCountry}
-                textFieldProps={{
-                  label: 'State',
-                }}
-              />
-              {/* <TextField
+              <Box sx={{ width: '200px' }}>
+                <CountryComponent
+                  value={experience.organizationCountry}
+                  onChange={(e, value) => {
+                    setFieldValue(`experiences.${index}.organizationCountry`, value);
+                  }}
+                  disabled={!isEditable.value}
+                  textFieldProps={{
+                    label: 'Country',
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      position: 'static', // ✅ override default absolute
+                      // marginTop: '4px',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
+                />
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <StateComponent
+                  value={experience.organizationState}
+                  onChange={(e, value) => {
+                    setFieldValue(`experiences.${index}.organizationState`, value);
+                    setFieldValue(`experiences.${index}.organizationCity`, { name: '' });
+                  }}
+                  disabled={!isEditable.value || !experience.organizationCountry}
+                  countryValue={experience.organizationCountry}
+                  textFieldProps={{
+                    label: 'State',
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      position: 'static', // ✅ override default absolute
+                      // marginTop: '4px',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
+                />
+                {/* <TextField
                 fullWidth
                 size="small"
                 name={`experiences.${index}.organizationState`}
@@ -210,20 +270,31 @@ const WorkExperiences = (props: any) => {
                 }}
                 disabled={!isEditable.value}
               /> */}
-            </Box>
-            <Box sx={{ width: '200px' }}>
-              <CityComponent
-                value={experience.organizationCity}
-                onChange={(e, value) => {
-                  setFieldValue(`experiences.${index}.organizationCity`, value);
-                }}
-                disabled={!isEditable.value || !experience.organizationState}
-                stateValue={experience.organizationState}
-                textFieldProps={{
-                  label: 'City',
-                }}
-              />
-              {/* <TextField
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <CityComponent
+                  value={experience.organizationCity}
+                  onChange={(e, value) => {
+                    setFieldValue(`experiences.${index}.organizationCity`, value);
+                  }}
+                  disabled={!isEditable.value || !experience.organizationState}
+                  stateValue={experience.organizationState}
+                  textFieldProps={{
+                    label: 'City',
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      margin: 0,
+                      position: 'static', // ✅ override default absolute
+                      // marginTop: '4px',
+                      whiteSpace: 'normal',
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: { lineHeight: '1.2em' },
+                  }}
+                />
+                {/* <TextField
                 fullWidth
                 size="small"
                 name={`experiences.${index}.organizationCity`}
@@ -235,87 +306,141 @@ const WorkExperiences = (props: any) => {
                 }}
                 disabled={!isEditable.value}
               /> */}
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <ShakingTextField
+                  error={
+                    formik?.touched?.experiences?.[index]?.fromDate &&
+                    formik?.errors?.experiences?.[index]?.fromDate
+                  }
+                >
+                  <DatePicker
+                    label="Start Date *"
+                    name={`experiences.${index}.fromDate`}
+                    disableFuture
+                    format="DD-MM-YYYY"
+                    value={experience.fromDate}
+                    onChange={(date) => {
+                      setFieldValue(`experiences.${index}.fromDate`, date);
+                    }}
+                    disabled={!isEditable.value}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error:
+                          !!(
+                            formik?.touched?.experiences?.[index]?.fromDate &&
+                            formik?.errors?.experiences?.[index]?.fromDate
+                          ) || false,
+                        helperText:
+                          (formik?.touched?.experiences?.[index]?.fromDate &&
+                            formik?.errors?.experiences?.[index]?.fromDate) ||
+                          '',
+                        FormHelperTextProps: {
+                          sx: {
+                            margin: 0,
+                            position: 'static', // ✅ override default absolute
+                            // marginTop: '4px',
+                            whiteSpace: 'normal',
+                          },
+                        },
+                        InputLabelProps: {
+                          sx: { lineHeight: '1.2em' },
+                        },
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Box>
+              <Box sx={{ width: '200px' }}>
+                <ShakingTextField
+                  error={
+                    formik?.touched?.experiences?.[index]?.toDate &&
+                    formik?.errors?.experiences?.[index]?.toDate
+                  }
+                >
+                  <DatePicker
+                    label="End Date *"
+                    name={`experiences.${index}.toDate`}
+                    format="DD-MM-YYYY"
+                    disableFuture
+                    value={experience.toDate}
+                    onChange={(date) => {
+                      setFieldValue(`experiences.${index}.toDate`, date);
+                    }}
+                    disabled={!isEditable.value}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error:
+                          !!(
+                            formik?.touched?.experiences?.[index]?.toDate &&
+                            formik?.errors?.experiences?.[index]?.toDate
+                          ) || false,
+                        helperText:
+                          (formik?.touched?.experiences?.[index]?.toDate &&
+                            formik?.errors?.experiences?.[index]?.toDate) ||
+                          '',
+                        FormHelperTextProps: {
+                          sx: {
+                            margin: 0,
+                            position: 'static', // ✅ override default absolute
+                            // marginTop: '4px',
+                            whiteSpace: 'normal',
+                          },
+                        },
+                        InputLabelProps: {
+                          sx: { lineHeight: '1.2em' },
+                        },
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Box>
             </Box>
-            <Box sx={{ width: '200px' }}>
-              <ShakingTextField
-                error={
-                  formik?.touched?.experiences?.[index]?.fromDate &&
-                  formik?.errors?.experiences?.[index]?.fromDate
-                }
+            <Box>
+              <IconButton
+                disabled={!isEditable.value}
+                onClick={() => {
+                  deleteExperienceDialog.onTrue();
+                  setSelectedExperience(index);
+                }}
               >
-                <DatePicker
-                  label="Start Date *"
-                  name={`experiences.${index}.fromDate`}
-                  disableFuture
-                  format="DD-MM-YYYY"
-                  value={experience.fromDate}
-                  onChange={(date) => {
-                    setFieldValue(`experiences.${index}.fromDate`, date);
-                  }}
-                  disabled={!isEditable.value}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error:
-                        formik?.touched?.experiences?.[index]?.fromDate &&
-                        formik?.errors?.experiences?.[index]?.fromDate,
-                      helperText:
-                        formik?.touched?.experiences?.[index]?.fromDate &&
-                        formik?.errors?.experiences?.[index]?.fromDate,
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </ShakingTextField>
+                <RemoveCircle sx={{ color: 'error.main' }} />
+              </IconButton>
             </Box>
-            <Box sx={{ width: '200px' }}>
-              <ShakingTextField
-                error={
-                  formik?.touched?.experiences?.[index]?.toDate &&
-                  formik?.errors?.experiences?.[index]?.toDate
-                }
-              >
-                <DatePicker
-                  label="End Date"
-                  name={`experiences.${index}.toDate`}
-                  format="DD-MM-YYYY"
-                  disableFuture
-                  value={experience.toDate}
-                  onChange={(date) => {
-                    setFieldValue(`experiences.${index}.toDate`, date);
-                  }}
-                  disabled={!isEditable.value}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      error:
-                        formik?.touched?.experiences?.[index]?.toDate &&
-                        formik?.errors?.experiences?.[index]?.toDate,
-                      helperText:
-                        formik?.touched?.experiences?.[index]?.toDate &&
-                        formik?.errors?.experiences?.[index]?.toDate,
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Box>
-          </Box>
-          <Box>
-            <IconButton
-              disabled={!isEditable.value}
-              onClick={() => {
-                setFieldValue(
-                  'experiences',
-                  values.experiences.filter((_e: any, i: number) => i !== index)
-                );
-              }}
-            >
-              <RemoveCircle sx={{ color: 'error.main' }} />
-            </IconButton>
-          </Box>
-        </Paper>
-      ))}
+          </Paper>
+        ))}
+      </Box>
+      <ConfirmDialog
+        open={deleteExperienceDialog.value}
+        onClose={() => {
+          setSelectedExperience(null);
+          deleteExperienceDialog.onFalse();
+        }}
+        title="Delete"
+        content={<>Are you sure you want to delete experience?</>}
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deleteExperienceDialog.onFalse();
+              setFieldValue(
+                'experiences',
+                values.experiences.filter((_e: any, i: number) => i !== selectedExperience)
+              );
+              // handle delete action
+            }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };

@@ -5,8 +5,6 @@ import React, { useState } from 'react';
 
 import { Card, Divider, useTheme, CardHeader } from '@mui/material';
 
-import { fNumber } from 'src/utils/format-number';
-
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
 
@@ -106,7 +104,7 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
     dataLabels: { enabled: true, dropShadow: { enabled: false } },
     tooltip: {
       y: {
-        formatter: (value: number) => fNumber(value),
+        // formatter: (value: number) => fNumber(value),
         title: { formatter: (seriesName: string) => `${seriesName}` },
       },
     },
