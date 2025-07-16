@@ -1,5 +1,3 @@
-import type { ICity, IState, ICountry } from 'country-state-city';
-
 export interface IFormValues {
   instituteName: string;
   instituteLogo: string[];
@@ -7,10 +5,10 @@ export interface IFormValues {
   addressLine1: string;
   addressLine2: string;
   addressLine3: string;
-  city?: Partial<ICity>;
-  stateProvince?: Partial<IState>;
+  city?: { name: string };
+  stateProvince?: { name: string; isoCode?: string };
   zipPostalCode: string;
-  country?: Partial<ICountry>;
+  country?: { name: string; isoCode?: string };
   contactNumber: string;
   emailAddress: string;
   password: string;

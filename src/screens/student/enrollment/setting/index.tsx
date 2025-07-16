@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import React, { useMemo, useState } from 'react';
 
 import { Add } from '@mui/icons-material';

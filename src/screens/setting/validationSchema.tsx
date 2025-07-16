@@ -16,19 +16,21 @@ export const basicInformationvalidationSchema = Yup.object().shape({
     .required('Institute Banner is required'),
   addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
-  addressLine3: Yup.string().required('Landmark is required'),
+  addressLine3: Yup.string(),
+
+  country: Yup.object()
+    .shape({ name: Yup.string().required('Country is required') })
+    .default(() => ({ name: '' }))
+    .required('Country is required'),
+
   city: Yup.object()
     .shape({ name: Yup.string().required('City is required') })
+    .default(() => ({ name: '' }))
     .required('City is required'),
   stateProvince: Yup.object()
     .shape({ name: Yup.string().required('State is required') })
+    .default(() => ({ name: '' }))
     .required('State is required'),
-  // zipPostalCode: Yup.string()
-  //   .required('ZIP/Postal Code is required')
-  //   .matches(/^[0-9]{5}(-[0-9]{4})?$/, 'Invalid ZIP/Postal Code format'),
-  country: Yup.object()
-    .shape({ name: Yup.string().required('Country is required') })
-    .required('Country is required'),
   contactNumber: Yup.string()
     .required('Contact Number is required')
     .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>

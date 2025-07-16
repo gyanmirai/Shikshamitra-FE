@@ -10,23 +10,23 @@ const Overview = () => {
   const [cards, setCards] = useState<ICardItem[]>([
     {
       id: '0',
-      icon: 'material-symbols:person-check-outline', // Students Present
+      icon: 'mdi:user-tick-outline', // Students Present
       title: 'Students Present Today',
       count: 1247,
       color: 'success.main',
       bgColor: 'success',
-      href: '/attendance/students-present',
+      href: '/student/attendance/take-attendance/',
       width: 4,
       labels: [],
     },
     {
       id: '1',
-      icon: 'material-symbols:person-off-outline', // Students Absent
+      icon: 'ci:user-remove', // Students Absent
       title: 'Students Absent Today',
       count: 1189,
       color: 'info.main',
       bgColor: 'info',
-      href: '/attendance/students-absent',
+      href: '/student/attendance/take-attendance/',
       width: 4,
       labels: [],
     },
@@ -37,7 +37,7 @@ const Overview = () => {
       count: 1203,
       color: 'warning.main',
       bgColor: 'warning',
-      href: '/attendance/pending-leaves',
+      href: '/student/attendance/leave-absent/',
       width: 4,
       labels: [],
     },

@@ -11,15 +11,7 @@ import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import React, {
-  useRef,
-  useMemo,
-  useState,
-  Fragment,
-  useEffect,
-  useCallback,
-  useLayoutEffect,
-} from 'react';
+import React, { useRef, useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -105,8 +97,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
   // const tableRef = useRef<any>(null);
   const [tableRef, setTableRef] = useState<any>(null);
-  console.log('🚀 ~ tableRef:', tableRef);
-
   const theme = useTheme();
 
   // const totalRows = data.length; // Get total number of rows
@@ -989,7 +979,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             )}
             {isPagination && (
               <TablePagination
-                rowsPerPageOptions={[10, 25, 100, { value: -1, label: 'All' }]}
+                rowsPerPageOptions={[10, 25, 100, { value: filteredData.length, label: 'All' }]}
                 component={Scrollbar}
                 count={serverSide ? totalCount || 0 : filteredData.length}
                 rowsPerPage={rowsPerPage}

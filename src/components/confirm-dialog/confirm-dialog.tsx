@@ -1,9 +1,9 @@
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import { Close } from '@mui/icons-material';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import { Box, Divider, useTheme, IconButton, Typography } from '@mui/material';
+import { Box, useTheme, Typography, DialogTitle } from '@mui/material';
+import { Info, Error, CheckCircle, WarningAmber } from '@mui/icons-material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -11,38 +11,33 @@ import { Iconify } from '../iconify';
 
 import type { ConfirmDialogProps } from './types';
 
+type ConfirmIconType = 'info' | 'warning' | 'success' | 'error';
 // ----------------------------------------------------------------------
-
+const iconMap: Record<ConfirmIconType, JSX.Element> = {
+  warning: <WarningAmber color="warning" fontSize="large" />,
+  success: <CheckCircle color="success" fontSize="large" />,
+  info: <Info color="info" fontSize="large" />,
+  error: <Error color="error" fontSize="large" />,
+};
 export function ConfirmDialog({
   title,
   content,
   action,
   open,
   onClose,
+  icon = 'error',
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
 
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose} {...other}>
-      <Box display="flex" justifyContent="space-between">
-        <Typography variant="h6" pl={3} pt={1}>
-          {title}
-        </Typography>
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            color: theme.palette.grey[500],
-            pr: 1,
-          }}
-        >
-          <Close />
-        </IconButton>
-      </Box>
-      {/* <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle> */}
-
-      <Divider />
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          {iconMap[icon as ConfirmIconType]}
+          <Typography variant="h6">{title}</Typography>
+        </Box>
+      </DialogTitle>
       {content && (
         <DialogContent sx={{ typography: 'body2', p: 2, py: 2.5 }}> {content} </DialogContent>
       )}

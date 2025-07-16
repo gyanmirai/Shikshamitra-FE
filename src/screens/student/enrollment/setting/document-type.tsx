@@ -35,6 +35,7 @@ import {
 } from 'src/redux/student/document-type/document-type-api';
 
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -106,6 +107,7 @@ const StudentDocumentType = ({
             size="small"
             onClick={async () => {
               await deleteDocument(editData?.id);
+              shikshaMitraToast.success({ message: 'Document deleted successfully' });
               confirm.onFalse();
               setEditData(null);
             }}
