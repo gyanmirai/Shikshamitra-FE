@@ -10,10 +10,24 @@ export const StudentDocumentTypeApi = createApi({
   tagTypes: ['Student-Document-Type'],
   endpoints: (builder) => ({
     getStudentDocumentType: builder.query({
-      query: () => ({
-        url: '/app/student-document-setting',
-        method: 'GET',
-      }),
+      query: ({ sorting, skipCount, maxResultCount }) => {
+        let query = '?';
+        if (sorting) {
+          query += `&Sorting=${sorting}`;
+        }
+        if (skipCount) {
+          query += `&SkipCount=${skipCount}`;
+        }
+        if (maxResultCount) {
+          query += `&MaxResultCount=${maxResultCount}`;
+        }
+        query = query.replace('?&', '?');
+
+        return {
+          url: `/app/student-document-setting${query}`,
+          method: 'GET',
+        };
+      },
       providesTags: ['Student-Document-Type'],
     }),
     addStudentDocumentType: builder.mutation({

@@ -23,6 +23,7 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
+import sortQueryString from 'src/utils/sort-query-string';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -62,9 +63,16 @@ const StudentDocumentType = ({
   // Get the dispatch function from the Redux store
   const dispatch = useDispatch();
   // Fetch all student document types
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
+    params: { ...query },
   });
 
   // Delete document mutation
@@ -140,6 +148,20 @@ const StudentDocumentType = ({
           </>
         }
         isLoading={isLoading}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         columns={[
           { id: 'documentName', label: 'Document Name' },
           { id: 'documentSize', label: 'Document Size' },

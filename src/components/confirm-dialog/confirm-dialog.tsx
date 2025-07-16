@@ -14,10 +14,10 @@ import type { ConfirmDialogProps } from './types';
 type ConfirmIconType = 'info' | 'warning' | 'success' | 'error';
 // ----------------------------------------------------------------------
 const iconMap: Record<ConfirmIconType, JSX.Element> = {
-  warning: <WarningAmber color="warning" fontSize="large" />,
-  success: <CheckCircle color="success" fontSize="large" />,
-  info: <Info color="info" fontSize="large" />,
-  error: <Error color="error" fontSize="large" />,
+  warning: <WarningAmber color="warning" fontSize="medium" />,
+  success: <CheckCircle color="success" fontSize="medium" />,
+  info: <Info color="info" fontSize="medium" />,
+  error: <Error color="error" fontSize="medium" />,
 };
 export function ConfirmDialog({
   title,
@@ -32,14 +32,17 @@ export function ConfirmDialog({
 
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose} {...other}>
-      <DialogTitle>
+      <DialogTitle sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={1}>
           {iconMap[icon as ConfirmIconType]}
           <Typography variant="h6">{title}</Typography>
         </Box>
       </DialogTitle>
       {content && (
-        <DialogContent sx={{ typography: 'body2', p: 2, py: 2.5 }}> {content} </DialogContent>
+        <DialogContent sx={{ typography: 'body2', padding: '0 16px 16px 16px' }}>
+          {' '}
+          {content}{' '}
+        </DialogContent>
       )}
       {/* <Divider /> */}
 

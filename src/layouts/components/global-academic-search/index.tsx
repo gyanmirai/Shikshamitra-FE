@@ -117,7 +117,7 @@ const GlobalAcademicSearch = () => {
         onChange={async (event, newValue) => {
           const confirmed = await showConfirm({
             title: 'Change Academic Year, Board and Medium',
-            message: 'Are you sure you want to change academic year, board and medium?',
+            message: `Are you sure you want to change academic year, board and medium from  ${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
             icon: 'warning',
           });
           if (confirmed) {
