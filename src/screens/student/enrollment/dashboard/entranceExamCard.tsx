@@ -11,8 +11,6 @@ const EntranceExamCard = () => (
       border: '1px solid #4CAF50',
       borderRadius: 2,
       p: 2,
-      bgcolor: '#F9FAFB',
-      color: '#1B5E20',
       minHeight: 80,
     }}
   >

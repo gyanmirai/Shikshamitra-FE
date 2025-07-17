@@ -82,7 +82,7 @@ type Props = CardProps & {
 export function BankingBalanceStatistics({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const [selectedSeries, setSelectedSeries] = useState('lastWeek');
+  const [selectedSeries, setSelectedSeries] = useState('Last Week');
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 

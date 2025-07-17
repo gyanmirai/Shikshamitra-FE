@@ -246,7 +246,11 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
             <CustomTooltip
               arrow
               placement="right"
-              title="In this dialog, you can create a leave policy by setting rules for different leave types (e.g., sick, casual), leave entitlements, and approval workflows."
+              title={
+                editData
+                  ? 'Update the leave type name and color to modify existing leave settings'
+                  : 'Create a new leave type and assign a color to distinguish it from other leaves'
+              }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -358,7 +362,8 @@ const LeaveTypeForm = ({
                 label="Leave Type *"
                 value={formik.values.leaveType}
                 onChange={(e) => {
-                  formik.setFieldValue('leaveType', capitalize(e.target.value));
+                  const newValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  formik.setFieldValue('leaveType', capitalize(newValue));
                 }}
                 size="small"
                 fullWidth

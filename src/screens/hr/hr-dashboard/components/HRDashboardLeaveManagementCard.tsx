@@ -82,7 +82,6 @@ export default function LeaveManagementCard() {
             border="1px solid"
             borderColor="grey.400"
             borderRadius={1}
-            bgcolor="grey.50"
             display="flex"
             gap={1.5}
             alignItems="center"
