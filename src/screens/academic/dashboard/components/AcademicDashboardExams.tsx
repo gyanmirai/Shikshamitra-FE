@@ -1,0 +1,74 @@
+import type { LabelColor } from 'src/components/label';
+
+import React from 'react';
+
+import { Card } from '@mui/material';
+
+import {
+  ScheduleExamStatus,
+  ScheduleExamStatusColor,
+  ScheduleExamStatusOptions,
+} from 'src/enums/schedule-exam-status';
+
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
+
+const AcademicDashboardExams = () => (
+  <Card sx={{ p: 3, height: '100%', borderRadius: 3 }}>
+    <CustomizableTable
+      tableId="nextExams"
+      columns={[
+        { id: 'subject', label: 'Subject' },
+        { id: 'class', label: 'Class' },
+        { id: 'date', label: 'Date' },
+        {
+          id: 'status',
+          label: 'Status',
+          minWidth: 80,
+          sticky: true,
+          filterType: 'enum',
+          enumOptions: ScheduleExamStatusOptions,
+          align: 'left',
+          render(value, row) {
+            const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
+            return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+          },
+        },
+      ]}
+      data={[
+        {
+          subject: 'Mathematics',
+          class: '10-A',
+          date: '15-06-2025',
+          status: ScheduleExamStatus.Completed, // 5 (Ongoing in UI)
+        },
+        {
+          subject: 'Physics',
+          class: '11',
+          date: '15-07-2025',
+          status: ScheduleExamStatus.Published, // 2 (Scheduled)
+        },
+        {
+          subject: 'Chemistry',
+          class: '12-B',
+          date: '24-06-2025',
+          status: ScheduleExamStatus.Completed, // 5 (Ongoing)
+        },
+        {
+          subject: 'English',
+          class: '10',
+          date: '01-11-2025',
+          status: ScheduleExamStatus.Published, // 2 (Scheduled)
+        },
+        {
+          subject: 'Gujarati',
+          class: '9-A',
+          date: '01-12-2025',
+          status: ScheduleExamStatus.Published, // 2 (Scheduled)
+        },
+      ]}
+    />
+  </Card>
+);
+
+export default AcademicDashboardExams;

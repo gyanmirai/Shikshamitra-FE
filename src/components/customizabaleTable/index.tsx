@@ -300,18 +300,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
 
   const handleSort = useCallback(
-    (column: string) => {
+    (column: string, originalId?: string) => {
       const newSortConfig = [...sorts];
       const configIndex = newSortConfig.findIndex((item) => item.column === column);
 
       if (configIndex > -1) {
         if (newSortConfig[configIndex].direction === 'asc') {
           newSortConfig[configIndex].direction = 'desc';
+          newSortConfig[configIndex].originalId = originalId;
         } else {
           newSortConfig.splice(configIndex, 1);
         }
       } else {
-        newSortConfig.push({ column, direction: 'asc' });
+        newSortConfig.push({ column, direction: 'asc', originalId });
       }
       handelChangeParams({ sorts: newSortConfig });
       // setSorts(newSortConfig);
@@ -410,25 +411,24 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [filters]
   );
 
-  const filteredData = useMemo(
-    () =>
-      serverSide
-        ? data
-        : data.filter((row) => {
-            const searchMatch = Object.entries(row).some(
-              ([key, value]) =>
-                columnVisibility[key] &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '') &&
-                _.get(row, columns.find((col) => col.id === key)?.id || '')
-                  .toString()
-                  .toLowerCase()
-                  .includes(searchValue.toLowerCase())
-            );
+  const filteredData = useMemo(() => {
+    if (serverSide) {
+      return data;
+    }
+    return data.filter((row) => {
+      const searchMatch = Object.entries(row).some(
+        ([key, value]) =>
+          columnVisibility[key] &&
+          _.get(row, columns.find((col) => col.id === key)?.id || '') &&
+          _.get(row, columns.find((col) => col.id === key)?.id || '')
+            .toString()
+            .toLowerCase()
+            .includes(searchValue.toLowerCase())
+      );
 
-            return searchMatch && applyFilter(row);
-          }),
-    [serverSide, data, applyFilter, columnVisibility, columns, searchValue]
-  );
+      return searchMatch && applyFilter(row);
+    });
+  }, [serverSide, data, applyFilter, columnVisibility, columns, searchValue]);
 
   const sortedData = useMemo(() => {
     if (serverSide) return filteredData;
@@ -790,7 +790,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             width: 'inherit',
                             gap: 0.5,
                           }}
-                          onClick={() => column.isSort !== false && handleSort(column.id)}
+                          onClick={() =>
+                            column.isSort !== false && handleSort(column.id, column?.originalId)
+                          }
                         >
                           <Box
                             fontSize="14px"

@@ -26,6 +26,7 @@ export interface IColumn {
   isDateRangeFilter?: boolean;
   enumOptions?: { label: string; value: any }[];
   defaultHidden?: boolean;
+  originalId?: string;
 }
 
 export interface IData {
@@ -39,7 +40,7 @@ export interface ICustomizableTableProps {
   serverSide?: boolean;
   onServerSort?: (
     column: string,
-    sortData: Array<{ column: string; direction: 'asc' | 'desc' }>
+    sortData: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   ) => void;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
@@ -76,7 +77,7 @@ export type IParams = {
     value: string;
     valueType: string;
   }>;
-  sorts: Array<{ column: string; direction: 'asc' | 'desc' }>;
+  sorts: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>;
   dateFilter: null | Dayjs;
   dateRangeFilter: { start: null | Dayjs; end: null | Dayjs };
   filterValue: string;
