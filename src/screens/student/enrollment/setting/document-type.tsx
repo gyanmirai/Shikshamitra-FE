@@ -209,13 +209,13 @@ const StudentDocumentType = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {editData ? 'Update Document Type' : 'Add New Document Type'}
+              {editData ? 'Update Document Type' : 'Add Document Type'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="In the Document Dialogue manage the list of required documents for registration and their types. Toggle to mark each as required or optional."
+              title="Define a new document type by specifying its name, size limit, and allowed file formats."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -455,7 +455,7 @@ export const DocumentForm = ({
   const formik = useFormik<{
     title: string;
     documentType: { label: string; value: number }[];
-    documentSize: number;
+    documentSize: number | string;
     isRequired: boolean;
   }>({
     initialValues: {
@@ -463,7 +463,7 @@ export const DocumentForm = ({
       documentType:
         editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
         [],
-      documentSize: editData?.documentSize || 5,
+      documentSize: editData?.documentSize || '',
       isRequired: editData?.isRequired || false,
     },
     validationSchema: Yup.object({
@@ -473,7 +473,7 @@ export const DocumentForm = ({
         .required('Document type is required'),
       documentSize: Yup.number()
         .required('Document size is required')
-        .min(1, 'Document size must be greater than 1 MB')
+        .max(20, 'Document size must be less than 20 MB')
         .positive('Document size must be a positive number')
         .integer('Document size must be an integer'),
     }),
@@ -539,7 +539,12 @@ export const DocumentForm = ({
                 type="number"
                 name="documentSize"
                 fullWidth
-                onChange={handleChange}
+                inputProps={{ min: 1, max: 20 }}
+                onChange={(e) => {
+                  // const value = parseInt(e.target.value, 10);
+
+                  setFieldValue('documentSize', e.target.value);
+                }}
                 error={Boolean(touched.documentSize && errors.documentSize)}
                 helperText={touched.documentSize && errors.documentSize}
               />

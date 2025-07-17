@@ -534,9 +534,17 @@ const AdmissionScreen = () => {
           dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
           ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-          studentName: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
           genderValue: GenderType[item?.genderType as any],
-          address: [item.addressLine1, item.addressLine2, item.addressLine3]
+          remarks: item?.remarks || '-',
+          address: [
+            item.addressLine1,
+            item.addressLine2,
+            item.addressLine3,
+            item.city,
+            item.state?.name,
+            item.country?.name,
+          ]
             .filter(Boolean)
             .join(', '),
         })) || [],
@@ -616,7 +624,7 @@ const AdmissionScreen = () => {
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
-        noDataText={<>No Admission Data Found</>}
+        noDataText={<>No Students Admission Data Found</>}
         isLoading={isLoading}
         columns={[
           {
@@ -695,8 +703,45 @@ const AdmissionScreen = () => {
             isDateRangeFilter: true,
             filterType: 'date',
           },
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            minWidth: '180px',
+            align: 'left',
+            render: (value) => value || '-',
+          },
+          {
+            id: 'address',
+            label: 'Address',
+            minWidth: '180px',
+            align: 'left',
+            render: (value, row) => {
+              const addressLines = value.split(', ');
+              const displayAddress = addressLines.slice(0, 3).join(', ');
+              const hasMoreLines = addressLines.length > 3;
 
-          { id: 'address', label: 'Address', minWidth: '180px', align: 'left' },
+              return (
+                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '13px',
+                      // width: 200,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: '1.2em',
+                      maxHeight: '2.4em',
+                    }}
+                  >
+                    {displayAddress}
+                    {hasMoreLines && '...'}
+                  </Typography>
+                </CustomTooltip>
+              );
+            },
+          },
           {
             id: 'primaryContactNumber',
             label: 'Primary Contact No.',
@@ -708,6 +753,7 @@ const AdmissionScreen = () => {
             label: 'Secondary Contact No.',
             minWidth: '220px',
             align: 'left',
+            render: (value) => value || '-',
           },
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {

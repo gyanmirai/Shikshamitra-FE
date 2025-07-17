@@ -53,6 +53,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -245,14 +246,18 @@ export const CommunicationForm = ({
           <Box className="loader" />
         ) : (
           <Timeline>
-            {data ? (
+            {data?.followUps?.length ? (
               data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
                 <TimelineItem key={index}>
                   <TimelineOppositeContent>
                     <Typography sx={{ color: 'text.primary' }}>
                       {dayjs(item?.timestamp).format('DD-MM-YYYY')}
                     </Typography>
-                    <Typography sx={{ color: 'text.secondary' }}>{item?.author}</Typography>
+                    <Typography sx={{ color: 'text.secondary' }}>
+                      {item?.author
+                        ? item.author.charAt(0).toUpperCase() + item.author.slice(1)
+                        : ''}
+                    </Typography>
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot color="primary" />
@@ -274,9 +279,7 @@ export const CommunicationForm = ({
                 </TimelineItem>
               ))
             ) : (
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                No notes added yet
-              </Typography>
+              <EmptyContent title="No Notes history yet." />
             )}
           </Timeline>
           // data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (

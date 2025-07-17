@@ -120,7 +120,7 @@ const RegisterScreen = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Schedule and manage entrance exams — set dates, assign subjects, and monitor students performance."
+              title="Schedule an entrance exam for the selected student."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

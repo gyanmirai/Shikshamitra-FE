@@ -23,6 +23,11 @@ export const inquiryValidationSchema = Yup.object().shape({
       `Date of Birth is not valid`,
       (value) => value && dayjs(value as string | number | Date).isAfter(MIN_DOB.subtract(1, 'day'))
     )
+    .test(
+      'max-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isBefore(dayjs())
+    )
     .required('Date of Birth is required'),
   // dateOfBirth: Yup.date().required('Date of Birth is required'),
   age: Yup.string().required('Age is required'),
