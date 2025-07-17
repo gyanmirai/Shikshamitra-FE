@@ -324,6 +324,12 @@ const LeaveHistory = (props: any) => {
             },
           },
           {
+            label: 'Organization',
+            id: 'employee.educationMediumStage.name',
+            align: 'left',
+            minWidth: '14vw',
+          },
+          {
             label: 'Description',
             id: 'description',
             align: 'left',
@@ -421,7 +427,11 @@ const LeaveHistory = (props: any) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
+              title={
+                editData
+                  ? 'Review and manage leave requests. You can view details and take actions like approve or reject.'
+                  : 'Submit leave requests by selecting dates, type and providing description.'
+              }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -453,7 +463,7 @@ const LeaveHistory = (props: any) => {
                 arrow
                 placement="right"
                 sx={{ textAlign: 'justify' }}
-                title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+                title="You can approve or reject leave requests and provide optional remarks. For rejections, remarks are required to explain the reason."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
               </CustomTooltip>
@@ -542,7 +552,7 @@ const ApproveRejectForm = ({
         <LoadingButton
           variant="contained"
           loading={isChangeStatusLoading}
-          type="submit"
+          onClick={(e: any) => handleSubmit(e)}
           size="small"
           startIcon={
             <Iconify

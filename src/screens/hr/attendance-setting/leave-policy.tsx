@@ -115,7 +115,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.leaveType || 'this policy'}</strong>?
+            Are you sure you want to delete <strong>{editData?.title || 'this policy'}</strong>?
           </>
         }
         action={
@@ -199,12 +199,14 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
             label: 'Accrual Start Date',
             minWidth: '16vw',
             align: 'left',
+            filterType: 'date',
           },
           {
             id: 'accrualEndDate',
             label: 'Accrual End Date',
             minWidth: '16vw',
             align: 'left',
+            filterType: 'date',
           },
           {
             id: 'action',
@@ -458,6 +460,7 @@ export const LeavePolicyForm = ({
           <Grid item xs={12} sm={4}>
             <DatePicker
               slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              format="DD-MM-YYYY"
               label="Accrual Start Date"
               value={formik.values.accrualStartDate}
               onChange={(val) => formik.setFieldValue('accrualStartDate', val)}
@@ -713,6 +716,7 @@ export const LeavePolicyForm = ({
         </Button>
         <LoadingButton
           size="small"
+          form="dialog-form"
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

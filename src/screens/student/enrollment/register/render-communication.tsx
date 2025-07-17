@@ -22,9 +22,13 @@ const RenderCommunicationFields = (props: any) => {
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void | false | undefined> => {
+    const validation = await formik.validateForm();
     await formik?.submitForm?.();
+    if (Object.keys(validation).length > 0) return false;
+
     formik.resetForm({ values: formik.values });
+    return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();

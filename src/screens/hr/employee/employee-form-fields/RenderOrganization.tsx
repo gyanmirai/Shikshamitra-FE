@@ -2,8 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 
-import { Select, MenuItem, InputLabel, FormControl, FormHelperText } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 interface RenderOrganizationProps {
@@ -16,7 +15,21 @@ export const RenderOrganization = ({ formik, disabled }: RenderOrganizationProps
 
   return (
     <ShakingTextField error={!!formik.errors.organization && formik.touched.organization}>
-      <FormControl
+      <CustomSelect
+        options={medium?.educationMediumStages || []}
+        fullWidth
+        disabled={!!disabled}
+        error={!!formik.errors.organization && formik.touched.organization}
+        helperText={(formik.touched.organization && formik.errors.organization) as string}
+        label="Organization *"
+        name="organization"
+        value={formik.values.organization}
+        valueKey="id"
+        labelKey="name"
+        onChange={(value) => formik.setFieldValue('organization', value)}
+      />
+
+      {/* <FormControl
         fullWidth
         disabled={!!disabled}
         error={!!formik.errors.organization && formik.touched.organization}
@@ -49,7 +62,7 @@ export const RenderOrganization = ({ formik, disabled }: RenderOrganizationProps
         {formik.touched.organization && formik.errors.organization && (
           <FormHelperText>{formik.errors.organization}</FormHelperText>
         )}
-      </FormControl>
+      </FormControl> */}
     </ShakingTextField>
   );
 };

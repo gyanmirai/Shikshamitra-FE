@@ -70,20 +70,22 @@ const CustomDialog = ({
       }}
       {...props}
     >
-      <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
-        <Typography variant="h5">{title}</Typography>
-        <IconButton
-          aria-label="close"
-          onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
-          sx={{
-            color: theme.palette.grey[500],
-          }}
-        >
-          <Close />
-        </IconButton>
-      </Box>
-      <Divider />
-      {children}
+      <form id="dialog-form">
+        <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
+          <Typography variant="h5">{title}</Typography>
+          <IconButton
+            aria-label="close"
+            onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
+            sx={{
+              color: theme.palette.grey[500],
+            }}
+          >
+            <Close />
+          </IconButton>
+        </Box>
+        <Divider />
+        {children}
+      </form>
     </Dialog>
   );
 };
@@ -97,7 +99,7 @@ export const DialogScrollContent = ({
   return (
     <Scrollbar ref={ref}>
       <DialogContent ref={ref} sx={{ p: 2 }} {...props}>
-        <form>{children}</form>
+        {children}
       </DialogContent>
     </Scrollbar>
   );

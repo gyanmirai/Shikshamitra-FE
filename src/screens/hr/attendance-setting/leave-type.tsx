@@ -14,7 +14,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { AccurateRateType } from 'src/enums/accurate-rate';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -68,10 +67,8 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
-      setTimeout(() => {
-        setEditData(null);
-        dispatch(setIsChanges(false));
-      }, 200); // Delay matches your dialog close animation
+      setEditData(null);
+      dispatch(setIsChanges(false));
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -79,9 +76,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
       resetState();
     } else if (!isChanges) {
       dialog.onFalse();
-      setTimeout(() => {
-        setEditData(null);
-      }, 200);
+      setEditData(null);
     }
   };
 
@@ -119,9 +114,10 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
             onClick={async () => {
               await deleteLeavePolicy(editData?.id);
               shikshaMitraToast.success({
-                message: `${editData?.leaveType} leave type deleted successfully}`,
+                message: `${editData?.leaveType} leave type deleted successfully`,
               });
               confirm.onFalse();
+              setEditData(null);
             }}
           >
             Yes
@@ -259,9 +255,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
         open={dialog.value}
         handleClose={() => {
           dialog.onFalse();
-          setTimeout(() => {
-            setEditData(null);
-          }, 200); // Adjust the delay based on your dialog transition duration
+          setEditData(null);
         }}
       >
         <LeaveTypeForm handleClose={handleClose} editData={editData} />
@@ -281,10 +275,6 @@ const LeaveTypeForm = ({
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
-    popupConfig: {
-      successMessage: 'Leave Type created successfully',
-      success: true,
-    },
   });
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -292,10 +282,10 @@ const LeaveTypeForm = ({
     currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
   });
 
-  const { data: roles, isLoading: isRolesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
-  });
+  // const { data: roles, isLoading: isRolesLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetRolesQuery,
+  // });
 
   const formik = useFormik({
     initialValues: {
@@ -439,7 +429,7 @@ const LeaveTypeForm = ({
                 sx={{ mb: 1 }}
                 color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
               >
-                Leave Type Color
+                Leave Type Color *
               </Typography>
               <ColorPickerCircle
                 onSelect={(color: string) => formik.setFieldValue('color', color)}
@@ -461,12 +451,13 @@ const LeaveTypeForm = ({
         </Grid>
       </DialogScrollContent>
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleClose}
           variant="outlined"
           size="small"
+          type="button"
         >
           Cancel
         </Button>
@@ -482,6 +473,8 @@ const LeaveTypeForm = ({
           onClick={(e: any) => formik.handleSubmit(e)}
           variant="contained"
           size="small"
+          form="dialog-form"
+          type="submit"
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>

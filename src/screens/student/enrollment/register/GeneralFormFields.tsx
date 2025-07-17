@@ -55,9 +55,13 @@ const RenderGeneralFormFields = (props: any) => {
 
   console.log(formik, 'formik================');
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void | false | undefined> => {
+    const validation = await formik.validateForm();
     await formik?.submitForm?.();
+    if (Object.keys(validation).length > 0) return false;
+
     formik.resetForm({ values: formik.values });
+    return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();
