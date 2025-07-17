@@ -64,7 +64,7 @@ const PaySlipGenerationScreen = () => {
           { name: 'Generate Salary Slip' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="In this tab, you can generate salary slips for employees. Select the pay period and employee details to generate and download the salary slip."
+        description="Generate and download salary slips by selecting the pay period and employee details."
       />
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <Autocomplete

@@ -78,7 +78,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance Tracking' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
+        description="Generate and filter payroll and employee reports by department, role, status, and other criteria."
       />
       {role === 'Teacher' ? (
         <TeacherAttendanceTracking searchParams={searchParams} setSearchParams={setSearchParams} />

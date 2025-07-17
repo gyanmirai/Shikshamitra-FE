@@ -190,7 +190,7 @@ const EarningComponent = ({
               title={
                 editData
                   ? `Edit ${editData.name} component settings including type, dependencies and visibility`
-                  : 'Configure salary components like basic pay, allowances and other earnings. Set component types, dependencies and visibility in payslip.'
+                  : 'Configure salary components like basic pay, allowances, and other earnings, including type, dependencies, and payslip visibility.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

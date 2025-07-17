@@ -47,6 +47,13 @@ const ProfessionalManagementScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading={currentActiveComponent?.label}
+        description={
+          searchParams.tab === 'performanceReviews'
+            ? 'Review employee performance, provide feedback, and track progress by department or period.'
+            : searchParams.tab === 'kpiSetup'
+              ? 'Define and manage KPIs by role and organization to track employee performance effectively.'
+              : 'View past performance reviews by date, department, and reviewer for reference and tracking.'
+        }
         links={[
           { name: 'HR' },
           { name: 'Attendance & Leave' },

@@ -111,7 +111,7 @@ const PayrollSettingScreen = () => {
         heading="Setting"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Setting' }]}
         sx={{ mb: 2 }}
-        description="In this section, you can configure payroll settings, including Professional Tax, Provident Fund (PF), and Salary Components to ensure accurate salary processing."
+        description="Configure payroll settings like Professional Tax, PF, and Salary Components for accurate processing."
         action={renderBUtton[allParams.tab as keyof typeof renderBUtton]}
       />
 
