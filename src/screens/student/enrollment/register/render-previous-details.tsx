@@ -70,7 +70,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="schoolName"
           value={formik.values.schoolName}
           onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
             const newName = capitalize(onlyText);
             formik.setFieldValue('schoolName', newName);
           }}
@@ -96,7 +96,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="schoolBoard"
           value={formik.values.schoolBoard}
           onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
             formik.setFieldValue('schoolBoard', onlyText);
           }}
           disabled={!isEditable.value}
@@ -110,7 +110,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="schoolMedium"
           value={formik.values.schoolMedium}
           onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
             formik.setFieldValue('schoolMedium', onlyText);
           }}
           disabled={!isEditable.value}
@@ -124,7 +124,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="tcNumber"
           value={formik.values.tcNumber}
           onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+            const onlyText = e.target.value.replace(/[^0-9]/g, '');
             formik.setFieldValue('tcNumber', onlyText);
           }}
           disabled={!isEditable.value}
@@ -155,6 +155,11 @@ const RenderPreviousSchoolFields = (props: any) => {
           onChange={(e: any) => {
             const newName = capitalize(e.target.value);
             formik.setFieldValue('percentage', newName);
+          }}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
           }}
           disabled={!isEditable.value}
         />

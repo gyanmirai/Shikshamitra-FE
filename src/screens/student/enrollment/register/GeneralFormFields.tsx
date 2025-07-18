@@ -10,6 +10,7 @@ import {
   FormLabel,
   RadioGroup,
   FormHelperText,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
@@ -51,7 +52,6 @@ const RenderGeneralFormFields = (props: any) => {
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
   // console.log('formik ---register values--', formik.values);
-  console.log('formik.erroes..validation----', formik.errors);
 
   console.log(formik, 'formik================');
 
@@ -373,10 +373,12 @@ const RenderGeneralFormFields = (props: any) => {
               disabled={!isContactDetailsEditable.value}
               InputProps={{
                 startAdornment: (
-                  <>
-                    <Iconify icon="mdi-light:email" />{' '}
-                    <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                  </>
+                  <InputAdornment position="start">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Iconify icon="mdi-light:email" />
+                      <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                    </Box>
+                  </InputAdornment>
                 ),
               }}
             />
@@ -411,7 +413,7 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.adharNo && formik.errors.adharNo}
               fullWidth
               onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                   e.preventDefault();
                 }
               }}
@@ -428,6 +430,7 @@ const RenderGeneralFormFields = (props: any) => {
                 maxLength: 12,
                 pattern: '[0-9]*',
               }}
+              onWheel={(e) => (e.target as HTMLElement).blur()}
               disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
@@ -459,10 +462,11 @@ const RenderGeneralFormFields = (props: any) => {
                 pattern: '[0-9]*',
               }}
               onKeyDown={(e) => {
-                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                   e.preventDefault();
                 }
               }}
+              onWheel={(e) => (e.target as HTMLElement).blur()}
               disabled={!isIdentificationEditable.value}
             />
           </ShakingTextField>
@@ -599,7 +603,12 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.nationality && formik.errors.nationality}
               fullWidth
               onChange={(e: any) => {
-                const newName = capitalize(e.target.value);
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const capitalized = capitalize(onlyLetters);
+                const newName = capitalized
+                  .split(' ')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ');
                 formik.setFieldValue('nationality', newName);
                 formik.setFieldTouched('nationality', true);
               }}
@@ -850,12 +859,15 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.previousSchool && formik.errors.previousSchool}
               fullWidth
               onChange={(e: any) => {
-                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                const capitalized = capitalize(onlyLetters);
-                const newName = capitalized
-                  .split(' ')
-                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                  .join(' ');
+                const alphanumeric = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                const words = alphanumeric.split(' ');
+                const capitalizedWords = words.map((word: string) => {
+                  if (word) {
+                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                  }
+                  return '';
+                });
+                const newName = capitalizedWords.join(' ');
                 formik.setFieldValue('previousSchool', newName);
                 formik.setFieldTouched('previousSchool', true, true);
               }}
@@ -878,13 +890,8 @@ const RenderGeneralFormFields = (props: any) => {
               helperText={formik.touched.lastClassPassed && formik.errors.lastClassPassed}
               fullWidth
               onChange={(e: any) => {
-                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                const capitalized = capitalize(onlyLetters);
-                const newName = capitalized
-                  .split(' ')
-                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                  .join(' ');
-                formik.setFieldValue('lastClassPassed', newName);
+                const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
+                formik.setFieldValue('lastClassPassed', onlyNumbers);
                 formik.setFieldTouched('lastClassPassed', true, true);
               }}
               disabled={!isPreviousSchoolEditable.value}

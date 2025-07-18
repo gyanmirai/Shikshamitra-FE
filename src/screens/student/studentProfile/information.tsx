@@ -417,7 +417,9 @@ export function StudentInformation(props: StudentTabsComponentType) {
         shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
       } else if (activeTabIndex === 7) {
         await handleBankDetailsFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Registration updated successfully' });
+        shikshaMitraToast.success({
+          message: `Registration for ${student?.firstName} ${student?.lastName} updated successfully`,
+        });
       }
     } catch (error) {
       console.log(error);

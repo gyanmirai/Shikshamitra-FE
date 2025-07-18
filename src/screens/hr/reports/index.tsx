@@ -45,6 +45,7 @@ const ReportsScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Reports"
+        description="Generate and filter payroll and employee reports by department, role, status, and other criteria."
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports' }]}
         sx={{ px: 1, mb: 2 }}
       />

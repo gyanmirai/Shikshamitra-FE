@@ -38,6 +38,7 @@ const StudentIcardScreen = () => {
         <>
           <CustomBreadcrumbs
             heading="I-Card"
+            description="View and manage employee I-Cards by status and organization."
             links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
             sx={{ px: 1, mb: 2 }}
             action={
@@ -58,6 +59,7 @@ const StudentIcardScreen = () => {
         <>
           <CustomBreadcrumbs
             heading="I-Card"
+            description="View and manage employee I-Cards by status and organization."
             links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
             sx={{ px: 1, mb: 2 }}
             action={

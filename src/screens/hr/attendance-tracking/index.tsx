@@ -19,6 +19,7 @@ import {
   Skeleton,
   TextField,
   InputLabel,
+  Typography,
   FormControl,
   Autocomplete,
 } from '@mui/material';
@@ -78,7 +79,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance Tracking' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="On the Attendance Tracking screen, you can view the attendance status of all employees or students, including who is present and who is absent on a specific date."
+        description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
         <TeacherAttendanceTracking searchParams={searchParams} setSearchParams={setSearchParams} />
@@ -178,7 +179,7 @@ const DateWise = ({
 
   const counts = useMemo(
     () => ({
-      all: attendanceData?.items.length || 24,
+      all: attendanceData?.items.length || 28,
       Present:
         attendanceData?.items.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
@@ -303,6 +304,7 @@ const DateWise = ({
           </Select>
         </FormControl>
         <DatePicker
+          disableFuture
           format="DD-MM-YYYY"
           label="Date"
           value={dateValue}
@@ -414,6 +416,39 @@ const DateWise = ({
             },
           },
           { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left' },
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            align: 'left',
+            minWidth: '200px',
+            render: (value, row) => {
+              // Split address into lines and take first two lines
+              const addressLines = value.split(', ');
+              const displayAddress = addressLines.slice(0, 3).join(', ');
+              const hasMoreLines = addressLines.length > 3;
+
+              return (
+                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '13px',
+                      width: '200px',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: '1.2em',
+                      maxHeight: '2.4em',
+                    }}
+                  >
+                    {displayAddress}
+                    {hasMoreLines && '...'}
+                  </Typography>
+                </CustomTooltip>
+              );
+            },
+          },
           // {
           //   id: 'status',
           //   label: 'Status',
@@ -447,7 +482,7 @@ const DateWise = ({
             render(value, row) {
               return (
                 <Label
-                  color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
+                  color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
                 >
                   {value}
                 </Label>
@@ -484,10 +519,12 @@ const DateWise = ({
             timeIn: '',
             timeOut: '',
             totalHoursWorked: '__ __',
-            status: 'Leave',
+            status: 'Absent',
             employeeName: 'Patel Amit Naresh',
             contactNo: '+91 98765 43212',
             employeeCode: 'EMP003',
+            remarks:
+              'The employee was marked absent for the day without any prior communication. We are awaiting a response or formal leave request to update the records accordingly.',
           },
           {
             id: 4,
@@ -528,7 +565,7 @@ const DateWise = ({
             timeIn: '',
             timeOut: '',
             totalHoursWorked: '__ __',
-            status: 'Leave',
+            status: 'Absent',
             employeeName: 'Joshi Arun Kumar',
             contactNo: '+91 98765 43216',
             employeeCode: 'EMP007',
@@ -689,7 +726,7 @@ const EmployeeWise = ({
       },
       {
         value: 'FullDayLeave',
-        label: 'Leave',
+        label: 'Absent',
         count: data?.[0]?.leaveDays || 6,
         icon: 'fluent-mdl2:leave-user',
         color: 'error',
@@ -808,6 +845,7 @@ const EmployeeWise = ({
         </CustomTooltip>
 
         <DatePicker
+          disableFuture
           format="DD-MM-YYYY"
           label="Start Date"
           value={startDate}
@@ -829,6 +867,7 @@ const EmployeeWise = ({
         <DatePicker
           format="DD-MM-YYYY"
           label="End Date"
+          disableFuture
           value={endDate}
           onChange={(value) => {
             setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
@@ -973,7 +1012,7 @@ const EmployeeWise = ({
                 return (
                   <Label
                     color={
-                      value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'
+                      value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'
                     }
                   >
                     {value}
@@ -1029,7 +1068,7 @@ const EmployeeWise = ({
               timeIn: '',
               timeOut: '',
               totalHoursWorked: '__ __',
-              status: 'Leave',
+              status: 'Absent',
               employeeName: 'Rajesh Kumar',
               contactNo: '+91 76543 21098',
               employeeCode: 'EMP103',
@@ -1079,7 +1118,7 @@ const EmployeeWise = ({
               timeIn: '',
               timeOut: '',
               totalHoursWorked: '__ __',
-              status: 'Leave',
+              status: 'Absent',
               employeeName: 'Arjun Malhotra',
               contactNo: '+91 32109 87654',
               employeeCode: 'EMP107',

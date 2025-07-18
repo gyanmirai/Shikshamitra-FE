@@ -425,6 +425,7 @@ const LeaveHistory = (props: any) => {
                   ? 'Review and manage leave requests. You can view details and take actions like approve or reject.'
                   : 'Create a leave request by selecting the employee, leave type, dates, and adding notes.'
               }
+
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

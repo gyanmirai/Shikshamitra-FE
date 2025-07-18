@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { capitalize } from 'lodash';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Divider, TextField, Typography, Autocomplete } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Divider,
+  TextField,
+  Typography,
+  Autocomplete,
+  InputAdornment,
+} from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -14,6 +22,9 @@ import {
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 
 function MotherOfficeAddressComponent(props: any) {
   const { formik, disabled, isMainForm = false } = props;
@@ -82,6 +93,60 @@ function MotherOfficeAddressComponent(props: any) {
             disabled={!!disabled}
           />
         </ShakingTextField>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CountryComponent
+          value={formik.values.motherOfficeCountry}
+          onChange={(_e, value) => {
+            formik.setFieldValue('motherOfficeState', null);
+            formik.setFieldValue('motherOfficeCountry', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
+          // helperText={formik.touched.localCountry && formik.errors.localCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <StateComponent
+          value={formik.values.motherOfficeState}
+          onChange={(_e, value) => {
+            formik.setFieldValue('motherOfficeCity', null);
+            formik.setFieldValue('motherOfficeState', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.localState && Boolean(formik.errors.localState)}
+          // helperText={formik.touched.localState && formik.errors.localState}
+          countryValue={formik.values.localCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CityComponent
+          value={formik.values.motherOfficeCity}
+          onChange={(_e, value) => formik.setFieldValue('motherOfficeCity', value)}
+          // error={formik.touched.motherOfficeCity && Boolean(formik.errors.motherOfficeCity)}
+          // helperText={formik.touched.motherOfficeCity && formik.errors.motherOfficeCity}
+          stateValue={formik.values.motherOfficeState}
+          disabled={!!disabled}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <TextField
+          disabled={!!disabled}
+          name="localPincode"
+          value={formik.values.motherOfficePincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('motherOfficePincode', value);
+          }}
+          error={formik.touched.motherOfficePincode && Boolean(formik.errors.motherOfficePincode)}
+          helperText={formik.touched.motherOfficePincode && formik.errors.motherOfficePincode}
+          fullWidth
+          size="small"
+          label="Pincode"
+        />
       </Grid>
     </Grid>
   );
@@ -167,6 +232,62 @@ function GuardianOfficeAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CountryComponent
+          value={formik.values.guardianOfficeCountry}
+          onChange={(_e, value) => {
+            formik.setFieldValue('guardianOfficeState', null);
+            formik.setFieldValue('guardianOfficeCountry', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.guardianOfficeCountry && Boolean(formik.errors.guardianOfficeCountry)}
+          // helperText={formik.touched.guardianOfficeCountry && formik.errors.guardianOfficeCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <StateComponent
+          value={formik.values.guardianOfficeState}
+          onChange={(_e, value) => {
+            formik.setFieldValue('guardianOfficeCity', null);
+            formik.setFieldValue('guardianOfficeState', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.guardianOfficeState && Boolean(formik.errors.guardianOfficeState)}
+          // helperText={formik.touched.guardianOfficeState && formik.errors.guardianOfficeState}
+          countryValue={formik.values.guardianOfficeCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CityComponent
+          value={formik.values.guardianOfficeCity}
+          onChange={(_e, value) => formik.setFieldValue('guardianOfficeCity', value)}
+          // error={formik.touched.guardianOfficeCity && Boolean(formik.errors.guardianOfficeCity)}
+          // helperText={formik.touched.guardianOfficeCity && formik.errors.guardianOfficeCity}
+          stateValue={formik.values.guardianOfficeState}
+          disabled={!!disabled}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <TextField
+          disabled={!!disabled}
+          name="localPincode"
+          value={formik.values.guardianOfficePincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('guardianOfficePincode', value);
+          }}
+          error={
+            formik.touched.guardianOfficePincode && Boolean(formik.errors.guardianOfficePincode)
+          }
+          helperText={formik.touched.guardianOfficePincode && formik.errors.guardianOfficePincode}
+          fullWidth
+          size="small"
+          label="Pincode"
+        />
+      </Grid>
     </Grid>
   );
 }
@@ -233,6 +354,60 @@ function MotherAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CountryComponent
+          value={formik.values.motherLocalCountry}
+          onChange={(_e, value) => {
+            formik.setFieldValue('motherLocalState', null);
+            formik.setFieldValue('motherLocalCountry', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.motherLocalCountry && Boolean(formik.errors.motherLocalCountry)}
+          // helperText={formik.touched.motherLocalCountry && formik.errors.motherLocalCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <StateComponent
+          value={formik.values.motherLocalState}
+          onChange={(_e, value) => {
+            formik.setFieldValue('motherLocalCity', null);
+            formik.setFieldValue('motherLocalState', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.motherLocalState && Boolean(formik.errors.motherLocalState)}
+          // helperText={formik.touched.motherLocalState && formik.errors.motherLocalState}
+          countryValue={formik.values.localCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CityComponent
+          value={formik.values.motherLocalCity}
+          onChange={(_e, value) => formik.setFieldValue('motherLocalCity', value)}
+          // error={formik.touched.motherLocalCity && Boolean(formik.errors.motherLocalCity)}
+          // helperText={formik.touched.motherLocalCity && formik.errors.localCity}
+          stateValue={formik.values.motherLocalState}
+          disabled={!!disabled}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <TextField
+          disabled={!!disabled}
+          name="localPincode"
+          value={formik.values.motherLocalPincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('motherLocalPincode', value);
+          }}
+          error={formik.touched.motherLocalPincode && Boolean(formik.errors.motherLocalPincode)}
+          helperText={formik.touched.motherLocalPincode && formik.errors.motherLocalPincode}
+          fullWidth
+          size="small"
+          label="Pincode"
+        />
+      </Grid>
     </Grid>
   );
 }
@@ -298,6 +473,60 @@ function GuardianAddressComponent(props: any) {
             disabled={!!disabled}
           />
         </ShakingTextField>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CountryComponent
+          value={formik.values.guardianLocalCountry}
+          onChange={(_e, value) => {
+            formik.setFieldValue('guardianLocalState', null);
+            formik.setFieldValue('guardianLocalCountry', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.guardianLocalCountry && Boolean(formik.errors.guardianLocalCountry)}
+          // helperText={formik.touched.guardianLocalCountry && formik.errors.guardianLocalCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <StateComponent
+          value={formik.values.guardianLocalState}
+          onChange={(_e, value) => {
+            formik.setFieldValue('guardianLocalCity', null);
+            formik.setFieldValue('guardianLocalState', value);
+          }}
+          disabled={!!disabled}
+          // error={formik.touched.guardianLocalState && Boolean(formik.errors.guardianLocalState)}
+          // helperText={formik.touched.guardianLocalState && formik.errors.guardianLocalState}
+          countryValue={formik.values.guardianLocalCountry}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <CityComponent
+          value={formik.values.guardianLocalCity}
+          onChange={(_e, value) => formik.setFieldValue('guardianLocalCity', value)}
+          // error={formik.touched.guardianLocalCity && Boolean(formik.errors.guardianLocalCity)}
+          // helperText={formik.touched.guardianLocalCity && formik.errors.guardianLocalCity}
+          stateValue={formik.values.guardianLocalState}
+          disabled={!!disabled}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <TextField
+          disabled={!!disabled}
+          name="localPincode"
+          value={formik.values.guardianLocalPincode || ''}
+          onChange={(e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 6) {
+              value = value.slice(0, 6);
+            }
+            formik.setFieldValue('guardianLocalPincode', value);
+          }}
+          error={formik.touched.guardianLocalPincode && Boolean(formik.errors.guardianLocalPincode)}
+          helperText={formik.touched.guardianLocalPincode && formik.errors.guardianLocalPincode}
+          fullWidth
+          size="small"
+          label="Pincode"
+        />
       </Grid>
     </Grid>
   );
@@ -404,7 +633,11 @@ function RenderFamilyInformation(props: any) {
             name="fatherEmail"
             label="Email"
             value={formik.values.fatherEmail}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              formik.setFieldValue('fatherEmail', value);
+              formik.setFieldTouched('fatherEmail', false, false);
+            }}
             error={formik.touched.fatherEmail && Boolean(formik.errors.fatherEmail)}
             helperText={formik.touched.fatherEmail && formik.errors.fatherEmail}
             fullWidth
@@ -412,10 +645,12 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
             InputProps={{
               startAdornment: (
-                <>
-                  <Iconify icon="mdi-light:email" />{' '}
-                  <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                </>
+                <InputAdornment position="start">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Iconify icon="mdi-light:email" />
+                    <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                  </Box>
+                </InputAdornment>
               ),
             }}
           />
@@ -427,7 +662,7 @@ function RenderFamilyInformation(props: any) {
             label="Qualification"
             value={formik.values.fatherQualification}
             onChange={(e) => {
-              const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
               const capitalized = capitalize(value);
               formik.setFieldValue('fatherQualification', capitalized);
             }}
@@ -444,7 +679,15 @@ function RenderFamilyInformation(props: any) {
             label="Year of Passing"
             type="number"
             value={formik.values.fatherPassOutYear}
-            onChange={formik.handleChange}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('fatherPassOutYear', value);
+            }}
             error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
             helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
             fullWidth
@@ -519,13 +762,25 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isFatherDetailsEditable.value}
             value={formik.values.fatherAadharNo}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onChange={(e) => {
               let value = e.target.value.replace(/\D/g, '');
               if (value.length > 12) {
                 value = value.slice(0, 12);
               }
+
               formik.setFieldValue('fatherAadharNo', value);
+              // formik.setFieldTouched('adharNo', true, true);
             }}
+            inputProps={{
+              maxLength: 12,
+              pattern: '[0-9]*',
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
             error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
             helperText={formik.touched.fatherAadharNo && formik.errors.fatherAadharNo}
             fullWidth
@@ -616,7 +871,60 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <CountryComponent
+            value={formik.values.fatherOfficeCountry}
+            onChange={(_e, value) => {
+              formik.setFieldValue('fatherOfficeState', null);
+              formik.setFieldValue('fatherOfficeCountry', value);
+            }}
+            disabled={!isFatherDetailsEditable.value}
+            // error={formik.touched.fatherOfficeCountry && Boolean(formik.errors.fatherOfficeCountry)}
+            // helperText={formik.touched.fatherOfficeCountry && formik.errors.fatherOfficeCountry}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <StateComponent
+            value={formik.values.fatherOfficeState}
+            onChange={(_e, value) => {
+              formik.setFieldValue('fatherOfficeCity', null);
+              formik.setFieldValue('fatherOfficeState', value);
+            }}
+            disabled={!isFatherDetailsEditable.value}
+            // error={formik.touched.fatherOfficeState && Boolean(formik.errors.fatherOfficeState)}
+            // helperText={formik.touched.fatherOfficeState && formik.errors.fatherOfficeState}
+            countryValue={formik.values.fatherOfficeCountry}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <CityComponent
+            value={formik.values.fatherOfficeCity}
+            onChange={(_e, value) => formik.setFieldValue('fatherOfficeCity', value)}
+            // error={formik.touched.fatherOfficeCity && Boolean(formik.errors.fatherOfficeCity)}
+            // helperText={formik.touched.fatherOfficeCity && formik.errors.fatherOfficeCity}
+            stateValue={formik.values.fatherOfficeState}
+            disabled={!isFatherDetailsEditable.value}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField
+            disabled={!isFatherDetailsEditable.value}
+            name="localPincode"
+            value={formik.values.fatherOfficePincode || ''}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 6) {
+                value = value.slice(0, 6);
+              }
+              formik.setFieldValue('fatherOfficePincode', value);
+            }}
+            error={formik.touched.fatherOfficePincode && Boolean(formik.errors.fatherOfficePincode)}
+            helperText={formik.touched.fatherOfficePincode && formik.errors.fatherOfficePincode}
+            fullWidth
+            size="small"
+            label="Pincode"
+          />
+        </Grid>
         <Grid item xs={12}>
           <Typography variant="subtitle1">Local Address</Typography>
         </Grid>
@@ -672,6 +980,60 @@ function RenderFamilyInformation(props: any) {
               disabled={!isFatherDetailsEditable.value}
             />
           </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <CountryComponent
+            value={formik.values.fatherLocalCountry}
+            onChange={(_e, value) => {
+              formik.setFieldValue('fatherLocalState', null);
+              formik.setFieldValue('fatherLocalCountry', value);
+            }}
+            disabled={!isFatherDetailsEditable.value}
+            // error={formik.touched.fatherLocalCountry && Boolean(formik.errors.fatherLocalCountry)}
+            // helperText={formik.touched.fatherLocalCountry && formik.errors.fatherLocalCountry}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <StateComponent
+            value={formik.values.fatherLocalState}
+            onChange={(_e, value) => {
+              formik.setFieldValue('fatherLocalCity', null);
+              formik.setFieldValue('fatherLocalState', value);
+            }}
+            disabled={!isFatherDetailsEditable.value}
+            // error={formik.touched.fatherLocalState && Boolean(formik.errors.fatherLocalState)}
+            // helperText={formik.touched.fatherLocalState && formik.errors.fatherLocalState}
+            countryValue={formik.values.fatherLocalCountry}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <CityComponent
+            value={formik.values.fatherLocalCity}
+            onChange={(_e, value) => formik.setFieldValue('fatherLocalCity', value)}
+            // error={formik.touched.fatherLocalCity && Boolean(formik.errors.fatherLocalCity)}
+            // helperText={formik.touched.fatherLocalCity && formik.errors.fatherLocalCity}
+            stateValue={formik.values.fatherLocalState}
+            disabled={!isFatherDetailsEditable.value}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField
+            disabled={!isFatherDetailsEditable.value}
+            name="localPincode"
+            value={formik.values.fatherLocalPincode || ''}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length > 6) {
+                value = value.slice(0, 6);
+              }
+              formik.setFieldValue('fatherLocalPincode', value);
+            }}
+            error={formik.touched.fatherLocalPincode && Boolean(formik.errors.fatherLocalPincode)}
+            helperText={formik.touched.fatherLocalPincode && formik.errors.fatherLocalPincode}
+            fullWidth
+            size="small"
+            label="Pincode"
+          />
         </Grid>
       </SectionCard>
 
@@ -753,17 +1115,23 @@ function RenderFamilyInformation(props: any) {
             label="Email"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherEmail}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              formik.setFieldValue('motherEmail', value);
+              formik.setFieldTouched('motherEmail', false, false);
+            }}
             error={formik.touched.motherEmail && Boolean(formik.errors.motherEmail)}
             helperText={formik.touched.motherEmail && formik.errors.motherEmail}
             fullWidth
             size="small"
             InputProps={{
               startAdornment: (
-                <>
-                  <Iconify icon="mdi-light:email" />{' '}
-                  <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                </>
+                <InputAdornment position="start">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Iconify icon="mdi-light:email" />
+                    <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                  </Box>
+                </InputAdornment>
               ),
             }}
           />
@@ -793,7 +1161,15 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherPassOutYear}
-            onChange={formik.handleChange}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('motherPassOutYear', value);
+            }}
             error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
             helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
             fullWidth
@@ -868,13 +1244,25 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherAadharNo}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onChange={(e) => {
               let value = e.target.value.replace(/\D/g, '');
               if (value.length > 12) {
                 value = value.slice(0, 12);
               }
+
               formik.setFieldValue('motherAadharNo', value);
+              // formik.setFieldTouched('adharNo', true, true);
             }}
+            inputProps={{
+              maxLength: 12,
+              pattern: '[0-9]*',
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
             error={formik.touched.motherAadharNo && Boolean(formik.errors.motherAadharNo)}
             helperText={formik.touched.motherAadharNo && formik.errors.motherAadharNo}
             fullWidth
@@ -987,17 +1375,23 @@ function RenderFamilyInformation(props: any) {
             label="Email"
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianEmail}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              formik.setFieldValue('guardianEmail', value);
+              formik.setFieldTouched('guardianEmail', false, false);
+            }}
             error={formik.touched.guardianEmail && Boolean(formik.errors.guardianEmail)}
             helperText={formik.touched.guardianEmail && formik.errors.guardianEmail}
             fullWidth
             size="small"
             InputProps={{
               startAdornment: (
-                <>
-                  <Iconify icon="mdi-light:email" />{' '}
-                  <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
-                </>
+                <InputAdornment position="start">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Iconify icon="mdi-light:email" />
+                    <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                  </Box>
+                </InputAdornment>
               ),
             }}
           />
@@ -1029,7 +1423,15 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianPassOutYear}
-            onChange={formik.handleChange}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('guardianPassOutYear', value);
+            }}
             error={formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)}
             helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
             fullWidth
@@ -1105,13 +1507,25 @@ function RenderFamilyInformation(props: any) {
             type="number"
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianAadharNo}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onChange={(e) => {
               let value = e.target.value.replace(/\D/g, '');
               if (value.length > 12) {
                 value = value.slice(0, 12);
               }
+
               formik.setFieldValue('guardianAadharNo', value);
+              // formik.setFieldTouched('adharNo', true, true);
             }}
+            inputProps={{
+              maxLength: 12,
+              pattern: '[0-9]*',
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
             error={formik.touched.guardianAadharNo && Boolean(formik.errors.guardianAadharNo)}
             helperText={formik.touched.guardianAadharNo && formik.errors.guardianAadharNo}
             fullWidth
