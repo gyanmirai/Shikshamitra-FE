@@ -220,7 +220,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
       >
         <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <UploadAvatar
-            maxSize={3145728}
+            // maxSize={3145728}
+
             onDrop={async (acceptedFiles: File[]) => {
               const file = acceptedFiles?.[0];
               if (!file) return;
@@ -233,7 +234,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             }}
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
-            // helperText={formik.touched.photo && formik.errors.photo}
+            helperText={formik.touched.photo && formik.errors.photo}
             sx={{ m: 'initial' }}
             disabled={!isBasicDetailsEditable.value}
           />

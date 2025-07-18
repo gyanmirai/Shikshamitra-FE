@@ -2,7 +2,7 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Autocomplete, LoadingButton } from '@mui/lab';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
@@ -55,6 +55,15 @@ const HrSetting = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteDocumentMutation,
   });
+
+  const tableData = useMemo(
+    () =>
+      documents?.items.map((item: any) => ({
+        ...item,
+        documentTypesString: item.documentTypes.map((ite: any) => DocumentType[ite]).join(', '),
+      })),
+    [documents?.items]
+  );
   return (
     <Box>
       <ConfirmDialog
@@ -128,14 +137,11 @@ const HrSetting = () => {
         isFilter={false}
         columns={[
           { id: 'documentName', label: 'Document Name' },
-          { id: 'documentSize', label: 'Document Size', minWidth: '10vw', align: 'left' },
+          { id: 'documentSize', label: 'Document Size (MB)', minWidth: '10vw', align: 'left' },
           {
-            id: 'documentTypes',
+            id: 'documentTypesString',
             label: 'Accepted Format',
             isSort: false,
-            render(value, row) {
-              return value.map((item: number) => DocumentType[item]).join(', ');
-            },
           },
           {
             label: 'Actions',
@@ -161,7 +167,7 @@ const HrSetting = () => {
             ),
           },
         ]}
-        data={documents?.items || []}
+        data={tableData || []}
       />
       <CustomDialog
         open={dialog.value}

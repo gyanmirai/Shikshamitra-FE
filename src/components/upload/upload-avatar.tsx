@@ -105,7 +105,7 @@ export function UploadAvatar({
   );
 
   return (
-    <>
+    <Box display="flex" flexDirection="column" gap={1} alignItems="center">
       <Box
         {...getRootProps()}
         sx={{
@@ -134,9 +134,14 @@ export function UploadAvatar({
         {renderContent}
       </Box>
 
-      {helperText && helperText}
+      {helperText && (
+        <Typography fontSize={10} variant="subtitle2" color={error ? 'error.main' : 'default.main'}>
+          {' '}
+          {helperText}
+        </Typography>
+      )}
 
       {/* <RejectionFiles files={fileRejections} /> */}
-    </>
+    </Box>
   );
 }
