@@ -43,5 +43,5 @@ export const EmployeeStatusTypeInformation = {
   [EmployeeStatusType.Left]:
     'The employee has officially exited the institution and is no longer associated with school operations.',
   [EmployeeStatusType.Retired]:
-    'The employee has permanently ended their career with the institution after reaching retirement eligibility.',
+    'The employee has retired after fulfilling the required service period with the institution',
 };

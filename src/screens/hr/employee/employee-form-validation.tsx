@@ -6,7 +6,7 @@ const MIN_DOB = dayjs('1947-01-01');
 
 const personalInformationValidationSchema = Yup.object({
   photo: Yup.string()
-    .required('Photo is required')
+    .required('Profile Photo is required')
     .test('fileSize', 'Photo size must be less than 3MB', (value) => {
       if (!value) return true;
       try {

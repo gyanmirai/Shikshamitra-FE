@@ -12,7 +12,6 @@ export const BackPopUpChecked = ({
     () => JSON.stringify(initialValues) === JSON.stringify(currentValues),
     [initialValues, currentValues]
   );
-
   const dispatch = useDispatch();
 
   useEffect(() => {

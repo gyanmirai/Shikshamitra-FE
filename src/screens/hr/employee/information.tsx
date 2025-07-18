@@ -233,6 +233,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     } else {
       setIsBackClick(false);
     }
+    formik.resetForm();
     setIsEdit(false);
     tabs.setValue(newValue);
   };
