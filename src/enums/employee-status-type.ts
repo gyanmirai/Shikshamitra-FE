@@ -28,7 +28,7 @@ export const EmployeeStatusTypeColor = {
   [EmployeeStatusType.Active]: 'success',
   [EmployeeStatusType.Inactive]: 'error',
   [EmployeeStatusType.Left]: 'info',
-  [EmployeeStatusType.Retired]: 'default',
+  [EmployeeStatusType.Retired]: 'default', // ✅ avoids using grey
 };
 
 export const EmployeeStatusTypeArray = Array.from(
