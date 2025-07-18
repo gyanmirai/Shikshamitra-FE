@@ -10,6 +10,7 @@ import { Box, Card, Grid, Button, TextField, DialogActions } from '@mui/material
 
 import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inquiry-api';
@@ -66,7 +67,9 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                     dateConvertor(dayjs(editData.dateOfInquiry)?.format(dateFormat) || '') || '',
                   genderType: editData.genderType,
                   primaryContactNumber: editData.primaryContactNumber,
-                  secondaryContactNumber: editData.secondaryContactNumber,
+                  secondaryContactNumber: editData?.secondaryContactNumber
+                    ? validatePhoneNumber(editData?.secondaryContactNumber)
+                    : '',
                   city: editData.city,
                   state: editData.state,
                   pinCode: editData.pinCode,
@@ -81,7 +84,9 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
               }).unwrap();
             }
             handleClose(null, true);
-            shikshaMitraToast.success({ message: 'Registration Form Issued Successfully' });
+            shikshaMitraToast.success({
+              message: `Registration Form Issued Successfully for ${editData.firstName} ${editData.lastName}.`,
+            });
           } catch (error) {
             console.error('Error:', error);
           }
@@ -134,7 +139,21 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       error={touched.amount && Boolean(errors.amount)}
                       helperText={touched.amount && errors.amount}
                       value={values.amount}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        // Format the value with Indian Rupee symbol and thousands separator
+                        const formattedValue = value
+                          ? `₹${Number(value).toLocaleString('en-IN')}`
+                          : '₹0';
+                        setFieldValue('amount', value);
+                      }}
+                      InputProps={{
+                        startAdornment: '₹',
+                        inputProps: {
+                          min: 0,
+                        },
+                      }}
+                      placeholder="0"
                     />
                   </ShakingTextField>
                 </Grid>

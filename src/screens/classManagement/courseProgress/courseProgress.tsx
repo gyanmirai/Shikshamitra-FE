@@ -135,48 +135,42 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
                 },
                 {
                   id: 'timeLine',
-                  label: '',
+                  label: 'End Date',
                   minWidth: 170,
                   align: 'left',
                   filterType: 'date',
                   renderColumn: () => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      End Date
-                      <CustomTooltip
-                        arrow
-                        title={
-                          <Box display="flex" flexDirection="column">
-                            <Typography variant="caption">
-                              <Box component="span" color="error.main">
-                                Red :{' '}
-                              </Box>
-                              <Box component="span">Due within 7 days</Box>
-                            </Typography>
-
-                            <Typography variant="caption">
-                              <Box component="span" color="warning.main">
-                                Yellow :{' '}
-                              </Box>
-                              <Box component="span">Due within 30 days</Box>
-                            </Typography>
-
-                            <Typography variant="caption">
-                              <Box component="span" color="success.main">
-                                Green :{' '}
-                              </Box>
-                              <Box component="span">Due after 30 days</Box>
-                            </Typography>
-
-                            <Typography variant="caption">
-                              <Box component="span">Black : </Box>
-                              <Box component="span">Completed Successfully</Box>
-                            </Typography>
-                          </Box>
-                        }
-                      >
-                        <Iconify icon="eva:info-outline" width={16} />
-                      </CustomTooltip>
-                    </Box>
+                    <CustomTooltip
+                      arrow
+                      title={
+                        <Box display="flex" flexDirection="column">
+                          <Typography variant="caption">
+                            <Box component="span" color="error.main">
+                              Red:{' '}
+                            </Box>
+                            <Box component="span">Due within 7 days</Box>
+                          </Typography>
+                          <Typography variant="caption">
+                            <Box component="span" color="warning.main">
+                              Yellow:{' '}
+                            </Box>
+                            <Box component="span">Due within 30 days</Box>
+                          </Typography>
+                          <Typography variant="caption">
+                            <Box component="span" color="success.main">
+                              Green:{' '}
+                            </Box>
+                            <Box component="span">Due after 30 days</Box>
+                          </Typography>
+                          <Typography variant="caption">
+                            <Box component="span">Black: </Box>
+                            <Box component="span">Completed Successfully</Box>
+                          </Typography>
+                        </Box>
+                      }
+                    >
+                      <Iconify icon="eva:info-outline" width={16} position="relative" />
+                    </CustomTooltip>
                   ),
                   render(value, row) {
                     const [day, month, year] = value.split('-');

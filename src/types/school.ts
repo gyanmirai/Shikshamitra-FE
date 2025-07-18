@@ -1,5 +1,3 @@
-import type { JSX } from 'react';
-
 export interface AcademicYear {
   id: string;
   creationTime: string;
@@ -45,7 +43,7 @@ export interface Organization {
   standards: Standards[];
 }
 export interface Standards {
-  map(arg0: (cls: Standards) => JSX.Element): import('react').ReactNode;
+  // map(arg0: (cls: Standards) => JSX.Element): import('react').ReactNode;
   id: string;
   creationTime: string;
   creatorId: string;

@@ -178,8 +178,8 @@ const HrSetting = () => {
               sx={{ textAlign: 'justify' }}
               title={
                 editData
-                  ? 'You can update document details including name, size and accepted formats.'
-                  : 'You can create a new document by entering document name, size and accepted formats.'
+                  ? 'Update document details such as name, size, and accepted formats.'
+                  : 'Enter name, size, and format to create a new document.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

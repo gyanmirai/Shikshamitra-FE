@@ -71,7 +71,7 @@ const RunPayroll = () => {
           heading="Run Payroll"
           links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
           sx={{ px: 1, mb: 2 }}
-          description="In this tab, you can run payroll by selecting the date and organization. You can also verify the payroll details by viewing them before processing."
+          description="Run payroll by selecting a date and organization, and verify details before processing."
         />
         {/* <StepsForPayroll /> */}
 

@@ -66,6 +66,10 @@ export interface IInquiryData {
   fatherOfficeAddress1: string;
   fatherOfficeAddress2: string;
   fatherOfficeAddress3: string;
+  fatherLocalCountry: ICountry;
+  fatherLocalState: IState;
+  fatherLocalCity: string;
+  fatherLocalPincode: number | null;
   inquiryStatusType: number;
   educationMediumId: string;
   educationMedium: Medium;
@@ -182,6 +186,14 @@ export interface ParentDetails {
   officeAddress1: string;
   officeAddress2: string;
   officeAddress3: string;
+  localCountry: ICountry;
+  localState: IState;
+  localCity: string;
+  localPincode: number | null;
+  officeCountry: ICountry;
+  officeState: IState;
+  officeCity: string;
+  officePincode: number | null;
 }
 
 export interface StudentCommunicationDetails {

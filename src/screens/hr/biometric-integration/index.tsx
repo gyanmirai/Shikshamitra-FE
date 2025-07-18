@@ -17,8 +17,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { EmployeeAttendanceStatusOptions } from 'src/enums/employee-attendance-status';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -46,7 +44,7 @@ const BiometricIntegrationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Import Attendance"
-        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
+        description="Configure Attendance Types, Leave Policies, and Late Arrival Rules for accurate tracking and enforcement."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
@@ -105,7 +103,7 @@ const BiometricIntegrationScreen = () => {
 
       <CustomizableTable
         // isLoading={isLoading}
-        noDataText={<>No Biometric Integration Data Found </>}
+        noDataText={<>No Import Attendance Data Found </>}
         tableId="biometric-integration-table"
         columns={[
           { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
@@ -115,7 +113,6 @@ const BiometricIntegrationScreen = () => {
             label: 'Mobile No.',
             align: 'left',
             minWidth: '8vw',
-            filterType: 'number',
           },
           {
             id: 'timeIn',
@@ -143,7 +140,23 @@ const BiometricIntegrationScreen = () => {
             sticky: true,
             align: 'left',
             minWidth: '6vw',
-            enumOptions: EmployeeAttendanceStatusOptions,
+            enumOptions: [
+              {
+                label: 'Present',
+                // value: EmployeeAttendanceStatus.Present,
+                value: 'Present',
+              },
+              {
+                label: 'Half Day',
+                // value: EmployeeAttendanceStatus.HalfDayLeave,
+                value: 'Half Day',
+              },
+              {
+                label: 'Leave',
+                // value: EmployeeAttendanceStatus.HalfDayLeave,
+                value: 'Leave',
+              },
+            ],
             render(value, row) {
               return (
                 <Label

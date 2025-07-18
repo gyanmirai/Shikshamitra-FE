@@ -115,60 +115,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   }>({ left: {}, right: {} });
   const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
 
-  useLayoutEffect(() => {
-    const leftSticky: { col: IColumn; idx: number }[] = [];
-    const rightSticky: { col: IColumn; idx: number }[] = [];
-
-    // Divide sticky columns into left and right halves
-    const stickyCols = columns.filter((col) => col.sticky);
-    const half = Math.ceil(stickyCols.length / 2);
-
-    columns.forEach((col, idx) => {
-      if (col.sticky) {
-        if (idx < half) {
-          leftSticky.push({ col, idx });
-        } else {
-          rightSticky.push({ col, idx });
-        }
-      }
-    });
-
-    const leftOffsets: Record<string, number> = {};
-    let left = 0;
-    leftSticky.forEach(({ col, idx }) => {
-      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
-      leftOffsets[col.id as string] = left;
-      left += width;
-    });
-
-    const rightOffsets: Record<string, number> = {};
-    let right = 0;
-    [...rightSticky].reverse().forEach(({ col, idx }) => {
-      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
-      rightOffsets[col.id as string] = right;
-      right += width;
-    });
-
-    setStickyMap({ left: leftOffsets, right: rightOffsets });
-  }, [columns]);
-
-  const getStickyStyle = (col: IColumn): React.CSSProperties => {
-    const base: React.CSSProperties = {
-      position: col.sticky ? 'sticky' : 'static',
-      // background: col.sticky ? theme.palette.background.paper : undefined,
-    };
-
-    const colId = col.id as string;
-    if (stickyMap.left[colId] !== undefined) {
-      return { ...base, left: stickyMap.left[colId] };
-    }
-    if (stickyMap.right[colId] !== undefined) {
-      return { ...base, right: stickyMap.right[colId] };
-    }
-
-    return base;
-  };
-
   const [tableConfig, setTableConfig] = useState<IParams>({
     page: 0,
     rowsPerPage: 10, // Changed from 10 to -1
@@ -249,9 +195,60 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const { sorts } = tableConfig;
 
   const [filterAnchorEl, setFilterAnchorEl] = useState<IColumnFilterAnchor | null>(null);
-
   // const { dateRangeFilter } = tableConfig[paramsKey.current];
+  useLayoutEffect(() => {
+    const leftSticky: { col: IColumn; idx: number }[] = [];
+    const rightSticky: { col: IColumn; idx: number }[] = [];
 
+    // Divide sticky columns into left and right halves
+    const stickyCols = columns.filter((col) => col.sticky);
+    const half = Math.ceil(stickyCols.length / 2);
+
+    columns.forEach((col, idx) => {
+      if (col.sticky && columnVisibility[col.id as string]) {
+        if (idx < half) {
+          leftSticky.push({ col, idx });
+        } else {
+          rightSticky.push({ col, idx });
+        }
+      }
+    });
+
+    const leftOffsets: Record<string, number> = {};
+    let left = 0;
+    leftSticky.forEach(({ col, idx }) => {
+      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
+      leftOffsets[col.id as string] = left;
+      left += width;
+    });
+
+    const rightOffsets: Record<string, number> = {};
+    let right = 0;
+    [...rightSticky].reverse().forEach(({ col, idx }) => {
+      const width = headerRefs.current[idx]?.offsetWidth ?? 100;
+      rightOffsets[col.id as string] = right;
+      right += width;
+    });
+
+    setStickyMap({ left: leftOffsets, right: rightOffsets });
+  }, [columns, columnVisibility]);
+
+  const getStickyStyle = (col: IColumn): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: col.sticky ? 'sticky' : 'static',
+      // background: col.sticky ? theme.palette.background.paper : undefined,
+    };
+
+    const colId = col.id as string;
+    if (stickyMap.left[colId] !== undefined) {
+      return { ...base, left: stickyMap.left[colId] };
+    }
+    if (stickyMap.right[colId] !== undefined) {
+      return { ...base, right: stickyMap.right[colId] };
+    }
+
+    return base;
+  };
   const handleChangePage = useCallback(
     (event: unknown, newPage: number) => {
       handelChangeParams({ page: newPage });

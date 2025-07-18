@@ -1,4 +1,4 @@
-import { Box, Grid, TextField } from '@mui/material';
+import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -10,6 +10,44 @@ const RenderLocalAddressFields = (props: any) => {
   return (
     <Box>
       <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <FormControlLabel
+            disabled={!isEdit}
+            control={
+              <Checkbox
+                checked={formik.values.sameAsStudentForLocal}
+                size="small"
+                disabled={!isEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                onChange={(e) => {
+                  formik.setFieldValue('sameAsStudentForLocal', e.target.checked);
+                  formik.setFieldValue('isOpenLocalAddress', !e.target.checked);
+                  if (e.target.checked) {
+                    formik.setFieldValue('localAddressLine1', formik.values.addressLine1);
+                    formik.setFieldValue('localAddressLine2', formik.values.addressLine2);
+                    formik.setFieldValue('localAddressLine3', formik.values.addressLine3);
+                    formik.setFieldValue('localCountry', formik.values.country);
+                    formik.setFieldValue('localState', formik.values.state);
+                    formik.setFieldValue('localCity', formik.values.city);
+                    formik.setFieldValue('localPincode', formik.values.pinCode);
+                  } else {
+                    formik.setFieldValue('localAddressLine1', '');
+                    formik.setFieldValue('localAddressLine2', '');
+                    formik.setFieldValue('localAddressLine3', '');
+                    formik.setFieldValue('localCountry', null);
+                    formik.setFieldValue('localState', null);
+                    formik.setFieldValue('localCity', null);
+                    formik.setFieldValue('localPincode', '');
+                  }
+                }}
+                name="sameAsLocal"
+              />
+            }
+            label="Same as Student Local Address"
+          />
+        </Grid>
         <Grid item xs={12} md={4}>
           <TextField
             name="localAddressLine1"

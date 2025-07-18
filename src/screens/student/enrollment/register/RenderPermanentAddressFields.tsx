@@ -30,6 +30,14 @@ const RenderPermanentAddressFields = (props: any) => {
                   formik.setFieldValue('permanentState', formik.values.localState);
                   formik.setFieldValue('permanentCity', formik.values.localCity);
                   formik.setFieldValue('permanentPincode', formik.values.localPincode);
+                } else {
+                  formik.setFieldValue('permanentAddressLine1', '');
+                  formik.setFieldValue('permanentAddressLine2', '');
+                  formik.setFieldValue('permanentAddressLine3', '');
+                  formik.setFieldValue('permanentCountry', null);
+                  formik.setFieldValue('permanentState', null);
+                  formik.setFieldValue('permanentCity', null);
+                  formik.setFieldValue('permanentPincode', '');
                 }
               }}
               name="sameAsLocal"

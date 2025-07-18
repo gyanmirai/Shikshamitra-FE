@@ -12,9 +12,13 @@ import type { FieldsType } from './type';
 const RenderMedicalFields = (props: any) => {
   const { formik, isMainForm = false } = props;
   const isMedicalEditable = useBoolean(isMainForm);
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void | false | undefined> => {
+    const validation = await formik.validateForm();
     await formik?.submitForm?.();
+    if (Object.keys(validation).length > 0) return false;
+
     formik.resetForm({ values: formik.values });
+    return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();
@@ -43,6 +47,12 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
           value={formik.values.weight}
           onChange={formik.handleChange}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           autoFocus
         />
       </Grid>
@@ -55,6 +65,12 @@ const RenderMedicalFields = (props: any) => {
           size="small"
           value={formik.values.height}
           onChange={formik.handleChange}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           disabled={!isMedicalEditable.value}
         />
       </Grid>
@@ -67,6 +83,12 @@ const RenderMedicalFields = (props: any) => {
           size="small"
           value={formik.values.bmi}
           onChange={formik.handleChange}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           disabled={!isMedicalEditable.value}
         />
       </Grid>
@@ -79,6 +101,12 @@ const RenderMedicalFields = (props: any) => {
           size="small"
           value={formik.values.pulseRate}
           onChange={formik.handleChange}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           disabled={!isMedicalEditable.value}
         />
       </Grid>
@@ -94,6 +122,12 @@ const RenderMedicalFields = (props: any) => {
             const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
             formik.setFieldValue('haemoglobin', onlyNumbers);
           }}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           disabled={!isMedicalEditable.value}
         />
       </Grid>
@@ -105,10 +139,23 @@ const RenderMedicalFields = (props: any) => {
           name="covidVaccination"
           size="small"
           value={formik.values.covidVaccination}
-          onChange={formik.handleChange}
+          onChange={(e) => {
+            const { value } = e.target;
+            // Only allow single digit numbers
+            if (value.length <= 1 && /^[0-9]*$/.test(value)) {
+              formik.handleChange(e);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
           error={formik.touched.covidVaccination && Boolean(formik.errors.covidVaccination)}
           helperText={formik.touched.covidVaccination && formik.errors.covidVaccination}
           disabled={!isMedicalEditable.value}
+          inputProps={{ maxLength: 1 }}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>

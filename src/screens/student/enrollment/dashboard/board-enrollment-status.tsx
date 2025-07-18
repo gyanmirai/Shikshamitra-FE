@@ -19,9 +19,9 @@ const BoardEnrollmentStatus = () => {
         title="Entrance Exam Status"
         chart={{
           series: [
-            { label: 'Passed (35%)', value: 35 },
-            { label: 'Failed (25%)', value: 25 },
-            { label: 'Awaiting Result (15%)', value: 15 },
+            { label: 'Passed', value: 35 },
+            { label: 'Failed', value: 25 },
+            { label: 'Awaiting Result', value: 15 },
           ],
           colors: [
             theme.palette.success.main,

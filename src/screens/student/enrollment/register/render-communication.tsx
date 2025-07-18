@@ -1,4 +1,4 @@
-import { Box, Grid, Divider, TextField } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -6,9 +6,6 @@ import {
   CardActions,
   SectionCard,
 } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
 
 import RenderLocalAddressFields from './RenderLocalAddressFields';
 import RenderPermanentAddressFields from './RenderPermanentAddressFields';
@@ -22,16 +19,20 @@ const RenderCommunicationFields = (props: any) => {
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void | false | undefined> => {
+    const validation = await formik.validateForm();
     await formik?.submitForm?.();
+    if (Object.keys(validation).length > 0) return false;
+
     formik.resetForm({ values: formik.values });
+    return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();
   };
   return (
     <Box>
-      <SectionCard
+      {/* <SectionCard
         title="Communication"
         headerContent={
           !isMainForm && (
@@ -44,7 +45,7 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        {/* <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={4}>
           <PhoneInput
             name="primaryContactNumber"
             disabled={!isCommunicationEditable.value}
@@ -74,7 +75,7 @@ const RenderCommunicationFields = (props: any) => {
             }
             helperText={formik.touched.secondaryContactNumber && formik.errors.secondaryContactNumber}
           />
-        </Grid> */}
+        </Grid>
 
         <Grid item xs={12} sm={4}>
           <TextField
@@ -149,7 +150,8 @@ const RenderCommunicationFields = (props: any) => {
             helperText={formik.touched.whatsAppContactNo && formik.errors.whatsAppContactNo}
           />
         </Grid>
-      </SectionCard>
+      </SectionCard> */}
+
       <SectionCard
         title="Local Address"
         headerContent={

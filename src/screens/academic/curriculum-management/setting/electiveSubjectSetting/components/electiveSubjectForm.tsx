@@ -90,8 +90,8 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                   label="Select Subjects *"
                   options={['Sanskrit', 'Hindi', 'Physical Training', 'Computer']}
                   value={formik.values.subjects.map((s) => s.name)}
-                  getOptionLabel={(opt) => opt}
-                  getOptionValue={(opt) => opt}
+                  getOptionLabel={(opt: any) => opt}
+                  getOptionValue={(opt: any) => opt}
                   onChange={(selected: string[]) => {
                     formik.setFieldValue(
                       'subjects',

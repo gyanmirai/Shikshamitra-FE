@@ -177,7 +177,7 @@ const EntranceExamScreen = () => {
           color: theme.palette[color].main,
           allDay: false,
           textColor: theme.palette[color].main,
-          title: `${i.studentEnrollment.firstName} ${i.studentEnrollment.lastName}`,
+          title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
           description: i.reason,
         };
       }) || [],
@@ -362,20 +362,21 @@ const EntranceExamScreen = () => {
             },
             { id: 'date', label: 'Date', filterType: 'date' },
             { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
-
-            {
-              id: 'passingMark',
-              label: 'Passing Marks',
-              filterType: 'number',
-              align: 'left',
-              minWidth: 140,
-            },
             {
               id: 'totalMarks',
               label: 'Total Marks',
               filterType: 'number',
               align: 'left',
               minWidth: 140,
+              render: (value) => value || '-',
+            },
+            {
+              id: 'passingMark',
+              label: 'Passing Marks',
+              filterType: 'number',
+              align: 'left',
+              minWidth: 140,
+              render: (value) => value || '-',
             },
             {
               id: 'obtainMarks',
@@ -393,7 +394,15 @@ const EntranceExamScreen = () => {
               render(value, row) {
                 return (
                   <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
+                    <CircularProgress
+                      variant="determinate"
+                      value={value}
+                      size={50}
+                      thickness={3}
+                      sx={{
+                        color: value < 50 ? 'warning.main' : 'success.main',
+                      }}
+                    />
                     <Box
                       sx={{
                         top: 0,
@@ -464,7 +473,7 @@ const EntranceExamScreen = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="Record entrance exam results by inputting total marks, pass marks, and students scores."
+              title="Input exam scores to save the student's result."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -490,7 +499,17 @@ const EntranceExamScreen = () => {
         }
         content={
           <>
-            Are you sure want to move student <strong>{editData?.name || ''}</strong> in admission ?
+            {editData?.status === 2 ? (
+              <>
+                Student failed the entrance exam <strong>{editData?.name || ''}</strong> Are you
+                sure continue with admission?
+              </>
+            ) : (
+              <>
+                Are you sure want to move student <strong>{editData?.name || ''}</strong> in
+                admission?
+              </>
+            )}
           </>
         }
         action={
@@ -687,8 +706,8 @@ export const ExamForm = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}>
-      <form onSubmit={formik.handleSubmit}>
-        <Paper sx={{ p: 2 }}>
+      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+        <Paper sx={{ p: 2, height: '100%' }}>
           <Box display="flex" gap={4}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Typography variant="subtitle2" color="text.primary">
@@ -730,11 +749,12 @@ export const ExamForm = ({
           sx={{
             p: 2,
             bgcolor: 'background.neutral',
+            height: '100%',
           }}
         >
           <Grid container spacing={3}>
             <Grid xs={4}>
-              <Paper>
+              <Paper sx={{ height: '100%' }}>
                 <DateCalendar
                   value={formik.values.examDate}
                   onChange={(value) => {
@@ -810,15 +830,15 @@ export const ExamForm = ({
                           ))
                         )}
                       </Grid>
-                      {formik.touched.slot && formik.errors.slot && (
-                        <Typography variant="caption" color="error">
-                          {formik.errors.slot}
-                        </Typography>
-                      )}
                     </Box>
                   </Grid>
                 </Grid>
               </Paper>
+              {formik.touched.slot && formik.errors.slot && (
+                <Typography variant="caption" color="error">
+                  {formik.errors.slot}
+                </Typography>
+              )}
             </Grid>
           </Grid>
         </Scrollbar>

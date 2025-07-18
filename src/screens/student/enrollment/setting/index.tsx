@@ -22,7 +22,7 @@ import EntranceExamSlots from './entrance-exam-slots';
 const TABS = [
   {
     value: 'defaultDocumentTypes',
-    label: 'Default Document Types',
+    label: 'Document Types',
     icon: <Iconify icon="basil:document-outline" width={20} />,
     buttonText: 'Document',
     component: (props: any) => <StudentDocumentType {...props} />,

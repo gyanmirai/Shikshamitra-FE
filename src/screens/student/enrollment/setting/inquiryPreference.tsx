@@ -222,7 +222,7 @@ export const InquiryPreferenceForm = ({
             preferenceName: formikValues.fieldName,
           },
         });
-        handleClose?.(null, false);
+        handleClose?.(null, true);
         return;
       }
       await addDocument({
