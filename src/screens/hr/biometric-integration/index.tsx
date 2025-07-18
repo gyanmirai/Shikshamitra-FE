@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -17,6 +17,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -25,10 +27,14 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const isDownLoadingTemplate = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const open = useBoolean();
   const [editData, setEditData] = useState<any>(null);
@@ -39,6 +45,16 @@ const BiometricIntegrationScreen = () => {
     link.download = 'Employee_import_attendance.xlsx'; // filename for download
     link.click();
     isDownLoadingTemplate.onFalse();
+  };
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      open.onFalse();
+      setEditData(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      open.onFalse();
+      setEditData(null);
+    }
   };
   return (
     <Box>
@@ -169,7 +185,7 @@ const BiometricIntegrationScreen = () => {
           },
           {
             id: 'action',
-            label: 'Actions',
+            label: 'Action',
             isFilter: false,
             minWidth: '3vw',
             align: 'left',
@@ -306,18 +322,9 @@ const BiometricIntegrationScreen = () => {
           </Box>
         }
         open={open.value}
-        handleClose={() => {
-          open.onFalse();
-          setEditData(null);
-        }}
+        handleClose={(e) => handleClose(e, false)}
       >
-        <BiometricForm
-          handleClose={() => {
-            open.onFalse();
-            setEditData(null);
-          }}
-          editData={editData}
-        />
+        <BiometricForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
     </Box>
   );
@@ -325,7 +332,13 @@ const BiometricIntegrationScreen = () => {
 
 export default BiometricIntegrationScreen;
 
-const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; editData: any }) => {
+const BiometricForm = ({
+  handleClose,
+  editData,
+}: {
+  handleClose: (e: any, isSubmit: boolean) => void;
+  editData: any;
+}) => {
   const formik = useFormik({
     initialValues: {
       name: editData ? editData.employeeName : '',
@@ -339,8 +352,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
       outTime: Yup.mixed().required('Out time is required'),
     }),
     onSubmit: (values) => {
-      console.log(values);
-      handleClose();
+      handleClose(null, true);
     },
   });
 
@@ -354,8 +366,9 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
   // }, [formik, formik.values.inTime, formik.values.outTime]);
 
   return (
-    <Box>
-      <Box component="form" onSubmit={formik.handleSubmit} sx={{ p: 2 }}>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      {/* // <form onSubmit={formik.handleSubmit}> */}
+      <Box sx={{ p: 2 }}>
         <Stack spacing={3}>
           <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
             <TextField
@@ -425,7 +438,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
       </Box>
       <DialogActions>
         <Button
-          onClick={handleClose}
+          onClick={() => handleClose(null, false)}
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
@@ -435,6 +448,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
         <Button
           type="submit"
           variant="contained"
+          onClick={(e: any) => formik.handleSubmit(e)}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -447,6 +461,7 @@ const BiometricForm = ({ handleClose, editData }: { handleClose: () => void; edi
           {editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
-    </Box>
+      {/* // </form> */}
+    </BackPopUpChecked>
   );
 };
