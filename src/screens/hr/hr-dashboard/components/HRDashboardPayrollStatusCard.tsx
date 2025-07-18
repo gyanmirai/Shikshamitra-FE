@@ -65,19 +65,7 @@ const PayrollStatusCard = () => {
           </Typography>
         </Box>
 
-        <Box
-          sx={{
-            backgroundColor: 'success.light',
-            borderRadius: 2,
-            width: 48,
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Iconify icon="fluent-emoji:receipt" width={28} />
-        </Box>
+        <Iconify icon="fa-solid:scroll" width={28} sx={{ color: 'primary.main' }} />
       </Box>
     </Card>
   );

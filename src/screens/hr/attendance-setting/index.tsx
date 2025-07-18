@@ -101,7 +101,7 @@ const HrAttendanceSettingScreen = () => {
           size="small"
           onClick={shiftManagementDialog.onTrue}
         >
-          Shift
+          Shift Rule
         </Button>
       ),
       leaveType: (
@@ -147,7 +147,7 @@ const HrAttendanceSettingScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
-        description="Manage settings for Attendance Types, Leave Policies, and Late Arrival Rules to support precise tracking and rule enforcement."
+        description="Configure attendance settings including shift schedules, leave types, and leave policies for effective workforce management"
       />
       <Card
         sx={{

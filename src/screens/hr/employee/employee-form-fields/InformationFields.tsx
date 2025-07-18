@@ -97,11 +97,11 @@ const actionButtonsVariant = {
 export const CardActions = ({
   isEdit,
   onCancel = () => {},
-  onSave = () => {},
+  onSave = async () => {},
   isLoading = false,
 }: {
   isEdit: UseBooleanReturn;
-  onSave?: () => void;
+  onSave?: () => Promise<void | boolean>;
   onCancel?: () => void;
   isLoading?: boolean;
 }) => {
@@ -146,8 +146,9 @@ export const CardActions = ({
           >
             <CustomTooltip title="Save" placement="top">
               <IconButton
-                onClick={() => {
-                  onSave();
+                onClick={async () => {
+                  const isValid = await onSave();
+                  if (typeof isValid === 'boolean' && !isValid) return;
                   setIsClickOnSave('yes');
                 }}
                 disabled={isNewLoading && isClickOnSave === 'yes'}
@@ -190,10 +191,13 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
   console.log('formik erroes---', formik.errors);
 
-  const handleSave = async () => {
-    formik.validateForm();
+  const handleSave = async (): Promise<void | false | undefined> => {
+    const validation = await formik.validateForm();
     await formik?.submitForm?.();
+    if (Object.keys(validation).length > 0) return false;
+
     formik.resetForm({ values: formik.values });
+    return undefined;
   };
   const handleCancel = () => {
     formik.resetForm();

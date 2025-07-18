@@ -50,8 +50,9 @@ import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -316,12 +317,10 @@ const LeaveHistory = (props: any) => {
             align: 'left',
           },
           {
-            label: 'Half Day',
-            id: 'isHalfDay',
-            minWidth: '100px',
-            render(value, row) {
-              return value ? 'Yes' : 'No';
-            },
+            label: 'Organization',
+            id: 'employee.educationMediumStage.name',
+            align: 'left',
+            minWidth: '14vw',
           },
           {
             label: 'Description',
@@ -421,7 +420,12 @@ const LeaveHistory = (props: any) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Create a leave request by selecting the employee, leave type, dates, and adding notes"
+              title={
+                editData
+                  ? 'Review and manage leave requests. You can view details and take actions like approve or reject.'
+                  : 'Create a leave request by selecting the employee, leave type, dates, and adding notes.'
+              }
+
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -453,7 +457,7 @@ const LeaveHistory = (props: any) => {
                 arrow
                 placement="right"
                 sx={{ textAlign: 'justify' }}
-                title="This is the attendance update dialog where you can modify biometric records manually. Ensure changes reflect actual attendance."
+                title="You can approve or reject leave requests and provide optional remarks. For rejections, remarks are required to explain the reason."
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
               </CustomTooltip>
@@ -542,7 +546,7 @@ const ApproveRejectForm = ({
         <LoadingButton
           variant="contained"
           loading={isChangeStatusLoading}
-          type="submit"
+          onClick={(e: any) => handleSubmit(e)}
           size="small"
           startIcon={
             <Iconify

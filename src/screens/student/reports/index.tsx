@@ -1,95 +1,245 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
+import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
-import { Box, Grid, Card, Select, Button, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Box, Grid, Card, Button, TextField } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { StudentReportTitle, StudentReportTitleOptions } from 'src/enums/studentRecordsReports';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-// const validationSchema = Yup.object().shape({
-//   report: Yup.string().required('Report is required'),
-//   department: Yup.string().required('Department is required'),
-//   status: Yup.string().required('Status is required'),
-//   designation: Yup.string().required('Designation is required'),
-//   employeeType: Yup.string().required('Employee Type is required'),
-//   employeeGroup: Yup.string().required('Employee Group is required'),
-//   gender: Yup.string().required('Gender is required'),
-// });
+import { getValidationSchema } from './validationSchema';
 
 const initialValues = {
-  report: '',
-  department: '',
-  status: '',
-  medium: '',
-  organization: '',
-  classes: '',
-  division: '',
+  report: '', // Single-select (e.g., report type dropdown)
+  department: '', // Single-select (e.g., employee/student department)
+  status: '', // Single-select (e.g., Active, Inactive, Left, etc.)
+  organization: '', // Single-select (e.g., organization or branch)
+  classes: [], // Multi-select (array of class IDs or names)
+  divisions: [], // Multi-select (array of division IDs or names)
+  fromRollNo: '', // Text or number input (roll number range start)
+  toRollNo: '', // Text or number input (roll number range end)
+  month: [], // Multi-select (array of selected months)
+  category: [], // Multi-select (e.g., caste/category: SC, ST, OBC, General)
+  fromDate: null, // Date picker (start date) — use null for date fields
+  toDate: null, // Date picker (end date)
+  gender: [],
+  age: '', // Text or number input (age or age range)
+  fromAge: '',
+  toAge: '',
+  religion: [],
+};
+
+const commonFields = ['organization', 'classes', 'divisions'];
+
+const reportFieldsMap = {
+  [StudentReportTitle.AddressLabelReport]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentContactList]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.AllBirthdayWishListReport]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+    'fromDate',
+    'toDate',
+  ],
+  [StudentReportTitle.BirthdayReport]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+    'month',
+  ],
+  [StudentReportTitle.LeftStudentList]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+    'fromDate',
+    'toDate',
+  ],
+  [StudentReportTitle.NewStudentAdmissionReport]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentDetailInformationForm]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentDetailList]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentListReport]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentListDivisionWiseSerialNo]: [...commonFields, 'students', 'houseGroup'],
+  [StudentReportTitle.StudentListIDNoWise]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentRegister]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentRegisterWithAddress]: [
+    ...commonFields,
+    'students',
+    'fromRollNo',
+    'toRollNo',
+    'houseGroup',
+  ],
+  [StudentReportTitle.StudentStrengthDivisionWiseSummary]: [...commonFields, 'toDate'],
+  [StudentReportTitle.AgeWiseSummary]: [...commonFields],
+  [StudentReportTitle.VerifyStudentData]: [...commonFields, 'fromDate', 'toDate'],
+  [StudentReportTitle.GenderwiseStudentStrengthSummary]: [...commonFields],
+  [StudentReportTitle.AgewiseList]: [...commonFields],
+  [StudentReportTitle.AdmissionCategorywiseList]: [...commonFields, 'category'],
+  [StudentReportTitle.GenderWiseReport]: [...commonFields, 'gender'],
+  [StudentReportTitle.ReligionWiseReport]: [...commonFields, 'religion'],
+  // [StudentReportTitle.FeesCategorywiseSummary]: [...commonFields],
+  [StudentReportTitle.GenderwiseSummary]: [...commonFields],
 };
 
 const StudentReportsScreen = () => {
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
-  });
+  const [dynamicSchema, setDynamicSchema] = useState(getValidationSchema([]));
 
-  const { errors, touched, values, handleChange, setFieldValue, handleSubmit } = useFormik({
+  const formik = useFormik({
     initialValues,
-    // validationSchema,
-    onSubmit: (val: any, { setSubmitting }) => {
-      setTimeout(() => {
-        alert(JSON.stringify(val, null, 2));
-        setSubmitting(false);
-      }, 400);
+    validationSchema: dynamicSchema,
+    enableReinitialize: true,
+    onSubmit: (val, { setSubmitting }) => {
+      alert(JSON.stringify(val, null, 2));
+      setSubmitting(false);
     },
   });
 
-  const { medium, organization, classes, division } = values;
+  // Get current fields for the selected report
+  const currentFields = useMemo(
+    () => reportFieldsMap[formik.values.report as unknown as StudentReportTitle] || [],
+    [formik.values.report]
+  );
+
+  // Update validation schema when report changes
+  useEffect(() => {
+    const newSchema = getValidationSchema(currentFields);
+    setDynamicSchema(newSchema);
+  }, [currentFields]); // Only depend on currentFields, not the schema itself
 
   useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
+    setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
+  }, [medium?.educationMediumStages]);
+
+  useEffect(() => {
+    const standards =
+      allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
+    if (!standards.some((std) => std.id === 'all')) {
+      standards.unshift({
+        id: 'all',
+        name: 'All',
+        creationTime: '',
+        creatorId: '',
+        lastModificationTime: '',
+        lastModifierId: '',
+        educationMediumStageId: '',
+        divisions: [],
+      });
     }
-  }, [boardData, currentBoard?.id, getBoard]);
+    setAllClass(standards);
+  }, [allOrganization, formik.values.organization]);
+
+  const showField = (fieldName: string) => currentFields.includes(fieldName);
 
   useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-  }, [boardData]);
+    if (formik.values.classes.length === 0) {
+      // No classes selected
+      setAllDivision([]);
+      formik.setFieldValue('divisions', []);
+      return;
+    }
 
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-  }, [medium, allMediums]);
+    if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
+      // Single class selected (not "all")
+      const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
+      const divisions = selectedClass?.divisions || [];
+      setAllDivision(divisions);
 
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-  }, [organization, allOrganization]);
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-  }, [allClass, classes]);
+      // Set all divisions for the selected class
+      const divisionIds = divisions.map((div: any) => div.id);
+      formik.setFieldValue('divisions', [...divisionIds]);
+    } else {
+      // Multiple classes selected or "all" is selected
+      setAllDivision([
+        {
+          id: 'all',
+          name: 'All',
+          creationTime: '',
+          creatorId: '',
+          lastModificationTime: '',
+          lastModifierId: '',
+          strength: 0,
+          standardId: '',
+        },
+      ]);
+
+      formik.setFieldValue('divisions', ['all']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allClass, formik.values.classes]);
 
   return (
     <Box>
@@ -103,115 +253,166 @@ const StudentReportsScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <Card>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={4}>
-                <FormControl
-                  // sx={{ maxWidth: 'unset', width: '100%' }}
-                  error={touched.report && !!errors.report}
-                  fullWidth
-                >
-                  <InputLabel size="small">List of reports</InputLabel>
-                  <Select
-                    name="report"
-                    value={values.report}
-                    onChange={handleChange}
-                    label="List of reports"
-                    size="small"
-                  >
-                    <MenuItem value="addressList">Address List</MenuItem>
-                    <MenuItem value="birthdayReport">Birthday Report</MenuItem>
-                    <MenuItem value="leftStudentList">Left Student List</MenuItem>
-                    <MenuItem value="newStudentAdmissionReport">
-                      New Student Admission Report
-                    </MenuItem>
-                    <MenuItem value="studentDetailInformationForm">
-                      Student Detail Information Form
-                    </MenuItem>
-                    <MenuItem value="studentList">Student List</MenuItem>
-                    <MenuItem value="studentListDivisionWise">Student List-Division Wise</MenuItem>
-                    <MenuItem value="studentListSerialNo">Student List-Serial No</MenuItem>
-                    <MenuItem value="studentListIDNoWise">Student List-ID No Wise</MenuItem>
-                    <MenuItem value="studentRegister">Student Register</MenuItem>
-                    <MenuItem value="studentRegisterWithAddress">
-                      Student Register With Address
-                    </MenuItem>
-                    <MenuItem value="admissionCategorywiseList">
-                      Admission Categorywise List
-                    </MenuItem>
-                    <MenuItem value="agewiseList">Agewise List</MenuItem>
-                    <MenuItem value="ageWiseSummary">Age Wise Summary</MenuItem>
-                    <MenuItem value="casteCategoryWiseSummary">
-                      Caste Category wise Summary
-                    </MenuItem>
-                    <MenuItem value="feesCategorywiseSummary">Fees Categorywise Summary</MenuItem>
-                    <MenuItem value="genderwiseList">Genderwise List</MenuItem>
-                    <MenuItem value="genderwiseStudentStrengthSummary">
-                      Genderwise Student Strength Summary
-                    </MenuItem>
-                    <MenuItem value="genderwiseSummary">Genderwise Summary</MenuItem>
-                    <MenuItem value="religionwiseList">Religionwise List</MenuItem>
-                    <MenuItem value="studentStrengthDivisionStatusWiseSummary">
-                      Student Strength Division Status Wise Summary
-                    </MenuItem>
-                    <MenuItem value="studentStrengthDivisionWiseSummary">
-                      Student Strength DivisionWise Summary
-                    </MenuItem>
-                  </Select>
-                </FormControl>
+                <CustomSelect
+                  options={StudentReportTitleOptions}
+                  label="Report *"
+                  labelKey="label"
+                  valueKey="name"
+                  value={formik.values.report}
+                  onChange={(val) => {
+                    formik.setFieldValue('report', val);
+                  }}
+                  onBlur={() => formik.setFieldTouched('report', true)}
+                  error={formik.touched.report && Boolean(formik.errors.report)}
+                  helperText={(formik.touched.report && formik.errors.report) as string}
+                  // labelKey="name"
+                  // valueKey="id"
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
                 <CustomSelect
-                  options={allMediums}
-                  label="Medium"
-                  value={medium}
-                  onChange={(val) => {
-                    setFieldValue('medium', val);
-                  }}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <CustomSelect
                   options={allOrganization}
-                  label="Organization"
-                  value={organization}
-                  onChange={(val) => setFieldValue('organization', val)}
+                  label="Organization *"
+                  value={formik.values.organization}
+                  onChange={(val) => {
+                    formik.setFieldValue('organization', val);
+
+                    const standards =
+                      allOrganization.find((org: any) => org?.id === val)?.standards || [];
+                    const standardIds = standards.map((standard: any) => standard.id);
+
+                    // Avoid duplicating 'all'
+                    const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
+
+                    formik.setFieldValue('classes', uniqueClassIds);
+                  }}
+                  onBlur={() => formik.setFieldTouched('organization', true)}
+                  error={formik.touched.organization && Boolean(formik.errors.organization)}
+                  helperText={(formik.touched.organization && formik.errors.organization) as string}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                   disabled={!medium}
                 />
               </Grid>
+
               <Grid item xs={12} sm={6} md={4}>
                 <CustomSelect
                   options={allClass}
-                  label="Class"
-                  value={classes}
-                  onChange={(val) => setFieldValue('classes', val)}
+                  label="Class *"
+                  multiple
+                  value={formik.values.classes}
+                  onChange={(val) => {
+                    const value = val as string[];
+
+                    const allClassIds =
+                      allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
+                    const isAllClicked = value.includes('all');
+                    const wasAllPreviouslySelected = (formik.values.classes as string[]).includes(
+                      'all'
+                    );
+
+                    if (isAllClicked && !wasAllPreviouslySelected) {
+                      // "All" was just clicked - select all classes
+                      formik.setFieldValue('classes', ['all', ...allClassIds]);
+                    } else if (!isAllClicked && wasAllPreviouslySelected) {
+                      // "All" was just unchecked - deselect all classes
+                      formik.setFieldValue('classes', []);
+                    } else if (isAllClicked && wasAllPreviouslySelected) {
+                      // Individual item was selected/deselected while "All" was already selected
+                      const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                      if (selectedWithoutAll.length === allClassIds.length) {
+                        // All individual items are selected, keep "All" selected
+                        formik.setFieldValue('classes', ['all', ...allClassIds]);
+                      } else {
+                        // Not all individual items are selected, remove "All"
+                        formik.setFieldValue('classes', selectedWithoutAll);
+                      }
+                    } else {
+                      // "All" is not selected, handle individual selections
+                      const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                      if (selectedWithoutAll.length === allClassIds.length) {
+                        // All individual items are selected, add "All"
+                        formik.setFieldValue('classes', ['all', ...allClassIds]);
+                      } else {
+                        // Not all items selected, just keep individual selections
+                        formik.setFieldValue('classes', selectedWithoutAll);
+                      }
+                    }
+                  }}
+                  onBlur={() => formik.setFieldTouched('classes', true)}
+                  error={formik.touched.classes && Boolean(formik.errors.classes)}
+                  helperText={(formik.touched.classes && formik.errors.classes) as string}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={!organization}
+                  disabled={!formik.values.organization}
                 />
               </Grid>
+
               <Grid item xs={12} sm={6} md={4}>
                 <CustomSelect
                   options={allDivision}
-                  label="Division"
-                  value={division}
-                  onChange={(val) => setFieldValue('division', val)}
+                  label="Division *"
+                  value={formik.values.divisions}
+                  onChange={(val) => formik.setFieldValue('divisions', val)}
+                  onBlur={() => formik.setFieldTouched('divisions', true)}
+                  error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                  helperText={(formik.touched.divisions && formik.errors.divisions) as string}
                   labelKey="name"
                   valueKey="id"
+                  multiple={
+                    !(formik.values.classes as string[]).includes('all') ||
+                    formik.values.classes.length > 1
+                  }
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={!classes}
+                  disabled={formik.values.classes.length === 0}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              {showField('fromRollNo') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    name="fromRollNo"
+                    value={formik.values.fromRollNo}
+                    type="number"
+                    label="From Roll No *"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    size="small"
+                    fullWidth
+                    disabled={formik.values.divisions.length === 0}
+                    error={formik.touched.fromRollNo && Boolean(formik.errors.fromRollNo)}
+                    helperText={(formik.touched.fromRollNo && formik.errors.fromRollNo) as string}
+                  />
+                </Grid>
+              )}
+              {showField('toRollNo') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    name="toRollNo"
+                    type="number"
+                    value={formik.values.toRollNo}
+                    label="To Roll No *"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    size="small"
+                    disabled={!formik.values.fromRollNo}
+                    fullWidth
+                    error={formik.touched.toRollNo && Boolean(formik.errors.toRollNo)}
+                    helperText={(formik.touched.toRollNo && formik.errors.toRollNo) as string}
+                  />
+                </Grid>
+              )}
+              {/* <Grid item xs={12} sm={6} md={4}>
                 <FormControl
                   sx={{ maxWidth: 'unset', width: '100%' }}
                   error={touched.status && !!errors.status}
@@ -231,12 +432,196 @@ const StudentReportsScreen = () => {
                     <MenuItem value="retired">Retired</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Grid> */}
+              {showField('month') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <CustomSelect
+                    label="Month *"
+                    options={[
+                      { id: '1', name: 'January' },
+                      { id: '2', name: 'February' },
+                      { id: '3', name: 'March' },
+                      { id: '4', name: 'April' },
+                      { id: '5', name: 'May' },
+                      { id: '6', name: 'June' },
+                      { id: '7', name: 'July' },
+                      { id: '8', name: 'August' },
+                      { id: '9', name: 'September' },
+                      { id: '10', name: 'October' },
+                      { id: '11', name: 'November' },
+                      { id: '12', name: 'December' },
+                    ]}
+                    name="month"
+                    labelKey="name"
+                    valueKey="id"
+                    multiple
+                    value={formik.values.month || []}
+                    onBlur={() => formik.setFieldTouched('month', true)} // ✅ Add this line
+                    onChange={(val) => {
+                      formik.setFieldValue('month', val);
+                      if (val.length === 0) {
+                        formik.setFieldTouched('month', true); // ✅ important
+                      }
+                    }}
+                    error={formik.touched.month && Boolean(formik.errors.month)}
+                    helperText={(formik.touched.month && formik.errors.month) as string}
+                  />
+                </Grid>
+              )}
+
+              {showField('fromDate') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <DatePicker
+                    label="From Date *"
+                    disableFuture
+                    value={formik.values.fromDate}
+                    onChange={(date) => formik.setFieldValue('fromDate', date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
+                        helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
+
+              {showField('toDate') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <DatePicker
+                    label="To Date *"
+                    disableFuture
+                    value={formik.values.toDate}
+                    onChange={(date) => formik.setFieldValue('toDate', date)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: formik.touched.toDate && Boolean(formik.errors.toDate),
+                        helperText: (formik.touched.toDate && formik.errors.toDate) as string,
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
+
+              {showField('fromAge') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="From Age *"
+                    type="number"
+                    name="fromAge"
+                    value={formik.values.fromAge}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.fromAge && Boolean(formik.errors.fromAge)}
+                    helperText={(formik.touched.fromAge && formik.errors.fromAge) as string}
+                    fullWidth
+                  />
+                </Grid>
+              )}
+
+              {showField('toAge') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="To Age *"
+                    type="number"
+                    name="toAge"
+                    value={formik.values.toAge}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    fullWidth
+                    error={formik.touched.toAge && Boolean(formik.errors.toAge)}
+                    helperText={(formik.touched.toAge && formik.errors.toAge) as string}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </Grid>
+              )}
+
+              {showField('category') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <CustomSelect
+                    labelId="category-dropdown-label"
+                    id="category-dropdown"
+                    value={formik.values.category}
+                    onBlur={() => formik.setFieldTouched('category', true)} // ✅ Add this line
+                    onChange={(val) => formik.setFieldValue('category', val)}
+                    size="small"
+                    label="Category *"
+                    name="category"
+                    error={formik.touched.category && Boolean(formik.errors.category)}
+                    helperText={(formik.touched.category && formik.errors.category) as string}
+                    options={EmployeeCastTypeArray.map((i, index) => ({
+                      value: index,
+                      label: EmployeeCastType[index],
+                    }))}
+                    multiple
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  />
+                </Grid>
+              )}
+
+              {showField('gender') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <CustomSelect
+                    label="Gender *"
+                    options={[
+                      { id: 'male', name: 'Male' },
+                      { id: 'female', name: 'Female' },
+                      { id: 'other', name: 'Other' },
+                    ]}
+                    value={formik.values.gender}
+                    onChange={(val) => formik.setFieldValue('gender', val)}
+                    onBlur={() => formik.setFieldTouched('gender', true)}
+                    error={formik.touched.gender && Boolean(formik.errors.gender)}
+                    helperText={(formik.touched.gender && formik.errors.gender) as string}
+                    labelKey="name"
+                    valueKey="id"
+                    multiple
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  />
+                </Grid>
+              )}
+
+              {showField('religion') && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <CustomSelect
+                    label="Religion *"
+                    options={[
+                      { id: 'Hinduism', name: 'Hinduism' },
+                      { id: 'Islam', name: 'Islam' },
+                      { id: 'Christianity', name: 'Christianity' },
+                      { id: 'Sikhism', name: 'Sikhism' },
+                      { id: 'Buddhism', name: 'Buddhism' },
+                      { id: 'Jainism', name: 'Jainism' },
+                      { id: 'Judaism', name: 'Judaism' },
+                      { id: 'Zoroastrianism', name: 'Zoroastrianism' },
+                    ]}
+                    value={formik.values.religion}
+                    onChange={(val) => formik.setFieldValue('religion', val)}
+                    onBlur={() => formik.setFieldTouched('religion', true)}
+                    error={formik.touched.religion && Boolean(formik.errors.religion)}
+                    helperText={(formik.touched.religion && formik.errors.religion) as string}
+                    labelKey="name"
+                    valueKey="id"
+                    multiple
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  />
+                </Grid>
+              )}
+
               <Grid item xs={12} justifyContent="flex-end" display="flex">
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}
                   type="submit"
                   variant="contained"
+                  size="small"
                 >
                   Generate Report
                 </Button>

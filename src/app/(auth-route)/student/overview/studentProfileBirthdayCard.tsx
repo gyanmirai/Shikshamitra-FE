@@ -25,12 +25,10 @@ export default function BirthdayCardProfile({
         display: 'flex',
         alignItems: 'center',
         border: '1px solid',
-        borderColor: 'grey.300', // Light border on all sides
         borderLeft: `4px solid ${borderColor}`, // Green left border (you can change the color)
         p: 2,
         borderRadius: '12px', // Rounded corners to match the design
         position: 'relative',
-        backgroundColor: 'white', // Optional for clarity
       }}
     >
       <UserHoverProfile
@@ -64,9 +62,7 @@ export default function BirthdayCardProfile({
       />
 
       <Box>
-        <Typography variant="body1" fontWeight="bold">
-          {name}
-        </Typography>
+        <Typography variant="subtitle2">{name}</Typography>
         <Typography variant="body2" color="text.secondary">
           {`${className}${division ? ` - ${division}` : ''}`}
         </Typography>

@@ -1,5 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -16,6 +17,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -24,7 +26,9 @@ import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -239,22 +243,57 @@ const ShiftManagementForm = ({
       shiftName: editData?.shiftName || '',
       weekStartDay: editData?.weekStartDay || '',
       workingDays: {
-        monday: editData?.workingDays?.monday || false,
-        tuesday: editData?.workingDays?.monday || false,
-        wednesday: editData?.workingDays?.wednesday || false,
-        thursday: editData?.workingDays?.thursday || false,
-        friday: editData?.workingDays?.friday || false,
-        saturday: editData?.workingDays?.saturday || false,
+        monday: editData?.workingDays?.monday || true,
+        tuesday: editData?.workingDays?.monday || true,
+        wednesday: editData?.workingDays?.wednesday || true,
+        thursday: editData?.workingDays?.thursday || true,
+        friday: editData?.workingDays?.friday || true,
+        saturday: editData?.workingDays?.saturday || true,
         sunday: editData?.workingDays?.sunday || false,
       },
       daySchedule: [
-        { day: 'Monday', dayType: null, startTime: null, endTime: null },
-        { day: 'Tuesday', dayType: null, startTime: null, endTime: null },
-        { day: 'Wednesday', dayType: null, startTime: null, endTime: null },
-        { day: 'Thursday', dayType: null, startTime: null, endTime: null },
-        { day: 'Friday', dayType: null, startTime: null, endTime: null },
-        { day: 'Saturday', dayType: null, startTime: null, endTime: null },
-        { day: 'Sunday', dayType: null, startTime: null, endTime: null },
+        {
+          day: 'Monday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Tuesday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Wednesday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Thursday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Friday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Saturday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
+        {
+          day: 'Sunday',
+          dayType: 'full',
+          startTime: editData?.startTime ? dayjs(editData.startTime) : dayjs('2024-01-01T09:00:00'),
+          endTime: editData?.endTime ? dayjs(editData.endTime) : dayjs('2024-01-01T17:00:00'),
+        },
       ],
     },
     validationSchema: Yup.object({
@@ -267,7 +306,13 @@ const ShiftManagementForm = ({
       shikshaMitraToast.success({ message: 'Shift rule updated successfully' });
     },
   });
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetShiftsQuery,
+  });
 
+  const shiftValue =
+    data?.items?.find((shift: any) => shift.id === formik.values.shiftName) || null;
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -278,15 +323,30 @@ const ShiftManagementForm = ({
                 <ShakingTextField
                   error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
                 >
-                  <TextField
-                    size="small"
-                    fullWidth
-                    label="Shift Name *"
-                    name="shiftName"
-                    value={formik.values.shiftName}
-                    onChange={formik.handleChange}
-                    error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
-                    helperText={(formik.touched.shiftName && formik.errors.shiftName) as string}
+                  <Autocomplete
+                    loading={isLoading}
+                    options={data?.items || []}
+                    value={shiftValue}
+                    getOptionLabel={(option: any) => {
+                      const startTime = dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A');
+                      const endTime = dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A');
+                      return `${option.shiftName} (${startTime}-${endTime})`;
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Shift *"
+                        // placeholder="Search Shift *"
+                        size="small"
+                        fullWidth
+                        sx={{ width: '100%', minWidth: '200px' }}
+                        error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
+                        helperText={(formik.touched.shiftName && formik.errors.shiftName) as string}
+                      />
+                    )}
+                    onChange={(e, value) => {
+                      formik.setFieldValue('shiftName', value?.id);
+                    }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -372,7 +432,7 @@ const ShiftManagementForm = ({
             ))}
           </TextField> */}
 
-          <SectionCard title="Day wise timing">
+          <SectionCard title="Day Wise Timing">
             {formik?.values?.daySchedule.map((schedule: any, index: number) => (
               <>
                 <Grid item xs={3}>
@@ -451,6 +511,7 @@ const ShiftManagementForm = ({
           Cancel
         </Button>
         <LoadingButton
+          form="dialog-form"
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

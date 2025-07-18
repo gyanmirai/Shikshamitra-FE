@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
-import { Grid, Button, DialogActions } from '@mui/material';
+import { Grid, Button, Typography, DialogActions } from '@mui/material';
 import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -100,104 +100,114 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     setFieldValue('docs', '');
   }, []);
 
-  const { initialValues, errors, touched, setFieldValue, values, handleSubmit } = useFormik({
-    initialValues: {
-      leaveType: editData?.leaveTypeId || '',
-      description: editData?.description || '',
-      startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
-      endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
-      isHalfDay: editData?.halfDay || false,
-      rejectionReason: editData?.rejectionReason || '',
-      status: editData?.status || 0,
-      startTime: editData?.startTime ? dayjs(editData?.startTime) : null,
-      endTime: editData?.endTime ? dayjs(editData?.endTime) : null,
+  const { initialValues, errors, touched, setFieldValue, values, handleSubmit, handleBlur } =
+    useFormik({
+      initialValues: {
+        leaveType: editData?.leaveTypeId || '',
+        description: editData?.description || '',
+        startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
+        endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
+        isHalfDay: editData?.halfDay || false,
+        rejectionReason: editData?.rejectionReason || '',
+        status: editData?.status || 0,
+        startTime: editData?.startTime ? dayjs(editData?.startTime) : null,
+        endTime: editData?.endTime ? dayjs(editData?.endTime) : null,
 
-      docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
-    },
-    validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave Type is required'),
-      isHalfDay: Yup.boolean(),
-      startDate: Yup.mixed()
-        .test(
-          'is-valid-dayjs',
-          'Start Date is required',
-          (value) => value && dayjs(value as any).isValid()
-        )
-        .required('Start Date is required'),
-      endDate: Yup.mixed()
-        .nullable()
-        .when('isHalfDay', {
-          is: true,
-          then: (schema) => schema.nullable(),
-          otherwise: (schema) =>
-            schema
-              .test('is-valid-dayjs', 'End Date is required', (value) => {
-                if (!value) return false;
-                return dayjs(value as any).isValid();
-              })
-              .required('End Date is required')
-              .test('endDate', 'End Date must be after start date', function (value) {
-                const { startDate } = this.parent;
-                if (startDate && value) {
-                  return dayjs(value as any).isSameOrAfter(dayjs(startDate));
-                }
-                return true;
-              }),
-        }),
-      description: Yup.string().required('Leave Description is required'),
-      status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
-      rejectionReason: Yup.string().test(
-        'rejectionReason',
-        'Rejection reason is required',
-        function (value) {
-          const { status } = this.parent;
-          if (editData && status === EmployeeLeaveStatusType.Rejected) {
-            return !!value || this.createError({ message: 'Rejection reason is required' });
+        docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
+      },
+      validationSchema: Yup.object().shape({
+        leaveType: Yup.string().required('Leave Type is required'),
+        // isHalfDay: Yup.boolean(),
+        startDate: Yup.mixed()
+          .test(
+            'is-valid-dayjs',
+            'Start Date is required',
+            (value) => value && dayjs(value as any).isValid()
+          )
+          .required('Start Date is required'),
+        endDate: Yup.mixed()
+          .nullable()
+          .when('isHalfDay', {
+            is: true,
+            then: (schema) => schema.nullable(),
+            otherwise: (schema) =>
+              schema
+                .test('is-valid-dayjs', 'End Date is required', (value) => {
+                  if (!value) return false;
+                  return dayjs(value as any).isValid();
+                })
+                .required('End Date is required')
+                .test('endDate', 'End Date must be after or equal to start date', function (value) {
+                  const { startDate } = this.parent;
+                  if (startDate && value) {
+                    const start = dayjs(startDate as any);
+                    const end = dayjs(value as any);
+                    return end.isAfter(start) || end.isSame(start);
+                  }
+                  return true;
+                })
+                .test('endDate-before', 'End Date cannot be before start date', function (value) {
+                  const { startDate } = this.parent;
+                  if (startDate && value) {
+                    const start = dayjs(startDate as any);
+                    const end = dayjs(value as any);
+                    return !end.isBefore(start);
+                  }
+                  return true;
+                }),
+          }),
+        description: Yup.string().required('Leave Description is required'),
+        status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
+        rejectionReason: Yup.string().test(
+          'rejectionReason',
+          'Rejection reason is required',
+          function (value) {
+            const { status } = this.parent;
+            if (editData && status === EmployeeLeaveStatusType.Rejected) {
+              return !!value || this.createError({ message: 'Rejection reason is required' });
+            }
+            return true;
           }
-          return true;
-        }
-      ),
-    }),
-    onSubmit: async (formValues: FormValues, { resetForm }) => {
-      console.log('data=========', formValues);
+        ),
+      }),
+      onSubmit: async (formValues: FormValues, { resetForm }) => {
+        try {
+          if (editData) {
+            await changeStatus({
+              id: editData.id,
+              body: {
+                status: EmployeeLeaveStatusType.Rejected,
+                rejectionReason: formValues.rejectionReason,
+              },
+            });
+          } else {
+            await addLeave({
+              // userId: userInfo.sub,
+              employeeId: employee.id,
+              leaveTypeId: formValues.leaveType,
 
-      try {
-        if (editData) {
-          await changeStatus({
-            id: editData.id,
-            body: {
-              status: EmployeeLeaveStatusType.Rejected,
-              rejectionReason: formValues.rejectionReason,
-            },
-          });
-        } else {
-          await addLeave({
-            // userId: userInfo.sub,
-            employeeId: employee.id,
-            leaveTypeId: formValues.leaveType,
-
-            halfDay: formValues.isHalfDay,
-            startDate: dateConvertor(
-              dayjs(formValues.startDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
-            ),
-            ...(!formValues.isHalfDay
-              ? {
-                  endDate: dateConvertor(
-                    dayjs(formValues.endDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
-                  ),
-                }
-              : {}),
-            description: formValues.description,
-            attachment: formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          });
-          resetForm();
+              halfDay: formValues.isHalfDay,
+              startDate: dateConvertor(
+                dayjs(formValues.startDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
+              ),
+              ...(!formValues.isHalfDay
+                ? {
+                    endDate: dateConvertor(
+                      dayjs(formValues.endDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
+                    ),
+                  }
+                : {}),
+              description: formValues.description,
+              attachment: formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+            });
+            resetForm();
+          }
+          handleClose?.(null, true);
+        } catch (e) {
+          console.log(e);
         }
-        handleClose?.(null, true);
-      } catch (e) {
-        console.log(e);
-      }
-    },
-  });
+      },
+    });
   return (
     <>
       <DialogScrollContent>
@@ -311,7 +321,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       label="Start Date *"
                       disablePast
                       onChange={(value) => setFieldValue('startDate', value)}
-                      format="DD-MM-YYYY HH:mm:ss"
+                      format="DD-MM-YYYY HH:mm"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       // views={['year', 'month', 'day']}
@@ -321,8 +331,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                         textField: {
                           fullWidth: true,
                           size: 'small',
+                          name: 'startDate',
                           helperText: touched.startDate && errors.startDate,
                           error: touched.startDate && Boolean(errors.startDate),
+                          onBlur: handleBlur,
                         },
                       }}
                     />
@@ -334,7 +346,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                       label="End Date *"
                       disablePast
                       onChange={(value) => setFieldValue('endDate', value)}
-                      format="DD-MM-YYYY HH:mm:ss"
+                      format="DD-MM-YYYY HH:mm"
                       // views={['year', 'month', 'day']}
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
@@ -344,6 +356,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                         textField: {
                           fullWidth: true,
                           size: 'small',
+                          name: 'endDate',
+                          onBlur: handleBlur,
                           helperText: touched.endDate && errors.endDate,
                           error: touched.endDate && Boolean(errors.endDate),
                         },
@@ -355,6 +369,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             )}
 
             <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom sx={{ pl: 0.5 }}>
+                Leave Description
+              </Typography>
               <ShakingTextField error={touched.description && Boolean(errors.description)}>
                 <Editor
                   onChange={(value) => {

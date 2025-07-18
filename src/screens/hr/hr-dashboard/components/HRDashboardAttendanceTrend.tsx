@@ -100,7 +100,7 @@ const HRDashboardAttendanceTrend = () => (
         chart={{
           series: [
             {
-              name: 'lastWeek',
+              name: 'Last Week',
               categories: ['21/06', '22/06', '23/06', '24/06', '25/06', '26/06', '27/06'],
               data: [
                 { name: 'Present', data: [60, 30, 40, 60, 50, 60, 40] },
@@ -109,7 +109,7 @@ const HRDashboardAttendanceTrend = () => (
               ],
             },
             {
-              name: 'last15Days',
+              name: 'Last 15 Days',
               categories: [
                 '13/06',
                 '14/06',
