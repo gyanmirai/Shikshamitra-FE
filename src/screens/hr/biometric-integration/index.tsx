@@ -46,7 +46,7 @@ const BiometricIntegrationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Import Attendance"
-        description="Here, you can configure settings for Attendance Types, Leave Policies, and Late Arrival Rules to ensure accurate attendance tracking and policy enforcement."
+        description="Configure Attendance Types, Leave Policies, and Late Arrival Rules for accurate tracking and enforcement."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },

@@ -421,7 +421,7 @@ const LeaveHistory = (props: any) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title=" you can create a new leave request by selecting the employee, leave type, start and end dates, and providing any additional notes or reasons for the leave."
+              title="Create a leave request by selecting the employee, leave type, dates, and adding notes"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
