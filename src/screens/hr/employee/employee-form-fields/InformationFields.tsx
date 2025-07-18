@@ -703,7 +703,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <ShakingTextField
             error={formik.touched.designation && Boolean(formik.errors.designation)}
           >
@@ -721,7 +721,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               disabled={!isProfessionalDetailsEditable.value}
             />
           </ShakingTextField>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} md={4}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
