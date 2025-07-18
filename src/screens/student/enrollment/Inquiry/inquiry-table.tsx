@@ -5,7 +5,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 import calculateAge from 'src/utils/calculate-age';
 
@@ -14,6 +14,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -140,8 +141,32 @@ const InquiryTable = ({
             label: 'Address',
             minWidth: '200px',
             align: 'left',
-            render(value, row) {
-              return value || '-';
+            render: (value, row) => {
+              // Split address into lines and take first two lines
+              const addressLines = value.split(', ');
+              const displayAddress = addressLines.slice(0, 3).join(', ');
+              const hasMoreLines = addressLines.length > 3;
+
+              return (
+                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '13px',
+                      // width: 200,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: '1.2em',
+                      maxHeight: '2.4em',
+                    }}
+                  >
+                    {displayAddress}
+                    {hasMoreLines && '...'}
+                  </Typography>
+                </CustomTooltip>
+              );
             },
           },
           {

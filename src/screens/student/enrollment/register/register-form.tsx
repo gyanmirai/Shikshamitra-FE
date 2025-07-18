@@ -237,6 +237,14 @@ const RegisterForm = ({
               address1: values.fatherAddress1,
               address2: values.fatherAddress2,
               address3: values.fatherAddress3,
+              officeCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              officeState: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              officeCity: values?.city?.name,
+              officePincode: values.fatherOfficePincode,
+              localCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              localState: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              localCity: values?.city?.name,
+              localPincode: values.fatherLocalPincode,
             },
             motherDetails: {
               name: values.motherName,
@@ -256,7 +264,14 @@ const RegisterForm = ({
               organisation: values.motherOrganization,
               aadhaarNo: String(values.motherAadharNo),
               remarks: values.motherRemarks,
-              address: values.motherAddress,
+              officeCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              officeState: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              officeCity: values?.city?.name,
+              officePincode: values.motherOfficePincode,
+              localCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              Slocaltate: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              localCity: values?.city?.name,
+              localPincode: values.motherLocalPincode,
             },
             guardianDetails: {
               name: values.guardianName,
@@ -279,6 +294,14 @@ const RegisterForm = ({
               address1: values.guardianAddress1,
               address2: values.guardianAddress2,
               address3: values.guardianAddress3,
+              officeCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              officeState: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              officeCity: values?.city?.name,
+              officePincode: values.guardianOfficePincode,
+              localCountry: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              localState: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              localCity: values?.city?.name,
+              localPincode: values.guaediannLocalPincode,
             },
           },
         }).unwrap();
@@ -436,26 +459,40 @@ const RegisterForm = ({
         if (activeStep === 0) {
           await handleGeneralFormSubmit(values, formik);
           if (!isComeFromIssueForm) {
-            shikshaMitraToast.success({ message: 'Student details updated successfully' });
+            shikshaMitraToast.success({
+              message: `${values.firstName} ${values.lastName}'s details updated successfully.`,
+            });
           }
         } else if (activeStep === 2) {
           await handleFamilyFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Family details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s family details updated successfully.`,
+          });
         } else if (activeStep === 3) {
           await handleCommunicationFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Communication details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s communication details updated successfully.`,
+          });
         } else if (activeStep === 4) {
           await handleAdditionalDetailsFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s additional details updated successfully.`,
+          });
         } else if (activeStep === 5) {
           await handleMedicalFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Medical details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s medical details updated successfully.`,
+          });
         } else if (activeStep === 6) {
           await handlePreviousSchoolFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s previous school details updated successfully.`,
+          });
         } else if (activeStep === 7) {
           await handleBankDetailsFormSubmit(values, formik);
-          shikshaMitraToast.success({ message: 'Registration updated successfully' });
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s  Moved to Registration Successfully.`,
+          });
         }
         if (!isLastStep) {
           if (!isSaveButton) {

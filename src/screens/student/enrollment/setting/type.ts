@@ -15,6 +15,7 @@ export interface ISlot {
   endDate?: string | Date | null;
   studentLimit?: number | null;
   roomNo?: string | null;
+  creationTime?: string | Date | null;
 }
 
 export interface IExamType {

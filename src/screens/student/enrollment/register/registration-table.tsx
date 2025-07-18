@@ -207,7 +207,7 @@ const RegistrationTable = ({
             align: 'left',
             sticky: true,
           },
-          { id: 'formNumber', label: 'Form No.', minWidth: '110px', align: 'left' },
+          { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left' },
           {
             id: 'inquiryNumber',
             label: 'Inquiry No.',
@@ -216,7 +216,7 @@ const RegistrationTable = ({
             filterType: 'string',
             align: 'left',
           },
-          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'standard.name', label: 'Class', align: 'left', minWidth: '80px' },
           {
             id: 'dobValue',
             label: 'Date of Birth',
@@ -239,12 +239,13 @@ const RegistrationTable = ({
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
+            minWidth: '90px',
             enumOptions: [
               { value: 'Male', label: 'Male' },
               { value: 'Female', label: 'Female' },
             ],
           },
-          { id: 'address', label: 'Address', minWidth: '120px', align: 'left' },
+          { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
           {
             id: 'primaryContactNumber',
             label: 'Primary Contact No.',
@@ -293,7 +294,15 @@ const RegistrationTable = ({
             render(value, row) {
               return (
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress variant="determinate" value={value} size={50} thickness={3} />
+                  <CircularProgress
+                    variant="determinate"
+                    value={value}
+                    size={50}
+                    thickness={3}
+                    sx={{
+                      color: value < 50 ? 'warning.main' : 'success.main',
+                    }}
+                  />
                   <Box
                     sx={{
                       top: 0,
@@ -362,11 +371,7 @@ const RegistrationTable = ({
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Move</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Move the selected student from entrance exam to admission."
-            >
+            <CustomTooltip arrow placement="right" title="Transfer student to Admission.">
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>

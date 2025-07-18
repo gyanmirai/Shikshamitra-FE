@@ -30,6 +30,14 @@ const RenderEmergencyAddressFields = (props: any) => {
                   formik.setFieldValue('emergencyState', formik.values.localState);
                   formik.setFieldValue('emergencyCity', formik.values.localCity);
                   formik.setFieldValue('emergencyPincode', formik.values.localPincode);
+                } else {
+                  formik.setFieldValue('emergencyAddressLine1', '');
+                  formik.setFieldValue('emergencyAddressLine2', '');
+                  formik.setFieldValue('emergencyAddressLine3', '');
+                  formik.setFieldValue('emergencyCountry', null);
+                  formik.setFieldValue('emergencyState', null);
+                  formik.setFieldValue('emergencyCity', null);
+                  formik.setFieldValue('emergencyPincode', '');
                 }
               }}
             />

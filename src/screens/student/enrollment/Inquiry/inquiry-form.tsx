@@ -162,7 +162,9 @@ const InquiryForm = ({
             educationBoardId: values.board,
           },
         }).unwrap();
-        shikshaMitraToast.success({ message: 'Inquiry updated successfully' });
+        shikshaMitraToast.success({
+          message: `Inquiry for ${values.firstName} ${values.lastName} updated successfully`,
+        });
       } else {
         await addInquiry({
           firstName: values.firstName,
@@ -190,7 +192,9 @@ const InquiryForm = ({
           educationBoardId: values.board,
           email: values.email,
         }).unwrap();
-        shikshaMitraToast.success({ message: 'Inquiry added successfully' });
+        shikshaMitraToast.success({
+          message: `Inquiry for ${values.firstName} ${values.lastName} added successfully`,
+        });
       }
       handleClose(null, true);
     } catch (error) {

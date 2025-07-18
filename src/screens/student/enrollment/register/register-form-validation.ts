@@ -38,9 +38,13 @@ export const generalFieldValidation = Yup.object({
     .required('Primary Contact No. is required'),
   secondaryContactNumber: Yup.string()
     .nullable()
-    .test('Mobile NO', 'Secondary Contact No. is not valid', (value) =>
-      value ? matchIsValidTel(value as string) : true
-    )
+    .test('Mobile NO', 'Secondary Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    })
     .test(
       'unique',
       'Secondary Contact No. cannot be same as primary contact no.',
@@ -85,14 +89,29 @@ export const familyFieldsValidation = Yup.object({
   fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
-  fatherContactNo: Yup.string().test('Mobile NO', 'Contact No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  fatherContactNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
+  fatherEmail: Yup.string().matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Please enter a valid email'
   ),
-  fatherEmail: Yup.string().email('Invalid email format'),
   fatherPassOutYear: Yup.string(),
-  fatherOfficeNo: Yup.string().test('Mobile NO', 'Office No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
-  ),
+  fatherOfficeNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Office No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   fatherOfficeAddress1: Yup.string(),
   fatherOfficeAddress2: Yup.string(),
   fatherOfficeAddress3: Yup.string(),
@@ -107,14 +126,29 @@ export const familyFieldsValidation = Yup.object({
   motherDob: Yup.string().required('Mother DOB is Required').nullable(),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
-  motherContactNo: Yup.string().test('Mobile NO', 'Contact No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  motherContactNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
+  motherEmail: Yup.string().matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Please enter a valid email'
   ),
-  motherEmail: Yup.string().email('Invalid email format'),
   motherPassOutYear: Yup.string(),
-  motherOfficeNo: Yup.string().test('Mobile NO', 'Office No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
-  ),
+  motherOfficeNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Office No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   motherOfficeAddress1: Yup.string(),
   motherOfficeAddress2: Yup.string(),
   motherOfficeAddress3: Yup.string(),
@@ -129,14 +163,29 @@ export const familyFieldsValidation = Yup.object({
   guardianDob: Yup.string().required('Guardian DOB is Required').nullable(),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
-  guardianContactNo: Yup.string().test('Mobile NO', 'Contact No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
+  guardianContactNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
+  guardianEmail: Yup.string().matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Please enter a valid email'
   ),
-  guardianEmail: Yup.string().email('Invalid email format'),
   guardianPassOutYear: Yup.string(),
-  guardianOfficeNo: Yup.string().test('Mobile NO', 'Office No. is not valid', (value) =>
-    value ? matchIsValidTel(value as string) : true
-  ),
+  guardianOfficeNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Office No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   guardianOfficeAddress1: Yup.string(),
   guardianOfficeAddress2: Yup.string(),
   guardianOfficeAddress3: Yup.string(),
@@ -150,9 +199,9 @@ export const familyFieldsValidation = Yup.object({
 });
 
 export const communicationFieldsValidation = Yup.object({
-  primaryContactNumber: Yup.string()
+  commPrimaryContactNumber: Yup.string()
     .nullable()
-    .test('primaryContactNumber', 'Primary Contact No. is not valid', (value) =>
+    .test('commPrimaryContactNumber', 'Primary Contact No. is not valid', (value) =>
       value ? matchIsValidTel(value as string) : true
     ),
   secondaryContactNumber: Yup.string()
@@ -222,11 +271,15 @@ export const additionalDetailsValidations = Yup.object({
   bplCardNo: Yup.string(),
   personWithDisability: Yup.boolean().nullable(),
   secondLanguage: Yup.string(),
-  emergencyContactNo: Yup.string().test(
-    'Mobile NO',
-    'Emergency Contact No. is not valid',
-    (value) => (value ? matchIsValidTel(value as string) : true)
-  ),
+  emergencyContactNo: Yup.string()
+    .nullable()
+    .test('Mobile NO', 'Emergency Contact No. is not valid', (value) => {
+      const digits = value?.replace(/\D/g, '');
+      const national = digits?.replace(/^91/, '');
+      return value
+        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
+        : true;
+    }),
   relationName: Yup.string(),
   relation: Yup.string(),
   singleParentChild: Yup.boolean(),
