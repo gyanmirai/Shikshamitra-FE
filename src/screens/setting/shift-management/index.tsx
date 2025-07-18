@@ -79,7 +79,7 @@ const ShiftManageMentScreen = () => {
             color="error"
             onClick={async () => {
               await deleteShift(editData?.id || '').unwrap();
-              shikshaMitraToast.success({ message: 'Shift deleted successfully' });
+              shikshaMitraToast.success({ message: 'Shift deleted successfully.' });
 
               confirm.onFalse();
               setEditData(null);
@@ -243,14 +243,14 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
               endTime: values.endTime?.format('HH:mm:ss'),
             },
           }).unwrap();
-          shikshaMitraToast.success({ message: 'Shift updated successfully' });
+          shikshaMitraToast.success({ message: 'Shift updated successfully.' });
         } else {
           await addShift({
             shiftName: values.name,
             startTime: values.startTime?.format('HH:mm:ss'),
             endTime: values.endTime?.format('HH:mm:ss'),
           }).unwrap();
-          shikshaMitraToast.success({ message: 'Shift added successfully' });
+          shikshaMitraToast.success({ message: 'Shift added successfully.' });
         }
         handleClose();
       } catch (error) {

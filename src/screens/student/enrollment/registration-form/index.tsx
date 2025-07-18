@@ -89,7 +89,7 @@ const RegistrationFormScreen = () => {
         secondaryContactNumber:
           item.secondaryContactNumber && item.secondaryContactNumber !== ''
             ? item.secondaryContactNumber
-            : '-',
+            : undefined,
       })),
     [inquiryFormData?.items]
   );
@@ -227,6 +227,9 @@ const RegistrationFormScreen = () => {
                 label: 'Previous School',
                 minWidth: '170px',
                 align: 'left',
+                render(value, row) {
+                  return value || '-';
+                },
               },
               {
                 id: 'inquiryPreference.preferenceName',
@@ -318,6 +321,7 @@ const RegistrationFormScreen = () => {
         maxWidth="sm"
       >
         <CommunicationForm
+          isStatus={false}
           handleCloseDialog={() => {
             setEditData(null);
             followUpDialog.onFalse();

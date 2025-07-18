@@ -38,6 +38,8 @@ export const RenderDocuments = (props: any) => {
   const viewDialog = useBoolean();
   // State to store the selected document ID
   const [docId, setDocId] = useState<null | string>(null);
+  // State to store the selected document name for dialog title
+  const [selectedDocName, setSelectedDocName] = useState<string>('');
 
   // Dialog state for adding documents
   const addDocumentDialog = useBoolean();
@@ -198,9 +200,9 @@ export const RenderDocuments = (props: any) => {
                           })
                         : uploadDocument({ id, body: formData }),
                       {
-                        loading: `Uploading Document ${row.documentName} `,
-                        success: () => `Upload Successfully!`,
-                        error: 'Error',
+                        loading: `Uploading Document ${row.documentName}...`,
+                        success: () => `Document ${row.documentName} uploaded successfully`,
+                        error: `Failed to upload ${row.documentName}`,
                         closeButton: true,
                       }
                     );
@@ -231,6 +233,7 @@ export const RenderDocuments = (props: any) => {
                   disabled={!row.uploadDocument}
                   onClick={() => {
                     setDocId(row.uploadDocument.id);
+                    setSelectedDocName(row.documentName);
                     viewDialog.onTrue();
                   }}
                 >
@@ -239,11 +242,56 @@ export const RenderDocuments = (props: any) => {
               );
             },
           },
+          {
+            id: 'download',
+            label: 'Download',
+            isFilter: false,
+            isSort: false,
+            align: 'left',
+            minWidth: '80px',
+            render(value, row) {
+              return (
+                <IconButton
+                  style={{
+                    textAlign: 'left',
+                    marginLeft: '0px',
+                    padding: '0px',
+                    justifyContent: 'flex-start',
+                    display: 'flex',
+                  }}
+                  disabled={!row.uploadDocument}
+                  onClick={() => {
+                    // Handle download logic here
+                    if (row.uploadDocument) {
+                      const link = document.createElement('a');
+                      link.href = convertBase64Format(row.uploadDocument.content);
+                      link.download = row.documentName;
+                      link.click();
+                    }
+                  }}
+                >
+                  <Iconify icon="material-symbols:download" width={20} height={20} />
+                </IconButton>
+              );
+            },
+          },
         ]}
         data={tableData}
       />
       <CustomDialog
-        title="Preview Document"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{selectedDocName || 'Preview Document'}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This is a preview of the uploaded document."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
         maxWidth="lg"
@@ -274,7 +322,6 @@ export const RenderDocuments = (props: any) => {
     </>
   );
 };
-
 export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
   // Fetch student document data using the provided student ID and document ID
   // Returns document content and loading state for rendering

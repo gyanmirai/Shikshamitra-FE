@@ -71,7 +71,7 @@ const RenderAdditionalDetails = (props: any) => {
           fullWidth
           label="BPL Card No."
           size="small"
-          disabled={!isAdditionalDetailsEditable.value}
+          disabled={!isAdditionalDetailsEditable.value || !formik.values.bplStudent}
           value={formik.values.bplCardNo}
           onChange={(e) => {
             const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
@@ -81,7 +81,6 @@ const RenderAdditionalDetails = (props: any) => {
           helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
         />
       </Grid>
-
       <Grid item xs={6} sm={4}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
@@ -102,7 +101,10 @@ const RenderAdditionalDetails = (props: any) => {
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.secondLanguage}
-          onChange={(e) => formik.setFieldValue('secondLanguage', e.target.value)}
+          onChange={(e) => {
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+            formik.setFieldValue('secondLanguage', onlyText);
+          }}
           error={formik.touched.secondLanguage && Boolean(formik.errors.secondLanguage)}
           helperText={formik.touched.secondLanguage && formik.errors.secondLanguage}
         />
@@ -123,12 +125,12 @@ const RenderAdditionalDetails = (props: any) => {
       <Grid item xs={6} sm={4}>
         <TextField
           fullWidth
-          label="Relation Name"
+          label="Relative Name"
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relationName}
           onChange={(e) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
             formik.setFieldValue('relationName', onlyText);
           }}
           error={formik.touched.relationName && Boolean(formik.errors.relationName)}
@@ -144,7 +146,7 @@ const RenderAdditionalDetails = (props: any) => {
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relation}
           onChange={(e) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z]/g, '');
+            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
             formik.setFieldValue('relation', onlyText);
           }}
           error={formik.touched.relation && Boolean(formik.errors.relation)}

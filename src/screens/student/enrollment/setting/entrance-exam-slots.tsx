@@ -55,6 +55,7 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
   const tableData = slots?.items?.map((item: ISlot) => ({
     ...item,
     startTime: dayjs(item.startDate).format('hh:mm A'),
+    creationDate: dayjs(item.creationTime).format('MM-DD-YYYY'),
     endTime: dayjs(item.endDate).format('hh:mm A'),
   }));
 
@@ -123,7 +124,9 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
           </>
         }
         columns={[
-          // { label: 'Slot Name', id: 'slotName' },
+          { label: 'Slot Name', id: 'slotName' },
+          { label: 'Duration', id: 'duration' },
+          { label: 'Date', id: 'creationDate' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
           { label: 'End Time', id: 'endTime', filterType: 'date' },
           { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
