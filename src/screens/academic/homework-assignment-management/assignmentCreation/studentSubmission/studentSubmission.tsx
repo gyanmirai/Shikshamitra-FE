@@ -150,6 +150,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             label: 'Roll No.',
             align: 'left',
             minWidth: 90,
+            filterType: 'number',
           },
           {
             id: 'assignmentType',
