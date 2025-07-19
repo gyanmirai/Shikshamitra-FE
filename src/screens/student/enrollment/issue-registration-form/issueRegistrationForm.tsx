@@ -135,22 +135,23 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       size="small"
                       name="amount"
                       label="Amount *"
-                      type="number"
                       error={touched.amount && Boolean(errors.amount)}
                       helperText={touched.amount && errors.amount}
-                      value={values.amount}
+                      value={
+                        values.amount
+                          ? Number(String(values.amount).replace(/,/g, '')).toLocaleString('en-IN')
+                          : ''
+                      }
                       onChange={(e) => {
-                        const { value } = e.target;
-                        // Format the value with Indian Rupee symbol and thousands separator
-                        const formattedValue = value
-                          ? `₹${Number(value).toLocaleString('en-IN')}`
-                          : '₹0';
-                        setFieldValue('amount', value);
+                        const input = e.target.value;
+                        const numeric = input.replace(/[^0-9]/g, '');
+                        setFieldValue('amount', numeric);
                       }}
                       InputProps={{
-                        startAdornment: '₹',
+                        startAdornment: <span>₹</span>,
                         inputProps: {
                           min: 0,
+                          inputMode: 'numeric',
                         },
                       }}
                       placeholder="0"
