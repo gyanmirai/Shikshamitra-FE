@@ -102,7 +102,7 @@ const HrSetting = () => {
           { name: 'Setting' },
         ]}
         sx={{ px: 1, mb: 2 }}
-        description="Add, update OR delete documents associated with an employee."
+        description="Add, update or delete documents associated with an employee."
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
             Document
