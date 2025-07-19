@@ -93,7 +93,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
     initialValues: getHomeworkInitialValues(editData, classes),
-    validationSchema: homeworkValidationSchema,
+    validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: (values) => {
       onClose(null, true);
       shikshaMitraToast.success({ message: `Homework Added successfully for ${values.subject}!` });
@@ -409,12 +409,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           format="DD/MM/YYYY"
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
+                          minDateTime={dayjs()}
                           value={div.publishDate ? dayjs(div.publishDate) : null}
-                          onChange={(val) =>
-                            formik.setFieldValue(`divisions[${idx}].publishDate`, val)
-                          }
+                          onChange={(val) => {
+                            formik.setFieldValue(`divisions[${idx}].publishDate`, val);
+                            formik.validateField(`divisions[${idx}].publishDate`);
+                          }}
                           ampm={false}
-                          minDateTime={dayjs()} // Prevent selecting dates before today
                           slotProps={{
                             popper: {
                               placement: 'top-start',
