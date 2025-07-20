@@ -156,7 +156,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             sticky: true,
             minWidth: 170,
           },
-          { id: 'rollNumber', label: 'Roll No.', align: 'left', minWidth: 90 },
+          {
+            id: 'rollNumber',
+            label: 'Roll No.',
+            align: 'left',
+            minWidth: 90,
+            filterType: 'number',
+          },
           { id: 'homeworkType', label: 'Type', align: 'left' },
           {
             id: 'submissionDate',
