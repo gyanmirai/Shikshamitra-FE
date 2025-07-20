@@ -258,34 +258,85 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             <ResponsiveMultiSelect
               label="Subjects *"
               disabled={formik.values.divisions.length === 0}
-              options={subjectOptions}
+              options={[
+                { subjectName: 'All', subjectCode: 'all', subjectColor: '#000000', type: 'All' },
+                ...subjectOptions,
+              ]}
               value={formik.values.subjects.map((sub: any) => sub.subjectCode)}
               getOptionLabel={(opt) => opt?.subjectName}
               getOptionValue={(opt) => opt?.subjectCode}
               onChange={(selectedCodes: string[]) => {
-                const updatedSubjects = selectedCodes.map((code, index) => {
-                  const fullSubject = subjectOptions.find((s) => s.subjectCode === code);
-                  return {
-                    id: index,
-                    subjectName: fullSubject?.subjectName || '',
-                    subjectCode: fullSubject?.subjectCode || '',
-                    subjectColor: fullSubject?.subjectColor || '#000000',
-                    examDate: null,
-                    startTime: null,
-                    endTime: null,
-                    totalMarks: null,
-                    passingMarks: null,
-                  };
-                });
+                const isAllSelected = selectedCodes.includes('all');
+                const wasAllPreviouslySelected = formik.values.subjects.some(
+                  (sub) => sub.subjectCode === 'all'
+                );
+
+                let updatedSubjects: Array<{
+                  id: number;
+                  subjectName: string;
+                  subjectCode: string;
+                  subjectColor: string;
+                  examDate: null;
+                  startTime: null;
+                  endTime: null;
+                  totalMarks: null;
+                  passingMarks: null;
+                }>;
+
+                if (isAllSelected && !wasAllPreviouslySelected) {
+                  updatedSubjects = [
+                    {
+                      id: -1,
+                      subjectName: 'All',
+                      subjectCode: 'all',
+                      subjectColor: '#000000',
+                      examDate: null,
+                      startTime: null,
+                      endTime: null,
+                      totalMarks: null,
+                      passingMarks: null,
+                    },
+                    ...subjectOptions.map((subject, index) => ({
+                      id: index,
+                      subjectName: subject.subjectName,
+                      subjectCode: subject.subjectCode,
+                      subjectColor: subject.subjectColor,
+                      examDate: null,
+                      startTime: null,
+                      endTime: null,
+                      totalMarks: null,
+                      passingMarks: null,
+                    })),
+                  ];
+                } else if (!isAllSelected && wasAllPreviouslySelected) {
+                  updatedSubjects = [];
+                } else {
+                  // 🔁 Handle individual selections (excluding 'all')
+                  updatedSubjects = selectedCodes
+                    .filter((code) => code !== 'all')
+                    .map((code, index) => {
+                      const fullSubject = subjectOptions.find((s) => s.subjectCode === code);
+                      return {
+                        id: index,
+                        subjectName: fullSubject?.subjectName || '',
+                        subjectCode: fullSubject?.subjectCode || '',
+                        subjectColor: fullSubject?.subjectColor || '#000000',
+                        examDate: null,
+                        startTime: null,
+                        endTime: null,
+                        totalMarks: null,
+                        passingMarks: null,
+                      };
+                    });
+                }
+
                 formik.setFieldValue('subjects', updatedSubjects);
               }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={
                 formik.touched.subjects && typeof formik.errors.subjects === 'string'
                   ? formik.errors.subjects
-                  : formik.touched.subjects && typeof formik.errors.subjects === 'string'
-                    ? formik.errors.subjects
-                    : undefined
+                  : undefined
               }
             />
           </ShakingTextField>
