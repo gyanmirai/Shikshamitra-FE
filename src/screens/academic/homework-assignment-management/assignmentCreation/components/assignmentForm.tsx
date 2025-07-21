@@ -103,7 +103,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
     initialValues: getAssignmentInitialValues(editData, classes),
-    validationSchema: assignmentValidationSchema,
+    validationSchema: assignmentValidationSchema(currentYear),
     onSubmit: (values) => {
       onClose(null, true);
       shikshaMitraToast.success({
@@ -391,22 +391,26 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         : formik.values.students
                     }
                     onChange={(val) => {
-                      // Check if the change involves the 'all' option
                       const hasAll = val.includes('all');
                       const currentStudents = formik.values.students;
                       const hadAll = currentStudents.length === allStudentIds.length;
 
+                      // Handle clicking "All" checkbox
                       if (hasAll && !hadAll) {
-                        // 'All' was just added - select all students
                         formik.setFieldValue('students', allStudentIds);
                       } else if (!hasAll && hadAll) {
-                        // 'All' was just removed - deselect all students
                         formik.setFieldValue('students', []);
-                      } else if (!hasAll) {
-                        // No 'all' involved, just individual student changes
-                        formik.setFieldValue('students', val);
+                      } else {
+                        // Handle individual student selections
+                        const newStudents = val.filter((id) => id !== 'all');
+
+                        // If all individual students are selected, add 'all'
+                        if (newStudents.length === allStudentIds.length) {
+                          formik.setFieldValue('students', allStudentIds);
+                        } else {
+                          formik.setFieldValue('students', newStudents);
+                        }
                       }
-                      // If hasAll && hadAll, it means all is still selected, do nothing
                     }}
                     getOptionLabel={(opt) => opt.name}
                     getOptionValue={(opt) => opt.id}

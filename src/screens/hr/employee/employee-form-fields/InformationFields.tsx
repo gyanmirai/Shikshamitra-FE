@@ -220,7 +220,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
       >
         <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <UploadAvatar
-            maxSize={3145728}
+            // maxSize={3145728}
+
             onDrop={async (acceptedFiles: File[]) => {
               const file = acceptedFiles?.[0];
               if (!file) return;
@@ -233,7 +234,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             }}
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
-            // helperText={formik.touched.photo && formik.errors.photo}
+            helperText={formik.touched.photo && formik.errors.photo}
             sx={{ m: 'initial' }}
             disabled={!isBasicDetailsEditable.value}
           />
@@ -703,7 +704,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        {/* <Grid item xs={12} md={4}>
           <ShakingTextField
             error={formik.touched.designation && Boolean(formik.errors.designation)}
           >
@@ -721,7 +722,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               disabled={!isProfessionalDetailsEditable.value}
             />
           </ShakingTextField>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} md={4}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />

@@ -244,9 +244,10 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
                 {
                   id: 'actions',
                   label: 'Actions',
-                  minWidth: 40,
+                  minWidth: 50,
                   align: 'left',
                   sticky: true,
+                  isSort: false,
                   isFilter: false,
                   render(value: any, row: any) {
                     return (

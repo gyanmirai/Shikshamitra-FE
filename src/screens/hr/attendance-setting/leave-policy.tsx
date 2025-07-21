@@ -317,7 +317,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
 };
 export default LeavePolicy;
 
-const roles = ['Employee', 'Manager'];
+const roles = ['Employee', 'Manager', 'Principal', 'Clinic staff'];
 const leaveTypes = ['Sick Leave', 'Casual Leave', 'Earned Leave'];
 const accrualMethods = ['Monthly', 'Yearly'];
 const months = [

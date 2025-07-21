@@ -51,7 +51,7 @@ export const personalInformationInitialValues = (editData: any) => ({
   secondaryMobileNo: editData ? editData?.secondaryMobileNo : '',
   email: editData ? editData.email : '',
   department: editData ? editData.department : '',
-  designation: editData ? editData.designation : '',
+  // designation: editData ? editData.designation : '',
   dateOfJoining: editData ? dayjs(editData.dateOfJoining, 'YYYY-MM-DD') : dayjs(),
   employeeGroup: editData ? editData.employeeGroup : '',
   qualification: editData ? editData.qualification : '',
@@ -261,7 +261,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           email: values.email,
 
           department: values.department,
-          designation: values.designation,
+          // designation: values.designation,
           dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
 
           employeeGroup: values.employeeGroup,
@@ -399,7 +399,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             email: values.email,
 
             department: values.department,
-            designation: values.designation,
+            // designation: values.designation,
             dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
 
             employeeGroup: values.employeeGroup,

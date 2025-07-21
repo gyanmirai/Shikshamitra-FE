@@ -6,6 +6,7 @@ import {
   Box,
   Stack,
   Button,
+  useTheme,
   TextField,
   IconButton,
   Autocomplete,
@@ -70,6 +71,7 @@ const ChangeStatusForm = ({
       }
     },
   });
+  const theme = useTheme();
 
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
@@ -98,7 +100,21 @@ const ChangeStatusForm = ({
                 {option.label}
                 <Box sx={{ marginLeft: 'auto' }}>
                   <CustomTooltip title={option.description} placement="right">
-                    <IconButton size="small">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color:
+                          option.value === EmployeeStatusType.Active
+                            ? theme.palette.success.main
+                            : option.value === EmployeeStatusType.Inactive
+                              ? theme.palette.error.main
+                              : option.value === EmployeeStatusType.Left
+                                ? theme.palette.info.main
+                                : option.value === EmployeeStatusType.Retired
+                                  ? theme.palette.grey[500]
+                                  : theme.palette.grey[500],
+                      }}
+                    >
                       <Iconify icon="mdi:information" width={20} />
                     </IconButton>
                   </CustomTooltip>

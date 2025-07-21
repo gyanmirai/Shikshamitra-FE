@@ -121,7 +121,9 @@ const AssignTeacher = () => {
     setFocusedCells([]);
     setHasChanges(false);
     saveConfirmDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Class Teacher assignments have been save successfully' });
+    shikshaMitraToast.success({
+      message: 'Class Teacher assignments have been saved successfully',
+    });
   };
 
   const getModifiedSubjects = () =>

@@ -1,12 +1,15 @@
+import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import React, { useMemo, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -224,6 +227,8 @@ export function EmployeeCard({ employee }: any) {
 }
 
 const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
   const tabs = useTabs('personalInformation');
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
@@ -251,7 +256,14 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
         links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee List' }]}
         description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
         isBack
-        onBack={() => setSearchParams({ employee: '' })}
+        onBack={() => {
+          if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+            setSearchParams({ employee: '' });
+            dispatch(setIsChanges(false));
+          } else if (!isChanges) {
+            setSearchParams({ employee: '' });
+          }
+        }}
         // sx={{ px: 1, pb: 1 }}
         // action={
         //   searchParams?.employee && (

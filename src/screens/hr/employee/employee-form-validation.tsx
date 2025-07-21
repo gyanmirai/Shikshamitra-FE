@@ -6,7 +6,7 @@ const MIN_DOB = dayjs('1947-01-01');
 
 const personalInformationValidationSchema = Yup.object({
   photo: Yup.string()
-    .required('Photo is required')
+    .required('Profile Photo is required')
     .test('fileSize', 'Photo size must be less than 3MB', (value) => {
       if (!value) return true;
       try {
@@ -79,7 +79,7 @@ const personalInformationValidationSchema = Yup.object({
     .required('Email is required'),
   // email: Yup.string().email('Invalid email').required('Email is required'),
   department: Yup.string(),
-  designation: Yup.string(),
+  // designation: Yup.string(),
   dateOfJoining: Yup.mixed()
     .test(
       'is-valid-dayjs',
@@ -222,7 +222,7 @@ export const workExperienceValidationSchema = Yup.object({
           return true;
         }),
       department: Yup.string(),
-      designation: Yup.string().required('Designation is required'),
+      // designation: Yup.string().required('Designation is required'),
     })
   ),
 });
