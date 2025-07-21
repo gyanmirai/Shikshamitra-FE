@@ -17,9 +17,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { kanbanClasses } from 'src/sections/kanban/classes';
 
@@ -221,22 +221,30 @@ const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
     onSubmit: () => {},
   });
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
-        <CustomSelect
-          options={[]}
-          value=""
-          onChange={() => {}}
-          label="Division"
-          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-        />
-      </Box>
+    <>
+      <DialogScrollContent>
+        <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
+          <CustomSelect
+            options={[]}
+            value=""
+            onChange={() => {}}
+            label="Division"
+            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          />
+        </Box>
+      </DialogScrollContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" variant="contained">
+        <Button
+          type="submit"
+          variant="contained"
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+        >
           Assign
         </Button>
       </DialogActions>
-    </Box>
+    </>
   );
 };

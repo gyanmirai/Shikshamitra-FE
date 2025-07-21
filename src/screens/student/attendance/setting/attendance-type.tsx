@@ -22,8 +22,6 @@ import {
 } from 'src/redux/student/attendance-type/attendance-type-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -31,6 +29,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -269,9 +268,10 @@ export const AttendanceTypeForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box>
       <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-        <Scrollbar sx={{ p: 2 }}>
+        {/* <Scrollbar sx={{ p: 2 }}> */}
+        <DialogScrollContent>
           <Stack spacing={3}>
             <ShakingTextField error={touched.type && Boolean(errors.type)}>
               <TextField
@@ -305,9 +305,10 @@ export const AttendanceTypeForm = ({
               />
             </ShakingTextField>
           </Stack>
-        </Scrollbar>
+        </DialogScrollContent>
+        {/* </Scrollbar> */}
       </BackPopUpChecked>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions>
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -327,6 +328,9 @@ export const AttendanceTypeForm = ({
               height={editData ? 16 : 20}
             />
           }
+          onClick={(e: any) => {
+            handleSubmit(e);
+          }}
           loading={isUpdateLoading || isLoading}
           variant="contained"
           type="submit"

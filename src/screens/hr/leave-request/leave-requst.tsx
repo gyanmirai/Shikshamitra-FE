@@ -28,7 +28,6 @@ import {
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -200,7 +199,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               description: formValues.description,
               attachment: formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
             });
-            resetForm();
           }
           handleClose?.(null, true);
         } catch (e) {
@@ -532,7 +530,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           </Grid>
         </BackPopUpChecked>
       </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions>
         <Button
           variant="outlined"
           size="small"
@@ -544,19 +542,25 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           Cancel
         </Button>
         {!editData && (
-          <SubmitButton
-            loading={isLoading}
-            onClick={() => {
-              handleSubmit();
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
+            onClick={(e: any) => {
+              handleSubmit(e);
             }}
-          />
+            type="submit"
+            size="small"
+            variant="contained"
+            disabled={isLoading}
+          >
+            Submit
+          </Button>
         )}
 
         {values.status === EmployeeLeaveStatusType.Rejected && (
           <LoadingButton
             loading={isChangeStatusLoading}
-            onClick={() => {
-              handleSubmit();
+            onClick={(e: any) => {
+              handleSubmit(e);
             }}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             disabled={isChangeStatusLoading}

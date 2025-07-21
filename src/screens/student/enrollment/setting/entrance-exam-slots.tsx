@@ -20,14 +20,14 @@ import {
   useDeleteEntranceExamSlotMutation,
 } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import type { ISlot } from './type';
 
@@ -91,6 +91,7 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
             onClick={async () => {
               await deleteSlot(editData?.id);
               confirm.onFalse();
+              shikshaMitraToast.success({ message: `Exam slot deleted successfully` });
               setEditData(null);
             }}
           >
@@ -262,8 +263,8 @@ export const SlotsForm = ({
     },
   });
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+    <Box>
+      <DialogScrollContent>
         <Stack spacing={3}>
           <ShakingTextField error={!!(formik.touched.slotName && formik.errors.slotName) || false}>
             <TextField
@@ -375,7 +376,7 @@ export const SlotsForm = ({
             />
           </ShakingTextField>
         </Stack>
-      </Scrollbar>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -398,6 +399,9 @@ export const SlotsForm = ({
               height={editData ? 16 : 20}
             />
           }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
           type="submit"
         >
           {editData ? 'Update' : 'Submit'}

@@ -565,6 +565,7 @@ export const ExamForm = ({
 }) => {
   // State to store all available exam slots
   const [allSlots, setAllSlots] = useState<any[]>([]);
+  console.log('allSlots---', allSlots);
 
   // Dialog state for slot management
   const dialog = useBoolean();
@@ -660,6 +661,9 @@ export const ExamForm = ({
     },
   });
 
+  console.log('formik initial values-------', formik.initialValues);
+  console.log('formik  values-------', formik.values);
+
   const handleGetAllStudentCount = useCallback(
     async (date: string) => {
       if (!slots?.items?.length) return;
@@ -706,7 +710,7 @@ export const ExamForm = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <DialogScrollContent style={{ height: '100%' }}>
         <Paper sx={{ p: 2, height: '100%' }}>
           <Box display="flex" gap={4}>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -842,61 +846,64 @@ export const ExamForm = ({
             </Grid>
           </Grid>
         </Scrollbar>
-        <DialogActions sx={{ flexShrink: 0 }}>
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => {
-              handleClose(null, false);
-            }}
-            size="small"
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isAddLoading}
-            type="submit"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            size="small"
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-        <CustomDialog
-          title={
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h6">Slot</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-          open={dialog.value}
-          handleClose={dialog.onFalse}
-        >
-          <SlotsForm handleClose={dialog.onFalse} editData={null} />
-        </CustomDialog>
-
-        <CustomDialog
-          open={addExamTypeDialog.value}
-          handleClose={() => {
-            addExamTypeDialog.onFalse();
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            handleClose(null, false);
           }}
-          title="Exam Type"
+          size="small"
         >
-          <ExamTypeForm
-            handleClose={() => {
-              handleCloseExamType(null, false);
-            }}
-            editData={null}
-          />
-        </CustomDialog>
-      </form>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isAddLoading}
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          type="submit"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          size="small"
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="h6">Slot</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="This is the Exam Slots section, where you can create slots for the entrance exam by configuring the student limit, room number, and other necessary parameters."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={dialog.value}
+        handleClose={dialog.onFalse}
+      >
+        <SlotsForm handleClose={dialog.onFalse} editData={null} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={addExamTypeDialog.value}
+        handleClose={() => {
+          addExamTypeDialog.onFalse();
+        }}
+        title="Exam Type"
+      >
+        <ExamTypeForm
+          handleClose={() => {
+            handleCloseExamType(null, false);
+          }}
+          editData={null}
+        />
+      </CustomDialog>
     </BackPopUpChecked>
   );
 };

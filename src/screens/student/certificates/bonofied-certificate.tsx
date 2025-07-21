@@ -29,12 +29,12 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const BonofiedCertificate = () => {
@@ -237,7 +237,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <Box component="form" onSubmit={handleSubmit}>
+      <DialogScrollContent>
         <Scrollbar sx={{ p: 2 }}>
           <Box display="flex" justifyContent="flex-end" mb={2}>
             <Button
@@ -407,27 +407,30 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
             </Grid>
           </Grid>
         </Scrollbar>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => {
-              onClose(null, false);
-            }}
-            variant="outlined"
-            size="small"
-          >
-            Cancel
-          </Button>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            variant="contained"
-            type="submit"
-            size="small"
-          >
-            Submit
-          </Button>
-        </DialogActions>
-      </Box>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            onClose(null, false);
+          }}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          variant="contained"
+          type="submit"
+          size="small"
+          onClick={(e: any) => {
+            handleSubmit(e);
+          }}
+        >
+          Submit
+        </Button>
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

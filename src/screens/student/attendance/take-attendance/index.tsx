@@ -413,7 +413,7 @@ const TakeAttendanceScreen = () => {
               fontWeight: 600,
             }}
           >
-            Absent: {absentStudents.length}
+            Absent : {absentStudents.length}
           </Label>
           <Label
             color="warning"
@@ -428,7 +428,7 @@ const TakeAttendanceScreen = () => {
               fontWeight: 600,
             }}
           >
-            Pending: {studentData.filter((item: any) => item.isPresent === null).length}
+            Pending : {studentData.filter((item: any) => item.isPresent === null).length}
           </Label>
         </Box>
 

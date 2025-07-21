@@ -109,24 +109,36 @@ const studentData = {
 };
 
 const AssignElectiveSubject = () => {
+  // Theme hook for Material-UI styling
   const theme = useTheme();
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClasses] = useState<string>('');
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
-  const [students, setStudents] = useState<any[]>([]);
-  const [electiveSubject, setElectiveSubject] = useState<string>('');
-  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>('');
-  const resetDialog = useBoolean();
-  const saveDialog = useBoolean();
 
+  // State for managing class data
+  const [allClass, setAllClass] = useState<Standards[]>([]); // Stores all available classes
+  const [classes, setClasses] = useState<string>(''); // Currently selected class
+
+  // State for managing division data
+  const [allDivision, setAllDivision] = useState<Division[]>([]); // Stores all divisions for selected class
+  const [division, setDivision] = useState<string>(''); // Currently selected division
+
+  // State for managing student and subject selections
+  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({}); // Maps student GR numbers to selected subjects
+  const [students, setStudents] = useState<any[]>([]); // List of students in current selection
+  const [electiveSubject, setElectiveSubject] = useState<string>(''); // Currently selected elective subject group
+  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>(''); // Subject selected for bulk assignment
+
+  // Dialog control states
+  const resetDialog = useBoolean(); // Controls visibility of reset confirmation dialog
+  const saveDialog = useBoolean(); // Controls visibility of save confirmation dialog
+
+  // Get current board, medium and medium setter from global state
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
+  // Effect to initialize classes when medium changes
+  // Flattens education medium stages to get all available classes
   useEffect(() => {
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
@@ -134,6 +146,8 @@ const AssignElectiveSubject = () => {
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
+  // Effect to handle class selection changes
+  // Updates divisions, sets default division and elective subject, resets selections
   useEffect(() => {
     const selectedClass = allClass.find((org: any) => org?.id === classes);
     setAllDivision(selectedClass?.divisions || []);
@@ -142,12 +156,15 @@ const AssignElectiveSubject = () => {
     setStudentSelections({});
   }, [allClass, classes, setDivision]);
 
+  // Effect to update student list when elective subject group changes
   useEffect(() => {
     if (electiveSubject) {
       setStudents(studentData[electiveSubject as keyof typeof studentData]);
     }
   }, [electiveSubject]);
 
+  // Handles resetting all student elective selections
+  // Clears selected subject and student selections, closes dialog and shows success message
   const handleReset = () => {
     setSelectedElectiveSubject('');
     setStudentSelections({});
@@ -157,6 +174,8 @@ const AssignElectiveSubject = () => {
     });
   };
 
+  // Handles saving student elective selections
+  // Closes save dialog and shows success message
   const handleSave = () => {
     saveDialog.onFalse();
     shikshaMitraToast.success({
@@ -164,6 +183,8 @@ const AssignElectiveSubject = () => {
     });
   };
 
+  // Handles clicking subject button in table header
+  // Toggles subject selection for all students
   const handleHeaderSubjectClick = (subjId: string) => {
     const isSame = selectedElectiveSubject === subjId;
     setSelectedElectiveSubject(isSame ? '' : subjId);
@@ -182,13 +203,21 @@ const AssignElectiveSubject = () => {
     }
   };
 
+  // Handles clicking subject button for individual student
+  // Updates subject selection for single student and checks if all students have same selection
   const handleStudentSubjectClick = (studentGrNo: string, subjId: string) => {
-    setStudentSelections((prev) => ({
-      ...prev,
-      [studentGrNo]: subjId,
-    }));
+    setStudentSelections((prev) => {
+      const newSelections = { ...prev, [studentGrNo]: subjId };
+
+      // Check if all students have the same subject selected
+      const allSameSubject = students.every((student) => newSelections[student.grNo] === subjId);
+      setSelectedElectiveSubject(allSameSubject ? subjId : '');
+
+      return newSelections;
+    });
   };
 
+  // Helper to check if any student selections exist
   const hasStudentSelections = Object.keys(studentSelections).length > 0;
 
   return (

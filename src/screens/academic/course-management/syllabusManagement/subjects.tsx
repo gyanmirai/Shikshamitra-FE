@@ -325,6 +325,7 @@ const Subjects = (props: TabComponentType) => {
         open={viewDocumentDialog.value}
         handleClose={() => {
           viewDocumentDialog.onFalse();
+          setSelectedChapter(null);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">

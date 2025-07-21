@@ -27,12 +27,11 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const CharacterCertificate = () => {
@@ -219,163 +218,164 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <Box component="form" onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2 }}>
-          <Grid container spacing={3}>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
-                <CustomSelect
-                  options={allOrganization}
-                  label="Organization *"
-                  value={organization}
-                  onChange={(val) => setFieldValue('organization', val as string)}
-                  labelKey="name"
-                  valueKey="id"
-                  error={!!(touched.organization && errors.organization)}
-                  helperText={(touched.organization && errors.organization) as string}
-                  formControlProps={{
-                    fullWidth: true,
-                  }}
-                  disabled={!medium}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.classes && errors.classes) || false}>
-                <CustomSelect
-                  options={allClass}
-                  label="Class *"
-                  value={classes}
-                  onChange={(val) => setFieldValue('classes', val as string)}
-                  labelKey="name"
-                  valueKey="id"
-                  error={!!(touched.classes && errors.classes)}
-                  helperText={(touched.classes && errors.classes) as string}
-                  formControlProps={{
-                    fullWidth: true,
-                  }}
-                  disabled={!organization}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.division && errors.division) || false}>
-                <CustomSelect
-                  options={allDivision}
-                  label="Division *"
-                  value={division}
-                  onChange={(val) => setFieldValue('division', val as string)}
-                  labelKey="name"
-                  valueKey="id"
-                  error={!!(touched.division && errors.division)}
-                  helperText={(touched.division && errors.division) as string}
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: { maxWidth: 'unset', width: '100%' },
-                  }}
-                  disabled={!classes}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.student && errors.student) || false}>
-                <Autocomplete
-                  loading={isLoading}
-                  noOptionsText="No Student Found"
-                  multiple
-                  fullWidth
-                  value={values.student}
-                  onChange={(e, value: any) => {
-                    setFieldValue('student', value);
-                  }}
-                  renderTags={(tagValue, getTagProps) =>
-                    tagValue.map((option, index) => (
-                      <Chip
-                        label={option.name}
-                        variant="soft"
-                        size="small"
-                        {...getTagProps({ index })}
-                      />
-                    ))
-                  }
-                  options={tableData}
-                  getOptionLabel={(option: any) => option?.name || ''}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size="small"
-                      label="Student *"
-                      fullWidth
-                      error={!!(touched.student && errors.student)}
-                      helperText={(touched.student && errors.student) as string}
-                    />
-                  )}
-                  renderOption={(prop: any, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.name}
-                    </li>
-                  )}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.creationDate && errors.creationDate) || false}>
-                <DatePicker
-                  label="Creation Date *"
-                  value={values.creationDate}
-                  onChange={(newValue) => {
-                    setFieldValue('creationDate', newValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      error: !!(touched.creationDate && errors.creationDate),
-                      helperText: (touched.creationDate && errors.creationDate) as string,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.reason && errors.reason) || false}>
-                <TextField
-                  size="small"
-                  value={values.reason}
-                  onChange={handleChange}
-                  name="reason"
-                  multiline
-                  rows={3}
-                  label="Reason *"
-                  fullWidth
-                  error={!!(touched.reason && errors.reason)}
-                  helperText={(touched.reason && errors.reason) as string}
-                />
-              </ShakingTextField>
-            </Grid>
+      <DialogScrollContent>
+        <Grid container spacing={3}>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
+              <CustomSelect
+                options={allOrganization}
+                label="Organization *"
+                value={organization}
+                onChange={(val) => setFieldValue('organization', val as string)}
+                labelKey="name"
+                valueKey="id"
+                error={!!(touched.organization && errors.organization)}
+                helperText={(touched.organization && errors.organization) as string}
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                disabled={!medium}
+              />
+            </ShakingTextField>
           </Grid>
-        </Scrollbar>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => {
-              onClose(null, false);
-            }}
-            variant="outlined"
-            size="small"
-          >
-            Cancel
-          </Button>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            variant="contained"
-            type="submit"
-            size="small"
-          >
-            Submit
-          </Button>
-        </DialogActions>
-      </Box>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.classes && errors.classes) || false}>
+              <CustomSelect
+                options={allClass}
+                label="Class *"
+                value={classes}
+                onChange={(val) => setFieldValue('classes', val as string)}
+                labelKey="name"
+                valueKey="id"
+                error={!!(touched.classes && errors.classes)}
+                helperText={(touched.classes && errors.classes) as string}
+                formControlProps={{
+                  fullWidth: true,
+                }}
+                disabled={!organization}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.division && errors.division) || false}>
+              <CustomSelect
+                options={allDivision}
+                label="Division *"
+                value={division}
+                onChange={(val) => setFieldValue('division', val as string)}
+                labelKey="name"
+                valueKey="id"
+                error={!!(touched.division && errors.division)}
+                helperText={(touched.division && errors.division) as string}
+                formControlProps={{
+                  fullWidth: true,
+                  sx: { maxWidth: 'unset', width: '100%' },
+                }}
+                disabled={!classes}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.student && errors.student) || false}>
+              <Autocomplete
+                loading={isLoading}
+                noOptionsText="No Student Found"
+                multiple
+                fullWidth
+                value={values.student}
+                onChange={(e, value: any) => {
+                  setFieldValue('student', value);
+                }}
+                renderTags={(tagValue, getTagProps) =>
+                  tagValue.map((option, index) => (
+                    <Chip
+                      label={option.name}
+                      variant="soft"
+                      size="small"
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                }
+                options={tableData}
+                getOptionLabel={(option: any) => option?.name || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Student *"
+                    fullWidth
+                    error={!!(touched.student && errors.student)}
+                    helperText={(touched.student && errors.student) as string}
+                  />
+                )}
+                renderOption={(prop: any, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.name}
+                  </li>
+                )}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.creationDate && errors.creationDate) || false}>
+              <DatePicker
+                label="Creation Date *"
+                value={values.creationDate}
+                onChange={(newValue) => {
+                  setFieldValue('creationDate', newValue);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!(touched.creationDate && errors.creationDate),
+                    helperText: (touched.creationDate && errors.creationDate) as string,
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ShakingTextField error={!!(touched.reason && errors.reason) || false}>
+              <TextField
+                size="small"
+                value={values.reason}
+                onChange={handleChange}
+                name="reason"
+                multiline
+                rows={3}
+                label="Reason *"
+                fullWidth
+                error={!!(touched.reason && errors.reason)}
+                helperText={(touched.reason && errors.reason) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            onClose(null, false);
+          }}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          variant="contained"
+          type="submit"
+          size="small"
+          onClick={(e: any) => {
+            handleSubmit(e);
+          }}
+        >
+          Submit
+        </Button>
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

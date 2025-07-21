@@ -18,15 +18,15 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { validationSchema } from './validationSchema';
 import { getChapterInitialValues } from './initialValues';
+import { getChapterValidationSchema } from './validationSchema';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
@@ -44,6 +44,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  console.log('currentYear--', currentYear);
 
   const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
   // State for managing rich text editor content
@@ -59,7 +60,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
-    validationSchema,
+    validationSchema: getChapterValidationSchema(currentYear),
     onSubmit: (values) => {
       onSubmit({
         ...values,
@@ -68,40 +69,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         // documents,
       });
       if (initialValues) {
-        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} updated successfully` });
+        shikshaMitraToast.success({
+          message: `Chapter  ${values.chapterNo} : ${values.chapterName} updated successfully`,
+        });
       } else {
-        shikshaMitraToast.success({ message: `Chapter ${values.chapterNo} added successfully` });
+        shikshaMitraToast.success({
+          message: `Chapter ${values.chapterNo} : ${values.chapterName} added successfully`,
+        });
       }
       onClose(null, true);
     },
   });
-
-  const handleDrop = (acceptedFiles: File[]) => {
-    formik.setFieldValue('documents', [...(formik.values.documents || []), ...acceptedFiles]);
-  };
-
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedDocuments = (formik.values.documents || []).filter((file) => {
-      if (typeof fileToRemove === 'string') {
-        return file.name !== fileToRemove;
-      }
-      return file !== fileToRemove;
-    });
-    formik.setFieldValue('documents', updatedDocuments);
-  };
-
-  const uploadProps = {
-    multiple: true,
-    accept: {
-      'image/*': [],
-      'application/pdf': [],
-      'video/*': [], // Added video file support
-      'application/vnd.ms-powerpoint': [], // PPT
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': [], // PPTX
-      'application/msword': [], // DOC
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [], // DOCX
-    },
-  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -158,15 +136,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     name="chapterName"
                     value={formik.values.chapterName}
                     onChange={(e) => {
-                      const value = e.target.value
-                        // Remove everything except letters and spaces
-                        .replace(/[^a-zA-Z\s]/g, '')
-                        // Capitalize each word
-                        .split(' ')
-                        .map((word) =>
-                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                        )
-                        .join(' ');
+                      const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       formik.setFieldValue('chapterName', value);
                     }}
                     size="small"
@@ -259,22 +229,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Grid>
               {/* Document Upload Section */}
               <Grid item xs={12}>
-                <FileUploader
-                  // @ts-ignore
-                  showVisibleDocumentCount={1}
-                  value={formik.values.documents}
+                <CustomUpload
                   multiple
-                  onChange={(value) => {
-                    formik.setFieldValue('documents', value);
-                    // const reader = new FileReader();
-                    // reader.readAsDataURL(value as File);
-                    // reader.readAsDataURL(value as File);
-                    // reader.onload = () => {
-                    //   const base64String = reader.result;
-                    // };
-                  }}
-                  primaryText="Please Upload Your Chapter Documents"
-                  secondaryText="Maximum file size is 5MB"
+                  previewCount={6}
+                  onChange={(files: any) => formik.setFieldValue('documents', files)}
+                  value={formik.values.documents}
+                  label="Upload Your Chapter Documents"
+                  helperText="Maximum file size is 5MB"
+                  outputFormat="file"
                 />
               </Grid>
             </Grid>

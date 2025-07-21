@@ -510,94 +510,94 @@ export const DocumentForm = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>
-      <form onSubmit={handleSubmit}>
-        <DialogScrollContent>
-          <Stack spacing={3}>
-            {/* Document Name */}
-            <ShakingTextField error={Boolean(touched.title && errors.title)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Document Name *"
-                name="title"
-                value={values.title}
-                onChange={(e) => {
-                  const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                  setFieldValue('title', onlyText);
-                }}
-                error={Boolean(touched.title && errors.title)}
-                helperText={touched.title && errors.title}
-              />
-            </ShakingTextField>
+      {/* <form onSubmit={handleSubmit}> */}
+      <DialogScrollContent>
+        <Stack spacing={3}>
+          {/* Document Name */}
+          <ShakingTextField error={Boolean(touched.title && errors.title)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Document Name *"
+              name="title"
+              value={values.title}
+              onChange={(e) => {
+                const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                setFieldValue('title', onlyText);
+              }}
+              error={Boolean(touched.title && errors.title)}
+              helperText={touched.title && errors.title}
+            />
+          </ShakingTextField>
 
-            {/* Document Size */}
-            <ShakingTextField error={Boolean(touched.documentSize && errors.documentSize)}>
-              <TextField
-                label="Document Size (MB) *"
-                value={values.documentSize}
-                size="small"
-                type="number"
-                name="documentSize"
-                fullWidth
-                inputProps={{ min: 1, max: 20 }}
-                onChange={(e) => {
-                  // const value = parseInt(e.target.value, 10);
+          {/* Document Size */}
+          <ShakingTextField error={Boolean(touched.documentSize && errors.documentSize)}>
+            <TextField
+              label="Document Size (MB) *"
+              value={values.documentSize}
+              size="small"
+              type="number"
+              name="documentSize"
+              fullWidth
+              inputProps={{ min: 1, max: 20 }}
+              onChange={(e) => {
+                // const value = parseInt(e.target.value, 10);
 
-                  setFieldValue('documentSize', e.target.value);
-                }}
-                error={Boolean(touched.documentSize && errors.documentSize)}
-                helperText={touched.documentSize && errors.documentSize}
-              />
-            </ShakingTextField>
+                setFieldValue('documentSize', e.target.value);
+              }}
+              error={Boolean(touched.documentSize && errors.documentSize)}
+              helperText={touched.documentSize && errors.documentSize}
+            />
+          </ShakingTextField>
 
-            {/* Document Type */}
-            <ShakingTextField error={Boolean(touched.documentType && errors.documentType)}>
-              <Autocomplete
-                multiple
-                options={DocumentTypeArray}
-                disableCloseOnSelect
-                getOptionLabel={(option) => option.label}
-                value={values.documentType}
-                onChange={(_, newValue) => setFieldValue('documentType', newValue)}
-                isOptionEqualToValue={(option, value) => option.value === value.value}
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox
-                      icon={<CheckBoxOutlineBlankIcon />}
-                      checkedIcon={<CheckBoxIcon />}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.label}
-                  </li>
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option.label}
-                      {...getTagProps({ index })}
-                      key={index}
-                      variant="soft"
-                      size="small"
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Accepted Format *"
-                    value={`${values.documentType?.length || 0} Document Selected`}
-                    size="small"
-                    error={Boolean(touched.documentType && errors.documentType)}
-                    helperText={(touched.documentType && errors.documentType) as string}
+          {/* Document Type */}
+          <ShakingTextField error={Boolean(touched.documentType && errors.documentType)}>
+            <Autocomplete
+              multiple
+              options={DocumentTypeArray}
+              disableCloseOnSelect
+              getOptionLabel={(option) => option.label}
+              value={values.documentType}
+              onChange={(_, newValue) => setFieldValue('documentType', newValue)}
+              isOptionEqualToValue={(option, value) => option.value === value.value}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon />}
+                    checkedIcon={<CheckBoxIcon />}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
                   />
-                )}
-              />
-            </ShakingTextField>
+                  {option.label}
+                </li>
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    label={option.label}
+                    {...getTagProps({ index })}
+                    key={index}
+                    variant="soft"
+                    size="small"
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Accepted Format *"
+                  value={`${values.documentType?.length || 0} Document Selected`}
+                  size="small"
+                  error={Boolean(touched.documentType && errors.documentType)}
+                  helperText={(touched.documentType && errors.documentType) as string}
+                />
+              )}
+            />
+          </ShakingTextField>
 
-            {/* Is Required Switch */}
-            {/* Uncomment if needed */}
-            {/* <FormControlLabel
+          {/* Is Required Switch */}
+          {/* Uncomment if needed */}
+          {/* <FormControlLabel
               control={
                 <Switch
                   checked={values.isRequired}
@@ -606,35 +606,38 @@ export const DocumentForm = ({
               }
               label="Is Required"
             /> */}
-          </Stack>
-        </DialogScrollContent>
+        </Stack>
+      </DialogScrollContent>
 
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            variant="outlined"
-            onClick={() => handleClose?.(null, false)}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            loading={isUpdateLoading || isLoading}
-            startIcon={
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                width={editData ? 16 : 20}
-                height={editData ? 16 : 20}
-              />
-            }
-            type="submit"
-          >
-            {editData ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-      </form>
+      <DialogActions>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={() => handleClose?.(null, false)}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdateLoading || isLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          type="submit"
+          onClick={(e: any) => {
+            handleSubmit(e);
+          }}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
+      </DialogActions>
+      {/* </form> */}
     </BackPopUpChecked>
   );
 };

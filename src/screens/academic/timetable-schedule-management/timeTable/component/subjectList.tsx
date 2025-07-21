@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Paper, Stack, Typography } from '@mui/material';
 
@@ -28,7 +31,19 @@ const SubjectList: React.FC<SubjectListProps> = ({
   timetable, // Add timetable prop
 }) => {
   const weeklyLecturesDialog = useBoolean();
-  console.log('subjectsGroups', subjectsGroups);
+  const dispatch = useDispatch();
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      weeklyLecturesDialog.onFalse();
+      // resetState();
+    } else if (!isChanges) {
+      weeklyLecturesDialog.onFalse();
+      // resetState();
+    }
+  };
 
   return (
     <Stack spacing={1}>
@@ -150,7 +165,7 @@ const SubjectList: React.FC<SubjectListProps> = ({
           weeklyLecturesDialog.onTrue();
         }}
       >
-        Create Weekly Lectures ?
+        Create Weekly Lectures
       </Typography>
       <CustomDialog
         title={
@@ -173,7 +188,7 @@ const SubjectList: React.FC<SubjectListProps> = ({
         <CreateNoOfLecture
           isEdit
           editData={null}
-          onClose={weeklyLecturesDialog.onFalse}
+          onClose={handleClose}
           selectedClass={selectedClass}
         />
       </CustomDialog>

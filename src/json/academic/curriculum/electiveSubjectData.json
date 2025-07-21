@@ -4,7 +4,7 @@
     "status": 1,
     "className": "1", 
     "subjectName": "Tech & Fitness Group",
-    "subjectType": "Elective",
+    "subjectType": 1,
     "subjects": [
       {
         "id": 501,
@@ -157,7 +157,7 @@
     "status": 1,
     "className": "1",
     "subjectName": "Language Enrichment Group",
-    "subjectType": "Elective",
+    "subjectType": 1,
     "subjects": [
       {
         "id": 901,
@@ -250,7 +250,7 @@
     "status": 0,
     "className": "1",
     "subjectName": "Mathematics",
-    "subjectType": "Core",
+    "subjectType": 0,
     "subjects": [
       {
         "id": 201,
@@ -301,7 +301,7 @@
     "status": 0,
     "className": "1",
     "subjectName": "Science",
-    "subjectType": "Core",
+    "subjectType": 0,
     "subjects": [
       {
         "id": 910,
@@ -352,7 +352,7 @@
     "status": 0,
     "className": "1",
     "subjectName": "Social Science",
-    "subjectType": "Core",
+    "subjectType": 0,
     "subjects": [
       {
         "id": 911,
@@ -403,7 +403,7 @@
     "status": 0,
     "className": "1",
     "subjectName": "Gujarati",
-    "subjectType": "Core",
+    "subjectType": 0,
     "subjects": [
       {
         "id": 912,
@@ -454,7 +454,7 @@
     "status": 0,
     "className": "1",
     "subjectName": "English",
-    "subjectType": "Core",
+    "subjectType": 0,
     "subjects": [
       {
         "id": 602,

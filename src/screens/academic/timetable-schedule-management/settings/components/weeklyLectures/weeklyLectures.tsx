@@ -213,7 +213,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({
                 },
               }}
             >
-              Weekly Lectures
+              Add Weekly Lectures
             </Box>
           </>
         }
@@ -291,7 +291,7 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({
               placement="right"
               title={
                 isEdit
-                  ? 'Update weekly lecture details, including the class and the total number of lectures scheduled per week.'
+                  ? 'Update weekly lecture details the total number of lectures scheduled per week.'
                   : 'You can add weekly lectures by specifying the class and total weekly number of lectures.'
               }
             >

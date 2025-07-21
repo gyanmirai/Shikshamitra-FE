@@ -7,6 +7,7 @@ import { Box, Tab, Tabs, Grid, Paper, Divider, Typography } from '@mui/material'
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { SubjectType } from 'src/enums/subject-type';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
@@ -89,14 +90,15 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-              {subject?.subjectType === 'Elective' ? (
+              {subject?.subjectType === 1 ? (
                 <Typography fontWeight="bold">{subject.subjectName}</Typography>
               ) : (
                 <Typography fontWeight="bold">Subject</Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography variant="body2" component="span">
-                  {subject?.className}- {subject?.subjectType}
+                  {subject?.className}-{' '}
+                  {subject?.subjectType !== undefined ? SubjectType[subject.subjectType] : ''}
                 </Typography>
               </Box>
             </Box>
