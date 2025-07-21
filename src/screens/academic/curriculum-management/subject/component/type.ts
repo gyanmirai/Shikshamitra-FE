@@ -51,7 +51,7 @@ export interface ISubjectFormValues {
   className: string;
   subjectName: string;
   subjects?: ISubjectDetail[];
-  subjectType?: string;
+  subjectType: number;
 }
 
 export interface ISubjectTableProps {

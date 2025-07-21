@@ -219,7 +219,7 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
         </Stack>
       )}
 
-      <Stack direction="row" spacing={0.5}>
+      {/* <Stack direction="row" spacing={0.5}>
         <ToolbarItem
           aria-label="Fullscreen"
           className={editorClasses.toolbar.fullscreen}
@@ -232,7 +232,7 @@ export function Toolbar({ editor, fullItem, fullScreen, onToggleFullScreen }: Ed
             )
           }
         />
-      </Stack>
+      </Stack> */}
     </Stack>
   );
 }

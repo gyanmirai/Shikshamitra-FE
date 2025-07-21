@@ -10,7 +10,7 @@ export const getSubjectInitialValues = (
     className: selectedClass,
     status: 1,
     subjects: [],
-    subjectType: 'Core',
+    subjectType: 0,
   };
 
   // If no edit data, return default values
@@ -19,15 +19,15 @@ export const getSubjectInitialValues = (
   }
 
   // Determine subject type
-  const subjectType = editData.subjectType || 'Core';
+  const subjectType = editData.subjectType || 0;
 
-  if (subjectType === 'Core') {
+  if (subjectType === 0) {
     // For core subjects, populate all fields from edit data
     return {
       subjectName: editData.subjectName || '',
       className: editData.className || '',
       status: editData.status || 0,
-      subjectType: 'Core',
+      subjectType: 0,
       // For core, we typically don't use the subjects array
       subjects: editData.subjects || [],
     };
@@ -40,7 +40,7 @@ export const getSubjectInitialValues = (
     // Preserve status
     status: editData.status || 1,
     // Mark as Elective type
-    subjectType: 'Elective',
+    subjectType: 1,
     // For Electives, subjects array contains all the detailed information
     subjects: editData.subjects || [],
   };

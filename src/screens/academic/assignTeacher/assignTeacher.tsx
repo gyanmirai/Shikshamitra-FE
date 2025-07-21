@@ -1,7 +1,9 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
 
+import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 
 import { Save } from '@mui/icons-material';
@@ -33,8 +35,10 @@ const AssignTeacher = () => {
   });
 
   const [classes, setClasses] = useState('');
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+
   const [division, setDivision] = useState('');
-  const [organization, setOrganization] = useState('');
+  const [organization, setOrganization] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const [originalTeacherAssignments, setOriginalTeacherAssignments] = useState<{
@@ -56,6 +60,12 @@ const AssignTeacher = () => {
     'Joshi Vikram Shyam',
   ]);
 
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
   useEffect(() => {
     if (classData?.items?.length) {
       if (classes) {
@@ -74,6 +84,11 @@ const AssignTeacher = () => {
       }
     }
   }, [classData, classes]);
+
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
 
   const [tableData, setTableData] = useState([
     { className: '1', division: 'A', classTeacher: '' },
@@ -164,17 +179,14 @@ const AssignTeacher = () => {
         }}
       >
         <CustomSelect
-          label="Organization"
-          options={[
-            { value: 'Pre Primary', label: 'Pre Primary' },
-            { value: 'Primary', label: 'Primary' },
-            { value: 'Secondary', label: 'Secondary' },
-            { value: 'Higher Secondary', label: 'Higher Secondary' },
-          ]}
+          options={allOrganization}
+          label="Organization *"
           value={organization}
           onChange={(val) => {
-            setOrganization(val as string);
+            setOrganization(val as any);
           }}
+          labelKey="name"
+          valueKey="id"
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
         />
         <Box display="flex" gap={2} justifyContent="flex-end">

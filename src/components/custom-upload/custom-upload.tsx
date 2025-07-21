@@ -1,11 +1,21 @@
 import { useDropzone } from 'react-dropzone';
 import React, { useState, useCallback } from 'react';
 
+import { Close } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Grid, Card, CardMedia, Typography, IconButton, DialogContent } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Dialog,
+  CardMedia,
+  Typography,
+  IconButton,
+  DialogTitle,
+  DialogContent,
+} from '@mui/material';
 
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -229,13 +239,23 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         </Box>
       )}
 
-      <CustomDialog
+      {/* <Dialog open={!!previewFile} onClose={() => setPreviewFile(null)} maxWidth="md" fullWidth> */}
+
+      <Dialog
         open={previewDialog.open}
-        handleClose={() => setPreviewDialog({ open: false })}
+        onClose={() => setPreviewDialog({ open: false, file: '' })}
         maxWidth="md"
         fullWidth
-        title="Preview"
       >
+        <DialogTitle>
+          Preview
+          <IconButton
+            onClick={() => setPreviewDialog({ open: false, file: '' })}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           {previewDialog.file && (
             <Box
@@ -245,15 +265,23 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
             />
           )}
         </DialogContent>
-      </CustomDialog>
+      </Dialog>
 
-      <CustomDialog
-        title="All Files"
-        open={filesDialog}
-        handleClose={() => setFilesDialog(false)}
+      <Dialog
+        open={filesDialog && files.length > 1}
+        onClose={() => setFilesDialog(false)}
         maxWidth="md"
         fullWidth
       >
+        <DialogTitle>
+          All Files
+          <IconButton
+            onClick={() => setFilesDialog(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             {files.map((file, index) => (
@@ -263,7 +291,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
             ))}
           </Grid>
         </DialogContent>
-      </CustomDialog>
+      </Dialog>
     </Box>
   );
 };

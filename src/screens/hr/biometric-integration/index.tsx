@@ -435,6 +435,7 @@ const BiometricForm = ({
             />
           </ShakingTextField>
         </Stack>
+        {/* </DialogScrollContent> */}
       </Box>
       <DialogActions>
         <Button

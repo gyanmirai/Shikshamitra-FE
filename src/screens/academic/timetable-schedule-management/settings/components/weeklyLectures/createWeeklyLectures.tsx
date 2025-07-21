@@ -16,6 +16,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
@@ -48,6 +49,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
     onSubmit: (values) => {
+      console.log('handle submit calll---s');
+
       // Calculate total lectures
       const totalLectures = values.subjects.reduce((sum, subject) => sum + subject.noOfLecture, 0);
       const submitData = {
@@ -56,16 +59,18 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       };
       if (editData) {
         shikshaMitraToast.success({
-          message: `Weekly No of lectures updated for class ${values.className}`,
+          message: `Weekly No. of lectures updated for class ${values.className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `Weekly No of lectures added for class ${values.className}`,
+          message: `Weekly No. of lectures added for class ${values.className}`,
         });
       }
       onClose?.(null, true);
     },
   });
+  console.log('formikk   values---', formik.values);
+  console.log('formikk   initial values---', formik.initialValues);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -82,10 +87,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       const dummySubjects = generateDummySubjects().map((subj, index) => ({
         id: `subject-${index}`,
         ...subj,
-        noOfLecture: null,
+        noOfLecture: '',
       }));
 
-      formik.setFieldValue('className', selectedClass);
+      // formik.setFieldValue('className', selectedClass);
       formik.setFieldValue('subjects', dummySubjects);
       formik.setFieldValue('totalLectures', 0);
     }
@@ -160,112 +165,113 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit}>
-        <Box sx={{ height: '100%', p: 2 }}>
-          {/* <Scrollbar sx={{ p: 2, height: '450px' }}> */}
-          <Grid container spacing={1}>
-            <Grid item xs={12} md={4}>
-              <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-                <CustomSelect
-                  options={allClass}
-                  value={formik.values.className}
-                  onChange={(val) => {
-                    formik.setFieldValue('className', val as string);
+      {/* <form onSubmit={formik.handleSubmit}> */}
+      <DialogScrollContent>
+        {/* <Scrollbar sx={{ p: 2, height: '450px' }}> */}
+        <Grid container spacing={1}>
+          <Grid item xs={12} md={4}>
+            <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+              <CustomSelect
+                options={allClass}
+                value={formik.values.className}
+                onChange={(val) => {
+                  formik.setFieldValue('className', val as string);
 
-                    const dummySubjects = generateDummySubjects().map((subj, index) => ({
-                      id: `subject-${index}`,
-                      ...subj,
-                      noOfLecture: null,
-                    }));
-                    formik.setFieldValue('subjects', dummySubjects);
-                    formik.setFieldValue('totalLectures', 0);
-                  }}
-                  label="Class *"
-                  // isLoading={isLoading}
-                  labelKey="name"
-                  valueKey="name"
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-                  error={formik.touched.className && Boolean(formik.errors.className)}
-                  helperText={
-                    formik.touched.className && typeof formik.errors.className === 'string'
-                      ? formik.errors.className
-                      : undefined
-                  }
-                  disabled={disabled || (isEdit && !!editData)}
-                />
-              </ShakingTextField>
-            </Grid>
-            {formik.values.className && (
-              <Grid item xs={12}>
-                <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
-                  <CustomizableTable
-                    tableId="table-subject-list"
-                    isSearch={false}
-                    isShowedDense={false}
-                    noDataText={<>No Subject&apos;s weekly lectures Found </>}
-                    isFilter={false}
-                    columns={[
-                      {
-                        id: 'name',
-                        label: 'Subject',
-                        isFilter: false,
-                        // isSort: false,
-                        render: (value, row) => (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <SubjectColorIndicator color={row.subjectColor} />
-                            <Typography variant="caption" fontSize="13px">
-                              {value} ({row.subjectCode})
-                            </Typography>
-                          </Box>
-                        ),
-                      },
-                      {
-                        id: 'noOfLecture',
-                        label: 'Weekly Lectures',
-                        isSort: false,
-                        isFilter: false,
-                        render: subjectColumnRender,
-                      },
-                    ]}
-                    data={formik.values.subjects}
-                  />
-                </Box>
-              </Grid>
-            )}
+                  const dummySubjects = generateDummySubjects().map((subj, index) => ({
+                    id: `subject-${index}`,
+                    ...subj,
+                    noOfLecture: null,
+                  }));
+                  formik.setFieldValue('subjects', dummySubjects);
+                  formik.setFieldValue('totalLectures', 0);
+                }}
+                label="Class *"
+                // isLoading={isLoading}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                error={formik.touched.className && Boolean(formik.errors.className)}
+                helperText={
+                  formik.touched.className && typeof formik.errors.className === 'string'
+                    ? formik.errors.className
+                    : undefined
+                }
+                disabled={disabled || (isEdit && !!editData)}
+              />
+            </ShakingTextField>
           </Grid>
-          {/* </Scrollbar> */}
-        </Box>
-        {!disabled && (
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              onClick={() => {
-                onClose?.(null, false);
-              }}
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <Button
-              startIcon={
-                <Iconify
-                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                  width={editData ? 16 : 20}
-                  height={editData ? 16 : 20}
+          {formik.values.className && (
+            <Grid item xs={12}>
+              <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
+                <CustomizableTable
+                  tableId="table-subject-list"
+                  isSearch={false}
+                  isShowedDense={false}
+                  noDataText={<>No Subject&apos;s weekly lectures Found </>}
+                  isFilter={false}
+                  columns={[
+                    {
+                      id: 'name',
+                      label: 'Subject',
+                      isFilter: false,
+                      // isSort: false,
+                      render: (value, row) => (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <SubjectColorIndicator color={row.subjectColor} />
+                          <Typography variant="caption" fontSize="13px">
+                            {value} ({row.subjectCode})
+                          </Typography>
+                        </Box>
+                      ),
+                    },
+                    {
+                      id: 'noOfLecture',
+                      label: 'Weekly Lectures',
+                      isSort: false,
+                      isFilter: false,
+                      render: subjectColumnRender,
+                    },
+                  ]}
+                  data={formik.values.subjects}
                 />
-              }
-              type="submit"
-              size="small"
-              variant="contained"
-            >
-              {editData ? 'Update' : 'Submit'}
-              {/* {isEdit ? 'Update' : 'Submit'} */}
-            </Button>
-            {/* <SubmitButton size="small" disabled={disabled} /> */}
-          </DialogActions>
-        )}
-      </form>
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+        {/* </Scrollbar> */}
+      </DialogScrollContent>
+      {!disabled && (
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            onClick={() => {
+              onClose?.(null, false);
+            }}
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            startIcon={
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                width={editData ? 16 : 20}
+                height={editData ? 16 : 20}
+              />
+            }
+            form="dialog-form"
+            onClick={() => formik.handleSubmit()}
+            size="small"
+            variant="contained"
+          >
+            {editData ? 'Update' : 'Submit'}
+            {/* {isEdit ? 'Update' : 'Submit'} */}
+          </Button>
+          {/* <SubmitButton size="small" disabled={disabled} /> */}
+        </DialogActions>
+      )}
+      {/* </form> */}
     </BackPopUpChecked>
   );
 };
@@ -282,15 +288,4 @@ export const generateDummySubjects = () => [
   { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
   { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
   { name: 'Physics', subjectCode: 'PHY101', subjectColor: '#5c6bc0' },
-  { name: 'Chemistry', subjectCode: 'CHEM101', subjectColor: '#ff7043' },
-  { name: 'Biology', subjectCode: 'BIO101', subjectColor: '#9ccc65' },
-  { name: 'History', subjectCode: 'HIST101', subjectColor: '#d4e157' },
-  { name: 'Geography', subjectCode: 'GEO101', subjectColor: '#26a69a' },
-  { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#ec407a' },
-  { name: 'Marathi', subjectCode: 'MAR101', subjectColor: '#ba68c8' },
-  { name: 'Physical Education', subjectCode: 'PE101', subjectColor: '#ffb74d' },
-  { name: 'Moral Science', subjectCode: 'MOR101', subjectColor: '#8e24aa' },
-  { name: 'Music', subjectCode: 'MUS101', subjectColor: '#f06292' },
-  { name: 'Sanskrit', subjectCode: 'SAN101', subjectColor: '#6d4c41' },
-  { name: 'Environmental Science', subjectCode: 'EVS101', subjectColor: '#aed581' },
 ];

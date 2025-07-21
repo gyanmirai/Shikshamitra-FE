@@ -55,7 +55,7 @@ const Categories = (props: TabComponentType) => {
           <TextField
             fullWidth
             size="small"
-            placeholder="Search columns"
+            label="Search columns"
             //   value={columnSearchTerm}
             //   onChange={(e) => setColumnSearchTerm(e.target.value)}
             sx={{ mb: 2 }}

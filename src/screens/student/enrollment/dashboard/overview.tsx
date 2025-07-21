@@ -3,6 +3,8 @@ import { useState } from 'react';
 
 import { Box, Card, Typography } from '@mui/material';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableView from 'src/components/customizable-view';
@@ -68,13 +70,13 @@ const Overview = () => {
       id: '0',
       icon: 'wpf:inspection',
       title: 'Total Inquiries',
-      count: 120,
+      count: fNumber(1120),
       color: 'primary.main',
       bgColor: 'primary',
       href: '/student/enrollment/inquiry',
       labels: [
-        { name: 'Male 500', color: 'success' },
-        { name: 'Female 200', color: 'warning' },
+        { name: `Male ${fNumber(500)}`, color: 'success' },
+        { name: `Female ${fNumber(200)}`, color: 'warning' },
       ],
       width: 4,
     },
@@ -82,13 +84,13 @@ const Overview = () => {
       id: '1',
       icon: 'medical-icon:i-registration',
       title: 'Total Registration',
-      count: 78,
+      count: fNumber(78),
       color: 'info.main',
       bgColor: 'info',
       href: '/student/enrollment/registration',
       labels: [
-        { name: 'Male 500', color: 'success' },
-        { name: 'Female 200', color: 'warning' },
+        { name: `Male ${fNumber(500)}`, color: 'success' },
+        { name: `Female ${fNumber(200)}`, color: 'warning' },
       ],
       width: 4,
     },
@@ -96,13 +98,13 @@ const Overview = () => {
       id: '2',
       icon: 'fluent-mdl2:open-enrollment',
       title: 'Total Admission',
-      count: 45,
+      count: fNumber(45),
       color: 'secondary.main',
       bgColor: 'secondary',
       href: '/student/enrollment/admission',
       labels: [
-        { name: 'Male 500', color: 'success' },
-        { name: 'Female 200', color: 'warning' },
+        { name: `Male ${fNumber(500)}`, color: 'success' },
+        { name: `Female ${fNumber(200)}`, color: 'warning' },
       ],
       width: 4,
     },
@@ -110,13 +112,13 @@ const Overview = () => {
     //   id: '3',
     //   icon: 'healthicons:i-exam-multiple-choice',
     //   title: 'Entrance Exam Status',
-    //   count: 10,
+    //   count: fNumber(10),
     //   color: 'info.main',
     //   bgColor: 'info',
     //   href: '/student/enrollment/entrance-exam',
     //   labels: [
-    //     { name: 'Ongoing 2', color: 'success' },
-    //     { name: 'Upcoming 5', color: 'info' },
+    //     { name: `Ongoing ${fNumber(2)}`, color: 'success' },
+    //     { name: `Upcoming ${fNumber(5)}`, color: 'info' },
     //   ],
     //   width: 4,
     // },
@@ -124,13 +126,13 @@ const Overview = () => {
     //   id: '4',
     //   icon: 'bi:pass-fill',
     //   title: 'Pass-Fail Ratio',
-    //   count: 17,
+    //   count: fNumber(17),
     //   color: 'error.main',
     //   bgColor: 'error',
     //   href: '/student/enrollment/entrance-exam/?view=table',
     //   labels: [
-    //     { name: 'Passed 15', color: 'success' },
-    //     { name: 'Failed 2', color: 'error' },
+    //     { name: `Passed ${fNumber(15)}`, color: 'success' },
+    //     { name: `Failed ${fNumber(2)}`, color: 'error' },
     //   ],
     //   width: 4,
     // },
@@ -150,7 +152,6 @@ const Overview = () => {
     //   width: 4,
     // },
   ]);
-
   const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card, index) => {
     acc[card.id] = (
       <StudentEnrollmentCard

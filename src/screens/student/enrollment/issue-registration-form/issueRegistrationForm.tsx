@@ -3,10 +3,10 @@ import type { FormikValues } from 'formik';
 import React from 'react';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { Form, Formik } from 'formik';
+import { Formik } from 'formik';
 
 import { LoadingButton } from '@mui/lab';
-import { Box, Card, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Card, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -16,9 +16,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inquiry-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -102,17 +103,8 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
           handleSubmit,
           handleBlur,
         }) => (
-          <Box
-            component={Form}
-            sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-            onSubmit={handleSubmit}
-          >
-            <Scrollbar
-              sx={{
-                p: 2,
-                height: '100%',
-              }}
-            >
+          <>
+            <DialogScrollContent>
               <Grid container spacing={3}>
                 <Grid item xs={12}>
                   <ShakingTextField error={!!(touched.formNumber && errors.formNumber) || false}>
@@ -130,37 +122,24 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                 </Grid>
                 <Grid item xs={12}>
                   <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-                    <TextField
+                    <NumericFormatCustom
                       fullWidth
                       size="small"
                       name="amount"
                       label="Amount *"
+                      value={values.amount}
+                      onChange={(e) => {
+                        const amount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                        setFieldValue('amount', amount);
+                      }}
                       error={touched.amount && Boolean(errors.amount)}
                       helperText={touched.amount && errors.amount}
-                      value={
-                        values.amount
-                          ? Number(String(values.amount).replace(/,/g, '')).toLocaleString('en-IN')
-                          : ''
-                      }
-                      onChange={(e) => {
-                        const input = e.target.value;
-                        const numeric = input.replace(/[^0-9]/g, '');
-                        setFieldValue('amount', numeric);
-                      }}
-                      InputProps={{
-                        startAdornment: <span>₹</span>,
-                        inputProps: {
-                          min: 0,
-                          inputMode: 'numeric',
-                        },
-                      }}
-                      placeholder="0"
                     />
                   </ShakingTextField>
                 </Grid>
               </Grid>
-            </Scrollbar>
-            <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+            </DialogScrollContent>
+            <DialogActions>
               <Button
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}
                 variant="outlined"
@@ -175,11 +154,14 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                 type="submit"
                 variant="contained"
                 size="small"
+                onClick={(e: any) => {
+                  handleSubmit(e);
+                }}
               >
                 Submit
               </LoadingButton>
             </DialogActions>
-          </Box>
+          </>
         )}
       </Formik>
     </Card>

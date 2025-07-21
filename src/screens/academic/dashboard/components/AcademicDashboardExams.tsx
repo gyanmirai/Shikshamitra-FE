@@ -2,7 +2,7 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 
-import { Card } from '@mui/material';
+import { Card, Typography } from '@mui/material';
 
 import {
   ScheduleExamStatus,
@@ -15,6 +15,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 const AcademicDashboardExams = () => (
   <Card sx={{ p: 3, height: '100%', borderRadius: 3 }}>
+    <Typography variant="h6">Next 5 Exams</Typography>
     <CustomizableTable
       tableId="nextExams"
       columns={[
