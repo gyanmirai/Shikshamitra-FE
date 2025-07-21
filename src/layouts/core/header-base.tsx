@@ -1,11 +1,17 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import { useSelector } from 'react-redux';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { Skeleton, Typography } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 
 import { Logo } from 'src/components/logo';
 
@@ -110,6 +116,17 @@ export function HeaderBase({
   ...other
 }: HeaderBaseProps) {
   const theme = useTheme();
+  const { user } = useSelector((state: any) => state.auth);
+
+  const { data: tenantData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTenantByIdQuery,
+    params: user?.profile?.tenantid,
+    options: {
+      skip: !user?.profile?.tenantid,
+    },
+  });
+  const schoolName = tenantData?.extraProperties?.InstituteName;
 
   return (
     <HeaderSection
@@ -139,6 +156,13 @@ export function HeaderBase({
 
             {/* -- Workspace popover -- */}
             {/* {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />} */}
+            {isLoading ? (
+              <Box sx={{ width: 200 }}>
+                <Skeleton animation="wave" />
+              </Box>
+            ) : (
+              <Typography fontWeight={600}> {schoolName}</Typography>
+            )}
 
             {slots?.leftAreaEnd}
           </>
