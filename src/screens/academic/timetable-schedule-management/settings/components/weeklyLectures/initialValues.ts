@@ -17,10 +17,13 @@ export const getNoOfLectureInitialValues = (
     generateDummySubjects().map((subj, index) => ({
       id: `subject-${index}`,
       ...subj,
-      noOfLecture: null,
+      noOfLecture: '',
     }));
 
-  const totalLectures = subjects.reduce<number>((sum, subj) => sum + (subj.noOfLecture ?? 0), 0);
+  const totalLectures = subjects.reduce<number>(
+    (sum, subj) => sum + (Number(subj.noOfLecture) || 0),
+    0
+  );
 
   return {
     className: editData?.className ? editData.className : selectedClass || '',

@@ -147,7 +147,7 @@ const TimeTableCell = ({
 
         // '&:hover': { bgcolor: !slotData ? 'grey.50' : 'inherit' },
         padding: '4px',
-        cursor: isDrag && slotData ? 'grab' : 'default',
+        cursor: isDrag && slotData?.subjects?.length ? 'grab' : 'default',
       }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}

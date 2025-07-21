@@ -296,7 +296,7 @@ const Teacher = ({
             label: 'Division',
             filterType: 'string',
             align: 'left',
-            minWidth: '80px',
+            minWidth: '90px',
             sticky: true,
             render: (value: string) => (
               <Typography variant="caption" fontSize="13px">

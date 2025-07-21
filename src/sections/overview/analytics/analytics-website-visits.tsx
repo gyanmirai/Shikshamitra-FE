@@ -24,6 +24,10 @@ type Props = CardProps & {
   firstDropdownValue?: string;
   firstDropdownOnChange?: (value: string) => void;
   firstDropdownLabel?: string;
+  secondDropdownOptions?: { value: string; label: string }[];
+  secondDropdownValue?: string;
+  secondDropdownOnChange?: (value: string) => void;
+  secondDropdownLabel?: string;
 };
 
 export function AnalyticsWebsiteVisits({
@@ -35,6 +39,10 @@ export function AnalyticsWebsiteVisits({
   firstDropdownOnChange,
   firstDropdownOptions = [],
   firstDropdownValue,
+  secondDropdownLabel,
+  secondDropdownOnChange,
+  secondDropdownOptions = [],
+  secondDropdownValue,
   ...other
 }: Props) {
   // Get the current theme from Material-UI
@@ -86,7 +94,18 @@ export function AnalyticsWebsiteVisits({
             onChange={(e) => firstDropdownOnChange(e as string)}
             value={firstDropdownValue ?? ''}
             formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
+              sx: { width: '100%', maxWidth: '120px' },
+            }}
+          />
+        )}
+        {secondDropdownOptions.length > 0 && secondDropdownOnChange && (
+          <CustomSelect
+            label={secondDropdownLabel}
+            options={secondDropdownOptions}
+            onChange={(e) => secondDropdownOnChange(e as string)}
+            value={secondDropdownValue ?? ''}
+            formControlProps={{
+              sx: { width: '100%', maxWidth: '120px' },
             }}
           />
         )}

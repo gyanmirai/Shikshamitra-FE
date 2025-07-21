@@ -26,11 +26,11 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Editor } from 'src/components/editor';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { TeacherProfile, ISubjectCardProps } from './type';
@@ -376,7 +376,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
             {/* Upload Document */}
             <Grid item xs={12}>
-              <FileUploader
+              <CustomUpload
+                multiple
+                previewCount={6}
+                onChange={(files) => formik.setFieldValue(`subjects.${index}.documents`, files)}
+                value={subject.documents}
+                // error={formik.touched[name] && formik.errors[name]}
+                // helperText={formik.touched[name] && formik.errors[name]}
+                label="Upload Your Subject Documents"
+                outputFormat="file"
+              />
+              {/* <FileUploader
                 // @ts-ignore
                 value={subject.documents}
                 multiple
@@ -390,9 +400,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   //   const base64String = reader.result;
                   // };
                 }}
-                primaryText="Please Upload Your Subject Documents"
+                primaryText="Upload Your Subject Documents"
                 secondaryText="Maximum file size is 5MB"
-              />
+              /> */}
             </Grid>
           </Grid>
         </AccordionDetails>

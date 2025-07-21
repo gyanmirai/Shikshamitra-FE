@@ -1,263 +1,131 @@
 import React from 'react';
 
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Table,
-  Paper,
-  Button,
-  TableRow,
-  useTheme,
-  TableBody,
-  TableCell,
-  Typography,
-  TableContainer,
-} from '@mui/material';
+import { Box } from '@mui/material';
+import Grid2 from '@mui/material/Unstable_Grid2';
 
-// Dummy data
-const upcomingSchedule = [
+import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
+
+import EmployeeProfileOverview from './profileDashboardComponent/ProfileOverview';
+import ProfileDashboardAttendance from './profileDashboardComponent/ProfileDashboardAttendance';
+import StudentHomeworkAssignments from './profileDashboardComponent/HRProfileHomeworkAssignment';
+import ProfileDashboardAttendanceTrend from './profileDashboardComponent/ProfileDashboardAttendanceTrend';
+
+const activities = [
   {
-    id: 1,
-    title: 'Staff Meeting',
-    time: '10:00 AM - 11:00 AM',
-    description: 'Discuss quarterly curriculum updates',
+    color: 'success',
+    title: 'Roll No. assigned to Yuvraj Singh',
+    subtitle: 'Class 5-B · Roll No.-12',
+    timeAgo: '2 hours ago',
+    date: '06-07-2025',
   },
   {
-    id: 2,
-    title: 'Math Exam Grading',
-    time: 'Due: Tomorrow, 5:00 PM',
-    description: 'Grade papers for Class 10A',
+    color: 'info',
+    title: 'Division Changed for Meera Patel',
+    subtitle: 'Class 4-B ➝ 4-C',
+    timeAgo: '4 hours ago',
+    date: '06-07-2025',
   },
   {
-    id: 3,
-    title: 'Science Project Submission Deadline',
-    time: 'Due: Next Friday',
-    description: 'Collect and review project submissions',
-  },
-];
-
-const leaderboard = [
-  { id: 1, name: 'Aarav Patel', department: 'Math Department', points: 1250 },
-  { id: 2, name: 'Priya Sharma', department: 'Science Department', points: 1160 },
-  { id: 3, name: 'Rohan Kumar', department: 'English Department', points: 1050 },
-];
-
-const smartSuggestions = [
-  {
-    id: 1,
-    title: 'Automatic grading for MCQs',
-    description: 'Save up to 2 hours per week',
+    color: 'success',
+    title: 'New Student added to Blue House',
+    subtitle: 'Anjali Sharma · Class 3-A',
+    timeAgo: '6 hours ago',
+    date: '06-07-2025',
   },
   {
-    id: 2,
-    title: 'Schedule parent-teacher meetings',
-    description: 'Use the automated scheduling tool',
+    color: 'success',
+    title: 'GR No. generated for Kiran Kumar',
+    subtitle: 'GR2025001847',
+    timeAgo: '1 day ago',
+    date: '05-07-2025',
   },
-];
+  {
+    color: 'warning',
+    title: 'House change request pending',
+    subtitle: 'Anjali Sharma · Green to Red House',
+    timeAgo: '2 days ago',
+    date: '04-07-2025',
+  },
+  {
+    color: 'error',
+    title: 'Attendance marked absent',
+    subtitle: 'Rahul Verma · Class 6-A',
+    timeAgo: '3 days ago',
+    date: '03-07-2025',
+  },
+  {
+    color: 'info',
+    title: 'Fee payment received',
+    subtitle: 'Priya Shah · Term 2 Fees',
+    timeAgo: '4 days ago',
+    date: '02-07-2025',
+  },
+  {
+    color: 'success',
+    title: 'Sports team selection',
+    subtitle: 'Arjun Kumar · Football Team',
+    timeAgo: '5 days ago',
+    date: '01-07-2025',
+  },
+  {
+    color: 'warning',
+    title: 'Parent meeting scheduled',
+    subtitle: 'Neha Gupta · Class 7-B',
+    timeAgo: '1 week ago',
+    date: '29-06-2025',
+  },
+  {
+    color: 'info',
+    title: 'Academic achievement',
+    subtitle: 'Sanya Malhotra · Science Quiz Winner',
+    timeAgo: '1 week ago',
+    date: '29-06-2025',
+  },
+] as const;
 
-const EmployeeDashboard = () => {
-  const theme = useTheme();
-
-  // Activity Heatmap Chart Configuration
-  const heatmapOptions = {
-    chart: {
-      type: 'heatmap',
-      toolbar: { show: false },
-    },
-    dataLabels: { enabled: false },
-    colors: ['#008FFB'],
-    plotOptions: {
-      heatmap: {
-        colorScale: {
-          ranges: [
-            { from: 0, to: 0, color: '#EEEEEE' },
-            { from: 1, to: 2, color: '#90CAF9' },
-            { from: 3, to: 4, color: '#42A5F5' },
-            { from: 5, to: 6, color: '#1976D2' },
-          ],
-        },
-      },
-    },
-    xaxis: {
-      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    },
-  };
-
-  const heatmapSeries = [
-    {
-      name: 'Activity',
-      data: [
-        { x: 'Mon', y: 4 },
-        { x: 'Tue', y: 2 },
-        { x: 'Wed', y: 5 },
-        { x: 'Thu', y: 6 },
-        { x: 'Fri', y: 3 },
-        { x: 'Sat', y: 1 },
-        { x: 'Sun', y: 0 },
-      ],
-    },
-  ];
-
-  // Productivity Chart Configuration
-  const productivityOptions = {
-    chart: {
-      type: 'bar',
-      toolbar: { show: false },
-    },
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        columnWidth: '60%',
-      },
-    },
-    dataLabels: { enabled: false },
-    colors: ['#4CAF50'],
-    xaxis: {
-      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    },
-  };
-
-  const productivitySeries = [
-    {
-      name: 'Productivity',
-      data: [75, 85, 95, 90, 85, 70],
-    },
-  ];
-
-  return (
-    <Box sx={{ p: 3 }}>
-      <Grid container spacing={3}>
-        {/* Status Cards */}
-        <Grid item xs={12} container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ p: 2, bgcolor: '#FFF5F5' }}>
-              <Typography variant="subtitle2" color="error">
-                Homework Drafts
-              </Typography>
-              <Typography variant="h4">12</Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ p: 2, bgcolor: '#F6FFF8' }}>
-              <Typography variant="subtitle2" color="success.main">
-                Published Assignments
-              </Typography>
-              <Typography variant="h4">45</Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ p: 2, bgcolor: '#FFFBF2' }}>
-              <Typography variant="subtitle2" color="warning.main">
-                Pending Exams
-              </Typography>
-              <Typography variant="h4">3</Typography>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ p: 2, bgcolor: '#F5F8FF' }}>
-              <Typography variant="subtitle2" color="primary">
-                Feedback Received
-              </Typography>
-              <Typography variant="h4">27</Typography>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Upcoming Schedule and Activity Heatmap */}
-        <Grid item xs={12} md={8}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">Upcoming Schedule</Typography>
-              <Button color="primary">View All</Button>
-            </Stack>
-            <Stack spacing={2}>
-              {upcomingSchedule.map((item) => (
-                <Box key={item.id} sx={{ p: 2, bgcolor: '#F5F5F5', borderRadius: 1 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    {item.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.time}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.description}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
+const EmployeeProfileDashboard = ({ editData }: { editData: any }) => (
+  <Box>
+    <Grid2 container spacing={2} sx={{ mb: 2 }}>
+      <Grid2 xs={12}>
+        <EmployeeProfileOverview />
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <ProfileDashboardAttendance />
+      </Grid2>{' '}
+      <Grid2 xs={12} md={6}>
+        <ProfileDashboardAttendance />
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <StudentHomeworkAssignments />
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <RecentActivities activities={activities} />
+      </Grid2>
+      <Grid2 xs={12}>
+        <ProfileDashboardAttendanceTrend />
+      </Grid2>
+      {/* <Grid2 xs={12}>
+          <Card sx={{ height: '100%', p: 2 }}>
+            <Grid2 xs={12} md={6}>
+              <BoardEnrollmentStatus />
+            </Grid2>
+            <Grid2 xs={12} md={6}>
+              <OrganizationStatus />
+            </Grid2>
           </Card>
-        </Grid>
-        {/* <Grid item xs={12} md={4}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" mb={2}>
-              Activity Heatmap
-            </Typography>
-            <Chart options={heatmapOptions} series={heatmapSeries} type="heatmap" height={200} />
-          </Card>
-        </Grid> */}
+        </Grid2> */}
+      {/* <Grid2 xs={12}>
+          <EntranceExamCard />
+        </Grid2>
+        <Grid2 xs={12}>
+          <EnrollmentActivities />
+        </Grid2> */}
+    </Grid2>
 
-        {/* Leaderboard, Smart Suggestions, and Productivity */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              Leaderboard
-            </Typography>
-            <TableContainer component={Paper} elevation={0}>
-              <Table>
-                <TableBody>
-                  {leaderboard.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Typography variant="subtitle2">{item.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {item.department}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography color="primary">{item.points} pts</Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              Smart Suggestions
-            </Typography>
-            <Stack spacing={2}>
-              {smartSuggestions.map((item) => (
-                <Box key={item.id} sx={{ p: 2, bgcolor: '#F5F5F5', borderRadius: 1 }}>
-                  <Typography variant="subtitle2">{item.title}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {item.description}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Card>
-        </Grid>
-        {/* <Grid item xs={12} md={4}>
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6" mb={2}>
-              Personal Productivity
-            </Typography>
-            <Chart
-              options={productivityOptions}
-              series={productivitySeries}
-              type="bar"
-              height={200}
-            />
-          </Card>
-        </Grid> */}
-      </Grid>
-    </Box>
-  );
-};
+    {/* <Grid2 container spacing={2}>
+        {sections.map((section: any) => dashBoardSections[section.id])}
+      </Grid2> */}
+  </Box>
+);
 
-export default EmployeeDashboard;
+export default EmployeeProfileDashboard;

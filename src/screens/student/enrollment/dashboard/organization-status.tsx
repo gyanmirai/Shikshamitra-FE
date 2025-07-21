@@ -5,32 +5,12 @@ import React, { useState } from 'react';
 
 import { Card, Divider, useTheme, CardHeader } from '@mui/material';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetOrganizationQuery } from 'src/redux/oraganization/oraganization';
-
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const OrganizationStatus = () => {
   const theme = useTheme();
-
-  const { data: organization, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetOrganizationQuery,
-  });
-  const ecommerceChart = {
-    series: [
-      { label: `Inquiry ${45}%`, value: 45 },
-      { label: `Registered ${30}%`, value: 30 },
-      { label: `Admission ${20}%`, value: 20 },
-    ],
-    colors: [
-      [theme.palette.success.light, theme.palette.success.main], // Inquiry (Green)
-      [theme.palette.info.light, theme.palette.info.main], // Registered (Purple)
-      [theme.palette.primary.light, theme.palette.primary.main], // Admission (Cyan/Blue)
-    ],
-  };
 
   const [selectedOrganization, setSelectedOrganization] = useState<string>('');
   return (

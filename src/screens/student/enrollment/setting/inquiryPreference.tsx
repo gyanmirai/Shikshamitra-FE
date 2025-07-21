@@ -21,8 +21,6 @@ import {
   useUpdateInquiryPreferenceMutation,
 } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
 
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -30,6 +28,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IInquiryPreference } from './type';
@@ -234,57 +233,62 @@ export const InquiryPreferenceForm = ({
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <form onSubmit={handleSubmit}>
-        <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-          <Stack spacing={2}>
-            <ShakingTextField error={!!(touched.fieldName && errors.fieldName) || false}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Preference Name *"
-                name="fieldName"
-                value={values.fieldName}
-                onChange={(e) => {
-                  const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+      {/* <form onSubmit={handleSubmit}> */}
+      <DialogScrollContent>
+        {/* <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}> */}
+        <Stack spacing={2}>
+          <ShakingTextField error={!!(touched.fieldName && errors.fieldName) || false}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Preference Name *"
+              name="fieldName"
+              value={values.fieldName}
+              onChange={(e) => {
+                const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
 
-                  setFieldValue('fieldName', onlyLetters);
-                  // setFieldTouched('previousSchool', true);
-                }}
-                error={Boolean(errors.fieldName && touched.fieldName)}
-                helperText={(touched.fieldName && errors.fieldName) || ''}
-              />
-            </ShakingTextField>
-          </Stack>
-        </Scrollbar>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            variant="outlined"
-            onClick={() => {
-              handleClose?.(null, false);
-            }}
-            size="small"
-          >
-            Cancel
-          </Button>
+                setFieldValue('fieldName', onlyLetters);
+                // setFieldTouched('previousSchool', true);
+              }}
+              error={Boolean(errors.fieldName && touched.fieldName)}
+              helperText={(touched.fieldName && errors.fieldName) || ''}
+            />
+          </ShakingTextField>
+        </Stack>
+        {/* </Scrollbar> */}
+      </DialogScrollContent>
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={() => {
+            handleClose?.(null, false);
+          }}
+          size="small"
+        >
+          Cancel
+        </Button>
 
-          <LoadingButton
-            size="small"
-            variant="contained"
-            loading={isUpdateLoading || isLoading}
-            startIcon={
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                width={editData ? 16 : 20}
-                height={editData ? 16 : 20}
-              />
-            }
-            type="submit"
-          >
-            {editData ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-      </form>
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdateLoading || isLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          onClick={(e: any) => {
+            handleSubmit(e);
+          }}
+          type="submit"
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
+      </DialogActions>
+      {/* </form> */}
     </BackPopUpChecked>
   );
 };

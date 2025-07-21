@@ -219,7 +219,6 @@ const studentModule = (isDdvs: boolean) => ({
             {
               title: 'Reports',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
               path: '/student/reports',
               _action: 'student-reports',
               shortcutKey: 'Alt+S+R+6',
@@ -494,7 +493,6 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
           disabled: !isDdvs,
-          caption: 'Coming Soon',
         },
         {
           title: 'Employee',
@@ -701,7 +699,6 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
           disabled: !isDdvs,
-          caption: 'Coming Soon',
         },
         {
           title: 'Curriculum Management',

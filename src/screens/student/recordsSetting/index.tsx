@@ -28,7 +28,6 @@ import {
 } from 'src/redux/student/student-group/student-group';
 
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -38,6 +37,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
@@ -326,57 +326,59 @@ const GroupManagementForm = ({
   });
   console.log(formik, '===============');
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
+    <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <Stack spacing={2} p={2}>
-          <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
-            <TextField
-              size="small"
-              value={formik.values.name}
-              name="name"
-              fullWidth
-              label="House Name *"
-              autoFocus
-              onChange={(e) => {
-                const value = capitalize(e.target.value);
-                formik.setFieldValue('name', value);
-              }}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
+        <DialogScrollContent>
+          <Stack spacing={3} p={0}>
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
+              <TextField
+                size="small"
+                value={formik.values.name}
+                name="name"
+                fullWidth
+                label="House Name *"
+                autoFocus
+                onChange={(e) => {
+                  const value = capitalize(e.target.value);
+                  formik.setFieldValue('name', value);
+                }}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+            </ShakingTextField>
+            <ColorPickerCircle
+              onSelect={(color: string) => formik.setFieldValue('color', color)}
+              initialColor={formik.values.color}
             />
-          </ShakingTextField>
-          <ColorPickerCircle
-            onSelect={(color: string) => formik.setFieldValue('color', color)}
-            initialColor={formik.values.color}
-          />
-          <FileUploader
-            value={formik.values.logo as File}
-            multiple={false}
-            onChange={(value) => {
-              // const reader = new FileReader();
-              formik.setFieldValue('logo', value);
-              // reader.readAsDataURL(value as File);
-              // reader.readAsDataURL(value as File);
-              // reader.onload = () => {
-              //   const base64String = reader.result;
-              // };
-            }}
-            primaryText="Please Upload Your logo"
-            secondaryText="Maximum file size is 3MB"
-          />
-          <TextField
-            multiline
-            rows={4}
-            size="small"
-            value={formik.values.description || ''}
-            name="description"
-            fullWidth
-            label="Description"
-            onChange={formik.handleChange}
-            error={formik.touched.description && Boolean(formik.errors.description)}
-            helperText={formik.touched.description && formik.errors.description}
-          />
-        </Stack>
+            <FileUploader
+              value={formik.values.logo as File}
+              multiple={false}
+              onChange={(value) => {
+                // const reader = new FileReader();
+                formik.setFieldValue('logo', value);
+                // reader.readAsDataURL(value as File);
+                // reader.readAsDataURL(value as File);
+                // reader.onload = () => {
+                //   const base64String = reader.result;
+                // };
+              }}
+              primaryText="Please Upload Your logo"
+              secondaryText="Maximum file size is 3MB"
+            />
+            <TextField
+              multiline
+              rows={4}
+              size="small"
+              value={formik.values.description || ''}
+              name="description"
+              fullWidth
+              label="Description"
+              onChange={formik.handleChange}
+              error={formik.touched.description && Boolean(formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
+            />
+          </Stack>
+        </DialogScrollContent>
       </BackPopUpChecked>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
@@ -401,6 +403,9 @@ const GroupManagementForm = ({
               height={editData ? 16 : 20}
             />
           }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>

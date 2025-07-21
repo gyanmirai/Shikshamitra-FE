@@ -35,14 +35,17 @@ const EnrollmentDashboardScreen = () => {
         </Grid2>
         <Grid2 xs={12}>
           <Card sx={{ height: '100%', p: 2 }}>
-            <Grid2 xs={12} md={6}>
-              <BoardEnrollmentStatus />
-            </Grid2>
-            <Grid2 xs={12} md={6}>
-              <OrganizationStatus />
+            <Grid2 container spacing={2}>
+              <Grid2 xs={12} md={6}>
+                <BoardEnrollmentStatus />
+              </Grid2>
+              <Grid2 xs={12} md={6}>
+                <OrganizationStatus />
+              </Grid2>
             </Grid2>
           </Card>
         </Grid2>
+
         <Grid2 xs={12}>
           <EntranceExamCard />
         </Grid2>

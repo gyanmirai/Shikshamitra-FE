@@ -40,7 +40,7 @@ const SubjectTable = ({
 
     // eslint-disable-next-line no-restricted-syntax
     for (const formData of formDataArray) {
-      if (formData.subjectType === 'Core') {
+      if (formData.subjectType === 0) {
         // Each subject is a row
         (formData.subjects || []).forEach((subject: ISubjectDetail) => {
           rows.push({
@@ -49,11 +49,13 @@ const SubjectTable = ({
             subjectColor: subject.subjectColor || '#1976d2',
             status: formData.status,
             secondaryTeacher: subject.secondaryTeacher || [],
-            subjectType: formData.subjectType && 0,
+            subjectType:
+              formData.subjectType !== undefined ? SubjectType[formData.subjectType] : '-',
+            // subjectType: formData.subjectType && 0,
             subject: formData.subjectName,
           });
         });
-      } else if (formData.subjectType === 'Elective') {
+      } else if (formData.subjectType === 1) {
         // All subjects in one row
         rows.push({
           id: formData.id,
@@ -68,7 +70,7 @@ const SubjectTable = ({
           status: formData.status,
           description: (formData.subjects || []).map((s) => s.description),
           isSubjectOpen: false,
-          subjectType: formData.subjectType && 1,
+          subjectType: SubjectType[formData.subjectType],
           subject: formData.subjectName,
         });
       }
@@ -104,7 +106,7 @@ const SubjectTable = ({
         tableId="subject-table"
         noDataText={
           <>
-            No Subject Found{' '}
+            No Subject data found
             <Box
               onClick={() => {
                 addSubjectDialog.onTrue();
@@ -133,11 +135,6 @@ const SubjectTable = ({
             minWidth: 130,
             enumOptions: SubjectTypeOptions,
             sticky: true,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {SubjectType[value]}
-              </Typography>
-            ),
           },
           {
             id: 'subjectName',

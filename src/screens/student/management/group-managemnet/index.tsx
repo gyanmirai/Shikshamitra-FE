@@ -38,12 +38,12 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
@@ -910,7 +910,7 @@ const AssignStudentForm = ({
     // Validation schema for form fields
     validationSchema: Yup.object({
       house: Yup.object({
-        id: Yup.string().required('please select a house'),
+        id: Yup.string().required('Please select a house'),
       }),
     }),
     /**
@@ -936,33 +936,35 @@ const AssignStudentForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Stack spacing={2} p={2}>
-        <Autocomplete
-          noOptionsText="No House Found"
-          fullWidth
-          loading={isGetGroupLoading}
-          value={formik.values.house}
-          onChange={(_, val) => formik.setFieldValue('house', val)}
-          renderOption={(props, option: any) => (
-            <li {...props} key={option.id}>
-              {option?.name}
-            </li>
-          )}
-          options={groupData?.items || []}
-          getOptionLabel={(option: any) => `${option?.name}`}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              fullWidth
-              size="small"
-              label="Search House"
-              error={formik.touched.house && Boolean(formik.errors.house?.id)}
-              helperText={formik.touched.house && formik.errors.house?.id}
-            />
-          )}
-        />
-      </Stack>
+    <Box>
+      <DialogScrollContent>
+        <Stack p={0}>
+          <Autocomplete
+            noOptionsText="No House Found"
+            fullWidth
+            loading={isGetGroupLoading}
+            value={formik.values.house}
+            onChange={(_, val) => formik.setFieldValue('house', val)}
+            renderOption={(props, option: any) => (
+              <li {...props} key={option.id}>
+                {option?.name}
+              </li>
+            )}
+            options={groupData?.items || []}
+            getOptionLabel={(option: any) => `${option?.name}`}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                fullWidth
+                size="small"
+                label="Search House"
+                error={formik.touched.house && Boolean(formik.errors.house?.id)}
+                helperText={formik.touched.house && formik.errors.house?.id}
+              />
+            )}
+          />
+        </Stack>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -977,6 +979,9 @@ const AssignStudentForm = ({
           type="submit"
           variant="contained"
           loading={isLoading}
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
           startIcon={<Iconify icon="mdi:account-plus" width={18} />}
         >
           assign

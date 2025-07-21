@@ -1198,9 +1198,7 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
           variant="contained"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={async () => {
-            onClose();
-          }}
+          onClick={(e: any) => {}}
         >
           Save
         </Button>
@@ -1434,43 +1432,48 @@ const AssignDivisionForm = ({
     },
   });
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'Background.neutral',
-          gap: 2,
-        }}
-      >
-        <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
-        <CustomSelect
-          autoFocus
-          options={standard?.divisions || []}
-          value={formik.values.division}
-          onChange={(val) => formik.setFieldValue('division', val)}
-          label="Division *"
-          valueKey="id"
-          labelKey="name"
-          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          error={formik.touched.division && Boolean(formik.errors.division)}
-          helperText={(formik.touched.division && formik.errors.division) as string}
-        />
-      </Box>
+    <>
+      <DialogScrollContent>
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'Background.neutral',
+            gap: 2,
+          }}
+        >
+          <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
+          <CustomSelect
+            autoFocus
+            options={standard?.divisions || []}
+            value={formik.values.division}
+            onChange={(val) => formik.setFieldValue('division', val)}
+            label="Division *"
+            valueKey="id"
+            labelKey="name"
+            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            error={formik.touched.division && Boolean(formik.errors.division)}
+            helperText={(formik.touched.division && formik.errors.division) as string}
+          />
+        </Box>
+      </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
         <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.assigned} />}
           loading={isLoading}
           type="submit"
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
           variant="contained"
           size="small"
         >
           Assign
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };
 
@@ -1536,8 +1539,8 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
   };
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
+    <>
+      <DialogScrollContent>
         <CustomSelect
           options={[
             { label: 'Approved', value: RegistrationStatusType.Approved },
@@ -1551,11 +1554,16 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
           label="Status"
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
-      </Box>
+      </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
-        <SubmitButton loading={isLoading} />
+        <SubmitButton
+          loading={isLoading}
+          onClick={() => {
+            formik.handleSubmit();
+          }}
+        />
       </DialogActions>
-    </Box>
+    </>
   );
 };
