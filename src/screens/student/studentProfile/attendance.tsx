@@ -40,7 +40,7 @@ type DotProps = {
   children?: React.ReactNode;
 };
 
-const Dot: React.FC<DotProps> = ({
+export const Dot: React.FC<DotProps> = ({
   sx = {},
   color = 'primary.main',
   children = null,

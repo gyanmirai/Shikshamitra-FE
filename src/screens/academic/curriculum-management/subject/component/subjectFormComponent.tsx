@@ -298,7 +298,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         id: data?.id || Date.now(),
         status: isDraft ? 'Draft' : 'Publish',
       };
-      if (isDraft) {
+      if (data) {
+        shikshaMitraToast.success({
+          message: `${values.subjectName} updated successfully for class ${values.className}`,
+        });
+      } else if (isDraft) {
         shikshaMitraToast.success({
           message: `${values.subjectName} save as draft successfully for class ${values.className}`,
         });
@@ -576,7 +580,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       index={index}
                       formik={formik}
                       subject={subject}
-                      isCore={formik.values.subjectType === 'Core'}
+                      isCore={formik.values.subjectType === 0}
                       isPublished={isPublished}
                       teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}

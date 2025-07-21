@@ -209,7 +209,7 @@ const LectureSlots = ({ addLectureSlotDialog, isEdit, setIsEdit }: any) => {
               {
                 id: 7,
                 startTime: dayjs('2025-07-05T12:00'),
-                endTime: dayjs('2024-01-01T12:30'),
+                endTime: dayjs('2025-07-05T12:30'),
                 slotType: 'period',
               },
             ],
@@ -313,12 +313,6 @@ const LectureSlots = ({ addLectureSlotDialog, isEdit, setIsEdit }: any) => {
                 id: 7,
                 startTime: dayjs('2025-07-05T12:00'),
                 endTime: dayjs('2025-07-05T12:40'),
-                slotType: 'period',
-              },
-              {
-                id: 8,
-                startTime: dayjs('2025-07-05T12:40'),
-                endTime: dayjs('2024-01-01T12:30'),
                 slotType: 'period',
               },
             ],

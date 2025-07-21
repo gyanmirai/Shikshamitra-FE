@@ -1,5 +1,7 @@
 import React from 'react';
 
-const page = () => <div>dashboard</div>;
+import ClassManagementDashboard from 'src/screens/classManagement/dashboard';
+
+const page = () => <ClassManagementDashboard />;
 
 export default page;

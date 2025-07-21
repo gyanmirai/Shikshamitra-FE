@@ -2,6 +2,8 @@ import type { ICardItem } from 'src/screens/student/enrollment/entrollment-inter
 
 import React, { useState } from 'react';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
 
 import CustomizableView from 'src/components/customizable-view';
@@ -12,7 +14,7 @@ const Overview = () => {
       id: '0',
       icon: 'mdi:user-tick-outline', // Students Present
       title: 'Students Present Today',
-      count: 1247,
+      count: fNumber(1247),
       color: 'success.main',
       bgColor: 'success',
       href: '/student/attendance/take-attendance/',
@@ -23,7 +25,7 @@ const Overview = () => {
       id: '1',
       icon: 'ci:user-remove', // Students Absent
       title: 'Students Absent Today',
-      count: 1189,
+      count: fNumber(1189),
       color: 'info.main',
       bgColor: 'info',
       href: '/student/attendance/take-attendance/',
@@ -34,7 +36,7 @@ const Overview = () => {
       id: '2',
       icon: 'mdi:clock-outline', // Pending Leave Requests
       title: 'Pending Leave Requests',
-      count: 1203,
+      count: fNumber(1203),
       color: 'warning.main',
       bgColor: 'warning',
       href: '/student/attendance/leave-absent/',

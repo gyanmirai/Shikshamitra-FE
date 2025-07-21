@@ -124,7 +124,13 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
               tableId="course-progress-table"
               noDataText={<>No Chapters Found For This Course Found </>}
               columns={[
-                { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+                {
+                  id: 'chapterNumber',
+                  label: 'Chapter No.',
+                  align: 'left',
+                  minWidth: 120,
+                  filterType: 'number',
+                },
                 { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
                 {
                   id: 'startDate',

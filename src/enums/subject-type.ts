@@ -6,11 +6,11 @@ export enum SubjectType {
 export const SubjectTypeOptions = [
   {
     label: 'Core',
-    value: SubjectType.Core,
+    value: SubjectType[0],
   },
   {
     label: 'Elective',
-    value: SubjectType.Elective,
+    value: SubjectType[1],
   },
 ];
 

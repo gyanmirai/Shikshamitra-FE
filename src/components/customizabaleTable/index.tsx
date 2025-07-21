@@ -626,7 +626,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   <TextField
                     fullWidth
                     size="small"
-                    placeholder="Search columns"
+                    label="Search columns"
                     value={columnSearchTerm}
                     onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
                     sx={{ mb: 2, flexShrink: '0', background: 'white', zIndex: '1' }}
@@ -1321,7 +1321,11 @@ const ColumnFilterMenu: React.FC<{
               fullWidth
               size="small"
               value={formik.values.filterValue as string}
-              onChange={(e) => formik.setFieldValue('filterValue', e.target.value)}
+              onChange={(e) => {
+                // Remove special characters using regex
+                const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                formik.setFieldValue('filterValue', sanitizedValue);
+              }}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
               label={`${anchorEl?.column.label} *`}
               error={formik.touched.filterValue && Boolean(formik.errors.filterValue)}

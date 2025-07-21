@@ -51,11 +51,11 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -232,149 +232,133 @@ export const CommunicationForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar
-        sx={{
-          // bgcolor: 'background.neutral',
-
-          position: 'relative',
-          height: '350px',
-          p: 2,
-        }}
-      >
-        {isLoading ? (
-          <Box className="loader" />
-        ) : (
-          <Timeline>
-            {data?.followUps?.length ? (
-              data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
-                <TimelineItem key={index}>
-                  <TimelineOppositeContent>
-                    <Typography sx={{ color: 'text.primary' }}>
-                      {dayjs(item?.timestamp).format('DD-MM-YYYY')}
-                    </Typography>
-                    <Typography sx={{ color: 'text.secondary' }}>
-                      {item?.author
-                        ? item.author.charAt(0).toUpperCase() + item.author.slice(1)
-                        : ''}
-                    </Typography>
-                  </TimelineOppositeContent>
-                  <TimelineSeparator>
-                    <TimelineDot color="primary" />
-                    {data?.followUps.length === index ? null : <TimelineConnector />}
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    <Paper
-                      sx={{
-                        p: 2,
-                        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
-                      }}
-                    >
-                      <Typography> {item?.message}</Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Reminder Date : {dayjs(item.dueDate).format('DD-MM-YYYY')}
-                      </Typography>
-                    </Paper>
-                  </TimelineContent>
-                </TimelineItem>
-              ))
-            ) : (
-              <EmptyContent title="No Notes history yet." />
-            )}
-          </Timeline>
-          // data?.followUps?.map((followUp: IFollowUpResponse['followUps'][0], index: number) => (
-          //   <Box key={index} py={1} borderBottom={1} borderColor="divider">
-          //     <Box display="flex" alignItems="center" gap={1}>
-          //       <Avatar />
-          //       <Box display="flex" flexDirection="column">
-          //         <Typography variant="subtitle1">{followUp?.author}</Typography>
-          //         <Typography component="span" variant="subtitle2" color="text.secondary">
-          //           {dayjs(followUp?.timestamp).format('DD-MM-YYYY')}
-          //         </Typography>
-          //       </Box>
-          //     </Box>
-          //     <Typography variant="body2" sx={{ mt: 1 }}>
-          //       {followUp?.message}
-          //     </Typography>
-          //   </Box>
-          // ))
-        )}
-      </Scrollbar>
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3,
-          flexDirection: 'column',
-        }}
-      >
-        <TextField
-          fullWidth
-          // sx={{ marginBottom: '10px' }}
-          variant="outlined"
-          label="Notes *"
-          size="small"
-          value={formik.values.msg}
-          name="msg"
-          onChange={formik.handleChange}
-          multiline
-          rows={2}
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              formik.handleSubmit();
-            }
-          }}
-          error={!!formik.errors.msg && formik.touched.msg}
-          helperText={formik.touched.msg && formik.errors.msg}
-        />
-        <Box
+    <Box>
+      <DialogScrollContent sx={{ p: 0 }}>
+        <Scrollbar
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            width: '100%',
+            // bgcolor: 'background.neutral',
+
+            position: 'relative',
+            height: '350px',
           }}
         >
-          <DatePicker
-            label="Next Reminder Date *"
-            format="DD/MM/YYYY"
-            value={formik.values.dueDate}
-            onChange={(newValue) => {
-              formik.setFieldValue('dueDate', newValue);
-            }}
-            minDate={dayjs()}
-            sx={{ minWidth: 180, width: '100%' }}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-                // placeholder: 'Select Start Date',
-                error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
-                helperText: formik.touched.dueDate && formik.errors.dueDate,
-              },
-            }}
-          />
-
-          {isStatus && (
-            <CustomSelect
-              options={FollowUpStatusTypeOptions}
-              value={formik.values.status}
-              isLoading={isLoading}
-              sx={{ minWidth: 200, flex: 1 }}
-              onChange={(newValue) => {
-                formik.setFieldValue('status', newValue);
-              }}
-              size="small"
-              label="Status"
-            />
+          {isLoading ? (
+            <Box className="loader" />
+          ) : (
+            <Timeline>
+              {data?.followUps?.length ? (
+                data?.followUps?.map((item: IFollowUpResponse['followUps'][0], index: number) => (
+                  <TimelineItem key={index}>
+                    <TimelineOppositeContent>
+                      <Typography sx={{ color: 'text.primary' }}>
+                        {dayjs(item?.timestamp).format('DD-MM-YYYY')}
+                      </Typography>
+                      <Typography sx={{ color: 'text.secondary' }}>
+                        {item?.author
+                          ? item.author.charAt(0).toUpperCase() + item.author.slice(1)
+                          : ''}
+                      </Typography>
+                    </TimelineOppositeContent>
+                    <TimelineSeparator>
+                      <TimelineDot color="primary" />
+                      {data?.followUps.length === index ? null : <TimelineConnector />}
+                    </TimelineSeparator>
+                    <TimelineContent>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                        }}
+                      >
+                        <Typography> {item?.message}</Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          Reminder Date : {dayjs(item.dueDate).format('DD-MM-YYYY')}
+                        </Typography>
+                      </Paper>
+                    </TimelineContent>
+                  </TimelineItem>
+                ))
+              ) : (
+                <EmptyContent title="No Notes history yet." />
+              )}
+            </Timeline>
           )}
-        </Box>
-      </Box>
+        </Scrollbar>
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            flexDirection: 'column',
+          }}
+        >
+          <TextField
+            fullWidth
+            // sx={{ marginBottom: '10px' }}
+            variant="outlined"
+            label="Notes *"
+            size="small"
+            value={formik.values.msg}
+            name="msg"
+            onChange={formik.handleChange}
+            multiline
+            rows={2}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                formik.handleSubmit();
+              }
+            }}
+            error={!!formik.errors.msg && formik.touched.msg}
+            helperText={formik.touched.msg && formik.errors.msg}
+          />
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              width: '100%',
+            }}
+          >
+            <DatePicker
+              label="Next Reminder Date *"
+              format="DD/MM/YYYY"
+              value={formik.values.dueDate}
+              onChange={(newValue) => {
+                formik.setFieldValue('dueDate', newValue);
+              }}
+              minDate={dayjs()}
+              sx={{ minWidth: 180, width: '100%' }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  size: 'small',
+                  // placeholder: 'Select Start Date',
+                  error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
+                  helperText: formik.touched.dueDate && formik.errors.dueDate,
+                },
+              }}
+            />
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            {isStatus && (
+              <CustomSelect
+                options={FollowUpStatusTypeOptions}
+                value={formik.values.status}
+                isLoading={isLoading}
+                sx={{ minWidth: 200, flex: 1 }}
+                onChange={(newValue) => {
+                  formik.setFieldValue('status', newValue);
+                }}
+                size="small"
+                label="Status"
+              />
+            )}
+          </Box>
+        </Box>
+      </DialogScrollContent>
+      <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleCloseDialog}
@@ -386,6 +370,7 @@ export const CommunicationForm = ({
         <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isAddLoading}
+          onClick={(e: any) => formik.handleSubmit(e)}
           type="submit"
           variant="contained"
           size="small"

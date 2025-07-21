@@ -134,7 +134,7 @@ const Subject = (props: TabComponentType) => {
                   })
                   .join(' , ')}
               </strong>{' '}
-              removed successfully!
+              removed successfully.
             </>
           ) : (
             <>
@@ -142,7 +142,7 @@ const Subject = (props: TabComponentType) => {
               <strong>
                 {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
               </strong>{' '}
-              removed successfully!
+              removed successfully.
             </>
           ),
       });
@@ -155,7 +155,11 @@ const Subject = (props: TabComponentType) => {
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
           heading="Subject Assignment"
-          description="Create and manage subject assignments by entering key details, mapping them to the curriculum, assigning teachers, and configuring assessment criteria for effective academic delivery."
+          description={
+            selectedSubject
+              ? 'Update and modify existing subject assignments by revising key details, curriculum mappings, teacher assignments, and assessment criteria for improved academic delivery.'
+              : 'Create and manage subject assignments by entering key details, mapping them to the curriculum, assigning teachers, and configuring assessment criteria for effective academic delivery.'
+          }
           isBack
           onBack={() => {
             handleClose(null, false);
@@ -323,9 +327,12 @@ const Subject = (props: TabComponentType) => {
       {/* Publish confirmation dialog */}
       <ConfirmDialog
         open={confirmPublishDialog.value}
+        icon={selectedSubject?.status === 0 ? 'warning' : 'success'}
         onClose={() => {
-          setSelectedSubject(null);
           confirmPublishDialog.onFalse();
+          setTimeout(() => {
+            setSelectedSubject(null);
+          }, 200); // Adjust the delay based on your dialog transition duration
         }}
         title={selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
         content={
@@ -376,7 +383,7 @@ const Subject = (props: TabComponentType) => {
                           })
                           .join(' , ')}
                       </strong>{' '}
-                      move to {status} successfully!
+                      move to {status} successfully.
                     </>
                   ) : (
                     <>
@@ -384,7 +391,7 @@ const Subject = (props: TabComponentType) => {
                       <strong>
                         {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
                       </strong>{' '}
-                      move to {status} successfully!
+                      move to {status} successfully.
                     </>
                   ),
               });
