@@ -349,10 +349,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               {/* Description */}
               <Grid item xs={12}>
                 <ShakingTextField
-                  error={
-                    !!(formik.touched.description && formik.errors.description) ||
-                    !!formik.errors.description
-                  }
+                  error={!!(formik.touched.description && formik.errors.description) || false}
                 >
                   <Editor
                     value={formik.values.description}
@@ -455,12 +452,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           maxDate={dayjs(currentYear?.endDate)}
                           value={div.dueDate ? dayjs(div.dueDate) : null}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
-                          minDateTime={dayjs()} // Prevent selecting dates before today
+                          minDateTime={dayjs()}
+                          disabled={!div.publishDate}
                           ampm={false}
                           slotProps={{
-                            // popper: {
-                            //   disablePortal: true, // <-- correct place
-                            // },
                             popper: {
                               placement: 'top-start',
                               sx: { zIndex: 1300 },
