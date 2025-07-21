@@ -16,10 +16,10 @@ const HouseDistribution = () => (
     title="House Distribution"
     chart={{
       series: [
-        { label: `Green House (142)`, value: 142 },
-        { label: `Blue House (138)`, value: 138 },
-        { label: `Red House (145)`, value: 145 },
-        { label: `Yellow House (135)`, value: 135 },
+        { label: 'Green House', value: 142 },
+        { label: 'Blue House', value: 138 },
+        { label: 'Red House', value: 145 },
+        { label: 'Yellow House', value: 135 },
       ],
       colors: [
         '#4caf50', // Green

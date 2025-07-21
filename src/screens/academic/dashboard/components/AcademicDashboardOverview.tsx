@@ -8,6 +8,8 @@ import { useState } from 'react';
 
 import { Box, Card, Typography } from '@mui/material';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableView from 'src/components/customizable-view';
@@ -72,7 +74,7 @@ const AcademicDashboardOverview = () => {
       id: '0',
       icon: 'hugeicons:book-edit',
       title: 'Total Subjects',
-      count: 20,
+      count: fNumber(20),
       color: 'success.main',
       bgColor: 'success',
       href: '/subjects',
@@ -86,7 +88,7 @@ const AcademicDashboardOverview = () => {
       id: '1',
       icon: 'healthicons:i-exam-qualification-outline',
       title: 'Total Exams',
-      count: 20,
+      count: fNumber(20),
       color: 'info.main',
       bgColor: 'info',
       href: '/exams',
@@ -100,7 +102,7 @@ const AcademicDashboardOverview = () => {
       id: '2',
       icon: 'fluent-emoji-high-contrast:page-with-curl',
       title: 'Total Assignment',
-      count: 20,
+      count: fNumber(20),
       color: 'secondary.main',
       bgColor: 'secondary',
       href: '/assignments',
@@ -114,7 +116,7 @@ const AcademicDashboardOverview = () => {
       id: '3',
       icon: 'streamline-freehand:book-flip-page',
       title: 'Total Homework',
-      count: 20,
+      count: fNumber(20),
       color: 'info.main',
       bgColor: 'info',
       href: '/homework',
@@ -128,7 +130,7 @@ const AcademicDashboardOverview = () => {
       id: '4',
       icon: 'hugeicons:quiz-05',
       title: 'Total Quiz',
-      count: 20,
+      count: fNumber(20),
       color: 'success.main',
       bgColor: 'success',
       href: '/quiz',
@@ -142,7 +144,7 @@ const AcademicDashboardOverview = () => {
       id: '5',
       icon: 'ion:document',
       title: 'Total Learning Resources',
-      count: 10000,
+      count: fNumber(10000),
       color: 'warning.main',
       bgColor: 'warning',
       href: '/resources',

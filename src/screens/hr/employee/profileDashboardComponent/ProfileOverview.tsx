@@ -2,6 +2,8 @@ import type { ICardItem } from 'src/screens/student/enrollment/entrollment-inter
 
 import { useState } from 'react';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
 
 import CustomizableView from 'src/components/customizable-view';
@@ -13,7 +15,7 @@ const EmployeeProfileOverview = () => {
       id: 'class-handle',
       icon: 'icon-park-outline:classroom', // adjust this icon as per your library
       title: 'Class Handle',
-      count: '08',
+      count: fNumber(8),
       color: 'success.main',
       bgColor: 'success',
       href: '', // add if you want it clickable
@@ -35,7 +37,7 @@ const EmployeeProfileOverview = () => {
       id: 'leave-taken',
       icon: 'solar:clock-bold', // match the clock icon shown in your screenshot
       title: 'Leave Taken',
-      count: '03',
+      count: fNumber(3),
       color: 'warning.main',
       bgColor: 'warning',
       href: '',

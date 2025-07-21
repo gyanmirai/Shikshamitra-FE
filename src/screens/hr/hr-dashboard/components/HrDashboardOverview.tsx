@@ -8,6 +8,8 @@ import { useState } from 'react';
 
 import { Box, Card, Typography } from '@mui/material';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomizableView from 'src/components/customizable-view';
@@ -71,7 +73,7 @@ const HRDashboardOverview = () => {
       id: '6',
       icon: 'mdi:account-group-outline',
       title: 'Total Employees',
-      count: 156,
+      count: fNumber(156),
       color: 'success.main',
       bgColor: 'success',
       href: '/staff/employees',
@@ -82,7 +84,7 @@ const HRDashboardOverview = () => {
       id: '7',
       icon: 'icon-park-outline:setting-config',
       title: 'Teaching Staff',
-      count: 89,
+      count: fNumber(89),
       color: 'info.main',
       bgColor: 'info',
       href: '/staff/teaching',
@@ -93,7 +95,7 @@ const HRDashboardOverview = () => {
       id: '8',
       icon: 'fluent:settings-32-filled',
       title: 'Non-Teaching Staff',
-      count: 67,
+      count: fNumber(67),
       color: 'warning.main',
       bgColor: 'warning',
       href: '/staff/non-teaching',

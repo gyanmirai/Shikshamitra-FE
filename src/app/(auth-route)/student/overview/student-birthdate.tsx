@@ -23,7 +23,7 @@ const BirthdaySection = ({ todaysBirthdays, upcomingBirthdays, title }: any) => 
             {title}
           </Typography>
         </Box>
-        <Scrollbar sx={{ height: '300px' }}>
+        <Scrollbar sx={{ height: '400px' }}>
           <Box
             sx={{
               width: '100%',

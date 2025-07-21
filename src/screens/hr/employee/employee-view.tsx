@@ -96,7 +96,7 @@ interface EmployeeViewProps {
 }
 
 export function EmployeeCard({ employee }: any) {
-  const tabs = useTabs('personalInformation');
+  const tabs = useTabs('dashboard');
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
