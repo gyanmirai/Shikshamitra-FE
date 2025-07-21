@@ -196,7 +196,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // const updated = [...examSchedules];
                   // updated[row.id].endTime = newTime;
                   formik.setFieldValue(`subjects.${row.id}.endTime`, newTime);
-                  formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.endTime`,false);
                   // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
                   // // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);

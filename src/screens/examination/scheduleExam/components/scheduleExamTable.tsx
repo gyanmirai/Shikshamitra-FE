@@ -195,7 +195,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             id: 'className',
             label: 'Class',
             align: 'left',
-            filterType: 'number',
+            filterType:'number',
             children: (row): React.ReactNode => (
               <ViewTimetableComp examData={row as IExamFormValues} />
             ),

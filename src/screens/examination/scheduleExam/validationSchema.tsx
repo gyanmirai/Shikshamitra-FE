@@ -11,7 +11,7 @@ export const validationSchema = [
     subjects: yup
       .array()
       .required('Subjects is required')
-      .min(1, 'At least one subject is required'),
+      .min(1, 'At least one subject is required')
   }),
 
   // Step 1: Exam Details - Enhanced validation
