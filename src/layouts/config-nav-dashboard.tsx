@@ -651,8 +651,6 @@ const classManagementModule = {
           _action: 'dashboard',
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
-          disabled: true,
-          caption: 'Coming Soon',
         },
         {
           title: 'Student Elective Assignment',
