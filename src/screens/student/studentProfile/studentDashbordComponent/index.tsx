@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { fNumber } from 'src/utils/format-number';
+
 import CustomizableView from 'src/components/customizable-view';
 
 import { StudentEnrollmentCard } from '../../enrollment/dashboard/overview';
@@ -39,18 +41,18 @@ const Overview = () => {
       id: 'fee-status',
       icon: 'streamline-plump:payment-recieve-7-remix',
       title: 'Fee Status',
-      count: '10,000',
+      count: fNumber(10000),
       color: 'success.main',
       bgColor: 'success',
       href: '/fees',
       width: 4,
       labels: [
         {
-          name: 'Paid: ₹1,000',
+          name: `Paid: ₹${fNumber(1000)}`,
           color: 'success',
         },
         {
-          name: 'Pending: ₹1,000',
+          name: `Pending: ₹${fNumber(1000)}`,
           color: 'warning',
         },
       ],
@@ -59,18 +61,18 @@ const Overview = () => {
       id: 'document',
       icon: 'ion:document',
       title: 'Document',
-      count: '08',
+      count: fNumber(8),
       color: 'warning.main',
       bgColor: 'warning',
       href: '/documents',
       width: 6,
       labels: [
         {
-          name: 'Uploaded: 05',
+          name: `Uploaded: ${fNumber(5)}`,
           color: 'success',
         },
         {
-          name: 'Pending: 03',
+          name: `Pending: ${fNumber(3)}`,
           color: 'warning',
         },
       ],

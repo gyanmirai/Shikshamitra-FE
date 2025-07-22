@@ -2,6 +2,8 @@ import type { ICardItem } from 'src/screens/student/enrollment/entrollment-inter
 
 import React, { useState } from 'react';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
 
 import CustomizableView from 'src/components/customizable-view';
@@ -12,7 +14,7 @@ const Overview = () => {
       id: '0',
       icon: 'mdi:users', // Total Students
       title: 'Total Students',
-      count: 1247,
+      count: fNumber(1247),
       color: 'success.main',
       bgColor: 'success',
       href: '/student/profile',
@@ -23,7 +25,7 @@ const Overview = () => {
       id: '1',
       icon: 'lucide:badge-check', // GR Numbers Generated
       title: 'GR Numbers Generated',
-      count: 1189,
+      count: fNumber(1189),
       color: 'info.main',
       bgColor: 'info',
       href: '/student/management/?tab=grGeneration',
@@ -34,7 +36,7 @@ const Overview = () => {
       id: '2',
       icon: 'heroicons:identification', // Roll Numbers Generated
       title: 'Roll Numbers Generated',
-      count: 1203,
+      count: fNumber(1203),
       color: 'warning.main',
       bgColor: 'warning',
       href: '/student/management/?tab=rollGeneration',
@@ -45,7 +47,7 @@ const Overview = () => {
       id: '3',
       icon: 'solar:transfer-horizontal-bold-duotone', // Division Change
       title: 'Division Change',
-      count: 47,
+      count: fNumber(47),
       color: 'info.main',
       bgColor: 'info',
       href: '/student/management/?tab=changeDivision',
@@ -56,7 +58,7 @@ const Overview = () => {
       id: '4',
       icon: 'solar:transfer-horizontal-broken', // Class Change This Term
       title: 'Class Change This Term',
-      count: 23,
+      count: fNumber(23),
       color: 'error.main',
       bgColor: 'error',
       href: '/student/enrollment/class-change',
@@ -67,7 +69,7 @@ const Overview = () => {
       id: '5',
       icon: 'tdesign:certificate-1', // Add New Card
       title: 'Certificates Generated',
-      count: 120,
+      count: fNumber(120),
       color: 'success.main',
       bgColor: 'success',
       href: '/student/certificates/?tab=bonafiedCertificates',
