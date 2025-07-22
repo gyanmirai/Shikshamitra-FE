@@ -558,6 +558,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                           minDateTime={dayjs()} // Prevent selecting dates before today
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
+                          disabled={!div.publishDate}
                           slotProps={{
                             popper: {
                               placement: 'top-start',
