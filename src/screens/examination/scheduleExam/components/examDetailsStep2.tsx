@@ -73,7 +73,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // const updated = [...examSchedules];
                   // updated[row.id].examDate = newTime;
                   formik.setFieldValue(`subjects.${row.id}.examDate`, newTime);
-                  // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
@@ -135,6 +135,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // updated[row.id].startTime = newTime;
                   // formik.setFieldValue('subjects', updated);
                   formik.setFieldValue(`subjects.${row.id}.startTime`, newTime);
+                  formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
@@ -195,6 +196,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // const updated = [...examSchedules];
                   // updated[row.id].endTime = newTime;
                   formik.setFieldValue(`subjects.${row.id}.endTime`, newTime);
+                  formik.setFieldTouched(`subjects.${row.id}.endTime`,false);
                   // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
                   // // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
@@ -260,7 +262,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
-                  // // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
                   // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 onKeyDown={(e) => {
@@ -326,11 +328,11 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   // updated[row.id].passingMarks = e.target.value;
                   // formik.setFieldValue('subjects', updated);
                   formik.setFieldValue(`subjects.${row.id}.passingMarks`, e.target.value);
-                  formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
-                  formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
-                  formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
-                  formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
-                  // formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.examDate`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.startTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.endTime`, false);
+                  // formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false);
+                  formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false);
                 }}
                 size="small"
                 error={

@@ -102,6 +102,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   // Remove everything except letters and spaces
                   .replace(/[^a-zA-Z0-9\s]/g, '');
                 formik.setFieldValue('examName', value);
+                formik.setFieldTouched(`examName`, false);
               }}
               // onChange={formik.handleChange}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
@@ -121,6 +122,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               value={formik.values.examType}
               onChange={(val) => {
                 formik.setFieldValue('examType', val);
+                formik.setFieldTouched(`examType`, false);
               }}
               label="Exam Type *"
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -168,6 +170,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               options={allClass}
               onChange={(val) => {
                 formik.setFieldValue('className', val as string);
+                formik.setFieldTouched(`className`, false);
               }}
               label="Class *"
               labelKey="name"
@@ -239,6 +242,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     formik.setFieldValue('divisions', selectedWithoutAll);
                   }
                 }
+                formik.setFieldTouched(`divisions`, false);
               }}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.divisions && formik.errors.divisions)}
@@ -311,7 +315,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 } else if (!isAllSelected && wasAllPreviouslySelected) {
                   updatedSubjects = [];
                 } else {
-                  // 🔁 Handle individual selections (excluding 'all')
                   updatedSubjects = selectedCodes
                     .filter((code) => code !== 'all')
                     .map((code, index) => {
@@ -331,6 +334,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 }
 
                 formik.setFieldValue('subjects', updatedSubjects);
+                formik.setFieldTouched(`subjects`, false);
               }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={

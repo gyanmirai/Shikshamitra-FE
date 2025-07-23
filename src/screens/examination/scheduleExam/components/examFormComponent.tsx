@@ -32,7 +32,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
-      validateOnChange
+      validateOnChange={false}
       validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
       // validationSchema={yup.object().shape({})}
       handleNext={(isLastStep, _values) => {

@@ -11,7 +11,7 @@ export const validationSchema = [
     subjects: yup
       .array()
       .required('Subjects is required')
-      .min(1, 'At least one subject is required'),
+      .min(1, 'At least one subject is required')
   }),
 
   // Step 1: Exam Details - Enhanced validation
@@ -133,7 +133,14 @@ export const validationSchema = [
             }),
         })
       )
-      .required('At least one subject is required'),
+      .required('At least one subject is required')
+      .test('Fill the second field details', (value) => {
+        if (!value || value.length === 0) return true;
+        return value.every(
+          (div) =>
+            div.examDate && div.startTime && div.endTime && div.totalMarks && div.passingMarks
+        );
+      }),
   }),
 
   // Step 2: Additional validation (if needed)
