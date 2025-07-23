@@ -119,7 +119,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                   <IconButton
                     edge="end"
                     aria-label="preview"
-                    onClick={() => handleDownload(document)}
+                    // onClick={() => handleDownload(document)}
                   >
                     <Iconify icon={GlobalIcons.eye} />
                   </IconButton>

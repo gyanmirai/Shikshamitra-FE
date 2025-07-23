@@ -57,87 +57,87 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
   return (
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '500px' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Box display="flex" gap={2}>
-                  <Typography variant="body2">
-                    <strong>Name : </strong>
-                    {data?.studentName}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Roll No : </strong>
-                    {data?.rollNumber}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} mb={-2}>
-                <Typography variant="subtitle2">Student Submission</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Card
-                  key={document.id}
-                  sx={{
-                    p: 2,
+        {/* <form onSubmit={formik.handleSubmit}> */}
+        <Scrollbar sx={{ p: 2, height: '500px' }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Box display="flex" gap={2}>
+                <Typography variant="body2">
+                  <strong>Name : </strong>
+                  {data?.studentName}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Roll No : </strong>
+                  {data?.rollNumber}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} mb={-2}>
+              <Typography variant="subtitle2">Student Submission</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Card
+                key={document.id}
+                sx={{
+                  p: 2,
 
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    '&:hover': { bgcolor: 'action.hover' },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {getFileIconByType(document.type ?? 'txt', 32)}
-                    <Box>
-                      <Typography variant="subtitle2">{document.name}</Typography>
-                      {document.size && (
-                        <Typography variant="body2" color="text.secondary">
-                          {document.size}
-                        </Typography>
-                      )}
-                    </Box>
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {getFileIconByType(document.type ?? 'txt', 32)}
+                  <Box>
+                    <Typography variant="subtitle2">{document.name}</Typography>
+                    {document.size && (
+                      <Typography variant="body2" color="text.secondary">
+                        {document.size}
+                      </Typography>
+                    )}
                   </Box>
+                </Box>
 
-                  <Tooltip title="Preview">
-                    <IconButton
-                      edge="end"
-                      aria-label="preview"
-                      onClick={() => handleDownload(document)}
-                    >
-                      <Iconify icon={GlobalIcons.eye} />
-                    </IconButton>
-                  </Tooltip>
-                </Card>
-              </Grid>
+                <Tooltip title="Preview">
+                  <IconButton
+                    edge="end"
+                    aria-label="preview"
+                    onClick={() => handleDownload(document)}
+                  >
+                    <Iconify icon={GlobalIcons.eye} />
+                  </IconButton>
+                </Tooltip>
+              </Card>
+            </Grid>
 
-              <Grid item xs={12} mb={-2}>
-                <Typography variant="subtitle2">Description</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Box
+            <Grid item xs={12} mb={-2}>
+              <Typography variant="subtitle2">Description</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 1,
+                  p: 2,
+                  bgcolor: '#fafafa',
+                  minHeight: '100px',
+                  maxHeight: '200px',
+                  overflow: 'auto',
+                }}
+              >
+                <Typography
+                  component="pre"
                   sx={{
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 1,
-                    p: 2,
-                    bgcolor: '#fafafa',
-                    minHeight: '100px',
-                    maxHeight: '200px',
-                    overflow: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    m: 0,
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
                   }}
                 >
-                  <Typography
-                    component="pre"
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      m: 0,
-                      fontSize: '0.875rem',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {`Homework Assignment: Science Fundamentals
+                  {`Homework Assignment: Science Fundamentals
 
 Due Date: Friday, March 15th, 2024
 Instructions: Write detailed explanations for the following scientific facts.
@@ -149,62 +149,60 @@ Questions:
 
 Additional Notes:
 I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12}>
-                <ShakingTextField
-                  error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-                >
-                  <TextField
-                    // placeholder="Enter Feedback"
-                    label="Feedback *"
-                    multiline
-                    size="small"
-                    disabled={!isEdit}
-                    rows={3}
-                    fullWidth
-                    name="feedback"
-                    value={formik.values.feedback}
-                    onChange={formik.handleChange}
-                    error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                    helperText={formik.touched.feedback && formik.errors.feedback}
-                  />
-                </ShakingTextField>
-              </Grid>
+                </Typography>
+              </Box>
             </Grid>
-          </Scrollbar>
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                onClose(null, false);
-              }}
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              type="submit"
-              size="small"
-              onClick={() => {
-                formik.handleSubmit();
-              }}
-              startIcon={
-                <Iconify
-                  icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
-                  width={data?.feedback ? 16 : 20}
-                  height={data?.feedback ? 16 : 20}
+
+            <Grid item xs={12}>
+              <ShakingTextField
+                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+              >
+                <TextField
+                  // placeholder="Enter Feedback"
+                  label="Feedback *"
+                  multiline
+                  size="small"
+                  disabled={!isEdit}
+                  rows={3}
+                  fullWidth
+                  name="feedback"
+                  value={formik.values.feedback}
+                  onChange={formik.handleChange}
+                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                  helperText={formik.touched.feedback && formik.errors.feedback}
                 />
-              }
-            >
-              {data?.feedback ? 'Update' : 'Submit'}
-            </Button>
-          </DialogActions>
-        </form>
+              </ShakingTextField>
+            </Grid>
+          </Grid>
+        </Scrollbar>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              onClose(null, false);
+            }}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            type="submit"
+            size="small"
+            onClick={(e: any) => formik.handleSubmit(e)}
+            startIcon={
+              <Iconify
+                icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
+                width={data?.feedback ? 16 : 20}
+                height={data?.feedback ? 16 : 20}
+              />
+            }
+          >
+            {data?.feedback ? 'Update' : 'Submit'}
+          </Button>
+        </DialogActions>
+        {/* </form> */}
       </BackPopUpChecked>
     </Box>
   );

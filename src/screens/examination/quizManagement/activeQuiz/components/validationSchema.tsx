@@ -37,6 +37,7 @@ export const stepValidationSchemas = [
     division: yup.array().of(yup.string()).min(1, 'At least one Division is required'),
     subject: yup.string().required('Subject is required'),
     chapter: yup.array().of(yup.string()).min(1, 'At least one Chapter is required'),
+    quizDuration: yup.string().required('Duration is required'),
   }),
   yup.object().shape({
     questions: yup.array().when('isQuestionUpload', {
