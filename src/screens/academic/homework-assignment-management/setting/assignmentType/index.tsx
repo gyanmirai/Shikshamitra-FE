@@ -102,7 +102,7 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
               placement="right"
               title={
                 selectedData
-                  ? 'You can update the assignment type details including name.'
+                  ? 'You can update the assignment type details entering the name.'
                   : 'You can create a new assignment type by entering the name.'
               }
             >

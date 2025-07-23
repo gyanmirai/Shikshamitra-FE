@@ -112,7 +112,7 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
               placement="right"
               title={
                 selectedData
-                  ? 'You can update the homework type details including name.'
+                  ? 'You can update the homework type details entering the name.'
                   : 'You can create a new homework type by entering the name.'
               }
             >

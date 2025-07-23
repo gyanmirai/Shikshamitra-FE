@@ -62,13 +62,14 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     }),
     onSubmit(values) {
       shikshaMitraToast.success({
-        message: `Obtained Marks Updated successfully`,
+        message: `Feedback & Marks
+ ${data?.feedback ? 'updated' : 'added'} successfully`,
       });
     },
   });
 
   const handleDownload = (doc: IDocument) => {
-    window.open(doc.url, '_blank');
+    // window.open(doc.url, '_blank');
   };
 
   return (

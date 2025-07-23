@@ -11,6 +11,7 @@ export type EditorProps = Partial<EditorOptions> & {
   sx?: SxProps<Theme>;
   placeholder?: string;
   helperText?: React.ReactNode;
+  isToolbarShow?: boolean;
   onChange?: (value: string) => void;
   slotProps?: {
     wrap: SxProps<Theme>;
