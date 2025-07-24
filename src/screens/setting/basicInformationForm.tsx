@@ -1,7 +1,5 @@
 'use client';
 
-import type { FileData } from 'src/components/custom-upload';
-
 // @ts-nocheck
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
@@ -445,7 +443,6 @@ const BasicInformation = () => {
       skip: !store?.user?.profile.tenantid,
     },
   });
-  console.log('🚀 ~ BasicInformation ~ tenantDetail:', tenantDetail);
   useEffect(() => {
     setEditData(tenantDetail);
   }, [tenantDetail]);
@@ -636,25 +633,19 @@ export default BasicInformation;
  * @param {string} name - Field name for the form values
  * @param {string} title - Title to display above the upload section
  */
-const BasicInformationAssets = ({ formik, name, title }: any) => {
-  console.log(name, 'name==============>');
-  const handleChange = (values: (File | FileData)[]) => {
-    console.log('🚀 ~ BasicInformationAssets ~ values:', name, values);
-    formik.setFieldValue(name, values);
-  };
-  return (
-    <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }} key={name}>
-      <FileUploader1
-        multiple
-        previewCount={3}
-        onChange={(files) => formik.setFieldValue(name, files)}
-        value={formik.values[name]}
-        error={formik.touched[name] && formik.errors[name]}
-        helperText={formik.touched[name] && formik.errors[name]}
-        label={title}
-        outputFormat="base64"
-      />
-      {/* <FileUploader1
+const BasicInformationAssets = ({ formik, name, title }: any) => (
+  <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }} key={name}>
+    <FileUploader1
+      multiple
+      previewCount={3}
+      onChange={(files) => formik.setFieldValue(name, files)}
+      value={formik.values[name]}
+      error={formik.touched[name] && formik.errors[name]}
+      helperText={formik.touched[name] && formik.errors[name]}
+      label={title}
+      outputFormat="base64"
+    />
+    {/* <FileUploader1
         onChange={handleChange}
         multiple
         parentsProps={{ sx: { width: '100%' } }}
@@ -665,9 +656,8 @@ const BasicInformationAssets = ({ formik, name, title }: any) => {
         error={formik.touched[name] && formik.errors[name]}
         key={name}
       /> */}
-    </Card>
-  );
-};
+  </Card>
+);
 
 // ImageSlider component displays a modal dialog with image carousel functionality
 const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {

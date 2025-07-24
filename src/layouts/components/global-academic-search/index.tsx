@@ -117,7 +117,9 @@ const GlobalAcademicSearch = () => {
         onChange={async (event, newValue) => {
           const confirmed = await showConfirm({
             title: 'Change Academic Year, Board and Medium',
-            message: `Are you sure you want to change academic year, board and medium from  ${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
+            message: !currentYear?.name
+              ? `Are you sure you want to set academic year, board and medium  ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`
+              : `Are you sure you want to change academic year, board and medium from  ${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
             icon: 'warning',
           });
           if (confirmed) {
@@ -136,7 +138,7 @@ const GlobalAcademicSearch = () => {
             // placeholder="Select a academic year, board and medium"
           />
         )}
-        sx={{ minWidth: '250px', width: '100%', '& *': { fontSize: '14px !important' } }}
+        sx={{ minWidth: '280px', width: '100%', '& *': { fontSize: '14px !important' } }}
       />
     </>
   );

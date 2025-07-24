@@ -55,7 +55,8 @@ const ThreeDotsActions = ({
   ...props
 }: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
   const popover = usePopover();
-
+  console.log('🚀 ~ popover:', popover);
+  const Comp = actions;
   return (
     <Box display="flex" gap={1.5} alignItems="center" {...props}>
       {showViewIcon && (
@@ -102,19 +103,20 @@ const ThreeDotsActions = ({
         </IconButton>
       )}
       {showThreeDots && (
-        <IconButton
+        <Box
           onClick={(e) => {
             e.stopPropagation();
             popover.onOpen(e as any);
             onClickThreeDots?.(e);
           }}
-          sx={{ p: 0 }}
         >
-          <Iconify
-            icon="eva:more-vertical-fill"
-            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-          />
-        </IconButton>
+          <IconButton sx={{ p: 0 }}>
+            <Iconify
+              icon="eva:more-vertical-fill"
+              sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+            />
+          </IconButton>
+        </Box>
       )}
       {/* <IconButton
         color={popover.open ? 'inherit' : 'default'}
@@ -132,6 +134,7 @@ const ThreeDotsActions = ({
           popover.onClose();
           onClosePopover?.();
         }}
+        // key={popover.open}
         slotProps={{
           arrow: { placement },
           // sx: {
@@ -141,7 +144,8 @@ const ThreeDotsActions = ({
           // },
         }}
       >
-        {actions?.({ popover })}
+        <Comp popover={popover} />
+        {/* {actions?.({ popover })} */}
       </CustomPopover>
       {/* <CustomPopover
         open={popover.open}
