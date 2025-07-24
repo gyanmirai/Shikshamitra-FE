@@ -9,13 +9,14 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Tab,
   Tabs,
+  Grid,
   Stack,
   Paper,
   Button,
@@ -58,6 +59,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -934,6 +936,7 @@ const AdmissionScreen = () => {
           standard={editData?.standard}
           studentID={editData?.id}
           division={editData?.division}
+          selectedStudent={editData}
         />
       </CustomDialog>
       <CustomDialog
@@ -989,6 +992,7 @@ const AdmissionScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
+          selectedStudent={editData}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
           isStatus={false}
         />
@@ -1394,12 +1398,15 @@ const AssignDivisionForm = ({
   standard,
   studentID,
   division,
+  selectedStudent,
 }: {
   handleClose: () => void;
   standard?: Standards;
   studentID?: string;
   division?: Division;
+  selectedStudent?: IInquiryData | null;
 }) => {
+  const [selectedDivision, setSelectedDivision] = useState('');
   const [assignDivision, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAssignDivisionTOStudentMutation,
@@ -1425,16 +1432,25 @@ const AssignDivisionForm = ({
             },
           ],
         }).unwrap();
+        shikshaMitraToast.success({
+          message: `${selectedDivision} division assign to ${selectedStudent?.firstName} ${selectedStudent?.lastName}`,
+        });
         handleClose();
       } catch (error) {
         console.log(error);
       }
     },
   });
+
+  useEffect(() => {
+    const div = standard?.divisions?.find((item) => item.id === formik.values.division);
+    setSelectedDivision(div?.name || '');
+  }, [standard?.divisions, formik.values.division]);
+
   return (
     <>
       <DialogScrollContent>
-        <Box
+        {/* <Box
           sx={{
             p: 2,
             display: 'flex',
@@ -1442,21 +1458,35 @@ const AssignDivisionForm = ({
             bgcolor: 'Background.neutral',
             gap: 2,
           }}
-        >
-          <TextField value={formik.values.standardName} label="Standard" disabled size="small" />
-          <CustomSelect
-            autoFocus
-            options={standard?.divisions || []}
-            value={formik.values.division}
-            onChange={(val) => formik.setFieldValue('division', val)}
-            label="Division *"
-            valueKey="id"
-            labelKey="name"
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            error={formik.touched.division && Boolean(formik.errors.division)}
-            helperText={(formik.touched.division && formik.errors.division) as string}
-          />
-        </Box>
+        > */}
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              value={formik.values.standardName}
+              label="Standard"
+              disabled
+              size="small"
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <CustomSelect
+              autoFocus
+              options={standard?.divisions || []}
+              value={formik.values.division}
+              onChange={(val) => {
+                formik.setFieldValue('division', val);
+              }}
+              label="Division *"
+              valueKey="id"
+              labelKey="name"
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              error={formik.touched.division && Boolean(formik.errors.division)}
+              helperText={(formik.touched.division && formik.errors.division) as string}
+            />
+          </Grid>
+        </Grid>
+        {/* </Box> */}
       </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
@@ -1509,6 +1539,9 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
           approvalStatus: values.status,
           body: selectedStudents.map((i: any) => i.id),
         }).unwrap();
+        shikshaMitraToast.success({
+          message: `${selectedStudents.length} admission marked as ${RegistrationStatusType[values.status]} on ${dayjs().format('DD-MM-YYYY')}.`,
+        });
         handleClose();
       } catch (error) {
         console.log(error);

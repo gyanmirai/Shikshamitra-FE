@@ -55,15 +55,16 @@ const ChangeDivisionScreen = ({
   // Handle save button click to update student divisions
   const handelSave = async () => {
     try {
+      const updatedStudents = tableData.filter((student) => !!student.divisionId);
       const res = await changeDivision({
-        studentDivisionUpdates: tableData
-          .filter((student) => !!student.divisionId) // Filter students with division assigned
-          .map((student) => ({
-            studentId: student.id,
-            divisionId: student.divisionId,
-          })),
+        studentDivisionUpdates: updatedStudents.map((student) => ({
+          studentId: student.id,
+          divisionId: student.divisionId,
+        })),
       }).unwrap();
-      shikshaMitraToast.success({ message: 'Data saved successfully' });
+      shikshaMitraToast.success({
+        message: `Division changed successfully of ${updatedStudents.length} students`,
+      });
       // Invalidate cache to refetch updated data
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {

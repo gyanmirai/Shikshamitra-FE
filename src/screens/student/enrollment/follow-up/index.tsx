@@ -13,6 +13,7 @@ import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
+  Grid,
   Paper,
   Button,
   TextField,
@@ -52,7 +53,9 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -61,6 +64,7 @@ import type { IInquiryData } from '../Inquiry';
 
 const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+
   const [openDialog, setOpenDialog] = useState(false);
 
   const { data, isLoading } = useQueryAndMutation({
@@ -177,11 +181,13 @@ interface IFollowUpResponse {
 export const CommunicationForm = ({
   handleCloseDialog,
   studentEnrollmentId,
+  selectedStudent,
   isStatus = true,
 }: {
   handleCloseDialog: () => void;
   studentEnrollmentId: string;
   isStatus?: boolean;
+  selectedStudent?: IInquiryData | null;
 }) => {
   const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -209,7 +215,7 @@ export const CommunicationForm = ({
     validationSchema: Yup.object({
       msg: Yup.string().required('Notes are required'),
       status: Yup.string().required('Status is required'),
-      dueDate: Yup.string().required('Reminder Date is required'),
+      dueDate: Yup.string().required('Next Reminder Date is required'),
     }),
     enableReinitialize: true,
     onSubmit: async (values) => {
@@ -224,6 +230,9 @@ export const CommunicationForm = ({
           },
         }).unwrap();
         dispatch(StudentInquiryApi.util.invalidateTags(['Student-Inquiry']));
+        shikshaMitraToast.success({
+          message: `Note added successfully for ${selectedStudent?.firstName} ${selectedStudent?.lastName} `,
+        });
         handleCloseDialog();
       } catch (error) {
         console.log('Error submitting form:', error);
@@ -284,65 +293,58 @@ export const CommunicationForm = ({
             </Timeline>
           )}
         </Scrollbar>
-        <Box
-          sx={{
-            p: 2,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 3,
-            flexDirection: 'column',
-          }}
-        >
-          <TextField
-            fullWidth
-            // sx={{ marginBottom: '10px' }}
-            variant="outlined"
-            label="Notes *"
-            size="small"
-            value={formik.values.msg}
-            name="msg"
-            onChange={formik.handleChange}
-            multiline
-            rows={2}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                formik.handleSubmit();
-              }
-            }}
-            error={!!formik.errors.msg && formik.touched.msg}
-            helperText={formik.touched.msg && formik.errors.msg}
-          />
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              width: '100%',
-            }}
-          >
-            <DatePicker
-              label="Next Reminder Date *"
-              format="DD/MM/YYYY"
-              value={formik.values.dueDate}
-              onChange={(newValue) => {
-                formik.setFieldValue('dueDate', newValue);
-              }}
-              minDate={dayjs()}
-              sx={{ minWidth: 180, width: '100%' }}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  size: 'small',
-                  // placeholder: 'Select Start Date',
-                  error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
-                  helperText: formik.touched.dueDate && formik.errors.dueDate,
-                },
-              }}
-            />
 
-            {isStatus && (
+        <Grid container spacing={3} p={2}>
+          <Grid item xs={12}>
+            <ShakingTextField error={!!(formik.touched.msg && formik.errors.msg) || false}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Notes *"
+                size="small"
+                value={formik.values.msg}
+                name="msg"
+                onChange={formik.handleChange}
+                multiline
+                rows={2}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    formik.handleSubmit();
+                  }
+                }}
+                error={!!formik.errors.msg && formik.touched.msg}
+                helperText={formik.touched.msg && formik.errors.msg}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid item xs={12} md={isStatus ? 6 : 12}>
+            <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}>
+              <DatePicker
+                label="Next Reminder Date *"
+                format="DD/MM/YYYY"
+                value={formik.values.dueDate}
+                onChange={(newValue) => {
+                  formik.setFieldValue('dueDate', newValue);
+                }}
+                minDate={dayjs()}
+                sx={{ minWidth: 180, width: '100%' }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
+                    helperText: formik.touched.dueDate && formik.errors.dueDate,
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {isStatus && (
+            <Grid item xs={12} md={6}>
               <CustomSelect
                 options={FollowUpStatusTypeOptions}
                 value={formik.values.status}
@@ -354,9 +356,9 @@ export const CommunicationForm = ({
                 size="small"
                 label="Status"
               />
-            )}
-          </Box>
-        </Box>
+            </Grid>
+          )}
+        </Grid>
       </DialogScrollContent>
       <DialogActions>
         <Button

@@ -86,7 +86,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
             }
             handleClose(null, true);
             shikshaMitraToast.success({
-              message: `Registration Form Issued Successfully for ${editData.firstName} ${editData.lastName}.`,
+              message: `Registration Form Issued Successfully for ${editData.firstName} ${editData.lastName} on ${dayjs().format('DD-MM-YYYY')}.`,
             });
           } catch (error) {
             console.error('Error:', error);

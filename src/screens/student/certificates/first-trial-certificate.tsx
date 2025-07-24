@@ -243,6 +243,7 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
             variant="contained"
             size="small"
             type="submit"
+            onClick={(e: any) => handleSubmit(e)}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
           >
             Generate

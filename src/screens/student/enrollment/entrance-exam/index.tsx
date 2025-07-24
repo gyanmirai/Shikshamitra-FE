@@ -105,7 +105,7 @@ const EntranceExamScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: {
-      successMessage: 'Student moved to Admission successfully',
+      successMessage: 'Student moved to Admission successfully.',
       success: true,
     },
   });
@@ -653,6 +653,9 @@ export const ExamForm = ({
           // examScheduleType: values.scheduleType,
           // passingMark: values.passingMarks,
         }).unwrap();
+        shikshaMitraToast.success({
+          message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
+        });
         handleClose(null, true);
       } catch (error) {
         console.log(error);
@@ -660,9 +663,6 @@ export const ExamForm = ({
       console.log(values);
     },
   });
-
-  console.log('formik initial values-------', formik.initialValues);
-  console.log('formik  values-------', formik.values);
 
   const handleGetAllStudentCount = useCallback(
     async (date: string) => {
@@ -935,24 +935,24 @@ const ResultForm = ({
       obtainedMarks: Yup.number()
         .test(
           'is-less-than-total',
-          'Obtained marks must be less than total marks',
+          'Obtained Marks must be less than total marks',
           (value, context) => {
             const { totalMarks } = context.parent;
             return value ? value <= totalMarks : true;
           }
         )
-        .required('Obtained marks is required'),
+        .required('Obtained Marks is required'),
       passingMarks: Yup.number()
         .test(
           'is-less-than-total',
-          'Passing marks must be less than total marks',
+          'Passing Marks must be less than total marks',
           (value, context) => {
             const { totalMarks } = context.parent;
             return value ? value <= totalMarks : true;
           }
         )
-        .required('Passing marks is required'),
-      totalMarks: Yup.number().required('Total marks is required'),
+        .required('Passing Marks is required'),
+      totalMarks: Yup.number().required('Total Marks is required'),
     }),
     onSubmit: async (values) => {
       console.log(values);

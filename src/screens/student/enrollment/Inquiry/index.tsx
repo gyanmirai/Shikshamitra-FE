@@ -359,6 +359,7 @@ const InquiryScreen = () => {
             followUpDialog.onFalse();
           }}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          selectedStudent={editData}
         />{' '}
       </CustomDialog>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
@@ -12,7 +13,13 @@ import calculateAge from 'src/utils/calculate-age';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
+import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -203,19 +210,19 @@ const InquiryTable = ({
             align: 'left',
             filterType: 'date',
           },
-          // {
-          //   id: 'followUpStatusType',
-          //   label: 'Status',
-          //   filterType: 'enum',
-          //   enumOptions: FollowUpStatusTypeOptions,
-          //   minWidth: '100px',
-          //   align: 'left',
-          //   sticky: true,
-          //   render(value, row) {
-          //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-          //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-          //   },
-          // },
+          {
+            id: 'followUpStatusType',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: FollowUpStatusTypeOptions,
+            minWidth: '100px',
+            align: 'left',
+            sticky: true,
+            render(value, row) {
+              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+            },
+          },
           {
             id: 'actions',
             label: 'Actions',

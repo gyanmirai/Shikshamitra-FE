@@ -91,7 +91,9 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
             onClick={async () => {
               await deleteSlot(editData?.id);
               confirm.onFalse();
-              shikshaMitraToast.success({ message: `Exam slot deleted successfully` });
+              shikshaMitraToast.success({
+                message: `${editData?.slotName} exam slot deleted successfully`,
+              });
               setEditData(null);
             }}
           >
@@ -247,6 +249,9 @@ export const SlotsForm = ({
               roomNo: values.roomNo,
             },
           }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.slotName} exam slot updated successfully`,
+          });
         } else {
           await addSlot({
             slotName: values.slotName,
@@ -255,6 +260,9 @@ export const SlotsForm = ({
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.slotName} exam slot added successfully`,
+          });
         }
         handleClose?.(null, true);
       } catch (error) {

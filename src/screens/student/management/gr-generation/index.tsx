@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -18,6 +17,7 @@ import {
   useLazyGetStudentForGrNumberQuery,
 } from 'src/redux/student/studentGrNumber/student-gr-number-api';
 
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -122,7 +122,9 @@ const GrNoGenerationScreen = ({
     try {
       const response = await updateStudentGrNumbers({ body: requestBody }).unwrap();
 
-      toast.success('GR Numbers updated successfully!');
+      shikshaMitraToast.success({
+        message: `GR Numbers updated successfully of ${requestBody.studentNumbers.length} students`,
+      });
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {

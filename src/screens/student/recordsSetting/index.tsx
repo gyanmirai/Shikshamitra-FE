@@ -242,7 +242,7 @@ const HouseSetting = () => {
                 await deleteGroup(editData?.id).unwrap();
                 confirm.onFalse();
                 shikshaMitraToast.success({
-                  message: 'House Deleted Successfully',
+                  message: `House ${editData?.name} Deleted Successfully`,
                 });
               } catch (error) {
                 console.log(error);
@@ -306,7 +306,7 @@ const GroupManagementForm = ({
               description: values.description,
             },
           }).unwrap();
-          shikshaMitraToast.success({ message: `House Updated Successfully` });
+          shikshaMitraToast.success({ message: `House ${values.name} Updated Successfully` });
         } else {
           // Add new group if no editData
           await addGroup({
@@ -315,7 +315,7 @@ const GroupManagementForm = ({
             logo: values.logo ? await fileToBase64(values.logo as File) : '',
             description: values.description,
           }).unwrap();
-          shikshaMitraToast.success({ message: `House Added Successfully` });
+          shikshaMitraToast.success({ message: `House ${values.name} Added Successfully` });
         }
         // Close dialog after successful operation
         handleClose(null, true);

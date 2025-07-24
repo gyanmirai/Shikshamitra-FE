@@ -104,7 +104,7 @@ const StudentDocumentType = ({
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.documentName}</strong>?
+            Are you sure you want to delete <strong>{editData?.documentName}</strong> document?
           </>
         }
         action={
@@ -115,7 +115,9 @@ const StudentDocumentType = ({
             size="small"
             onClick={async () => {
               await deleteDocument(editData?.id);
-              shikshaMitraToast.success({ message: 'Document deleted successfully' });
+              shikshaMitraToast.success({
+                message: `${editData?.documentName} document deleted successfully`,
+              });
               confirm.onFalse();
               setEditData(null);
             }}
@@ -489,11 +491,17 @@ export const DocumentForm = ({
 
         if (editData) {
           await updateDocument({ id: editData.id, body: payload }).unwrap();
+          shikshaMitraToast.success({
+            message: `${payload.documentName} document updated successfully`,
+          });
           handleClose?.(null, true);
           return;
         }
 
         await addDocument(payload).unwrap();
+        shikshaMitraToast.success({
+          message: `${payload.documentName} document added successfully`,
+        });
         setShowSuccessMessage(true);
         resetForm();
         dispatch(setIsChanges(false));

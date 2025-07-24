@@ -30,10 +30,10 @@ interface DialogState extends ConfirmOptions {
 }
 
 const iconMap: Record<ConfirmIconType, JSX.Element> = {
-  warning: <WarningAmberIcon color="warning" fontSize="large" />,
-  success: <CheckCircleIcon color="success" fontSize="large" />,
-  info: <InfoIcon color="info" fontSize="large" />,
-  error: <ErrorIcon color="error" fontSize="large" />,
+  warning: <WarningAmberIcon color="warning" fontSize="medium" />,
+  success: <CheckCircleIcon color="success" fontSize="medium" />,
+  info: <InfoIcon color="info" fontSize="medium" />,
+  error: <ErrorIcon color="error" fontSize="medium" />,
 };
 
 export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolean>, JSX.Element] {
@@ -69,10 +69,10 @@ export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolea
         <Typography>{dialogState.message}</Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleClose(false)} variant="outlined" color="inherit">
+        <Button onClick={() => handleClose(false)} variant="outlined" color="inherit" size="small">
           Cancel
         </Button>
-        <Button onClick={() => handleClose(true)} variant="contained" autoFocus>
+        <Button onClick={() => handleClose(true)} variant="contained" autoFocus size="small">
           OK
         </Button>
       </DialogActions>

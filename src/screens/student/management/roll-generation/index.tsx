@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { toast } from 'sonner';
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -16,6 +15,7 @@ import { StudentApi } from 'src/redux/student';
 import { useUpdateStudentRollNumberMutation } from 'src/redux/student/roll-number/roll-number-api';
 
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -131,7 +131,9 @@ const RollNoGenerationScreen = ({
       const response = await updateStudentRollNumbers({ body: requestBody }).unwrap();
 
       // Show success message and reset state
-      toast.success('Roll Numbers updated successfully!');
+      shikshaMitraToast.success({
+        message: `Roll Numbers updated successfully of ${requestBody.studentNumbers.length} students`,
+      });
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (err) {

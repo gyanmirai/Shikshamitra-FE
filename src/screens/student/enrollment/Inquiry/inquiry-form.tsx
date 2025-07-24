@@ -1,4 +1,4 @@
-import type { Board } from 'src/types/school';
+import type { Board, AcademicYear } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -163,7 +163,7 @@ const InquiryForm = ({
           },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `Inquiry for ${values.firstName} ${values.lastName} updated successfully`,
+          message: `Inquiry for ${values.firstName} ${values.lastName} updated successfully for ${selectedAcademicYear}`,
         });
       } else {
         await addInquiry({
@@ -193,7 +193,7 @@ const InquiryForm = ({
           email: values.email,
         }).unwrap();
         shikshaMitraToast.success({
-          message: `Inquiry for ${values.firstName} ${values.lastName} added successfully`,
+          message: `Inquiry for ${values.firstName} ${values.lastName} added successfully for ${selectedAcademicYear}`,
         });
       }
       handleClose(null, true);
@@ -260,7 +260,7 @@ const InquiryForm = ({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
-
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState();
   /**
    * Hook to update existing student inquiry
    */
@@ -312,13 +312,19 @@ const InquiryForm = ({
         (item: Board) => item.academicYearId === editData.academicYearId
       );
       setBoards(findBoards);
+      const year = academicYear?.items?.find(
+        (item: AcademicYear) => item.id === values.academicYear
+      );
+      console.log('year---', year);
+
+      setSelectedAcademicYear(year?.name || '');
 
       // Fetch classes if education medium ID exists in edit data
       if (editData.educationMediumId) {
         getClassByMedium(editData.educationMediumId);
       }
     }
-  }, [board?.items, editData, getClassByMedium]);
+  }, [academicYear?.items, board?.items, editData, getClassByMedium, values.academicYear]);
 
   return (
     <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent', mt: 1 }}>
@@ -350,6 +356,7 @@ const InquiryForm = ({
                       const findBoards = board?.items.filter(
                         (item: Board) => item.academicYearId === value
                       );
+
                       setBoards(findBoards);
                       setFieldValue('board', '');
                       setFieldValue('medium', '');
