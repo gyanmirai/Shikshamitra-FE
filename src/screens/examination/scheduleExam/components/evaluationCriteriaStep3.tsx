@@ -6,7 +6,6 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { Upload } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
 
 import RubricCreationForm from '../../settings/rubricManagement/rubricCreationForm';
@@ -27,26 +26,26 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
    */
   const [rubricType, setRubricType] = useState<'predefined' | 'custom'>('predefined');
 
-  const handleDrop = (acceptedFiles: File[]) => {
-    const updatedSubjects = formik.values.subjects.map((subject) => ({
-      ...subject,
-      rubric: [...(subject.rubric || []), ...acceptedFiles],
-    }));
-    formik.setFieldValue('subjects', updatedSubjects);
-  };
+  // const handleDrop = (acceptedFiles: File[]) => {
+  //   const updatedSubjects = formik.values.subjects.map((subject) => ({
+  //     ...subject,
+  //     rubric: [...(subject.rubric || []), ...acceptedFiles],
+  //   }));
+  //   formik.setFieldValue('subjects', updatedSubjects);
+  // };
 
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedSubjects = formik.values.subjects.map((subject) => ({
-      ...subject,
-      rubric: (subject.rubric || []).filter((file) => {
-        if (typeof fileToRemove === 'string') {
-          return file.name !== fileToRemove;
-        }
-        return file !== fileToRemove;
-      }),
-    }));
-    formik.setFieldValue('subjects', updatedSubjects);
-  };
+  // const handleRemove = (fileToRemove: string | File) => {
+  //   const updatedSubjects = formik.values.subjects.map((subject) => ({
+  //     ...subject,
+  //     rubric: (subject.rubric || []).filter((file) => {
+  //       if (typeof fileToRemove === 'string') {
+  //         return file.name !== fileToRemove;
+  //       }
+  //       return file !== fileToRemove;
+  //     }),
+  //   }));
+  //   formik.setFieldValue('subjects', updatedSubjects);
+  // };
 
   // Configuration for file upload component
   const uploadProps = {
@@ -63,12 +62,12 @@ const EvaluationCriteria = (props: FormikProps<IExamFormValues>) => {
           <Typography variant="subtitle1" gutterBottom>
             Upload Rubric
           </Typography>
-          <Upload
+          {/* <Upload
             value={formik.values.subjects[0]?.rubric}
             onDrop={handleDrop}
             onRemove={handleRemove}
             {...uploadProps}
-          />
+          /> */}
         </Grid>
         {/* Commented out rubric selection UI */}
         {/* <Grid item xs={12}>

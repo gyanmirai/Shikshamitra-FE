@@ -237,19 +237,6 @@ const RegistrationFormScreen = () => {
                 minWidth: '170px',
                 align: 'left',
               },
-              // {
-              //   id: 'followUpStatusType',
-              //   label: 'Follow Up Status',
-              //   filterType: 'enum',
-              //   enumOptions: FollowUpStatusTypeOptions,
-              //   minWidth: '170px',
-              //   align: 'left',
-              //   sticky: true,
-              //   render(value, row) {
-              //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-              //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-              //   },
-              // },
               {
                 id: 'actions',
                 label: 'Actions',
@@ -326,6 +313,7 @@ const RegistrationFormScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
+          selectedStudent={editData}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
       </CustomDialog>

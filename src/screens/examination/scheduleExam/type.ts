@@ -14,7 +14,7 @@ export interface IScheduledExam {
   status: number;
 }
 
-export interface ISubjectDetail {
+export interface IExamTime {
   id: number;
   subjectName: string;
   subjectColor: string;
@@ -24,8 +24,16 @@ export interface ISubjectDetail {
   endTime: string | Dayjs | null;
   totalMarks: string;
   passingMarks: string;
-  rubric: File[];
 }
+
+export interface SubjectRoomDetail {
+  divisionId: string;
+  roomIds: string[];
+  capacity: number;
+  copyPastSubject: string;
+}
+
+export type IRoomDetails = Record<string, SubjectRoomDetail>;
 
 export interface IExamFormValues {
   id?: string;
@@ -33,7 +41,8 @@ export interface IExamFormValues {
   examName: string;
   className: string;
   divisions: string[];
-  subjects: ISubjectDetail[];
+  subjects: IExamTime[];
+  roomDetails?: IRoomDetails[];
   description: string;
   status?: number;
 }

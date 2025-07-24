@@ -163,6 +163,7 @@ const RegisterScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
+          selectedStudent={editData}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
       </CustomDialog>

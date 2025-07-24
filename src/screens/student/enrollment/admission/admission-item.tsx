@@ -223,15 +223,15 @@ const AssignDivisionForm = ({ handleClose }: { handleClose: () => void }) => {
   return (
     <>
       <DialogScrollContent>
-        <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}>
-          <CustomSelect
-            options={[]}
-            value=""
-            onChange={() => {}}
-            label="Division"
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          />
-        </Box>
+        {/* <Box sx={{ p: 2, bgcolor: 'Background.neutral' }}> */}
+        <CustomSelect
+          options={[]}
+          value=""
+          onChange={() => {}}
+          label="Division"
+          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+        />
+        {/* </Box> */}
       </DialogScrollContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>

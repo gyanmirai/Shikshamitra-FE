@@ -16,7 +16,7 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { IExamFormValues } from '../type';
+import type { IRoomDetails, IExamFormValues } from '../type';
 
 const subjectOptions = [
   // Core subjects
@@ -68,6 +68,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  console.log('formik values----', formik.values);
 
   // Get current board, medium and medium setter from global state
   const {
@@ -335,6 +336,22 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
                 formik.setFieldValue('subjects', updatedSubjects);
                 formik.setFieldTouched(`subjects`, false);
+                const updatedRoomDetails = selectedCodes.reduce((acc, code) => {
+                  if (code === 'all') return acc;
+
+                  const subject = subjectOptions.find((s) => s.subjectCode === code);
+                  if (!subject) return acc;
+
+                  acc[subject.subjectName] = {
+                    divisionId: '',
+                    roomIds: [],
+                    capacity: 0,
+                    copyPastSubject: '',
+                  };
+                  return acc;
+                }, {} as IRoomDetails);
+
+                formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
               error={!!(formik.touched.subjects && formik.errors.subjects)}
               helperText={

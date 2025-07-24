@@ -45,7 +45,7 @@ const RegistrationTable = ({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: {
-      successMessage: 'Student moved to Admission successfully',
+      successMessage: `${editData?.firstName} ${editData?.lastName} moved to Admission successfully`,
       success: true,
     },
   });

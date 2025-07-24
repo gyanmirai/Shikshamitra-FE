@@ -460,38 +460,38 @@ const RegisterForm = ({
           await handleGeneralFormSubmit(values, formik);
           if (!isComeFromIssueForm) {
             shikshaMitraToast.success({
-              message: `${values.firstName} ${values.lastName}'s details updated successfully.`,
+              message: `${values.firstName} ${values.lastName}'s details updated successfully`,
             });
           }
         } else if (activeStep === 2) {
           await handleFamilyFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s family details updated successfully.`,
+            message: `${values.firstName} ${values.lastName}'s family details updated successfully`,
           });
         } else if (activeStep === 3) {
           await handleCommunicationFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s communication details updated successfully.`,
+            message: `${values.firstName} ${values.lastName}'s communication details updated successfully`,
           });
         } else if (activeStep === 4) {
           await handleAdditionalDetailsFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s additional details updated successfully.`,
+            message: `${values.firstName} ${values.lastName}'s additional details updated successfully`,
           });
         } else if (activeStep === 5) {
           await handleMedicalFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s medical details updated successfully.`,
+            message: `${values.firstName} ${values.lastName}'s medical details updated successfully`,
           });
         } else if (activeStep === 6) {
           await handlePreviousSchoolFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s previous school details updated successfully.`,
+            message: `${values.firstName} ${values.lastName}'s previous school details updated successfully`,
           });
         } else if (activeStep === 7) {
           await handleBankDetailsFormSubmit(values, formik);
           shikshaMitraToast.success({
-            message: `${values.firstName} ${values.lastName}'s  Moved to Registration Successfully.`,
+            message: `${values.firstName} ${values.lastName}'s  Moved to Registration Successfully`,
           });
         }
         if (!isLastStep) {

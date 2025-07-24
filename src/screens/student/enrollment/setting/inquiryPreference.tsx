@@ -221,11 +221,17 @@ export const InquiryPreferenceForm = ({
             preferenceName: formikValues.fieldName,
           },
         });
+        shikshaMitraToast.success({
+          message: `${formikValues.fieldName} Inquiry preference added successfully`,
+        });
         handleClose?.(null, true);
         return;
       }
       await addDocument({
         preferenceName: formikValues.fieldName,
+      });
+      shikshaMitraToast.success({
+        message: `${formikValues.fieldName} Inquiry preference added successfully`,
       });
       handleClose?.(null, true);
     },
