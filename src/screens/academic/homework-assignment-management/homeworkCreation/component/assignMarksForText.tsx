@@ -2,7 +2,7 @@
 
 import { useFormik } from 'formik';
 
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Typography, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -10,7 +10,6 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { assignGradeValidationSchema } from './validationSchema';
@@ -39,7 +38,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     validationSchema: assignGradeValidationSchema,
     onSubmit(values) {
       shikshaMitraToast.success({
-        message: `feedback Updated successfully`,
+        message: `Feedback ${data?.feedback ? 'updated' : 'added'} successfully`,
       });
     },
   });
@@ -63,12 +62,13 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               </Box>
             </Grid>
             <Grid item xs={12} mb={-2}>
-              <Typography variant="subtitle2">Student Submission</Typography>
+              {/* <Typography variant="subtitle2">Student Submission</Typography> */}
             </Grid>
             <Grid item xs={12} mb={-1}>
               <Editor
                 editable={false}
                 onChange={() => {}}
+                isToolbarShow={false}
                 value={`
 
 1. The sun rises in the east.
@@ -116,26 +116,6 @@ Additional Notes:
 I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-              >
-                <TextField
-                  // placeholder="Enter Feedback"
-                  label="Feedback *"
-                  multiline
-                  size="small"
-                  rows={3}
-                  disabled={!isEdit}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
             </Grid>
           </Grid>
         </Scrollbar>

@@ -9,6 +9,7 @@ import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -25,67 +26,71 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     }),
     onSubmit: (values) => {
       console.log(values);
+      shikshaMitraToast.success({
+        message: `Homework Type ${editData ? 'updated' : 'added'} successfully`,
+      });
     },
   });
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <DialogScrollContent>
-          <Stack spacing={3}>
-            <ShakingTextField
-              error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                name="homeworkTypeName"
-                label="Name *"
-                value={formik.values.homeworkTypeName}
-                onChange={(e) => {
-                  const value = e.target.value
-                    // Remove everything except letters and spaces
-                    .replace(/[^a-zA-Z\s]/g, '')
-                    // Capitalize each word
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-                  formik.setFieldValue('homeworkTypeName', value);
-                }}
-                error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
-                helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
-              />
-            </ShakingTextField>
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          {' '}
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
-            variant="outlined"
-            size="small"
+      {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
+      <DialogScrollContent>
+        <Stack spacing={3}>
+          <ShakingTextField
+            error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
           >
-            Cancel
-          </Button>
-          <Button
-            startIcon={
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                width={editData ? 16 : 20}
-                height={editData ? 16 : 20}
-              />
-            }
-            type="submit"
-            variant="contained"
-            size="small"
-          >
-            {editData ? 'Update' : 'Submit'}
-          </Button>
-        </DialogActions>
-      </form>
+            <TextField
+              fullWidth
+              size="small"
+              name="homeworkTypeName"
+              label="Name *"
+              value={formik.values.homeworkTypeName}
+              onChange={(e) => {
+                const value = e.target.value
+                  // Remove everything except letters and spaces
+                  .replace(/[^a-zA-Z\s]/g, '')
+                  // Capitalize each word
+                  .split(' ')
+                  .map((word) =>
+                    word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                  )
+                  .join(' ');
+                formik.setFieldValue('homeworkTypeName', value);
+              }}
+              error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
+              helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
+            />
+          </ShakingTextField>
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        {' '}
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          type="submit"
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
+      {/* </form> */}
     </BackPopUpChecked>
   );
 };
