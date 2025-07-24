@@ -114,51 +114,65 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     return file.preview || '';
   };
 
-  const renderFilePreview = (file: FileWithPreview | string) => (
-    <Box sx={{ position: 'relative', m: 1 }}>
-      {/* Close Icon Button outside Card */}
-      <IconButton
-        size="small"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDelete(file);
-        }}
-        sx={{
-          position: 'absolute',
-          top: -6,
-          right: -6,
-          zIndex: 2,
-          bgcolor: 'rgba(241, 241, 241, 0.8)',
-          border: '1px solid #ccc',
-          width: 20,
-          height: 20,
-          '&:hover': {
-            bgcolor: 'rgba(241, 241, 241, 1)',
-          },
-        }}
-      >
-        <CloseIcon fontSize="small" sx={{ width: 14, height: 14 }} />
-      </IconButton>
+  const renderFilePreview = (file: FileWithPreview | string) => {
+    const isImage =
+      typeof file === 'string' ? file.includes('image/') : file.type.startsWith('image/');
+    return (
+      <Box sx={{ position: 'relative', m: 1 }}>
+        {/* Close Icon Button outside Card */}
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(file);
+          }}
+          sx={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            zIndex: 2,
+            bgcolor: 'rgba(241, 241, 241, 0.8)',
+            border: '1px solid #ccc',
+            width: 20,
+            height: 20,
+            '&:hover': {
+              bgcolor: 'rgba(241, 241, 241, 1)',
+            },
+          }}
+        >
+          <CloseIcon fontSize="small" sx={{ width: 14, height: 14 }} />
+        </IconButton>
 
-      <Card
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: 2,
-          overflow: 'hidden',
-          border: '1px solid #ccc',
-          cursor: 'pointer',
-        }}
-        onClick={() => handlePreview(file)}
-      >
-        <CardMedia
-          component="img"
-          image={getFilePreview(file)}
-          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      </Card>
-    </Box>
-  );
+        <Card
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid #ccc',
+            cursor: 'pointer',
+          }}
+          onClick={() => handlePreview(file)}
+        >
+          {isImage ? (
+            <CardMedia
+              component="img"
+              image={getFilePreview(file)}
+              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <CardMedia
+              component={Iconify}
+              icon="eva:file-text-outline"
+              width={28}
+              color={isImage ? 'default.main' : 'action.active'}
+              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          )}
+        </Card>
+      </Box>
+    );
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -258,11 +272,89 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         </DialogTitle>
         <DialogContent>
           {previewDialog.file && (
-            <Box
-              component="img"
-              src={getFilePreview(previewDialog.file)}
-              sx={{ width: '100%', height: 'auto' }}
-            />
+            <>
+              {typeof previewDialog.file === 'string' ? (
+                // Handle string URLs/base64
+                previewDialog.file.includes('application/pdf') ? (
+                  <iframe
+                    src={previewDialog.file}
+                    style={{ width: '100%', height: '600px' }}
+                    title="PDF Preview"
+                  />
+                ) : previewDialog.file.includes('image/') ? (
+                  <Box
+                    component="img"
+                    src={previewDialog.file}
+                    sx={{ width: '100%', height: 'auto' }}
+                  />
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Document Preview Not Available
+                    </Typography>
+                    <Box
+                      component="a"
+                      href={previewDialog.file}
+                      download
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        px: 2,
+                        py: 1,
+                        borderRadius: 1,
+                        textDecoration: 'none',
+                        '&:hover': { bgcolor: 'primary.dark' },
+                      }}
+                    >
+                      <Iconify icon="eva:download-outline" width={20} />
+                      Download File
+                    </Box>
+                  </Box>
+                )
+              ) : // Handle File objects
+              previewDialog.file.type === 'application/pdf' ? (
+                <iframe
+                  src={getFilePreview(previewDialog.file)}
+                  style={{ width: '100%', height: '600px' }}
+                  title="PDF Preview"
+                />
+              ) : previewDialog.file.type.startsWith('image/') ? (
+                <Box
+                  component="img"
+                  src={getFilePreview(previewDialog.file)}
+                  sx={{ width: '100%', height: 'auto' }}
+                />
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Document Preview Not Available
+                  </Typography>
+                  <Box
+                    component="a"
+                    href={getFilePreview(previewDialog.file)}
+                    download={previewDialog.file.name}
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1,
+                      textDecoration: 'none',
+                      '&:hover': { bgcolor: 'primary.dark' },
+                    }}
+                  >
+                    <Iconify icon="eva:download-outline" width={20} />
+                    Download File
+                  </Box>
+                </Box>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>
