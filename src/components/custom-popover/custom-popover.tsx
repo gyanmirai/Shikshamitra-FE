@@ -1,6 +1,6 @@
 import type { PaperProps } from '@mui/material/Paper';
 
-import { useRef, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 
 import Popover from '@mui/material/Popover';
 import { listClasses } from '@mui/material/List';
@@ -27,25 +27,21 @@ export function CustomPopover({
 
   const arrowOffset = slotProps?.arrow?.offset ?? 17;
 
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-  // 👇 Key to force Popover re-render on open or anchor change
-  const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    if (open && anchorEl) {
-      // Wait for layout to stabilize, then force a re-render
-      requestAnimationFrame(() => setKey((prev) => prev + 1));
-    }
-  }, [open, anchorEl]);
   const { paperStyles, anchorOrigin, transformOrigin } = calculateAnchorOrigin(arrowPlacement);
+
+  const [anchor, setAnchor] = useState<any>(null);
+
+  useMemo(() => {
+    setTimeout(() => {
+      setAnchor(anchorEl);
+    }, 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, anchorEl]);
 
   return (
     <Popover
-      ref={popoverRef}
-      key={key}
-      disablePortal
       open={!!open}
-      anchorEl={anchorEl}
+      anchorEl={anchor}
       onClose={onClose}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}

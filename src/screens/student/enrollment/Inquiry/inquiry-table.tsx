@@ -218,7 +218,7 @@ const InquiryTable = ({
             minWidth: '100px',
             align: 'left',
             sticky: true,
-            render(value, row) {
+            render: (value, row) => {
               const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
               return <Label color={color}>{FollowUpStatusType[value]}</Label>;
             },
@@ -232,7 +232,7 @@ const InquiryTable = ({
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  placement="right-top"
+                  placement="right-center"
                   showEditIcon
                   handleEditClick={() => {
                     inquiryDialog.onTrue();

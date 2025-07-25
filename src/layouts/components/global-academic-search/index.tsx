@@ -135,7 +135,6 @@ const GlobalAcademicSearch = () => {
             variant="filled"
             size="small"
             label="Academic Year, Board and Medium"
-            // placeholder="Select a academic year, board and medium"
           />
         )}
         sx={{ minWidth: '280px', width: '100%', '& *': { fontSize: '14px !important' } }}

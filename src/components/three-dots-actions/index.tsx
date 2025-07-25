@@ -1,6 +1,6 @@
 import type { IconButtonOwnProps } from '@mui/material';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
@@ -55,8 +55,7 @@ const ThreeDotsActions = ({
   ...props
 }: Omit<IconButtonOwnProps, 'onClick'> & IThreeDotesActionsType) => {
   const popover = usePopover();
-  console.log('🚀 ~ popover:', popover);
-  const Comp = actions;
+  const ActionComponent = useMemo(() => actions, [actions]);
   return (
     <Box display="flex" gap={1.5} alignItems="center" {...props}>
       {showViewIcon && (
@@ -103,20 +102,19 @@ const ThreeDotsActions = ({
         </IconButton>
       )}
       {showThreeDots && (
-        <Box
+        <IconButton
           onClick={(e) => {
             e.stopPropagation();
             popover.onOpen(e as any);
             onClickThreeDots?.(e);
           }}
+          sx={{ p: 0 }}
         >
-          <IconButton sx={{ p: 0 }}>
-            <Iconify
-              icon="eva:more-vertical-fill"
-              sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
-            />
-          </IconButton>
-        </Box>
+          <Iconify
+            icon="eva:more-vertical-fill"
+            sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+          />
+        </IconButton>
       )}
       {/* <IconButton
         color={popover.open ? 'inherit' : 'default'}
@@ -134,7 +132,6 @@ const ThreeDotsActions = ({
           popover.onClose();
           onClosePopover?.();
         }}
-        // key={popover.open}
         slotProps={{
           arrow: { placement },
           // sx: {
@@ -144,8 +141,7 @@ const ThreeDotsActions = ({
           // },
         }}
       >
-        <Comp popover={popover} />
-        {/* {actions?.({ popover })} */}
+        <ActionComponent popover={popover} />
       </CustomPopover>
       {/* <CustomPopover
         open={popover.open}
