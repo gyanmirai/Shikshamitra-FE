@@ -56,12 +56,11 @@ import { getInitialValues } from './initialValues';
 import { stepValidationSchemas } from './validationSchema';
 
 const QuizInformation = ({ formik }: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Get current board, medium and medium setter from global state
   const {
@@ -91,7 +90,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <DateTimePicker
               label="Start Date/Time *"
-              format="DD/MM/YYYY HH:mm"
+              format="DD/MM/YYYY hh:mm"
               value={formik.values.quizStartDateTime}
               onChange={(value) => {
                 formik.setFieldValue('quizStartDateTime', value);
@@ -117,7 +116,7 @@ const QuizInformation = ({ formik }: any) => {
           >
             <DateTimePicker
               label="End Date/Time *"
-              format="DD/MM/YYYY HH:mm"
+              format="DD/MM/YYYY hh:mm"
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.quizEndDateTime}
@@ -392,6 +391,7 @@ const QuizInformation = ({ formik }: any) => {
 
 const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }: any) => {
   const deleteQuestionDialog = useBoolean();
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   if (!questions?.length) {
     return (
       <Box
@@ -459,7 +459,10 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             <Typography variant="body2">{index + 1}</Typography>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2">{question.question}</Typography>
+                            <Typography
+                              variant="body2"
+                              dangerouslySetInnerHTML={{ __html: question.question }}
+                            />
                           </TableCell>
                           <TableCell>{question.questionType}</TableCell>
                           <TableCell>
@@ -503,6 +506,7 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                               color="error"
                               size="small"
                               onClick={() => {
+                                setDeleteIndex(index);
                                 deleteQuestionDialog.onTrue();
                               }}
                             >
@@ -518,7 +522,11 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                         deleteQuestionDialog.onFalse();
                       }}
                       title="Delete"
-                      content="Are you sure you want to Delete Question ?"
+                      content={
+                        deleteIndex !== null
+                          ? `Are you sure you want to delete Question ${deleteIndex + 1}?`
+                          : ''
+                      }
                       action={
                         <Button
                           variant="contained"
@@ -676,8 +684,8 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
 
   return (
     <BackPopUpChecked initialValues={initial} currentValues={formState}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Scrollbar sx={{ p: 2, height: '300px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '200x' }}>
+        <Scrollbar sx={{ p: 2, height: '400px' }}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <ShakingTextField error={!!errors.question}>
@@ -1039,7 +1047,7 @@ const QuizBuilder = ({ formik }: any) => {
       )}
 
       <CustomDialog
-        maxWidth="sm"
+        maxWidth="lg"
         open={addQuestionDialog.value}
         handleClose={addQuestionDialog.onFalse}
         title={
@@ -1121,6 +1129,7 @@ const AddNewQuiz = ({
 }) => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <CustomStepperWithFormik
@@ -1131,7 +1140,8 @@ const AddNewQuiz = ({
         setActiveStep(activeStep - 1);
       }}
       validateOnChange
-      validationSchema={stepValidationSchemas[activeStep as keyof typeof stepValidationSchemas]}
+      // eslint-disable-next-line no-sequences
+      validationSchema={stepValidationSchemas(currentYear)[activeStep]}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);

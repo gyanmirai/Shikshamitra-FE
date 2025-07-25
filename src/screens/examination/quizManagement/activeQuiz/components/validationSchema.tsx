@@ -1,16 +1,27 @@
 import dayjs from 'dayjs';
 import * as yup from 'yup';
 
-export const stepValidationSchemas = [
+export const stepValidationSchemas = (currentYear: any) => [
   yup.object().shape({
     attemptsAllowed: yup.number(),
-
     quizStartDateTime: yup
       .mixed()
       .test(
         'is-valid-date',
         'Start Date/Time is required',
         (value) => value && dayjs(value as any).isValid()
+      )
+      .test(
+        'min-date',
+        (value) =>
+          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        (value) =>
+          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       )
       .required('Start Date/Time is required'),
     totalMarks: yup.number().required('Total Marks is required'),
@@ -26,6 +37,18 @@ export const stepValidationSchemas = [
         'is-valid-date',
         'End Date/Time is required',
         (value) => value && dayjs(value as any).isValid()
+      )
+      .test(
+        'min-date',
+        (value) =>
+          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+      )
+      .test(
+        'max-date',
+        (value) =>
+          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       )
       .required('End Date/Time is required')
       .test('is-after-start', 'End date must be after start date', function (value) {
