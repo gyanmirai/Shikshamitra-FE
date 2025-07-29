@@ -576,8 +576,12 @@ function RenderFamilyInformation(props: any) {
               autoFocus
               onChange={(e) => {
                 const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                const capitalized = capitalize(onlyLetters);
-                formik.setFieldValue('fatherName', capitalized);
+                const words = onlyLetters.split(' ');
+                const capitalizedWords = words.map(
+                  (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                const result = capitalizedWords.join(' ');
+                formik.setFieldValue('fatherName', result);
               }}
               error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}
               helperText={formik.touched.fatherName && formik.errors.fatherName}
@@ -756,36 +760,40 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
         <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="fatherAadharNo"
-            label="Aadhar No."
-            type="number"
-            disabled={!isFatherDetailsEditable.value}
-            value={formik.values.fatherAadharNo}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onChange={(e) => {
-              let value = e.target.value.replace(/\D/g, '');
-              if (value.length > 12) {
-                value = value.slice(0, 12);
-              }
-
-              formik.setFieldValue('fatherAadharNo', value);
-              // formik.setFieldTouched('adharNo', true, true);
-            }}
-            inputProps={{
-              maxLength: 12,
-              pattern: '[0-9]*',
-            }}
-            onWheel={(e) => (e.target as HTMLElement).blur()}
+          <ShakingTextField
             error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
-            helperText={formik.touched.fatherAadharNo && formik.errors.fatherAadharNo}
-            fullWidth
-            size="small"
-          />
+          >
+            <TextField
+              name="fatherAadharNo"
+              label="Aadhar No."
+              type="number"
+              disabled={!isFatherDetailsEditable.value}
+              value={formik.values.fatherAadharNo}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 12) {
+                  value = value.slice(0, 12);
+                }
+
+                formik.setFieldValue('fatherAadharNo', value);
+                formik.setFieldTouched('adharNo', true, true);
+              }}
+              inputProps={{
+                maxLength: 12,
+                pattern: '[0-9]*',
+              }}
+              onWheel={(e) => (e.target as HTMLElement).blur()}
+              error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
+              helperText={formik.touched.fatherAadharNo && formik.errors.fatherAadharNo}
+              fullWidth
+              size="small"
+            />
+          </ShakingTextField>
         </Grid>
         {/* <Grid item xs={12} md={4} lg={4}>
           <TextField
@@ -1059,8 +1067,12 @@ function RenderFamilyInformation(props: any) {
               value={formik.values.motherName}
               onChange={(e) => {
                 const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                const capitalized = capitalize(onlyLetters);
-                formik.setFieldValue('motherName', capitalized);
+                const words = onlyLetters.split(' ');
+                const capitalizedWords = words.map(
+                  (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                const result = capitalizedWords.join(' ');
+                formik.setFieldValue('motherName', result);
               }}
               error={formik.touched.motherName && Boolean(formik.errors.motherName)}
               helperText={formik.touched.motherName && formik.errors.motherName}
@@ -1256,7 +1268,7 @@ function RenderFamilyInformation(props: any) {
               }
 
               formik.setFieldValue('motherAadharNo', value);
-              // formik.setFieldTouched('adharNo', true, true);
+              formik.setFieldTouched('adharNo', true, true);
             }}
             inputProps={{
               maxLength: 12,
@@ -1317,8 +1329,12 @@ function RenderFamilyInformation(props: any) {
               value={formik.values.guardianName}
               onChange={(e) => {
                 const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                const capitalized = capitalize(onlyLetters);
-                formik.setFieldValue('guardianName', capitalized);
+                const words = onlyLetters.split(' ');
+                const capitalizedWords = words.map(
+                  (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                const result = capitalizedWords.join(' ');
+                formik.setFieldValue('guardianName', result);
               }}
               error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
               helperText={formik.touched.guardianName && formik.errors.guardianName}
@@ -1519,7 +1535,7 @@ function RenderFamilyInformation(props: any) {
               }
 
               formik.setFieldValue('guardianAadharNo', value);
-              // formik.setFieldTouched('adharNo', true, true);
+              formik.setFieldTouched('adharNo', true, true);
             }}
             inputProps={{
               maxLength: 12,

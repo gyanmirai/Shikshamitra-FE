@@ -368,7 +368,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
             <Grid item xs={12}>
               <Typography variant="subtitle2" gutterBottom sx={{ pl: 0.5 }}>
-                Leave Description
+                Leave Description *
               </Typography>
               <ShakingTextField error={touched.description && Boolean(errors.description)}>
                 <Editor

@@ -261,6 +261,7 @@ const InquiryForm = ({
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
   const [selectedAcademicYear, setSelectedAcademicYear] = useState();
+  // console.log('🚀 ~ InquiryForm ~ selectedAcademicYear:', selectedAcademicYear);
   /**
    * Hook to update existing student inquiry
    */
@@ -306,18 +307,18 @@ const InquiryForm = ({
   // }, [editData, years, board?.items, setFieldValue, getClassByMedium]);
 
   useEffect(() => {
+    const year = academicYear?.items?.find((item: AcademicYear) => item.id === values.academicYear);
+    console.log('year---', year);
+
+    setSelectedAcademicYear(year?.name);
     if (editData) {
       // Filter boards based on academic year ID from edit data
       const findBoards = board?.items.filter(
         (item: Board) => item.academicYearId === editData.academicYearId
       );
       setBoards(findBoards);
-      const year = academicYear?.items?.find(
-        (item: AcademicYear) => item.id === values.academicYear
-      );
-      console.log('year---', year);
 
-      setSelectedAcademicYear(year?.name || '');
+      setSelectedAcademicYear(year?.name);
 
       // Fetch classes if education medium ID exists in edit data
       if (editData.educationMediumId) {
@@ -353,6 +354,11 @@ const InquiryForm = ({
                     valueKey="id"
                     autoFocus
                     onChange={(value) => {
+                      // const year = academicYear?.items?.find(
+                      //   (item: AcademicYear) => item.id === value
+                      // );
+
+                      // setSelectedAcademicYear(year?.name);
                       const findBoards = board?.items.filter(
                         (item: Board) => item.academicYearId === value
                       );
@@ -592,7 +598,6 @@ const InquiryForm = ({
                     name="dateOfInquiry"
                     value={values.dateOfInquiry}
                     format="DD-MM-YYYY"
-                    disabled
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
                       // setFieldValue('dateOfInquiry', newValue);

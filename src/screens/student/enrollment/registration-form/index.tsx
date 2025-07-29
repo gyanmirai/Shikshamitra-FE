@@ -9,6 +9,7 @@ import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
+import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -37,17 +38,8 @@ const RegistrationFormScreen = () => {
   // State to store inquiry data for editing
   const [editData, setEditData] = useState<IInquiryData | null>(null);
 
-  // State to store ID of student being moved to registration
-  const [moveId, setMoveId] = useState<string | null>(null);
-
-  // State to store dates (currently unused)
-  const [dates, setDates] = useState([]);
-
   // Dialog control for follow-up form
   const followUpDialog = useBoolean();
-
-  // Dialog control for move confirmation popup
-  const confirmMovePopup = useBoolean();
 
   // Query hook to fetch registration form data
   const {
@@ -86,10 +78,9 @@ const RegistrationFormScreen = () => {
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),
-        secondaryContactNumber:
-          item.secondaryContactNumber && item.secondaryContactNumber !== ''
-            ? item.secondaryContactNumber
-            : undefined,
+        secondaryContactNumber: item?.secondaryContactNumber
+          ? validatePhoneNumber(item?.secondaryContactNumber)
+          : '',
       })),
     [inquiryFormData?.items]
   );

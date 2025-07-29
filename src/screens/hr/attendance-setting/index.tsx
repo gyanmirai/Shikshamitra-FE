@@ -147,7 +147,7 @@ const HrAttendanceSettingScreen = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
-        description="Configure attendance settings including shift schedules, leave types, and leave policies for effective workforce management"
+        description="Configure attendance settings including shift management, leave types, and leave policies for effective workforce management"
       />
       <Card
         sx={{

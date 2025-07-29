@@ -499,14 +499,19 @@ const EntranceExamScreen = () => {
         }
         content={
           <>
-            {editData?.status === 2 ? (
+            {editData?.status === 0 ? (
               <>
-                Student failed the entrance exam <strong>{editData?.name || ''}</strong> Are you
-                sure continue with admission?
+                The entrance exam has not been conducted yet. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
+              </>
+            ) : editData?.status === 2 ? (
+              <>
+                The student has failed the entrance exam. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
               </>
             ) : (
               <>
-                Are you sure want to move student <strong>{editData?.name || ''}</strong> in
+                Are you sure you want to move student <strong>{editData?.name || ''}</strong> to
                 admission?
               </>
             )}
