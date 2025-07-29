@@ -595,7 +595,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.fatherDob && Boolean(formik.errors.fatherDob)}>
             <DatePicker
               name="fatherDob"
-              label="Date of Birth"
+              label="Date of Birth "
               value={formik.values.fatherDob}
               format="DD-MM-YYYY"
               onChange={(value) => {
@@ -1085,7 +1085,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.motherDob && Boolean(formik.errors.motherDob)}>
             <DatePicker
               name="motherDob"
-              label="Date of Birth"
+              label="Date of Birth "
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherDob}
               format="DD-MM-YYYY"
@@ -1252,7 +1252,7 @@ function RenderFamilyInformation(props: any) {
         <Grid item xs={12} md={4} lg={3}>
           <TextField
             name="motherAadharNo"
-            label="Aadhar No."
+            label="Aadhar No. "
             type="number"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherAadharNo}
@@ -1349,7 +1349,7 @@ function RenderFamilyInformation(props: any) {
           >
             <DatePicker
               name="guardianDob"
-              label="Date of Birth"
+              label="Date of Birth "
               format="DD-MM-YYYY"
               disabled={!isGuardianDetailsEditable.value}
               value={formik.values.guardianDob}
