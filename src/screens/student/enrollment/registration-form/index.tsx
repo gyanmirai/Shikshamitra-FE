@@ -9,6 +9,7 @@ import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import calculateAge from 'src/utils/calculate-age';
+import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -86,10 +87,9 @@ const RegistrationFormScreen = () => {
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),
-        secondaryContactNumber:
-          item.secondaryContactNumber && item.secondaryContactNumber !== ''
-            ? item.secondaryContactNumber
-            : undefined,
+        secondaryContactNumber: item?.secondaryContactNumber
+          ? validatePhoneNumber(item?.secondaryContactNumber)
+          : '',
       })),
     [inquiryFormData?.items]
   );

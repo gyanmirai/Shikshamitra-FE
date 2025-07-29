@@ -71,8 +71,12 @@ const RenderPreviousSchoolFields = (props: any) => {
           value={formik.values.schoolName}
           onChange={(e: any) => {
             const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            const newName = capitalize(onlyText);
-            formik.setFieldValue('schoolName', newName);
+            const words = onlyText.split(' ');
+            const capitalizedWords = words.map(
+              (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            );
+            const result = capitalizedWords.join(' ');
+            formik.setFieldValue('schoolName', result);
           }}
           disabled={!isEditable.value}
         />

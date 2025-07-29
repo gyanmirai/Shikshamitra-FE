@@ -22,7 +22,9 @@ export const generalFieldValidation = Yup.object({
   age: Yup.string(),
   gender: Yup.string().required('Gender is required'),
   apparId: Yup.string().matches(/\b\d{12}\b/, 'Appar Id must be 12 digits'),
-  adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  adharNo: Yup.string()
+    .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
+    .required('Adhar No. is required'),
   religion: Yup.string(),
   familyCast: Yup.string().required('Family Cast is required'),
   castCategory: Yup.string().required('Cast Category is required'),
@@ -86,7 +88,14 @@ export const generalFieldValidation = Yup.object({
 
 export const familyFieldsValidation = Yup.object({
   fatherName: Yup.string().required('Father name is required'),
-  fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
+  // fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
+  fatherDob: Yup.mixed()
+    .test(
+      'is-valid-dayjs',
+      'Date of Birth is required',
+      (value) => value && dayjs(value as any).isValid()
+    )
+    .required('Date of Birth is required'),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
   fatherContactNo: Yup.string()
@@ -117,13 +126,22 @@ export const familyFieldsValidation = Yup.object({
   fatherOfficeAddress3: Yup.string(),
   fatherDesignation: Yup.string(),
   fatherOrganization: Yup.string(),
-  fatherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  fatherAadharNo: Yup.string()
+    .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
+    .required('Adhar No. is required'),
   fatherRemarks: Yup.string(),
   fatherAddress1: Yup.string(),
   fatherAddress2: Yup.string(),
   fatherAddress3: Yup.string(),
   motherName: Yup.string().required('Mother name is required'),
-  motherDob: Yup.string().required('Mother DOB is Required').nullable(),
+  // motherDob: Yup.string().required('Mother DOB is Required').nullable(),
+  motherDob: Yup.mixed()
+    .test(
+      'is-valid-dayjs',
+      'Date of Birth is required',
+      (value) => value && dayjs(value as any).isValid()
+    )
+    .required('Date of Birth is required'),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
   motherContactNo: Yup.string()
@@ -154,13 +172,22 @@ export const familyFieldsValidation = Yup.object({
   motherOfficeAddress3: Yup.string(),
   motherDesignation: Yup.string(),
   motherOrganization: Yup.string(),
-  motherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  motherAadharNo: Yup.string()
+    .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
+    .required('Adhar No. is required'),
   motherRemarks: Yup.string(),
   motherAddress1: Yup.string(),
   motherAddress2: Yup.string(),
   motherAddress3: Yup.string(),
   guardianName: Yup.string(),
-  guardianDob: Yup.string().required('Guardian DOB is Required').nullable(),
+  // guardianDob: Yup.string().required('Guardian DOB is Required').nullable(),
+  guardianDob: Yup.mixed()
+    .test(
+      'is-valid-dayjs',
+      'Date of Birth is required',
+      (value) => value && dayjs(value as any).isValid()
+    )
+    .required('Date of Birth is required'),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string()
@@ -191,7 +218,9 @@ export const familyFieldsValidation = Yup.object({
   guardianOfficeAddress3: Yup.string(),
   guardianDesignation: Yup.string(),
   guardianOrganization: Yup.string(),
-  guardianAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  guardianAadharNo: Yup.string()
+    .matches(/^\d{12}$/, 'Adhar number must be 12 digits')
+    .required('Adhar No. is required'),
   guardianRemarks: Yup.string(),
   guardianAddress1: Yup.string(),
   guardianAddress2: Yup.string(),

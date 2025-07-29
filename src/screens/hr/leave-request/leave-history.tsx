@@ -422,8 +422,8 @@ const LeaveHistory = (props: any) => {
               sx={{ textAlign: 'justify' }}
               title={
                 editData
-                  ? 'Review and manage leave requests. You can view details and take actions like approve or reject.'
-                  : 'Create a leave request by selecting the employee, leave type, dates, and adding notes.'
+                  ? 'Review leave request information including dates, type, reason and others.'
+                  : 'Add leave request by entering leave type, start and end dates, and a short description.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -458,8 +458,8 @@ const LeaveHistory = (props: any) => {
                 sx={{ textAlign: 'justify' }}
                 title={
                   editData.type === EmployeeLeaveStatusType.Rejected
-                    ? 'When rejecting a leave request, you must provide remarks explaining the reason for rejection.'
-                    : 'You can add optional remarks while approving this leave request.'
+                    ? 'Reject the leave if needed. Use the remarks box to share your reason (optional).'
+                    : 'Review the request and click Approve. Add remarks if you wish to include any additional info.'
                 }
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

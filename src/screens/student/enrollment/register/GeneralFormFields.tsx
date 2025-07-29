@@ -405,7 +405,7 @@ const RenderGeneralFormFields = (props: any) => {
               key="adharNo"
               size="small"
               type="number"
-              label="Aadhar No."
+              label="Aadhar No. *"
               name="adharNo"
               value={formik.values.adharNo}
               onBlur={formik.handleBlur}
