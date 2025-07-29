@@ -932,7 +932,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                               }}
                             >
                               {column.render
-                                ? column.render(_.get(row, column.id, ''), row)
+                                ? column.render(_.get(row, column.id, '-') ?? '-', row)
                                 : _.get(row, column.id, '-')}
                             </TableCell>
                           )
