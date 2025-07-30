@@ -62,7 +62,7 @@ export const SectionCard = ({
   headerContent?: React.ReactNode;
   isLoading?: boolean;
 }) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative', overflow: 'hidden' }} elevation={6}>
+  <Paper sx={{ p: 2, mb: 3, position: 'relative' }} elevation={6}>
     {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
     <Box
       display="flex"

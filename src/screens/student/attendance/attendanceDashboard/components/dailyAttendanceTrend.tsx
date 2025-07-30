@@ -7,7 +7,7 @@ import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 
-import { fPercent, fCurrency } from 'src/utils/format-number';
+import { fCurrency } from 'src/utils/format-number';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
@@ -122,7 +122,7 @@ export function BankingBalanceStatistics({ title, subheader, chart, ...other }: 
       <ChartLegends
         colors={chartOptions?.colors}
         labels={chart.series[0].data.map((item) => item.name)}
-        sublabels={[`+${fPercent(43)}`, `+${fPercent(3)}`, `+${fPercent(8)}`]}
+        sublabels={[`+${43}`, `+${3}`, `+${8}`]}
         // values={[fCurrency(6789), fCurrency(1234), fCurrency(1012)]}
         sx={{ px: 3, gap: 3 }}
       />

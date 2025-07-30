@@ -19,7 +19,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import ViewTimetableComp from './viewTimetableComp';
+import ViewTimetableComp from './ViewTimetableComp';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 

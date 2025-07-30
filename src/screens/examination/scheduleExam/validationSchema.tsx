@@ -8,10 +8,10 @@ export const validationSchema = [
     examName: yup.string().required('Exam Name is required'),
     className: yup.string().required('Class is required'),
     divisions: yup.array().min(1, 'At least one division is required'),
-    subjects: yup
+    selectedSubjects: yup
       .array()
       .required('Subjects is required')
-      .min(1, 'At least one subject is required')
+      .min(1, 'At least one subject is required'),
   }),
 
   // Step 1: Exam Details - Enhanced validation

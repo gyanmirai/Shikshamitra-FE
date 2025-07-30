@@ -6,15 +6,20 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import SelectExam from './selectExamStep1';
+import RoomDetails from './roomManageStep3';
 import ExamDetails from './examDetailsStep2';
+// import ExamDetails from './ExamDetailsStep2';
 import { validationSchema } from '../validationSchema';
 
 import type { INewExamFormProps } from '../type';
+// import ExamDetails from './examDetailsStep2';
+// import RoomDetails from './roomManageStep3';
+// import SelectExam from './selectExamStep1';
 
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   // Active step for stepper navigation
   const [activeStep, setActiveStep] = useState(0);
-  const allTimetableSteps = [SelectExam, ExamDetails];
+  const allTimetableSteps = [SelectExam, ExamDetails, RoomDetails];
 
   return (
     <CustomStepperWithFormik
@@ -24,10 +29,13 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         examName: '',
         className: '',
         divisions: [],
-        subjects: [],
+        selectedSubjects: [], // dropdown selection
+        subjects: [], // full details with timings
         description: '',
+        isRoomAssign: false,
+        roomDetails: {},
       }}
-      steps={['Basic Details', 'Schedule']}
+      steps={['Basic Details', 'Schedule', 'Room Details']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);

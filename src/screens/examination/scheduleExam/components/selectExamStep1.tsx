@@ -16,7 +16,12 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { IRoomDetails, IExamFormValues } from '../type';
+import type {
+  IRoomDetails,
+  IExamFormValues,
+  ISubjectRoomDetail,
+  IDivisionRoomDetail,
+} from '../type';
 
 const subjectOptions = [
   // Core subjects
@@ -90,28 +95,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName) || false}>
-            <TextField
-              fullWidth
-              label="Exam Name *"
-              name="examName"
-              // placeholder="Enter Exam Name"
-              value={formik.values.examName}
-              onChange={(e) => {
-                const value = e.target.value
-                  // Remove everything except letters and spaces
-                  .replace(/[^a-zA-Z0-9\s]/g, '');
-                formik.setFieldValue('examName', value);
-                formik.setFieldTouched(`examName`, false);
-              }}
-              // onChange={formik.handleChange}
-              error={formik.touched.examName && Boolean(formik.errors.examName)}
-              helperText={formik.touched.examName && formik.errors.examName}
-              size="small"
-            />
-          </ShakingTextField>
-        </Grid>
         <Grid item xs={12} md={6} lg={3}>
           <ShakingTextField error={formik.touched.examType && Boolean(formik.errors.examType)}>
             <CustomSelect
@@ -244,6 +227,35 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   }
                 }
                 formik.setFieldTouched(`divisions`, false);
+                const updatedRoomDetails = {
+                  ...(formik.values.roomDetails as unknown as Record<string, ISubjectRoomDetail>),
+                };
+
+                formik.values.subjects.forEach((subject) => {
+                  const { subjectName } = subject;
+
+                  const divisionsObj = value
+                    .filter((code) => code !== 'all')
+                    .reduce(
+                      (acc, divisionId: string) => {
+                        acc[divisionId] = updatedRoomDetails?.[subjectName]?.divisions?.[
+                          divisionId
+                        ] ?? {
+                          roomIds: [],
+                          capacity: 0,
+                        };
+                        return acc;
+                      },
+                      {} as Record<string, IDivisionRoomDetail>
+                    );
+
+                  updatedRoomDetails[subjectName] = {
+                    ...updatedRoomDetails[subjectName],
+                    divisions: divisionsObj,
+                  };
+                });
+
+                formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.divisions && formik.errors.divisions)}
@@ -259,7 +271,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         </Grid>
 
         <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects) || false}>
+          <ShakingTextField
+            error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects) || false}
+          >
             <ResponsiveMultiSelect
               label="Subjects *"
               disabled={formik.values.divisions.length === 0}
@@ -267,98 +281,113 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 { subjectName: 'All', subjectCode: 'all', subjectColor: '#000000', type: 'All' },
                 ...subjectOptions,
               ]}
-              value={formik.values.subjects.map((sub: any) => sub.subjectCode)}
+              value={formik.values.selectedSubjects}
               getOptionLabel={(opt) => opt?.subjectName}
               getOptionValue={(opt) => opt?.subjectCode}
               onChange={(selectedCodes: string[]) => {
                 const isAllSelected = selectedCodes.includes('all');
-                const wasAllPreviouslySelected = formik.values.subjects.some(
-                  (sub) => sub.subjectCode === 'all'
-                );
+                const wasAllPreviouslySelected = formik.values.selectedSubjects.includes('all');
 
-                let updatedSubjects: Array<{
-                  id: number;
-                  subjectName: string;
-                  subjectCode: string;
-                  subjectColor: string;
-                  examDate: null;
-                  startTime: null;
-                  endTime: null;
-                  totalMarks: null;
-                  passingMarks: null;
-                }>;
+                let updatedSelectedSubjects: string[] = [];
 
                 if (isAllSelected && !wasAllPreviouslySelected) {
-                  updatedSubjects = [
-                    {
-                      id: -1,
-                      subjectName: 'All',
-                      subjectCode: 'all',
-                      subjectColor: '#000000',
-                      examDate: null,
-                      startTime: null,
-                      endTime: null,
-                      totalMarks: null,
-                      passingMarks: null,
-                    },
-                    ...subjectOptions.map((subject, index) => ({
-                      id: index,
-                      subjectName: subject.subjectName,
-                      subjectCode: subject.subjectCode,
-                      subjectColor: subject.subjectColor,
-                      examDate: null,
-                      startTime: null,
-                      endTime: null,
-                      totalMarks: null,
-                      passingMarks: null,
-                    })),
-                  ];
+                  // Select all subjects
+                  updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
                 } else if (!isAllSelected && wasAllPreviouslySelected) {
-                  updatedSubjects = [];
+                  // Deselect all
+                  updatedSelectedSubjects = [];
+                } else if (isAllSelected && selectedCodes.length !== subjectOptions.length + 1) {
+                  // Prevent partial select when "All" is selected manually but not everything else
+                  updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
                 } else {
-                  updatedSubjects = selectedCodes
-                    .filter((code) => code !== 'all')
-                    .map((code, index) => {
-                      const fullSubject = subjectOptions.find((s) => s.subjectCode === code);
-                      return {
-                        id: index,
-                        subjectName: fullSubject?.subjectName || '',
-                        subjectCode: fullSubject?.subjectCode || '',
-                        subjectColor: fullSubject?.subjectColor || '#000000',
-                        examDate: null,
-                        startTime: null,
-                        endTime: null,
-                        totalMarks: null,
-                        passingMarks: null,
-                      };
-                    });
+                  // Remove 'all' if other subjects are being toggled
+                  updatedSelectedSubjects = selectedCodes.filter((code) => code !== 'all');
                 }
 
+                formik.setFieldValue('selectedSubjects', updatedSelectedSubjects);
+                formik.setFieldTouched(`selectedSubjects`, false);
+                // Update subjects list
+                const updatedSubjects = updatedSelectedSubjects
+                  .filter((code) => code !== 'all')
+                  .map((code, index) => {
+                    const subject = subjectOptions.find((s) => s.subjectCode === code);
+                    return {
+                      id: index,
+                      subjectName: subject?.subjectName || '',
+                      subjectCode: subject?.subjectCode || '',
+                      subjectColor: subject?.subjectColor || '#000000',
+                      examDate: null,
+                      startTime: null,
+                      endTime: null,
+                      totalMarks: null,
+                      passingMarks: null,
+                    };
+                  });
+
                 formik.setFieldValue('subjects', updatedSubjects);
-                formik.setFieldTouched(`subjects`, false);
-                const updatedRoomDetails = selectedCodes.reduce((acc, code) => {
-                  if (code === 'all') return acc;
+                // formik.setFieldTouched(`subjects`, false);
 
-                  const subject = subjectOptions.find((s) => s.subjectCode === code);
-                  if (!subject) return acc;
+                // Update room details
+                const updatedRoomDetails: IRoomDetails = updatedSelectedSubjects.reduce(
+                  (acc, subjectCode) => {
+                    if (subjectCode === 'all') return acc;
 
-                  acc[subject.subjectName] = {
-                    divisionId: '',
-                    roomIds: [],
-                    capacity: 0,
-                    copyPastSubject: '',
-                  };
-                  return acc;
-                }, {} as IRoomDetails);
+                    const subject = subjectOptions.find((s) => s.subjectCode === subjectCode);
+                    if (!subject) return acc;
 
+                    acc[subject.subjectName] = {
+                      copyPastSubject: '',
+                      divisions: (formik.values.divisions || [])
+                        .filter((code) => code !== 'all')
+                        .reduce(
+                          (divAcc, divisionId) => {
+                            divAcc[divisionId] = {
+                              roomIds: [],
+                              capacity: 0,
+                            };
+                            return divAcc;
+                          },
+                          {} as Record<string, IDivisionRoomDetail>
+                        ),
+                    };
+
+                    return acc;
+                  },
+                  {} as IRoomDetails
+                );
+
+                // Now set this into Formik
                 formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
-              error={!!(formik.touched.subjects && formik.errors.subjects)}
+              error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
               helperText={
-                formik.touched.subjects && typeof formik.errors.subjects === 'string'
-                  ? formik.errors.subjects
+                formik.touched.selectedSubjects &&
+                typeof formik.errors.selectedSubjects === 'string'
+                  ? formik.errors.selectedSubjects
                   : undefined
               }
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid item xs={12} md={6} lg={3}>
+          <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName) || false}>
+            <TextField
+              fullWidth
+              label="Exam Name *"
+              name="examName"
+              // placeholder="Enter Exam Name"
+              value={formik.values.examName}
+              onChange={(e) => {
+                const value = e.target.value
+                  // Remove everything except letters and spaces
+                  .replace(/[^a-zA-Z0-9\s]/g, '');
+                formik.setFieldValue('examName', value);
+                formik.setFieldTouched(`examName`, false);
+              }}
+              // onChange={formik.handleChange}
+              error={formik.touched.examName && Boolean(formik.errors.examName)}
+              helperText={formik.touched.examName && formik.errors.examName}
+              size="small"
             />
           </ShakingTextField>
         </Grid>

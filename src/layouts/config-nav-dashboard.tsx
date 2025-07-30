@@ -894,6 +894,13 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+1+2',
             },
             {
+              title: 'Seat Allocation',
+              path: '/academic/seatallocation',
+              _action: 'academic-seatAllocation',
+              shortcutKey: 'Alt+E+1+2',
+              shortcutKeyName: 'Alt+E+1+2',
+            },
+            {
               title: 'Record Marks',
               path: '/academic/gradeEntry',
               _action: 'academic-gradeEntry',

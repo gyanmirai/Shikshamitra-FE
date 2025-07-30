@@ -564,12 +564,15 @@ const defaultValues = {
   questionTime: '',
 };
 
-const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
+const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => {
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
   const theme = useTheme();
   const [optionToDeleteIndex, setOptionToDeleteIndex] = useState<number | null>(null);
-
+  const totalQuestionMarks = formik.values.questions.reduce(
+    (acc: any, question: any) => acc + Number(question.marks || 0),
+    0
+  );
   const deleteOptionDialog = useBoolean();
   const [errors, setErrors] = useState({
     question: '',
@@ -613,6 +616,10 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
     if (!formState.questionType) newErrors.questionType = 'Question Type is required';
     if (!formState.marks || isNaN(Number(formState.marks)) || Number(formState.marks) <= 0)
       newErrors.marks = 'Valid marks required';
+    if (!formState.marks || formState.marks > formik.values.totalMarks)
+      newErrors.marks = 'Cannot exceed total marks.';
+    if (totalQuestionMarks + Number(formState.marks) > formik.values.totalMarks)
+      newErrors.marks = 'Total Cannot exceed total marks.';
     if (!formState.questionTime) newErrors.questionTime = 'Time is required';
     if (!formState.correctAnswer) newErrors.correctAnswer = 'Answer required';
 
@@ -1064,7 +1071,7 @@ const QuizBuilder = ({ formik }: any) => {
           </Box>
         }
       >
-        <QuestionForm onSave={handleAddQuestion} onCancel={handleClose} />
+        <QuestionForm onSave={handleAddQuestion} onCancel={handleClose} formik={formik} />
       </CustomDialog>
 
       <CustomDialog
@@ -1090,6 +1097,7 @@ const QuizBuilder = ({ formik }: any) => {
             initialData={editingQuestion.data}
             onSave={handleSaveEdit}
             onCancel={handleClose}
+            formik={formik}
           />
         )}
       </CustomDialog>
