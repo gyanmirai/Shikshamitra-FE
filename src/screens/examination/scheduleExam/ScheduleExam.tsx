@@ -17,11 +17,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+// import NewExamForm from './components/ExamFormComponent';
+import ViewTimetableComp from './components/ViewTimetableComp';
+// import ScheduledExamTable from './components/ScheduleExamTable';
+
 import NewExamForm from './components/examFormComponent';
-import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
 
 import type { IExamFormValues } from './type';
+// import ScheduledExamTable from './components/scheduleExamTable';
 
 const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control exam form visibility

@@ -24,19 +24,26 @@ export interface IExamTime {
   endTime: string | Dayjs | null;
   totalMarks: string;
   passingMarks: string;
+  notes?: string;
 }
-
-export interface SubjectRoomDetail {
-  divisionId: string;
+// Represents room data for a single division
+export interface IDivisionRoomDetail {
   roomIds: string[];
   capacity: number;
+}
+
+// Represents room assignment for a subject with multiple divisions
+export interface ISubjectRoomDetail {
+  divisions: Record<string, IDivisionRoomDetail>; // key: division ID (string)
   copyPastSubject: string;
 }
 
-export type IRoomDetails = Record<string, SubjectRoomDetail>;
+// Represents the whole structure: key is subjectName (e.g. "Science", "Maths")
+export type IRoomDetails = Record<string, ISubjectRoomDetail>;
 
 export interface IExamFormValues {
   id?: string;
+  selectedSubjects: string[];
   examType: string;
   examName: string;
   className: string;
@@ -45,6 +52,7 @@ export interface IExamFormValues {
   roomDetails?: IRoomDetails[];
   description: string;
   status?: number;
+  isRoomAssign?: boolean;
 }
 
 export interface IScheduledExamTableProps {

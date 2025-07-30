@@ -19,7 +19,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import ViewTimetableComp from './viewTimetableComp';
+import ViewTimetableComp from './ViewTimetableComp';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
 
@@ -191,11 +191,13 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           </>
         }
         columns={[
+          { id: 'examName', label: 'Exam Name', align: 'left' },
+          { id: 'examType', label: 'Exam Type', align: 'left' },
           {
             id: 'className',
             label: 'Class',
             align: 'left',
-            filterType:'number',
+            filterType: 'number',
             children: (row): React.ReactNode => (
               <ViewTimetableComp examData={row as IExamFormValues} />
             ),
@@ -206,8 +208,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             align: 'left',
             render: (value) => <Box>{value.join(', ')}</Box>,
           },
-          { id: 'examName', label: 'Exam Name', align: 'left' },
-          { id: 'examType', label: 'Exam Type', align: 'left' },
+          { id: 'createdBy', label: 'Created By', align: 'left' },
           {
             id: 'action',
             label: 'Actions',
