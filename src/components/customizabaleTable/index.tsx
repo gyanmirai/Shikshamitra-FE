@@ -94,19 +94,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
     [columns]
   );
-  // const tableRef = useRef<any>(null);
   const [tableRef, setTableRef] = useState<any>(null);
   const theme = useTheme();
-
-  // const totalRows = data.length; // Get total number of rows
-
-  // const [selectedRows, setSelectedRows] = useState(new Set()); // Store selected row IDs
-
-  // const handleSendNotification = () => {
-  //   // sendInstantNotificationDialogValue.onTrue();
-  //   // const selectedRowIds = Array.from(selectedRows);
-  //   // const selectedRowsData = data.filter((row) => selectedRowIds.includes(row.id));
-  // };
 
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
@@ -161,14 +150,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   //   columns.reduce((acc, column) => ({ ...acc, [column.id]: true }), {})
   // );
   const { columnVisibility } = tableConfig;
-  // const [filterColumn, setFilterColumn] = useState('');
-  const { filterColumn } = tableConfig;
-
-  // const [filterType, setFilterType] = useState('contains');
-  const { filterType } = tableConfig;
-
-  // const [filterValue, setFilterValue] = useState('');
-  const { filterValue } = tableConfig;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -277,14 +258,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     }, 500);
   }, [handelChangeParams, searchValue]);
 
-  // useEffect(
-  //   () => () => {
-  //     removeParamsByKey(tableId);
-  //   },
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  //   [tableId]
-  // );
-
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       // setRowsPerPage(+event.target.value);
@@ -347,8 +320,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           : filter.value;
         const isDateType = filter.valueType === 'date';
         const isFormattedNumber = filter.valueType === 'formattedNumber';
-        // const isBetweenfilter=
-        console.log(filter.valueType, 'filter.valueType');
 
         if (isDateType) {
           switch (filter.type) {
@@ -431,10 +402,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const sortedData = useMemo(() => {
     if (serverSide) return filteredData;
-    // const column = columns.find((col) => col.id === sortColumn);
-    // if (column && column.onSort && column.isSort !== false) {
-    //   return column.onSort(filteredData, sorts);
-    // }
     return _.orderBy(
       filteredData,
       sorts.map((i) => i.column),
@@ -461,10 +428,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       filterValue: '',
       page: 0,
     });
-    // setFilterColumn('');
-    // setFilterType('contains');
-    // setFilterValue('');
-    // setPage(0);
     setAnchorEl(null);
   };
 
@@ -504,26 +467,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     },
     [data, columns]
   );
-  const handleApplyFilter = () => {
-    if (filterColumn && filterType && filterValue) {
-      handelChangeParams({
-        filters: [
-          ...filters,
-          { column: filterColumn, type: filterType, value: filterValue, valueType: '' },
-        ],
-        filterColumn: '',
-        filterType: 'contains',
-        filterValue: '',
-      });
-      // setFilters([...filters, { column: filterColumn, type: filterType, value: filterValue }]);
-      // setFilterColumn('');
-      // setFilterType('contains');
-      // setFilterValue('');
-    }
-    handelChangeParams({ page: 0 });
-    // setPage(0);
-    setAnchorEl(null);
-  };
+
   const handleColumnFilterClick = (event: React.MouseEvent, column: IColumn) => {
     event.stopPropagation(); // Prevent sort trigger
     setFilterAnchorEl({ element: event.currentTarget as HTMLElement, column });
@@ -581,18 +525,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         {isFilter && (
           <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
             <Box sx={{ ml: 2 }}>
-              {/* {showCheckbox && (
-                <Button
-                  // variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="prime:send" />}
-                  onClick={onSendNotification}
-                  sx={{ mr: 2 }}
-                  disabled
-                >
-                  Send Notification
-                </Button>
-              )} */}
               <Button
                 // variant="outlined"
                 size="small"
@@ -654,10 +586,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                     [column.id]: e.target.checked,
                                   },
                                 });
-                                // setColumnVisibility((prev) => ({
-                                //   ...prev,
-                                //   [column.id]: e.target.checked,
-                                // }));
                               }}
                             />
                           }
@@ -669,9 +597,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     <Button
                       size="small"
                       onClick={() => {
-                        // setColumnVisibility(
-                        //   Object.fromEntries(columns.map((column) => [column.id, true]))
-                        // );
                         handelChangeParams({
                           columnSearchTerm: '',
                           columnVisibility: Object.fromEntries(
@@ -709,15 +634,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   <Iconify icon="solar:document-bold" />
                   &nbsp; Export as PDF
                 </MenuItem>
-                {/* <MenuItem onClick={() => handleExport('import')}>
-              {' '}
-              <Iconify icon="solar:import-bold" />
-              &nbsp; Import
-            </MenuItem>
-            <MenuItem onClick={() => handleExport('print')}>
-              <Iconify icon="fluent:print-28-filled" />
-              &nbsp; Print
-            </MenuItem> */}
               </Menu>
             </Box>
           </Box>
@@ -755,7 +671,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                         sx={{
                           fontSize: '14px',
                           width: column.minWidth,
-
                           // @ts-ignore
                           left: column.sticky ? stickyMap[column.id] : 'auto',
                           right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
@@ -828,7 +743,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                 transform: 'translateY(-50%)',
                               }}
                               onClick={(e) => handleColumnFilterClick(e, column)}
-                              // className="column-filter-icon"
                             />
                           )}
 
@@ -838,13 +752,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                               display="flex"
                               justifyContent="center"
                               alignItems="center"
-                              // sx={{
-                              //   position: 'absolute',
-                              //   left: '10px',
-                              //   top: '50%',
-                              //   transform: 'translateY(-50%)',
-                              //   mr: 0.5,
-                              // }}
                             >
                               {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
                                 <Box component="span" sx={{ fontSize: '0.75em' }}>
@@ -867,15 +774,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             </Box>
                           )}
                         </Box>
-                        {/* <Divider
-                        orientation="vertical"
-                        sx={{
-                          width: column.sticky ? '0px' : '2px',
-                          background: (theme) => theme.palette.divider,
-                          height: '20px',
-                          margin: '10px 2px',
-                        }}
-                      /> */}
                       </TableCell>
                     )
                 )}
@@ -889,7 +787,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     colSpan={columns.length + 1}
                     sx={{ height: '50px' }}
                   >
-                    {/* <CircularProgress color="primary" size={24} /> */}
                     <Box className="loader" height={24} />
                   </TableCell>
                 </TableRow>
@@ -926,14 +823,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                 backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                                 boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
                                 ...getStickyStyle(column),
-                                // '&:hover': {
-                                //   background: 'var(--palette-action-hover)',
-                                // },
                               }}
                             >
                               {column.render
-                                ? column.render(_.get(row, column.id, ''), row)
-                                : _.get(row, column.id, '-')}
+                                ? column.render(_.get(row, column.id, '-') ?? '-', row)
+                                : (_.get(row, column.id, '-') ?? '-')}
                             </TableCell>
                           )
                       )}

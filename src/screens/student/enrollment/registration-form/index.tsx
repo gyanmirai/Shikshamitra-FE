@@ -86,15 +86,9 @@ const RegistrationFormScreen = () => {
         address: [item.addressLine1, item.addressLine2, item.addressLine3]
           .filter(Boolean)
           .join(', '),
-        secondaryContactNumber:
-          item.secondaryContactNumber && item.secondaryContactNumber !== ''
-            ? item.secondaryContactNumber
-            : undefined,
       })),
     [inquiryFormData?.items]
   );
-
-  console.log(tableData);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
