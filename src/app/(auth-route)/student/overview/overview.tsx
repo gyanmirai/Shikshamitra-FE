@@ -14,67 +14,43 @@ const Overview = () => {
       id: '0',
       icon: 'mdi:users', // Total Students
       title: 'Total Students',
-      count: fNumber(1247),
+      count: fNumber(1000),
       color: 'success.main',
       bgColor: 'success',
       href: '/student/profile',
       width: 4,
-      labels: [],
+      labels: [
+        { name: 'Male - 5,000', color: 'success' },
+        { name: 'Female - 5,000', color: 'error' },
+      ],
     },
     {
       id: '1',
-      icon: 'lucide:badge-check', // GR Numbers Generated
-      title: 'GR Numbers Generated',
-      count: fNumber(1189),
-      color: 'info.main',
+      icon: 'ph:student-bold', // Total Primary Students
+      title: 'Total Primary Students',
+      count: fNumber(1000),
+      color: '#00BFFF',
       bgColor: 'info',
-      href: '/student/management/?tab=grGeneration',
+      href: '/student/primary',
       width: 4,
-      labels: [],
+      labels: [
+        { name: 'Male - 600', color: 'success' },
+        { name: 'Female - 400', color: 'error' },
+      ],
     },
     {
       id: '2',
-      icon: 'heroicons:identification', // Roll Numbers Generated
-      title: 'Roll Numbers Generated',
-      count: fNumber(1203),
-      color: 'warning.main',
+      icon: 'ph:student-fill', // Total Secondary Students
+      title: 'Total Secondary Students',
+      count: fNumber(247),
+      color: '#FFA500',
       bgColor: 'warning',
-      href: '/student/management/?tab=rollGeneration',
+      href: '/student/secondary',
       width: 4,
-      labels: [],
-    },
-    {
-      id: '3',
-      icon: 'solar:transfer-horizontal-bold-duotone', // Division Change
-      title: 'Division Change',
-      count: fNumber(47),
-      color: 'info.main',
-      bgColor: 'info',
-      href: '/student/management/?tab=changeDivision',
-      width: 4,
-      labels: [],
-    },
-    {
-      id: '4',
-      icon: 'solar:transfer-horizontal-broken', // Class Change This Term
-      title: 'Class Change This Term',
-      count: fNumber(23),
-      color: 'error.main',
-      bgColor: 'error',
-      href: '/student/enrollment/class-change',
-      width: 4,
-      labels: [],
-    },
-    {
-      id: '5',
-      icon: 'tdesign:certificate-1', // Add New Card
-      title: 'Certificates Generated',
-      count: fNumber(120),
-      color: 'success.main',
-      bgColor: 'success',
-      href: '/student/certificates/?tab=bonafiedCertificates',
-      width: 4,
-      labels: [],
+      labels: [
+        { name: 'Male - 120', color: 'success' },
+        { name: 'Female - 127', color: 'error' },
+      ],
     },
   ]);
 

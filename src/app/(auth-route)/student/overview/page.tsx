@@ -3,12 +3,14 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
 
 import { fNumber } from 'src/utils/format-number';
+
+import activities from 'src/json/student/enrollementDashboard/recentActivities.json';
 
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
@@ -26,134 +28,37 @@ const todayBirthdays = [
 const upcomingBirthdays = [
   { name: 'Arjun Sharma', age: 15, className: '5A', dateLabel: 'Tomorrow' },
   { name: 'Priya Patel', age: 14, className: '5A', dateLabel: 'Dec 28' },
+  { name: 'Raj Kumar', age: 13, className: '4B', dateLabel: 'Dec 29' },
+  { name: 'Meera Singh', age: 12, className: '3C', dateLabel: 'Dec 30' },
 ];
 
-const activities = [
-  {
-    color: 'success',
-    title: 'Roll No. assigned to Yuvraj Singh',
-    subtitle: 'Class 5-B · Roll No.-12',
-    timeAgo: '2 hours ago',
-    date: '06-07-2025',
-  },
-  {
-    color: 'info',
-    title: 'Division Changed for Meera Patel',
-    subtitle: 'Class 4-B ➝ 4-C',
-    timeAgo: '4 hours ago',
-    date: '06-07-2025',
-  },
-  {
-    color: 'success',
-    title: 'New Student added to Blue House',
-    subtitle: 'Anjali Sharma · Class 3-A',
-    timeAgo: '6 hours ago',
-    date: '06-07-2025',
-  },
-  {
-    color: 'success',
-    title: 'GR No. generated for Kiran Kumar',
-    subtitle: 'GR2025001847',
-    timeAgo: '1 day ago',
-    date: '05-07-2025',
-  },
-  {
-    color: 'warning',
-    title: 'House change request pending',
-    subtitle: 'Anjali Sharma · Green to Red House',
-    timeAgo: '2 days ago',
-    date: '04-07-2025',
-  },
-  {
-    color: 'error',
-    title: 'Attendance marked absent',
-    subtitle: 'Rahul Verma · Class 6-A',
-    timeAgo: '3 days ago',
-    date: '03-07-2025',
-  },
-  {
-    color: 'info',
-    title: 'Fee payment received',
-    subtitle: 'Priya Shah · Term 2 Fees',
-    timeAgo: '4 days ago',
-    date: '02-07-2025',
-  },
-  {
-    color: 'success',
-    title: 'Sports team selection',
-    subtitle: 'Arjun Kumar · Football Team',
-    timeAgo: '5 days ago',
-    date: '01-07-2025',
-  },
-  {
-    color: 'warning',
-    title: 'Parent meeting scheduled',
-    subtitle: 'Neha Gupta · Class 7-B',
-    timeAgo: '1 week ago',
-    date: '29-06-2025',
-  },
-  {
-    color: 'info',
-    title: 'Academic achievement',
-    subtitle: 'Sanya Malhotra · Science Quiz Winner',
-    timeAgo: '1 week ago',
-    date: '29-06-2025',
-  },
-] as const;
-const Overview = () => {
-  const [sections, setSections] = useState([
-    {
-      id: '0',
-      title: 'Over View',
-    },
-    {
-      id: '1',
-      title: 'Recent Activities Notification',
-    },
-    {
-      id: '2',
-      title: 'Student Birth Date',
-    },
-    {
-      id: '3',
-      title: 'Enrollment Trends',
-    },
-    {
-      id: '4',
-      title: 'Class Wise Student Strength ',
-    },
-  ]);
-  return (
-    <Box>
-      {/* <CustomizableView sections={sections} setSections={setSections} /> */}
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
-          <OverviewCard />
-        </Grid2>
-
-        <Grid2 xs={12} md={6}>
-          <HouseDistribution />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <StudentStrengthClassWise />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <BirthdaySection
-            todaysBirthdays={todayBirthdays}
-            upcomingBirthdays={upcomingBirthdays}
-            title="Student's Birthdays"
-          />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <RecentActivities activities={activities} />
-        </Grid2>
+const Overview = () => (
+  <Box>
+    <Grid2 container spacing={2} sx={{ mb: 2 }}>
+      <Grid2 xs={12}>
+        <OverviewCard />
       </Grid2>
-      {/* <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>{sections.map((section: any) => dashBoardSections[section.id])}</Grid2>
-      </Grid2> */}
-    </Box>
-  );
-};
+
+      <Grid2 xs={12} md={6}>
+        <HouseDistribution />
+      </Grid2>
+      <Grid2 xs={12} md={6}>
+        <BirthdaySection
+          todaysBirthdays={todayBirthdays}
+          upcomingBirthdays={upcomingBirthdays}
+          title="Birthdays"
+        />
+      </Grid2>
+      <Grid2 xs={12}>
+        <StudentStrengthClassWise />
+      </Grid2>
+
+      <Grid2 xs={12}>
+        <RecentActivities activities={activities} />
+      </Grid2>
+    </Grid2>
+  </Box>
+);
 
 export default Overview;
 
