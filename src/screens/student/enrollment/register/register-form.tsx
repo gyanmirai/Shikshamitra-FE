@@ -64,6 +64,8 @@ const RegisterForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   isComeFromIssueForm?: boolean;
 }) => {
+  console.log('🚀 ~ RegisterForm ~ editData:', editData);
+
   const [activeStep, setActiveStep] = useState(0);
 
   const [addRegistration] = useQueryAndMutation({
