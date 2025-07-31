@@ -19,7 +19,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/ViewTimetableComp';
-import ScheduledExamTable from './components/scheduleExamTable';
+import ScheduledExamTable from './components/ScheduleExamTable';
 
 import type { IExamFormValues } from './type';
 

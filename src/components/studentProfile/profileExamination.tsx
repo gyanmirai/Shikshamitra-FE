@@ -1,7 +1,7 @@
 import type { CardProps } from '@mui/material';
 import type { IExamFormValues } from 'src/screens/examination/scheduleExam/type';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 import { Card, useTheme, CardHeader } from '@mui/material';
 
@@ -19,11 +19,6 @@ const ProfileExamination = () => {
   const [examData, setExamData] = useState<IExamFormValues[]>(examTableData);
   // State to track the selected year for data series
   const [selectedSeries, setSelectedSeries] = useState('2024');
-
-  // Callback handler for updating the selected series
-  const handleChangeSeries = useCallback((newValue: string) => {
-    setSelectedSeries(newValue);
-  }, []);
 
   return (
     <ScheduledExamTable
