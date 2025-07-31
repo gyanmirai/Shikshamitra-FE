@@ -17,8 +17,6 @@ const SeatManagement = ({
   onStudentRemove: (studentId: number | null) => void;
   onSeatSwap: (from: number, to: number) => void;
 }) => {
-  console.log('assignedData--', assignedData);
-
   const generateDummySeats = (room: { rows: number; columns: number; benchCapacity: number }) => {
     const seats: ISeat[] = [];
     let seatNumber = 1;
@@ -68,8 +66,6 @@ const SeatManagement = ({
   const handleSeatSwap = (fromSeatNumber: number, toSeatNumber: number) => {
     onSeatSwap(fromSeatNumber, toSeatNumber);
   };
-
-  console.log('seatList---', seatList);
 
   return (
     <Box sx={{ height: '100%' }}>

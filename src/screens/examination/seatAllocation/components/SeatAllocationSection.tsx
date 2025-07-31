@@ -2,43 +2,33 @@ import React, { useState } from 'react';
 
 import { Box, Grid, Paper, useTheme } from '@mui/material';
 
+import seatAllocationData from 'src/json/examination/seatAllocationData.json';
+import seatAllocationStudents from 'src/json/examination/seatAllocationStudents.json';
+
 import { Scrollbar } from 'src/components/scrollbar';
 
 import StudentCard from './StudentCard';
 import SeatManagement from './SeatManagement';
 
-const SeatAllocationSection = ({ division, classRoom }: any) => {
+import type { IStudentRoomAssignment } from '../type';
+
+const SeatAllocationSection = ({
+  division,
+  classRoom,
+}: {
+  division: string;
+  classRoom: string;
+}) => {
+  // Material-UI theme hook for accessing theme colors and styling properties
   const theme = useTheme();
-  const [assignedData, setAssignedData] = useState([
-    { seatNumber: 1, studentName: 'Dharmik Jinger', class: 'I', rollNo: '1', studentId: 101 },
-    { seatNumber: 2, studentName: 'Nitre', class: 'I', rollNo: '1', studentId: 102 },
-    { seatNumber: 3, studentName: 'Raj Baku', class: 'I', rollNo: '2', studentId: 103 },
-    { seatNumber: 4, studentName: 'Mayur Solanki', class: '2', rollNo: '2', studentId: 104 },
-    { seatNumber: 21, studentName: 'John Doe', class: '3', rollNo: '3', studentId: 105 },
-    { seatNumber: 22, studentName: 'Jane Smith', class: '3', rollNo: '4', studentId: 106 },
-  ]);
-  const [students, setStudents] = useState<any[]>([
-    { id: 1, name: 'Jignesh Jinjala', rollNo: '08', isRoomAssign: false },
-    { id: 2, name: 'Sweta Badgujar', rollNo: '09', bench: '05', room: '101', isRoomAssign: true },
-    { id: 3, name: 'Amit Patel', rollNo: '10', bench: '02', room: '102', isRoomAssign: true },
-    { id: 4, name: 'Kavita Mehta', rollNo: '11', isRoomAssign: false },
-    { id: 5, name: 'Raj Shah', rollNo: '12', bench: '03', room: '101', isRoomAssign: true },
-    { id: 6, name: 'Priya Singh', rollNo: '13', isRoomAssign: false },
-    { id: 7, name: 'Nikhil Verma', rollNo: '14', bench: '06', room: '103', isRoomAssign: true },
-    { id: 8, name: 'Meera Desai', rollNo: '15', bench: '04', room: '102', isRoomAssign: true },
-    { id: 9, name: 'Rohan Kumar', rollNo: '16', isRoomAssign: false },
-    { id: 10, name: 'Anita Sharma', rollNo: '17', bench: '07', room: '103', isRoomAssign: true },
-    { id: 11, name: 'Vikram Malhotra', rollNo: '18', bench: '08', room: '101', isRoomAssign: true },
-    { id: 12, name: 'Neha Gupta', rollNo: '19', isRoomAssign: false },
-    { id: 13, name: 'Arun Joshi', rollNo: '20', bench: '09', room: '102', isRoomAssign: true },
-    { id: 14, name: 'Pooja Patel', rollNo: '21', bench: '10', room: '103', isRoomAssign: true },
-    { id: 15, name: 'Sanjay Mehta', rollNo: '22', isRoomAssign: false },
-    { id: 16, name: 'Deepa Reddy', rollNo: '23', bench: '11', room: '101', isRoomAssign: true },
-    { id: 17, name: 'Karan Soni', rollNo: '24', bench: '12', room: '102', isRoomAssign: true },
-    { id: 18, name: 'Maya Iyer', rollNo: '25', isRoomAssign: false },
-    { id: 19, name: 'Rahul Kapoor', rollNo: '26', bench: '13', room: '103', isRoomAssign: true },
-    { id: 20, name: 'Anjali Nair', rollNo: '27', bench: '14', room: '101', isRoomAssign: true },
-  ]);
+
+  // State to manage seat assignment data, tracking which students are assigned to which seats
+  // Initialized with mock data from JSON file for seat allocation information
+  const [assignedData, setAssignedData] = useState(seatAllocationData);
+
+  // State to manage the list of students available for room assignment
+  // Tracks student details including assignment status and bench allocation
+  const [students, setStudents] = useState<IStudentRoomAssignment[]>(seatAllocationStudents);
 
   const handleStudentRemove = (studentId: number | null) => {
     // Remove from assigned seats
@@ -46,7 +36,7 @@ const SeatAllocationSection = ({ division, classRoom }: any) => {
 
     // Update student status
     setStudents((prev) =>
-      prev.map((s) => (s.id === studentId ? { ...s, isRoomAssign: false, bench: undefined } : s))
+      prev?.map((s) => (s.id === studentId ? { ...s, isRoomAssign: false, bench: undefined } : s))
     );
   };
 

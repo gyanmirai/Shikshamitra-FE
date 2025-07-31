@@ -1,8 +1,16 @@
+import type { Theme } from '@mui/material';
+
 import { Box, Paper, Avatar, Typography } from '@mui/material';
 
-const StudentCard = ({ student, theme }: { student: any; theme: any }) => {
+import type { IStudentRoomAssignment } from '../type';
+
+interface DragData {
+  type: string;
+  student: IStudentRoomAssignment;
+}
+const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; theme: Theme }) => {
   const handleDragStart = (e: React.DragEvent) => {
-    const dragData: any = {
+    const dragData: DragData = {
       type: 'student',
       student,
     };
@@ -35,7 +43,7 @@ const StudentCard = ({ student, theme }: { student: any; theme: any }) => {
       title={student.isRoomAssign ? 'Already Assign' : 'Drag to assign seat'}
     >
       <Box display="flex" alignItems="center" gap={1}>
-        <Avatar>{student.name.split(' ')[0][0]}</Avatar>
+        <Avatar>{student.name?.split(' ')?.[0]?.[0] || '?'}</Avatar>
         <Box>
           <Typography variant="subtitle1" fontWeight={600}>
             {student.name}

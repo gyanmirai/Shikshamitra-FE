@@ -9,3 +9,12 @@ export interface ISeat {
   row: number;
   studentId: number | null;
 }
+
+export interface IStudentRoomAssignment {
+  id: number;
+  name: string;
+  rollNo: string;
+  bench?: string;
+  room?: string;
+  isRoomAssign: boolean;
+}
