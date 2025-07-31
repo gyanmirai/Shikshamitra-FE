@@ -8,7 +8,7 @@ import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers
 
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IExamFormValues } from '../type';
+import type { IExamFormValues, ISubjectRoomDetail } from '../type';
 
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
@@ -65,6 +65,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 onChange={(newTime) => {
                   formik.setFieldValue(`subjects.${row.id}.examDate`, newTime);
                   formik.setFieldTouched(`subjects.${row.id}.examDate`, true, false);
+                  const updatedRoomDetails = {
+                    ...(formik.values.roomDetails as unknown as Record<string, ISubjectRoomDetail>),
+                  };
+                  updatedRoomDetails[row.subjectName] = {
+                    ...updatedRoomDetails[row.subjectName],
+                    examDate: newTime || null,
+                  };
+                  formik.setFieldValue('roomDetails', updatedRoomDetails);
                 }}
                 minDate={dayjs()}
                 slotProps={{

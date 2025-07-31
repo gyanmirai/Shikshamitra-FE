@@ -36,6 +36,7 @@ export interface IDivisionRoomDetail {
 export interface ISubjectRoomDetail {
   divisions: Record<string, IDivisionRoomDetail>; // key: division ID (string)
   copyPastSubject: string;
+  examDate: string | Dayjs | null; // Exam date for the subject
 }
 
 // Represents the whole structure: key is subjectName (e.g. "Science", "Maths")
@@ -49,7 +50,7 @@ export interface IExamFormValues {
   className: string;
   divisions: string[];
   subjects: IExamTime[];
-  roomDetails?: IRoomDetails[];
+  roomDetails?: IRoomDetails;
   description: string;
   status?: number;
   isRoomAssign?: boolean;

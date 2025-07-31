@@ -296,24 +296,12 @@ const TimeTableGrid = ({
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };
 
-  console.log('timetable---', timetable);
-
   // Function to open dialog and store initial state
   const handleOpenDialog = useCallback(() => {
     setInitialTimetableData(cloneDeep(timetable));
     setInitialSubjectsGroups(cloneDeep(subjectsGroups));
     setOpen(true);
   }, [timetable, subjectsGroups]);
-
-  // const handleCloseDialog = (shouldRevert: boolean = false) => {
-  //   if (shouldRevert) {
-  //     // Revert to initial state
-  //     setTimetable(initialTimetableData);
-  //     setSubjectsGroups(initialSubjectsGroups);
-  //   }
-  //   setOpen(false);
-  //   setIsEdit(false);
-  // };
 
   const handleDrop = (e: any, item: DayData, rowIndex: number, colIndex: number) => {
     const subjectData = e.dataTransfer.getData('subject');
@@ -420,8 +408,6 @@ const TimeTableGrid = ({
         setTimetable(cloneTimeTableData);
         setSubjectsGroups(cloneSubjectGroups);
       }
-
-      console.log('cloneTimeTableData---', cloneTimeTableData);
     }
   };
 

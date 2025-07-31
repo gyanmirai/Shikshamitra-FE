@@ -567,6 +567,8 @@ const defaultValues = {
 const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => {
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
+  const currentMarks = Number(formState.marks);
+  const totalMarks = Number(formik.values.totalMarks);
   const theme = useTheme();
   const [optionToDeleteIndex, setOptionToDeleteIndex] = useState<number | null>(null);
   const totalQuestionMarks = formik.values.questions.reduce(
@@ -616,10 +618,11 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
     if (!formState.questionType) newErrors.questionType = 'Question Type is required';
     if (!formState.marks || isNaN(Number(formState.marks)) || Number(formState.marks) <= 0)
       newErrors.marks = 'Valid marks required';
-    if (!formState.marks || formState.marks > formik.values.totalMarks)
-      newErrors.marks = 'Cannot exceed total marks.';
-    if (totalQuestionMarks + Number(formState.marks) > formik.values.totalMarks)
-      newErrors.marks = 'Total Cannot exceed total marks.';
+    if (currentMarks > totalMarks) {
+      newErrors.marks = 'Marks cannot exceed total marks limit.';
+    } else if (totalQuestionMarks + currentMarks > totalMarks) {
+      newErrors.marks = `Total marks would exceed limit. Available: ${totalMarks - totalQuestionMarks}`;
+    }
     if (!formState.questionTime) newErrors.questionTime = 'Time is required';
     if (!formState.correctAnswer) newErrors.correctAnswer = 'Answer required';
 

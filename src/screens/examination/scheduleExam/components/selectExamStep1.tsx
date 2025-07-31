@@ -16,12 +16,7 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type {
-  IRoomDetails,
-  IExamFormValues,
-  ISubjectRoomDetail,
-  IDivisionRoomDetail,
-} from '../type';
+import type { IRoomDetails, IExamFormValues, IDivisionRoomDetail } from '../type';
 
 const subjectOptions = [
   // Core subjects
@@ -73,7 +68,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  console.log('formik values----', formik.values);
 
   // Get current board, medium and medium setter from global state
   const {
@@ -228,7 +222,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 }
                 formik.setFieldTouched(`divisions`, false);
                 const updatedRoomDetails = {
-                  ...(formik.values.roomDetails as unknown as Record<string, ISubjectRoomDetail>),
+                  ...(formik.values.roomDetails || {}),
                 };
 
                 formik.values.subjects.forEach((subject) => {
@@ -238,7 +232,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     .filter((code) => code !== 'all')
                     .reduce(
                       (acc, divisionId: string) => {
-                        acc[divisionId] = updatedRoomDetails?.[subjectName]?.divisions?.[
+                        acc[divisionId] = updatedRoomDetails?.[subjectName as string]?.divisions?.[
                           divisionId
                         ] ?? {
                           roomIds: [],
@@ -252,6 +246,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   updatedRoomDetails[subjectName] = {
                     ...updatedRoomDetails[subjectName],
                     divisions: divisionsObj,
+                    examDate: subject.examDate || null,
                   };
                 });
 
@@ -325,7 +320,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   });
 
                 formik.setFieldValue('subjects', updatedSubjects);
-                // formik.setFieldTouched(`subjects`, false);
 
                 // Update room details
                 const updatedRoomDetails: IRoomDetails = updatedSelectedSubjects.reduce(
@@ -349,6 +343,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           },
                           {} as Record<string, IDivisionRoomDetail>
                         ),
+                      examDate: acc[subject.subjectName]?.examDate || null,
                     };
 
                     return acc;
