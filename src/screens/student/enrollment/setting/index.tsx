@@ -18,6 +18,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import StudentDocumentType from './document-type';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
+import RegistrationAmount from './RegistrationFormAmount';
 
 const TABS = [
   {
@@ -41,13 +42,28 @@ const TABS = [
     buttonText: 'Slot',
     component: (props: any) => <EntranceExamSlots {...props} />,
   },
+  {
+    value: 'registrationFormAmount',
+    label: 'Registration Form Amount',
+    icon: <Iconify icon="solar:money-bold" width={20} />,
+    buttonText: 'Amount',
+    component: (props: any) => <RegistrationAmount {...props} />,
+  },
+  {
+    value: 'formNumberSeries',
+    label: 'Form Number Series',
+    icon: <Iconify icon="solar:form-bold" width={20} />,
+    buttonText: 'Form Number Series',
+    component: React.lazy(() => import('./FormNumberSeries')),
+  },
 ];
 const StudentEnrollmentSettingScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'defaultDocumentTypes' });
   const defaultDocumentTypes = useBoolean();
   const inquiryPreferenceDialog = useBoolean();
   const entranceExamSlotsDialog = useBoolean();
-
+  const registrationAmountDialog = useBoolean();
+  const formNumberSeriesDialog = useBoolean();
   const renderButton = useMemo(
     () => ({
       defaultDocumentTypes: (
@@ -83,8 +99,35 @@ const StudentEnrollmentSettingScreen = () => {
           Slot
         </Button>
       ),
+      registrationFormAmount: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={registrationAmountDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Amount
+        </Button>
+      ),
+      formNumberSeries: (
+        <Button
+          startIcon={<Add />}
+          onClick={formNumberSeriesDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Form Number Series
+        </Button>
+      ),
     }),
-    [defaultDocumentTypes.onTrue, entranceExamSlotsDialog.onTrue, inquiryPreferenceDialog.onTrue]
+    [
+      defaultDocumentTypes.onTrue,
+      entranceExamSlotsDialog.onTrue,
+      inquiryPreferenceDialog.onTrue,
+      registrationAmountDialog.onTrue,
+      formNumberSeriesDialog.onTrue,
+    ]
   );
 
   const currentActiveComponent = useMemo(
@@ -158,6 +201,8 @@ const StudentEnrollmentSettingScreen = () => {
               defaultDocumentTypes={defaultDocumentTypes}
               inquiryPreferenceDialog={inquiryPreferenceDialog}
               entranceExamSlotsDialog={entranceExamSlotsDialog}
+              registrationAmountDialog={registrationAmountDialog}
+              formNumberSeriesDialog={formNumberSeriesDialog}
             />
           )}
         </Scrollbar>

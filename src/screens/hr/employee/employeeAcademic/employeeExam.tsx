@@ -9,7 +9,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-import ViewTimetableComp from 'src/screens/examination/scheduleExam/components/viewTimetableComp';
+import ViewTimetableComp from 'src/screens/examination/scheduleExam/components/ViewTimetableComp';
 
 import { Label } from 'src/components/label';
 import CustomDialog from 'src/components/customDialog';

@@ -31,7 +31,7 @@ interface IssueRegistrationFormProps {
 const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClose, editData }) => {
   const initialValues = {
     formNumber: '',
-    amount: null,
+    amount: 100,
   };
 
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -127,6 +127,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       size="small"
                       name="amount"
                       label="Amount *"
+                      disabled
                       value={values.amount}
                       onChange={(e) => {
                         const amount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
