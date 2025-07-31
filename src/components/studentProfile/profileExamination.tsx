@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Card, useTheme, CardHeader } from '@mui/material';
 
 import examTableData from 'src/json/examination/examTableData.json';
-import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/scheduleExamTable';
+import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/ScheduleExamTable';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 

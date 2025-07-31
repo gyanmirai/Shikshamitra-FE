@@ -18,7 +18,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NewExamForm from './components/examFormComponent';
-import ViewTimetableComp from './components/ViewTimetableComp';
+import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/ScheduleExamTable';
 
 import type { IExamFormValues } from './type';
