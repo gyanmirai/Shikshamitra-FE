@@ -29,19 +29,9 @@ const ProfileExamination = () => {
     <ScheduledExamTable
       isScheduleExamButton={false}
       isAction={false}
-      onDelete={(data) => {
-        // setSelectedExam(data);
-        // deleteDialog.onTrue();
-      }}
-      // openDialog={open}
-      // setOpenDialog={setOpen}
-      // editData={selectedExam}
-      // setEditData={setSelectedExam}
+      onDelete={(data) => {}}
       data={examData}
-      onViewTimetable={(data) => {
-        // viewTimeDialog.onTrue();
-        // setSelectedExam(data);
-      }}
+      onViewTimetable={(data) => {}}
     />
   );
 };

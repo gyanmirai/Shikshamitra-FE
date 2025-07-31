@@ -230,16 +230,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     // showViewIcon
                     showDeleteIcon
                     showEditIcon
-                    handleDeleteClick={() => {
-                      // onDelete(row as IExamFormValues);
-                    }}
-                    handleEditClick={() => {
-                      // setEditData(row as IExamFormValues);
-                      // setOpenDialog?.(true);
-                    }}
-                    // handleViewClick={() => {
-                    //   onViewTimetable(row as IExamFormValues);
-                    // }}
+                    handleDeleteClick={() => {}}
+                    handleEditClick={() => {}}
                   />
                 );
               },

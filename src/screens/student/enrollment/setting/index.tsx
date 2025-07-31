@@ -16,6 +16,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentDocumentType from './document-type';
+import FormNumberSeries from './FormNumberSeries';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
 import RegistrationAmount from './RegistrationFormAmount';
@@ -54,16 +55,26 @@ const TABS = [
     label: 'Form Number Series',
     icon: <Iconify icon="solar:form-bold" width={20} />,
     buttonText: 'Form Number Series',
-    component: React.lazy(() => import('./FormNumberSeries')),
+    component: (props: any) => <FormNumberSeries {...props} />,
   },
 ];
 const StudentEnrollmentSettingScreen = () => {
+  // URL search parameter state for active tab, defaulting to document types tab
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'defaultDocumentTypes' });
+
+  // Controls visibility of document types configuration dialog
   const defaultDocumentTypes = useBoolean();
+  // Controls visibility of inquiry preference settings dialog
   const inquiryPreferenceDialog = useBoolean();
+  // Controls visibility of entrance exam time slots dialog
   const entranceExamSlotsDialog = useBoolean();
+  // Controls visibility of registration fee amount dialog
   const registrationAmountDialog = useBoolean();
+  // Controls visibility of form number series configuration dialog
   const formNumberSeriesDialog = useBoolean();
+
+  // Memoized object containing add buttons for each tab
+  // Each button opens its corresponding dialog modal
   const renderButton = useMemo(
     () => ({
       defaultDocumentTypes: (
@@ -130,15 +141,19 @@ const StudentEnrollmentSettingScreen = () => {
     ]
   );
 
+  // Find the currently active tab component based on URL search param
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
 
+  // Get the index of current active tab for animation purposes
   const currentIndex = useMemo(
     () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
+  // State to track if user clicked back to previous tab
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (

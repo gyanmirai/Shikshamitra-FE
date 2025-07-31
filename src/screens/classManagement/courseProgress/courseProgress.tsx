@@ -42,7 +42,7 @@ import ViewChapterLogs from './components/viewChapterLogs';
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
 const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
-  const [courses, setCourses] = useState<any[]>(courseData);
+  const [courses, setCourses] = useState<ICourse[]>(courseData);
 
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
@@ -100,14 +100,59 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
     [updateProgressDialog, viewLogsDialog]
   );
 
+  /**
+   * Handles closing of the update progress dialog
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    // Close dialog if either:
+    // 1. Form was submitted successfully
+    // 2. There are unsaved changes and user confirms leaving
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       updateProgressDialog.onFalse();
       dispatch(setIsChanges(false));
-    } else if (!isChanges) {
+    }
+    // Close dialog if there are no unsaved changes
+    else if (!isChanges) {
       updateProgressDialog.onFalse();
     }
   };
+
+  /**
+   * Renders a tooltip component showing color-coded deadline indicators
+   * Used to explain the meaning of different colors in the timeline
+   */
+  const EndToolTip = () => (
+    <CustomTooltip
+      sx={{ textAlign: 'left' }}
+      arrow
+      title={
+        <Box display="flex" flexDirection="column" gap={0.5}>
+          {/* Map through color indicators and their meanings */}
+          {[
+            { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
+            { label: 'Yellow', color: 'warning.main', text: 'Due within 30 days' },
+            { label: 'Green', color: 'success.main', text: 'Due after 30 days' },
+            {
+              label: 'Black',
+              color: 'text.primary',
+              text: 'Completed Successfully',
+            },
+          ].map(({ label, color, text }) => (
+            <Box key={label} display="flex">
+              <Box component="span" sx={{ color, minWidth: 50, fontWeight: 500 }}>
+                {label} :
+              </Box>
+              <Typography variant="caption">{text}</Typography>
+            </Box>
+          ))}
+        </Box>
+      }
+    >
+      <Iconify icon="eva:info-outline" width={20} position="relative" sx={{ pt: 0.7 }} />
+    </CustomTooltip>
+  );
 
   return (
     <Box>
@@ -145,40 +190,7 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
                   minWidth: 170,
                   align: 'left',
                   filterType: 'date',
-                  renderColumn: () => (
-                    <CustomTooltip
-                      sx={{ textAlign: 'left' }}
-                      arrow
-                      title={
-                        <Box display="flex" flexDirection="column" gap={0.5}>
-                          {[
-                            { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
-                            { label: 'Yellow', color: 'warning.main', text: 'Due within 30 days' },
-                            { label: 'Green', color: 'success.main', text: 'Due after 30 days' },
-                            {
-                              label: 'Black',
-                              color: 'text.primary',
-                              text: 'Completed Successfully',
-                            },
-                          ].map(({ label, color, text }) => (
-                            <Box key={label} display="flex">
-                              <Box component="span" sx={{ color, minWidth: 50, fontWeight: 500 }}>
-                                {label} :
-                              </Box>
-                              <Typography variant="caption">{text}</Typography>
-                            </Box>
-                          ))}
-                        </Box>
-                      }
-                    >
-                      <Iconify
-                        icon="eva:info-outline"
-                        width={20}
-                        position="relative"
-                        sx={{ pt: 0.7 }}
-                      />
-                    </CustomTooltip>
-                  ),
+                  renderColumn: () => <EndToolTip />,
                   render(value, row) {
                     const [day, month, year] = value.split('-');
                     const endDate = new Date(`${year}-${month}-${day}`);
@@ -288,40 +300,7 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
                   minWidth: 170,
                   align: 'left',
                   filterType: 'date',
-                  renderColumn: () => (
-                    <CustomTooltip
-                      sx={{ textAlign: 'left' }}
-                      arrow
-                      title={
-                        <Box display="flex" flexDirection="column" gap={0.5}>
-                          {[
-                            { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
-                            { label: 'Yellow', color: 'warning.main', text: 'Due within 30 days' },
-                            { label: 'Green', color: 'success.main', text: 'Due after 30 days' },
-                            {
-                              label: 'Black',
-                              color: 'text.primary',
-                              text: 'Completed Successfully',
-                            },
-                          ].map(({ label, color, text }) => (
-                            <Box key={label} display="flex">
-                              <Box component="span" sx={{ color, minWidth: 50, fontWeight: 500 }}>
-                                {label} :
-                              </Box>
-                              <Typography variant="caption">{text}</Typography>
-                            </Box>
-                          ))}
-                        </Box>
-                      }
-                    >
-                      <Iconify
-                        icon="eva:info-outline"
-                        width={20}
-                        position="relative"
-                        sx={{ pt: 0.7 }}
-                      />
-                    </CustomTooltip>
-                  ),
+                  renderColumn: () => <EndToolTip />,
                   render(value, row) {
                     const [day, month, year] = value.split('-');
                     const endDate = new Date(`${year}-${month}-${day}`);
