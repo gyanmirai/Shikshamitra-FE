@@ -14,6 +14,7 @@ export interface ISlot {
   startDate?: string | Date | null;
   endDate?: string | Date | null;
   studentLimit?: number | null;
+  duration?: number | null; // Duration in minutes
   roomNo?: string | null;
   creationTime?: string | Date | null;
 }
@@ -26,4 +27,9 @@ export interface IExamType {
 export interface IInquiryPreference {
   id: string;
   preferenceName: string;
+}
+
+export interface IRegistrationAmount {
+  id: string;
+  amount: number;
 }

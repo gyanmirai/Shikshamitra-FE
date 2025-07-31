@@ -129,7 +129,7 @@ const RenderAdditionalDetails = (props: any) => {
       <Grid item xs={6} sm={4}>
         <TextField
           fullWidth
-          label="Relative Name"
+          label="Emergency Relative Name"
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relationName}
@@ -145,7 +145,7 @@ const RenderAdditionalDetails = (props: any) => {
       <Grid item xs={6} sm={4}>
         <TextField
           fullWidth
-          label="Relation"
+          label="Emergency Relation"
           size="small"
           disabled={!isAdditionalDetailsEditable.value}
           value={formik.values.relation}
