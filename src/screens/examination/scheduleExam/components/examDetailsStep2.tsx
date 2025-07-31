@@ -1,7 +1,6 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
 
 import { Box, TextField, Typography } from '@mui/material';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -13,8 +12,7 @@ import type { IExamFormValues, ISubjectRoomDetail } from '../type';
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
   const formik = props;
-  // State to store and manage exam schedules data for each subject, initialized with subjects from formik values
-  const [examSchedules, setExamSchedules] = useState(formik.values.subjects);
+
   return (
     <CustomizableTable
       isFilter={false}

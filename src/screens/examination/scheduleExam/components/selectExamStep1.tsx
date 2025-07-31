@@ -66,8 +66,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const formik = props;
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const {
@@ -83,7 +81,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    // setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
   return (
@@ -106,26 +104,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={formik.touched.examType && Boolean(formik.errors.examType)}
               helperText={formik.touched.examType ? formik.errors.examType : undefined}
-              // error={!!(formik.touched.examType && formik.errors.examType)}
-              // helperText={
-              //   formik.touched.examType && formik.errors.examType
-              //     ? formik.errors.examType
-              //     : undefined
-              // }
             />
           </ShakingTextField>
-          {/* <Box mt={1} display="flex" justifyContent="flex-end">
-            <Typography
-              variant="body2"
-              fontWeight={500}
-              color="primary.main"
-              fontSize={12}
-              sx={{ cursor: 'pointer' }}
-              onClick={() => examTypeDialog.onTrue()}
-            >
-              Add Exam Type ?
-            </Typography>
-          </Box> */}
+
           <CustomDialog
             title="Create Exam Type"
             open={examTypeDialog.value}

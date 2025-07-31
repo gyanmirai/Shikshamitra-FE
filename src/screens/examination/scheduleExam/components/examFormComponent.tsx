@@ -8,17 +8,17 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import SelectExam from './selectExamStep1';
 import RoomDetails from './roomManageStep3';
 import ExamDetails from './examDetailsStep2';
-// import ExamDetails from './ExamDetailsStep2';
 import { validationSchema } from '../validationSchema';
 
 import type { INewExamFormProps } from '../type';
-// import ExamDetails from './examDetailsStep2';
-// import RoomDetails from './roomManageStep3';
-// import SelectExam from './selectExamStep1';
 
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
-  // Active step for stepper navigation
+  // State to track the current active step in the multi-step exam creation form
+  // 0: Basic Details, 1: Schedule, 2: Room Details
   const [activeStep, setActiveStep] = useState(0);
+
+  // Array of step components that correspond to each step in the exam creation process
+  // Used to dynamically render the appropriate component based on activeStep
   const allTimetableSteps = [SelectExam, ExamDetails, RoomDetails];
 
   return (

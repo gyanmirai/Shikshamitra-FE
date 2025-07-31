@@ -783,9 +783,7 @@ const TimeTableGrid = ({
             variant="contained"
             size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              // handleDelete(selectedExam?.id);
-            }}
+            onClick={() => {}}
           >
             Publish
           </Button>
@@ -805,9 +803,7 @@ const TimeTableGrid = ({
             variant="contained"
             size="small"
             startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-            onClick={() => {
-              // handleDelete(selectedExam?.id);
-            }}
+            onClick={() => {}}
           >
             Draft
           </Button>

@@ -1,6 +1,6 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import type { DayData } from '../type';
+import type { DayData, TimetableSlot } from '../type';
 
 export interface ITimeTableCellProps {
   timeSlot: string;
@@ -34,4 +34,27 @@ export interface IAssignTeacherProps {
   slotData: any;
   onTeacherSelect: (value: string) => void;
   onClose?: (e: any, isSubmit: boolean) => void;
+}
+
+export interface ITimeTableView {
+  timeTableData: TimetableSlot[];
+  isTeacherVisible?: boolean;
+  isRoomVisible?: boolean;
+  isClassVisible?: boolean;
+  isDivisionVisible?: boolean;
+  isDrag?: boolean;
+  onDrop?: (e: any, item: DayData, rowIndex: number, colIndex: number) => void;
+  onTeacherSelect?: (
+    updatedSlotData: any, // Contains the updated subjects array with teachers
+    rowIndex: number,
+    colIndex: number
+  ) => void;
+  onRoomSelect?: (
+    updatedSlotData: any, // Contains the updated subjects array with rooms
+    rowIndex: number,
+    colIndex: number
+  ) => void;
+  // isDraggable: boolean;
+  handleDeleteSlot?: (rowIndex: number, colIndex: number) => void;
+  showThreeDots: boolean;
 }
