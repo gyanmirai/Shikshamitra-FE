@@ -148,16 +148,26 @@ const reportFieldsMap = {
 };
 
 const StudentReportsScreen = () => {
+  // Redux state for current board, medium and medium setter
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
+
+  // State to store list of all organizations/branches
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+
+  // State to store list of all classes/standards
   const [allClass, setAllClass] = useState<Standards[]>([]);
+
+  // State to store list of all divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
+
+  // State to store dynamic validation schema based on selected report type
   const [dynamicSchema, setDynamicSchema] = useState(getValidationSchema([]));
 
+  // Initialize formik form with validation and submit handler
   const formik = useFormik({
     initialValues,
     validationSchema: dynamicSchema,
@@ -168,25 +178,29 @@ const StudentReportsScreen = () => {
     },
   });
 
-  // Get current fields for the selected report
+  // Memoized computation of required fields based on selected report type
   const currentFields = useMemo(
     () => reportFieldsMap[formik.values.report as unknown as StudentReportTitle] || [],
     [formik.values.report]
   );
 
-  // Update validation schema when report changes
+  // Update validation schema whenever required fields change
   useEffect(() => {
     const newSchema = getValidationSchema(currentFields);
     setDynamicSchema(newSchema);
-  }, [currentFields]); // Only depend on currentFields, not the schema itself
+  }, [currentFields]);
 
+  // Update organizations list when medium changes
   useEffect(() => {
     setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
   }, [medium?.educationMediumStages]);
 
+  // Update classes list when organization selection changes
   useEffect(() => {
     const standards =
       allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
+
+    // Add "All" option if not present
     if (!standards.some((std) => std.id === 'all')) {
       standards.unshift({
         id: 'all',
@@ -202,27 +216,29 @@ const StudentReportsScreen = () => {
     setAllClass(standards);
   }, [allOrganization, formik.values.organization]);
 
+  // Helper function to check if a field should be displayed
   const showField = (fieldName: string) => currentFields.includes(fieldName);
 
+  // Update divisions list when class selection changes
   useEffect(() => {
     if (formik.values.classes.length === 0) {
-      // No classes selected
+      // Reset divisions when no classes selected
       setAllDivision([]);
       formik.setFieldValue('divisions', []);
       return;
     }
 
     if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      // Single class selected (not "all")
+      // Handle single class selection
       const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
       const divisions = selectedClass?.divisions || [];
       setAllDivision(divisions);
 
-      // Set all divisions for the selected class
+      // Auto-select all divisions for the selected class
       const divisionIds = divisions.map((div: any) => div.id);
       formik.setFieldValue('divisions', [...divisionIds]);
     } else {
-      // Multiple classes selected or "all" is selected
+      // Handle multiple classes or "all" selection
       setAllDivision([
         {
           id: 'all',
@@ -269,8 +285,6 @@ const StudentReportsScreen = () => {
                   onBlur={() => formik.setFieldTouched('report', true)}
                   error={formik.touched.report && Boolean(formik.errors.report)}
                   helperText={(formik.touched.report && formik.errors.report) as string}
-                  // labelKey="name"
-                  // valueKey="id"
                   formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                 />
               </Grid>
@@ -359,23 +373,25 @@ const StudentReportsScreen = () => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
-                <CustomSelect
-                  options={allDivision}
-                  label="Division *"
-                  value={formik.values.divisions}
-                  onChange={(val) => formik.setFieldValue('divisions', val)}
-                  onBlur={() => formik.setFieldTouched('divisions', true)}
-                  error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-                  helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-                  labelKey="name"
-                  valueKey="id"
-                  multiple={
-                    !(formik.values.classes as string[]).includes('all') ||
-                    formik.values.classes.length > 1
-                  }
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={formik.values.classes.length === 0}
-                />
+                {(formik.values.classes as string[]).includes('all') && (
+                  <CustomSelect
+                    options={allDivision}
+                    label="Division *"
+                    value={formik.values.divisions}
+                    onChange={(val) => formik.setFieldValue('divisions', val)}
+                    onBlur={() => formik.setFieldTouched('divisions', true)}
+                    error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                    helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                    labelKey="name"
+                    valueKey="id"
+                    multiple={
+                      !(formik.values.classes as string[]).includes('all') ||
+                      formik.values.classes.length > 1
+                    }
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    disabled={formik.values.classes.length === 0}
+                  />
+                )}
               </Grid>
 
               {showField('fromRollNo') && (
@@ -412,27 +428,7 @@ const StudentReportsScreen = () => {
                   />
                 </Grid>
               )}
-              {/* <Grid item xs={12} sm={6} md={4}>
-                <FormControl
-                  sx={{ maxWidth: 'unset', width: '100%' }}
-                  error={touched.status && !!errors.status}
-                  fullWidth
-                >
-                  <InputLabel size="small">Status</InputLabel>
-                  <Select
-                    name="status"
-                    value={values.status}
-                    onChange={handleChange}
-                    label="Status"
-                    size="small"
-                  >
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="left">Left</MenuItem>
-                    <MenuItem value="suspended">Suspended</MenuItem>
-                    <MenuItem value="retired">Retired</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid> */}
+
               {showField('month') && (
                 <Grid item xs={12} sm={6} md={4}>
                   <CustomSelect

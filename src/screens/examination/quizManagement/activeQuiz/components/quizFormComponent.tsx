@@ -21,7 +21,6 @@ import {
   Switch,
   Button,
   TableRow,
-  useTheme,
   TextField,
   TableHead,
   TableCell,
@@ -390,7 +389,10 @@ const QuizInformation = ({ formik }: any) => {
 };
 
 const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }: any) => {
+  // Boolean state to control visibility of delete question confirmation dialog
   const deleteQuestionDialog = useBoolean();
+
+  // State to track index of question being deleted, null when no deletion in progress
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   if (!questions?.length) {
     return (
@@ -415,21 +417,41 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: '50px' }} />
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Sr No.</TableCell>
-              <TableCell sx={{ width: '40%', fontWeight: 'bold' }}>Question</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Type</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Required</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Options</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Marks</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Time(Min)</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Answer</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Edit</TableCell>
-              <TableCell sx={{ width: '20%', fontWeight: 'bold' }}>Delete</TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }} />
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Sr No.
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Question
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Type
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Required
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Options
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Marks
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Time(Min)
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Answer
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Edit
+              </TableCell>
+              <TableCell sx={{ width: '80px', maxWidth: '80px', whiteSpace: 'nowrap' }}>
+                Delete
+              </TableCell>
             </TableRow>
           </TableHead>
           <Droppable droppableId="questions">
@@ -446,6 +468,11 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                             '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.03)' },
                             ...(snapshot.isDragging && {
                               backgroundColor: 'rgba(63, 81, 181, 0.08) !important',
+                              display: 'table', // 👈 Key Fix
+                              width: '100%', // ensure full width
+                              tableLayout: 'fixed',
+                              borderCollapse: 'collapse',
+                              boxSizing: 'border-box',
                               '& td': { borderBottom: 'none' },
                             }),
                           }}
@@ -473,7 +500,14 @@ const QuestionList = ({ questions, onDragEnd, onDeleteQuestion, onEditQuestion }
                               <Iconify icon="mdi:cross-circle-outline" />
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            sx={{
+                              width: '150px',
+                              maxWidth: '150px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
                             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                               {question.options.length
                                 ? question.options.map((audience: string) => (
@@ -564,13 +598,42 @@ const defaultValues = {
   questionTime: '',
 };
 
-const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
+const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => {
+  // Initialize form state with provided initial data or default values
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
-  const theme = useTheme();
+
+  // Get current question marks and total quiz marks
+  const totalMarks = Number(formik.values.totalMarks);
+  // Convert marks from form state to number
+  const currentMarks = Number(formState.marks);
+  // Get current question time and total quiz duration
+  const currentTime = Number(formState.questionTime);
+  // Convert quiz duration from formik values to a number
+  // This represents the total allowed time for the quiz in minutes
+  const totalDuration = Number(formik.values.quizDuration);
+  // Calculate total time taken by all questions in minutes
+  const totalQuestionTimeInMinutes = formik.values.questions.reduce(
+    (acc: number, question: any) => acc + Number(question.questionTime || 0),
+    0
+  );
+
+  // Get total quiz duration in minutes
+  const totalDurationInMinutes = Number(formik.values.quizDuration);
+
+  // State to track index of option being deleted
   const [optionToDeleteIndex, setOptionToDeleteIndex] = useState<number | null>(null);
 
+  // Calculate total marks of all questions
+  const totalQuestionMarks = formik.values.questions.reduce(
+    (acc: any, question: any) => acc + Number(question.marks || 0),
+    0
+  );
+
+  // Dialog state for confirming option deletion
   const deleteOptionDialog = useBoolean();
+
+  // State to track form validation errors
   const [errors, setErrors] = useState({
     question: '',
     questionType: '',
@@ -580,25 +643,31 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
     questionTime: '',
   });
 
+  // Reset form state when initial data changes
   useEffect(() => {
     setFormState(initial);
   }, [initial, initialData]);
 
+  // Generic handler for updating form fields and clearing their errors
   const handleChange = (field: string, value: any) => {
     setFormState((prev: any) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
+  // Handler for updating individual multiple choice options
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...formState.options];
     newOptions[index] = value;
     handleChange('options', newOptions);
   };
 
+  // Handler for adding a new blank option to multiple choice questions
   const handleAddOption = () => {
     handleChange('options', [...formState.options, '']);
   };
 
+  // Handler for removing an option from multiple choice questions
+  // Also clears the correct answer if the removed option was selected
   const handleRemoveOption = (index: number) => {
     const updated = formState.options.filter((_: any, i: any) => i !== index);
     handleChange('options', updated);
@@ -613,20 +682,32 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
     if (!formState.questionType) newErrors.questionType = 'Question Type is required';
     if (!formState.marks || isNaN(Number(formState.marks)) || Number(formState.marks) <= 0)
       newErrors.marks = 'Valid marks required';
+    if (currentMarks > totalMarks) {
+      newErrors.marks = 'Cannot exceed total marks.';
+    } else if (totalQuestionMarks + currentMarks > totalMarks) {
+      newErrors.marks = `Total marks would exceed limit. Available: ${totalMarks - totalQuestionMarks}`;
+    }
     if (!formState.questionTime) newErrors.questionTime = 'Time is required';
-    if (!formState.correctAnswer) newErrors.correctAnswer = 'Answer required';
-
-    if (formState.options.length < 2) {
-      newErrors.options = ['At least two options needed'];
-    } else {
-      const optionErrors = formState.options.map((opt: string) =>
-        !opt.trim() ? 'Option cannot be empty' : ''
-      );
-      if (optionErrors.some((e: any) => e)) {
-        newErrors.options = optionErrors;
-      }
+    if (currentTime > totalDurationInMinutes) {
+      newErrors.questionTime = 'Cannot exceed total duration.';
+    } else if (totalQuestionTimeInMinutes + currentTime > totalDurationInMinutes) {
+      newErrors.questionTime = `Total time would exceed limit. Available: ${totalDurationInMinutes - totalQuestionTimeInMinutes}`;
     }
 
+    if (!formState.correctAnswer) newErrors.correctAnswer = 'Sample Answer required';
+
+    if (formState.questionType === 'Multiple Choice') {
+      if (formState.options.length < 2) {
+        newErrors.options = ['At least two options needed'];
+      } else {
+        const optionErrors = formState.options.map((opt: string) =>
+          !opt.trim() ? 'Option cannot be empty' : ''
+        );
+        if (optionErrors.some((e: any) => e)) {
+          newErrors.options = optionErrors;
+        }
+      }
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -756,20 +837,6 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                 placeholder="Question *"
                 error={!!errors.question}
                 helperText={errors.question}
-                // sx={{
-                //   border: `1px solid ${theme.palette.grey[500]}`,
-                //   borderRadius: 1,
-                //   '&:hover': {
-                //     borderColor: theme.palette.text.primary,
-                //   },
-                //   '&:focus-within': {
-                //     borderColor: theme.palette.text.primary,
-                //     borderWidth: 2,
-                //   },
-                //   // ...((!!errors.question || !!errors.question) && {
-                //   //   borderColor: 'error',
-                //   // }),
-                // }}
               />
             </Grid>
 
@@ -792,11 +859,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                             />
                           </ShakingTextField>
                         </Box>
-                        {/* {errors.options && (
-                          <FormHelperText error sx={{ mt: 1 }}>
-                            {errors.options}
-                          </FormHelperText>
-                        )} */}
+
                         <IconButton
                           onClick={() => {
                             setOptionToDeleteIndex(i); // Store current index
@@ -808,30 +871,10 @@ const QuestionForm = ({ onSave, onCancel, initialData = null }: any) => {
                         >
                           <Iconify icon={GlobalIcons.delete} />
                         </IconButton>
-                        {/* <ConfirmDialog
-                          open={deleteOptionDialog.value}
-                          onClose={deleteOptionDialog.onFalse}
-                          title="Delete"
-                          content="Are you sure you want to delete this option?"
-                          action={
-                            <Button
-                              variant="contained"
-                              color="error"
-                              size="small"
-                              onClick={() => {
-                                handleRemoveOption(i);
-                                deleteOptionDialog.onFalse();
-                              }}
-                            >
-                              Yes
-                            </Button>
-                          }
-                        /> */}
                       </Box>
                     </Grid>
                   ))}
                 </Grid>
-                {/* {errors.options && <FormHelperText error>{errors.options}</FormHelperText>} */}
                 <Button
                   variant="outlined"
                   size="small"
@@ -1047,7 +1090,7 @@ const QuizBuilder = ({ formik }: any) => {
       )}
 
       <CustomDialog
-        maxWidth="lg"
+        maxWidth="sm"
         open={addQuestionDialog.value}
         handleClose={addQuestionDialog.onFalse}
         title={
