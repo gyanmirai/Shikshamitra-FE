@@ -8,7 +8,7 @@ import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/
 
 import CustomizableView from 'src/components/customizable-view';
 
-const Overview = () => {
+const OverviewCard = () => {
   const [cards, setCards] = useState<ICardItem[]>([
     {
       id: '0',
@@ -77,4 +77,4 @@ const Overview = () => {
   );
 };
 
-export default Overview;
+export default OverviewCard;
