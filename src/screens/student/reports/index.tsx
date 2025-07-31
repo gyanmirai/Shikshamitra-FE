@@ -373,25 +373,26 @@ const StudentReportsScreen = () => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
-                {(formik.values.classes as string[]).includes('all') && (
-                  <CustomSelect
-                    options={allDivision}
-                    label="Division *"
-                    value={formik.values.divisions}
-                    onChange={(val) => formik.setFieldValue('divisions', val)}
-                    onBlur={() => formik.setFieldTouched('divisions', true)}
-                    error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-                    helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-                    labelKey="name"
-                    valueKey="id"
-                    multiple={
-                      !(formik.values.classes as string[]).includes('all') ||
-                      formik.values.classes.length > 1
-                    }
-                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                    disabled={formik.values.classes.length === 0}
-                  />
-                )}
+                {!(formik.values.classes as string[]).includes('all') &&
+                  formik.values.classes.length > 0 && (
+                    <CustomSelect
+                      options={allDivision}
+                      label="Division *"
+                      value={formik.values.divisions}
+                      onChange={(val) => formik.setFieldValue('divisions', val)}
+                      onBlur={() => formik.setFieldTouched('divisions', true)}
+                      error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                      helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple={
+                        !(formik.values.classes as string[]).includes('all') ||
+                        formik.values.classes.length > 1
+                      }
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={formik.values.classes.length === 0}
+                    />
+                  )}
               </Grid>
 
               {showField('fromRollNo') && (

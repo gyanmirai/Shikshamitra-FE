@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+import feeStructureData from 'src/json/finance/student-fee-management/feeStructureData.json';
+
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -52,54 +54,7 @@ const FeeStructureTable = () => (
         ),
       },
     ]}
-    data={[
-      {
-        id: 1,
-        name: 'Class 1 Structure',
-        class: '1',
-        board: 'GSEB',
-        medium: 'English',
-        receiptBook: 'GSEB',
-        paymentTerm: 'Monthly',
-        feeHeads: [
-          {
-            name: 'Tuition Fee',
-            color: '#2F80ED',
-            totalFee: '₹ 10,000.00',
-            discount: '₹ 1,000.00',
-            dueDate: '30-04-2026',
-          },
-          {
-            name: 'Hostel Fee',
-            color: '#EB5757',
-            totalFee: '₹ 10,000.00',
-            discount: '₹ 1,000.00',
-            dueDate: '30-04-2026',
-          },
-          {
-            name: 'Transport Fee',
-            color: '#F2994A',
-            totalFee: '₹ 10,000.00',
-            discount: '₹ 1,000.00',
-            dueDate: '30-04-2026',
-          },
-          {
-            name: 'Admission Fee',
-            color: '#F2C94C',
-            totalFee: '₹ 5,000.00',
-            discount: '₹ 1,000.00',
-            dueDate: '30-04-2026',
-          },
-          {
-            name: 'Sport Fee',
-            color: '#27AE60',
-            totalFee: '₹ 12,000.00',
-            discount: '₹ 00',
-            dueDate: '30-04-2026',
-          },
-        ],
-      },
-    ]}
+    data={feeStructureData || []}
   />
 );
 
