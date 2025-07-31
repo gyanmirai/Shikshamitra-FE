@@ -20,30 +20,8 @@ import CustomDialog from 'src/components/customDialog';
 import TimeTableCell from './timeTableCell';
 import CreateSlotsForm from '../../settings/components/lectureSlots/createSlotsForm';
 
-import type { DayData, TimetableSlot } from '../type';
-
-interface ITimeTableView {
-  timeTableData: TimetableSlot[];
-  isTeacherVisible?: boolean;
-  isRoomVisible?: boolean;
-  isClassVisible?: boolean;
-  isDivisionVisible?: boolean;
-  isDrag?: boolean;
-  onDrop?: (e: any, item: DayData, rowIndex: number, colIndex: number) => void;
-  onTeacherSelect?: (
-    updatedSlotData: any, // Contains the updated subjects array with teachers
-    rowIndex: number,
-    colIndex: number
-  ) => void;
-  onRoomSelect?: (
-    updatedSlotData: any, // Contains the updated subjects array with rooms
-    rowIndex: number,
-    colIndex: number
-  ) => void;
-  // isDraggable: boolean;
-  handleDeleteSlot?: (rowIndex: number, colIndex: number) => void;
-  showThreeDots: boolean;
-}
+import type { ITimeTableView } from './type';
+import type { TimetableSlot } from '../type';
 
 const TimeTableView: React.FC<ITimeTableView> = ({
   timeTableData,
@@ -59,14 +37,29 @@ const TimeTableView: React.FC<ITimeTableView> = ({
   handleDeleteSlot,
   showThreeDots,
 }) => {
+  // Local state to manage timetable data, initialized with prop data
+  // Allows for local manipulation while keeping sync with parent component
   const [timetable, setTimetable] = useState<TimetableSlot[]>(timeTableData);
+
+  // Boolean hook to control the visibility of the create slots dialog
   const createSlotsDialog = useBoolean();
+
+  // Effect to sync local timetable state with incoming prop changes
+  // Updates local state whenever parent component updates timeTableData
   useEffect(() => {
     setTimetable(timeTableData);
   }, [timeTableData]);
+
   // Extract weekdays from the first slot that has `dayData` (i.e., non-break slot)
+  // Create array of formatted time slot strings for display purposes
   const timeSlots = timetable.map((slot) => `${slot.startTime} - ${slot.endTime}`);
+
+  // Find the first non-break slot that contains day data to extract weekday structure
+  // This ensures we get the proper day layout even if some slots are breaks
   const [firstSlotWithDayData] = timetable.filter((slot) => slot.dayData.length > 0);
+
+  // Extract weekday names from the first valid slot to create table headers
+  // Falls back to empty array if no valid slot data exists
   const weekDays = firstSlotWithDayData?.dayData.map((d) => d.day) || [];
   return (
     <>
