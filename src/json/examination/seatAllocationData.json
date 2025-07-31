@@ -1,0 +1,44 @@
+[
+  {
+    "seatNumber": 1,
+    "studentName": "Dharmik Jinger",
+    "class": "I",
+    "rollNo": "1",
+    "studentId": 101
+  },
+  {
+    "seatNumber": 2,
+    "studentName": "Nitre",
+    "class": "I",
+    "rollNo": "1",
+    "studentId": 102
+  },
+  {
+    "seatNumber": 3,
+    "studentName": "Raj Baku",
+    "class": "I",
+    "rollNo": "2",
+    "studentId": 103
+  },
+  {
+    "seatNumber": 4,
+    "studentName": "Mayur Solanki",
+    "class": "2",
+    "rollNo": "2",
+    "studentId": 104
+  },
+  {
+    "seatNumber": 21,
+    "studentName": "John Doe",
+    "class": "3",
+    "rollNo": "3",
+    "studentId": 105
+  },
+  {
+    "seatNumber": 22,
+    "studentName": "Jane Smith",
+    "class": "3",
+    "rollNo": "4",
+    "studentId": 106
+  }
+]

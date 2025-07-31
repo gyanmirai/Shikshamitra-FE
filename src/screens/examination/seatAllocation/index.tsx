@@ -30,6 +30,14 @@ const SeatAllocation = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
+
+  const [rooms, setRooms] = useState([
+    { id: '1', name: 'Room 101' },
+    { id: '2', name: 'Room 102' },
+    { id: '3', name: 'Room 103' },
+    { id: '4', name: 'Room 104' },
+    { id: '5', name: 'Room 105' },
+  ]);
   const {
     currentBoard,
     currentMedium: medium,
@@ -111,13 +119,7 @@ const SeatAllocation = () => {
                 disabled={!classes}
               />
               <CustomSelect
-                options={[
-                  { id: '1', name: 'Room 101' },
-                  { id: '2', name: 'Room 102' },
-                  { id: '3', name: 'Room 103' },
-                  { id: '4', name: 'Room 104' },
-                  { id: '5', name: 'Room 105' },
-                ]}
+                options={rooms}
                 label="Room"
                 value={room}
                 onChange={(val) => setRoom(val as string)}
