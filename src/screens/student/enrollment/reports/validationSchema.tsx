@@ -112,10 +112,6 @@ export const getValidationSchema = (showField: string[]) => {
       .typeError('Secondary Contact No must be a number')
       .required('Secondary Contact No is required');
   }
-    shape.secondryContactNo = Yup.number()
-      .typeError('Secondary Contact No must be a number')
-      .required('Secondary Contact No is required');
-  }
 
   if (showField.includes('email')) {
     shape.email = Yup.string().email('Invalid email').required('Email is required');
