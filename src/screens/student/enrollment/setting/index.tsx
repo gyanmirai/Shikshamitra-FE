@@ -16,8 +16,10 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentDocumentType from './document-type';
+import FormNumberSeries from './FormNumberSeries';
 import InquiryPreference from './inquiryPreference';
 import EntranceExamSlots from './entrance-exam-slots';
+import RegistrationAmount from './RegistrationFormAmount';
 
 const TABS = [
   {
@@ -41,13 +43,38 @@ const TABS = [
     buttonText: 'Slot',
     component: (props: any) => <EntranceExamSlots {...props} />,
   },
+  {
+    value: 'registrationFormAmount',
+    label: 'Registration Form Amount',
+    icon: <Iconify icon="solar:money-bold" width={20} />,
+    buttonText: 'Amount',
+    component: (props: any) => <RegistrationAmount {...props} />,
+  },
+  {
+    value: 'formNumberSeries',
+    label: 'Form Number Series',
+    icon: <Iconify icon="solar:form-bold" width={20} />,
+    buttonText: 'Form Number Series',
+    component: (props: any) => <FormNumberSeries {...props} />,
+  },
 ];
 const StudentEnrollmentSettingScreen = () => {
+  // URL search parameter state for active tab, defaulting to document types tab
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'defaultDocumentTypes' });
-  const defaultDocumentTypes = useBoolean();
-  const inquiryPreferenceDialog = useBoolean();
-  const entranceExamSlotsDialog = useBoolean();
 
+  // Controls visibility of document types configuration dialog
+  const defaultDocumentTypes = useBoolean();
+  // Controls visibility of inquiry preference settings dialog
+  const inquiryPreferenceDialog = useBoolean();
+  // Controls visibility of entrance exam time slots dialog
+  const entranceExamSlotsDialog = useBoolean();
+  // Controls visibility of registration fee amount dialog
+  const registrationAmountDialog = useBoolean();
+  // Controls visibility of form number series configuration dialog
+  const formNumberSeriesDialog = useBoolean();
+
+  // Memoized object containing add buttons for each tab
+  // Each button opens its corresponding dialog modal
   const renderButton = useMemo(
     () => ({
       defaultDocumentTypes: (
@@ -83,19 +110,50 @@ const StudentEnrollmentSettingScreen = () => {
           Slot
         </Button>
       ),
+      registrationFormAmount: (
+        <Button
+          sx={{ width: '160px' }}
+          startIcon={<Add />}
+          onClick={registrationAmountDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Amount
+        </Button>
+      ),
+      formNumberSeries: (
+        <Button
+          startIcon={<Add />}
+          onClick={formNumberSeriesDialog.onTrue}
+          variant="contained"
+          size="small"
+        >
+          Form Number Series
+        </Button>
+      ),
     }),
-    [defaultDocumentTypes.onTrue, entranceExamSlotsDialog.onTrue, inquiryPreferenceDialog.onTrue]
+    [
+      defaultDocumentTypes.onTrue,
+      entranceExamSlotsDialog.onTrue,
+      inquiryPreferenceDialog.onTrue,
+      registrationAmountDialog.onTrue,
+      formNumberSeriesDialog.onTrue,
+    ]
   );
 
+  // Find the currently active tab component based on URL search param
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
 
+  // Get the index of current active tab for animation purposes
   const currentIndex = useMemo(
     () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
+  // State to track if user clicked back to previous tab
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
@@ -158,6 +216,8 @@ const StudentEnrollmentSettingScreen = () => {
               defaultDocumentTypes={defaultDocumentTypes}
               inquiryPreferenceDialog={inquiryPreferenceDialog}
               entranceExamSlotsDialog={entranceExamSlotsDialog}
+              registrationAmountDialog={registrationAmountDialog}
+              formNumberSeriesDialog={formNumberSeriesDialog}
             />
           )}
         </Scrollbar>

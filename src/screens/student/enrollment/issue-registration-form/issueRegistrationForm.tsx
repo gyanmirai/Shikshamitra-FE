@@ -29,11 +29,17 @@ interface IssueRegistrationFormProps {
 }
 
 const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClose, editData }) => {
+  // Fixed registration form amount in rupees
+  const amount = 100;
+
+  // Initial form values
   const initialValues = {
-    formNumber: '',
-    amount: null,
+    formNumber: '', // Student registration form number
+    amount, // Registration fee amount
   };
 
+  // Mutation hook for updating student inquiry
+  // Returns updateInquiry function and loading state
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentInquiryMutation,
@@ -127,10 +133,11 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       size="small"
                       name="amount"
                       label="Amount *"
+                      disabled
                       value={values.amount}
                       onChange={(e) => {
-                        const amount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
-                        setFieldValue('amount', amount);
+                        const amt = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
+                        setFieldValue('amount', amt);
                       }}
                       error={touched.amount && Boolean(errors.amount)}
                       helperText={touched.amount && errors.amount}

@@ -19,6 +19,7 @@ import {
   Grid,
   Stack,
   Paper,
+  Radio,
   Button,
   Dialog,
   Divider,
@@ -29,8 +30,10 @@ import {
   TextField,
   IconButton,
   Typography,
+  RadioGroup,
   DialogActions,
   CircularProgress,
+  FormControlLabel,
 } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
@@ -1060,6 +1063,23 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useChangeAdmissionStatusMutation,
   });
+  const [selectedStatus, setSelectedStatus] = useState<RegistrationStatusType | null>(null);
+
+  const handleSave = async () => {
+    console.log('handleSave called with selectedStatus:', selectedStatus);
+    if (selectedStatus === null) return;
+
+    const payload = {
+      approvalStatus: selectedStatus,
+      body: [editData.id],
+    };
+
+    await changeStatus(payload).unwrap();
+    shikshaMitraToast.success({
+      message: `${editData.firstName} ${editData.lastName} moved to ${RegistrationStatusType[selectedStatus]}`,
+    });
+    onClose();
+  };
 
   return (
     <>
@@ -1080,112 +1100,49 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
         <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
         <DocumentsSections editData={editData} />
         <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
-        {tabValue === RegistrationStatusType.Pending && (
-          <>
-            <Button
-              fullWidth
-              variant="soft"
-              color="success"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Approved,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Approve Application
-            </Button>
-            <Button
-              fullWidth
-              variant="soft"
-              color="error"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Rejected,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Reject Application
-            </Button>
-          </>
-        )}
+        <>
+          <RadioGroup
+            row
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(Number(e.target.value) as RegistrationStatusType)}
+          >
+            {tabValue !== RegistrationStatusType.Approved && (
+              <FormControlLabel
+                value={RegistrationStatusType.Approved}
+                control={<Radio />}
+                label="Approve Application"
+              />
+            )}
+            {tabValue !== RegistrationStatusType.Rejected && (
+              <FormControlLabel
+                value={RegistrationStatusType.Rejected}
+                control={<Radio />}
+                label="Reject Application"
+              />
+            )}
+            {tabValue !== RegistrationStatusType.Pending && (
+              <FormControlLabel
+                value={RegistrationStatusType.Pending}
+                control={<Radio />}
+                label="Pending"
+              />
+            )}
+          </RadioGroup>
 
-        {tabValue === RegistrationStatusType.Approved && (
-          <>
-            <Button
+          {selectedStatus === RegistrationStatusType.Rejected && (
+            <TextField
+              label="Remarks"
+              multiline
+              rows={4}
               fullWidth
-              variant="soft"
-              color="error"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Rejected,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Reject Application
-            </Button>
-            <Button
-              fullWidth
-              variant="soft"
-              color="info"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Pending,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Pending{' '}
-            </Button>
-          </>
-        )}
+              sx={{ my: 2 }}
+              // value={remarks}
+              // onChange={(e) => setRemarks(e.target.value)}
+            />
+          )}
 
-        {tabValue === RegistrationStatusType.Rejected && (
-          <>
-            <Button
-              fullWidth
-              variant="soft"
-              color="success"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Approved,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Approve Application
-            </Button>
-            <Button
-              fullWidth
-              variant="soft"
-              color="info"
-              sx={{ mt: 2 }}
-              onClick={async () => {
-                await changeStatus({
-                  approvalStatus: RegistrationStatusType.Pending,
-                  body: [editData.id],
-                }).unwrap();
-                onClose();
-              }}
-            >
-              Pending
-            </Button>
-          </>
-        )}
-
-        <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />
+          {/* {showRemarks && <TextField label="Remarks" multiline rows={4} fullWidth sx={{ my: 2 }} />} */}
+        </>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>
         <Button
@@ -1198,14 +1155,13 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
         >
           Cancel
         </Button>
-        <Button
+        <SubmitButton
           variant="contained"
-          size="small"
+          loading={isLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={(e: any) => {}}
-        >
-          Save
-        </Button>
+          onClick={handleSave}
+          buttonText="Save"
+        />
       </DialogActions>
     </>
   );
@@ -1382,7 +1338,11 @@ const DocumentsSections = ({ editData }: any) => {
               </Stack>
             ))
           ) : (
-            'No Documents Found'
+            <Stack spacing={2} sx={{ borderRadius: 1, bgcolor: 'background.neutral' }}>
+              <Box component="span" sx={{ textAlign: 'center', color: 'text.secondary' }}>
+                No Documents Found
+              </Box>
+            </Stack>
           )}
         </Stack>
       )}
