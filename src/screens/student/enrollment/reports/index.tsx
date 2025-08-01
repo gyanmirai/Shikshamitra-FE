@@ -454,7 +454,7 @@ const StudentReportsScreen = () => {
                   <DatePicker
                     label="From Date"
                     value={formik.values.fromDate}
-                    onChange={(date) => formik.setFieldValue('formDate', date)}
+                    onChange={(date) => formik.setFieldValue('fromDate', date)}
                     slotProps={{
                       textField: {
                         size: 'small',
