@@ -478,9 +478,12 @@ const OrganizationUnitFrom = ({
             value={formik.values.title}
             onChange={(e) => {
               const value = e.target.value
-                .split(' ')
-                .map((item) => (item[0]?.toUpperCase() || '') + item.slice(1));
-              formik.setFieldValue('title', value.join(' '));
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              formik.setFieldValue('title', value);
             }}
             size="small"
             error={!!formik.errors.title && !!formik.touched.title}
