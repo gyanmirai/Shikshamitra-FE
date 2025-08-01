@@ -8,6 +8,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import SelectExam from './selectExamStep1';
 import RoomDetails from './roomManageStep3';
 import ExamDetails from './examDetailsStep2';
+import ExamReviewStep4 from './ExamReviewStep4';
 import { validationSchema } from '../validationSchema';
 
 import type { INewExamFormProps } from '../type';
@@ -19,7 +20,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
 
   // Array of step components that correspond to each step in the exam creation process
   // Used to dynamically render the appropriate component based on activeStep
-  const allTimetableSteps = [SelectExam, ExamDetails, RoomDetails];
+  const allTimetableSteps = [SelectExam, ExamDetails, RoomDetails, ExamReviewStep4];
 
   return (
     <CustomStepperWithFormik
@@ -35,14 +36,13 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         isRoomAssign: false,
         roomDetails: {},
       }}
-      steps={['Basic Details', 'Schedule', 'Room Details']}
+      steps={['Basic Details', 'Schedule', 'Room Details', 'Review']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
       validateOnChange={false}
       validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
-      // validationSchema={yup.object().shape({})}
       handleNext={(isLastStep, _values) => {
         if (isLastStep) return;
         setActiveStep(activeStep + 1);
