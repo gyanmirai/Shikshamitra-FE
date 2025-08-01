@@ -107,7 +107,11 @@ export const getValidationSchema = (showField: string[]) => {
       .required('Primary Contact No is required');
   }
 
-  if (showField.includes('secondryContactNo')) {
+  if (showField.includes('secondaryContactNo')) {
+    shape.secondaryContactNo = Yup.number()
+      .typeError('Secondary Contact No must be a number')
+      .required('Secondary Contact No is required');
+  }
     shape.secondryContactNo = Yup.number()
       .typeError('Secondary Contact No must be a number')
       .required('Secondary Contact No is required');
