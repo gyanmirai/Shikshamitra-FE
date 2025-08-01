@@ -6,7 +6,7 @@ import type { Standards, Organization } from 'src/types/school';
 import { cloneDeep } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -50,7 +50,7 @@ const initialValues = {
   previousSchoolName: '',
   contactNo: null,
   primaryContactNo: null,
-  secondryContactNo: null,
+  secondaryContactNo: null,
   email: '',
   studentCount: null,
   classAdmitted: '',
@@ -113,7 +113,7 @@ const reportFieldsMap = {
     'class',
     'name',
     'primaryContactNo',
-    'secondryContactNo',
+    'secondaryContactNo',
     'email',
   ],
   [StudentEnrollmentReportTitle.ReligionWiseStudentReport]: [
@@ -233,18 +233,6 @@ const StudentReportsScreen = () => {
     }
     setAllClass(allClasses);
   }, [medium?.educationMediumStages]);
-
-  useEffect(() => {
-    const updatedFields =
-      reportFieldsMap[formik.values.report as unknown as StudentEnrollmentReportTitle] || [];
-    setCurrentFieldsState(updatedFields);
-    setDynamicSchema(getValidationSchema(updatedFields));
-  }, [formik.values.report]);
-
-  const currentFields = useMemo(
-    () => reportFieldsMap[formik.values.report as unknown as StudentEnrollmentReportTitle] || [],
-    [formik.values.report]
-  );
 
   const showField = useCallback(
     (field: string) => currentFieldsState.includes(field),
@@ -634,17 +622,19 @@ const StudentReportsScreen = () => {
                 </Grid>
               )}
 
-              {showField('secondryContactNo') && (
+              {showField('secondaryContactNo') && (
                 <Grid item xs={12} sm={6} md={4}>
                   <TextField
-                    name="secondryContactNo"
+                    name="secondaryContactNo"
                     label="Secondary Contact No"
-                    value={formik.values.secondryContactNo}
+                    value={formik.values.secondaryContactNo}
                     onChange={formik.handleChange}
                     error={
-                      formik.touched.secondryContactNo && Boolean(formik.errors.secondryContactNo)
+                      formik.touched.secondaryContactNo && Boolean(formik.errors.secondaryContactNo)
                     }
-                    helperText={formik.touched.secondryContactNo && formik.errors.secondryContactNo}
+                    helperText={
+                      formik.touched.secondaryContactNo && formik.errors.secondaryContactNo
+                    }
                     fullWidth
                     size="small"
                   />

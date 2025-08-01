@@ -62,10 +62,10 @@ export const getValidationSchema = (showField: string[]) => {
   }
 
   if (showField.includes('enrollmentDate')) {
-     shape.enrollmentDate = Yup.date()
-       .nullable()
-       .required('Enrollment Date is required')
-       .typeError('Enrollment Date is invalid');
+    shape.enrollmentDate = Yup.date()
+      .nullable()
+      .required('Enrollment Date is required')
+      .typeError('Enrollment Date is invalid');
   }
   if (showField.includes('name')) {
     shape.name = Yup.string().required('Name is required');
