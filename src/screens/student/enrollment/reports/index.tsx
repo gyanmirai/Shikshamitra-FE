@@ -251,7 +251,6 @@ const StudentReportsScreen = () => {
     [currentFieldsState]
   );
 
-  const validationSchema = useMemo(() => getValidationSchema(currentFields), [currentFields]);
   return (
     <Box sx={{ height: '100%' }}>
       <CustomBreadcrumbs
