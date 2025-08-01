@@ -68,11 +68,6 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          // render: (value) => (
-          //   <Typography variant="caption" gutterBottom>
-          //     {value ? dayjs(value).local().format('hh:mm A') : '-'}
-          //   </Typography>
-          // ),
         },
         {
           id: 'endTime',
@@ -80,11 +75,6 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
-          // render: (value) => (
-          //   <Typography fontSize="12px" gutterBottom>
-          //     {value ? dayjs(value).format('hh:mm A') : '-'}
-          //   </Typography>
-          // ),
         },
         {
           id: 'totalMarks',

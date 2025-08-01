@@ -26,6 +26,7 @@ module.exports = {
    */
   rules: {
     // general
+    'no-console': 'error',
     'import/no-cycle': 'off',
     'no-alert': 0,
     'react/prop-types': 'off',
