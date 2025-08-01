@@ -2057,7 +2057,7 @@ export const navData = (isDdvs: boolean) => [
         submodule: securityModule[securityPath].flatMap((list) => list.items),
       },
       {
-        title: 'Security Gaurd',
+        title: 'Security Guard',
         path: '/security-guard/dashboard',
         icon: ICONS.securityGuard,
         _action: 'security-guard',
