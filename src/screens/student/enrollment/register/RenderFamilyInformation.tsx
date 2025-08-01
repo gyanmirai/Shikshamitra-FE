@@ -27,7 +27,7 @@ import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 function MotherOfficeAddressComponent(props: any) {
-  const { formik, disabled, isMainForm = false } = props;
+  const { formik, disabled = false } = props;
 
   return (
     <Grid container spacing={2}>
@@ -102,8 +102,6 @@ function MotherOfficeAddressComponent(props: any) {
             formik.setFieldValue('motherOfficeCountry', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.localCountry && Boolean(formik.errors.localCountry)}
-          // helperText={formik.touched.localCountry && formik.errors.localCountry}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -114,8 +112,6 @@ function MotherOfficeAddressComponent(props: any) {
             formik.setFieldValue('motherOfficeState', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.localState && Boolean(formik.errors.localState)}
-          // helperText={formik.touched.localState && formik.errors.localState}
           countryValue={formik.values.localCountry}
         />
       </Grid>
@@ -123,8 +119,6 @@ function MotherOfficeAddressComponent(props: any) {
         <CityComponent
           value={formik.values.motherOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('motherOfficeCity', value)}
-          // error={formik.touched.motherOfficeCity && Boolean(formik.errors.motherOfficeCity)}
-          // helperText={formik.touched.motherOfficeCity && formik.errors.motherOfficeCity}
           stateValue={formik.values.motherOfficeState}
           disabled={!!disabled}
         />
@@ -240,8 +234,6 @@ function GuardianOfficeAddressComponent(props: any) {
             formik.setFieldValue('guardianOfficeCountry', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.guardianOfficeCountry && Boolean(formik.errors.guardianOfficeCountry)}
-          // helperText={formik.touched.guardianOfficeCountry && formik.errors.guardianOfficeCountry}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -252,8 +244,6 @@ function GuardianOfficeAddressComponent(props: any) {
             formik.setFieldValue('guardianOfficeState', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.guardianOfficeState && Boolean(formik.errors.guardianOfficeState)}
-          // helperText={formik.touched.guardianOfficeState && formik.errors.guardianOfficeState}
           countryValue={formik.values.guardianOfficeCountry}
         />
       </Grid>
@@ -261,8 +251,6 @@ function GuardianOfficeAddressComponent(props: any) {
         <CityComponent
           value={formik.values.guardianOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('guardianOfficeCity', value)}
-          // error={formik.touched.guardianOfficeCity && Boolean(formik.errors.guardianOfficeCity)}
-          // helperText={formik.touched.guardianOfficeCity && formik.errors.guardianOfficeCity}
           stateValue={formik.values.guardianOfficeState}
           disabled={!!disabled}
         />
@@ -362,8 +350,6 @@ function MotherAddressComponent(props: any) {
             formik.setFieldValue('motherLocalCountry', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.motherLocalCountry && Boolean(formik.errors.motherLocalCountry)}
-          // helperText={formik.touched.motherLocalCountry && formik.errors.motherLocalCountry}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -374,8 +360,6 @@ function MotherAddressComponent(props: any) {
             formik.setFieldValue('motherLocalState', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.motherLocalState && Boolean(formik.errors.motherLocalState)}
-          // helperText={formik.touched.motherLocalState && formik.errors.motherLocalState}
           countryValue={formik.values.localCountry}
         />
       </Grid>
@@ -383,8 +367,6 @@ function MotherAddressComponent(props: any) {
         <CityComponent
           value={formik.values.motherLocalCity}
           onChange={(_e, value) => formik.setFieldValue('motherLocalCity', value)}
-          // error={formik.touched.motherLocalCity && Boolean(formik.errors.motherLocalCity)}
-          // helperText={formik.touched.motherLocalCity && formik.errors.localCity}
           stateValue={formik.values.motherLocalState}
           disabled={!!disabled}
         />
@@ -482,8 +464,6 @@ function GuardianAddressComponent(props: any) {
             formik.setFieldValue('guardianLocalCountry', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.guardianLocalCountry && Boolean(formik.errors.guardianLocalCountry)}
-          // helperText={formik.touched.guardianLocalCountry && formik.errors.guardianLocalCountry}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -494,8 +474,6 @@ function GuardianAddressComponent(props: any) {
             formik.setFieldValue('guardianLocalState', value);
           }}
           disabled={!!disabled}
-          // error={formik.touched.guardianLocalState && Boolean(formik.errors.guardianLocalState)}
-          // helperText={formik.touched.guardianLocalState && formik.errors.guardianLocalState}
           countryValue={formik.values.guardianLocalCountry}
         />
       </Grid>
@@ -503,8 +481,6 @@ function GuardianAddressComponent(props: any) {
         <CityComponent
           value={formik.values.guardianLocalCity}
           onChange={(_e, value) => formik.setFieldValue('guardianLocalCity', value)}
-          // error={formik.touched.guardianLocalCity && Boolean(formik.errors.guardianLocalCity)}
-          // helperText={formik.touched.guardianLocalCity && formik.errors.guardianLocalCity}
           stateValue={formik.values.guardianLocalState}
           disabled={!!disabled}
         />
@@ -533,7 +509,7 @@ function GuardianAddressComponent(props: any) {
 }
 
 function RenderFamilyInformation(props: any) {
-  const { formik, isEdit, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const [student, setStudent] = useState([]);
 
   const isFatherDetailsEditable = useBoolean(isMainForm);
@@ -781,7 +757,7 @@ function RenderFamilyInformation(props: any) {
                 }
 
                 formik.setFieldValue('fatherAadharNo', value);
-                formik.setFieldTouched('adharNo', true, true);
+                formik.setFieldTouched('fatherAadharNo', true, true);
               }}
               inputProps={{
                 maxLength: 12,
@@ -795,22 +771,6 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        {/* <Grid item xs={12} md={4} lg={4}>
-          <TextField
-            name="fatherRemarks"
-            label="Remarks"
-            
-            disabled={!isFatherDetailsEditable.value}
-            multiline
-            rows={3}
-            value={formik.values.fatherRemarks}
-            onChange={formik.handleChange}
-            error={formik.touched.fatherRemarks && Boolean(formik.errors.fatherRemarks)}
-            helperText={formik.touched.fatherRemarks && formik.errors.fatherRemarks}
-            fullWidth
-            size="small"
-          />
-        </Grid> */}
         <Grid item xs={12}>
           <Typography variant="subtitle1">Office Address</Typography>
         </Grid>
@@ -887,8 +847,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('fatherOfficeCountry', value);
             }}
             disabled={!isFatherDetailsEditable.value}
-            // error={formik.touched.fatherOfficeCountry && Boolean(formik.errors.fatherOfficeCountry)}
-            // helperText={formik.touched.fatherOfficeCountry && formik.errors.fatherOfficeCountry}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -899,8 +857,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('fatherOfficeState', value);
             }}
             disabled={!isFatherDetailsEditable.value}
-            // error={formik.touched.fatherOfficeState && Boolean(formik.errors.fatherOfficeState)}
-            // helperText={formik.touched.fatherOfficeState && formik.errors.fatherOfficeState}
             countryValue={formik.values.fatherOfficeCountry}
           />
         </Grid>
@@ -908,8 +864,6 @@ function RenderFamilyInformation(props: any) {
           <CityComponent
             value={formik.values.fatherOfficeCity}
             onChange={(_e, value) => formik.setFieldValue('fatherOfficeCity', value)}
-            // error={formik.touched.fatherOfficeCity && Boolean(formik.errors.fatherOfficeCity)}
-            // helperText={formik.touched.fatherOfficeCity && formik.errors.fatherOfficeCity}
             stateValue={formik.values.fatherOfficeState}
             disabled={!isFatherDetailsEditable.value}
           />
@@ -997,8 +951,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('fatherLocalCountry', value);
             }}
             disabled={!isFatherDetailsEditable.value}
-            // error={formik.touched.fatherLocalCountry && Boolean(formik.errors.fatherLocalCountry)}
-            // helperText={formik.touched.fatherLocalCountry && formik.errors.fatherLocalCountry}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -1009,8 +961,6 @@ function RenderFamilyInformation(props: any) {
               formik.setFieldValue('fatherLocalState', value);
             }}
             disabled={!isFatherDetailsEditable.value}
-            // error={formik.touched.fatherLocalState && Boolean(formik.errors.fatherLocalState)}
-            // helperText={formik.touched.fatherLocalState && formik.errors.fatherLocalState}
             countryValue={formik.values.fatherLocalCountry}
           />
         </Grid>
@@ -1018,8 +968,6 @@ function RenderFamilyInformation(props: any) {
           <CityComponent
             value={formik.values.fatherLocalCity}
             onChange={(_e, value) => formik.setFieldValue('fatherLocalCity', value)}
-            // error={formik.touched.fatherLocalCity && Boolean(formik.errors.fatherLocalCity)}
-            // helperText={formik.touched.fatherLocalCity && formik.errors.fatherLocalCity}
             stateValue={formik.values.fatherLocalState}
             disabled={!isFatherDetailsEditable.value}
           />
@@ -1268,7 +1216,7 @@ function RenderFamilyInformation(props: any) {
               }
 
               formik.setFieldValue('motherAadharNo', value);
-              formik.setFieldTouched('adharNo', true, true);
+              formik.setFieldTouched('motherAadharNo', true, true);
             }}
             inputProps={{
               maxLength: 12,
@@ -1281,22 +1229,6 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        {/* <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="motherRemarks"
-            label="Remarks"
-            
-            disabled={!isFatherDetailsEditable.value}
-            multiline
-            rows={3}
-            value={formik.values.motherRemarks}
-            onChange={formik.handleChange}
-            error={formik.touched.motherRemarks && Boolean(formik.errors.motherRemarks)}
-            helperText={formik.touched.motherRemarks && formik.errors.motherRemarks}
-            fullWidth
-            size="small"
-          />
-        </Grid> */}
         <Grid item xs={12}>
           <MotherOfficeAddressComponent formik={formik} disabled={!isMotherDetailsEditable.value} />
         </Grid>
@@ -1535,7 +1467,7 @@ function RenderFamilyInformation(props: any) {
               }
 
               formik.setFieldValue('guardianAadharNo', value);
-              formik.setFieldTouched('adharNo', true, true);
+              formik.setFieldTouched('guardianAadharNo', true, true);
             }}
             inputProps={{
               maxLength: 12,
@@ -1548,22 +1480,6 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        {/* <Grid item xs={12} md={4} lg={3}>
-          <TextField
-            name="guardianRemarks"
-            label="Remarks"
-            
-            disabled={!isGuardianDetailsEditable.value}
-            multiline
-            rows={3}
-            value={formik.values.guardianRemarks}
-            onChange={formik.handleChange}
-            error={formik.touched.guardianRemarks && Boolean(formik.errors.guardianRemarks)}
-            helperText={formik.touched.guardianRemarks && formik.errors.guardianRemarks}
-            fullWidth
-            size="small"
-          />
-        </Grid> */}
         <Grid item xs={12}>
           <GuardianOfficeAddressComponent
             formik={formik}

@@ -241,43 +241,6 @@ const LeaveHistory = (props: any) => {
         isLoading={isLoading}
         tableId="leave-history-table"
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   sticky: true,
-          //   isSort: false,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             label: 'Name',
             sticky: true,
@@ -458,7 +421,7 @@ const LeaveHistory = (props: any) => {
                 sx={{ textAlign: 'justify' }}
                 title={
                   editData.type === EmployeeLeaveStatusType.Rejected
-                    ? 'Reject the leave if needed. Use the remarks box to share your reason (optional).'
+                    ? 'When rejecting a leave request, you must provide remarks explaining the reason for rejection.'
                     : 'Review the request and click Approve. Add remarks if you wish to include any additional info.'
                 }
               >
