@@ -12,6 +12,8 @@ import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { GlobalIcons } from 'src/utils/icons';
+
 import { varAlpha } from 'src/theme/styles';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -162,15 +164,22 @@ export const AccessControlForm = ({
           gap: 2,
         }}
       >
-        <Button variant="outlined" onClick={handleClose}>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          onClick={handleClose}
+        >
           Cancel
         </Button>
         <LoadingButton
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isAddAccessControlLoading}
           variant="contained"
           onClick={handleSubmit}
         >
-          Save
+          Submit
         </LoadingButton>
       </Box>
     </Box>

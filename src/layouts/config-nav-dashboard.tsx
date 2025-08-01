@@ -53,6 +53,7 @@ export const ICONS = {
   parameter: icon('ic-parameter'),
   student: icon('ic-student'),
   security: icon('ic-security'),
+  securityGuard: icon('ic-security-guard'),
   hr: icon('ic-hr'),
   finance: icon('ic-finance'),
   communication: icon('ic-communication'),
@@ -325,126 +326,6 @@ const securityModule = {
               shortcutKeyName: 'Alt+R+3',
             },
           ],
-        },
-        {
-          title: 'Visitor Management',
-          path: '',
-          _action: 'visitor-management',
-          children: [
-            {
-              title: 'Visitor Checkpoint',
-              path: '/security/visitor-management/visitor-check-in',
-              _action: 'visitor-check-in',
-            },
-            {
-              title: 'Visitor Pre Approval',
-              path: '/security/visitor-management/visitor-pre-approval',
-              _action: 'visitor-pre-approval',
-            },
-          ],
-        },
-        {
-          title: 'Gate Pass Management',
-          path: '',
-          _action: 'gate-pass-management',
-          children: [
-            {
-              title: 'Gate Pass System',
-              path: '/security/gate-pass-management/gate-pass-system',
-              _action: 'gate-pass-system',
-            },
-            {
-              title: 'Access Logs Management',
-              path: '/security/gate-pass-management/access-logs-management',
-              _action: 'access-logs-management',
-            },
-            {
-              title: 'Create Gate Pass',
-              path: '/security/gate-pass-management/create-gate-pass',
-              _action: 'create-gate-pass',
-            },
-            {
-              title: 'Gate Pass Request',
-              path: '/security/gate-pass-management/gate-pass',
-              _action: 'gate-pass',
-            },
-            {
-              title: 'Review Gate Pass Request',
-              path: '/security/gate-pass-management/review-gate-pass-request',
-              _action: 'review-gate-pass-request',
-            },
-            // {
-            //   title: 'Access Logs Management Security',
-            //   path: '/security/gate-pass-management/access-logs-management-security',
-            //   _action: 'access-logs-management-security',
-            // },
-            {
-              title: 'Gate Pass Request',
-              path: '/security/gate-pass-management/gate-pass-staff',
-              _action: 'gate-pass-staff',
-            },
-            {
-              title: 'Review Gate Pass Request',
-              path: '/security/gate-pass-management/review-gate-pass-staff',
-              _action: 'review-gate-pass-staff',
-            },
-          ],
-        },
-
-        {
-          title: 'Guard Management',
-          path: '',
-          _action: 'guard-management',
-          children: [
-            {
-              title: 'Guard Assignment',
-              path: '/security/guard-management/guard-assignment',
-              _action: 'guard-assignment',
-            },
-            {
-              title: 'My Duty Schedule',
-              path: '/security/guard-management/duty-schedule',
-              _action: 'duty-schedule',
-            },
-            {
-              title: 'Guard Shift Configuration',
-              path: '/security/guard-management/setting-configuration',
-              _action: 'setting-configuration',
-            },
-            {
-              title: 'Guard Duty Overview',
-              path: '/security/guard-management/hand-over-notes',
-              _action: 'hand-over-notes',
-            },
-          ],
-        },
-
-        {
-          title: 'Alert',
-          path: '',
-          _action: 'alert',
-          children: [
-            {
-              title: 'Live Security Alert',
-              path: '/security/alert/live-security-alert',
-              _action: 'live-security-alerts',
-            },
-            {
-              title: 'Alert Dashboard',
-              path: '/security/alert/alert-dashboard',
-              _action: 'alert-dashboard',
-            },
-            {
-              title: 'Alert Report',
-              path: '/security/alert/alert-report',
-              _action: 'alert-report',
-            },
-          ],
-        },
-        {
-          title: 'Reports',
-          path: '/security/reports',
-          _action: 'reports',
         },
       ],
     },
@@ -2178,7 +2059,7 @@ export const navData = (isDdvs: boolean) => [
       {
         title: 'Security Gaurd',
         path: '/security-guard/dashboard',
-        icon: ICONS.security,
+        icon: ICONS.securityGuard,
         _action: 'security-guard',
 
         submodule: securityGuardModule[securityGuardPath].flatMap((list) => list.items),
