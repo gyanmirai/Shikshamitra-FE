@@ -19,7 +19,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/viewTimetableComp';
-import ScheduledExamTable from './components/ScheduleExamTable';
+import ScheduledExamTable from './components/scheduleExamTable';
 
 import type { IExamFormValues } from './type';
 
@@ -102,7 +102,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <NewExamForm
-            // onSubmit={handleSubmit}
             onClose={() => {
               setOpen(false);
             }}
@@ -142,7 +141,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               deleteDialog.onFalse();
               shikshaMitraToast.success({

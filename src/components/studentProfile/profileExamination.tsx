@@ -6,19 +6,15 @@ import { useState } from 'react';
 import { Card, useTheme, CardHeader } from '@mui/material';
 
 import examTableData from 'src/json/examination/examTableData.json';
-import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/ScheduleExamTable';
+import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/scheduleExamTable';
 
 import { Chart, useChart, ChartSelect, ChartLegends } from '../chart';
 
 import type { ChartOptions } from '../chart';
 
 const ProfileExamination = () => {
-  // Get the current theme from MUI
-  const theme = useTheme();
   // State to store all exam data, initialized with data from JSON
   const [examData, setExamData] = useState<IExamFormValues[]>(examTableData);
-  // State to track the selected year for data series
-  const [selectedSeries, setSelectedSeries] = useState('2024');
 
   return (
     <ScheduledExamTable
@@ -90,7 +86,6 @@ export function EcommerceYearlySales({
       <ChartLegends
         colors={chartOptions?.colors}
         labels={chart.series[0].data.map((item) => item.name)}
-        // values={[fShortenNumber(1234), fShortenNumber(6789)]}
         sx={{ px: 3, gap: 3 }}
       />
 
