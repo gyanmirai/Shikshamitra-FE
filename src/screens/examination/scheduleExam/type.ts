@@ -48,10 +48,12 @@ export interface IExamFormValues {
 }
 
 export interface IScheduledExamTableProps {
-  openDialog: boolean;
-  setOpenDialog: (value: boolean) => void;
+  isScheduleExamButton?: boolean;
+  isAction?: boolean;
+  openDialog?: boolean;
+  setOpenDialog?: (value: boolean) => void;
   editData?: IExamFormValues | null;
-  setEditData: (value: IExamFormValues | null) => void;
+  setEditData?: (value: IExamFormValues | null) => void;
   data: IExamFormValues[];
   onDelete: (data: IExamFormValues) => void;
   onViewTimetable: (data: IExamFormValues) => void;

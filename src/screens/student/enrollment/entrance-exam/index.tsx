@@ -7,6 +7,7 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import isoWeek from 'dayjs/plugin/isoWeek';
 import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -68,6 +69,8 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
 
+dayjs.extend(isoWeek);
+
 /**
  * Main component for managing entrance exam screens and functionalities
  */
@@ -80,10 +83,10 @@ const EntranceExamScreen = () => {
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
   // State for managing the start date filter for entrance exams
-  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().startOf('isoWeek'));
 
   // State for managing the end date filter for entrance exams
-  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // useDispatch hook for dispatching Redux actions
@@ -129,6 +132,7 @@ const EntranceExamScreen = () => {
         class: item.studentEnrollment.standard.name,
         board: item.studentEnrollment.educationBoard.name,
         status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
+        progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
         percentage:
           item.marksObtained === null
             ? 0
@@ -137,6 +141,7 @@ const EntranceExamScreen = () => {
       })),
     [entranceExamData]
   );
+  console.log('Table Data:', entranceExamData?.items);
 
   /**
    * Memoized calendar data transformation
@@ -203,8 +208,16 @@ const EntranceExamScreen = () => {
 
         <MenuItem
           onClick={async () => {
+            if (row.progress < 50) {
+              shikshaMitraToast.error({
+                message: 'Please Complete Required Fields of Registration Form',
+              });
+              popover.onClose();
+              return;
+            }
             confirmMovePopup.onTrue();
             setEditData(row);
+            // dialog.onTrue();
             setMoveId(row.id);
             popover.onClose();
           }}
@@ -264,19 +277,23 @@ const EntranceExamScreen = () => {
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
+            value={startDate}
             slotProps={{
               textField: {
                 sx: { width: '250px' },
                 size: 'small',
               },
             }}
+            views={['year', 'month', 'day']}
             onChange={(value) => {
               setStartDate(value);
             }}
           />
           <DatePicker
             label="End Date"
+            value={endDate}
             format="DD-MM-YYYY"
+            views={['year', 'month', 'day']}
             slotProps={{
               textField: {
                 sx: { width: '250px' },
@@ -384,6 +401,49 @@ const EntranceExamScreen = () => {
               filterType: 'number',
               align: 'left',
               minWidth: 150,
+            },
+            {
+              id: 'progress',
+              label: 'Progress',
+              align: 'left',
+              sticky: true,
+              filterType: 'number',
+              render(value, row) {
+                return (
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress
+                      variant="determinate"
+                      value={value}
+                      size={50}
+                      thickness={3}
+                      sx={{
+                        color: value < 50 ? 'warning.main' : 'success.main',
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        component="small"
+                        color="text.secondary"
+                        sx={{ fontSize: '12px' }}
+                      >
+                        {value}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              },
             },
             {
               id: 'percentage',

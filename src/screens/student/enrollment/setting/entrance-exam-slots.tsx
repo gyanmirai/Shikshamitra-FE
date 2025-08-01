@@ -1,7 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { LoadingButton } from '@mui/lab';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -13,6 +16,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetEntranceExamSlotQuery,
   useAddEntranceExamSlotMutation,
@@ -28,6 +32,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { ISlot } from './type';
 
@@ -38,7 +43,10 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
   const confirm = useBoolean();
   // State to store data being edited
   const [editData, setEditData] = useState<ISlot | null>(null);
-
+  // Redux state for tracking unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Redux dispatch
+  const dispatch = useDispatch();
   // Fetch entrance exam slots data
   const { data: slots, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -59,11 +67,26 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
     endTime: dayjs(item.endDate).format('hh:mm A'),
   }));
 
-  // Handle closing of dialog and reset edit data
-  const handleClose = () => {
-    entranceExamSlotsDialog.onFalse();
-    setEditData(null);
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      entranceExamSlotsDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      entranceExamSlotsDialog.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
   };
+
   return (
     <Box>
       <ConfirmDialog
@@ -176,7 +199,10 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
           </Box>
         }
         open={entranceExamSlotsDialog.value}
-        handleClose={handleClose}
+        handleClose={() => {
+          entranceExamSlotsDialog.onFalse();
+          setEditData(null);
+        }}
       >
         <SlotsForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
@@ -209,6 +235,7 @@ export const SlotsForm = ({
       slotName: editData?.slotName || null,
       startTime: editData?.startDate ? dayjs(editData?.startDate) : null,
       endTime: editData?.endDate ? dayjs(editData?.endDate) : null,
+      duration: editData?.duration || null,
       studentLimit: editData?.studentLimit || null,
       roomNo: editData?.roomNo || null,
     },
@@ -216,21 +243,32 @@ export const SlotsForm = ({
     validationSchema: Yup.object().shape({
       slotName: Yup.string().required('Slot Name is required'),
       startTime: Yup.date()
+        .required('Start Time is required')
         .test('startTime', 'Start time must be before end time', (value, context) => {
-          if (context.parent.endTime && dayjs(context.parent.endTime).isBefore(dayjs(value))) {
+          const { endTime } = context.parent;
+          if (value && endTime && dayjs(value).isAfter(dayjs(endTime))) {
             return false;
           }
           return true;
-        })
-        .required('Start Time is required'),
+        }),
+
       endTime: Yup.date()
-        .test('endtime', 'End time must be after start time', (value, context) => {
-          if (dayjs(context.parent.startTime).isAfter(dayjs(value))) {
+        .required('End Time is required')
+        .test('endTime', 'End time must be after start time', (value, context) => {
+          const { startTime } = context.parent;
+          if (value && startTime && dayjs(value).isBefore(dayjs(startTime))) {
             return false;
           }
           return true;
         })
-        .required('End Time is required'),
+        .test('durationLimit', 'Duration should not exceed 3 hours', (value, context) => {
+          const { startTime } = context.parent;
+          if (value && startTime) {
+            const diffInMinutes = dayjs(value).diff(dayjs(startTime), 'minute');
+            return diffInMinutes <= 180;
+          }
+          return true; // don't block validation if fields are empty
+        }),
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
@@ -272,149 +310,178 @@ export const SlotsForm = ({
   });
   return (
     <Box>
-      <DialogScrollContent>
-        <Stack spacing={3}>
-          <ShakingTextField error={!!(formik.touched.slotName && formik.errors.slotName) || false}>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <DialogScrollContent>
+          <Stack spacing={3}>
+            <ShakingTextField
+              error={!!(formik.touched.slotName && formik.errors.slotName) || false}
+            >
+              <TextField
+                name="slotName"
+                label="Slot Name *"
+                value={formik.values.slotName}
+                onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
+                onBlur={formik.handleBlur}
+                size="small"
+                fullWidth
+                error={formik.touched.slotName && Boolean(formik.errors.slotName)}
+                helperText={
+                  formik.touched.slotName && formik.errors.slotName
+                    ? String(formik.errors.slotName)
+                    : ''
+                }
+              />
+            </ShakingTextField>
+
+            <ShakingTextField
+              error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+            >
+              <TimePicker
+                label="Start Time *"
+                value={formik.values.startTime}
+                format="hh:mm a"
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+                onChange={(date) => {
+                  formik.setFieldValue('startTime', date);
+
+                  const { endTime } = formik.values;
+                  if (endTime && date) {
+                    const diffInMinutes = dayjs(endTime).diff(dayjs(date), 'minute');
+                    formik.setFieldValue('duration', diffInMinutes);
+                  }
+                }}
+                // onChange={(date) => formik.setFieldValue('startTime', date)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    name: 'startTime',
+                    helperText:
+                      formik.touched.startTime && formik.errors.startTime
+                        ? String(formik.errors.startTime)
+                        : undefined,
+                    error: !!formik.errors.startTime && formik.touched.startTime,
+                  },
+                }}
+              />
+            </ShakingTextField>
+
+            <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
+              <TimePicker
+                label="End Time *"
+                format="hh:mm a"
+                value={formik.values.endTime}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+                onChange={(date) => {
+                  formik.setFieldValue('endTime', date);
+
+                  const { startTime } = formik.values;
+                  if (startTime && date) {
+                    const diffInMinutes = dayjs(date).diff(dayjs(startTime), 'minute');
+                    formik.setFieldValue('duration', diffInMinutes);
+                  }
+                }}
+                // onChange={(date) => formik.setFieldValue('endTime', date)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    name: 'endTime',
+                    helperText:
+                      formik.touched.endTime && formik.errors.endTime
+                        ? String(formik.errors.endTime)
+                        : undefined,
+                    error: !!formik.errors.endTime && formik.touched.endTime,
+                  },
+                }}
+              />
+            </ShakingTextField>
+
             <TextField
-              name="slotName"
-              label="Slot Name *"
-              value={formik.values.slotName}
-              onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
-              onBlur={formik.handleBlur}
+              label="Duration (Minutes)"
+              value={formik.values.duration || ''}
               size="small"
               fullWidth
-              error={formik.touched.slotName && Boolean(formik.errors.slotName)}
-              helperText={
-                formik.touched.slotName && formik.errors.slotName
-                  ? String(formik.errors.slotName)
-                  : ''
-              }
+              disabled
             />
-          </ShakingTextField>
+            <ShakingTextField
+              error={!!(formik.touched.studentLimit && formik.errors.studentLimit) || false}
+            >
+              <TextField
+                name="studentLimit"
+                label="Student Limit *"
+                type="number"
+                value={formik.values.studentLimit}
+                onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
+                onBlur={formik.handleBlur}
+                size="small"
+                fullWidth
+                helperText={
+                  formik.touched.studentLimit && formik.errors.studentLimit
+                    ? String(formik.errors.studentLimit)
+                    : ''
+                }
+                error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
+              />
+            </ShakingTextField>
 
-          <ShakingTextField
-            error={!!(formik.touched.startTime && formik.errors.startTime) || false}
+            <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
+              <TextField
+                name="roomNo"
+                label="Room No. *"
+                type="number"
+                onBlur={formik.handleBlur}
+                value={formik.values.roomNo}
+                onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
+                size="small"
+                fullWidth
+                helperText={
+                  formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
+                }
+                error={formik.touched.roomNo && !!formik.errors.roomNo}
+              />
+            </ShakingTextField>
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            variant="outlined"
+            onClick={() => {
+              handleClose?.(null, false);
+            }}
+            size="small"
           >
-            <TimePicker
-              label="Start Time *"
-              value={formik.values.startTime}
-              format="hh:mm"
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-              onChange={(date) => formik.setFieldValue('startTime', date)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  name: 'startTime',
-                  helperText:
-                    formik.touched.startTime && formik.errors.startTime
-                      ? String(formik.errors.startTime)
-                      : undefined,
-                  error: !!formik.errors.startTime && formik.touched.startTime,
-                },
-              }}
-            />
-          </ShakingTextField>
-
-          <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
-            <TimePicker
-              label="End Time *"
-              format="hh:mm "
-              value={formik.values.endTime}
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-              onChange={(date) => formik.setFieldValue('endTime', date)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  name: 'endTime',
-                  helperText:
-                    formik.touched.endTime && formik.errors.endTime
-                      ? String(formik.errors.endTime)
-                      : undefined,
-                  error: !!formik.errors.endTime && formik.touched.endTime,
-                },
-              }}
-            />
-          </ShakingTextField>
-
-          <ShakingTextField
-            error={!!(formik.touched.studentLimit && formik.errors.studentLimit) || false}
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={isLoading || isUpdateSlotLoading}
+            startIcon={
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                width={editData ? 16 : 20}
+                height={editData ? 16 : 20}
+              />
+            }
+            onClick={(e: any) => {
+              formik.handleSubmit(e);
+            }}
+            type="submit"
           >
-            <TextField
-              name="studentLimit"
-              label="Student Limit *"
-              type="number"
-              value={formik.values.studentLimit}
-              onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
-              onBlur={formik.handleBlur}
-              size="small"
-              fullWidth
-              helperText={
-                formik.touched.studentLimit && formik.errors.studentLimit
-                  ? String(formik.errors.studentLimit)
-                  : ''
-              }
-              error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
-            />
-          </ShakingTextField>
-
-          <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
-            <TextField
-              name="roomNo"
-              label="Room No. *"
-              type="number"
-              onBlur={formik.handleBlur}
-              value={formik.values.roomNo}
-              onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
-              size="small"
-              fullWidth
-              helperText={
-                formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
-              }
-              error={formik.touched.roomNo && !!formik.errors.roomNo}
-            />
-          </ShakingTextField>
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          variant="outlined"
-          onClick={() => {
-            handleClose?.(null, false);
-          }}
-          size="small"
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          variant="contained"
-          loading={isLoading || isUpdateSlotLoading}
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={editData ? 16 : 20}
-              height={editData ? 16 : 20}
-            />
-          }
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
-          type="submit"
-        >
-          {editData ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
+            {editData ? 'Update' : 'Submit'}
+          </LoadingButton>
+        </DialogActions>
+      </BackPopUpChecked>
     </Box>
   );
 };
