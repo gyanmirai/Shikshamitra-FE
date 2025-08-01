@@ -20,8 +20,8 @@ const OverviewCard = () => {
       href: '/student/profile',
       width: 4,
       labels: [
-        { name: 'Male - 5,000', color: 'success' },
-        { name: 'Female - 5,000', color: 'error' },
+        { name: `Male - ${fNumber(5000)}`, color: 'success' },
+        { name: `Female - ${fNumber(5000)}`, color: 'error' },
       ],
     },
     {
@@ -29,13 +29,13 @@ const OverviewCard = () => {
       icon: 'ph:student-bold', // Total Primary Students
       title: 'Total Primary Students',
       count: fNumber(1000),
-      color: '#00BFFF',
+      color: 'info.main',
       bgColor: 'info',
       href: '/student/primary',
       width: 4,
       labels: [
-        { name: 'Male - 600', color: 'success' },
-        { name: 'Female - 400', color: 'error' },
+        { name: `Male - ${fNumber(600)}`, color: 'success' },
+        { name: `Female - ${fNumber(400)}`, color: 'error' },
       ],
     },
     {
@@ -43,13 +43,13 @@ const OverviewCard = () => {
       icon: 'ph:student-fill', // Total Secondary Students
       title: 'Total Secondary Students',
       count: fNumber(247),
-      color: '#FFA500',
+      color: 'warning.main',
       bgColor: 'warning',
       href: '/student/secondary',
       width: 4,
       labels: [
-        { name: 'Male - 120', color: 'success' },
-        { name: 'Female - 127', color: 'error' },
+        { name: `Male - ${fNumber(120)}`, color: 'success' },
+        { name: `Female - ${fNumber(127)}`, color: 'error' },
       ],
     },
   ]);

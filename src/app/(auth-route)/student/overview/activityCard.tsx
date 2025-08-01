@@ -6,7 +6,6 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 import { Label } from 'src/components/label';
 
 interface ActivityItemProps {
-  color: string;
   title: string;
   subtitle: string;
   timeAgo: string;
@@ -14,14 +13,7 @@ interface ActivityItemProps {
   tag: string;
 }
 
-const ActivityItem: React.FC<ActivityItemProps> = ({
-  color,
-  title,
-  subtitle,
-  timeAgo,
-  date,
-  tag,
-}) => (
+const ActivityItem: React.FC<ActivityItemProps> = ({ title, subtitle, timeAgo, date, tag }) => (
   <Card
     variant="outlined"
     sx={{
