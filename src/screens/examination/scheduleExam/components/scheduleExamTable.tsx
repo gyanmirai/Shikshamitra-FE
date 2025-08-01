@@ -82,23 +82,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [data, tabs.value]
   );
 
-  const handleAccordionToggle = (row: IExamFormValues) => {
-    const isOpen = expandedRowId === row.id;
-    setExpandedRowId(isOpen ? null : row.id || null);
-
-    // Call view action only when opening
-    if (!isOpen) {
-      onViewTimetable(row);
-    }
-  };
-
+  // Actions component for the three dots menu
+  // Renders menu items for printing and publishing timetables
+  // Uses useCallback to memoize the component for performance
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
         {' '}
         <MenuList>
-          {/* Show Add Timetable option for Pending status */}
-
+          {/* Menu item for printing the timetable */}
           <MenuItem
             onClick={() => {
               pop.onClose();
@@ -107,6 +99,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             <Iconify icon={GlobalIcons.download} />
             Print Timetable
           </MenuItem>
+
+          {/* Menu item for publishing the timetable 
+              Sets the selected timetable name and shows confirmation dialog */}
           <MenuItem
             onClick={() => {
               publishExamDialog.onTrue();
@@ -231,7 +226,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     showDeleteIcon
                     showEditIcon
                     handleDeleteClick={() => {}}
-                    handleEditClick={() => {}}
+                    handleEditClick={() => {
+                      setOpenDialog?.(true);
+                      setEditData?.(row as IExamFormValues);
+                    }}
                   />
                 );
               },

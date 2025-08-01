@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -28,12 +29,28 @@ interface IFormNumberSeries {
   formNumberSeries: number;
 }
 
-const FormNumberSeries = ({ formNumberSeriesDialog }: any) => {
+const FormNumberSeries = ({
+  formNumberSeriesDialog,
+}: {
+  formNumberSeriesDialog: UseBooleanReturn;
+}) => {
+  // State to control confirm dialog visibility
   const confirm = useBoolean();
+
+  // Get isChanges state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Redux dispatch function
   const dispatch = useDispatch();
+
+  // State to store form number series data being edited
   const [editData, setEditData] = useState<null | IFormNumberSeries>(null);
 
+  /**
+   * Handles closing of the form number series dialog
+   * @param _e - Event object
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       formNumberSeriesDialog.onFalse();
