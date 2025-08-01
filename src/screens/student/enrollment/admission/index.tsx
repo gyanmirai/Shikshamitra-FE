@@ -540,6 +540,7 @@ const AdmissionScreen = () => {
           ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
           studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
+          secondaryContactNumber: item.secondaryContactNumber || undefined,
           genderValue: GenderType[item?.genderType as any],
           remarks: item?.remarks || '-',
           address: [
@@ -758,7 +759,6 @@ const AdmissionScreen = () => {
             label: 'Secondary Contact No.',
             minWidth: '220px',
             align: 'left',
-            render: (value) => value || '-',
           },
           { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
           {

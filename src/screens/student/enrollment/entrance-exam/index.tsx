@@ -235,7 +235,6 @@ const EntranceExamScreen = () => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      console.log('Are u sure to leave this page ');
       resultDialog.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
@@ -305,9 +304,6 @@ const EntranceExamScreen = () => {
             }}
           />
         </Box>
-        {/* <Button startIcon={<Upload />} variant="contained" size="small">
-          Upload Results
-        </Button> */}
       </Box>
       <Box mt={2}>
         <CustomizableTable
@@ -317,43 +313,6 @@ const EntranceExamScreen = () => {
           noDataText={<>No Entrance Exam Data Found </>}
           isLoading={isLoading}
           columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'left',
-            //   minWidth: '60px',
-            //   isSort: false,
-            //   sticky: true,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(tableData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     return (
-            //       <Checkbox
-            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
             {
               id: 'name',
               label: 'Student Name',
@@ -559,14 +518,19 @@ const EntranceExamScreen = () => {
         }
         content={
           <>
-            {editData?.status === 2 ? (
+            {editData?.status === EntranceExamStatusType.Pending ? (
               <>
-                Student failed the entrance exam <strong>{editData?.name || ''}</strong> Are you
-                sure continue with admission?
+                The entrance exam has not been conducted yet. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
+              </>
+            ) : editData?.status === EntranceExamStatusType.Fail ? (
+              <>
+                The student has failed the entrance exam. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
               </>
             ) : (
               <>
-                Are you sure want to move student <strong>{editData?.name || ''}</strong> in
+                Are you sure you want to move student <strong>{editData?.name || ''}</strong> to
                 admission?
               </>
             )}
@@ -625,7 +589,6 @@ export const ExamForm = ({
 }) => {
   // State to store all available exam slots
   const [allSlots, setAllSlots] = useState<any[]>([]);
-  console.log('allSlots---', allSlots);
 
   // Dialog state for slot management
   const dialog = useBoolean();
@@ -633,17 +596,6 @@ export const ExamForm = ({
   // Validation schema for exam form fields
   const validationSchema = Yup.object({
     examDate: Yup.date().required('Exam date is required'),
-    // passingMarks: Yup.number()
-    //   .nullable()
-    //   .test(
-    //     'less-than-total',
-    //     'Passing marks should be less than total marks',
-    //     (value, context) => {
-    //       const { totalMarks } = context.parent;
-    //       return value == null || (totalMarks != null && value < totalMarks);
-    //     }
-    //   ),
-    // examType: Yup.string().required('Exam type is required'),
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
@@ -681,7 +633,6 @@ export const ExamForm = ({
         const res = await getStudentCountByDate({ slotId, examDate: date }).unwrap();
         return res.studentCount;
       } catch (e) {
-        console.log(e);
         return 0;
       }
     },
@@ -690,16 +641,11 @@ export const ExamForm = ({
 
   // Formik instance for form handling
   const formik = useFormik({
-    // enableReinitialize: true,
     initialValues: {
       examDate: null,
-      // examType: '',
-      // scheduleType: ScheduleType.Individual,
-      // totalMarks: 0,
       isConfirmed: false,
       slots: allSlots || [],
       slot: '',
-      // passingMarks: null,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -708,10 +654,6 @@ export const ExamForm = ({
           entranceExamSlotId: values.slot,
           studentEnrollmentId,
           examDate: dateConvertor(dayjs(values.examDate).format(dateFormat)),
-          // examType: values.examType,
-          // totalMarks: values.totalMarks,
-          // examScheduleType: values.scheduleType,
-          // passingMark: values.passingMarks,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
@@ -720,7 +662,6 @@ export const ExamForm = ({
       } catch (error) {
         console.log(error);
       }
-      console.log(values);
     },
   });
 
@@ -1015,7 +956,6 @@ const ResultForm = ({
       totalMarks: Yup.number().required('Total Marks is required'),
     }),
     onSubmit: async (values) => {
-      console.log(values);
       try {
         await updateMarks({
           id: editData.id,
@@ -1099,30 +1039,6 @@ const ResultForm = ({
                 helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
               />
             </ShakingTextField>
-            {/* <Typography variant="caption" color="error">
-              {formik.errors.obtainedMarks as string}
-            </Typography> */}
-
-            {/* <Box>
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={formik.values.status === 1}
-                    onChange={() => formik.setFieldValue('status', 1)}
-                  />
-                }
-                label="Pass"
-              />
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={formik.values.status === 2}
-                    onChange={() => formik.setFieldValue('status', 2)}
-                  />
-                }
-                label="Fail"
-              />
-            </Box> */}
           </Box>
         </BackPopUpChecked>
       </DialogScrollContent>

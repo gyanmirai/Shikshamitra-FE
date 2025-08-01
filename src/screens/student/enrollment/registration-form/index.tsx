@@ -41,17 +41,8 @@ const RegistrationFormScreen = () => {
   const [editData, setEditData] = useState<IInquiryData | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  // State to store ID of student being moved to registration
-  const [moveId, setMoveId] = useState<string | null>(null);
-
-  // State to store dates (currently unused)
-  const [dates, setDates] = useState([]);
-
   // Dialog control for follow-up form
   const followUpDialog = useBoolean();
-
-  // Dialog control for move confirmation popup
-  const confirmMovePopup = useBoolean();
 
   // Query hook to fetch registration form data
   const {

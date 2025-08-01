@@ -241,43 +241,6 @@ const LeaveHistory = (props: any) => {
         isLoading={isLoading}
         tableId="leave-history-table"
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   sticky: true,
-          //   isSort: false,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             label: 'Name',
             sticky: true,
@@ -422,8 +385,8 @@ const LeaveHistory = (props: any) => {
               sx={{ textAlign: 'justify' }}
               title={
                 editData
-                  ? 'Review and manage leave requests. You can view details and take actions like approve or reject.'
-                  : 'Create a leave request by selecting the employee, leave type, dates, and adding notes.'
+                  ? 'Review leave request information including dates, type, reason and others.'
+                  : 'Add leave request by entering leave type, start and end dates, and a short description.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -459,7 +422,7 @@ const LeaveHistory = (props: any) => {
                 title={
                   editData.type === EmployeeLeaveStatusType.Rejected
                     ? 'When rejecting a leave request, you must provide remarks explaining the reason for rejection.'
-                    : 'You can add optional remarks while approving this leave request.'
+                    : 'Review the request and click Approve. Add remarks if you wish to include any additional info.'
                 }
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

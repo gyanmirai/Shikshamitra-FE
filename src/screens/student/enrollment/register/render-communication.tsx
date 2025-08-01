@@ -15,7 +15,6 @@ import type { FieldsType } from './type';
 
 const RenderCommunicationFields = (props: any) => {
   const { formik, isEdit, isMainForm = false } = props;
-  const isCommunicationEditable = useBoolean(isMainForm);
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);
