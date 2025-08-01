@@ -141,7 +141,6 @@ const EntranceExamScreen = () => {
       })),
     [entranceExamData]
   );
-  console.log('Table Data:', entranceExamData?.items);
 
   /**
    * Memoized calendar data transformation
