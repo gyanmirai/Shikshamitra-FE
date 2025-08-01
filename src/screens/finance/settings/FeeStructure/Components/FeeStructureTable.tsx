@@ -15,9 +15,12 @@ const FeeStructureTable = () => (
         id: 'name',
         label: 'Fee Structure Name',
         children(row) {
+          if (!row?.feeHeads || !Array.isArray(row.feeHeads)) {
+            return <div>No fee heads available</div>;
+          }
           return (
             <CustomizableTable
-              tableId={`fee-heads-${row.id}`}
+              tableId={`fee-heads-${row.id || 'unknown'}`}
               columns={[
                 { id: 'name', label: 'Fee Head' },
                 { id: 'totalFee', label: 'Total Fee' },
