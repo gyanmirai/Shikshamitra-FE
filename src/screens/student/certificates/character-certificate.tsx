@@ -28,6 +28,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -137,67 +138,92 @@ const CharacterCertificate = () => {
 export default CharacterCertificate;
 
 const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
+  // State for storing all available mediums (languages of instruction)
   const [allMediums, setAllMediums] = useState<Medium[]>([]);
+
+  // State for storing all organizations/stages within selected medium
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+
+  // State for storing all classes/standards within selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
+
+  // State for storing all divisions within selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
+
+  // Get current board and medium from global state
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
+
+  // Query hook for fetching filtered students based on selected criteria
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
+  // Initialize form handling with Formik
   const { errors, touched, initialValues, values, setFieldValue, handleSubmit, handleChange } =
     useFormik({
       initialValues: {
-        medium: '',
-        organization: medium?.educationMediumStages?.[0]?.id || '',
-        classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '',
-        division: medium?.educationMediumStages?.[0]?.standards?.[0]?.divisions?.[0]?.id || '',
+        medium: '', // Medium of instruction
+        organization: medium?.educationMediumStages?.[0]?.id || '', // Default to first organization
+        classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '', // Default to first class
+        division: medium?.educationMediumStages?.[0]?.standards?.[0]?.divisions?.[0]?.id || '', // Default to first division
         grNo: '',
         creationDate: null,
         reason: '',
+        student: [],
       },
       validationSchema: Yup.object().shape({
         organization: Yup.string().required('Organization is required'),
         classes: Yup.string().required('Class is required'),
         division: Yup.string().required('Division is required'),
+        student: Yup.array().min(1, 'Please select at least one student'),
+
         creationDate: Yup.date().required('Creation date is required'),
         reason: Yup.string().required('Reason is required'),
       }),
       onSubmit: (val: any) => {
-        // submit form logic
-        // fresetForm();
+        shikshaMitraToast.success({
+          message: `Character certificate created for ${val.student?.length} students`,
+        });
+        onClose(null, true);
       },
     });
+  // Destructure form values for division, organization and classes
+  // These are used to track selected options and trigger data fetching
   const { division, organization, classes } = values;
-
+  // Update organizations list and set default organization when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
     setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
   }, [medium, setFieldValue]);
 
+  // Update classes list and set default class when organization changes
   useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setFieldValue(
-      'classes',
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
+    // Find selected organization and get its standards/classes
+    const selectedOrg = allOrganization.find((org: any) => org?.id === organization);
+    setAllClass(selectedOrg?.standards || []);
+
+    // Set first class as default
+    setFieldValue('classes', selectedOrg?.standards?.[0]?.id || '');
   }, [organization, allOrganization, setFieldValue]);
 
+  // Update divisions list and set default division when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setFieldValue(
-      'division',
-      allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
-    );
+    // Find selected class and get its divisions
+    const selectedClass = allClass.find((org: any) => org?.id === classes);
+    setAllDivision(selectedClass?.divisions || []);
+
+    // Set first division as default
+    setFieldValue('division', selectedClass?.divisions?.[0]?.id || '');
   }, [allClass, classes, setFieldValue]);
 
+  // Fetch students data when division, class or organization changes
   useEffect(() => {
+    // Only fetch if all required fields are selected
     if (division && classes && organization) {
       getStudents({
         educationMediumStageId: organization,
@@ -207,10 +233,12 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
     }
   }, [division, classes, organization, getStudents]);
 
+  // Transform students data for table display
   const tableData = useMemo(
     () =>
       StudentsData?.items?.map((item: any) => ({
         ...item,
+        // Combine first, last and middle names
         name: `${item.firstName} ${item.lastName} ${item.middleName}`,
       })) || [],
     [StudentsData?.items]

@@ -242,7 +242,7 @@ const HouseSetting = () => {
                 await deleteGroup(editData?.id).unwrap();
                 confirm.onFalse();
                 shikshaMitraToast.success({
-                  message: `House ${editData?.name} Deleted Successfully`,
+                  message: `${editData?.name} House Deleted Successfully`,
                 });
               } catch (error) {
                 console.log(error);
@@ -273,6 +273,10 @@ const GroupManagementForm = ({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentGroupMutation,
   });
+  // Custom hook for updating student group data
+  // Returns mutation function and loading state
+  // updateGroup: Function to update existing group
+  // isUpdateLoading: Boolean indicating if update is in progress
   const [updateGroup, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentGroupMutation,
@@ -293,7 +297,6 @@ const GroupManagementForm = ({
     }),
     // Handle form submission for both add and update operations
     onSubmit: async (values) => {
-      console.log('formik');
       try {
         if (editData) {
           // Update existing group if editData exists
@@ -306,7 +309,7 @@ const GroupManagementForm = ({
               description: values.description,
             },
           }).unwrap();
-          shikshaMitraToast.success({ message: `House ${values.name} Updated Successfully` });
+          shikshaMitraToast.success({ message: `${values.name} House Updated Successfully` });
         } else {
           // Add new group if no editData
           await addGroup({
@@ -315,7 +318,7 @@ const GroupManagementForm = ({
             logo: values.logo ? await fileToBase64(values.logo as File) : '',
             description: values.description,
           }).unwrap();
-          shikshaMitraToast.success({ message: `House ${values.name} Added Successfully` });
+          shikshaMitraToast.success({ message: `${values.name} House Added Successfully` });
         }
         // Close dialog after successful operation
         handleClose(null, true);
@@ -324,7 +327,6 @@ const GroupManagementForm = ({
       }
     },
   });
-  console.log(formik, '===============');
   return (
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

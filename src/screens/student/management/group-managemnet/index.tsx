@@ -124,17 +124,6 @@ const GroupManagement = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 6 }}>
-        {/* <Button
-          sx={{ width: '180px' }}
-          size="small"
-          startIcon={<Add />}
-          variant="contained"
-          onClick={dialog.onTrue}
-        >
-          House
-        </Button> */}
-      </Box>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -158,7 +147,7 @@ const GroupManagement = ({
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 confirm.onFalse();
                 shikshaMitraToast.success({
-                  message: `House Deleted Successfully Successfully for ${editData?.firstName} ${editData?.name}`,
+                  message: `${editData?.groupMembership?.groupName} House Deleted Successfully for ${editData?.name}`,
                 });
               } catch (error) {
                 console.log(error);
@@ -235,7 +224,7 @@ const GroupManagement = ({
                 confirm.onFalse();
 
                 shikshaMitraToast.success({
-                  message: `House Leader removed successfully for ${editData?.firstName} ${editData?.name}`,
+                  message: `House Leader removed successfully for ${editData?.name}`,
                 });
                 isRemoveLeader.onFalse();
               } catch (error) {
@@ -277,7 +266,7 @@ const GroupManagement = ({
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 confirm.onFalse();
                 shikshaMitraToast.success({
-                  message: `House removed of ${editData?.firstName} ${editData?.name}`,
+                  message: `${editData?.groupMembership?.groupName} House removed successfully for  ${editData?.name}`,
                 });
                 isRemoveStudentToHouse.onFalse();
               } catch (error) {
@@ -331,7 +320,7 @@ const GroupManagement = ({
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 isConfirmForDivisionLeader.onFalse();
                 shikshaMitraToast.success({
-                  message: `Division leader successfully for ${editData?.firstName} ${editData?.name}`,
+                  message: `Division leader assign successfully for ${editData?.name}`,
                 });
               } catch (error) {
                 console.log(error);
@@ -383,7 +372,7 @@ const GroupManagement = ({
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 isConfirmForMainLeader.onFalse();
                 shikshaMitraToast.success({
-                  message: `House Leader sssigned successfully for ${editData?.firstName} ${editData?.name}`,
+                  message: `House Leader asssigned successfully for ${editData?.name}`,
                 });
               } catch (error) {
                 console.log(error);
@@ -927,7 +916,9 @@ const AssignStudentForm = ({
           isLeader: false,
           isDivisionLeader: false,
         }).unwrap();
-        shikshaMitraToast.success({ message: `Student Assigned Successfully` });
+        shikshaMitraToast.success({
+          message: `${formik.values.house?.name} House assigned successfully for ${editData?.name}`,
+        });
         dispatch(StudentApi.util.invalidateTags(['Student']));
         handleClose();
       } catch (error) {

@@ -24,28 +24,23 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const GrNoGenerationScreen = ({
-  tableData: studentData,
-  isLoading,
-}: {
-  isLoading: boolean;
-  tableData: IInquiryData[];
-}) => {
+const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryData[] }) => {
   // State to track if manual GR number generation is enabled
   const [isManual, setIsManual] = useState<boolean>(false);
-  // State to store the starting GR number for auto-generation
-  const [startGrNo, setStartGrNo] = useState<number | null>(null);
+
   // State to store and manage the table data of students
   const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
 
   // Update table data when student data changes
   useEffect(() => {
     setTableData(studentData);
+    setInitialData(studentData);
   }, [studentData]);
 
   const dispatch = useDispatch();
   // Get current board and medium from global state
   const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
 
   // Extract education related IDs from current selections
   const educationBoardId = currentBoard?.id || null;
@@ -74,10 +69,7 @@ const GrNoGenerationScreen = ({
         educationMediumStageId,
       }).unwrap();
 
-      console.log('Students data fetched successfully:', result);
-
       if (typeof result === 'number') {
-        setStartGrNo(result);
         let lastNum = result;
         setTableData((prevData) =>
           prevData.map((item, index) => ({
@@ -104,10 +96,11 @@ const GrNoGenerationScreen = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Handle individual GR number changes in manual mode
-  const handleGrNumberChange = (id: string, newValue: number | null) => {
+  const handleGrNumberChange = (id: string, name: string, newValue: number | null) => {
     setTableData((prevData) =>
       prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue } : item))
     );
+    setSelectedStudents([{ id, name }]);
   };
 
   // Save the updated GR numbers to the backend
@@ -118,13 +111,17 @@ const GrNoGenerationScreen = ({
         grNo: item.grNoRecord ?? item.tempGrNo, // Use new GR No if available, else keep the current one
       })),
     };
+    await updateStudentGrNumbers({ body: requestBody }).unwrap();
 
     try {
-      const response = await updateStudentGrNumbers({ body: requestBody }).unwrap();
-
       shikshaMitraToast.success({
-        message: `GR Numbers updated successfully of ${requestBody.studentNumbers.length} students`,
+        message: `GR Number ${
+          selectedStudents.length === 1
+            ? `of student ${selectedStudents[0].name}`
+            : `of ${requestBody.studentNumbers.length} students`
+        } updated successfully`,
       });
+      setInitialData(tableData);
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
@@ -133,7 +130,7 @@ const GrNoGenerationScreen = ({
   };
 
   // State to track selected students for notifications
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   // Controls the visibility of notification dialog
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -145,7 +142,7 @@ const GrNoGenerationScreen = ({
   };
   return (
     <Box>
-      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
           <Button
             size="small"
@@ -237,7 +234,11 @@ const GrNoGenerationScreen = ({
                     inputProps={{ min: 0 }}
                     value={row.grNoRecord}
                     onChange={(e) =>
-                      handleGrNumberChange(row.id, e.target.value ? +e.target.value : null)
+                      handleGrNumberChange(
+                        row.id,
+                        row.name,
+                        e.target.value ? +e.target.value : null
+                      )
                     }
                   />
                 ) : (
