@@ -263,7 +263,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             onClick={() => {
               deleteHomeworkDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Homework Deleted successfully for ${selectedHomework?.subject}!`,
+                message: `Homework "${selectedHomework?.title}" has been successfully deleted for Class ${classes} - ${division} of ${selectedHomework?.subject}.`,
               });
             }}
             size="small"
@@ -292,7 +292,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             onClick={() => {
               publishHomeworkDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Homework Published successfully for ${selectedHomework?.subject}!`,
+                message: `Homework Published successfully for Class ${classes} - ${division} of Subject ${selectedHomework?.subject}.`,
               });
             }}
             size="small"

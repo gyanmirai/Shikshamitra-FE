@@ -17,15 +17,16 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialValues } from './initialValues';
-import { validationSchema } from './validationSchema';
+import { getValidationSchema } from './validationSchema';
 
-import type { ITimeSlot, ICreateSlotsFormProps } from './type';
+import type { ICreateSlotsFormProps } from './type';
 
 const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   open,
@@ -38,7 +39,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  console.log('data------', data);
 
   // Get current board, medium and medium setter from global state for managing education settings
   const {
@@ -66,20 +66,23 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   const formik = useFormik({
     initialValues: getInitialValues(classes, data),
     // enableReinitialize: true,
-    validationSchema,
+    validationSchema: getValidationSchema('07:00 AM', '12:30 PM'),
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      if (isEdit) {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully updated for ${values.className}.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully created for ${values.className}.`,
+        });
+      }
+      handleClose?.(null, true);
+    },
   });
-
-  console.log('formik vluess------', formik.values);
-
-  // State for managing total number of slots
-  const [totalSlots, setTotalSlots] = useState('');
-  // State for controlling table visibility
   const [showTable, setShowTable] = useState(false);
-  // State for storing time slot data
-  const [timeSlots, setTimeSlots] = useState<ITimeSlot[]>([]);
 
   /**
    * Creates empty time slots based on the total slots entered

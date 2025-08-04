@@ -70,11 +70,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
       });
       if (initialValues) {
         shikshaMitraToast.success({
-          message: `Chapter  ${values.chapterNo} : ${values.chapterName} updated successfully`,
+          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `Chapter ${values.chapterNo} : ${values.chapterName} added successfully`,
+          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
         });
       }
       onClose(null, true);

@@ -20,13 +20,6 @@ import { electiveSubjectValidationSchema } from './validationSchema';
 
 import type { IElectiveSubjectFormProps } from '../type';
 
-const subjectOptions = [
-  { label: 'Sanskrit', value: 'Sanskrit' },
-  { label: 'Hindi', value: 'Hindi' },
-  { label: 'Physical Training', value: 'Physical Training' },
-  { label: 'Computer', value: 'Computer' },
-];
-
 const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   open,
   onClose,
@@ -42,11 +35,11 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `Elective Group ${values.title} updated successfully`,
+          message: `${values.title} Elective Group updated successfully`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `Elective Group ${values.title} added successfully`,
+          message: `${values.title} Elective Group added successfully`,
         });
       }
       onClose(null, true);

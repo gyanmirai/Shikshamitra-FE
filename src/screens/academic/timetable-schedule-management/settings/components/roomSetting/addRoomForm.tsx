@@ -39,10 +39,14 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
     validationSchema,
     onSubmit: (values) => {
       if (!isEdit) {
-        shikshaMitraToast.success({ message: `Room ${values.roomNumber} added successfully` });
+        shikshaMitraToast.success({
+          message: `Room number ${values.roomNumber} has been added successfully.`,
+        });
         onClose(null, true);
       } else {
-        shikshaMitraToast.success({ message: `Room ${values.roomNumber} updated successfully` });
+        shikshaMitraToast.success({
+          message: `Room number ${values.roomNumber} has been updated successfully.`,
+        });
         onClose(null, true);
         // onSave(values);
       }

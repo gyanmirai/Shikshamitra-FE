@@ -304,11 +304,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
         });
       } else if (isDraft) {
         shikshaMitraToast.success({
-          message: `${values.subjectName} save as draft successfully for class ${values.className}`,
+          message: `${values.subjectName} subject save as draft successfully for class ${values.className}`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.subjectName} published successfully for class ${values.className}`,
+          message: `${values.subjectName} subject published successfully for class ${values.className}`,
         });
       }
 
@@ -577,6 +577,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                   {/* Map and render all subject cards */}
                   {formik.values.subjects.map((subject, index) => (
                     <SubjectCard
+                      key={subject.id || index}
                       index={index}
                       formik={formik}
                       subject={subject}
@@ -585,7 +586,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}
                     />
-                  ))}
+                  ))}{' '}
                 </Grid>
               )}
             </Grid>

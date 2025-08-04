@@ -22,6 +22,7 @@ import { getFileIconByType } from 'src/screens/academic/curriculum-management/su
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -47,7 +48,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
-    onSubmit(values) {},
+    onSubmit(values) {
+      shikshaMitraToast.success({
+        message: `Feedback have been ${data?.feedback ? 'updated' : 'added'} successfully for ${data?.studentName}.`,
+      });
+      onClose(null, true);
+    },
   });
 
   const handleDownload = (doc: IDocument) => {
