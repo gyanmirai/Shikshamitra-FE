@@ -113,7 +113,7 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
       >
         <AssignmentTypeForm
           open={addAssignmentTypeDialog}
-          onClose={() => handleClose(null, false)}
+          onClose={handleClose}
           editData={selectedData}
         />
       </CustomDialog>
@@ -140,7 +140,7 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
             onClick={() => {
               deleteDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Assignment Type : ${selectedData?.assignmentTypeName} deleted successfullly`,
+                message: `${selectedData?.assignmentTypeName} Assignment Type deleted successfullly`,
               });
               setSelectedData(null);
             }}

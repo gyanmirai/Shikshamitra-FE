@@ -65,16 +65,23 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
 
   const formik = useFormik({
     initialValues: getInitialValues(classes, data),
+    // enableReinitialize: true,
     validationSchema: getValidationSchema('07:00 AM', '12:30 PM'),
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      shikshaMitraToast.success({ message: `Lecture slots created for ${values.className}` });
+      if (isEdit) {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully updated for ${values.className}.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully created for ${values.className}.`,
+        });
+      }
       handleClose?.(null, true);
     },
   });
-
-  // State for managing total number of slots
   const [showTable, setShowTable] = useState(false);
 
   /**

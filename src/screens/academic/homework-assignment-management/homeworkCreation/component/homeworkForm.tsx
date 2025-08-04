@@ -54,15 +54,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
+  // Get current academic year from global state for date validation and filtering
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
-  // Configuration for file upload component
-  const uploadProps = {
-    multiple: true,
-    accept: { 'image/*': [] },
-  };
+
   // Get current board, medium and medium setter from global state
   const {
     currentBoard,
@@ -87,8 +83,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
   }, [allClass, classes]);
-  // State to store available division options for selected class
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
@@ -96,25 +90,18 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: (values) => {
       onClose(null, true);
-      shikshaMitraToast.success({ message: `Homework Added successfully for ${values.subject}!` });
+      const divisionNames = values.divisions.map((d) => d.divisionId).join(', ');
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Homework successfully updated for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Homework successfully added for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
+        });
+      }
     },
   });
-
-  console.log('formik.values---', formik.values.attachments);
-
-  const handleDrop = (acceptedFiles: File[]) => {
-    formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
-  };
-
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedDocuments = (formik.values.attachments || []).filter((file) => {
-      if (typeof fileToRemove === 'string') {
-        return file.name !== fileToRemove;
-      }
-      return file !== fileToRemove;
-    });
-    formik.setFieldValue('attachments', updatedDocuments);
-  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -315,18 +302,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
                   />
                 </ShakingTextField>
-                {/* <Box display="flex" justifyContent="flex-end">
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => homeworkTypeDialog.onTrue()}
-                  >
-                    Add Homework Type
-                  </Typography>
-                </Box> */}
 
                 <CustomDialog
                   open={homeworkTypeDialog.value}
