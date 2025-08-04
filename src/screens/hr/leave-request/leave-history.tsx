@@ -385,8 +385,8 @@ const LeaveHistory = (props: any) => {
               sx={{ textAlign: 'justify' }}
               title={
                 editData
-                  ? 'Review leave request information including dates, type, reason and others.'
-                  : 'Add leave request by entering leave type, start and end dates, and a short description.'
+                  ? 'Review the request to see all leave information.'
+                  : 'Create a leave request by entering all required fields.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -421,7 +421,7 @@ const LeaveHistory = (props: any) => {
                 sx={{ textAlign: 'justify' }}
                 title={
                   editData.type === EmployeeLeaveStatusType.Rejected
-                    ? 'When rejecting a leave request, you must provide remarks explaining the reason for rejection.'
+                    ? 'Remarks are required to reject the leave request.'
                     : 'Review the request and click Approve. Add remarks if you wish to include any additional info.'
                 }
               >
