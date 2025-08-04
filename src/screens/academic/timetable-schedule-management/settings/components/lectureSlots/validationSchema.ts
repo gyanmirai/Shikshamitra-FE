@@ -1,240 +1,111 @@
+import type { Dayjs } from 'dayjs';
+
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-export const validationSchema = Yup.object().shape({
-  className: Yup.string().required('Class is required'),
-  schoolHours: Yup.string().required('School hours are required'),
-  totalSlots: Yup.number()
-    .required('Total Slots are required')
-    .min(1, 'At least one slot is required')
-    .max(20, 'Max 20 slots can add'),
-  timeSlots: Yup.array()
-    .of(
-      Yup.object().shape({
-        startTime: Yup.mixed()
-          .test('is-valid-start', 'Start time is required', (value) => {
-            if (!value) return false;
+const parseTime = (timeStr: string) => dayjs(timeStr, ['hh:mm A']);
 
-            // Handle different possible value types
-            if (dayjs.isDayjs(value)) {
-              return value.isValid();
-            }
+export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
+  const schoolStart = parseTime(schoolStartTimeStr);
+  const schoolEnd = parseTime(schoolEndTimeStr);
 
-            // Try to parse as dayjs
-            try {
-              const parsed = dayjs(value as any);
-              return parsed.isValid();
-            } catch {
-              return false;
-            }
-          })
-          .required('Start time is required'),
+  return Yup.object().shape({
+    className: Yup.string().required('Class is required'),
+    schoolHours: Yup.string().required('School hours are required'),
 
-        endTime: Yup.mixed()
-          .test('is-valid-end', 'End time is required', (value) => {
-            if (!value) return false;
+    totalSlots: Yup.number()
+      .required('Total Slots are required')
+      .min(1, 'At least one slot is required')
+      .max(20, 'Maximum 20 slots can be added'),
 
-            // Handle different possible value types
-            if (dayjs.isDayjs(value)) {
-              return value.isValid();
-            }
-
-            // Try to parse as dayjs
-            try {
-              const parsed = dayjs(value as any);
-              return parsed.isValid();
-            } catch {
-              return false;
-            }
-          })
-          .required('End time is required')
-          .test('is-after-start', 'End time must be after start time', function (endTime) {
-            const { startTime } = this.parent;
-
-            if (!startTime || !endTime) return true;
-
-            try {
-              // More robust conversion handling
-              let start;
-              let end;
-
-              if (dayjs.isDayjs(startTime)) {
-                start = startTime;
-              } else {
-                start = dayjs(startTime);
+    timeSlots: Yup.array()
+      .of(
+        Yup.object().shape({
+          startTime: Yup.mixed()
+            .required('Start time is required')
+            .test('valid-start', 'Invalid start time', (value) =>
+              value ? dayjs(value as Dayjs).isValid() : false
+            )
+            .test(
+              'within-school-hours-start',
+              'Start time must be within school hours',
+              (value) => {
+                const start = dayjs(value as Dayjs);
+                return (
+                  start.isValid() &&
+                  start.isSameOrAfter(schoolStart, 'minute') &&
+                  start.isBefore(schoolEnd, 'minute')
+                );
               }
+            ),
 
-              if (dayjs.isDayjs(endTime)) {
-                end = endTime;
-              } else {
-                end = dayjs(endTime as any);
-              }
+          endTime: Yup.mixed()
+            .required('End time is required')
+            .test('valid-end', 'Invalid end time', (value) =>
+              value ? dayjs(value as Dayjs).isValid() : false
+            )
+            .test('within-school-hours-end', 'End time must be within school hours', (value) => {
+              const end = dayjs(value as Dayjs);
+              return (
+                end.isValid() &&
+                end.isAfter(schoolStart, 'minute') &&
+                end.isSameOrBefore(schoolEnd, 'minute')
+              );
+            })
+            .test('after-start', 'End time must be after start time', function (endTime) {
+              const { startTime } = this.parent;
+              if (!startTime || !endTime) return true;
+              const start = dayjs(startTime);
+              const end = dayjs(endTime as Dayjs);
+              return start.isValid() && end.isValid() && end.isAfter(start);
+            }),
 
-              // Check if both are valid
-              if (!start.isValid() || !end.isValid()) return true;
+          slotType: Yup.string().required('Slot type is required'),
 
-              return end.isAfter(start);
-            } catch {
-              return true; // If conversion fails, let other validations handle it
-            }
+          breakType: Yup.string().when('slotType', {
+            is: 'break',
+            then: (schema) => schema.required('Break type is required'),
+            otherwise: (schema) => schema.notRequired(),
           }),
-
-        slotType: Yup.string().required('Slot type is required'),
-
-        breakType: Yup.string().when('slotType', {
-          is: 'break',
-          then: (schema) => schema.required('Break type is required'),
-          otherwise: (schema) => schema.notRequired(),
-        }),
-      })
-    )
-    .min(1, 'Please create at least one time slot')
-    .test('unique-start-times', 'Start times must be unique', function (timeSlots) {
-      if (!timeSlots || timeSlots.length <= 1) return true;
-
-      const startTimes = timeSlots
-        .map((slot, index) => ({
-          time: slot.startTime,
-          index,
-        }))
-        .filter((item) => item.time); // Filter out null/undefined times
-
-      // Check for duplicates
-      for (let i = 0; i < startTimes.length; i += 1) {
-        for (let j = i + 1; j < startTimes.length; j += 1) {
-          try {
-            let time1;
-            let time2;
-
-            if (dayjs.isDayjs(startTimes[i].time)) {
-              time1 = startTimes[i].time;
-            } else {
-              time1 = dayjs(startTimes[i].time as any);
-            }
-
-            if (dayjs.isDayjs(startTimes[j].time)) {
-              time2 = startTimes[j].time;
-            } else {
-              time2 = dayjs(startTimes[j].time as any);
-            }
-
-            if (dayjs.isDayjs(time1) && dayjs.isDayjs(time2) && time1.isSame(time2, 'minute')) {
-              return this.createError({
-                path: `timeSlots[${startTimes[j].index}].startTime`,
-                message: 'Start times cannot be the same',
-              });
-            }
-          } catch {
-            // Skip invalid times
-            return true; // Skip invalid times and continue validation
-          }
-        }
-      }
-      return true;
-    })
-    .test('unique-end-times', 'End times must be unique', function (timeSlots) {
-      if (!timeSlots || timeSlots.length <= 1) return true;
-
-      const endTimes = timeSlots
-        .map((slot, index) => ({
-          time: slot.endTime,
-          index,
-        }))
-        .filter((item) => item.time); // Filter out null/undefined times
-
-      // Check for duplicates
-      for (let i = 0; i < endTimes.length; i += 1) {
-        for (let j = i + 1; j < endTimes.length; j += 1) {
-          try {
-            let time1;
-            let time2;
-
-            if (dayjs.isDayjs(endTimes[i].time)) {
-              time1 = endTimes[i].time;
-            } else {
-              time1 = dayjs(endTimes[i].time as any);
-            }
-
-            if (dayjs.isDayjs(endTimes[j].time)) {
-              time2 = endTimes[j].time;
-            } else {
-              time2 = dayjs(endTimes[j].time as any);
-            }
-
-            if (dayjs.isDayjs(time1) && dayjs.isDayjs(time2) && time1.isSame(time2, 'minute')) {
-              return this.createError({
-                path: `timeSlots[${endTimes[j].index}].endTime`,
-                message: 'End times cannot be the same',
-              });
-            }
-          } catch {
-            // Skip invalid times
-            return true; // Skip invalid times and continue validation
-          }
-        }
-      }
-      return true;
-    })
-    .test('no-time-overlaps', 'Time slots cannot overlap', function (timeSlots) {
-      if (!timeSlots || timeSlots.length <= 1) return true;
-
-      // Create array of valid time slots for overlap checking
-      const validSlots = timeSlots
-        .map((slot, index) => {
-          try {
-            let startTime;
-            let endTime;
-
-            if (dayjs.isDayjs(slot.startTime)) {
-              startTime = slot.startTime;
-            } else {
-              startTime = dayjs(slot.startTime as any);
-            }
-
-            if (dayjs.isDayjs(slot.endTime)) {
-              endTime = dayjs(slot.endTime);
-            } else {
-              endTime = dayjs(slot.endTime as any);
-            }
-            return {
-              ...slot,
-              index,
-              startTime,
-              endTime,
-            };
-          } catch {
-            return null;
-          }
         })
-        .filter(
-          (slot) =>
-            slot &&
-            slot.startTime &&
-            slot.endTime &&
-            slot.startTime.isValid() &&
-            slot.endTime.isValid() &&
-            slot.endTime.isAfter(slot.startTime)
-        );
+      )
+      .min(1, 'Please create at least one time slot')
+      .test(
+        'sequential-slots',
+        'Time slots must be sequential without gaps or overlap',
+        function (slots) {
+          if (!slots || slots.length <= 1) return true;
 
-      // Check for overlaps
-      for (let i = 0; i < validSlots.length; i += 1) {
-        for (let j = i + 1; j < validSlots.length; j += 1) {
-          const slot1 = validSlots[i];
-          const slot2 = validSlots[j];
+          const sorted = slots.map((slot, index) => ({
+            index,
+            start: dayjs(slot.startTime as Dayjs),
+            end: dayjs(slot.endTime as Dayjs),
+          }));
 
-          // Check if slots overlap
-          const overlap =
-            // slot1 starts before slot2 ends AND slot1 ends after slot2 starts
-            slot1?.startTime.isBefore(slot2?.endTime) && slot1.endTime.isAfter(slot2?.startTime);
+          for (let i = 0; i < sorted.length - 1; i += 1) {
+            const current = sorted[i];
+            const next = sorted[i + 1];
 
-          if (overlap) {
-            return this.createError({
-              path: `timeSlots[${slot2?.index}].startTime`,
-              message: `This slot overlaps with slot ${(slot1?.index ?? -1) + 1}`,
-            });
+            if (
+              !current.start.isValid() ||
+              !current.end.isValid() ||
+              !next.start.isValid() ||
+              !next.end.isValid()
+            ) {
+              return true;
+            }
+
+            if (!current.end.isSame(next.start)) {
+              return this.createError({
+                path: `timeSlots[${next.index}].startTime`,
+                message: `Slot ${next.index + 1} must start exactly when slot ${
+                  current.index + 1
+                } ends`,
+              });
+            }
           }
+          return true;
         }
-      }
-      return true;
-    }),
-});
+      ),
+  });
+};

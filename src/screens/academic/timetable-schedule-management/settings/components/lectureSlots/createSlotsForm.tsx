@@ -17,15 +17,16 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialValues } from './initialValues';
-import { validationSchema } from './validationSchema';
+import { getValidationSchema } from './validationSchema';
 
-import type { ITimeSlot, ICreateSlotsFormProps } from './type';
+import type { ICreateSlotsFormProps } from './type';
 
 const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   open,
@@ -38,7 +39,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  console.log('data------', data);
 
   // Get current board, medium and medium setter from global state for managing education settings
   const {
@@ -65,27 +65,24 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
 
   const formik = useFormik({
     initialValues: getInitialValues(classes, data),
-    // enableReinitialize: true,
-    validationSchema,
+    validationSchema: getValidationSchema('07:00 AM', '12:30 PM'),
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      shikshaMitraToast.success({ message: `Lecture slots created for ${values.className}` });
+      handleClose?.(null, true);
+    },
   });
 
-  console.log('formik vluess------', formik.values);
-
   // State for managing total number of slots
-  const [totalSlots, setTotalSlots] = useState('');
-  // State for controlling table visibility
   const [showTable, setShowTable] = useState(false);
-  // State for storing time slot data
-  const [timeSlots, setTimeSlots] = useState<ITimeSlot[]>([]);
 
   /**
    * Creates empty time slots based on the total slots entered
    * Initializes each slot with default values
    */
   const handleCreateSlots = (e: any) => {
+    console.log('e.target.value', e.target.value);
     const inputValue = e.target.value;
     const slotsCount = parseInt(inputValue, 10);
 
@@ -101,13 +98,19 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
 
     const newSlots = Array(slotsCount)
       .fill(null)
-      .map((_, index) => ({
-        id: index,
-        startTime: index === 0 ? dayjs('2024-01-01T07:00') : null,
-        endTime: index === slotsCount - 1 ? dayjs('2024-01-01T12:30') : null,
-        slotType: 'period',
-        breakType: '',
-      }));
+      .map((_, index) => {
+        const startTime = index === 0 ? dayjs().hour(7).minute(0).second(0).millisecond(0) : null;
+        const endTime =
+          index === slotsCount - 1 ? dayjs().hour(12).minute(30).second(0).millisecond(0) : null;
+
+        return {
+          id: index,
+          startTime, // ensure it's explicitly null
+          endTime,
+          slotType: 'period',
+          breakType: '',
+        };
+      });
 
     formik.setFieldValue('timeSlots', newSlots);
     setShowTable(true);
@@ -115,9 +118,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
 
   // Helper function to check if it's the last row
   const isLastRow = (rowIndex: number) => rowIndex === formik.values.timeSlots.length - 1;
-
-  // Helper function to check if it's the first row
-  const isFirstRow = (rowIndex: number) => rowIndex === 0;
 
   return (
     // <form onSubmit={formik.handleSubmit} noValidate>
@@ -162,7 +162,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   fullWidth
                   label="School Hours *"
                   name="schoolHours"
-                  value={formik.values.schoolHours || '07:00 - 12:30'}
+                  value={formik.values.schoolHours || '07:00 AM- 12:30 PM'}
                   onChange={formik.handleChange}
                   size="small"
                   disabled
@@ -263,10 +263,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                         return (
                           <ShakingTextField error={!!(isTouched && fieldError)}>
                             <TimePicker
-                              value={value || null}
+                              value={dayjs(value) || null}
                               format="hh:mm a"
                               views={['hours', 'minutes']}
-                              disabled={(disabled && !isEdit) || isFirstRow(rowIndex)}
+                              disabled={disabled && !isEdit}
                               ampm
                               onChange={(newTime) => {
                                 const updated = [...formik.values.timeSlots];
@@ -280,7 +280,14 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                                   };
                                 }
 
-                                updated[rowIndex].startTime = newTime;
+                                updated[rowIndex].startTime = newTime?.isValid?.()
+                                  ? dayjs(newTime)
+                                  : null;
+
+                                if (isLastRow(rowIndex)) {
+                                  // Set fixed endTime only for last row
+                                  updated[rowIndex].endTime = dayjs('12:30', 'HH:mm'); // or dayjs().hour(12).minute(30)
+                                }
                                 formik.setFieldValue('timeSlots', updated);
                                 // formik.setFieldTouched(fieldPath, true);
                                 // Trigger validation
@@ -337,7 +344,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                         return (
                           <ShakingTextField error={!!(isTouched && fieldError)}>
                             <TimePicker
-                              value={value || null}
+                              value={dayjs(value) || null}
                               disabled={(disabled && !isEdit) || isLastRow(rowIndex)}
                               viewRenderers={{
                                 hours: renderTimeViewClock,
@@ -358,7 +365,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                                     breakType: '',
                                   };
                                 }
-                                updated[rowIndex].endTime = newTime;
+                                updated[rowIndex].endTime = newTime?.isValid?.()
+                                  ? dayjs(newTime)
+                                  : null;
+
                                 formik.setFieldValue('timeSlots', updated);
                                 // formik.setFieldTouched(fieldPath, true);
                                 // Trigger validation
