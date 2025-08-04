@@ -3,11 +3,16 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-const parseTime = (timeStr: string) => dayjs(timeStr, ['hh:mm A']);
-
 export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
   const schoolStart = parseTime(schoolStartTimeStr);
   const schoolEnd = parseTime(schoolEndTimeStr);
+
+  if (!schoolStart.isValid() || !schoolEnd.isValid()) {
+    throw new Error('Invalid school hours provided');
+  }
+
+  // ...rest of your validation schema logic...
+}
 
   return Yup.object().shape({
     className: Yup.string().required('Class is required'),
