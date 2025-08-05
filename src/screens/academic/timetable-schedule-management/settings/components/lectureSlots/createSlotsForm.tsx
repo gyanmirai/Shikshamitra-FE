@@ -70,16 +70,25 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      if (isEdit) {
-        shikshaMitraToast.success({
-          message: `Lecture slots have been successfully updated for ${values.className}.`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Lecture slots have been successfully created for ${values.className}.`,
+      try {
+        // Add your API call or data persistence logic here
+        // await saveTimeSlots(values);
+
+        if (isEdit) {
+          shikshaMitraToast.success({
+            message: `Lecture slots have been successfully updated for ${values.className}.`,
+          });
+        } else {
+          shikshaMitraToast.success({
+            message: `Lecture slots have been successfully created for ${values.className}.`,
+          });
+        }
+        handleClose?.(null, true);
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: `Failed to ${isEdit ? 'update' : 'create'} lecture slots. Please try again.`,
         });
       }
-      handleClose?.(null, true);
     },
   });
   const [showTable, setShowTable] = useState(false);
