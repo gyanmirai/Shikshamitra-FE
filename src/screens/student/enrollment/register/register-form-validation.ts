@@ -4,7 +4,7 @@ import { matchIsValidTel } from 'mui-tel-input';
 
 // validation schema for student registration
 // Validates various student-specific information and characteristics
-
+const MIN_DOB = dayjs('1947-01-01');
 export const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
   formNo: Yup.string().required('Form No. is required'),
@@ -17,8 +17,17 @@ export const generalFieldValidation = Yup.object({
       'Date of Birth is required',
       (value) => value && dayjs(value as any).isValid()
     )
+    .test(
+      'min-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isAfter(MIN_DOB.subtract(1, 'day'))
+    )
+    .test(
+      'max-date',
+      `Date of Birth is not valid`,
+      (value) => value && dayjs(value as string | number | Date).isBefore(dayjs())
+    )
     .required('Date of Birth is required'),
-  // dob: Yup.date().required('Date of Birth is required'),
   age: Yup.string(),
   gender: Yup.string().required('Gender is required'),
   apparId: Yup.string().matches(/\b\d{12}\b/, 'Appar Id must be 12 digits'),
@@ -54,14 +63,6 @@ export const generalFieldValidation = Yup.object({
     ),
   addressLine1: Yup.string().required('Building No./Flat/ House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
-  // alternativeContactNumber: Yup.string()
-  //   .test('Mobile NO', 'mobile number is not valid', (value) =>
-  //     value ? matchIsValidTel(value as string) : true
-  //   )
-
-  //   .test('unique', 'Alternate contact number cannot be same as contact number', function (value) {
-  //     return !value || value !== this.parent.mobileNo;
-  //   }),
   email: Yup.string().email('Invalid email format'),
   medium: Yup.string().required('Medium is required'),
   board: Yup.string().required('Board is required'),
@@ -217,29 +218,11 @@ export const communicationFieldsValidation = Yup.object({
   whatsAppContactNo: Yup.string().test('Mobile NO', 'WhatsApp No. is not valid', (value) =>
     value?.replace('+91', '') ? matchIsValidTel(value as string) : true
   ),
-  // localCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // localState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // localCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
   localPincode: Yup.string(),
   localAddressLine1: Yup.string(),
   localAddressLine2: Yup.string(),
   localAddressLine3: Yup.string(),
   isOpenLocalAddress: Yup.boolean(),
-  // emergencyCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // emergencyState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // emergencyCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
   emergencyPincode: Yup.string(),
   emergencyAddressLine1: Yup.string(),
   emergencyAddressLine2: Yup.string(),
@@ -249,15 +232,6 @@ export const communicationFieldsValidation = Yup.object({
   permanentAddress: Yup.string(),
   permanentAddressLine2: Yup.string(),
   permanentAddressLine3: Yup.string(),
-  // permanentCountry: Yup.object({
-  //   name: Yup.string().required('Country is required'),
-  // }),
-  // permanentState: Yup.object({
-  //   name: Yup.string().required('State is required'),
-  // }),
-  // permanentCity: Yup.object({
-  //   name: Yup.string().required('City is required'),
-  // }),
   permanentPincode: Yup.string(),
   sameAsLocalForPermanent: Yup.boolean(),
   isOpenPermanentAddress: Yup.boolean(),
@@ -284,7 +258,6 @@ export const additionalDetailsValidations = Yup.object({
   relation: Yup.string(),
   singleParentChild: Yup.boolean(),
   singleChild: Yup.boolean(),
-  // sponsorStudent: Yup.boolean(),
   sponsorName: Yup.string(),
 });
 export const medicalDetailsValidations = Yup.object({
@@ -319,16 +292,6 @@ export const bankDetailsValidation = Yup.object({
   branchName: Yup.string(),
   accountHolderName: Yup.string(),
 });
-
-// Array of validation schemas for different sections of the student registration form
-// Index 0: General fields validation (student basic details)
-// Index 1: Empty object for future use or placeholder
-// Index 2: Family details validation (parent/guardian information)
-// Index 3: Communication details validation (address and contact info)
-// Index 4: Additional details validation (category, RTE, emergency contacts)
-// Index 5: Medical details validation (health and immunization records)
-// Index 6: Previous school details validation (academic history)
-// Index 7: Bank details validation (financial information)
 export const validationSchemas = [
   generalFieldValidation,
   Yup.object({}),
