@@ -11,6 +11,11 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+// --- existing imports ---
+import { UseBooleanReturn } from 'your-hooks-or-utils';
+import { ExamSeatAllocationData } from 'your-types';
+// -------------------------
+
 const tableData = [
   {
     examName: 'Mid Term Exam',
@@ -63,6 +68,20 @@ const tableData = [
     status: 'allocated',
   },
 ];
+
+interface SeatAllocationTableProps {
+  openSeatAllocation: UseBooleanReturn;
+  examData?: ExamSeatAllocationData[];
+}
+
+const SeatAllocationTable = ({
+  openSeatAllocation,
+  examData = tableData,
+}: SeatAllocationTableProps) => {
+  const [data, setData] = useState(examData);
+
+  // ...rest of your component logic/rendering
+};
 
 const SeatAllocationTable = ({ openSeatAllocation }: { openSeatAllocation: UseBooleanReturn }) => {
   const [data, setData] = useState(tableData);
