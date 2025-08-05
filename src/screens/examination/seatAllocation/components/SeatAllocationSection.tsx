@@ -93,7 +93,7 @@ const SeatAllocationSection = ({
               justifyContent="space-between"
               sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
             >
-              Total Students : 20
+              Total Students : {students.length}
             </Box>
             <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
               <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
