@@ -1,8 +1,12 @@
 'use client';
 
+import _ from 'lodash';
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useCallback } from 'react';
 
+import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import {
   Box,
   Paper,
@@ -23,12 +27,7 @@ import {
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-// import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import _ from 'lodash';
-import * as Yup from 'yup';
-
-import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -44,9 +43,6 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -54,6 +50,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import AssignModule from './modules';
 
@@ -172,6 +169,7 @@ const RoleScreen = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            align: 'left',
             minWidth: 80,
             render: (value, data) => (
               <ThreeDotsActions
@@ -220,13 +218,11 @@ export default RoleScreen;
 
 // Component for handling role creation and editing form
 const RoleForm = ({ handleClose, editData }: any) => {
-  // State to store module permission data
-  // const [modulePermissionData, setModulePermissionData] = useState([]);
   // State to store all permissions data
   const [allPermissions, setAllPermissions] = useState([]);
 
   // Query hook to fetch permission data based on role name
-  const { data: permissionData } = useQueryAndMutation({
+  const { data: _permissionData } = useQueryAndMutation({
     type: 'query',
     options: {
       refetchOnMountOrArgChange: true,
@@ -242,7 +238,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
 
   // Mutation hook to add new role with success message
-  const [addRole, { isSuccess }] = useQueryAndMutation({
+  const [addRole, { isLoading, isSuccess }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddRoleMutation,
     popupConfig: {
@@ -252,7 +248,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
 
   // Mutation hook to update existing role with success message
-  const [updateRole] = useQueryAndMutation({
+  const [updateRole, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateRoleMutation,
     popupConfig: {
@@ -270,70 +266,72 @@ const RoleForm = ({ handleClose, editData }: any) => {
       role: Yup.string().required('Role is required'),
     }),
     onSubmit: async (values) => {
-      if (editData) {
-        await updateRole({
-          id: editData.id,
-          body: {
+      try {
+        if (editData) {
+          await updateRole({
+            id: editData.id,
+            body: {
+              name: values.role,
+              isDefault: true,
+              isPublic: false,
+            },
+          });
+        } else {
+          await addRole({
             name: values.role,
             isDefault: true,
             isPublic: false,
-          },
-        });
+          });
+        }
         await updatePermission({
           role: values.role,
           data: {
             permissions: allPermissions.map((i: any) => ({ name: i.name, isGranted: i.isGranted })),
           },
         });
-      } else {
-        await addRole({
-          name: values.role,
-          isDefault: true,
-          isPublic: false,
-        });
-        await updatePermission({
-          role: values.role,
-          data: {
-            permissions: allPermissions.map((i: any) => ({ name: i.name, isGranted: i.isGranted })),
-          },
-        });
+        handleClose();
+      } catch (error) {
+-        console.log(error);
++        console.error('Role operation failed:', error);
++        // Show error message to user
++        // Consider using a toast/snackbar notification system
       }
-      handleClose();
     },
   });
   return (
-    <Box>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar
-          sx={{
-            p: 3,
-            height: 'calc(100vh - 150px)',
-          }}
+    <>
+      <DialogScrollContent>
+        <Box sx={{ display: 'flex', gap: 2, mb: 1, height: '100%', alignItems: 'center' }}>
+          <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+            <TextField
+              label="Role"
+              name="role"
+              size="small"
+              disabled={isSuccess}
+              value={formik.values.role}
+              onChange={formik.handleChange}
+              error={formik.touched.role && !!formik.errors.role}
+              helperText={(formik.touched.role && formik.errors.role) || ''}
+              sx={{ maxWidth: 300, width: '100%' }}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Box>
+        <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
+      </DialogScrollContent>
+      <DialogActions>
+        <CancelButton onClick={handleClose} />
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isLoading || isUpdateLoading}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={() => formik.handleSubmit()}
         >
-          <Box sx={{ display: 'flex', gap: 2, mb: 1, height: '100%', alignItems: 'center' }}>
-            <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
-              <TextField
-                label="Role"
-                name="role"
-                size="small"
-                disabled={isSuccess}
-                value={formik.values.role}
-                onChange={formik.handleChange}
-                error={formik.touched.role && !!formik.errors.role}
-                helperText={(formik.touched.role && formik.errors.role) || ''}
-                sx={{ maxWidth: 300, width: '100%' }}
-                onBlur={formik.handleBlur}
-              />
-            </ShakingTextField>
-          </Box>
-          <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
-        </Scrollbar>
-        <DialogActions sx={{ flexShrink: 0 }}>
-          <CancelButton onClick={handleClose} />
-          <SubmitButton />
-        </DialogActions>
-      </form>
-    </Box>
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };
 
@@ -374,12 +372,14 @@ const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
   );
 };
 
-// Component for rendering a row in the permissions table
-// Props:
-// - item: permission item data
-// - handlePermissionClick: callback for permission click events
-// - allPermissions: array of all available permissions
-// - setAllPermissions: function to update permissions state
+/*
+ * Component for rendering a row in the permissions table
+ * Props:
+ * - item: permission item data
+ * - handlePermissionClick: callback for permission click events
+ * - allPermissions: array of all available permissions
+ * - setAllPermissions: function to update permissions state
+ */
 
 const RowComponent = ({
   item,
@@ -478,18 +478,7 @@ const RowComponent = ({
     <>
       {/* Main row with collapse toggle */}
       <TableRow onClick={collapse.onToggle}>
-        <TableCell>
-          {/* <FormControlLabel
-            control={
-              <Checkbox
-              // checked={formik.values.role?.create || false}
-              // onChange={(e) => formik.setFieldValue('role.create', e.target.checked)}
-              />
-            }
-            label=" "
-          />{' '} */}
-          {item?.displayName}
-        </TableCell>
+        <TableCell>{item?.displayName}</TableCell>
         <TableCell>
           {/* Collapse toggle button */}
           <IconButton
