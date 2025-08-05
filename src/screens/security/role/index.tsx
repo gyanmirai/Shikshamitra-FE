@@ -291,10 +291,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
         });
         handleClose();
       } catch (error) {
--        console.log(error);
-+        console.error('Role operation failed:', error);
-+        // Show error message to user
-+        // Consider using a toast/snackbar notification system
+        console.error('Role operation failed:', error);
       }
     },
   });

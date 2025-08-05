@@ -12,7 +12,6 @@ import {
   TextField,
   Typography,
   RadioGroup,
-  CardContent,
   FormControlLabel,
 } from '@mui/material';
 
@@ -28,23 +27,33 @@ interface QuestionNumberProps {
   onClick?: () => void;
   sx?: any;
 }
-const QuestionNumber = styled(Paper)<QuestionNumberProps>(({ theme, status, onClick }: any) => ({
-  padding: theme.spacing(1),
+const QuestionNumber = styled(Paper)<QuestionNumberProps>(({ theme, status }) => ({
+  width: 44,
+  height: 44,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 18,
+  padding: 0,
   textAlign: 'center',
   cursor: 'pointer',
-  border: status === 'current' ? `2px solid ${theme.palette.primary.main}` : 'none',
+  borderRadius: 8,
+  boxShadow: status === 'current' ? theme.shadows[3] : theme.shadows[1],
+  border: status === 'current' ? `2px solid ${theme.palette.warning.main}` : 'none',
   backgroundColor:
     status === 'current'
-      ? theme.palette.grey[200]
+      ? theme.palette.warning.main
       : status === 'answered'
         ? theme.palette.success.main
         : status === 'skipped'
-          ? theme.palette.warning.main
-          : theme.palette.grey[200],
+          ? theme.palette.info.main
+          : theme.palette.grey[300],
   color:
-    status === 'answered' || status === 'skipped'
+    status === 'answered' || status === 'current' || status === 'skipped'
       ? theme.palette.common.white
       : theme.palette.text.primary,
+  fontWeight: status === 'current' ? 700 : 500,
+  transition: 'all 0.2s',
 }));
 
 // QuestionList Component
@@ -55,25 +64,60 @@ const QuestionList = ({
   skippedQuestions,
   onQuestionSelect,
 }: any) => (
-  <Card sx={{ p: 2, mb: 2, height: '100%' }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Typography variant="subtitle2" gutterBottom>
-        Total Questions : {totalQuestions}
+  <Card
+    sx={{
+      p: 3,
+      mb: 2,
+      borderRadius: 3,
+      boxShadow: 2,
+      bgcolor: 'background.paper',
+      height: 479,
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-start',
+    }}
+  >
+    {/* Top row: title and legend in one line */}
+    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
+      <Typography variant="h6" sx={{ mr: 3 }}>
+        Question Navigation
       </Typography>
+      <Typography variant="subtitle2" sx={{ mr: 2 }}>
+        Legend
+      </Typography>
+      <Stack direction="row" spacing={2}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'success.main', borderRadius: 1 }} />
+          <Typography variant="body2">Answered</Typography>
+        </Stack>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'info.main', borderRadius: 1 }} />
+          <Typography variant="body2">Skipped</Typography>
+        </Stack>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
+          <Typography variant="body2">Current</Typography>
+        </Stack>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Box sx={{ width: 16, height: 16, bgcolor: 'grey.300', borderRadius: 1 }} />
+          <Typography variant="body2">Not Visited</Typography>
+        </Stack>
+      </Stack>
     </Box>
-
-    <Grid container spacing={1}>
-      {Array.from({ length: totalQuestions }, (_, i) => (
-        <Grid item xs={0.9} key={i}>
+    {/* Number buttons below with scroll */}
+    <Box
+      sx={{
+        flex: 1,
+        overflow: 'auto',
+        pr: 1, // optional, for scrollbar spacing
+      }}
+    >
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {Array.from({ length: totalQuestions }, (_, i) => (
           <QuestionNumber
+            key={i}
             onClick={() => onQuestionSelect(i + 1)}
-            sx={{
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'scale(1.1)',
-                boxShadow: (theme: any) => theme.shadows[3],
-              },
-            }}
             status={
               i + 1 === currentQuestion
                 ? 'current'
@@ -86,100 +130,92 @@ const QuestionList = ({
           >
             {i + 1}
           </QuestionNumber>
-        </Grid>
-      ))}
-    </Grid>
-    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box sx={{ width: 16, height: 16, bgcolor: 'success.main', borderRadius: 1 }} />
-        <Typography variant="body2">Answered</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
-        <Typography variant="body2">Skipped</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box
-          sx={{
-            width: 16,
-            height: 16,
-            bgcolor: 'grey.200',
-            borderRadius: 1,
-            border: 2,
-            borderColor: 'primary.main',
-          }}
-        />
-        <Typography variant="body2">Current</Typography>
+        ))}
       </Box>
     </Box>
   </Card>
 );
-
 // QuestionDisplay Component
 const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
   if (!question) return null;
 
-  const renderOptions = () => {
-    switch (question.questionType) {
-      case 'multiple-choice':
-        return (
-          <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
-            {question.options.map((option: any) => (
-              <FormControlLabel
-                key={option.value}
-                value={option.value}
-                control={<Radio />}
-                label={option.label}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </RadioGroup>
-        );
-      case 'trueFalse':
-        return (
-          <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
-            {['true', 'false'].map((value) => (
-              <FormControlLabel
-                key={value}
-                value={value}
-                control={<Radio />}
-                label={value.charAt(0).toUpperCase() + value.slice(1)}
-                sx={{ mb: 1 }}
-              />
-            ))}
-          </RadioGroup>
-        );
-      case 'descriptive':
-        return (
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            value={currentAnswer || ''}
-            placeholder="Type your answer here..."
-            onChange={(e) => onAnswer(e.target.value)}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h5">Question {question.questionNumber}</Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Marks: {question.marks}
-          </Typography>
-        </Box>
-        <Typography variant="body1" gutterBottom>
-          {question.question}
+    <Card sx={{ borderRadius: 3, boxShadow: 2, bgcolor: 'background.paper', p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">
+          Question {question.questionNumber} of {sampleQuizData.length}
         </Typography>
-        <Box sx={{ mt: 2 }}>{renderOptions()}</Box>
-      </CardContent>
+        <Typography variant="subtitle2" color="text.secondary">
+          Marks: {question.marks}
+        </Typography>
+      </Box>
+      <Typography variant="body1" gutterBottom>
+        {question.question}
+      </Typography>
+      <Box sx={{ mt: 2 }}>
+        {/* ...renderOptions code unchanged... */}
+        {(() => {
+          switch (question.questionType) {
+            case 'multiple-choice':
+              return (
+                <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
+                  {question.options.map((option: any) => (
+                    <FormControlLabel
+                      key={option.value}
+                      value={option.value}
+                      control={<Radio />}
+                      label={option.label}
+                      sx={{
+                        mb: 2,
+                        bgcolor: 'grey.100',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        '& .MuiRadio-root': { color: 'primary.main' },
+                      }}
+                    />
+                  ))}
+                </RadioGroup>
+              );
+            case 'trueFalse':
+              return (
+                <RadioGroup value={currentAnswer || ''} onChange={(e) => onAnswer(e.target.value)}>
+                  {['true', 'false'].map((value) => (
+                    <FormControlLabel
+                      key={value}
+                      value={value}
+                      control={<Radio />}
+                      label={value.charAt(0).toUpperCase() + value.slice(1)}
+                      sx={{
+                        mb: 2,
+                        bgcolor: 'grey.100',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        '& .MuiRadio-root': { color: 'primary.main' },
+                      }}
+                    />
+                  ))}
+                </RadioGroup>
+              );
+            case 'descriptive':
+              return (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  value={currentAnswer || ''}
+                  placeholder="Type your answer here..."
+                  onChange={(e) => onAnswer(e.target.value)}
+                  sx={{ bgcolor: 'grey.100', borderRadius: 2 }}
+                />
+              );
+            default:
+              return null;
+          }
+        })()}
+      </Box>
     </Card>
   );
 };
@@ -193,44 +229,48 @@ const NavigationButtons = ({
   onSkip,
   onSubmit,
 }: any) => (
-  <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
-    <Box>
-      {currentQuestion > 1 && (
-        <Button
-          variant="contained"
-          onClick={onBack}
-          size="small"
-          startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
-        >
-          Back
-        </Button>
-      )}
-    </Box>
-    <Stack direction="row" spacing={2}>
+  <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+    {currentQuestion > 1 && (
       <Button
-        size="small"
-        startIcon={<Iconify icon={GlobalIcons.skipIcon} />}
         variant="outlined"
-        onClick={onSkip}
+        onClick={onBack}
+        size="medium"
+        sx={{ mr: 2, minWidth: 100, borderRadius: 2 }}
+        startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
       >
-        Skip
+        Back
       </Button>
-      {currentQuestion === totalQuestions ? (
-        <Button
-          size="small"
-          variant="contained"
-          color="success"
-          onClick={onSubmit}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-        >
-          Submit
-        </Button>
-      ) : (
-        <Button size="small" variant="contained" onClick={onNext}>
-          Next
-        </Button>
-      )}
-    </Stack>
+    )}
+    <Button
+      size="medium"
+      startIcon={<Iconify icon={GlobalIcons.skipIcon} />}
+      variant="outlined"
+      onClick={onSkip}
+      sx={{ mr: 2, minWidth: 100 }}
+    >
+      Skip
+    </Button>
+    {currentQuestion === totalQuestions ? (
+      <Button
+        size="medium"
+        variant="contained"
+        onClick={onSubmit}
+        startIcon={<Iconify icon={GlobalIcons.submit} />}
+        sx={{ minWidth: 100 }}
+      >
+        Submit
+      </Button>
+    ) : (
+      <Button
+        size="medium"
+        variant="contained"
+        onClick={onNext}
+        sx={{ minWidth: 100 }}
+        endIcon={<Iconify icon="ic:round-arrow-forward" width={20} />}
+      >
+        Next
+      </Button>
+    )}
   </Stack>
 );
 
@@ -276,7 +316,7 @@ const sampleQuizData = [
 ];
 
 // Main Quiz Portal Component
-const QuizPortal = ({ quizData }: { quizData: any }) => {
+const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () => void }) => {
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<number[]>([]);
@@ -349,33 +389,49 @@ const QuizPortal = ({ quizData }: { quizData: any }) => {
   };
 
   const handleSubmit = () => {
-    // Add your submit logic here
-    console.log('Quiz submitted:', answers);
+    handleClose();
   };
 
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Typography variant="h6">
-          Time Left: {Math.floor(timeLeft / 3600)}:
-          {Math.floor((timeLeft % 3600) / 60)
-            .toString()
-            .padStart(2, '0')}
-          :{(timeLeft % 60).toString().padStart(2, '0')}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 3,
+          px: 2,
+          pt: 2,
+        }}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          Quiz: General Knowledge
         </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Iconify icon="mdi:clock-outline" width={20} />
+            <Typography variant="h6" fontWeight={600} sx={{ fontSize: 18 }}>
+              {Math.floor(timeLeft / 3600)}:
+              {Math.floor((timeLeft % 3600) / 60)
+                .toString()
+                .padStart(2, '0')}
+              :{(timeLeft % 60).toString().padStart(2, '0')}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      <Grid container spacing={2} padding={2}>
+      <Grid container spacing={3} padding={2}>
         <Grid item xs={12} md={8}>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
             <QuestionDisplay
               question={{ ...sampleQuizData[currentQuestion - 1], questionNumber: currentQuestion }}
               onAnswer={handleAnswer}
               currentAnswer={answers[currentQuestion]}
               isSkipped={skippedQuestions.includes(currentQuestion)}
             />
-
             <NavigationButtons
+              onClose={handleClose}
               currentQuestion={currentQuestion}
               totalQuestions={sampleQuizData.length}
               onNext={handleNext}
@@ -387,7 +443,6 @@ const QuizPortal = ({ quizData }: { quizData: any }) => {
             />
           </Stack>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <QuestionList
             totalQuestions={sampleQuizData.length}
