@@ -92,7 +92,11 @@ const SeatAllocationTable = ({ openSeatAllocation }: { openSeatAllocation: UseBo
         <MenuItem
           onClick={() => {
             openSeatAllocation.onTrue();
-            console.log('Print Timetable for:', row.examName);
+        <MenuItem
+          onClick={() => {
+            openSeatAllocation.onTrue();
+            pop.onClose();
+          }}
             pop.onClose();
           }}
         >
