@@ -10,11 +10,34 @@ export interface ISeat {
   studentId: number | null;
 }
 
+export interface IRoom {
+  id: number;
+  roomName: string;
+  capacity: number;
+  building: string;
+  floor: string;
+  roomType: string;
+  totalBenches: number;
+  benchCapacity: number;
+  rows: number;
+  columns: number;
+  features: string[];
+}
+
 export interface IStudentRoomAssignment {
   id: number;
   name: string;
   rollNo: string;
   bench?: string;
   room?: string;
+  isRoomAssign: boolean;
+}
+
+export interface ISeatAllocation {
+  seatNumber: number;
+  studentName: string;
+  class: string;
+  rollNo: number;
+  studentId: number;
   isRoomAssign: boolean;
 }

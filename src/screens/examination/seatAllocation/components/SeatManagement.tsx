@@ -2,7 +2,7 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import SeatBox from './SeatBox';
 
-import type { ISeat } from '../type';
+import type { IRoom, ISeat, ISeatAllocation, IStudentRoomAssignment } from '../type';
 
 const SeatManagement = ({
   selectedRoom,
@@ -11,9 +11,9 @@ const SeatManagement = ({
   onStudentRemove,
   onSeatSwap,
 }: {
-  selectedRoom: any;
-  assignedData: any[];
-  onStudentDrop: (student: any, seatNumber: number) => void;
+  selectedRoom: IRoom;
+  assignedData: ISeatAllocation[];
+  onStudentDrop: (student: IStudentRoomAssignment, seatNumber: number) => void;
   onStudentRemove: (studentId: number | null) => void;
   onSeatSwap: (from: number, to: number) => void;
 }) => {

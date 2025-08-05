@@ -3,42 +3,48 @@
     "seatNumber": 1,
     "studentName": "Dharmik Jinger",
     "class": "I",
-    "rollNo": "1",
-    "studentId": 101
+    "rollNo": 1,
+    "studentId": 101,
+    "isRoomAssign": false 
   },
   {
     "seatNumber": 2,
     "studentName": "Nitre",
     "class": "I",
-    "rollNo": "1",
-    "studentId": 102
+    "rollNo": 1,
+    "studentId": 102,
+    "isRoomAssign": false 
   },
   {
     "seatNumber": 3,
     "studentName": "Raj Baku",
     "class": "I",
-    "rollNo": "2",
-    "studentId": 103
+    "rollNo": 2,
+    "studentId": 103,
+    "isRoomAssign": false 
   },
   {
     "seatNumber": 4,
     "studentName": "Mayur Solanki",
     "class": "2",
-    "rollNo": "2",
-    "studentId": 104
+    "rollNo": 2,
+    "studentId": 104,
+    "isRoomAssign": false 
   },
   {
     "seatNumber": 21,
     "studentName": "John Doe",
     "class": "3",
-    "rollNo": "3",
-    "studentId": 105
+    "rollNo": 3,
+    "studentId": 105,
+    "isRoomAssign": false 
   },
   {
     "seatNumber": 22,
     "studentName": "Jane Smith",
     "class": "3",
-    "rollNo": "4",
-    "studentId": 106
+    "rollNo": 4,
+    "studentId": 106,
+    "isRoomAssign": false 
   }
 ]

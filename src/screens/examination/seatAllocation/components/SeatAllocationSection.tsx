@@ -10,7 +10,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import StudentCard from './StudentCard';
 import SeatManagement from './SeatManagement';
 
-import type { IStudentRoomAssignment } from '../type';
+import type { ISeatAllocation, IStudentRoomAssignment } from '../type';
 
 const SeatAllocationSection = ({
   division,
@@ -24,7 +24,7 @@ const SeatAllocationSection = ({
 
   // State to manage seat assignment data, tracking which students are assigned to which seats
   // Initialized with mock data from JSON file for seat allocation information
-  const [assignedData, setAssignedData] = useState(seatAllocationData);
+  const [assignedData, setAssignedData] = useState<ISeatAllocation[]>(seatAllocationData);
 
   // State to manage the list of students available for room assignment
   // Tracks student details including assignment status and bench allocation
@@ -40,7 +40,7 @@ const SeatAllocationSection = ({
     );
   };
 
-  const handleStudentDrop = (student: any, seatNumber: number) => {
+  const handleStudentDrop = (student: IStudentRoomAssignment, seatNumber: number) => {
     // Check if seat is already assigned
     const isAlreadyAssigned = assignedData.some((seat) => seat.seatNumber === seatNumber);
     if (isAlreadyAssigned) {
@@ -51,8 +51,9 @@ const SeatAllocationSection = ({
       seatNumber,
       studentName: student.name,
       class: division || 'I',
-      rollNo: student.rollNo,
+      rollNo: Number(student.rollNo),
       studentId: student.id,
+      isRoomAssign: false,
     };
 
     setAssignedData((prev) => [...prev, newAssignment]);

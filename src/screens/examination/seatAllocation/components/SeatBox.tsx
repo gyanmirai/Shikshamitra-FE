@@ -8,7 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
-import type { ISeat } from '../type';
+import type { ISeat, IStudentRoomAssignment } from '../type';
 
 const SeatBox = ({
   seat,
@@ -17,7 +17,7 @@ const SeatBox = ({
   onSeatSwap,
 }: {
   seat: ISeat;
-  onStudentDrop: (student: any, seatNumber: number) => void;
+  onStudentDrop: (student: IStudentRoomAssignment, seatNumber: number) => void;
   onStudentRemove: (studentId: number | null) => void;
   onSeatSwap: (fromSeatNumber: number, toSeatNumber: number) => void;
 }) => {
@@ -52,37 +52,29 @@ const SeatBox = ({
     try {
       const dragDataString = e.dataTransfer.getData('application/json');
       if (!dragDataString) {
-        console.log('No drag data found');
         return;
       }
 
       const dragData = JSON.parse(dragDataString);
-      console.log('Drag data:', dragData);
 
       // Handle student drops (from student list to empty seats)
       if (dragData.type === 'student') {
         if (!seat.isAssigned) {
-          console.log('Dropping student:', dragData.student, 'on seat:', seat.seatNumber);
           onStudentDrop(dragData.student, seat.seatNumber);
-        } else {
-          console.log('Cannot drop student on occupied seat');
         }
       }
 
       // Handle seat moving (occupied seat to empty seat)
       if (dragData.type === 'seat') {
         const fromSeat = dragData.seat;
-        console.log('Moving seat:', fromSeat.seatNumber, 'to', seat.seatNumber);
 
         // Prevent drop on same seat
         if (fromSeat.seatNumber === seat.seatNumber) {
-          console.log('Cannot move seat to itself');
           return;
         }
 
         // Only allow move from occupied seat to empty seat
         if (fromSeat.isAssigned && !seat.isAssigned) {
-          console.log('Moving student from occupied seat to empty seat');
           // First remove from old seat
           onStudentRemove(fromSeat.studentId);
           // Then add to new seat
@@ -90,10 +82,9 @@ const SeatBox = ({
             id: fromSeat.studentId,
             name: fromSeat.studentName,
             rollNo: fromSeat.rollNo,
+            isRoomAssign: false,
           };
           onStudentDrop(studentToMove, seat.seatNumber);
-        } else {
-          console.log('Can only move from occupied seat to empty seat');
         }
       }
     } catch (error) {
@@ -127,7 +118,6 @@ const SeatBox = ({
           const dragData = { type: 'seat', seat };
           e.dataTransfer.setData('application/json', JSON.stringify(dragData));
           e.dataTransfer.effectAllowed = 'move';
-          console.log('Started dragging seat:', seat.seatNumber);
         }
       }}
       onDragOver={handleDragOver}
