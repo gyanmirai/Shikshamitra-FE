@@ -41,3 +41,14 @@ export interface ISeatAllocation {
   studentId: number;
   isRoomAssign: boolean;
 }
+
+export interface IExamAllocation {
+  examName: string;
+  examType: string;
+  className: number;
+  divisions: string[];
+  totalStudents: number;
+  allocatedStudents: number;
+  pendingStudents: number;
+  status: string;
+}

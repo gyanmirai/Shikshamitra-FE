@@ -1,3 +1,4 @@
+// --- existing imports ---
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React, { useState, useCallback } from 'react';
@@ -11,10 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-// --- existing imports ---
-import { UseBooleanReturn } from 'your-hooks-or-utils';
-import { ExamSeatAllocationData } from 'your-types';
-// -------------------------
+import type { IExamAllocation } from '../type';
 
 const tableData = [
   {
@@ -71,7 +69,7 @@ const tableData = [
 
 interface SeatAllocationTableProps {
   openSeatAllocation: UseBooleanReturn;
-  examData?: ExamSeatAllocationData[];
+  examData?: IExamAllocation[];
 }
 
 const SeatAllocationTable = ({
@@ -80,23 +78,12 @@ const SeatAllocationTable = ({
 }: SeatAllocationTableProps) => {
   const [data, setData] = useState(examData);
 
-  // ...rest of your component logic/rendering
-};
-
-const SeatAllocationTable = ({ openSeatAllocation }: { openSeatAllocation: UseBooleanReturn }) => {
-  const [data, setData] = useState(tableData);
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
             openSeatAllocation.onTrue();
-        <MenuItem
-          onClick={() => {
-            openSeatAllocation.onTrue();
-            pop.onClose();
-          }}
             pop.onClose();
           }}
         >
