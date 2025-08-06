@@ -4,8 +4,10 @@
     "examName": "Weekly Test - English & Math",
     "className": "5",
     "divisions": ["A", "B"],
-    "createdBy" : "Atre Prerna Bhanudas",
-    "selectedSubjects" : ["English", "Math"],
+    "examName" : "Weekly Test - Art & Computer",
+    "className" : "4",
+    "createdBy" : "Badgujar Sweta Ramesh",
+    "selectedSubjects" : ["Art", "Computer"],
     "subjects": [
       {
         "id": 201,
