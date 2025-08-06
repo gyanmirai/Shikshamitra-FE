@@ -45,8 +45,10 @@
   "examType": "Weekly Test",
   "examName": "Weekly Test - English & Math",
   "className": "5",
-  "createdBy" : "Atre Harshita Bhanudas",
-    "selectedSubjects" : ["English", "Math"],
+  "className": "5",
+  "divisions": ["A", "B"],
+  "createdBy": "Atre Harshita Bhanudas",
+  "selectedSubjects": ["English", "Math"],
 
   "divisions": ["A", "B"],
   "subjects": [
