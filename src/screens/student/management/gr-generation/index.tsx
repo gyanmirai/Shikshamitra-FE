@@ -111,9 +111,10 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
         grNo: item.grNoRecord ?? item.tempGrNo, // Use new GR No if available, else keep the current one
       })),
     };
-    await updateStudentGrNumbers({ body: requestBody }).unwrap();
 
     try {
+      await updateStudentGrNumbers({ body: requestBody }).unwrap();
+
       shikshaMitraToast.success({
         message: `GR Number ${
           selectedStudents.length === 1

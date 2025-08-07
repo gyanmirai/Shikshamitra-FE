@@ -372,7 +372,7 @@ const GroupManagement = ({
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 isConfirmForMainLeader.onFalse();
                 shikshaMitraToast.success({
-                  message: `House Leader asssigned successfully for ${editData?.name}`,
+                  message: `House Leader assign successfully for ${editData?.name}`,
                 });
               } catch (error) {
                 console.log(error);
