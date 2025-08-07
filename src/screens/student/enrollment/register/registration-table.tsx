@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import { toast } from 'sonner';
 import React, { useMemo, useState, useCallback } from 'react';
 
 import { LoadingButton } from '@mui/lab';
@@ -17,6 +16,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -57,7 +57,9 @@ const RegistrationTable = ({
           <MenuItem
             onClick={async () => {
               if (row.percentage < 50) {
-                toast.error('Please Complete Required Fields of Registration Form');
+                shikshaMitraToast.error({
+                  message: 'Please Complete Required Fields of Registration Form',
+                });
                 pop.onClose();
                 return;
               }

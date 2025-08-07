@@ -1,0 +1,22 @@
+[
+  { "id": 1, "name": "Jignesh Jinjala", "rollNo": "08", "isRoomAssign": false },
+  { "id": 2, "name": "Sweta Badgujar", "rollNo": "09", "bench": "05", "room": "101", "isRoomAssign": true },
+  { "id": 3, "name": "Amit Patel", "rollNo": "10", "bench": "02", "room": "102", "isRoomAssign": true },
+  { "id": 4, "name": "Kavita Mehta", "rollNo": "11", "isRoomAssign": false },
+  { "id": 5, "name": "Raj Shah", "rollNo": "12", "bench": "03", "room": "101", "isRoomAssign": true },
+  { "id": 6, "name": "Priya Singh", "rollNo": "13", "isRoomAssign": false },
+  { "id": 7, "name": "Nikhil Verma", "rollNo": "14", "bench": "06", "room": "103", "isRoomAssign": true },
+  { "id": 8, "name": "Meera Desai", "rollNo": "15", "bench": "04", "room": "102", "isRoomAssign": true },
+  { "id": 9, "name": "Rohan Kumar", "rollNo": "16", "isRoomAssign": false },
+  { "id": 10, "name": "Anita Sharma", "rollNo": "17", "bench": "07", "room": "103", "isRoomAssign": true },
+  { "id": 11, "name": "Vikram Malhotra", "rollNo": "18", "bench": "08", "room": "101", "isRoomAssign": true },
+  { "id": 12, "name": "Neha Gupta", "rollNo": "19", "isRoomAssign": false },
+  { "id": 13, "name": "Arun Joshi", "rollNo": "20", "bench": "09", "room": "102", "isRoomAssign": true },
+  { "id": 14, "name": "Pooja Patel", "rollNo": "21", "bench": "10", "room": "103", "isRoomAssign": true },
+  { "id": 15, "name": "Sanjay Mehta", "rollNo": "22", "isRoomAssign": false },
+  { "id": 16, "name": "Deepa Reddy", "rollNo": "23", "bench": "11", "room": "101", "isRoomAssign": true },
+  { "id": 17, "name": "Karan Soni", "rollNo": "24", "bench": "12", "room": "102", "isRoomAssign": true },
+  { "id": 18, "name": "Maya Iyer", "rollNo": "25", "isRoomAssign": false },
+  { "id": 19, "name": "Rahul Kapoor", "rollNo": "26", "bench": "13", "room": "103", "isRoomAssign": true },
+  { "id": 20, "name": "Anjali Nair", "rollNo": "27", "bench": "14", "room": "101", "isRoomAssign": true }
+]

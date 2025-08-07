@@ -51,9 +51,6 @@ const RenderGeneralFormFields = (props: any) => {
   const isIdentificationEditable = useBoolean(isMainForm);
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
-  // console.log('formik ---register values--', formik.values);
-
-  console.log(formik, 'formik================');
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -405,7 +402,7 @@ const RenderGeneralFormFields = (props: any) => {
               key="adharNo"
               size="small"
               type="number"
-              label="Aadhar No."
+              label="Aadhar No. "
               name="adharNo"
               value={formik.values.adharNo}
               onBlur={formik.handleBlur}

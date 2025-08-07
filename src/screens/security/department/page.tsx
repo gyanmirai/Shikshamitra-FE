@@ -51,7 +51,6 @@ import {
 import { Iconify } from 'src/components/iconify';
 import ZoomAndDrag from 'src/components/zoom-drag';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
@@ -63,6 +62,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import StandardNode from './standard-node';
 
@@ -468,27 +468,38 @@ const OrganizationUnitFrom = ({
     },
   });
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+    <>
+      <DialogScrollContent>
         <ShakingTextField error={!!formik.errors.title && !!formik.touched.title}>
           <TextField
             name="title"
             label="Name"
             fullWidth
             value={formik.values.title}
-            onChange={formik.handleChange}
+            onChange={(e) => {
+              const value = e.target.value
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              formik.setFieldValue('title', value);
+            }}
             size="small"
             error={!!formik.errors.title && !!formik.touched.title}
             helperText={formik.touched.title && formik.errors.title}
           />
         </ShakingTextField>
-      </Scrollbar>
+      </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
 
-        <SubmitButton loading={isAddLoading || isUpdateLoading} />
+        <SubmitButton
+          onClick={() => formik.handleSubmit()}
+          loading={isAddLoading || isUpdateLoading}
+        />
       </DialogActions>
-    </Box>
+    </>
   );
 };
 const AssignUserForm = () => {
@@ -764,8 +775,8 @@ const RenderRoleForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+    <>
+      <DialogScrollContent>
         <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
           <CustomSelect
             options={data?.items || []}
@@ -783,7 +794,7 @@ const RenderRoleForm = ({
             helperText={((formik.touched.role && formik.errors.role) as string) || ''}
           />
         </ShakingTextField>
-      </Scrollbar>
+      </DialogScrollContent>
 
       <DialogActions>
         <Button onClick={formik.handleReset}>Cancel</Button>
@@ -792,11 +803,12 @@ const RenderRoleForm = ({
           type="submit"
           variant="contained"
           disabled={isAddLoading}
+          onClick={() => formik.handleSubmit()}
         >
           Add
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };
 /**
@@ -919,7 +931,7 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
         ]}
         data={data?.items || []}
       />
-      <CustomDialog title="Assign Role" open={formDialog.value} handleClose={formDialog.onFalse}>
+      <CustomDialog title="Assign User" open={formDialog.value} handleClose={formDialog.onFalse}>
         <RenderUserForm organizationId={organizationId} handleClose={formDialog.onFalse} />
       </CustomDialog>
     </>
@@ -964,8 +976,8 @@ const RenderUserForm = ({
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+    <>
+      <DialogScrollContent>
         <ShakingTextField error={formik.touched.user && Boolean(formik.errors.user)}>
           <CustomSelect
             options={data?.items || []}
@@ -983,7 +995,7 @@ const RenderUserForm = ({
             helperText={((formik.touched.user && formik.errors.user) as string) || ''}
           />
         </ShakingTextField>
-      </Scrollbar>
+      </DialogScrollContent>
 
       <DialogActions>
         <Button onClick={formik.handleReset}>Cancel</Button>
@@ -992,10 +1004,11 @@ const RenderUserForm = ({
           type="submit"
           variant="contained"
           disabled={isAddLoading}
+          onClick={() => formik.handleSubmit()}
         >
           Add
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };

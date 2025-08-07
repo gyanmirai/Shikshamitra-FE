@@ -1107,7 +1107,7 @@ const QuizBuilder = ({ formik }: any) => {
           </Box>
         }
       >
-        <QuestionForm onSave={handleAddQuestion} onCancel={handleClose} />
+        <QuestionForm onSave={handleAddQuestion} onCancel={handleClose} formik={formik} />
       </CustomDialog>
 
       <CustomDialog
@@ -1133,6 +1133,7 @@ const QuizBuilder = ({ formik }: any) => {
             initialData={editingQuestion.data}
             onSave={handleSaveEdit}
             onCancel={handleClose}
+            formik={formik}
           />
         )}
       </CustomDialog>

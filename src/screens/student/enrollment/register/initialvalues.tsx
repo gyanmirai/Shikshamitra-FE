@@ -9,57 +9,54 @@ import { Category } from 'src/enums/studnet-category';
 
 import type { IInquiryData } from '../Inquiry';
 
-export const generalFieldsInitialValues = (editData?: IInquiryData | null) => {
-  console.log('editData--->', editData);
-  return {
-    inquiryNo: editData?.inquiryNumber || '',
-    formNo: editData?.formNumber || '',
-    firstName: editData?.firstName || '',
-    lastName: editData?.lastName || '',
-    middleName: editData?.middleName || '',
-    dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
-    age: calculateAge(dayjs(editData?.dateOfBirth).format()),
-    gender: editData?.genderType || GenderType.Male,
-    adharNo: editData?.aadhaarNo || '',
-    religion: editData?.religion || '',
-    familyCast: editData ? editData?.familyCast : '',
-    castCategory: editData ? editData?.castType : null,
-    motherTongue: editData?.motherTongue || '',
-    nationality: editData?.nationality || 'Indian',
-    birthPlace: editData?.birthPlace || '',
-    temporaryGr: editData?.temporaryGr || '',
-    remarks: editData?.remarks || '',
-    primaryContactNumber: editData?.primaryContactNumber || '',
-    secondaryContactNumber: editData?.secondaryContactNumber
-      ? validatePhoneNumber(editData?.secondaryContactNumber)
-      : '',
-    email: editData?.email || '',
-    userId: editData?.userId || null,
-    id: editData?.id || null,
-    medium: editData?.educationMediumId || '',
-    board: editData?.educationBoardId || '',
-    academicYear: editData?.academicYearId || '',
-    class: editData?.standardId || '',
-    previousSchool: editData?.previousSchoolName || '',
-    photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
-    city: editData?.city ? { name: editData?.city } : { name: '' },
-    state: editData?.state
-      ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
-      : { name: '', isoCode: '' },
-    country: editData?.country
-      ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-      : { name: 'India', isoCode: 'IN' },
-    addressLine1: editData?.addressLine1 || '',
+export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
+  inquiryNo: editData?.inquiryNumber || '',
+  formNo: editData?.formNumber || '',
+  firstName: editData?.firstName || '',
+  lastName: editData?.lastName || '',
+  middleName: editData?.middleName || '',
+  dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
+  age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
+  gender: editData?.genderType || GenderType.Male,
+  adharNo: editData?.aadhaarNo || '',
+  religion: editData?.religion || '',
+  familyCast: editData ? editData?.familyCast : '',
+  castCategory: editData ? editData?.castType : null,
+  motherTongue: editData?.motherTongue || '',
+  nationality: editData?.nationality || 'Indian',
+  birthPlace: editData?.birthPlace || '',
+  temporaryGr: editData?.temporaryGr || '',
+  remarks: editData?.remarks || '',
+  primaryContactNumber: editData?.primaryContactNumber || '',
+  secondaryContactNumber: editData?.secondaryContactNumber
+    ? validatePhoneNumber(editData?.secondaryContactNumber)
+    : '',
+  email: editData?.email || '',
+  userId: editData?.userId || null,
+  id: editData?.id || null,
+  medium: editData?.educationMediumId || '',
+  board: editData?.educationBoardId || '',
+  academicYear: editData?.academicYearId || '',
+  class: editData?.standardId || '',
+  previousSchool: editData?.previousSchoolName || '',
+  photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
+  city: editData?.city ? { name: editData?.city } : { name: '' },
+  state: editData?.state
+    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    : { name: '', isoCode: '' },
+  country: editData?.country
+    ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+    : { name: 'India', isoCode: 'IN' },
+  addressLine1: editData?.addressLine1 || '',
 
-    addressLine2: editData?.addressLine2 || '',
-    addressLine3: editData?.addressLine3 || '',
-    pinCode: editData?.pinCode || '',
-    inquiryPreference: editData?.inquiryPreferenceId || null,
-    apparId: editData?.apparId || '',
-    panNo: editData?.panNo || '',
-    lastClassPassed: editData?.lastClassPassed || '',
-  };
-};
+  addressLine2: editData?.addressLine2 || '',
+  addressLine3: editData?.addressLine3 || '',
+  pinCode: editData?.pinCode || '',
+  inquiryPreference: editData?.inquiryPreferenceId || null,
+  apparId: editData?.apparId || '',
+  panNo: editData?.panNo || '',
+  lastClassPassed: editData?.lastClassPassed || '',
+});
 export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({
   documents: [],
 });
@@ -77,12 +74,10 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
   fatherEmail: editData?.fatherDetails?.email || '',
   fatherPassOutYear: editData?.fatherDetails?.passOutYear || '',
   fatherOfficeNo: editData?.fatherDetails?.officeNo || '',
-  // fatherOfficeAddress: editData?.fatherDetails?.officeAddress || '',
   fatherDesignation: editData?.fatherDetails?.designation || '',
   fatherOrganization: editData?.fatherDetails?.organisation || '',
   fatherAadharNo: editData?.fatherDetails?.aadhaarNo || '',
   fatherRemarks: editData?.fatherDetails?.remarks || '',
-  // fatherAddress: editData?.fatherDetails?.address || '',
   fatherAddress1: editData?.fatherDetails?.address1 || '',
   fatherAddress2: editData?.fatherDetails?.address2 || '',
   fatherAddress3: editData?.fatherDetails?.address3 || '',
@@ -226,7 +221,6 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
 });
 
 export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  // primaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
   commPrimaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
   parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo
     ? validatePhoneNumber(editData?.studentCommunicationDetails?.parentContactNo)

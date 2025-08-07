@@ -48,7 +48,7 @@ const RenderMedicalFields = (props: any) => {
           value={formik.values.weight}
           onChange={formik.handleChange}
           onKeyDown={(e) => {
-            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
               e.preventDefault();
             }
           }}
@@ -66,7 +66,7 @@ const RenderMedicalFields = (props: any) => {
           value={formik.values.height}
           onChange={formik.handleChange}
           onKeyDown={(e) => {
-            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
               e.preventDefault();
             }
           }}
@@ -84,7 +84,7 @@ const RenderMedicalFields = (props: any) => {
           value={formik.values.bmi}
           onChange={formik.handleChange}
           onKeyDown={(e) => {
-            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
               e.preventDefault();
             }
           }}
@@ -102,7 +102,7 @@ const RenderMedicalFields = (props: any) => {
           value={formik.values.pulseRate}
           onChange={formik.handleChange}
           onKeyDown={(e) => {
-            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
               e.preventDefault();
             }
           }}

@@ -325,6 +325,7 @@ export const CommunicationForm = ({
               <DatePicker
                 label="Next Reminder Date *"
                 format="DD/MM/YYYY"
+                views={['year', 'month', 'day']}
                 value={formik.values.dueDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);

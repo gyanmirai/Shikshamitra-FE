@@ -31,6 +31,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   onDelete,
   data,
   onViewTimetable,
+  isScheduleExamButton = true,
+  isAction = true,
 }) => {
   const publishExamDialog = useBoolean();
 
@@ -80,23 +82,15 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [data, tabs.value]
   );
 
-  const handleAccordionToggle = (row: IExamFormValues) => {
-    const isOpen = expandedRowId === row.id;
-    setExpandedRowId(isOpen ? null : row.id || null);
-
-    // Call view action only when opening
-    if (!isOpen) {
-      onViewTimetable(row);
-    }
-  };
-
+  // Actions component for the three dots menu
+  // Renders menu items for printing and publishing timetables
+  // Uses useCallback to memoize the component for performance
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <>
         {' '}
         <MenuList>
-          {/* Show Add Timetable option for Pending status */}
-
+          {/* Menu item for printing the timetable */}
           <MenuItem
             onClick={() => {
               pop.onClose();
@@ -105,6 +99,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             <Iconify icon={GlobalIcons.download} />
             Print Timetable
           </MenuItem>
+
+          {/* Menu item for publishing the timetable 
+              Sets the selected timetable name and shows confirmation dialog */}
           <MenuItem
             onClick={() => {
               publishExamDialog.onTrue();
@@ -152,95 +149,142 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             />
           ))}
         </Tabs>
-        <Button
-          size="small"
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            setOpenDialog(true);
-          }}
-          sx={{
-            mt: 2,
-          }}
-        >
-          Schedule Exam
-        </Button>
+        {isScheduleExamButton && (
+          <Button
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              setOpenDialog?.(true);
+            }}
+            sx={{
+              mt: 2,
+            }}
+          >
+            Schedule Exam
+          </Button>
+        )}
       </Box>
-      <CustomizableTable
-        tableId="schedule-exam-table"
-        noDataText={
-          <>
-            Exam Data Not Found{' '}
-            <Box
-              onClick={() => {
-                setOpenDialog(true);
-                setEditData(null);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Create Exam
-            </Box>
-          </>
-        }
-        columns={[
-          {
-            id: 'className',
-            label: 'Class',
-            align: 'left',
-            filterType:'number',
-            children: (row): React.ReactNode => (
-              <ViewTimetableComp examData={row as IExamFormValues} />
-            ),
-          },
-          {
-            id: 'divisions',
-            label: 'Divisions',
-            align: 'left',
-            render: (value) => <Box>{value.join(', ')}</Box>,
-          },
-          { id: 'examName', label: 'Exam Name', align: 'left' },
-          { id: 'examType', label: 'Exam Type', align: 'left' },
-          {
-            id: 'action',
-            label: 'Actions',
-            minWidth: 80,
-            align: 'left',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  // showViewIcon
-                  showDeleteIcon
-                  showEditIcon
-                  handleDeleteClick={() => {
-                    onDelete(row as IExamFormValues);
-                  }}
-                  handleEditClick={() => {
-                    setEditData(row as IExamFormValues);
-                    setOpenDialog(true);
-                  }}
-                  // handleViewClick={() => {
-                  //   onViewTimetable(row as IExamFormValues);
-                  // }}
-                />
-              );
+      {isAction ? (
+        <CustomizableTable
+          tableId="schedule-exam-table"
+          noDataText={
+            <>
+              Exam Data Not Found{' '}
+              <Box
+                onClick={() => {
+                  setOpenDialog?.(true);
+                  setEditData?.(null);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Create Exam
+              </Box>
+            </>
+          }
+          columns={[
+            { id: 'examName', label: 'Exam Name', align: 'left' },
+            { id: 'examType', label: 'Exam Type', align: 'left' },
+            {
+              id: 'className',
+              label: 'Class',
+              align: 'left',
+              filterType: 'number',
+              children: (row): React.ReactNode => (
+                <ViewTimetableComp examData={row as IExamFormValues} />
+              ),
             },
-          },
-        ]}
-        data={tableData}
-      />
+            {
+              id: 'divisions',
+              label: 'Divisions',
+              align: 'left',
+              render: (value) => <Box>{value.join(', ')}</Box>,
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'action',
+              label: 'Actions',
+              minWidth: 80,
+              align: 'left',
+              isSort: false,
+              sticky: true,
+              isFilter: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                    // showViewIcon
+                    showDeleteIcon
+                    showEditIcon
+                    handleDeleteClick={() => {}}
+                    handleEditClick={() => {
+                      setOpenDialog?.(true);
+                      setEditData?.(row as IExamFormValues);
+                    }}
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData}
+        />
+      ) : (
+        <CustomizableTable
+          tableId="schedule-exam-table"
+          noDataText={
+            <>
+              Exam Data Not Found{' '}
+              <Box
+                onClick={() => {
+                  setOpenDialog?.(true);
+                  setEditData?.(null);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Create Exam
+              </Box>
+            </>
+          }
+          columns={[
+            { id: 'examName', label: 'Exam Name', align: 'left' },
+            { id: 'examType', label: 'Exam Type', align: 'left' },
+            {
+              id: 'className',
+              label: 'Class',
+              align: 'left',
+              filterType: 'number',
+              children: (row): React.ReactNode => (
+                <ViewTimetableComp examData={row as IExamFormValues} />
+              ),
+            },
+            {
+              id: 'divisions',
+              label: 'Divisions',
+              align: 'left',
+              render: (value) => <Box>{value.join(', ')}</Box>,
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+          ]}
+          data={tableData}
+        />
+      )}
 
       <ConfirmDialog
         open={publishExamDialog.value}

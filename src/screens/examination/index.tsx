@@ -16,7 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import Setting from './setting';
 import QuizManagement from './quiz';
 import GradeEntry from './gradeEntry/gradeEntry';
-import ScheduleExam from './scheduleExam/schedule-exam';
+import ScheduleExam from './scheduleExam/ScheduleExam';
 import GradingAndAnalytics from './gradingAndAnalytics';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
 // eslint-disable-next-line import/no-named-as-default

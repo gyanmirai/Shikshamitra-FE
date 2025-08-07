@@ -473,11 +473,7 @@ export const DocumentForm = ({
       documentType: Yup.array()
         .min(1, 'At least one document type is required')
         .required('Document type is required'),
-      documentSize: Yup.number()
-        .required('Document size is required')
-        .max(20, 'Document size must be less than 20 MB')
-        .positive('Document size must be a positive number')
-        .integer('Document size must be an integer'),
+      documentSize: Yup.number().required('Document size is required'),
     }),
     onSubmit: async (values, { resetForm, setSubmitting }) => {
       try {
@@ -547,11 +543,20 @@ export const DocumentForm = ({
               type="number"
               name="documentSize"
               fullWidth
-              inputProps={{ min: 1, max: 20 }}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              inputProps={{ min: 1, max: 9 }}
               onChange={(e) => {
-                // const value = parseInt(e.target.value, 10);
+                const { value } = e.target;
 
-                setFieldValue('documentSize', e.target.value);
+                if (/^[1-9]$/.test(value)) {
+                  setFieldValue('documentSize', value);
+                } else if (value === '') {
+                  setFieldValue('documentSize', '');
+                }
               }}
               error={Boolean(touched.documentSize && errors.documentSize)}
               helperText={touched.documentSize && errors.documentSize}

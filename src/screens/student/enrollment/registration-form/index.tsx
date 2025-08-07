@@ -1,8 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
-import { useDispatch } from 'react-redux';
 import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
 
@@ -12,6 +14,7 @@ import calculateAge from 'src/utils/calculate-age';
 
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
 import {
   StudentRegistrationFormApi,
@@ -36,18 +39,10 @@ const RegistrationFormScreen = () => {
   const dispatch = useDispatch();
   // State to store inquiry data for editing
   const [editData, setEditData] = useState<IInquiryData | null>(null);
-
-  // State to store ID of student being moved to registration
-  const [moveId, setMoveId] = useState<string | null>(null);
-
-  // State to store dates (currently unused)
-  const [dates, setDates] = useState([]);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Dialog control for follow-up form
   const followUpDialog = useBoolean();
-
-  // Dialog control for move confirmation popup
-  const confirmMovePopup = useBoolean();
 
   // Query hook to fetch registration form data
   const {
@@ -90,6 +85,25 @@ const RegistrationFormScreen = () => {
     [inquiryFormData?.items]
   );
 
+  /**
+   * Handles closing the registration form dialog with proper cleanup
+   * @param _e - Event object (unused)
+   * @param isSubmit - Optional flag indicating if the close action is triggered by form submission
+   */
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
+      setEditData(null);
+      registerFormDialog.onFalse();
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
+      setEditData(null);
+      registerFormDialog.onFalse();
+      dispatch(setIsChanges(false));
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {registerFormDialog.value ? (
@@ -104,9 +118,7 @@ const RegistrationFormScreen = () => {
           ]}
           isBack
           onBack={() => {
-            setEditData(null);
-            registerFormDialog.onFalse();
-            dispatch(StudentRegistrationFormApi.util.invalidateTags(['Student-Registration-Form']));
+            handleClose(null, false);
           }}
           sx={{ mb: 2 }}
         />

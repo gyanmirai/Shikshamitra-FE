@@ -128,7 +128,13 @@ const QuizManagement = (props: TabComponentType) => {
         open={attemptQuizDialog.value}
         fullScreen
       >
-        <QuizPortal quizData={quizPortalData} />
+        <QuizPortal
+          quizData={quizPortalData}
+          handleClose={() => {
+            attemptQuizDialog.onFalse();
+            setSelectedQuiz(null);
+          }}
+        />
       </CustomDialog>
     </>
   ) : (
@@ -219,7 +225,6 @@ const QuizManagement = (props: TabComponentType) => {
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={() => {
               handleDelete(selectedQuiz?.id);
             }}

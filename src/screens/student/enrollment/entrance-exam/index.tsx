@@ -7,6 +7,7 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import isoWeek from 'dayjs/plugin/isoWeek';
 import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -68,6 +69,8 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
 
+dayjs.extend(isoWeek);
+
 /**
  * Main component for managing entrance exam screens and functionalities
  */
@@ -80,10 +83,10 @@ const EntranceExamScreen = () => {
   // State for storing the ID of the student to be moved to admission
   const [moveId, setMoveId] = useState<string | null>(null);
   // State for managing the start date filter for entrance exams
-  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().startOf('isoWeek'));
 
   // State for managing the end date filter for entrance exams
-  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // useDispatch hook for dispatching Redux actions
@@ -129,6 +132,7 @@ const EntranceExamScreen = () => {
         class: item.studentEnrollment.standard.name,
         board: item.studentEnrollment.educationBoard.name,
         status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
+        progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
         percentage:
           item.marksObtained === null
             ? 0
@@ -203,8 +207,16 @@ const EntranceExamScreen = () => {
 
         <MenuItem
           onClick={async () => {
+            if (row.progress < 50) {
+              shikshaMitraToast.error({
+                message: 'Please Complete Required Fields of Registration Form',
+              });
+              popover.onClose();
+              return;
+            }
             confirmMovePopup.onTrue();
             setEditData(row);
+            // dialog.onTrue();
             setMoveId(row.id);
             popover.onClose();
           }}
@@ -222,7 +234,6 @@ const EntranceExamScreen = () => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      console.log('Are u sure to leave this page ');
       resultDialog.onFalse();
       setEditData(null);
       dispatch(setIsChanges(false));
@@ -264,19 +275,23 @@ const EntranceExamScreen = () => {
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
+            value={startDate}
             slotProps={{
               textField: {
                 sx: { width: '250px' },
                 size: 'small',
               },
             }}
+            views={['year', 'month', 'day']}
             onChange={(value) => {
               setStartDate(value);
             }}
           />
           <DatePicker
             label="End Date"
+            value={endDate}
             format="DD-MM-YYYY"
+            views={['year', 'month', 'day']}
             slotProps={{
               textField: {
                 sx: { width: '250px' },
@@ -288,9 +303,6 @@ const EntranceExamScreen = () => {
             }}
           />
         </Box>
-        {/* <Button startIcon={<Upload />} variant="contained" size="small">
-          Upload Results
-        </Button> */}
       </Box>
       <Box mt={2}>
         <CustomizableTable
@@ -300,43 +312,6 @@ const EntranceExamScreen = () => {
           noDataText={<>No Entrance Exam Data Found </>}
           isLoading={isLoading}
           columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'left',
-            //   minWidth: '60px',
-            //   isSort: false,
-            //   sticky: true,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(tableData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     return (
-            //       <Checkbox
-            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
             {
               id: 'name',
               label: 'Student Name',
@@ -384,6 +359,49 @@ const EntranceExamScreen = () => {
               filterType: 'number',
               align: 'left',
               minWidth: 150,
+            },
+            {
+              id: 'progress',
+              label: 'Progress',
+              align: 'left',
+              sticky: true,
+              filterType: 'number',
+              render(value, row) {
+                return (
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress
+                      variant="determinate"
+                      value={value}
+                      size={50}
+                      thickness={3}
+                      sx={{
+                        color: value < 50 ? 'warning.main' : 'success.main',
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        component="small"
+                        color="text.secondary"
+                        sx={{ fontSize: '12px' }}
+                      >
+                        {value}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              },
             },
             {
               id: 'percentage',
@@ -499,14 +517,19 @@ const EntranceExamScreen = () => {
         }
         content={
           <>
-            {editData?.status === 2 ? (
+            {editData?.status === EntranceExamStatusType.Pending ? (
               <>
-                Student failed the entrance exam <strong>{editData?.name || ''}</strong> Are you
-                sure continue with admission?
+                The entrance exam has not been conducted yet. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
+              </>
+            ) : editData?.status === EntranceExamStatusType.Fail ? (
+              <>
+                The student has failed the entrance exam. Are you sure you want to proceed with
+                moving <strong>{editData?.name || ''}</strong> to admission?
               </>
             ) : (
               <>
-                Are you sure want to move student <strong>{editData?.name || ''}</strong> in
+                Are you sure you want to move student <strong>{editData?.name || ''}</strong> to
                 admission?
               </>
             )}
@@ -565,7 +588,6 @@ export const ExamForm = ({
 }) => {
   // State to store all available exam slots
   const [allSlots, setAllSlots] = useState<any[]>([]);
-  console.log('allSlots---', allSlots);
 
   // Dialog state for slot management
   const dialog = useBoolean();
@@ -573,17 +595,6 @@ export const ExamForm = ({
   // Validation schema for exam form fields
   const validationSchema = Yup.object({
     examDate: Yup.date().required('Exam date is required'),
-    // passingMarks: Yup.number()
-    //   .nullable()
-    //   .test(
-    //     'less-than-total',
-    //     'Passing marks should be less than total marks',
-    //     (value, context) => {
-    //       const { totalMarks } = context.parent;
-    //       return value == null || (totalMarks != null && value < totalMarks);
-    //     }
-    //   ),
-    // examType: Yup.string().required('Exam type is required'),
     slot: Yup.string().required('At least one slot should be selected'),
   });
 
@@ -621,7 +632,6 @@ export const ExamForm = ({
         const res = await getStudentCountByDate({ slotId, examDate: date }).unwrap();
         return res.studentCount;
       } catch (e) {
-        console.log(e);
         return 0;
       }
     },
@@ -630,16 +640,11 @@ export const ExamForm = ({
 
   // Formik instance for form handling
   const formik = useFormik({
-    // enableReinitialize: true,
     initialValues: {
       examDate: null,
-      // examType: '',
-      // scheduleType: ScheduleType.Individual,
-      // totalMarks: 0,
       isConfirmed: false,
       slots: allSlots || [],
       slot: '',
-      // passingMarks: null,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -648,10 +653,6 @@ export const ExamForm = ({
           entranceExamSlotId: values.slot,
           studentEnrollmentId,
           examDate: dateConvertor(dayjs(values.examDate).format(dateFormat)),
-          // examType: values.examType,
-          // totalMarks: values.totalMarks,
-          // examScheduleType: values.scheduleType,
-          // passingMark: values.passingMarks,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
@@ -660,7 +661,6 @@ export const ExamForm = ({
       } catch (error) {
         console.log(error);
       }
-      console.log(values);
     },
   });
 
@@ -955,7 +955,6 @@ const ResultForm = ({
       totalMarks: Yup.number().required('Total Marks is required'),
     }),
     onSubmit: async (values) => {
-      console.log(values);
       try {
         await updateMarks({
           id: editData.id,
@@ -1039,30 +1038,6 @@ const ResultForm = ({
                 helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
               />
             </ShakingTextField>
-            {/* <Typography variant="caption" color="error">
-              {formik.errors.obtainedMarks as string}
-            </Typography> */}
-
-            {/* <Box>
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={formik.values.status === 1}
-                    onChange={() => formik.setFieldValue('status', 1)}
-                  />
-                }
-                label="Pass"
-              />
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={formik.values.status === 2}
-                    onChange={() => formik.setFieldValue('status', 2)}
-                  />
-                }
-                label="Fail"
-              />
-            </Box> */}
           </Box>
         </BackPopUpChecked>
       </DialogScrollContent>

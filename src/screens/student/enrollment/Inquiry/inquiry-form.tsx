@@ -206,11 +206,9 @@ const InquiryForm = ({
     errors,
     touched,
     handleChange,
-    isSubmitting,
     setFieldValue,
     values,
     handleSubmit,
-    handleBlur,
     setFieldTouched,
     initialValues,
   } = useFormik({
@@ -221,32 +219,10 @@ const InquiryForm = ({
     validateOnBlur: true,
   });
 
-  // useMemo(() => {
-  //   if (academicYear?.items?.length) {
-  //     setFieldValue('academicYear', academicYear?.items[0].id);
-  //   }
-  // }, [setFieldValue, academicYear?.items]);
-
   /**
    * Custom hook to check for changes in form values
    * @param initialValues - Initial form values
    * @param currentValue - Current form values
-
-  /**
-   * Hook to fetch board data
-   */
-
-  const [mediums, setMediums] = useState([]);
-
-  // useMemo(() => {
-  //   if (years?.length) {
-  //     setFieldValue('academicYear', years[0].id);
-  //     const findBoards = board?.items.filter(
-  //       (item: Board) => item.academicYearId === editData?.academicYearId
-  //     );
-  //     setBoards(findBoards);
-  //   }
-  // }, [board?.items, editData?.academicYearId, setFieldValue, years]);
 
   /**
    * Custom hook to check for changes in form values
@@ -260,8 +236,8 @@ const InquiryForm = ({
     type: 'mutation',
     currentQueryAndMutation: useAddStudentInquiryMutation,
   });
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState();
-  /**
+  // Keep empty string as a safe UI-friendly default
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>(''); /**
    * Hook to update existing student inquiry
    */
   const [updateInquiry, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -269,60 +245,22 @@ const InquiryForm = ({
     currentQueryAndMutation: useUpdateStudentInquiryMutation,
   });
 
-  /**
-   * State to store filtered boards based on academic year
-   */
-
-  // useEffect(() => {
-  //   if (!board?.items?.length || !years?.length) return;
-
-  //   // If in edit mode
-  //   if (editData) {
-  //     const yearId = editData.academicYearId;
-  //     setFieldValue('academicYear', yearId);
-
-  //     const findBoards = board.items.filter((item: Board) => item.academicYearId === yearId);
-  //     setBoards(findBoards);
-  //     setFieldValue('board', editData.educationBoardId || '');
-
-  //     if (editData.educationBoardId) {
-  //       const selectedBoard = board.items.find(
-  //         (item: Board) => item.id === editData.educationBoardId
-  //       );
-  //       setMediums(selectedBoard?.educationMediums || []);
-  //     }
-
-  //     if (editData.educationMediumId) {
-  //       getClassByMedium(editData.educationMediumId);
-  //     }
-  //   } else {
-  //     // Default behavior when not editing
-  //     const yearId = years[0].id;
-  //     setFieldValue('academicYear', yearId);
-
-  //     const findBoards = board.items.filter((item: Board) => item.academicYearId === yearId);
-  //     setBoards(findBoards);
-  //   }
-  // }, [editData, years, board?.items, setFieldValue, getClassByMedium]);
-
   useEffect(() => {
-    if (editData) {
-      // Filter boards based on academic year ID from edit data
-      const findBoards = board?.items.filter(
-        (item: Board) => item.academicYearId === editData.academicYearId
+    // Find and set selected academic year name
+    const year = academicYear?.items?.find((item: AcademicYear) => item.id === values.academicYear);
+    setSelectedAcademicYear(year?.name ?? '');
+
+    // Filter and set boards based on academic year
+    if (board?.items) {
+      const findBoards = board.items.filter(
+        (item: Board) => item.academicYearId === (editData?.academicYearId ?? values.academicYear)
       );
       setBoards(findBoards);
-      const year = academicYear?.items?.find(
-        (item: AcademicYear) => item.id === values.academicYear
-      );
-      console.log('year---', year);
+    }
 
-      setSelectedAcademicYear(year?.name || '');
-
-      // Fetch classes if education medium ID exists in edit data
-      if (editData.educationMediumId) {
-        getClassByMedium(editData.educationMediumId);
-      }
+    // Get classes by medium if editing existing data
+    if (editData?.educationMediumId) {
+      getClassByMedium(editData.educationMediumId);
     }
   }, [academicYear?.items, board?.items, editData, getClassByMedium, values.academicYear]);
 
@@ -429,12 +367,9 @@ const InquiryForm = ({
                     value={values.class}
                     onChange={(value) => {
                       setFieldValue('class', value);
-                      // setFieldTouched('class', true);
                     }}
                     error={!!(touched.class && errors.class) || false}
                     helperText={(touched.class && errors.class) || ''}
-                    // error={touched.class && Boolean(errors.class)}
-                    // helperText={(touched.class && errors.class) as string}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -452,9 +387,7 @@ const InquiryForm = ({
                     onChange={(e) => {
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
-                      // const value = capitalize(e.target.value);
                       setFieldValue('firstName', capitalized);
-                      // setFieldTouched('firstName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -473,7 +406,6 @@ const InquiryForm = ({
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
                       setFieldValue('middleName', capitalized);
-                      // setFieldTouched('middleName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -492,7 +424,6 @@ const InquiryForm = ({
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
                       setFieldValue('lastName', capitalized);
-                      // setFieldTouched('lastName', true);
                     }}
                   />
                 </ShakingTextField>
@@ -511,7 +442,6 @@ const InquiryForm = ({
                         setFieldValue('age', age);
                       }
                       setFieldValue('dateOfBirth', newValue);
-                      // setFieldTouched('dateOfBirth', true);
                     }}
                     disableFuture
                     minDate={dayjs('1947-01-01')}
@@ -521,8 +451,6 @@ const InquiryForm = ({
                         size: 'small',
                         error: !!(touched.dateOfBirth && errors.dateOfBirth) || false,
                         helperText: (touched.dateOfBirth && errors.dateOfBirth) || '',
-                        // helperText: touched.dateOfBirth && (errors.dateOfBirth as string),
-                        // error: touched.dateOfBirth && Boolean(errors.dateOfBirth),
                       },
                     }}
                   />
@@ -570,7 +498,6 @@ const InquiryForm = ({
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
 
                       setFieldValue('previousSchool', onlyLetters);
-                      // setFieldTouched('previousSchool', true);
                     }}
                     size="small"
                     name="previousSchool"
@@ -592,10 +519,8 @@ const InquiryForm = ({
                     name="dateOfInquiry"
                     value={values.dateOfInquiry}
                     format="DD-MM-YYYY"
-                    disabled
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
-                      // setFieldValue('dateOfInquiry', newValue);
                       setFieldTouched('dateOfInquiry', true);
                     }}
                     slotProps={{
@@ -630,7 +555,6 @@ const InquiryForm = ({
                       },
                     }}
                     addOtherItemOnClick={dialog.onTrue}
-                    // addOtherItemText="Add Inquiry Preference"
                   />
                 </ShakingTextField>
               </Grid>
@@ -671,7 +595,6 @@ const InquiryForm = ({
                     value={values.primaryContactNumber}
                     onChange={(value) => {
                       setFieldValue('primaryContactNumber', value);
-                      // setFieldTouched('primaryContactNumber', true);
                     }}
                     error={touched.primaryContactNumber && Boolean(errors.primaryContactNumber)}
                     helperText={touched.primaryContactNumber && errors.primaryContactNumber}
@@ -692,7 +615,6 @@ const InquiryForm = ({
                     value={values.secondaryContactNumber}
                     onChange={(value) => {
                       setFieldValue('secondaryContactNumber', value || '');
-                      // setFieldTouched('secondaryContactNumber', true);
                     }}
                     error={Boolean(touched.secondaryContactNumber && errors.secondaryContactNumber)}
                     helperText={
@@ -702,7 +624,6 @@ const InquiryForm = ({
                     }
                     variant="outlined"
                     label="Secondary Contact No."
-                    // onBlur={handleBlur}
                   />
                 </ShakingTextField>
               </Grid>
@@ -782,11 +703,6 @@ const InquiryForm = ({
                       });
                       setFieldValue('city', { name: '' });
                     }}
-                    // onChange={(_e, value) => {
-                    //   setFieldValue('city', null);
-                    //   setFieldValue('state', value);
-                    //   setFieldTouched('state', true);
-                    // }}
                     error={touched.state && Boolean(errors?.state?.name)}
                     helperText={touched.state && errors?.state?.name}
                     countryValue={values.country}
