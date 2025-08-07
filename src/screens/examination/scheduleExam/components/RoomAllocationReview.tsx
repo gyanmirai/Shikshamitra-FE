@@ -39,7 +39,7 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
     <SectionCard title="Room Allocation">
       {Object.entries(roomDetails as IRoomDetails).map(
         ([subjectName, subjectDetail]: [string, ISubjectRoomDetail]) => (
-          <Grid item xs={12}>
+            <Grid item xs={12} key={subjectName}>
             <SectionCard key={subjectName} title={`${subjectName}`}>
               {/* <Stack spacing={2}> */}
               {Object.entries(subjectDetail.divisions).map(([divisionName, divisionData]) => (
