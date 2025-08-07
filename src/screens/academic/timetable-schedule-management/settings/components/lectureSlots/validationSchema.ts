@@ -3,7 +3,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-const parseTime = (timeStr: string) => dayjs(timeStr, ['hh:mm A']);
+const parseTime = (timeString: string): Dayjs => dayjs(timeString, 'hh:mm A');
 
 export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
   const schoolStart = parseTime(schoolStartTimeStr);
