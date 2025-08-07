@@ -27,14 +27,9 @@ import { StudentSubmissions } from './studentSubmission';
 const QuizTable = ({
   data,
   addQuizDialog,
-  onTogglePublish,
   onAttemptClick,
-  handleDelete,
-  onViewQuiz,
   onDelete,
-  onQuizResult,
   onEdit,
-  openDialog,
   setOpenDialog,
 }: any) => {
   // Initialize tabs state with default value of Pending status
@@ -50,10 +45,10 @@ const QuizTable = ({
       <MenuList>
         {tabs.value === ScheduleExamStatus.Pending && (
           <>
-            {/* <MenuItem onClick={() => onAttemptClick(row)}>
+            <MenuItem onClick={() => onAttemptClick(row)}>
               <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
               Attempt Quiz
-            </MenuItem> */}
+            </MenuItem>
 
             <MenuItem onClick={() => {}}>
               <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
@@ -204,13 +199,11 @@ const QuizTable = ({
                   label: 'Title',
                   align: 'left',
                   filterType: 'string',
-                  // minWidth: 120,
                 },
                 {
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -334,7 +327,6 @@ const QuizTable = ({
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
-                  // minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -408,12 +400,6 @@ const QuizTable = ({
                   align: 'left',
                   filterType: 'number',
                 },
-                // {
-                //   id: 'obtainedMarks',
-                //   label: 'Obtained Marks',
-                //   align: 'left',
-                //   filterType: 'number',
-                // },
                 {
                   id: 'marksStatus',
                   label: 'Marks Status',

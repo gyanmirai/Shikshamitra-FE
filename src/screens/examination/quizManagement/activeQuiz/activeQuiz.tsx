@@ -82,7 +82,7 @@ const ActiveQuiz = () => {
       </Box>
 
       {open ? (
-        <QuizPortal quizData={quizPortalData} />
+        <QuizPortal quizData={quizPortalData} handleClose={() => handleClose(null, false)} />
       ) : (
         <QuizTable
           addQuizDialog={addQuizDialog}

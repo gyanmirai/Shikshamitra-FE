@@ -185,7 +185,7 @@ const LeaveHistory = (props: any) => {
   }, [editData?.rejectionReason]);
 
   return (
-    <>
+    <Box sx={{ height: '100%' }}>
       <Box sx={{ display: 'flex', gap: 2, my: 2, pl: 1, justifyContent: 'space-between' }}>
         <DatePicker
           label="Month-Year"
@@ -440,7 +440,7 @@ const LeaveHistory = (props: any) => {
           />
         </CustomDialog>
       )}
-    </>
+    </Box>
   );
 };
 
