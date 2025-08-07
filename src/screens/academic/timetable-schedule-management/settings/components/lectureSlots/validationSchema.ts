@@ -8,7 +8,9 @@ const parseTime = (timeStr: string) => dayjs(timeStr, ['hh:mm A']);
 export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
   const schoolStart = parseTime(schoolStartTimeStr);
   const schoolEnd = parseTime(schoolEndTimeStr);
-
+  if (!schoolStart.isValid() || !schoolEnd.isValid()) {
+    throw new Error('Invalid school hours provided');
+  }
   return Yup.object().shape({
     className: Yup.string().required('Class is required'),
     schoolHours: Yup.string().required('School hours are required'),
