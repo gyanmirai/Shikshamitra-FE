@@ -17,6 +17,9 @@ import {
 
 import { GlobalIcons } from 'src/utils/icons';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetQuizListQuery } from 'src/redux/academics/examination/quiz-management-api';
+
 import { Iconify } from 'src/components/iconify';
 
 // Styled components
@@ -78,39 +81,40 @@ const QuestionList = ({
       justifyContent: 'flex-start',
     }}
   >
-    {/* Top row: title and legend in one line */}
-    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2 }}>
-      <Typography variant="h6" sx={{ mr: 3 }}>
-        Question Navigation
-      </Typography>
-      <Typography variant="subtitle2" sx={{ mr: 2 }}>
-        Legend
-      </Typography>
-      <Stack direction="row" spacing={2}>
+    <Box sx={{ mb: 2 }}>
+      <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+        <Typography variant="h6">Question Navigation</Typography>
+
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 16, height: 16, bgcolor: 'success.main', borderRadius: 1 }} />
-          <Typography variant="body2">Answered</Typography>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 16, height: 16, bgcolor: 'info.main', borderRadius: 1 }} />
-          <Typography variant="body2">Skipped</Typography>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
-          <Typography variant="body2">Current</Typography>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 16, height: 16, bgcolor: 'grey.300', borderRadius: 1 }} />
-          <Typography variant="body2">Not Visited</Typography>
+          <Typography variant="subtitle2">Legend:</Typography>
+
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 16, height: 16, bgcolor: 'success.main', borderRadius: 1 }} />
+            <Typography variant="body2">Answered</Typography>
+          </Stack>
+
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 16, height: 16, bgcolor: 'info.main', borderRadius: 1 }} />
+            <Typography variant="body2">Skipped</Typography>
+          </Stack>
+
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 16, height: 16, bgcolor: 'warning.main', borderRadius: 1 }} />
+            <Typography variant="body2">Current</Typography>
+          </Stack>
+
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 16, height: 16, bgcolor: 'grey.300', borderRadius: 1 }} />
+            <Typography variant="body2">Not Visited</Typography>
+          </Stack>
         </Stack>
       </Stack>
     </Box>
-    {/* Number buttons below with scroll */}
     <Box
       sx={{
         flex: 1,
         overflow: 'auto',
-        pr: 1, // optional, for scrollbar spacing
+        pr: 1,
       }}
     >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -136,14 +140,14 @@ const QuestionList = ({
   </Card>
 );
 // QuestionDisplay Component
-const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
+const QuestionDisplay = ({ question, onAnswer, currentAnswer, totalQuestions }: any) => {
   if (!question) return null;
 
   return (
     <Card sx={{ borderRadius: 3, boxShadow: 2, bgcolor: 'background.paper', p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">
-          Question {question.questionNumber} of {sampleQuizData.length}
+          Question {question.questionNumber} of {totalQuestions}
         </Typography>
         <Typography variant="subtitle2" color="text.secondary">
           Marks: {question.marks}
@@ -153,7 +157,6 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
         {question.question}
       </Typography>
       <Box sx={{ mt: 2 }}>
-        {/* ...renderOptions code unchanged... */}
         {(() => {
           switch (question.questionType) {
             case 'multiple-choice':
@@ -198,7 +201,7 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
                   ))}
                 </RadioGroup>
               );
-            case 'descriptive':
+            case 'shortAns':
               return (
                 <TextField
                   fullWidth
@@ -210,6 +213,35 @@ const QuestionDisplay = ({ question, onAnswer, currentAnswer }: any) => {
                   onChange={(e) => onAnswer(e.target.value)}
                   sx={{ bgcolor: 'grey.100', borderRadius: 2 }}
                 />
+              );
+            case 'matchTheFollowing':
+              return (
+                <Box>
+                  {question.pairs.map((pair: any, idx: number) => (
+                    <Box key={idx} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography sx={{ minWidth: 80 }}>{pair.left}</Typography>
+                      <RadioGroup
+                        row
+                        value={currentAnswer?.[idx] || ''}
+                        onChange={(e) => {
+                          const newAnswers = Array.isArray(currentAnswer) ? [...currentAnswer] : [];
+                          newAnswers[idx] = e.target.value;
+                          onAnswer(newAnswers);
+                        }}
+                      >
+                        {pair.rightOptions.map((option: string) => (
+                          <FormControlLabel
+                            key={option}
+                            value={option}
+                            control={<Radio />}
+                            label={option}
+                            sx={{ mx: 1 }}
+                          />
+                        ))}
+                      </RadioGroup>
+                    </Box>
+                  ))}
+                </Box>
               );
             default:
               return null;
@@ -274,55 +306,20 @@ const NavigationButtons = ({
   </Stack>
 );
 
-// Sample quiz data
-const sampleQuizData = [
-  {
-    questionType: 'multiple-choice',
-    question: 'What is the capital of France?',
-    options: [
-      { value: 'paris', label: 'Paris' },
-      { value: 'london', label: 'London' },
-      { value: 'berlin', label: 'Berlin' },
-      { value: 'madrid', label: 'Madrid' },
-    ],
-    marks: 2,
-  },
-  {
-    questionType: 'trueFalse',
-    question: 'The Earth is flat.',
-    marks: 1,
-  },
-  {
-    questionType: 'descriptive',
-    question: 'Explain the process of photosynthesis.',
-    marks: 5,
-  },
-  {
-    questionType: 'multiple-choice',
-    question: 'Which programming language is used for React?',
-    options: [
-      { value: 'javascript', label: 'JavaScript' },
-      { value: 'python', label: 'Python' },
-      { value: 'java', label: 'Java' },
-      { value: 'cpp', label: 'C++' },
-    ],
-    marks: 2,
-  },
-  {
-    questionType: 'descriptive',
-    question: 'What are the key principles of Object-Oriented Programming?',
-    marks: 5,
-  },
-];
-
 // Main Quiz Portal Component
 const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () => void }) => {
+  const { data } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuizListQuery,
+  });
+
+  const quizList = Array.isArray(data) ? data : [];
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<number[]>([]);
   type Answer = string | boolean;
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
-  const [timeLeft, setTimeLeft] = useState(3600); // 1 hour in seconds
+  const [timeLeft, setTimeLeft] = useState(3600);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -354,7 +351,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
   };
 
   const handleNext = () => {
-    if (currentQuestion < sampleQuizData.length) {
+    if (currentQuestion < data.length) {
       // If moving to next without answering, consider it skipped
       if (
         !answeredQuestions.includes(currentQuestion) &&
@@ -425,15 +422,18 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
         <Grid item xs={12} md={8}>
           <Stack spacing={3}>
             <QuestionDisplay
-              question={{ ...sampleQuizData[currentQuestion - 1], questionNumber: currentQuestion }}
+              question={{
+                ...quizList[currentQuestion - 1],
+                questionNumber: currentQuestion,
+              }}
+              totalQuestions={quizList.length}
               onAnswer={handleAnswer}
               currentAnswer={answers[currentQuestion]}
-              isSkipped={skippedQuestions.includes(currentQuestion)}
             />
+
             <NavigationButtons
-              onClose={handleClose}
               currentQuestion={currentQuestion}
-              totalQuestions={sampleQuizData.length}
+              totalQuestions={quizList.length}
               onNext={handleNext}
               onBack={handleBack}
               onSkip={handleSkip}
@@ -445,7 +445,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
         </Grid>
         <Grid item xs={12} md={4}>
           <QuestionList
-            totalQuestions={sampleQuizData.length}
+            totalQuestions={quizList.length}
             currentQuestion={currentQuestion}
             answeredQuestions={answeredQuestions}
             skippedQuestions={skippedQuestions}
