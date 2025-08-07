@@ -63,12 +63,16 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
             }),
 
           slotType: Yup.string().required('Slot type is required'),
-
-          breakType: Yup.string().when('slotType', {
-            is: 'break',
-            then: (schema) => schema.required('Break type is required'),
-            otherwise: (schema) => schema.notRequired(),
-          }),
+          breakType: Yup.string().when('slotType', (slotType, schema) =>
+            typeof slotType === 'string' && slotType === 'break'
+              ? schema.required('Break type is required')
+              : schema.notRequired()
+          ),
+          // breakType: Yup.string().when('slotType', {
+          //   is: 'break',
+          //   then: (schema) => schema.required('Break type is required'),
+          //   otherwise: (schema) => schema.notRequired(),
+          // }),
         })
       )
       .min(1, 'Please create at least one time slot')
