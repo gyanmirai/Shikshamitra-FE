@@ -61,11 +61,12 @@ export const getValidationSchema = (showField: string[]) => {
       .required('Enrollment No is required');
   }
 
-  shape.enrollmentDate = Yup.date()
-    .nullable()
-    .required('Enrollment Date is required')
-    .typeError('Enrollment Date is invalid');
-
+  if (showField.includes('enrollmentDate')) {
+    shape.enrollmentDate = Yup.date()
+      .nullable()
+      .required('Enrollment Date is required')
+      .typeError('Enrollment Date is invalid');
+  }
   if (showField.includes('name')) {
     shape.name = Yup.string().required('Name is required');
   }
@@ -107,8 +108,8 @@ export const getValidationSchema = (showField: string[]) => {
       .required('Primary Contact No is required');
   }
 
-  if (showField.includes('secondryContactNo')) {
-    shape.secondryContactNo = Yup.number()
+  if (showField.includes('secondaryContactNo')) {
+    shape.secondaryContactNo = Yup.number()
       .typeError('Secondary Contact No must be a number')
       .required('Secondary Contact No is required');
   }

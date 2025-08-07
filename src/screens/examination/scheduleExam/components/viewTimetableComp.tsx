@@ -4,8 +4,6 @@ import utc from 'dayjs/plugin/utc';
 
 import { Box, Typography } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IExamFormValues } from '../type';
@@ -17,7 +15,6 @@ interface ViewTimetableCompProps {
 dayjs.extend(utc);
 
 const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
-  const publishExamDialog = useBoolean();
   if (!examData) return null;
 
   return (

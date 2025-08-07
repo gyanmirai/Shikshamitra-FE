@@ -4,6 +4,8 @@
     "examName": "Weekly Test - English & Math",
     "className": "5",
     "divisions": ["A", "B"],
+    "createdBy" : "Atre Prerna Bhanudas",
+    "selectedSubjects" : ["English", "Math"],
     "subjects": [
       {
         "id": 201,
@@ -41,6 +43,9 @@
   "examType": "Weekly Test",
   "examName": "Weekly Test - English & Math",
   "className": "5",
+  "createdBy" : "Atre Harshita Bhanudas",
+    "selectedSubjects" : ["English", "Math"],
+
   "divisions": ["A", "B"],
   "subjects": [
     {
@@ -81,6 +86,9 @@
     "examType": "Weekly Test",
     "examName": "Weekly Test - Art & Computer",
     "className": "4",
+          "createdBy" : "Badgujar Sweta Ramesh",
+    "selectedSubjects" : ["English", "Math"],
+
     "divisions": ["A"],
     "subjects": [
       {
@@ -118,6 +126,9 @@
   {
     "examType": "Unit Test",
     "examName": "Unit Test - Languages",
+              "createdBy" : "Ahir Dharmik ",
+    "selectedSubjects" : ["English", "Math"],
+
     "className": "6",
     "divisions": ["B"],
     "subjects": [
@@ -156,8 +167,11 @@
   {
     "examType": "Weekly Test",
     "examName": "Weekly Test - Sanskrit",
+    "createdBy" : "",
     "className": "5",
     "divisions": ["A", "B"],
+        "selectedSubjects" : ["English", "Math"],
+
     "subjects": [
       {
         "id": 207,
@@ -180,8 +194,11 @@
   {
     "examType": "Mid-term Exam",
     "examName": "Mid-term - Core Subjects",
+    "createdBy" : "Jinjala Jignesh",
     "className": "7",
     "divisions": ["A", "B"],
+        "selectedSubjects" : ["English", "Math"],
+
     "subjects": [
       {
         "id": 301,
@@ -246,8 +263,11 @@
   {
     "examType": "Annual Exam",
     "examName": "Annual Examination - Class 8",
+    "createdBy" : "Ghussar Parth",
     "className": "8",
     "divisions": ["A", "B", "C"],
+        "selectedSubjects" : ["English", "Math"],
+
     "subjects": [
       {
         "id": 401,

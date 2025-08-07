@@ -20,7 +20,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
-
 import type { IExamFormValues } from './type';
 
 const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {

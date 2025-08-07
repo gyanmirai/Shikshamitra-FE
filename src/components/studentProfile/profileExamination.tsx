@@ -14,7 +14,7 @@ import type { ChartOptions } from '../chart';
 
 const ProfileExamination = () => {
   // State to store all exam data, initialized with data from JSON
-  const [examData, setExamData] = useState<IExamFormValues[]>(examTableData);
+  const examData = examTableData as IExamFormValues[];
 
   return (
     <ScheduledExamTable

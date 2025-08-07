@@ -296,24 +296,12 @@ const TimeTableGrid = ({
     e.dataTransfer.setData('subject', JSON.stringify(subject));
   };
 
-  console.log('timetable---', timetable);
-
   // Function to open dialog and store initial state
   const handleOpenDialog = useCallback(() => {
     setInitialTimetableData(cloneDeep(timetable));
     setInitialSubjectsGroups(cloneDeep(subjectsGroups));
     setOpen(true);
   }, [timetable, subjectsGroups]);
-
-  const handleCloseDialog = (shouldRevert: boolean = false) => {
-    if (shouldRevert) {
-      // Revert to initial state
-      setTimetable(initialTimetableData);
-      setSubjectsGroups(initialSubjectsGroups);
-    }
-    setOpen(false);
-    setIsEdit(false);
-  };
 
   const handleDrop = (e: any, item: DayData, rowIndex: number, colIndex: number) => {
     const subjectData = e.dataTransfer.getData('subject');
@@ -420,8 +408,6 @@ const TimeTableGrid = ({
         setTimetable(cloneTimeTableData);
         setSubjectsGroups(cloneSubjectGroups);
       }
-
-      console.log('cloneTimeTableData---', cloneTimeTableData);
     }
   };
 
@@ -560,7 +546,7 @@ const TimeTableGrid = ({
           sx={{ px: 1, mb: 2 }}
           isBack
           onBack={() => {
-            handleCloseDialog(false);
+            // handleCloseDialog(false);
           }}
         />
       ) : (
@@ -590,7 +576,11 @@ const TimeTableGrid = ({
           </Box>
         }
         handleClose={() => {
-          handleCloseDialog(false);
+          // handleCloseDialog(false);
+          setTimetable(initialTimetableData);
+          setSubjectsGroups(initialSubjectsGroups);
+          setOpen(false);
+          setIsEdit(false);
         }}
         open={open}
         fullScreen
@@ -793,9 +783,7 @@ const TimeTableGrid = ({
             variant="contained"
             size="small"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              // handleDelete(selectedExam?.id);
-            }}
+            onClick={() => {}}
           >
             Publish
           </Button>
@@ -815,9 +803,7 @@ const TimeTableGrid = ({
             variant="contained"
             size="small"
             startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-            onClick={() => {
-              // handleDelete(selectedExam?.id);
-            }}
+            onClick={() => {}}
           >
             Draft
           </Button>
