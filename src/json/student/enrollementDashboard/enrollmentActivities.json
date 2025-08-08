@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Kanwar Rajan Rameshbhai",
+    "type": "Inquiry", 
+    "date": "08-06-2025",
+    "timeAgo": "1 hour ago"
+  },
+  {
+    "name": "Jinjala Dharmik Laljibhai",
+    "type": "Registration",
+    "date": "08-06-2025", 
+    "timeAgo": "2 hours ago"
+  },
+  {
+    "name": "Jinjala Jignesh Laljibhai",
+    "type": "Scheduled",
+    "date": "08-06-2025",
+    "timeAgo": "4 hours ago"
+  }
+]
