@@ -308,16 +308,15 @@ const NavigationButtons = ({
 
 // Main Quiz Portal Component
 const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () => void }) => {
-  const { data } = useQueryAndMutation({
+  const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetQuizListQuery,
   });
 
-  const quizList = Array.isArray(data) ? data : [];
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<number[]>([]);
-  type Answer = string | boolean;
+  type Answer = string | boolean | string[];
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [timeLeft, setTimeLeft] = useState(3600);
 
@@ -389,7 +388,9 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
     handleClose();
   };
 
-  return (
+  return isLoading ? (
+    'loading.. ...'
+  ) : (
     <>
       <Box
         sx={{
@@ -423,17 +424,17 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
           <Stack spacing={3}>
             <QuestionDisplay
               question={{
-                ...quizList[currentQuestion - 1],
+                ...data[currentQuestion - 1],
                 questionNumber: currentQuestion,
               }}
-              totalQuestions={quizList.length}
+              totalQuestions={data.length}
               onAnswer={handleAnswer}
               currentAnswer={answers[currentQuestion]}
             />
 
             <NavigationButtons
               currentQuestion={currentQuestion}
-              totalQuestions={quizList.length}
+              totalQuestions={data.length}
               onNext={handleNext}
               onBack={handleBack}
               onSkip={handleSkip}
@@ -445,7 +446,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
         </Grid>
         <Grid item xs={12} md={4}>
           <QuestionList
-            totalQuestions={quizList.length}
+            totalQuestions={data.length}
             currentQuestion={currentQuestion}
             answeredQuestions={answeredQuestions}
             skippedQuestions={skippedQuestions}
