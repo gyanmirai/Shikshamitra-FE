@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import React, { useMemo, useState, useEffect } from 'react';
 
@@ -42,12 +41,13 @@ import {
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const TakeAttendanceScreen = () => {
-  const [fillStudentAttendance] = useQueryAndMutation({
+  const [fillStudentAttendance, { isLoading: isSavedAttendanceLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useFillStudentAttendanceMutation,
   });
@@ -107,7 +107,9 @@ const TakeAttendanceScreen = () => {
           remarks: student.remarks,
         })),
       }).unwrap();
-      toast.success('Attendance saved successfully');
+      shikshaMitraToast.success({
+        message: `Attendance saved successfully of ${date?.format('DD-MM-YYYY')}`,
+      });
     } catch (error) {
       console.error('Error saving attendance:', error);
     }
@@ -305,6 +307,7 @@ const TakeAttendanceScreen = () => {
                 remarks: '',
               })) || []
             );
+            shikshaMitraToast.success({ message: 'Attendance Data Reset Successfully' });
           }}
           disabled={
             studentData.length === 0 || studentData.every((item: any) => item.isPresent === null)
@@ -339,24 +342,8 @@ const TakeAttendanceScreen = () => {
           disabled={
             studentData.length === 0 || studentData.every((item: any) => item.isPresent === null)
           }
-          // sx={{
-          //   backgroundColor: 'primary.main',
-          //   '&:hover': {
-          //     backgroundColor: 'primary.dark',
-          //     boxShadow: 2,
-          //   },
-          //   '&:disabled': {
-          //     backgroundColor: 'text.disabled',
-          //     color: 'text.secondary',
-          //   },
-          //   minWidth: '70px',
-          //   fontWeight: 600,
-          //   fontSize: '0.8rem',
-          //   py: 0.5,
-          //   boxShadow: 1,
-          // }}
         >
-          Save
+          {isSavedAttendanceLoading ? 'Loading...' : 'Save'}
         </Button>
       </Box>
 
@@ -758,14 +745,13 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                       )
                     );
                   }}
+                  label="Add remarks"
                   multiline
                   rows={2}
-                  placeholder="Add remarks..."
                   sx={{
                     width: '100%',
                     '& .MuiInputBase-input::placeholder': {
                       color: 'text.secondary',
-                      fontStyle: 'italic',
                       opacity: 0.7,
                     },
                   }}
