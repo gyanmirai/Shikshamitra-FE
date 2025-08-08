@@ -29,6 +29,7 @@ import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bon
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -192,8 +193,10 @@ const LeavingForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
       bookNumber: Yup.string().required('Book Number is required'),
     }),
     onSubmit: (val: any) => {
-      // submit form logic
-      // fresetForm();
+      shikshaMitraToast.success({
+        message: `Leaving certificate created for ${val.student?.length} students`,
+      });
+      onClose(null, true);
     },
   });
   const { division, organization, classes } = values;

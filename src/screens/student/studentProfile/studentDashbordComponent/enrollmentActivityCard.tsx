@@ -1,7 +1,9 @@
 import React from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Box, Card, Typography, IconButton } from '@mui/material';
+import { Box, Card, Stack, Typography, IconButton } from '@mui/material';
+
+import { Label } from 'src/components/label';
 
 interface EnrollmentActivityProps {
   name: string;
@@ -35,9 +37,17 @@ const EnrollmentActivityCard: React.FC<EnrollmentActivityProps> = ({
       <Typography variant="subtitle1" fontWeight="600">
         {name}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {type} · {date} · {timeAgo}
-      </Typography>
+      <Stack direction="row" alignItems="center">
+        {/* Show type as a soft green label */}
+        <Label variant="soft" color="success">
+          {type}
+        </Label>
+
+        {/* Show date and timeAgo next to the label */}
+        <Typography variant="body2" color="text.secondary">
+          · {date} · {timeAgo}
+        </Typography>
+      </Stack>
     </Box>
     <IconButton>
       <VisibilityIcon fontSize="small" />

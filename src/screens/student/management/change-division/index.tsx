@@ -36,12 +36,19 @@ const ChangeDivisionScreen = ({
   division: string;
 }) => {
   // State to manage table data
+  // State to store and manage the current table data that can be modified
   const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
+
+  // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
+  // State to keep track of the initial/original table data for comparison
+  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
+  // const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   // Update table data when studentData changes
   useEffect(() => {
     setTableData(studentData);
+    setInitialData(studentData);
   }, [studentData]);
 
   // Mutation hook for changing student division
@@ -50,21 +57,27 @@ const ChangeDivisionScreen = ({
     currentQueryAndMutation: useChangeDivisionMutation,
   });
 
+  // Select isChanges from confirmPopup state to track if there are unsaved changes
+  // This is used to enable/disable the save button
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
   // Handle save button click to update student divisions
   const handelSave = async () => {
     try {
       const updatedStudents = tableData.filter((student) => !!student.divisionId);
-      const res = await changeDivision({
+      const requestBody = await changeDivision({
         studentDivisionUpdates: updatedStudents.map((student) => ({
           studentId: student.id,
           divisionId: student.divisionId,
         })),
       }).unwrap();
       shikshaMitraToast.success({
-        message: `Division changed successfully of ${updatedStudents.length} students`,
+        message: `Division ${
+          selectedStudents.length === 1
+            ? `of student ${selectedStudents[0].name}`
+            : `of ${requestBody.studentDivisionUpdates.length} students`
+        } updated successfully`,
       });
+
       // Invalidate cache to refetch updated data
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (error) {
@@ -73,7 +86,8 @@ const ChangeDivisionScreen = ({
   };
 
   // State to track selected students for bulk actions
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  // Each student has an id and name property
+  const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   // Handler for sending notifications to selected students
@@ -104,43 +118,6 @@ const ChangeDivisionScreen = ({
           noDataText={<>No Student Data Found </>}
           isLoading={isLoading}
           columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'left',
-            //   minWidth: '60px',
-            //   sticky: true,
-            //   isSort: false,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(tableData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     return (
-            //       <Checkbox
-            //         checked={selectedStudents.some((i: any) => i.id === row.id)}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
             { id: 'grNoRecord', label: 'GR No.' },
             { id: 'name', label: 'Name' },
             {
@@ -157,6 +134,8 @@ const ChangeDivisionScreen = ({
                     onChange={(val) => {
                       const newData = tableData.map((item) => {
                         if (item.id === row.id) {
+                          setSelectedStudents([{ id: row.id, name: row.name }]);
+
                           return {
                             ...item,
                             divisionId: val as string,

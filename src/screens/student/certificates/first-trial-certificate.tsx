@@ -29,6 +29,7 @@ import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bon
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -137,14 +138,20 @@ const FirstTrialCertificate = () => {
 export default FirstTrialCertificate;
 
 const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
+  // State for storing organization data
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  // State for storing class data
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  // Get current board and medium from global state
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
+  // State for storing division data
   const [allDivision, setAllDivision] = useState<Division[]>([]);
+
+  // Initialize form with Formik
   const {
     initialValues,
     values,
@@ -155,11 +162,13 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
     touched,
     errors,
   } = useFormik({
+    // Set initial form values
     initialValues: {
       organization: medium?.educationMediumStages?.[0]?.id || '',
       classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '',
       division: medium?.educationMediumStages?.[0]?.standards?.[0]?.divisions?.[0]?.id || '',
       grNo: '',
+      student: [],
       firstTrialDate: null,
       examYear: null,
       examCenter: '',
@@ -168,37 +177,48 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
       remarks: '',
       lastExamName: '',
     },
+    // Form validation schema
     validationSchema: Yup.object().shape({
       organization: Yup.string().required('Organization is required'),
       classes: Yup.string().required('Class is required'),
       grNo: Yup.string().required('GR No is required'),
-      // firstTrialDate: Yup.date().required('First Trial Date is required').nullable(),
       examYear: Yup.mixed().nullable().required('Exam Year is required'),
       examCenter: Yup.string().required('Exam Center is required'),
       seatNumber: Yup.string()
         .required('Seat Number is required')
         .matches(/^[0-9]+$/, 'Must be only digits'),
-      trial: Yup.string().required('Trial is required'),
       remarks: Yup.string().required('Remarks are required'),
       lastExamName: Yup.string().required('Last Exam Name is required'),
       division: Yup.string().required('Division is required'),
+      student: Yup.array()
+        .nullable()
+        .min(1, 'At least one student must be selected')
+        .required('Student selection is required'),
     }),
     onSubmit: (val: any) => {
-      // submit form logic
-      // fresetForm();
+      shikshaMitraToast.success({
+        message: `First Trial certificate created for ${val.student?.length} students`,
+      });
+      onClose(null, true);
     },
   });
+  console.log('errors--', errors);
+
+  // Query hook for fetching student data
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+
+  // Destructure form values
   const { organization, classes, division } = values;
 
+  // Effect to update organizations when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
-    // setFieldValue('organization', medium?.educationMediumStages?.[0]?.id || '');
   }, [medium, setFieldValue]);
 
+  // Effect to fetch students when filters change
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
@@ -209,22 +229,17 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
     }
   }, [division, classes, organization, getStudents]);
 
+  // Effect to update classes when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    // setFieldValue(
-    //   'classes',
-    //   allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    // );
   }, [organization, allOrganization, setFieldValue]);
 
+  // Effect to update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    // setFieldValue(
-    //   'division',
-    //   allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || ''
-    // );
   }, [allClass, classes, setFieldValue]);
 
+  // Memoized table data transformation
   const tableData = useMemo(
     () =>
       StudentsData?.items?.map((item: any) => ({
@@ -233,7 +248,6 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
       })) || [],
     [StudentsData?.items]
   );
-  console.log('StudentsData---', StudentsData);
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
@@ -328,8 +342,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               <Autocomplete
                 loading={isLoading}
                 noOptionsText="No Student Found"
-                multiple
                 fullWidth
+                multiple
                 value={values.student}
                 onChange={(e, value: any) => {
                   setFieldValue('student', value);
@@ -402,7 +416,7 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
           <Grid xs={4}>
             <ShakingTextField error={!!(touched.examYear && errors.examYear)}>
               <DatePicker
-                label="Exam Year"
+                label="Exam Year *"
                 value={values.examYear}
                 format="YYYY"
                 views={['year']}

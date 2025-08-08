@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -31,6 +31,7 @@ import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bon
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -140,19 +141,21 @@ const BonofiedCertificate = () => {
 export default BonofiedCertificate;
 
 const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
+  // State to store list of organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  // State to store list of classes
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store list of divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // const [selectedOrganization, setSelectedOrganization] = useState<string>();
-  // const [selectedClass, setSelectedClass] = useState<string>();
-  // const [selectedDivision, setSelectedDivision] = useState<string>();
+
+  // Get current medium and board from global state
   const {
     currentBoard,
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
+  // Initialize form with Formik
   const {
     initialValues,
     setFieldTouched,
@@ -163,6 +166,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
     touched,
     errors,
   } = useFormik({
+    // Set initial form values
     initialValues: {
       organization: medium?.educationMediumStages?.[0]?.id || '',
       classes: medium?.educationMediumStages?.[0]?.standards?.[0]?.id || '',
@@ -184,38 +188,38 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
         .required('Student selection is required'),
     }),
     onSubmit: (val: any) => {
-      // submit form logic
-      // fresetForm();
+      shikshaMitraToast.success({
+        message: `Bonafide certificate created for ${val.student?.length} students`,
+      });
+      onClose(null, true);
     },
   });
-  const { organization, classes, division } = values;
 
+  // Destructure form values for organization, classes and division
+  // These are used to track selected values and trigger dependent dropdowns
+  const { organization, classes, division } = values;
+  // Update organizations list when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
-    // setSelectedOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium, setFieldValue]);
 
+  // Update classes list when organization changes
   useEffect(() => {
     setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    // setSelectedClass(
-    //   allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    // );
-    // setFieldValue(
-    //   'classes',
-    //   allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    // );
   }, [organization, allOrganization, setFieldValue]);
 
+  // Update divisions list when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    // setSelectedDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes, setFieldValue]);
 
+  // Initialize query hook for fetching students
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
+  // Fetch students when division, class and organization are all selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
@@ -226,6 +230,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
     }
   }, [division, classes, organization, getStudents]);
 
+  // Transform student data to include full name
   const tableData = useMemo(
     () =>
       StudentsData?.items?.map((item: any) => ({

@@ -31,9 +31,12 @@ const RollNoGenerationScreen = ({
 }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)
   const [arrangementType, setArrangementType] = useState('');
-
+  // State to store selected students for notifications and bulk actions
+  // Each student has an id and name property
+  const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   // State to toggle between automatic and manual roll number assignment
   const [isManual, setIsManual] = useState(false);
+  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
 
   // State for controlling the sorting criteria (e.g., by name, by GR number)
   const [arrangeBy, setArrangeBy] = useState('');
@@ -87,13 +90,14 @@ const RollNoGenerationScreen = ({
   useEffect(() => {
     if (studentData) {
       setTableData(studentData);
+      setInitialData(studentData);
     }
   }, [studentData]);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Handle roll number change for a specific student
-  const handleRollNoChange = (id: string, newValue: number | null) => {
+  const handleRollNoChange = (id: string, name: string, newValue: number | null) => {
     // Update the roll number for the specified student
     const updatedData = tableData.map((item) =>
       item.id === id ? { ...item, rollNo: newValue } : item
@@ -111,6 +115,8 @@ const RollNoGenerationScreen = ({
       [id]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
     }));
 
+    setSelectedStudents([{ id, name }]);
+
     // Update the table data with new roll numbers
     setTableData(updatedData);
   };
@@ -124,16 +130,16 @@ const RollNoGenerationScreen = ({
         rollNo: item.rollNo,
       })),
     };
-
-    console.log('Request body:', requestBody);
     try {
-      // Send API request to update roll numbers
-      const response = await updateStudentRollNumbers({ body: requestBody }).unwrap();
-
-      // Show success message and reset state
       shikshaMitraToast.success({
-        message: `Roll Numbers updated successfully of ${requestBody.studentNumbers.length} students`,
+        message: `Roll Number ${
+          selectedStudents.length === 1
+            ? `of student ${selectedStudents[0].name}`
+            : `of ${requestBody.studentNumbers.length} students`
+        } updated successfully`,
       });
+
+      setInitialData(tableData);
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (err) {
@@ -141,8 +147,6 @@ const RollNoGenerationScreen = ({
     }
   };
 
-  // State for managing selected students and notification dialog
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   // Handler for opening notification dialog
@@ -153,7 +157,7 @@ const RollNoGenerationScreen = ({
   };
   return (
     <Box>
-      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
           <Box display="flex" gap={2} ml={1}>
             <CustomSelect
@@ -240,7 +244,11 @@ const RollNoGenerationScreen = ({
                       value={row.rollNo}
                       inputProps={{ min: 0 }}
                       onChange={(e) =>
-                        handleRollNoChange(row.id, e.target.value ? +e.target.value : null)
+                        handleRollNoChange(
+                          row.id,
+                          row.name,
+                          e.target.value ? +e.target.value : null
+                        )
                       }
                       error={Boolean(error[row.id])}
                       helperText={error[row.id]}

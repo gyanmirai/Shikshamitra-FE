@@ -29,7 +29,6 @@ import {
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -497,7 +496,7 @@ const LeaveRequestForm = ({
             }
             return true;
           }),
-        description: Yup.string().required('Description is required'),
+        description: Yup.string().required('Leave Description is required'),
         status: Yup.string().nullable(),
         rejectionReason: Yup.string().test(
           'rejectionReason',
@@ -513,19 +512,23 @@ const LeaveRequestForm = ({
       }),
       onSubmit: async (val) => {
         try {
-          const res = await addLeaveRequest({
-            studentId: student?.id,
-            leaveTypeId: val.leaveType,
-            halfDay: val.isHalfDay,
-            startDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
-            ...(!val.isHalfDay
-              ? {
-                  endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
-                }
-              : {}),
-            description: val.description,
-            attachment: val.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          }).unwrap();
+          // this will after so, i'm commenting this code
+          // const res = await addLeaveRequest({
+          //   studentId: student?.id,
+          //   leaveTypeId: val.leaveType,
+          //   halfDay: val.isHalfDay,
+          //   startDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
+          //   ...(!val.isHalfDay
+          //     ? {
+          //         endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
+          //       }
+          //     : {}),
+          //   description: val.description,
+          //   attachment: val.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+          // }).unwrap();
+          shikshaMitraToast.success({
+            message: `Leave request added by ${student?.firstName} ${student?.lastName} for ${values.startDate?.format('')}`,
+          });
           handleClose(null, true);
         } catch (err) {
           console.log(err);

@@ -18,7 +18,7 @@ const RecentActivities = ({ activities }: any) => (
       </Button>
     </Box>
 
-    {activities.slice(0, 6).map((activity: any, index: any) => (
+    {activities.slice(0, 4).map((activity: any, index: any) => (
       <ActivityItem key={index} {...activity} />
     ))}
   </Card>

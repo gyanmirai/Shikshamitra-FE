@@ -1,8 +1,6 @@
 import type { CardProps } from '@mui/material';
 import type { IExamFormValues } from 'src/screens/examination/scheduleExam/type';
 
-import { useState } from 'react';
-
 import { Card, useTheme, CardHeader } from '@mui/material';
 
 import examTableData from 'src/json/examination/examTableData.json';
