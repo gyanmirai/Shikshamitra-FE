@@ -272,12 +272,19 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 } else if (!isAllSelected && wasAllPreviouslySelected) {
                   // Deselect all
                   updatedSelectedSubjects = [];
-                } else if (isAllSelected && selectedCodes.length !== subjectOptions.length + 1) {
-                  // Prevent partial select when "All" is selected manually but not everything else
-                  updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
+                } else if (isAllSelected && wasAllPreviouslySelected) {
+                  // Toggling individual items while "All" was already selected
+                  const selectedWithoutAll = selectedCodes.filter((code) => code !== 'all');
+                  if (selectedWithoutAll.length === subjectOptions.length) {
+                    // Still all subjects selected → keep "All"
+                    updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
+                  } else {
+                    // Not all selected → remove "All"
+                    updatedSelectedSubjects = selectedWithoutAll;
+                  }
                 } else {
-                  // Remove 'all' if other subjects are being toggled
-                  updatedSelectedSubjects = selectedCodes.filter((code) => code !== 'all');
+                  // Normal individual toggle
+                  updatedSelectedSubjects = selectedCodes;
                 }
 
                 formik.setFieldValue('selectedSubjects', updatedSelectedSubjects);
@@ -324,7 +331,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           },
                           {} as Record<string, IDivisionRoomDetail>
                         ),
-                      examDate: acc[subject.subjectName]?.examDate || null,
+                      examDate: formik.values.roomDetails?.[subject.subjectName]?.examDate || null,
                     };
 
                     return acc;

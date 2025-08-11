@@ -12,7 +12,7 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IExamFormValues } from '../type';
+import type { IExamFormValues, RoomAssignmentCardProps } from '../type';
 
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
@@ -50,7 +50,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 };
 export default RoomDetails;
 
-const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
+const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: RoomAssignmentCardProps) => {
   // Get current board, medium and medium setter from global state
   const {
     currentBoard,
@@ -91,7 +91,9 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
   ];
 
   return (
-    <SectionCard title={`${subjectName} • ${subjectData.examDate.format('DD-MM-YYYY')}`} key={key}>
+    <SectionCard
+      title={`${subjectName} • ${typeof subjectData?.examDate === 'string' ? subjectData.examDate : subjectData?.examDate?.format('DD-MM-YYYY')}`}
+    >
       <Grid item xs={12}>
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}

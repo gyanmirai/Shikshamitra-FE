@@ -43,14 +43,14 @@
   "examType": "Weekly Test",
   "examName": "Weekly Test - English & Math",
   "className": "5",
-  "createdBy" : "Atre Harshita Bhanudas",
-    "selectedSubjects" : ["English", "Math"],
+  "createdBy" : "Atre Bhavesh Bhanudas",
+  "selectedSubjects" : ["English", "Math", "Science", "Social Science", "Computer Science"],
 
   "divisions": ["A", "B"],
   "subjects": [
     {
       "id": 201,
-      "subjectName": "English",
+      "subjectName": "English", 
       "subjectCode": "ENG201",
       "examDate": "2025-06-10T00:00:00.000Z",
       "startTime": "08:30 AM",
@@ -65,7 +65,7 @@
     {
       "id": 202,
       "subjectName": "Math",
-      "subjectCode": "MTH202",
+      "subjectCode": "MTH202", 
       "examDate": "2025-06-10T00:00:00.000Z",
       "startTime": "10:00 AM",
       "endTime": "11:00 AM",
@@ -75,20 +75,61 @@
       "teacher": "Ms. Suman",
       "rubric": [],
       "subjectColor": "#7ED321"
+    },
+    {
+      "id": 203,
+      "subjectName": "Science",
+      "subjectCode": "SCI203",
+      "examDate": "2025-06-10T00:00:00.000Z", 
+      "startTime": "11:30 AM",
+      "endTime": "12:30 PM",
+      "totalMarks": "40",
+      "passingMarks": "16",
+      "invigilationTeacher": "Ms. Trisha",
+      "teacher": "Mr. Sameer",
+      "rubric": [],
+      "subjectColor": "#00BCD4"
+    },
+    {
+      "id": 204,
+      "subjectName": "Social Science",
+      "subjectCode": "SST204",
+      "examDate": "2025-06-10T00:00:00.000Z",
+      "startTime": "02:00 PM", 
+      "endTime": "03:00 PM",
+      "totalMarks": "40",
+      "passingMarks": "16",
+      "invigilationTeacher": "Ms. Rekha",
+      "teacher": "Mr. Kiran",
+      "rubric": [],
+      "subjectColor": "#29B6F6"
+    },
+    {
+      "id": 205,
+      "subjectName": "Computer Science",
+      "subjectCode": "CSC205",
+      "examDate": "2025-06-10T00:00:00.000Z",
+      "startTime": "03:30 PM",
+      "endTime": "04:30 PM", 
+      "totalMarks": "40",
+      "passingMarks": "16",
+      "invigilationTeacher": "Ms. Khan",
+      "teacher": "Mr. Agarwal",
+      "rubric": [],
+      "subjectColor": "#50E3C2"
     }
   ],
   "description": "Combined test for English and Math.",
   "status": 1,
-  "createdBy": "Prerna Atre",
+  "createdBy": "Atre Jagruti Nandkumar",
   "createdOn": "2025-06-01T08:00:00.000Z"
 },
   {
     "examType": "Weekly Test",
     "examName": "Weekly Test - Art & Computer",
     "className": "4",
-          "createdBy" : "Badgujar Sweta Ramesh",
-    "selectedSubjects" : ["English", "Math"],
-
+    "createdBy" : "Badgujar Sweta Ramesh",
+    "selectedSubjects" : ["Art", "Computer"],
     "divisions": ["A"],
     "subjects": [
       {
@@ -126,16 +167,15 @@
   {
     "examType": "Unit Test",
     "examName": "Unit Test - Languages",
-              "createdBy" : "Ahir Dharmik ",
-    "selectedSubjects" : ["English", "Math"],
-
+    "createdBy" : "Ahir Dharmik ",
+    "selectedSubjects" : ["Sanskrit", "French"],
     "className": "6",
     "divisions": ["B"],
     "subjects": [
       {
         "id": 205,
-        "subjectName": "Gujarati",
-        "subjectCode": "GUJ205",
+        "subjectName": "Sanskrit",
+        "subjectCode": "SKT205",
         "examDate": "2025-06-18T00:00:00.000Z",
         "startTime": "08:00 AM",
         "endTime": "09:00 AM",
@@ -148,8 +188,8 @@
       },
       {
         "id": 206,
-        "subjectName": "Hindi",
-        "subjectCode": "HIN206",
+        "subjectName": "French",
+        "subjectCode": "FRN206",
         "examDate": "2025-06-18T00:00:00.000Z",
         "startTime": "10:30 AM",
         "endTime": "11:30 AM",
@@ -170,8 +210,7 @@
     "createdBy" : "",
     "className": "5",
     "divisions": ["A", "B"],
-        "selectedSubjects" : ["English", "Math"],
-
+    "selectedSubjects" : ["Sanskrit", "Hindi", "Marathi"],
     "subjects": [
       {
         "id": 207,
@@ -186,6 +225,34 @@
         "teacher": "Mr. Desai",
         "rubric": [],
         "subjectColor": "#FF8C00"
+      },
+      {
+        "id": 208,
+        "subjectName": "Hindi",
+        "subjectCode": "HIN208",
+        "examDate": "2025-06-20T00:00:00.000Z",
+        "startTime": "11:00 AM",
+        "endTime": "12:00 PM",
+        "totalMarks": "30",
+        "passingMarks": "12",
+        "invigilationTeacher": "Mr. Kumar",
+        "teacher": "Ms. Sharma",
+        "rubric": [],
+        "subjectColor": "#E91E63"
+      },
+      {
+        "id": 209,
+        "subjectName": "Marathi",
+        "subjectCode": "MAR209",
+        "examDate": "2025-06-20T00:00:00.000Z",
+        "startTime": "02:00 PM",
+        "endTime": "03:00 PM",
+        "totalMarks": "30",
+        "passingMarks": "12",
+        "invigilationTeacher": "Ms. Patil",
+        "teacher": "Mr. Kulkarni",
+        "rubric": [],
+        "subjectColor": "#9C27B0"
       }
     ],
     "description": "Sanskrit assessment for Class 5.",
@@ -197,7 +264,7 @@
     "createdBy" : "Jinjala Jignesh",
     "className": "7",
     "divisions": ["A", "B"],
-        "selectedSubjects" : ["English", "Math"],
+        "selectedSubjects" : ["English", "Math", "Hindi", "Marathi"],
 
     "subjects": [
       {
@@ -229,32 +296,32 @@
         "subjectColor": "#7ED321"
       },
       {
-        "id": 303,
-        "subjectName": "Science",
-        "subjectCode": "SCI303",
+        "id": 305,
+        "subjectName": "Hindi",
+        "subjectCode": "HIN305",
         "examDate": "2025-06-26T00:00:00.000Z",
         "startTime": "11:30 AM",
         "endTime": "12:30 PM",
         "totalMarks": "60",
         "passingMarks": "24",
-        "invigilationTeacher": "Ms. Trisha",
-        "teacher": "Mr. Sameer",
+        "invigilationTeacher": "Mr. Kumar",
+        "teacher": "Ms. Sharma",
         "rubric": [],
-        "subjectColor": "#00BCD4"
+        "subjectColor": "#E91E63"
       },
       {
-        "id": 304,
-        "subjectName": "Social Science",
-        "subjectCode": "SST304",
+        "id": 306,
+        "subjectName": "Marathi",
+        "subjectCode": "MAR306", 
         "examDate": "2025-06-26T00:00:00.000Z",
         "startTime": "02:00 PM",
         "endTime": "03:00 PM",
         "totalMarks": "60",
         "passingMarks": "24",
-        "invigilationTeacher": "Ms. Rekha",
-        "teacher": "Mr. Kiran",
+        "invigilationTeacher": "Ms. Patil",
+        "teacher": "Mr. Kulkarni",
         "rubric": [],
-        "subjectColor": "#29B6F6"
+        "subjectColor": "#9C27B0"
       }
     ],
     "description": "Mid-term examination for Class 7.",
@@ -266,78 +333,49 @@
     "createdBy" : "Ghussar Parth",
     "className": "8",
     "divisions": ["A", "B", "C"],
-        "selectedSubjects" : ["English", "Math"],
-
+    "selectedSubjects" : ["Hindi", "Marathi", "Sanskrit"],
     "subjects": [
       {
-        "id": 401,
-        "subjectName": "English",
-        "subjectCode": "ENG401",
+        "id": 501,
+        "subjectName": "Hindi",
+        "subjectCode": "HIN501",
         "examDate": "2025-07-02T00:00:00.000Z",
         "startTime": "09:00 AM",
-        "endTime": "10:00 AM",
+        "endTime": "10:30 AM",
         "totalMarks": "80",
         "passingMarks": "32",
-        "invigilationTeacher": "Ms. D'Souza",
-        "teacher": "Mr. John",
+        "invigilationTeacher": "Mr. Kumar",
+        "teacher": "Ms. Sharma",
         "rubric": [],
-        "subjectColor": "#4A90E2"
+        "subjectColor": "#E91E63"
       },
       {
-        "id": 402,
-        "subjectName": "Mathematics",
-        "subjectCode": "MTH402",
+        "id": 502,
+        "subjectName": "Marathi",
+        "subjectCode": "MAR502",
         "examDate": "2025-07-03T00:00:00.000Z",
-        "startTime": "10:30 AM",
-        "endTime": "11:30 AM",
+        "startTime": "11:00 AM",
+        "endTime": "12:30 PM",
         "totalMarks": "80",
         "passingMarks": "32",
-        "invigilationTeacher": "Mr. Raj",
-        "teacher": "Ms. Suman",
+        "invigilationTeacher": "Ms. Patil",
+        "teacher": "Mr. Kulkarni",
         "rubric": [],
-        "subjectColor": "#7ED321"
+        "subjectColor": "#9C27B0"
       },
       {
-        "id": 403,
-        "subjectName": "Science",
-        "subjectCode": "SCI403",
+        "id": 503,
+        "subjectName": "Sanskrit",
+        "subjectCode": "SKT503",
         "examDate": "2025-07-04T00:00:00.000Z",
-        "startTime": "01:00 PM",
-        "endTime": "02:00 PM",
-        "totalMarks": "80",
-        "passingMarks": "32",
-        "invigilationTeacher": "Ms. Trisha",
-        "teacher": "Mr. Sameer",
-        "rubric": [],
-        "subjectColor": "#00BCD4"
-      },
-      {
-        "id": 404,
-        "subjectName": "Social Science",
-        "subjectCode": "SST404",
-        "examDate": "2025-07-05T00:00:00.000Z",
-        "startTime": "02:30 PM",
+        "startTime": "02:00 PM",
         "endTime": "03:30 PM",
         "totalMarks": "80",
         "passingMarks": "32",
-        "invigilationTeacher": "Ms. Rekha",
-        "teacher": "Mr. Kiran",
+        "invigilationTeacher": "Ms. Patel",
+        "teacher": "Mr. Joshi",
         "rubric": [],
-        "subjectColor": "#29B6F6"
-      },
-      {
-        "id": 405,
-        "subjectName": "Computer Science",
-        "subjectCode": "CSC405",
-        "examDate": "2025-07-06T00:00:00.000Z",
-        "startTime": "11:00 AM",
-        "endTime": "12:00 PM",
-        "totalMarks": "80",
-        "passingMarks": "32",
-        "invigilationTeacher": "Ms. Khan",
-        "teacher": "Mr. Agarwal",
-        "rubric": [],
-        "subjectColor": "#50E3C2"
+        "subjectColor": "#BD10E0"
       }
     ],
     "description": "Annual examination for Class 8 all divisions.",

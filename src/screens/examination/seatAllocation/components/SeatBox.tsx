@@ -19,7 +19,7 @@ const SeatBox = ({
   seat: ISeat;
   onStudentDrop: (student: IStudentRoomAssignment, seatNumber: number) => void;
   onStudentRemove: (studentId: number | null) => void;
-  onSeatSwap: (fromSeatNumber: number, toSeatNumber: number) => void;
+  onSeatSwap?: (fromSeatNumber: number, toSeatNumber: number) => void;
 }) => {
   const [isDragOver, setIsDragOver] = React.useState(false);
   const removeStudentDialog = useBoolean();

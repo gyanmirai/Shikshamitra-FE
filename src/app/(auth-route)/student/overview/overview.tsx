@@ -14,7 +14,7 @@ const OverviewCard = () => {
       id: '0',
       icon: 'mdi:users', // Total Students
       title: 'Total Students',
-      count: fNumber(1000),
+      count: fNumber(10000),
       color: 'success.main',
       bgColor: 'success',
       href: '/student/profile',

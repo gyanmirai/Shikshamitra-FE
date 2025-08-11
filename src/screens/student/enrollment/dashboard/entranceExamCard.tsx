@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
-import entraceExamsData from 'src/json/student/enrollementDashboard/entranceExamData.json';
+import entranceExamsData from 'src/json/student/enrollementDashboard/entranceExamData.json';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -20,9 +20,9 @@ const UpcomingEntranceExams = () => (
     </Box>
 
     <Stack spacing={2}>
-      {entraceExamsData?.map((exam, idx) => (
+      {entranceExamsData?.map((exam, idx) => (
         <Card
-          key={idx}
+          key={idx || `${exam.date}-${exam.time}-${idx}`}
           variant="outlined"
           sx={{
             p: 2,

@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { FormikProps } from 'formik';
 
 export interface IScheduledExam {
   id: string;
@@ -71,4 +72,11 @@ export interface IScheduledExamTableProps {
 export interface INewExamFormProps {
   onClose: () => void;
   editData?: IScheduledExam | null;
+}
+
+export interface RoomAssignmentCardProps {
+  key: string;
+  subjectName: string;
+  subjectData: ISubjectRoomDetail;
+  formik: FormikProps<IExamFormValues>;
 }

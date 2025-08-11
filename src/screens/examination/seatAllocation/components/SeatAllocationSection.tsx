@@ -53,7 +53,7 @@ const SeatAllocationSection = ({
       class: division || 'I',
       rollNo: Number(student.rollNo),
       studentId: student.id,
-      isRoomAssign: false,
+      isRoomAssign: true,
     };
 
     setAssignedData((prev) => [...prev, newAssignment]);
@@ -62,7 +62,12 @@ const SeatAllocationSection = ({
     setStudents((prev) =>
       prev.map((s) =>
         s.id === student.id
-          ? { ...s, isRoomAssign: true, bench: Math.ceil(seatNumber / 2).toString() }
+          ? {
+              ...s,
+              isRoomAssign: true,
+              bench: Math.ceil(seatNumber / 2).toString(),
+              room: classRoom,
+            }
           : s
       )
     );

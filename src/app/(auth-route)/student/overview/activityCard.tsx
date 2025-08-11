@@ -35,11 +35,10 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, subtitle, timeAgo, d
 
         {/* Tag Chip */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          {tag && (
-            <Label variant="soft" color="success">
-              {tag}
-            </Label>
-          )}
+          <Label variant="soft" color="success">
+            {tag}
+          </Label>
+
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {subtitle}
           </Typography>

@@ -1,0 +1,52 @@
+[
+  {
+    "examName": "Mid Term Exam",
+    "examType": "Mid",
+    "className": 1,
+    "divisions": ["A", "B"],
+    "totalStudents": 500,
+    "allocatedStudents": 300,
+    "pendingStudents": 200,
+    "status": "pending"
+  },
+  {
+    "examName": "Final Exam",
+    "examType": "Final",
+    "className": 3,
+    "divisions": ["A", "B", "C"],
+    "totalStudents": 500,
+    "allocatedStudents": 250,
+    "pendingStudents": 250,
+    "status": "pending"
+  },
+  {
+    "examName": "Final Exam",
+    "examType": "Final",
+    "className": 7,
+    "divisions": ["C", "D"],
+    "totalStudents": 500,
+    "allocatedStudents": 350,
+    "pendingStudents": 150,
+    "status": "update"
+  },
+  {
+    "examName": "Mid Term Exam",
+    "examType": "Mid",
+    "className": 10,
+    "divisions": ["A", "C"],
+    "totalStudents": 500,
+    "allocatedStudents": 400,
+    "pendingStudents": 100,
+    "status": "update"
+  },
+  {
+    "examName": "Mid Term Exam",
+    "examType": "Mid",
+    "className": 12,
+    "divisions": ["A", "D"],
+    "totalStudents": 500,
+    "allocatedStudents": 500,
+    "pendingStudents": 0,
+    "status": "allocated"
+  }
+]

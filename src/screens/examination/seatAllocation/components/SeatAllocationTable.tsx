@@ -12,71 +12,17 @@ import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IExamAllocation } from '../type';
+import seatAllocationTableData from '../../../../json/examination/seatAllocationTableData.json';
 
-const tableData = [
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 1,
-    divisions: ['A', 'B'],
-    totalStudents: 500,
-    allocatedStudents: 300,
-    pendingStudents: 200,
-    status: 'pending',
-  },
-  {
-    examName: 'Final Exam',
-    examType: 'Final',
-    className: 3,
-    divisions: ['A', 'B', 'C'],
-    totalStudents: 500,
-    allocatedStudents: 250,
-    pendingStudents: 250,
-    status: 'pending',
-  },
-  {
-    examName: 'Final Exam',
-    examType: 'Final',
-    className: 7,
-    divisions: ['C', 'D'],
-    totalStudents: 500,
-    allocatedStudents: 350,
-    pendingStudents: 150,
-    status: 'update',
-  },
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 10,
-    divisions: ['A', 'C'],
-    totalStudents: 500,
-    allocatedStudents: 400,
-    pendingStudents: 100,
-    status: 'update',
-  },
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 12,
-    divisions: ['A', 'D'],
-    totalStudents: 500,
-    allocatedStudents: 500,
-    pendingStudents: 0,
-    status: 'allocated',
-  },
-];
+import type { IExamAllocation } from '../type';
 
 interface SeatAllocationTableProps {
   openSeatAllocation: UseBooleanReturn;
   examData?: IExamAllocation[];
 }
 
-const SeatAllocationTable = ({
-  openSeatAllocation,
-  examData = tableData,
-}: SeatAllocationTableProps) => {
-  const [data, setData] = useState(examData);
+const SeatAllocationTable = ({ openSeatAllocation, examData }: SeatAllocationTableProps) => {
+  const [data, setData] = useState(seatAllocationTableData);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -147,11 +93,6 @@ const SeatAllocationTable = ({
               <ThreeDotsActions
                 actions={(prop) => actions({ ...prop, row })}
                 placement="right-top"
-                // showViewIcon
-
-                // handleViewClick={() => {
-                //   onViewTimetable(row as IExamFormValues);
-                // }}
               />
             );
           },
