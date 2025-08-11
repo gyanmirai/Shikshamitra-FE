@@ -31,7 +31,7 @@ const OverviewCard = () => {
       count: fNumber(1000),
       color: 'info.main',
       bgColor: 'info',
-      href: '/student/primary',
+      href: '', // will add later
       width: 4,
       labels: [
         { name: `Male - ${fNumber(600)}`, color: 'success' },
@@ -45,7 +45,7 @@ const OverviewCard = () => {
       count: fNumber(247),
       color: 'warning.main',
       bgColor: 'warning',
-      href: '/student/secondary',
+      href: '', // will add later
       width: 4,
       labels: [
         { name: `Male - ${fNumber(120)}`, color: 'success' },

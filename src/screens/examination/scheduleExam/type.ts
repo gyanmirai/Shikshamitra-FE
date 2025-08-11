@@ -23,8 +23,8 @@ export interface IExamTime {
   examDate: string | Dayjs | null;
   startTime: string | Dayjs | null;
   endTime: string | Dayjs | null;
-  totalMarks: string;
-  passingMarks: string;
+  totalMarks: string | null;
+  passingMarks: string | null;
   notes?: string;
 }
 // Represents room data for a single division
@@ -75,7 +75,6 @@ export interface INewExamFormProps {
 }
 
 export interface RoomAssignmentCardProps {
-  key: string;
   subjectName: string;
   subjectData: ISubjectRoomDetail;
   formik: FormikProps<IExamFormValues>;

@@ -50,7 +50,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 };
 export default RoomDetails;
 
-const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: RoomAssignmentCardProps) => {
+const RoomAssignmentCard = ({ subjectName, subjectData, formik }: RoomAssignmentCardProps) => {
   // Get current board, medium and medium setter from global state
   const {
     currentBoard,
