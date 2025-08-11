@@ -40,9 +40,13 @@ export interface ISubjectRoomDetail {
   examDate: string | Dayjs | null; // Exam date for the subject
 }
 
-// Represents the whole structure: key is subjectName (e.g. "Science", "Maths")
-export type IRoomDetails = Record<string, ISubjectRoomDetail>;
+export interface ISubjectRoomDetail {
+  subjectName: string;
+  subjectCode: string;   // now required
+  room?: string;
+}
 
+export type IRoomDetails = Record<ISubjectRoomDetail['subjectCode'], ISubjectRoomDetail>;
 export interface IExamFormValues {
   id?: string;
   selectedSubjects: string[];
