@@ -137,7 +137,8 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: RoomAssig
                       );
                     }}
                     formControlProps={{
-                      sx: { minWidth: '400px', fullWidth: '100%' },
+                      fullWidth: true,
+                      sx: { minWidth: '400px' },
                     }}
                   />
                 );
