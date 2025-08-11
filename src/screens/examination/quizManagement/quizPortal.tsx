@@ -313,6 +313,8 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
     currentQueryAndMutation: useGetQuizListQuery,
   });
 
+  const quizList = data;
+
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<number[]>([]);
@@ -350,7 +352,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
   };
 
   const handleNext = () => {
-    if (currentQuestion < data.length) {
+    if (currentQuestion < quizList.length) {
       // If moving to next without answering, consider it skipped
       if (
         !answeredQuestions.includes(currentQuestion) &&
@@ -424,17 +426,17 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
           <Stack spacing={3}>
             <QuestionDisplay
               question={{
-                ...data[currentQuestion - 1],
+                ...quizList[currentQuestion - 1],
                 questionNumber: currentQuestion,
               }}
-              totalQuestions={data.length}
+              totalQuestions={quizList.length}
               onAnswer={handleAnswer}
               currentAnswer={answers[currentQuestion]}
             />
 
             <NavigationButtons
               currentQuestion={currentQuestion}
-              totalQuestions={data.length}
+              totalQuestions={quizList.length}
               onNext={handleNext}
               onBack={handleBack}
               onSkip={handleSkip}
@@ -446,7 +448,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
         </Grid>
         <Grid item xs={12} md={4}>
           <QuestionList
-            totalQuestions={data.length}
+            totalQuestions={quizList.length}
             currentQuestion={currentQuestion}
             answeredQuestions={answeredQuestions}
             skippedQuestions={skippedQuestions}
