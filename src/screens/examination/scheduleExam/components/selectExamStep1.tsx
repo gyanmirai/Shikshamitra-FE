@@ -317,21 +317,20 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     const subject = subjectOptions.find((s) => s.subjectCode === subjectCode);
                     if (!subject) return acc;
 
+                    const prev = formik.values.roomDetails?.[subject.subjectName];
                     acc[subject.subjectName] = {
-                      copyPastSubject: '',
+                      copyPastSubject: prev?.copyPastSubject ?? '',
                       divisions: (formik.values.divisions || [])
                         .filter((code) => code !== 'all')
                         .reduce(
                           (divAcc, divisionId) => {
-                            divAcc[divisionId] = {
-                              roomIds: [],
-                              capacity: 0,
-                            };
+                            const prevDiv = prev?.divisions?.[divisionId];
+                            divAcc[divisionId] = prevDiv ?? { roomIds: [], capacity: 0 };
                             return divAcc;
                           },
                           {} as Record<string, IDivisionRoomDetail>
                         ),
-                      examDate: formik.values.roomDetails?.[subject.subjectName]?.examDate || null,
+                      examDate: prev?.examDate ?? null,
                     };
 
                     return acc;
