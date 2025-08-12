@@ -61,19 +61,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         .max(Yup.ref('totalMarks'), 'Marks cannot exceed Total Marks'),
     }),
     onSubmit(values) {
-      shikshaMitraToast.success({
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
       shikshaMitraToast.success({
         message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'}.`,
       });
-      });
       onClose(null, true);
     },
   });
-
-  const handleDownload = (doc: IDocument) => {
-    // window.open(doc.url, '_blank');
-  };
 
   return (
     <Box>
