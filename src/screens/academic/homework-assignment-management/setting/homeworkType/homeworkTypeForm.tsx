@@ -25,7 +25,6 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
       homeworkTypeName: Yup.string().required('Name is required'),
     }),
     onSubmit: (values) => {
-      console.log(values);
       shikshaMitraToast.success({
         message: `${values.homeworkTypeName} Homework Type ${editData ? 'updated' : 'added'} successfully`,
       });

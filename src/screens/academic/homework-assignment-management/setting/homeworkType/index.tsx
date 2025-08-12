@@ -150,7 +150,7 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
             onClick={() => {
               deleteDialog.onFalse();
               shikshaMitraToast.success({
-                message: ` ${selectedData?.homeworkTypeName} Homeowork Type deleted successfullly`,
+                message: `${selectedData?.homeworkTypeName} Homework Type has been successfully deleted.`,
               });
               setSelectedData(null);
             }}

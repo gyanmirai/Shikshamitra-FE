@@ -57,7 +57,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
       deleteConfirmDialog.onFalse();
       setSelectedGrade(null);
       shikshaMitraToast.success({
-        message: `${selectedGrade.name} Grade Scale deleted successfully`,
+        message: `${gradeData.name} Grade Scale deleted successfully`,
       });
     }
   };
