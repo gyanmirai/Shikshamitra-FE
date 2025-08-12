@@ -54,15 +54,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
+  // Get current academic year from global state for date validation and filtering
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
-  // Configuration for file upload component
-  const uploadProps = {
-    multiple: true,
-    accept: { 'image/*': [] },
-  };
+
   // Get current board, medium and medium setter from global state
   const {
     currentBoard,
@@ -96,7 +92,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: (values) => {
       onClose(null, true);
-      shikshaMitraToast.success({ message: `Homework Added successfully for ${values.subject}!` });
+      const divisionNames = values.divisions.map((d) => d.divisionId).join(', ');
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Homework successfully updated for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Homework successfully added for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
+        });
+      }
     },
   });
 

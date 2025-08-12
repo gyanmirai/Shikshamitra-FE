@@ -27,8 +27,9 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     onSubmit: (values) => {
       console.log(values);
       shikshaMitraToast.success({
-        message: `Homework Type ${editData ? 'updated' : 'added'} successfully`,
+        message: `${values.homeworkTypeName} Homework Type ${editData ? 'updated' : 'added'} successfully`,
       });
+      onClose(null, true);
     },
   });
 
@@ -68,7 +69,9 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
         {' '}
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
+          onClick={() => {
+            onClose(null, false);
+          }}
           variant="outlined"
           size="small"
         >

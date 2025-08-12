@@ -69,7 +69,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      shikshaMitraToast.success({ message: `Lecture slots created for ${values.className}` });
+      if (isEdit) {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully updated for ${values.className}.`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Lecture slots have been successfully created for ${values.className}.`,
+        });
+      }
       handleClose?.(null, true);
     },
   });

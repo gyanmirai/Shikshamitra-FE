@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -39,7 +40,12 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     validationSchema: Yup.object({
       marks: Yup.string().required('Marks is required'),
     }),
-    onSubmit(values) {},
+    onSubmit(values) {
+      shikshaMitraToast.success({
+        message: `Feedback and marks have been ${data?.feedback ? 'updated' : 'added'} successfully for ${data?.studentName}.`,
+      });
+      onClose(null, true);
+    },
   });
 
   return (

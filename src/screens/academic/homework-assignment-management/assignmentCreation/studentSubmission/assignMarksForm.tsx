@@ -62,9 +62,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     }),
     onSubmit(values) {
       shikshaMitraToast.success({
-        message: `Feedback & Marks
- ${data?.feedback ? 'updated' : 'added'} successfully`,
+        message: `Feedback and marks have been ${data?.feedback ? 'updated' : 'added'} successfully for ${data?.studentName}.`,
       });
+      onClose(null, true);
     },
   });
 

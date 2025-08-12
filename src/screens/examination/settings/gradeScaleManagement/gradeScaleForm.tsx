@@ -26,9 +26,9 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
     validationSchema,
     onSubmit: (values) => {
       if (data) {
-        shikshaMitraToast.success({ message: 'Grade scale updated successfully' });
+        shikshaMitraToast.success({ message: `${values.name} Grade scale updated successfully` });
       } else {
-        shikshaMitraToast.success({ message: 'Grade scale created successfully' });
+        shikshaMitraToast.success({ message: `${values.name} Grade scale created successfully` });
       }
       onClose(null, true);
     },
