@@ -4,14 +4,15 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 import quizData from 'src/json/academic/examination/quizPortalData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
+const jsonUrl = 'http://localhost:3001';
 
 export const quizManagementApi = createApi({
   reducerPath: 'quizManagementApi',
   baseQuery: isDev
     ? axiosBaseQuery({
-        baseUrl: 'http://localhost:3001',
+        baseUrl: jsonUrl,
       })
-    : async ({ url }) => {
+    : async ({ url }: { url: string }) => {
         if (url === '/questions') {
           return { data: quizData.questions };
         }
