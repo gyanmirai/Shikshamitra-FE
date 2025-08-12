@@ -4,8 +4,9 @@ export const axiosBaseQuery =
   ({ baseUrl }: any) =>
   async ({ url, method = 'get', data, params, headers, ...props }: any) => {
     try {
-      const result = await createAxiosInstance(process.env.NEXT_PUBLIC_API_URL as string)({
-        url: baseUrl + url,
+      const axios = createAxiosInstance(baseUrl);
+      const result = await axios({
+        url,
         method,
         data,
         params,
@@ -16,7 +17,6 @@ export const axiosBaseQuery =
       return { data: result.data };
     } catch (axiosError) {
       const err = axiosError as any;
-      console.log(err, '=====error========');
       return {
         error: {
           status: err.response?.status,
