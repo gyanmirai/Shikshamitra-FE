@@ -577,7 +577,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                   {/* Map and render all subject cards */}
                   {formik.values.subjects.map((subject, index) => (
                     <SubjectCard
-                      key={subject.id || index}
+                      key={subject.id}
                       index={index}
                       formik={formik}
                       subject={subject}
