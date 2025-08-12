@@ -8,17 +8,17 @@ const isDev = process.env.NODE_ENV === 'development';
 export const quizManagementApi = createApi({
   reducerPath: 'quizManagementApi',
   baseQuery: isDev
-    ? async ({ url }: { url: string }) => {
+    ? axiosBaseQuery({
+        baseUrl: 'http://localhost:3001',
+      })
+    : async ({ url }) => {
         if (url === '/questions') {
           return { data: quizData.questions };
         }
         return {
           error: { status: 404, data: 'No data found for this route' },
         };
-      }
-    : axiosBaseQuery({
-        baseUrl: 'http://localhost:3001',
-      }),
+      },
   tagTypes: ['Quiz'],
   endpoints: (builder) => ({
     getQuizList: builder.query<any[], void>({
