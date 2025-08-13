@@ -123,7 +123,7 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
       >
         <HomeworkTypeForm
           open={addHomeworkTypeDialog}
-          onClose={() => handleClose(null, false)}
+          onClose={handleClose}
           editData={selectedData}
         />
       </CustomDialog>
@@ -150,9 +150,8 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
             onClick={() => {
               deleteDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Homeowork Type : ${selectedData?.homeworkTypeName} deleted successfullly`,
+                message: `${selectedData?.homeworkTypeName} Homework Type has been successfully deleted.`,
               });
-
               setSelectedData(null);
             }}
           >

@@ -158,7 +158,8 @@ const Subjects = (props: TabComponentType) => {
       shikshaMitraToast.success({
         message: (
           <>
-            Chapter: <strong>{selectedChapter?.chapterName}</strong> deleted successfully
+            Chapter : <strong>{selectedChapter?.chapterName}</strong> deleted successfully from{' '}
+            {subject} for Class {classes}.
           </>
         ),
       });

@@ -27,8 +27,7 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
   // const dialog = useBoolean();
   // State for storing and managing the exam type table data.
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
-  // Dialog state for confirming the publish/unpublish status change.
-  const confirmPublishDialog = useBoolean();
+
   // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
   // Redux state indicating if there are unsaved changes.
@@ -38,49 +37,18 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
   // State for tracking whether the form is in edit mode.
   const [isEdit, setIsEdit] = useState(false);
   // State for storing the currently selected exam type for editing or other actions.
-  const [selectedExamType, setSelectedExamType] = useState<any | null>(null);
-  // State for storing the pending status change of an exam type before confirmation.
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
-    newValue: string;
-  } | null>(null);
-
-  // Function to handle changes in the status of an exam type.
-  const handleStatusChange = (id: number, value: string) => {
-    // Set the pending status change for confirmation.
-    setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
-    // Open the confirmation dialog for publishing/unpublishing.
-    confirmPublishDialog.onTrue();
-  };
-
-  // Function to confirm the status change of an exam type.
-  const confirmStatusChange = () => {
-    if (pendingStatusChange) {
-      const { id, newValue } = pendingStatusChange;
-      // Update the exam type table with the new status.
-      setExamTypeTable((prevSubject) =>
-        prevSubject.map((examType) =>
-          examType.id === id ? { ...examType, status: newValue } : examType
-        )
-      );
-    }
-    // Close the confirmation dialog.
-    confirmPublishDialog.onFalse();
-    // Reset the pending status change.
-    setPendingStatusChange(null);
-  };
+  const [selectedExamType, setSelectedExamType] = useState<IExamType | null>(null);
 
   // Function to handle the deletion of an exam type.
-  const handleDelete = (comingExamType: any) => {
+  const handleDelete = (comingExamType: IExamType | null) => {
     // Filter out the deleted exam type from the table data.
     setExamTypeTable((prevData) =>
-      prevData.filter((examType) => examType.id !== comingExamType.id)
+      prevData.filter((examType) => examType.id !== comingExamType?.id)
     );
     confirmDeleteDialog.onFalse();
     shikshaMitraToast.success({
-      message: `Exam Type deleted successfully`,
+      message: `${comingExamType?.examType} Exam Type deleted successfully`,
     });
-    // Close the dialogs after deletion.
   };
 
   // Function to handle form submission for creating or editing an exam type.
@@ -123,21 +91,6 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
 
   return (
     <Box>
-      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          size="small"
-          onClick={() => {
-            addExamTypeDialog.onTrue();
-          }}
-          sx={{
-            width: '150px',
-          }}
-        >
-          Exam Type
-        </Button>
-      </Box> */}
       <CustomizableTable
         tableId="examTypeTable"
         noDataText={
@@ -182,11 +135,11 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
                   showDeleteIcon
                   handleDeleteClick={() => {
                     confirmDeleteDialog.onTrue();
-                    setSelectedExamType(row);
+                    setSelectedExamType(row as IExamType);
                   }}
                   handleEditClick={() => {
                     addExamTypeDialog.onTrue();
-                    setSelectedExamType(row);
+                    setSelectedExamType(row as IExamType);
                     setIsEdit(true);
                   }}
                 />

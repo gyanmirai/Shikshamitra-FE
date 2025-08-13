@@ -25,10 +25,10 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
       assignmentTypeName: Yup.string().required('Name is required'),
     }),
     onSubmit: (values) => {
-      console.log(values);
       shikshaMitraToast.success({
-        message: `Assignment Type ${editData ? 'updated' : 'added'} successfully`,
+        message: `${values.assignmentTypeName} Assignment Type ${editData ? 'updated' : 'added'} successfully`,
       });
+      onClose(null, true);
     },
   });
 
@@ -71,7 +71,9 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
+          onClick={() => {
+            onClose(null, false);
+          }}
           variant="outlined"
           size="small"
         >

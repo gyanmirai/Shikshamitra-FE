@@ -30,10 +30,10 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     onSubmit: (values, formikHelpers) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `Subject ${values.subjectName} updated successfully`,
+          message: `${values.subjectName} Subject updated successfully`,
         });
       } else {
-        shikshaMitraToast.success({ message: `Subject ${values.subjectName} added successfully` });
+        shikshaMitraToast.success({ message: `${values.subjectName} Subject added successfully` });
       }
       onClose(null, true);
     },
