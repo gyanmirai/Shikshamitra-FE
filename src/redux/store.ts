@@ -16,18 +16,22 @@ import { feeHeadApi } from './feeHead/feeHeadApi';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
+import { feeTermsApi } from './feeCollection/feeTerms';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
+import { feeConcessionApi } from './feeCollection/feeConcession';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
+import { financeFeeCollectionApi } from './feeCollection/feeCollection';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
@@ -104,6 +108,10 @@ const reducers = combineReducers({
   [BulkStudentApi.reducerPath]: BulkStudentApi.reducer,
   [CoreSubjectApi.reducerPath]: CoreSubjectApi.reducer,
   [quizManagementApi.reducerPath]: quizManagementApi.reducer,
+  [financeFeeCollectionApi.reducerPath]: financeFeeCollectionApi.reducer,
+  [feeTermsApi.reducerPath]: feeTermsApi.reducer,
+  [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
+  [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
 });
 
 const store = configureStore({
@@ -154,7 +162,11 @@ const store = configureStore({
       .concat(StudentLeaveApi.middleware)
       .concat(BulkStudentApi.middleware)
       .concat(CoreSubjectApi.middleware)
-      .concat(quizManagementApi.middleware),
+      .concat(quizManagementApi.middleware)
+      .concat(financeFeeCollectionApi.middleware)
+      .concat(feeTermsApi.middleware)
+      .concat(paymentHistoryApi.middleware)
+      .concat(feeConcessionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
