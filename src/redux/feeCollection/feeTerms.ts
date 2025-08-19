@@ -13,7 +13,7 @@ export const feeTermsApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/terms') {
-          return { data: feeCollection };
+          return { data: feeCollection.terms };
         }
         return {
           error: {

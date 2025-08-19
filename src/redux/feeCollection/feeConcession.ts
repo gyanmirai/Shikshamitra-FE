@@ -12,7 +12,7 @@ export const feeConcessionApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/feeConcession') {
-          return { data: feeCollection };
+          return { data: feeCollection.feeConcession };
         }
         return {
           error: {

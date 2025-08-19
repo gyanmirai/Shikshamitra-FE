@@ -37,7 +37,6 @@ export const buildInitialValues = () => {
       initialValues[method][field.name] = field.type === 'date' ? null : '';
     });
   });
-
   return initialValues;
 };
 export const buildValidationSchema = () =>
@@ -104,6 +103,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
     type: 'query',
     currentQueryAndMutation: useGetFeeTermsQuery,
   });
+
   // Calculate total payable amount based on selected terms
   const selectedTermsData =
     feeTermsData?.filter((term: ITerm) => formik.values.selectedTerms.includes(term.id)) || [];

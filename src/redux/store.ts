@@ -29,6 +29,7 @@ import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
+import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
 import { financeFeeCollectionApi } from './feeCollection/feeCollection';
@@ -112,6 +113,7 @@ const reducers = combineReducers({
   [feeTermsApi.reducerPath]: feeTermsApi.reducer,
   [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
   [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
+  [outstandingFeeApi.reducerPath]: outstandingFeeApi.reducer,
 });
 
 const store = configureStore({
@@ -166,7 +168,8 @@ const store = configureStore({
       .concat(financeFeeCollectionApi.middleware)
       .concat(feeTermsApi.middleware)
       .concat(paymentHistoryApi.middleware)
-      .concat(feeConcessionApi.middleware),
+      .concat(feeConcessionApi.middleware)
+      .concat(outstandingFeeApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

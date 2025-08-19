@@ -1,8 +1,10 @@
 {
-  "feeCollectionData": [
+"feeCollectionData": [
   {
     "id": 1,
     "name": "Dharmik Jinjala",
+    "profileImage": "/images/student1.jpg",
+    "rollNumber": "2024001", 
     "board": "CBSE",
     "medium": "English",
     "className": "10",
@@ -10,23 +12,85 @@
     "totalFees": 50000,
     "paidFees": 50000,
     "pendingFees": 0,
-    "status": 1
+    "overdueFees": 0,
+    "status": 2,
+    "terms": [
+      {
+        "id": "1",
+        "name": "Term 1",
+        "dueDate": "30-06-2024",
+        "amount": 25000,
+        "paid": 25000,
+        "status": 2
+      },
+      {
+        "id": "2",
+        "name": "Term 2", 
+        "dueDate": "30-12-2024",
+        "amount": 25000,
+        "paid": 25000,
+        "status": 2
+      }
+    ],
+    "paymentDetails": {
+      "bankName": "SBI",
+      "accountNumber": "XXXX1234",
+      "ifscCode": "SBIN0001234"
+    },
+    "contactNumber": "9876543210",
+    "admissionDate": "01-04-2024",
+    "grNumber": "GR2024001",
+    "parentName": "Rajesh Jinjala",
+    "email": "dharmik.j@example.com"
   },
   {
     "id": 2,
     "name": "Dharmik Jinjala",
-    "board": "GSEB",
+    "profileImage": "/images/student2.jpg",
+    "rollNumber": "2024002",
+    "board": "GSEB", 
     "medium": "English",
     "className": "02",
     "division": "C",
     "totalFees": 10000,
     "paidFees": 5000,
     "pendingFees": 5000,
-    "status": 2
+    "overdueFees": 2000,
+    "status": 1,
+    "terms": [
+      {
+        "id": "1",
+        "name": "Term 1",
+        "dueDate": "30-06-2024",
+        "amount": 5000,
+        "paid": 5000,
+        "status": 2
+      },
+      {
+        "id": "2",
+        "name": "Term 2",
+        "dueDate": "30-12-2024",
+        "amount": 5000,
+        "paid": 0,
+        "status": 0
+      }
+    ],
+    "paymentDetails": {
+      "bankName": "HDFC",
+      "accountNumber": "XXXX5678",
+      "ifscCode": "HDFC0005678"
+    },
+    "contactNumber": "9876543211",
+    "admissionDate": "01-04-2024",
+    "grNumber": "GR2024002",
+    "parentName": "Rajesh Jinjala",
+    "email": "dharmik.j@example.com"
   },
   {
     "id": 3,
     "name": "Dharmik Jinjala",
+    "profileImage": "/images/student3.jpg",
+    "rollNumber": "2024003",
     "board": "CBSE",
     "medium": "Gujarati",
     "className": "06",
@@ -34,11 +98,42 @@
     "totalFees": 20000,
     "paidFees": 15000,
     "pendingFees": 5000,
-    "status": 2
+    "overdueFees": 0,
+    "status": 1,
+    "terms": [
+      {
+        "id": "1",
+        "name": "Term 1",
+        "dueDate": "30-06-2024",
+        "amount": 10000,
+        "paid": 10000,
+        "status": 2
+      },
+      {
+        "id": "2",
+        "name": "Term 2",
+        "dueDate": "30-12-2024",
+        "amount": 10000,
+        "paid": 5000,
+        "status": 1
+      }
+    ],
+    "paymentDetails": {
+      "bankName": "ICICI",
+      "accountNumber": "XXXX9012",
+      "ifscCode": "ICIC0009012"
+    },
+    "contactNumber": "9876543212",
+    "admissionDate": "01-04-2024",
+    "grNumber": "GR2024003",
+    "parentName": "Rajesh Jinjala",
+    "email": "dharmik.j@example.com"
   },
   {
     "id": 4,
     "name": "Dharmik Jinjala",
+    "profileImage": "/images/student4.jpg",
+    "rollNumber": "2024004",
     "board": "GSEB",
     "medium": "Gujarati",
     "className": "08",
@@ -46,11 +141,42 @@
     "totalFees": 30000,
     "paidFees": 30000,
     "pendingFees": 0,
-    "status": 0
+    "overdueFees": 0,
+    "status": 2,
+    "terms": [
+      {
+        "id": "1",
+        "name": "Term 1",
+        "dueDate": "30-06-2024",
+        "amount": 15000,
+        "paid": 15000,
+        "status": 2
+      },
+      {
+        "id": "2",
+        "name": "Term 2",
+        "dueDate": "30-12-2024",
+        "amount": 15000,
+        "paid": 15000,
+        "status": 2
+      }
+    ],
+    "paymentDetails": {
+      "bankName": "Axis",
+      "accountNumber": "XXXX3456",
+      "ifscCode": "UTIB0003456"
+    },
+    "contactNumber": "9876543213",
+    "admissionDate": "01-04-2024",
+    "grNumber": "GR2024004",
+    "parentName": "Rajesh Jinjala",
+    "email": "dharmik.j@example.com"
   },
   {
     "id": 5,
     "name": "Dharmik Jinjala",
+    "profileImage": "/images/student5.jpg",
+    "rollNumber": "2024005",
     "board": "CBSE",
     "medium": "English",
     "className": "12",
@@ -58,7 +184,36 @@
     "totalFees": 60000,
     "paidFees": 0,
     "pendingFees": 60000,
-    "status": 2
+    "overdueFees": 30000,
+    "status": 0,
+    "terms": [
+      {
+        "id": "1",
+        "name": "Term 1",
+        "dueDate": "30-06-2024",
+        "amount": 30000,
+        "paid": 0,
+        "status": 0
+      },
+      {
+        "id": "2",
+        "name": "Term 2",
+        "dueDate": "30-12-2024",
+        "amount": 30000,
+        "paid": 0,
+        "status": 0
+      }
+    ],
+    "paymentDetails": {
+      "bankName": "BOB",
+      "accountNumber": "XXXX7890",
+      "ifscCode": "BARB0007890"
+    },
+    "contactNumber": "9876543214",
+    "admissionDate": "01-04-2024",
+    "grNumber": "GR2024005",
+    "parentName": "Rajesh Jinjala",
+    "email": "dharmik.j@example.com"
   }
 ],
 "terms" : [

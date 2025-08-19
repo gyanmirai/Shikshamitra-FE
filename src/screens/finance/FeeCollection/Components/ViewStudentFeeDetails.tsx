@@ -17,7 +17,7 @@ const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
       <Card sx={{ p: 3, borderRadius: 2, border: '1px solid black' }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography variant="subtitle1" color="primary.main">
           Student Information
         </Typography>
 
