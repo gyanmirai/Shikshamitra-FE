@@ -47,6 +47,7 @@ export const GlobalIcons = {
   receiptIcon: 'tabler:receipt',
   tick: 'mdi:tick-circle',
   reject: 'fluent:text-change-reject-24-filled',
+  lockIcon: 'mdi:lock-outline',
 };
 
 export const GlobalIconColors = {

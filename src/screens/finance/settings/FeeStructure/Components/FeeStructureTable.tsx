@@ -2,63 +2,163 @@
 
 import React from 'react';
 
-import feeStructureData from 'src/json/finance/student-fee-management/feeStructureData.json';
+import { Box, useTheme, Typography, IconButton } from '@mui/material';
 
+import { GlobalIcons } from 'src/utils/icons';
+
+import {
+  FeeStructureLockStatusType,
+  FeeStructureLockStatusOptions,
+} from 'src/enums/finance-fee-structure-status';
+
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const FeeStructureTable = () => (
-  <CustomizableTable
-    tableId="fee-structure-table"
-    columns={[
-      {
-        id: 'name',
-        label: 'Fee Structure Name',
-        children(row) {
-          if (!row?.feeHeads || !Array.isArray(row.feeHeads)) {
-            return <div>No fee heads available</div>;
-          }
-          return (
-            <CustomizableTable
-              tableId={`fee-heads-${row.id || 'unknown'}`}
-              columns={[
-                { id: 'name', label: 'Fee Head' },
-                { id: 'totalFee', label: 'Total Fee' },
-                { id: 'discount', label: 'Discount' },
-                { id: 'dueDate', label: 'Due Date' },
-              ]}
-              data={row.feeHeads}
-            />
-          );
+import type { IFeeStructure, IFeeStructureTableProps } from '../type';
+
+const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
+  data,
+  addFeeStructure,
+  editData,
+  setEditData,
+  onDelete,
+  onEdit,
+  onToggle,
+}) => {
+  const theme = useTheme();
+  console.log('data====', data);
+
+  return (
+    <CustomizableTable
+      tableId="fee-structure-table"
+      noDataText={
+        <>
+          No Fee Structure data found
+          <Box
+            onClick={() => {
+              addFeeStructure.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Fee Structure
+          </Box>
+        </>
+      }
+      columns={[
+        {
+          id: 'feeStructureName',
+          label: 'Fee Structure Name',
+          align: 'left',
         },
-      },
-      { id: 'class', label: 'Class' },
-      { id: 'board', label: 'Board' },
-      { id: 'medium', label: 'Medium' },
-      { id: 'receiptBook', label: 'Receipt Book' },
-      { id: 'paymentTerm', label: 'Payment Term' },
-      {
-        id: 'action',
-        label: 'Action',
-        render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showDeleteIcon
-            handleDeleteClick={() => {
-              // TODO: Implement delete functionality
-              console.warn('Delete functionality not yet implemented');
-            }}
-            showEditIcon
-            handleEditClick={() => {
-              // TODO: Implement edit functionality
-              console.warn('Edit functionality not yet implemented');
-            }}
-          />
-        ),
-      },
-    ]}
-    data={feeStructureData || []}
-  />
-);
+        {
+          id: 'board',
+          label: 'Board/Medium',
+          align: 'left',
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {value}/{row.medium}
+            </Typography>
+          ),
+        },
+        { id: 'receiptBook', label: 'Receipt Book', align: 'left' },
+        { id: 'paymentTerm', label: 'Payment Term', align: 'left' },
+        { id: 'totalFeeHead', label: 'Total Fee Head', align: 'left' },
+        { id: 'totalClass', label: 'Total Class', align: 'left' },
+        {
+          id: 'status',
+          label: 'Status',
+          align: 'left',
+          minWidth: 40,
+          isFilter: false,
+          sticky: true,
+          isSort: false,
+          filterType: 'enum',
+          enumOptions: FeeStructureLockStatusOptions,
+          render(value, row) {
+            const statusColor =
+              value === FeeStructureLockStatusType.Locked
+                ? theme.palette.error.main
+                : theme.palette.success.main;
+
+            return (
+              <CustomTooltip
+                title={value === 0 ? 'Unlock' : 'Lock'}
+                arrow
+                placement="left"
+                PopperProps={{
+                  modifiers: [
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 0], // Try 0 or adjust closer
+                      },
+                    },
+                  ],
+                }}
+              >
+                <IconButton
+                  onClick={() => {
+                    onToggle?.(row as IFeeStructure);
+                  }}
+                  sx={{
+                    p: 0.6, // some padding for a more clickable area
+                    borderRadius: '50%',
+                    backgroundColor: statusColor, // light background to indicate clickability
+                    transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      backgroundColor: statusColor,
+                    },
+                  }}
+                >
+                  <Iconify
+                    icon={GlobalIcons.lockIcon}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      color: '#fff',
+                    }}
+                  />
+                </IconButton>
+              </CustomTooltip>
+            );
+          },
+        },
+        {
+          id: 'action',
+          label: 'Action',
+          align: 'left',
+          isSort: false,
+          isFilter: false,
+          sticky: true,
+          minWidth: 50,
+          render: (value, row) => (
+            <ThreeDotsActions
+              showThreeDots={false}
+              showEditIcon
+              handleEditClick={() => {
+                // TODO: Imp lement edit functionality
+                onEdit?.(row as IFeeStructure);
+              }}
+            />
+          ),
+        },
+      ]}
+      data={data || []}
+    />
+  );
+};
 
 export default FeeStructureTable;
