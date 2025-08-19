@@ -1,0 +1,176 @@
+{
+  "feeCollectionData": [
+  {
+    "id": 1,
+    "name": "Dharmik Jinjala",
+    "board": "CBSE",
+    "medium": "English",
+    "className": "10",
+    "division": "A",
+    "totalFees": 50000,
+    "paidFees": 50000,
+    "pendingFees": 0,
+    "status": 1
+  },
+  {
+    "id": 2,
+    "name": "Dharmik Jinjala",
+    "board": "GSEB",
+    "medium": "English",
+    "className": "02",
+    "division": "C",
+    "totalFees": 10000,
+    "paidFees": 5000,
+    "pendingFees": 5000,
+    "status": 2
+  },
+  {
+    "id": 3,
+    "name": "Dharmik Jinjala",
+    "board": "CBSE",
+    "medium": "Gujarati",
+    "className": "06",
+    "division": "D",
+    "totalFees": 20000,
+    "paidFees": 15000,
+    "pendingFees": 5000,
+    "status": 2
+  },
+  {
+    "id": 4,
+    "name": "Dharmik Jinjala",
+    "board": "GSEB",
+    "medium": "Gujarati",
+    "className": "08",
+    "division": "B",
+    "totalFees": 30000,
+    "paidFees": 30000,
+    "pendingFees": 0,
+    "status": 0
+  },
+  {
+    "id": 5,
+    "name": "Dharmik Jinjala",
+    "board": "CBSE",
+    "medium": "English",
+    "className": "12",
+    "division": "A",
+    "totalFees": 60000,
+    "paidFees": 0,
+    "pendingFees": 60000,
+    "status": 2
+  }
+],
+"terms" : [
+  {
+    "id": "1",
+    "name": "January 2025",
+    "dueDate": "30-01-2025",
+    "paid": 4000,
+    "total": 10000,
+    "feeHeads": [
+      { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": "Paid" },
+      { "name": "Library Fee", "paid": 0, "total": 3000, "status": "Pending" },
+      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": "Pending" }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "February 2025",
+    "dueDate": "28-02-2025",
+    "paid": 0,
+    "total": 10000,
+    "feeHeads": [
+      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": "Pending" },
+      { "name": "Library Fee", "paid": 0, "total": 3000, "status": "Pending" },
+      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": "Pending" }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "March 2025",
+    "dueDate": "30-03-2025",
+    "paid": 0,
+    "total": 10000,
+    "feeHeads": [
+      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": "Pending" },
+      { "name": "Library Fee", "paid": 0, "total": 3000, "status": "Pending" },
+      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": "Pending" }
+    ]
+  }
+],
+"paymentHistory" : [
+  {
+    "receiptNo": "REC-2025-100",
+    "date": "10-01-2025",
+    "amount": 10000,
+    "paymentMethod": "Cash",
+    "status": "Successful"
+  },
+  {
+    "receiptNo": "REC-2025-150",
+    "date": "10-02-2025",
+    "amount": 10000,
+    "paymentMethod": "UPI",
+    "status": "Successful"
+  },
+  {
+    "receiptNo": "REC-2025-207",
+    "date": "10-03-2025",
+    "amount": 10000,
+    "paymentMethod": "Cheque",
+    "status": "Successful"
+  },
+  {
+    "receiptNo": "REC-2025-305",
+    "date": "10-04-2025",
+    "amount": 10000,
+    "paymentMethod": "Net Banking",
+    "status": "Successful"
+  }
+],
+"feeConcession" : [
+  {
+    "id": 1,
+    "concessionType": "Sibling Discount",
+    "reason": "Reduction in fees for families with more than one child enrolled in the school.",
+    "status": "Approved"
+  },
+  {
+    "id": 2,
+    "concessionType": "Merit Scholarship",
+    "reason": "Awarded based on outstanding academic performance or achievements.",
+    "status": "Under Review"
+  }
+],
+"outstandingFeeData" : [
+  {
+    "id": 1,
+    "feeHead": "Tuition Fee",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": "Overdue"
+  },
+  {
+    "id": 2,
+    "feeHead": "Library Fee",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": "Overdue"
+  },
+  {
+    "id": 3,
+    "feeHead": "Transport Fee",
+    "amount": 7000,
+    "dueDate": "30-10-2025",
+    "status": "Overdue"
+  },
+  {
+    "id": 4,
+    "feeHead": "Lab Fee",
+    "amount": 1000,
+    "dueDate": "30-10-2025",
+    "status": "Overdue"
+  }
+]
+}
