@@ -1123,11 +1123,18 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+4',
         },
         {
+          title: 'Concession',
+          path: '/finance/concession',
+          _action: 'fee-concession',
+          shortcutKey: 'Alt+F+5',
+          shortcutKeyName: 'Alt+F+5',
+        },
+        {
           title: 'Reconciliation',
           path: '',
           _action: 'reconciliation',
-          shortcutKey: 'Alt+F+5',
-          shortcutKeyName: 'Alt+F+5',
+          shortcutKey: 'Alt+F+6',
+          shortcutKeyName: 'Alt+F+6',
           children: [
             {
               title: 'Cheque Transactions',
@@ -1210,6 +1217,20 @@ const financeModule = {
               _action: 'fee-structure-setting',
               shortcutKey: 'Alt+F+S+3',
               shortcutKeyName: 'Alt+F+S+3',
+            },
+            {
+              title: 'Payment Terms',
+              path: '/finance/settings/payment-term',
+              _action: 'payment-terms-setting',
+              shortcutKey: 'Alt+F+S+4',
+              shortcutKeyName: 'Alt+F+S+4',
+            },
+            {
+              title: 'Concession Type',
+              path: '/finance/settings/concession-type',
+              _action: 'concession-type-setting',
+              shortcutKey: 'Alt+F+S+5',
+              shortcutKeyName: 'Alt+F+S+5',
             },
             {
               title: 'Receipt Templates',

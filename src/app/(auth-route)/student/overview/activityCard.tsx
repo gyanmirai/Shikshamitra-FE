@@ -39,7 +39,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ title, subtitle, timeAgo, d
             <Label variant="soft" color="success">
               {tag}
             </Label>
-          )}
+          )}{' '}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {subtitle}
           </Typography>
