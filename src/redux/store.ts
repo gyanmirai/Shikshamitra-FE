@@ -17,9 +17,11 @@ import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
+import { PaymentTermApi } from './finance/paymentTerm';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
+import { ConcessionTypeApi } from './finance/concessionType';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -30,6 +32,7 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
+import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
 import { financeFeeCollectionApi } from './feeCollection/feeCollection';
@@ -114,6 +117,9 @@ const reducers = combineReducers({
   [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
   [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
   [outstandingFeeApi.reducerPath]: outstandingFeeApi.reducer,
+  [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
+  [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
+  [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
 });
 
 const store = configureStore({
@@ -169,7 +175,11 @@ const store = configureStore({
       .concat(feeTermsApi.middleware)
       .concat(paymentHistoryApi.middleware)
       .concat(feeConcessionApi.middleware)
-      .concat(outstandingFeeApi.middleware),
+      .concat(feeConcessionApi.middleware)
+      .concat(outstandingFeeApi.middleware)
+      .concat(FinanceFeeStructureApi.middleware)
+      .concat(PaymentTermApi.middleware)
+      .concat(ConcessionTypeApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
