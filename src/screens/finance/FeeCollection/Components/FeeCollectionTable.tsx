@@ -72,7 +72,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           label="Search Student by Name, GR No, Class or Roll No"
           sx={{ width: '100%' }}
         />
-        <Button onClick={() => {}} variant="contained" size="small">
+        <Button onClick={() => {}} variant="contained" size="small" sx={{ marginTop: 0.5 }}>
           Search
         </Button>
       </Box>

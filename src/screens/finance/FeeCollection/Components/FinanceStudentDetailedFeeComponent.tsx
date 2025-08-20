@@ -1,12 +1,15 @@
 'use client';
 
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
 import React from 'react';
 
-import { Box, Tab, Card, Typography } from '@mui/material';
+import { Box, Tab, Card, Button } from '@mui/material';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 
@@ -55,11 +58,15 @@ const TABS = [
 interface FinanceStudentDetailedFeeComponentProps {
   studentId: string;
   student: IStudentFee | null;
+  collectFeesDialog: UseBooleanReturn;
+  viewDialog: UseBooleanReturn;
 }
 
 const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComponentProps> = ({
   studentId,
   student,
+  collectFeesDialog,
+  viewDialog,
 }) => {
   // Initialize tab state, defaulting to 'overview'
   const tabs = useTabs('overview');
@@ -68,38 +75,55 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
   return (
-    <Card sx={{ p: 2, borderRadius: 2, height: '100%', boxShadow: 'var(--shadows-4)' }}>
-      {/* <Box sx={{ display: 'flex', flexDirection: 'column', }}> */}
-      <Scrollbar sx={{ height: '300px' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">Detailed Fee View</Typography>
-        </Box>
-        <Card>
-          <CustomTabs value={tabs.value} onChange={tabs.onChange}>
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {tab.icon}
-                    {tab.label}
-                  </Box>
-                }
-                sx={{
-                  fontSize: '14px',
-                  textTransform: 'none',
-                }}
-              />
-            ))}
-          </CustomTabs>
-        </Card>
-
-        <Box px={1} pt={2}>
-          {CurrentComponent?.({ student })}
-        </Box>
-      </Scrollbar>
-      {/* </Box> */}
+    <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
+      <CustomTabs value={tabs.value} onChange={tabs.onChange}>
+        {TABS.map((tab) => (
+          <Tab
+            key={tab.value}
+            value={tab.value}
+            label={
+              <Box display="flex" alignItems="center" gap={1}>
+                {tab.icon}
+                {tab.label}
+              </Box>
+            }
+            sx={{
+              fontSize: '14px',
+              textTransform: 'none',
+            }}
+          />
+        ))}
+      </CustomTabs>
+      <Box px={1} pt={2}>
+        {CurrentComponent?.({ student })}
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          mt: 2,
+          ml: 1,
+          mb: 2,
+          alignItems: 'center',
+          justifyItems: 'space-between',
+        }}
+      >
+        <Button variant="outlined" startIcon={<ArrowForwardIcon />} size="small">
+          Send Reminder
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<CreditCardIcon />}
+          color="primary"
+          size="small"
+          onClick={() => {
+            collectFeesDialog.onTrue();
+            viewDialog.onFalse();
+          }}
+        >
+          Collect Fees
+        </Button>
+      </Box>
     </Card>
   );
 };

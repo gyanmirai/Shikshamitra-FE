@@ -14,10 +14,10 @@ import {
 
 import { Label } from 'src/components/label';
 
-import type { ITerm, ITermsToCollectProps } from './type';
+import type { ITermsToCollectProps } from './type';
 
 const TermsToCollect: React.FC<ITermsToCollectProps> = ({
-  terms,
+  terms = [],
   selectedTerms,
   onTermSelect,
   showError,
@@ -26,11 +26,6 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   // State to track which term is currently expanded (only one at a time)
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  // Initialize terms data from props or fallback to dummy data
-  const [termsData, setTermsData] = useState<ITerm[] | null>(terms);
-  console.log('terms in TermstoCollecr===', terms);
-
-  console.log('termsData===', termsData);
   // Get the current theme for styling
   const theme = useTheme();
 

@@ -13,7 +13,7 @@ export const paymentHistoryApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/paymentHistory') {
-          return { data: feeCollection };
+          return { data: feeCollection.paymentHistory };
         }
         return {
           error: {
