@@ -22,6 +22,7 @@ import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { ConcessionTypeApi } from './finance/concessionType';
+import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -120,6 +121,7 @@ const reducers = combineReducers({
   [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
   [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
   [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
+  [ConcessionApi.reducerPath]: ConcessionApi.reducer,
 });
 
 const store = configureStore({
@@ -175,11 +177,11 @@ const store = configureStore({
       .concat(feeTermsApi.middleware)
       .concat(paymentHistoryApi.middleware)
       .concat(feeConcessionApi.middleware)
-      .concat(feeConcessionApi.middleware)
       .concat(outstandingFeeApi.middleware)
       .concat(FinanceFeeStructureApi.middleware)
       .concat(PaymentTermApi.middleware)
-      .concat(ConcessionTypeApi.middleware),
+      .concat(ConcessionTypeApi.middleware)
+      .concat(ConcessionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
