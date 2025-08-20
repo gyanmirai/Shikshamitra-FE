@@ -1123,6 +1123,13 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+4',
         },
         {
+          title: 'Invoice & Receipt',
+          path: '/finance/invoice-receipt',
+          _action: 'fee-refund',
+          shortcutKey: 'Alt+F+4',
+          shortcutKeyName: 'Alt+F+4',
+        },
+        {
           title: 'Reconciliation',
           path: '',
           _action: 'reconciliation',

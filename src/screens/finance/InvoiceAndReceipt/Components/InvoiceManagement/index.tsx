@@ -1,0 +1,151 @@
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { ClearIcon } from '@mui/x-date-pickers';
+import { GridSearchIcon } from '@mui/x-data-grid';
+import { Box, TextField, IconButton } from '@mui/material';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetInvoiceDataQuery } from 'src/redux/invoiceAndReceipt/invoiceApi';
+
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+
+import InvoiceForm from './InvoiceForm';
+import InvoiceTable from './InvoiceTable';
+
+const InvoiceManagement = ({ addInvoiceDialog }: any) => {
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClass] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+  const [searchValue, setSearchValue] = useState('');
+  const { data: invoiceData, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetInvoiceDataQuery,
+  });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClass(allClasses[0]?.name || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
+  }, [allClass, classes]);
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addInvoiceDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      addInvoiceDialog.onFalse();
+    }
+  };
+
+  return (
+    <Box>
+      <Box
+        display="flex"
+        sx={{
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          mt: 1,
+          mb: 2,
+          p: 1,
+          gap: 2,
+        }}
+      >
+        {' '}
+        <CustomSelect
+          options={allClass}
+          label="Class"
+          value={classes}
+          onChange={(val) => setClass(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+        />
+        <CustomSelect
+          options={allDivision}
+          label="Division"
+          value={division}
+          onChange={(val) => setDivision(val as string)}
+          labelKey="name"
+          valueKey="name"
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!classes}
+        />
+        <TextField
+          variant="outlined"
+          size="small"
+          value={searchValue}
+          onChange={() => {}}
+          InputProps={{
+            endAdornment: (
+              <>
+                {searchValue ? (
+                  <IconButton
+                    size="small"
+                    sx={{ mr: '-12px', p: 1 }}
+                    onClick={() => setSearchValue('')}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                ) : (
+                  <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
+                    <GridSearchIcon />
+                  </IconButton>
+                )}
+              </>
+            ),
+          }}
+          label="Search Student by Name, Invoice Id"
+          sx={{ minWidth: '250.6px', width: '100%' }}
+        />
+      </Box>
+      <InvoiceTable data={invoiceData} />
+      <CustomDialog
+        open={addInvoiceDialog.value}
+        handleClose={() => {
+          addInvoiceDialog?.onFalse();
+        }}
+        title="Generate Student Invoice"
+        maxWidth="sm"
+      >
+        <InvoiceForm open={addInvoiceDialog} onClose={handleClose} />
+      </CustomDialog>
+    </Box>
+  );
+};
+
+export default InvoiceManagement;
