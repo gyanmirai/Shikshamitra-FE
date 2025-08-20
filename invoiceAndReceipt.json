@@ -1,19 +1,87 @@
 {
-  "posts": [
-    {
-      "id": 1,
-      "title": "json-server",
-      "author": "typicode"
-    }
-  ],
-  "comments": [
-    {
-      "id": 1,
-      "body": "some comment",
-      "postId": 1
-    }
-  ],
-  "profile": {
-    "name": "typicode"
+    "invoiceData" :[
+  {
+    "invoiceId": "INV-2025-001",
+    "student": "Dharmik Jinjala",
+    "classDivision": "10-A",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": 0
+  },
+  {
+    "invoiceId": "INV-2025-002",
+    "student": "Prerna Atre",
+    "classDivision": "10-A",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": 1
+  },
+  {
+    "invoiceId": "INV-2025-003",
+    "student": "Mayur Solanki",
+    "classDivision": "10-A",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": 1
+  },
+  {
+    "invoiceId": "INV-2025-004",
+    "student": "Parth Ghusar",
+    "classDivision": "10-A",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": 2
+  },
+  {
+    "invoiceId": "INV-2025-005",
+    "student": "Raj Baku",
+    "classDivision": "10-A",
+    "amount": 10000,
+    "dueDate": "30-09-2025",
+    "status": 1
   }
+],
+"receiptData" :
+[
+  {
+    "receiptId": "RCPT-2025-001",
+    "invoiceId": "INV-2025-001",
+    "student": "Dharmik Jinjala",
+    "amount": 10000,
+    "paymentMethod": "UPI",
+    "paymentDate": "2025-08-10"
+  },
+  {
+    "receiptId": "RCPT-2025-002",
+    "invoiceId": "INV-2025-002",
+    "student": "Prerna Atre",
+    "amount": 12000,
+    "paymentMethod": "Credit Card",
+    "paymentDate": "2025-08-12"
+  },
+  {
+    "receiptId": "RCPT-2025-003",
+    "invoiceId": "INV-2025-003",
+    "student": "Aarav Mehta",
+    "amount": 9500,
+    "paymentMethod": "Net Banking",
+    "paymentDate": "2025-08-15"
+  },
+  {
+    "receiptId": "RCPT-2025-004",
+    "invoiceId": "INV-2025-004",
+    "student": "Siya Patel",
+    "amount": 15000,
+    "paymentMethod": "Cash",
+    "paymentDate": "2025-08-17"
+  },
+  {
+    "receiptId": "RCPT-2025-005",
+    "invoiceId": "INV-2025-005",
+    "student": "Rohan Sharma",
+    "amount": 8000,
+    "paymentMethod": "Cheque",
+    "paymentDate": "2025-08-18"
+  }
+]
 }
