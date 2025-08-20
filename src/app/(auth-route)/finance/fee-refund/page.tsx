@@ -1,7 +1,7 @@
 import React from 'react';
 
-import FeeRefundScreen from 'src/screens/finance/fee-refund/fee-refund-screen';
+import FeeRefund from 'src/screens/finance/feeRefund';
 
-const FinanceFee = () => <FeeRefundScreen />;
+const FinanceFee = () => <FeeRefund />;
 
 export default FinanceFee;
