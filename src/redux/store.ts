@@ -57,6 +57,7 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
+import { ConcessionApi } from './feeConcession/feeConcession';
 
 const persistConfig = {
   key: 'root',
@@ -120,6 +121,7 @@ const reducers = combineReducers({
   [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
   [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
   [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
+  [ConcessionApi.reducerPath]: ConcessionApi.reducer,
 });
 
 const store = configureStore({
@@ -179,7 +181,8 @@ const store = configureStore({
       .concat(outstandingFeeApi.middleware)
       .concat(FinanceFeeStructureApi.middleware)
       .concat(PaymentTermApi.middleware)
-      .concat(ConcessionTypeApi.middleware),
+      .concat(ConcessionTypeApi.middleware)
+      .concat(ConcessionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
