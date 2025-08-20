@@ -20,6 +20,7 @@ import { feeTermsApi } from './feeCollection/feeTerms';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
+import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -112,6 +113,7 @@ const reducers = combineReducers({
   [feeTermsApi.reducerPath]: feeTermsApi.reducer,
   [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
   [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
+  [ConcessionApi.reducerPath]: ConcessionApi.reducer,
 });
 
 const store = configureStore({
@@ -166,7 +168,8 @@ const store = configureStore({
       .concat(financeFeeCollectionApi.middleware)
       .concat(feeTermsApi.middleware)
       .concat(paymentHistoryApi.middleware)
-      .concat(feeConcessionApi.middleware),
+      .concat(feeConcessionApi.middleware)
+      .concat(ConcessionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
