@@ -22,6 +22,7 @@ import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { ConcessionTypeApi } from './finance/concessionType';
+import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -57,7 +58,6 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
-import { ConcessionApi } from './feeConcession/feeConcession';
 
 const persistConfig = {
   key: 'root',
@@ -176,7 +176,6 @@ const store = configureStore({
       .concat(financeFeeCollectionApi.middleware)
       .concat(feeTermsApi.middleware)
       .concat(paymentHistoryApi.middleware)
-      .concat(feeConcessionApi.middleware)
       .concat(feeConcessionApi.middleware)
       .concat(outstandingFeeApi.middleware)
       .concat(FinanceFeeStructureApi.middleware)
