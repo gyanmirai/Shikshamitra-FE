@@ -1218,6 +1218,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+3',
               shortcutKeyName: 'Alt+F+S+3',
             },
+
             {
               title: 'Fee Structure',
               path: '/finance/settings/create-fee-structure',

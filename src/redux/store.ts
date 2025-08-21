@@ -13,6 +13,7 @@ import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { feeHeadApi } from './feeHead/feeHeadApi';
+import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
@@ -126,6 +127,7 @@ const reducers = combineReducers({
   [ConcessionApi.reducerPath]: ConcessionApi.reducer,
   [invoiceApi.reducerPath]: invoiceApi.reducer,
   [receiptApi.reducerPath]: receiptApi.reducer,
+  [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
 });
 
 const store = configureStore({
@@ -187,7 +189,8 @@ const store = configureStore({
       .concat(ConcessionTypeApi.middleware)
       .concat(ConcessionApi.middleware)
       .concat(invoiceApi.middleware)
-      .concat(receiptApi.middleware),
+      .concat(receiptApi.middleware)
+      .concat(FeeRefundApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
