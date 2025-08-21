@@ -51,6 +51,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         id: 'totalInstallments',
         label: 'Total Numbers of Installments',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'action',

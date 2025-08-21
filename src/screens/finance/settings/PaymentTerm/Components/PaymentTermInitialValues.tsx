@@ -6,15 +6,9 @@ export const getInitialPaymentTermData = (
   id: editData?.id || '',
   paymentTermName: editData?.paymentTermName || '',
   totalInstallments: editData?.totalInstallments || '',
+  academicYearId: editData?.academicYearId || '',
   academicYear: editData?.academicYear || '',
   board: editData?.board || '',
   medium: editData?.medium || '',
-  installments: editData?.installments || [
-    {
-      id: 0,
-      installmentName: '',
-      percentage: 0,
-      dueDate: null,
-    },
-  ],
+  installments: editData?.installments || [],
 });

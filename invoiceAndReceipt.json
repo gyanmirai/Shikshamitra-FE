@@ -1,87 +1,143 @@
 {
-    "invoiceData" :[
+    "invoiceData" : [
   {
-    "invoiceId": "INV-2025-001",
     "student": "Dharmik Jinjala",
-    "classDivision": "10-A",
+    "class": "10",
+    "division": "A", 
     "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": 0
+    "rollNumber" : 10,
+    "grNumber" : 111,
+    "paymentTerm" : "Monthly",
+    "dueDate": "30-09-2025"
   },
   {
-    "invoiceId": "INV-2025-002",
     "student": "Prerna Atre",
-    "classDivision": "10-A",
+    "class": "10",
+    "division": "A",
     "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": 1
+    "dueDate": "30-09-2025"
   },
   {
-    "invoiceId": "INV-2025-003",
     "student": "Mayur Solanki",
-    "classDivision": "10-A",
+    "class": "10",
+    "division": "A",
     "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": 1
+    "dueDate": "30-09-2025"
   },
   {
-    "invoiceId": "INV-2025-004",
-    "student": "Parth Ghusar",
-    "classDivision": "10-A",
+    "student": "Parth Ghusar", 
+    "class": "10",
+    "division": "A",
     "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": 2
+    "dueDate": "30-09-2025"
   },
   {
-    "invoiceId": "INV-2025-005",
     "student": "Raj Baku",
-    "classDivision": "10-A",
+    "class": "10",
+    "division": "A",
     "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": 1
+    "dueDate": "30-09-2025"
   }
 ],
 "receiptData" :
 [
   {
-    "receiptId": "RCPT-2025-001",
-    "invoiceId": "INV-2025-001",
     "student": "Dharmik Jinjala",
-    "amount": 10000,
-    "paymentMethod": "UPI",
-    "paymentDate": "2025-08-10"
+    "rollNo": "101",
+    "division": "A",
+    "totalPaidFees": 10000,
+    "totalPendingFees": 5000,
+    "lastPaymentDate": "10-08-2025"
   },
   {
-    "receiptId": "RCPT-2025-002",
-    "invoiceId": "INV-2025-002",
-    "student": "Prerna Atre",
-    "amount": 12000,
-    "paymentMethod": "Credit Card",
-    "paymentDate": "2025-08-12"
+    "student": "Prerna Atre", 
+    "rollNo": "102",
+    "division": "A",
+    "totalPaidFees": 12000,
+    "totalPendingFees": 3000,
+    "lastPaymentDate": "12-08-2025"
   },
   {
-    "receiptId": "RCPT-2025-003",
-    "invoiceId": "INV-2025-003",
     "student": "Aarav Mehta",
-    "amount": 9500,
-    "paymentMethod": "Net Banking",
-    "paymentDate": "2025-08-15"
+    "rollNo": "103", 
+    "division": "B",
+    "totalPaidFees": 9500,
+    "totalPendingFees": 5500,
+    "lastPaymentDate": "15-08-2025"
   },
   {
-    "receiptId": "RCPT-2025-004",
-    "invoiceId": "INV-2025-004",
     "student": "Siya Patel",
-    "amount": 15000,
-    "paymentMethod": "Cash",
-    "paymentDate": "2025-08-17"
+    "rollNo": "104",
+    "division": "A",
+    "totalPaidFees": 15000,
+    "totalPendingFees": 0,
+    "lastPaymentDate": "17-08-2025"
   },
   {
-    "receiptId": "RCPT-2025-005",
-    "invoiceId": "INV-2025-005",
     "student": "Rohan Sharma",
-    "amount": 8000,
-    "paymentMethod": "Cheque",
-    "paymentDate": "2025-08-18"
+    "rollNo": "105",
+    "division": "B", 
+    "totalPaidFees": 8000,
+    "totalPendingFees": 7000,
+    "lastPaymentDate": "18-08-2025"
   }
-]
+],
+"studentInvoiceData": [
+    {
+      "student": "Dharmik Jinjala",
+      "rollNo": "101",
+      "class": "10",
+      "division": "A",
+      "totalPaidFees": 10000,
+      "totalPendingFees": 5000,
+      "grNo": 1001,
+      "lastPaymentDate": "31-01-2025",
+      "paymentTerm": "Monthly"
+    },
+    {
+      "student": "Prerna Atre",
+      "rollNo": "102", 
+      "class": "10",
+      "division": "A",
+      "totalPaidFees": 10000,
+      "totalPendingFees": 5000,
+      "grNo": 1002,
+      "lastPaymentDate": "28-02-2025",
+      "paymentTerm": "Monthly"
+    },
+    {
+      "student": "Mayur Solanki",
+      "rollNo": "103",
+      "class": "10", 
+      "division": "A",
+      "totalPaidFees": 10000,
+      "totalPendingFees": 5000,
+      "grNo": 1003,
+      "lastPaymentDate": "31-03-2025",
+      "paymentTerm": "Monthly"
+    }
+  ],
+  "studentReceiptData" : [
+    {
+      "receiptId": "RCP-2025-001",
+      "invoiceId": "INV-2025-001",
+      "amount": 10000,
+      "paymentMethod": "Bank Transfer",
+      "paymentDate": "12-01-2025"
+    },
+    {
+      "receiptId": "RCP-2025-057",
+      "invoiceId": "INV-2025-057",
+      "amount": 10000,
+      "paymentMethod": "Cash",
+      "paymentDate": "04-02-2025"
+    },
+    {
+      "receiptId": "RCP-2025-089",
+      "invoiceId": "INV-2025-089",
+      "amount": 10000,
+      "paymentMethod": "Bank Transfer",
+      "paymentDate": "22-03-2025"
+    }
+  ]
 }

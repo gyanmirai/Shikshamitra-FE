@@ -22,6 +22,8 @@ import { PaymentTermApi } from './finance/paymentTerm';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
+import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
+import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
@@ -41,6 +43,8 @@ import { financeFeeCollectionApi } from './feeCollection/feeCollection';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
+import { studentInvoiceApi } from './invoiceAndReceipt/studentInvoiceApi';
+import { studentReceiptApi } from './invoiceAndReceipt/studentReceiptApi';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
@@ -59,8 +63,6 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
-import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
-import { receiptApi } from './invoiceAndReceipt/receiptApi';
 
 const persistConfig = {
   key: 'root',
@@ -128,6 +130,8 @@ const reducers = combineReducers({
   [invoiceApi.reducerPath]: invoiceApi.reducer,
   [receiptApi.reducerPath]: receiptApi.reducer,
   [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
+  [studentInvoiceApi.reducerPath]: studentInvoiceApi.reducer,
+  [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
 });
 
 const store = configureStore({
@@ -190,7 +194,9 @@ const store = configureStore({
       .concat(ConcessionApi.middleware)
       .concat(invoiceApi.middleware)
       .concat(receiptApi.middleware)
-      .concat(FeeRefundApi.middleware),
+      .concat(FeeRefundApi.middleware)
+      .concat(studentInvoiceApi.middleware)
+      .concat(studentReceiptApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
