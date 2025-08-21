@@ -13,7 +13,7 @@ export const ConcessionApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/concessionStudentInfo') {
-          return { data: concessionData };
+          return { data: concessionData.concessionStudentInfo };
         }
         return {
           error: {
