@@ -1,7 +1,7 @@
 import React from 'react';
 
-import FinanceStudentFeeTab from 'src/screens/finance/fee-collection/finance-student-fee-tab';
+import FeeCollection from 'src/screens/finance/FeeCollection';
 
-const FinanceFeeCollection = () => <FinanceStudentFeeTab />;
+const FinanceFeeCollection = () => <FeeCollection />;
 
 export default FinanceFeeCollection;

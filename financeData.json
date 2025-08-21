@@ -1,0 +1,140 @@
+  {
+    "feeStructure": [
+    {
+      "feeStructureName": "Class 1 Structure",
+      "board": "GSEB",
+      "medium": "English",
+      "receiptBook": "GSEB",
+      "paymentTerm": "Monthly",
+      "paymentMethod": ["Online", "Cash"],
+      "totalFeeHead": 5,
+      "totalClass": 1,
+      "status": 1,
+      "feeStructureClasses": {
+        "Class 1": {
+          "status": 1,
+          "feeItems": [
+            {
+              "feeCategory": "Tuition",
+              "feeHead": "Tuition Fee",
+              "amount": 10000,
+              "required": true
+            },
+            {
+              "feeCategory": "Hostel",
+              "feeHead": "Hostel Fee",
+            "amount": 10000,
+            "required": true
+          },
+          {
+            "feeCategory": "Transport",
+            "feeHead": "Transport Fee",
+            "amount": 10000,
+            "required": true
+          },
+          {
+            "feeCategory": "Admission",
+            "feeHead": "Admission Fee",
+            "amount": 5000,
+            "required": true
+          },
+          {
+            "feeCategory": "Sports",
+            "feeHead": "Sport Fee",
+            "amount": 12000,
+            "required": true
+          }
+        ]
+      }
+    }
+  }
+  ],
+  "paymentTerms": [
+  {
+    "id": 1,
+    "paymentTermName": "Quarterly",
+    "totalInstallments": 4,
+    "academicYear": "2025-2026",
+    "board": "CBSE",
+    "medium": "English",
+    "installments": [
+      {
+        "id": 1,
+        "installmentName": "Installment 1",
+        "percentage": 25,
+        "dueDate": "2025-03-30"
+      },
+      {
+        "id": 2,
+        "installmentName": "Installment 2",
+        "percentage": 25,
+        "dueDate": "2025-06-30"
+      },
+      {
+        "id": 3,
+        "installmentName": "Installment 3",
+        "percentage": 25,
+        "dueDate": "2025-09-30"
+      },
+      {
+        "id": 4,
+        "installmentName": "Installment 4",
+        "percentage": 25,
+        "dueDate": "2025-12-30"
+      }
+    ]
+  }
+],
+"concessionTypeSetting" :[
+  {
+    "concessionName": "Merit Scholarship",
+    "concessionType": "percentage",
+    "percentage": 25,
+    "applicableFeeHeads": ["Tuition Fee", "Library Fee"],
+    "documentRequired": true,
+    "documents": [
+      {
+        "id": 1,
+        "documentName": "Scholarship Certificate",
+        "documentSize": "2mb",
+        "acceptedFormat": "pdf"
+      }
+    ],
+    "description": "25% concession on tuition and library fees for merit students."
+  },
+  {
+    "concessionName": "Sibling Discount",
+    "concessionType": "fixed",
+    "amount": 5000,
+    "applicableFeeHeads": ["Hostel Fee", "Tuition Fee"],
+    "documentRequired": false,
+    "documents": [],
+    "description": "Fixed discount of ₹5000 on hostel and tuition fee for sibling students."
+  },
+  {
+    "concessionName": "Sports Quota",
+    "concessionType": "percentage",
+    "percentage": 15,
+    "applicableFeeHeads": ["Sports Fee", "Annual Fee"],
+    "documentRequired": true,
+    "documents": [
+      {
+        "id": "SP001",
+        "documentName": "Sports Achievement Certificate",
+        "documentSize": "3mb",
+        "acceptedFormat": "jpg, png, pdf"
+      }
+    ],
+    "description": "15% concession for students selected under sports quota."
+  },
+  {
+    "concessionName": "Early Payment Discount",
+    "concessionType": "fixed",
+    "amount": 2000,
+    "applicableFeeHeads": ["Tuition Fee"],
+    "documentRequired": false,
+    "documents": [],
+    "description": "₹2000 concession for students who pay fees before due date."
+  }
+]
+}

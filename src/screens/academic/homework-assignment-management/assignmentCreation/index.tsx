@@ -269,9 +269,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             onClick={() => {
               deleteAssignmentDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Assignment Deleted successfully for ${selectedAssignment?.subjects}!`,
+                message: `Assignment for ${selectedAssignment?.subjects} has been successfully deleted from Class ${classes} - ${division}.`,
               });
-              // delete logic here
             }}
           >
             Yes
@@ -300,7 +299,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             onClick={() => {
               publishAssignmentDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Assignment Published successfully for ${selectedAssignment?.subjects}!`,
+                message: `Assignment has been successfully published for ${selectedAssignment?.subjects} subject in Class ${classes} - ${division}.`,
               });
               // publish logic here
             }}

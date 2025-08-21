@@ -134,7 +134,7 @@ const Subject = (props: TabComponentType) => {
                   })
                   .join(' , ')}
               </strong>{' '}
-              removed successfully.
+              removed successfully from class {classes}.
             </>
           ) : (
             <>
@@ -142,7 +142,7 @@ const Subject = (props: TabComponentType) => {
               <strong>
                 {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
               </strong>{' '}
-              removed successfully.
+              removed successfully from class {classes}.
             </>
           ),
       });

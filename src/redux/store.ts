@@ -13,21 +13,31 @@ import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { feeHeadApi } from './feeHead/feeHeadApi';
+import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
+import { feeTermsApi } from './feeCollection/feeTerms';
+import { PaymentTermApi } from './finance/paymentTerm';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
+import { ConcessionTypeApi } from './finance/concessionType';
+import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
+import { feeConcessionApi } from './feeCollection/feeConcession';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
+import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
+import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
+import { financeFeeCollectionApi } from './feeCollection/feeCollection';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
@@ -49,6 +59,8 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
+import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
+import { receiptApi } from './invoiceAndReceipt/receiptApi';
 
 const persistConfig = {
   key: 'root',
@@ -104,6 +116,18 @@ const reducers = combineReducers({
   [BulkStudentApi.reducerPath]: BulkStudentApi.reducer,
   [CoreSubjectApi.reducerPath]: CoreSubjectApi.reducer,
   [quizManagementApi.reducerPath]: quizManagementApi.reducer,
+  [financeFeeCollectionApi.reducerPath]: financeFeeCollectionApi.reducer,
+  [feeTermsApi.reducerPath]: feeTermsApi.reducer,
+  [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
+  [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
+  [outstandingFeeApi.reducerPath]: outstandingFeeApi.reducer,
+  [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
+  [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
+  [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
+  [ConcessionApi.reducerPath]: ConcessionApi.reducer,
+  [invoiceApi.reducerPath]: invoiceApi.reducer,
+  [receiptApi.reducerPath]: receiptApi.reducer,
+  [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
 });
 
 const store = configureStore({
@@ -154,7 +178,19 @@ const store = configureStore({
       .concat(StudentLeaveApi.middleware)
       .concat(BulkStudentApi.middleware)
       .concat(CoreSubjectApi.middleware)
-      .concat(quizManagementApi.middleware),
+      .concat(quizManagementApi.middleware)
+      .concat(financeFeeCollectionApi.middleware)
+      .concat(feeTermsApi.middleware)
+      .concat(paymentHistoryApi.middleware)
+      .concat(feeConcessionApi.middleware)
+      .concat(outstandingFeeApi.middleware)
+      .concat(FinanceFeeStructureApi.middleware)
+      .concat(PaymentTermApi.middleware)
+      .concat(ConcessionTypeApi.middleware)
+      .concat(ConcessionApi.middleware)
+      .concat(invoiceApi.middleware)
+      .concat(receiptApi.middleware)
+      .concat(FeeRefundApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

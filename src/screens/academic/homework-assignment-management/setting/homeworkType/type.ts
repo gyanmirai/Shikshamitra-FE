@@ -4,7 +4,7 @@ export interface IHomeworkType {
 
 export interface IHomeworkTypeFormProps {
   open: { value: boolean; onFalse: () => void };
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   editData?: IHomeworkType | null;
 }
 
