@@ -21,6 +21,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialPaymentTermData } from './PaymentTermInitialValues';
@@ -71,6 +72,8 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
     },
   });
 
+  console.log('formik.values---', formik.values);
+
   const [selectedAcademicYear, setSelectedAcademicYear] = useState();
 
   const [installments, setInstallments] = useState(formik.values.installments || []);
@@ -89,6 +92,9 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
         installmentName: formik.values.installments?.[i]?.installmentName || '',
         percentage: equalPercentage,
         dueDate: formik.values.installments?.[i]?.dueDate || null,
+        reminderDate: formik.values.installments?.[i]?.reminderDate || null,
+        gracePeriod: formik.values.installments?.[i]?.gracePeriod || null,
+        overdueCharges: formik.values.installments?.[i]?.overdueCharges || null,
       }));
 
       setInstallments(updated);
@@ -99,8 +105,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.totalInstallments]);
-
-  console.log('formik values----', formik.values);
 
   useEffect(() => {
     if (editData) {
@@ -154,7 +158,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                     name="totalInstallments"
                     label="Total Installments *"
                     type="number"
-                    inputProps={{ min: 1, max: 20 }}
+                    inputProps={{ min: 1, max: 12 }}
                     value={formik.values.totalInstallments || ''}
                     onChange={formik.handleChange}
                     error={!!(formik.touched.totalInstallments && formik.errors.totalInstallments)}
@@ -167,27 +171,36 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
               </Grid>
               <Grid item xs={12} md={4}>
                 <ShakingTextField
-                  error={!!(formik.touched.academicYear && formik.errors.academicYear) || false}
+                  error={!!(formik.touched.academicYearId && formik.errors.academicYearId) || false}
                 >
                   <CustomSelect
-                    name="academicYear"
+                    name="academicYearId"
                     label="Academic Year *"
                     isLoading={yearLoading}
                     options={academicYear?.items || []}
-                    value={formik.values.academicYear || ''}
+                    value={formik.values.academicYearId || ''}
                     labelKey="name"
                     valueKey="id"
                     onChange={(value) => {
                       const findBoards = board?.items.filter(
                         (item: Board) => item.academicYearId === value
                       );
+                      const selectedYear = academicYear?.items.find(
+                        (item: AcademicYear) => item.id === value
+                      );
                       setBoards(findBoards);
                       formik.setFieldValue('board', '');
                       formik.setFieldValue('medium', '');
-                      formik.setFieldValue('academicYear', value);
+                      formik.setFieldValue('academicYearId', value);
+                      formik.setFieldTouched('academicYearId', false);
+                      formik.setFieldValue('academicYear', selectedYear?.name || '');
                     }}
-                    error={!!(formik.touched.academicYear && formik.errors.academicYear) || false}
-                    helperText={(formik.touched.academicYear && formik.errors.academicYear) || ''}
+                    error={
+                      !!(formik.touched.academicYearId && formik.errors.academicYearId) || false
+                    }
+                    helperText={
+                      (formik.touched.academicYearId && formik.errors.academicYearId) || ''
+                    }
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -230,6 +243,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                     valueKey="id"
                     onChange={async (value) => {
                       formik.setFieldValue('medium', value);
+                      formik.setFieldTouched('medium', false);
                       formik.setFieldValue('feeStructureClasses', {});
                       await getClassByMedium(value);
                     }}
@@ -254,38 +268,25 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                       tableId="installments-table"
                       isSearch={false}
                       isFilter={false}
-                      isPagination={false}
                       columns={[
                         {
                           id: 'id',
                           label: 'Sr No.',
+                          align: 'left',
+                          minWidth: 80,
+                          filterType: 'number',
                           render(value, row) {
                             return <span>{row.id}</span>;
                           },
                         },
                         {
                           id: 'installmentName',
-                          label: 'Installment Name *',
+                          label: 'Installment Name',
+                          align: 'left',
+                          minWidth: 170,
                           render(value, row) {
                             return (
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Installment Name *"
-                                name={`installments.${row.index}.installmentName`}
-                                value={formik.values.installments[row.index]?.installmentName || ''}
-                                onChange={(e) => {
-                                  const updated = [...installments];
-                                  updated[row.index].installmentName = e.target.value;
-                                  setInstallments(updated);
-                                }}
-                                variant="outlined"
-                                sx={{
-                                  mb: 1.5,
-                                  width: '100%',
-                                  padding: '0',
-                                  borderRadius: 1,
-                                }}
+                              <ShakingTextField
                                 error={
                                   !!(
                                     formik?.touched?.installments?.[row.index]?.installmentName &&
@@ -298,52 +299,72 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                     )?.installmentName
                                   )
                                 }
-                                helperText={
-                                  formik?.touched?.installments?.[row.index]?.installmentName &&
-                                  Array.isArray(formik?.errors?.installments) &&
-                                  typeof formik?.errors?.installments?.[row.index] === 'object' &&
-                                  (
-                                    formik.errors.installments[
-                                      row.index
-                                    ] as FormikErrors<IInstallment>
-                                  )?.installmentName
-                                    ? (
+                              >
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  label="Installment Name *"
+                                  name={`installments.${row.index}.installmentName`}
+                                  value={
+                                    formik.values.installments[row.index]?.installmentName || ''
+                                  }
+                                  onChange={(e) => {
+                                    const updated = [...installments];
+                                    updated[row.index].installmentName = e.target.value;
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.installmentName`,
+                                      false
+                                    );
+                                  }}
+                                  variant="outlined"
+                                  sx={{
+                                    mb: 2,
+                                    width: '100%',
+                                    padding: '0',
+                                    borderRadius: 1,
+                                  }}
+                                  error={
+                                    !!(
+                                      formik?.touched?.installments?.[row.index]?.installmentName &&
+                                      Array.isArray(formik?.errors?.installments) &&
+                                      typeof formik?.errors?.installments?.[row.index] ===
+                                        'object' &&
+                                      (
                                         formik.errors.installments[
                                           row.index
                                         ] as FormikErrors<IInstallment>
                                       )?.installmentName
-                                    : ''
-                                }
-                              />
+                                    )
+                                  }
+                                  helperText={
+                                    formik?.touched?.installments?.[row.index]?.installmentName &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.installmentName
+                                      ? (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.installmentName
+                                      : ''
+                                  }
+                                />
+                              </ShakingTextField>
                             );
                           },
                         },
                         {
                           id: 'percentage',
-                          label: 'Percentage *',
+                          label: 'Percentage',
+                          filterType: 'number',
                           render(value, row) {
                             return (
-                              <TextField
-                                fullWidth
-                                size="small"
-                                disabled
-                                type="number"
-                                label="Percentage *"
-                                name={`installments.${row.index}.percentage`}
-                                inputProps={{ min: 0, max: 100 }}
-                                value={formik.values.installments[row.index]?.percentage || ''}
-                                onChange={(e) => {
-                                  const updated = [...installments];
-                                  updated[row.index].percentage = Number(e.target.value);
-                                  setInstallments(updated);
-                                }}
-                                variant="outlined"
-                                sx={{
-                                  mb: 1.5,
-                                  width: '100%',
-                                  padding: '0',
-                                  borderRadius: 1,
-                                }}
+                              <ShakingTextField
                                 error={
                                   !!(
                                     formik?.touched?.installments?.[row.index]?.percentage &&
@@ -356,58 +377,291 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                     )?.percentage
                                   )
                                 }
-                                helperText={
-                                  formik?.touched?.installments?.[row.index]?.percentage &&
-                                  Array.isArray(formik?.errors?.installments) &&
-                                  typeof formik?.errors?.installments?.[row.index] === 'object' &&
-                                  (
-                                    formik.errors.installments[
-                                      row.index
-                                    ] as FormikErrors<IInstallment>
-                                  )?.percentage
-                                    ? (
+                              >
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  disabled
+                                  type="number"
+                                  label="Percentage *"
+                                  name={`installments.${row.index}.percentage`}
+                                  inputProps={{ min: 0, max: 100 }}
+                                  value={formik.values.installments[row.index]?.percentage || ''}
+                                  onChange={(e) => {
+                                    const updated = [...installments];
+                                    updated[row.index].percentage = Number(e.target.value);
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.percentage`,
+                                      false
+                                    );
+                                  }}
+                                  variant="outlined"
+                                  sx={{
+                                    mb: 1.5,
+                                    width: '100%',
+                                    padding: '0',
+                                    borderRadius: 1,
+                                  }}
+                                  error={
+                                    !!(
+                                      formik?.touched?.installments?.[row.index]?.percentage &&
+                                      Array.isArray(formik?.errors?.installments) &&
+                                      typeof formik?.errors?.installments?.[row.index] ===
+                                        'object' &&
+                                      (
                                         formik.errors.installments[
                                           row.index
                                         ] as FormikErrors<IInstallment>
                                       )?.percentage
-                                    : ''
-                                }
-                              />
+                                    )
+                                  }
+                                  helperText={
+                                    formik?.touched?.installments?.[row.index]?.percentage &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.percentage
+                                      ? (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.percentage
+                                      : ''
+                                  }
+                                />
+                              </ShakingTextField>
                             );
                           },
                         },
                         {
                           id: 'dueDate',
-                          label: 'Due Date *',
+                          label: 'Due Date',
+                          align: 'left',
+                          filterType: 'date',
+                          minWidth: 150,
                           render(value, row) {
                             return (
-                              <DatePicker
-                                name={`installments.${row.index}.dueDate`}
-                                label="Due Date *"
-                                value={
-                                  formik.values.installments[row.index]?.dueDate
-                                    ? dayjs(formik.values.installments[row.index]?.dueDate)
-                                    : null
+                              <ShakingTextField
+                                error={
+                                  !!(
+                                    formik?.touched?.installments?.[row.index]?.dueDate &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.dueDate
+                                  )
                                 }
-                                onChange={(newValue) => {
-                                  const updated = [...installments];
-                                  updated[row.index].dueDate = newValue;
-                                  setInstallments(updated);
-                                }}
-                                format="DD-MM-YYYY"
-                                slotProps={{
-                                  textField: {
-                                    fullWidth: true,
-                                    size: 'small',
-                                    variant: 'outlined',
-                                    sx: {
-                                      mb: 1.5,
-                                      width: '100%',
-                                      padding: '0',
-                                      borderRadius: 1,
+                              >
+                                <DatePicker
+                                  name={`installments.${row.index}.dueDate`}
+                                  label="Due Date *"
+                                  value={
+                                    formik.values.installments[row.index]?.dueDate
+                                      ? dayjs(formik.values.installments[row.index]?.dueDate)
+                                      : null
+                                  }
+                                  onChange={(newValue) => {
+                                    const updated = [...installments];
+                                    updated[row.index].dueDate = newValue;
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.dueDate`,
+                                      false
+                                    );
+                                  }}
+                                  format="DD-MM-YYYY"
+                                  minDate={dayjs(
+                                    `${formik.values.academicYear?.split('-')?.[0]}-01-01`
+                                  )}
+                                  maxDate={dayjs(
+                                    `${formik.values.academicYear?.split('-')?.[1]}-12-31`
+                                  )}
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: 'small',
+                                      variant: 'outlined',
+                                      sx: {
+                                        mb: 1.5,
+                                        width: '100%',
+                                        padding: '0',
+                                        borderRadius: 1,
+                                      },
+                                      error: !!(
+                                        formik?.touched?.installments?.[row.index]?.dueDate &&
+                                        Array.isArray(formik?.errors?.installments) &&
+                                        typeof formik?.errors?.installments?.[row.index] ===
+                                          'object' &&
+                                        (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.dueDate
+                                      ),
+                                      helperText:
+                                        formik?.touched?.installments?.[row.index]?.dueDate &&
+                                        Array.isArray(formik?.errors?.installments) &&
+                                        typeof formik?.errors?.installments?.[row.index] ===
+                                          'object' &&
+                                        (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.dueDate
+                                          ? (
+                                              formik.errors.installments[
+                                                row.index
+                                              ] as FormikErrors<IInstallment>
+                                            )?.dueDate
+                                          : '',
                                     },
-                                    error: !!(
-                                      formik?.touched?.installments?.[row.index]?.dueDate &&
+                                  }}
+                                />
+                              </ShakingTextField>
+                            );
+                          },
+                        },
+                        {
+                          id: 'reminderDate',
+                          label: 'Reminder Date',
+                          filterType: 'date',
+                          align: 'left',
+                          minWidth: 170,
+                          render(value, row) {
+                            return (
+                              <ShakingTextField
+                                error={
+                                  !!(
+                                    formik?.touched?.installments?.[row.index]?.reminderDate &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.reminderDate
+                                  )
+                                }
+                              >
+                                <DatePicker
+                                  name={`installments.${row.index}.reminderDate`}
+                                  label="Reminder Date *"
+                                  value={
+                                    formik.values.installments[row.index]?.reminderDate
+                                      ? dayjs(formik.values.installments[row.index]?.reminderDate)
+                                      : null
+                                  }
+                                  onChange={(newValue) => {
+                                    const updated = [...installments];
+                                    updated[row.index].reminderDate = newValue;
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.reminderDate`,
+                                      false
+                                    );
+                                  }}
+                                  format="DD-MM-YYYY"
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: 'small',
+                                      variant: 'outlined',
+                                      sx: {
+                                        mb: 1.5,
+                                        width: '100%',
+                                        padding: '0',
+                                        borderRadius: 1,
+                                      },
+                                      error: !!(
+                                        formik?.touched?.installments?.[row.index]?.reminderDate &&
+                                        Array.isArray(formik?.errors?.installments) &&
+                                        typeof formik?.errors?.installments?.[row.index] ===
+                                          'object' &&
+                                        (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.reminderDate
+                                      ),
+                                      helperText:
+                                        formik?.touched?.installments?.[row.index]?.reminderDate &&
+                                        Array.isArray(formik?.errors?.installments) &&
+                                        typeof formik?.errors?.installments?.[row.index] ===
+                                          'object' &&
+                                        (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.reminderDate
+                                          ? (
+                                              formik.errors.installments[
+                                                row.index
+                                              ] as FormikErrors<IInstallment>
+                                            )?.reminderDate
+                                          : '',
+                                    },
+                                  }}
+                                />
+                              </ShakingTextField>
+                            );
+                          },
+                        },
+                        {
+                          id: 'gracePeriod',
+                          label: 'Grace Period (Days)',
+                          filterType: 'number',
+                          align: 'left',
+                          minWidth: 180,
+                          render(value, row) {
+                            return (
+                              <ShakingTextField
+                                error={
+                                  !!(
+                                    formik?.touched?.installments?.[row.index]?.gracePeriod &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.gracePeriod
+                                  )
+                                }
+                              >
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  type="number"
+                                  label="Grace Period *"
+                                  name={`installments.${row.index}.gracePeriod`}
+                                  inputProps={{ min: 0 }}
+                                  value={formik.values.installments[row.index]?.gracePeriod || ''}
+                                  onChange={(e) => {
+                                    const updated = [...installments];
+                                    updated[row.index].gracePeriod = Number(e.target.value);
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.gracePeriod`,
+                                      false
+                                    );
+                                  }}
+                                  variant="outlined"
+                                  sx={{
+                                    mb: 1.5,
+                                    width: '100%',
+                                    padding: '0',
+                                    borderRadius: 1,
+                                  }}
+                                  error={
+                                    !!(
+                                      formik?.touched?.installments?.[row.index]?.gracePeriod &&
                                       Array.isArray(formik?.errors?.installments) &&
                                       typeof formik?.errors?.installments?.[row.index] ===
                                         'object' &&
@@ -415,10 +669,80 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                         formik.errors.installments[
                                           row.index
                                         ] as FormikErrors<IInstallment>
-                                      )?.dueDate
-                                    ),
-                                    helperText:
-                                      formik?.touched?.installments?.[row.index]?.dueDate &&
+                                      )?.gracePeriod
+                                    )
+                                  }
+                                  helperText={
+                                    formik?.touched?.installments?.[row.index]?.gracePeriod &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.gracePeriod
+                                      ? (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.gracePeriod
+                                      : ''
+                                  }
+                                />
+                              </ShakingTextField>
+                            );
+                          },
+                        },
+                        {
+                          id: 'overdueCharges',
+                          label: 'Overdue Charges',
+                          filterType: 'number',
+                          align: 'left',
+                          minWidth: 170,
+                          render(value, row) {
+                            return (
+                              <ShakingTextField
+                                error={
+                                  !!(
+                                    formik?.touched?.installments?.[row.index]?.overdueCharges &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.overdueCharges
+                                  )
+                                }
+                              >
+                                <NumericFormatCustom
+                                  size="small"
+                                  fullWidth
+                                  label="Overdue Charges *"
+                                  name={`installments.${row.index}.overdueCharges`}
+                                  value={
+                                    formik.values.installments[row.index]?.overdueCharges || ''
+                                  }
+                                  onChange={(e) => {
+                                    let val = e.target.value;
+                                    val = val.replace(/[₹,\s]/g, '');
+                                    const updated = [...installments];
+                                    updated[row.index].overdueCharges = Number(val);
+                                    setInstallments(updated);
+                                    formik.setFieldTouched(
+                                      `installments.${row.index}.overdueCharges`,
+                                      false
+                                    );
+                                  }}
+                                  sx={{
+                                    mb: 1.5,
+                                    width: '100%',
+                                    padding: '0',
+                                    borderRadius: 1,
+                                  }}
+                                  error={
+                                    !!(
+                                      formik?.touched?.installments?.[row.index]?.overdueCharges &&
                                       Array.isArray(formik?.errors?.installments) &&
                                       typeof formik?.errors?.installments?.[row.index] ===
                                         'object' &&
@@ -426,16 +750,27 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                         formik.errors.installments[
                                           row.index
                                         ] as FormikErrors<IInstallment>
-                                      )?.dueDate
-                                        ? (
-                                            formik.errors.installments[
-                                              row.index
-                                            ] as FormikErrors<IInstallment>
-                                          )?.dueDate
-                                        : '',
-                                  },
-                                }}
-                              />
+                                      )?.overdueCharges
+                                    )
+                                  }
+                                  helperText={
+                                    formik?.touched?.installments?.[row.index]?.overdueCharges &&
+                                    Array.isArray(formik?.errors?.installments) &&
+                                    typeof formik?.errors?.installments?.[row.index] === 'object' &&
+                                    (
+                                      formik.errors.installments[
+                                        row.index
+                                      ] as FormikErrors<IInstallment>
+                                    )?.overdueCharges
+                                      ? (
+                                          formik.errors.installments[
+                                            row.index
+                                          ] as FormikErrors<IInstallment>
+                                        )?.overdueCharges
+                                      : ''
+                                  }
+                                />
+                              </ShakingTextField>
                             );
                           },
                         },

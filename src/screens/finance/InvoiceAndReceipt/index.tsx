@@ -61,7 +61,7 @@ const InvoiceAndReceipt = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Invoice & Receipt"
-        description="Manage invoices and receipts"
+        description="View and manage all generated student invoices, with options to preview, download, and share with parents."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Invoice & Receipt' }]}
         sx={{ px: 1, mb: 2 }}
         action={searchParams.tab === 'invoice' && renderButton[searchParams.tab]}

@@ -6,14 +6,22 @@ import React, { useState, useEffect } from 'react';
 
 import { ClearIcon } from '@mui/x-date-pickers';
 import { GridSearchIcon } from '@mui/x-data-grid';
-import { Box, TextField, IconButton } from '@mui/material';
+import { Box, TextField, IconButton, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetInvoiceDataQuery } from 'src/redux/invoiceAndReceipt/invoiceApi';
+import { useGetReceiptDataQuery } from 'src/redux/invoiceAndReceipt/receiptApi';
 
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import ReceiptTable from './Components/receiptTable';
+import StudentTableView from './Components/StudentReceiptTable';
+
+import type { IFeeReceipt } from './type';
 
 const ReceiptManagement = ({ addInvoiceDialog }: any) => {
   // State to store all classes/standards for the selected organization
@@ -26,12 +34,14 @@ const ReceiptManagement = ({ addInvoiceDialog }: any) => {
   const [division, setDivision] = useState<string>('');
   // State to store search input value for filtering students/invoices
   const [searchValue, setSearchValue] = useState('');
+  const viewReceiptDetailsDialog = useBoolean();
+  const [selectedReceiptData, setSelectedReceiptData] = useState<IFeeReceipt | null>(null);
 
   // Query hook to fetch invoice data from the API
   // Returns invoice data and loading state
-  const { data: invoiceData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: receiptData, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetInvoiceDataQuery,
+    currentQueryAndMutation: useGetReceiptDataQuery,
   });
   // Get current board, medium and medium setter from global state
   const {
@@ -117,7 +127,37 @@ const ReceiptManagement = ({ addInvoiceDialog }: any) => {
           sx={{ minWidth: '250.6px', width: '100%' }}
         />
       </Box>
-      <ReceiptTable data={invoiceData} />
+      <ReceiptTable
+        data={receiptData}
+        onView={(data) => {
+          viewReceiptDetailsDialog.onTrue();
+          setSelectedReceiptData(data);
+        }}
+      />
+
+      <CustomDialog
+        open={viewReceiptDetailsDialog.value}
+        handleClose={() => {
+          viewReceiptDetailsDialog?.onFalse();
+          setSelectedReceiptData(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Receipt Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal displays all fee receipts of a particular student, with options to view, download."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+      >
+        <StudentTableView selectedStudent={selectedReceiptData} />
+      </CustomDialog>
     </Box>
   );
 };

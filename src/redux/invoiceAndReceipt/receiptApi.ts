@@ -9,7 +9,7 @@ const isDev = process.env.NODE_ENV === 'development';
 export const receiptApi = createApi({
   reducerPath: 'ReceiptApi',
   baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001/receiptData' })
+    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
         // Handle mock route
         if (url === '/receiptData') {

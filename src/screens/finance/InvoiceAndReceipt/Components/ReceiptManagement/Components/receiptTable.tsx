@@ -1,29 +1,48 @@
 import React from 'react';
 
-import { Box, IconButton } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-const ReceiptTable = ({ data }: any) => (
+import type { IFeeReceipt } from '../type';
+
+const ReceiptTable = ({
+  data,
+  onView,
+}: {
+  data: IFeeReceipt[];
+  onView: (data: IFeeReceipt) => void;
+}) => (
   <CustomizableTable
-    tableId="receipt-table"
-    noDataText={<>No Receipt Data Found</>}
+    tableId="fees-status-table"
+    noDataText={<>No Fees Data Found</>}
     columns={[
-      { id: 'receiptId', label: 'Receipt ID', align: 'left', minWidth: '10vw', sticky: true },
-      { id: 'invoiceId', label: 'Invoice ID', align: 'left', minWidth: '10vw' },
-      { id: 'student', label: 'Student', align: 'left', minWidth: '12vw' },
+      { id: 'student', label: 'Student Name', align: 'left', minWidth: '12vw', sticky: true },
+      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '6vw' },
+      { id: 'division', label: 'Division', align: 'left', minWidth: '6vw' },
       {
-        id: 'amount',
-        label: 'Amount',
+        id: 'totalPaidFees',
+        label: 'Total Paid Fees',
         align: 'left',
-        minWidth: '8vw',
+        filterType: 'number',
+        minWidth: '10vw',
         render: (value) => `₹ ${value.toLocaleString()}`,
       },
-      { id: 'paymentMethod', label: 'Payment Method', align: 'left', minWidth: '10vw' },
-      { id: 'paymentDate', label: 'Payment Date', align: 'left', minWidth: '9vw' },
+      {
+        id: 'totalPendingFees',
+        label: 'Total Pending Fees',
+        align: 'left',
+        filterType: 'number',
+
+        minWidth: '12vw',
+        render: (value) => `₹ ${value.toLocaleString()}`,
+      },
+      {
+        id: 'lastPaymentDate',
+        label: 'Last Payment Date',
+        align: 'left',
+        minWidth: '10vw',
+        filterType: 'date',
+      },
       {
         id: 'actions',
         label: 'Actions',
@@ -34,14 +53,12 @@ const ReceiptTable = ({ data }: any) => (
         sticky: true,
         render(value, row) {
           return (
-            <Box display="flex">
-              <IconButton>
-                <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
-              </IconButton>
-              <IconButton>
-                <Iconify icon={GlobalIcons.download} sx={{ height: '16px', width: '16px' }} />
-              </IconButton>
-            </Box>
+            <ThreeDotsActions
+              placement="right-center"
+              showViewIcon
+              showThreeDots={false}
+              handleViewClick={() => onView(row as IFeeReceipt)}
+            />
           );
         },
       },
