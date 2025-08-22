@@ -1,0 +1,177 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { Add } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadApi/feeHeadApi';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
+import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import FeeHeadForm from './Components/FeeHeadForm';
+import FeeHeadTable from './Components/FeeHeadTable';
+
+import type { IFeeHead } from './Components/type';
+
+const FeeHeadCreation = () => {
+  // Custom hook to fetch fee head data
+  const { data: feeHeadData, isLoading: paymentTermsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeHeadsQuery,
+  });
+
+  // Dialog control states
+  const deleteFeeHeadDialog = useBoolean(); // Controls delete confirmation dialog
+  const addFeeHeadDialog = useBoolean(); // Controls add/edit fee head dialog
+  const [open, setOpen] = useState(false); // Controls main dialog visibility
+
+  // State management
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup); // Tracks unsaved changes
+  const [selectedFeeHead, setSelectedFeeHead] = useState<IFeeHead | null>(null); // Currently selected fee head for edit/delete
+  const dispatch = useDispatch();
+
+  /**
+   * Handles closing of the fee head form dialog
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    // Helper function to reset state after dialog closes
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedFeeHead(null);
+        dispatch(setIsChanges(false));
+      }, 200);
+    };
+
+    // Handle different closing scenarios
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addFeeHeadDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      addFeeHeadDialog.onFalse();
+      setTimeout(() => {
+        setSelectedFeeHead(null);
+      }, 200);
+    }
+  };
+
+  return (
+    <Box height="100%" display="flex" flexDirection="column">
+      <CustomBreadcrumbs
+        heading="Fee Head"
+        description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click ‘Add Fee Head’ to create a new one."
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Fee Head', href: '/finance/fee-head' },
+        ]}
+        action={
+          <Button
+            onClick={() => addFeeHeadDialog.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+          >
+            Fee Head
+          </Button>
+        }
+        sx={{ px: 1, mb: 2 }}
+      />
+      <FeeHeadTable
+        onDelete={(data) => {
+          setSelectedFeeHead(data);
+          deleteFeeHeadDialog.onTrue();
+        }}
+        onEdit={(data) => {
+          setSelectedFeeHead(data);
+          addFeeHeadDialog.onTrue();
+        }}
+        open={open}
+        onAddFeeHead={addFeeHeadDialog}
+        setOpenDialog={setOpen}
+        editData={selectedFeeHead}
+        setEditData={setSelectedFeeHead}
+        data={feeHeadData}
+      />
+
+      <CustomDialog
+        open={addFeeHeadDialog.value}
+        handleClose={() => {
+          addFeeHeadDialog.onFalse();
+          setTimeout(() => {
+            setSelectedFeeHead(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedFeeHead ? 'Update Fee Head' : 'Add Fee Head'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedFeeHead
+                  ? 'You can update the fee head details including name, category, and description.'
+                  : 'Create a new fee head by entering its name, selecting the related fee category, and marking it as mandatory if required.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <FeeHeadForm open={addFeeHeadDialog} onClose={handleClose} editData={selectedFeeHead} />
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteFeeHeadDialog.value}
+        onClose={() => {
+          setSelectedFeeHead(null);
+          deleteFeeHeadDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete fee head <strong>{selectedFeeHead?.feeHeadName}</strong>
+            ?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deleteFeeHeadDialog.onFalse();
+              setSelectedFeeHead(null);
+              shikshaMitraToast.success({
+                message: `Fee Head ${selectedFeeHead?.feeHeadName} deleted successfully`,
+              });
+              // handle delete action
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
+    </Box>
+  );
+};
+
+export default FeeHeadCreation;
