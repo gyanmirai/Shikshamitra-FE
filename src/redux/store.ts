@@ -17,6 +17,7 @@ import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
 import { feeHeadApi } from './feeHeadApi/feeHeadApi';
+import { chargesApi } from './chargesApi/chargesApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import globalStateReducer from './globalState/globalSlice';
@@ -134,6 +135,7 @@ const reducers = combineReducers({
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
   [feeHeadApi.reducerPath]: feeHeadApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
+  [chargesApi.reducerPath]: chargesApi.reducer,
 });
 
 const store = configureStore({
@@ -200,7 +202,8 @@ const store = configureStore({
       .concat(studentInvoiceApi.middleware)
       .concat(studentReceiptApi.middleware)
       .concat(feeHeadApi.middleware)
-      .concat(feeCategoryApi.middleware),
+      .concat(feeCategoryApi.middleware)
+      .concat(chargesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
