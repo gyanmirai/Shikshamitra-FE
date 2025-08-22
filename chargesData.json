@@ -1,0 +1,115 @@
+{
+  "chargesData": [
+    {
+      "id": "CH-001",
+      "category": "Tuition Fee",
+      "class": "10",
+      "divisions": ["A", "B"],
+      "students": 70,
+      "studentList": [
+        { "id": "ST-101", "name": "Aarav Sharma", "division": "A" },
+        { "id": "ST-102", "name": "Priya Patel", "division": "A" },
+        { "id": "ST-103", "name": "Rahul Verma", "division": "B" },
+        { "id": "ST-104", "name": "Sneha Iyer", "division": "B" }
+      ],
+      "amount": 15000,
+      "priority": 1,
+      "dueDate": "2025-08-30",
+      "status": 0,
+      "description": "Annual tuition fee applicable for Class 10 students in divisions A and B.",
+      "academicYear": "2025-2026",
+      "board": "CBSE",
+      "medium": "English",
+      "additionalNotes": "Installments allowed in two parts."
+    },
+    {
+      "id": "CH-002",
+      "category": "Lab Fee",
+      "class": "9",
+      "divisions": ["A", "C"],
+      "students": 55,
+      "studentList": [
+        { "id": "ST-201", "name": "Karan Mehta", "division": "A" },
+        { "id": "ST-202", "name": "Riya Nair", "division": "A" },
+        { "id": "ST-203", "name": "Aditya Joshi", "division": "C" },
+        { "id": "ST-204", "name": "Megha Gupta", "division": "C" }
+      ],
+      "amount": 5000,
+      "priority": 2,
+      "dueDate": "2025-09-10",
+      "status": 2,
+      "description": "Laboratory usage charges for Class 9 divisions A and C.",
+      "academicYear": "2025-2026",
+      "board": "CBSE",
+      "medium": "English",
+      "additionalNotes": "Includes Physics, Chemistry, and Biology labs."
+    },
+    {
+      "id": "CH-003",
+      "category": "Sports Fee",
+      "class": "8",
+      "divisions": ["A", "B", "C"],
+      "students": 120,
+      "studentList": [
+        { "id": "ST-301", "name": "Manav Desai", "division": "A" },
+        { "id": "ST-302", "name": "Ananya Reddy", "division": "B" },
+        { "id": "ST-303", "name": "Ishaan Singh", "division": "C" },
+        { "id": "ST-304", "name": "Pooja Kulkarni", "division": "B" },
+        { "id": "ST-305", "name": "Vikram Chauhan", "division": "A" }
+      ],
+      "amount": 3000,
+      "priority": 3,
+      "dueDate": "2025-09-15",
+      "status": 1,
+      "description": "Annual sports and physical education fee for Class 8.",
+      "academicYear": "2025-2026",
+      "board": "CBSE",
+      "medium": "English",
+      "additionalNotes": "Covers ground maintenance and coaching charges."
+    },
+    {
+      "id": "CH-004",
+      "category": "Exam Fee",
+      "class": "10",
+      "divisions": ["B", "C"],
+      "students": 65,
+      "studentList": [
+        { "id": "ST-401", "name": "Nikhil Bansal", "division": "B" },
+        { "id": "ST-402", "name": "Shruti Deshmukh", "division": "C" },
+        { "id": "ST-403", "name": "Arjun Malhotra", "division": "B" },
+        { "id": "ST-404", "name": "Divya Menon", "division": "C" }
+      ],
+      "amount": 2500,
+      "priority": 2,
+      "dueDate": "2025-09-20",
+      "status": 0,
+      "description": "Examination fee for mid-term and final exams for Class 10.",
+      "academicYear": "2025-2026",
+      "board": "CBSE",
+      "medium": "English",
+      "additionalNotes": "Includes question paper printing and evaluation charges."
+    },
+    {
+      "id": "CH-005",
+      "category": "Library Fee",
+      "class": "7",
+      "divisions": ["A", "D"],
+      "students": 60,
+      "studentList": [
+        { "id": "ST-501", "name": "Rohan Khanna", "division": "A" },
+        { "id": "ST-502", "name": "Neha Choudhary", "division": "D" },
+        { "id": "ST-503", "name": "Siddharth Jain", "division": "A" },
+        { "id": "ST-504", "name": "Tanvi Shah", "division": "D" }
+      ],
+      "amount": 1200,
+      "priority": 1,
+      "dueDate": "2025-09-25",
+      "status": 2,
+      "description": "Annual library subscription fee for Class 7.",
+      "academicYear": "2025-2026",
+      "board": "CBSE",
+      "medium": "English",
+      "additionalNotes": "Includes digital library and book lending services."
+    }
+  ]
+}
