@@ -1138,29 +1138,10 @@ const financeModule = {
         },
         {
           title: 'Reconciliation',
-          path: '',
+          path: '/finance/reconciliation',
           _action: 'reconciliation',
-          shortcutKey: 'Alt+F+6',
-          shortcutKeyName: 'Alt+F+6',
-          children: [
-            {
-              title: 'Cheque Transactions',
-              path: '/finance/reconciliation/payment-by-cheque',
-              _action: 'payment-by-cheque',
-            },
-            {
-              title: 'Bounced Cheque',
-              path: '/finance/reconciliation/bounce-cheque',
-              _action: 'bounce-cheque',
-              shortcutKey: 'Alt+F+7',
-              shortcutKeyName: 'Alt+F+7',
-            },
-            {
-              title: 'Cleared Cheque',
-              path: '/finance/reconciliation/cleared-cheque',
-              _action: 'payment-by-cheque',
-            },
-          ],
+          shortcutKey: 'Alt+F+5',
+          shortcutKeyName: 'Alt+F+5',
         },
         {
           title: 'Income Tracking',

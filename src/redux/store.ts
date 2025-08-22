@@ -24,6 +24,7 @@ import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
 import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
 import { receiptApi } from './invoiceAndReceipt/receiptApi';
+import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { organizationApi } from './oraganization/oraganization';
@@ -125,6 +126,7 @@ const reducers = combineReducers({
   [outstandingFeeApi.reducerPath]: outstandingFeeApi.reducer,
   [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
   [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
+  [ReconciliationApi.reducerPath]: ReconciliationApi.reducer,
   [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
   [ConcessionApi.reducerPath]: ConcessionApi.reducer,
   [invoiceApi.reducerPath]: invoiceApi.reducer,
@@ -190,6 +192,7 @@ const store = configureStore({
       .concat(outstandingFeeApi.middleware)
       .concat(FinanceFeeStructureApi.middleware)
       .concat(PaymentTermApi.middleware)
+      .concat(ReconciliationApi.middleware)
       .concat(ConcessionTypeApi.middleware)
       .concat(ConcessionApi.middleware)
       .concat(invoiceApi.middleware)
