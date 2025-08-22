@@ -6,22 +6,30 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { ClearIcon } from '@mui/x-date-pickers';
 import { GridSearchIcon } from '@mui/x-data-grid';
-import { Box, TextField, IconButton } from '@mui/material';
+import { Box, TextField, IconButton, Typography } from '@mui/material';
+
+import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetInvoiceDataQuery } from 'src/redux/invoiceAndReceipt/invoiceApi';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import InvoiceForm from './InvoiceForm';
 import InvoiceTable from './InvoiceTable';
+import InvoiceTableView from './StudentInvoiceTable';
+
+import type { InvoiceData } from './type';
 
 const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
+  const [selectedInvoiceData, setSelectedInvoiceData] = useState<InvoiceData | null>(null);
   const [classes, setClass] = useState<string>('');
   // State to store all divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -32,6 +40,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
     type: 'query',
     currentQueryAndMutation: useGetInvoiceDataQuery,
   });
+  const viewInvoiceDetailsDialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
@@ -133,7 +142,13 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
           sx={{ minWidth: '250.6px', width: '100%' }}
         />
       </Box>
-      <InvoiceTable data={invoiceData} />
+      <InvoiceTable
+        data={invoiceData}
+        onView={(data) => {
+          viewInvoiceDetailsDialog.onTrue();
+          setSelectedInvoiceData(data);
+        }}
+      />
       <CustomDialog
         open={addInvoiceDialog.value}
         handleClose={() => {
@@ -143,6 +158,30 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
         maxWidth="sm"
       >
         <InvoiceForm open={addInvoiceDialog} onClose={handleClose} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={viewInvoiceDetailsDialog.value}
+        handleClose={() => {
+          viewInvoiceDetailsDialog?.onFalse();
+          setSelectedInvoiceData(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Receipt Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal displays all invoices of a particular student, with options to view each invoice in detail or send it."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+      >
+        <InvoiceTableView selectedStudent={selectedInvoiceData} />
       </CustomDialog>
     </Box>
   );
