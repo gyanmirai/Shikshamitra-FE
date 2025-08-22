@@ -6,13 +6,17 @@ export interface IInstallment {
   installmentName: string;
   percentage: number; // store as number (e.g., 25 for 25%)
   dueDate: string | null | Dayjs; // ISO date string e.g., "2025-03-30"
+  reminderDate: string | null | Dayjs;
+  gracePeriod: number | null;
+  overdueCharges: number | null;
 }
 
 export interface IPaymentTerm {
   id: string | number;
   paymentTermName: string;
   totalInstallments: number | string;
-  academicYear: string;
+  academicYearId: string;
+  academicYear?: string;
   board: string;
   medium: string;
   installments: IInstallment[];

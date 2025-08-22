@@ -10,7 +10,7 @@ export const paymentTermValidationSchema = Yup.object().shape({
     .min(2, 'Must be at least 2 characters')
     .max(50, 'Cannot exceed 50 characters'),
   totalInstallments: Yup.string().required('Total Installment is required'),
-  academicYear: Yup.string().required('Academic Year is required'),
+  academicYearId: Yup.string().required('Academic Year is required'),
 
   board: Yup.string().required('Board is required'),
 
@@ -31,7 +31,52 @@ export const paymentTermValidationSchema = Yup.object().shape({
           .required('Percentage is required')
           .min(1, 'Percentage must be at least 1')
           .max(100, 'Percentage cannot exceed 100'),
-        dueDate: Yup.mixed().required('Due Date is required'),
+        dueDate: Yup.mixed()
+          .required('Due Date is required')
+          .test('min-year', function (value) {
+            const context = this.options.context as { academicYear?: string };
+            const { academicYear } = context; // <-- comes from Formik context
+            if (!academicYear || !value) return true;
+
+            const [startYear, endYear] = academicYear.split('-').map(Number);
+            const dueYear = dayjs(value as Dayjs).year();
+
+            if (dueYear < startYear || dueYear > endYear) {
+              return this.createError({
+                message: `Due Date between ${startYear} and ${endYear}`,
+              });
+            }
+            return true;
+          }),
+
+        reminderDate: Yup.mixed()
+          .required('Reminder Date is required')
+          .test('reminder-before-due', 'Reminder date must be before due date', function (value) {
+            const { dueDate } = this.parent;
+            if (!value || !dueDate) return true;
+            return dayjs(value as Dayjs).isBefore(dayjs(dueDate));
+          })
+          .test('min-year', function (value) {
+            const context = this.options.context as { academicYear?: string };
+            const { academicYear } = context; // <-- comes from Formik context
+            if (!academicYear || !value) return true;
+
+            const [startYear, endYear] = academicYear.split('-').map(Number);
+            const dueYear = dayjs(value as Dayjs).year();
+
+            if (dueYear < startYear || dueYear > endYear) {
+              return this.createError({
+                message: `Due Date between ${startYear} and ${endYear}`,
+              });
+            }
+            return true;
+          }),
+        gracePeriod: Yup.number()
+          .min(1, 'Grace Period must be greater than 0')
+          .required('Grace Period is required'),
+        overdueCharges: Yup.number()
+          .min(1, 'Overdue Charges must be greater than 0')
+          .required('Overdue Charges is required'),
       })
     )
     .required('Installments are required')

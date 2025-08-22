@@ -14,6 +14,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetPaymentTermQuery } from 'src/redux/finance/paymentTerm';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PaymentTermForm from './Components/PaymentTermForm';
@@ -26,6 +28,8 @@ const PaymentTerm = () => {
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<IPaymentTerm | null>(null);
   // Custom hook to manage dialog open/close state
   const addPaymentTermDialog = useBoolean();
+  const deletePaymentTermDialog = useBoolean();
+
   const { data: paymentTerms, isLoading: paymentTermsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPaymentTermQuery,
@@ -123,9 +127,44 @@ const PaymentTerm = () => {
               addPaymentTermDialog.onTrue();
               setSelectedPaymentTerm(data);
             }}
+            onDelete={(data) => {
+              deletePaymentTermDialog.onTrue();
+              setSelectedPaymentTerm(data);
+            }}
           />
         )}
       </>
+      <ConfirmDialog
+        open={deletePaymentTermDialog.value}
+        onClose={() => {
+          setSelectedPaymentTerm(null);
+          deletePaymentTermDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete payment term{' '}
+            <strong>{selectedPaymentTerm?.paymentTermName}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deletePaymentTermDialog.onFalse();
+              setSelectedPaymentTerm(null);
+              shikshaMitraToast.success({
+                message: `Payment term ${selectedPaymentTerm?.paymentTermName} deleted successfully`,
+              });
+              // handle delete action
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };
