@@ -1,0 +1,448 @@
+{
+  "overviewData": {
+    "id": 1,
+    "lastUpdated": "12-07-2025 | 12:30 PM",
+    "totalTransactions": 1247,
+    "matches": 1198,
+    "unmatched": 49,
+    "discrepancies": 12,
+    "overallProgress": 96.1
+  },
+
+  "months": [
+    { "id": 1, "value": "November 2024", "label": "November 2024" },
+    { "id": 2, "value": "October 2024", "label": "October 2024" },
+    { "id": 3, "value": "September 2024", "label": "September 2024" },
+    { "id": 4, "value": "August 2024", "label": "August 2024" },
+    { "id": 5, "value": "July 2024", "label": "July 2024" },
+    { "id": 6, "value": "June 2024", "label": "June 2024" }
+  ],
+
+  "summaryCards": [
+    {
+      "id": 1,
+      "title": "Total Transactions",
+      "value": 1247,
+      "icon": "material-symbols:receipt-long-outline",
+      "color": "#E3F2FD",
+      "iconColor": "#2196F3"
+    },
+    {
+      "id": 2,
+      "title": "Matches",
+      "value": 1198,
+      "icon": "material-symbols:check-circle-outline",
+      "color": "#E8F5E8",
+      "iconColor": "#4CAF50"
+    },
+    {
+      "id": 3,
+      "title": "Unmatched",
+      "value": 49,
+      "icon": "material-symbols:warning-outline",
+      "color": "#FFF3E0",
+      "iconColor": "#FF9800"
+    },
+    {
+      "id": 4,
+      "title": "Discrepancies",
+      "value": 12,
+      "icon": "material-symbols:error-outline",
+      "color": "#FFEBEE",
+      "iconColor": "#F44336"
+    }
+  ],
+
+
+
+  "discrepancy": {
+    "statusOptions": [
+      { "id": 1, "label": "Pending", "value": 0 },
+      { "id": 2, "label": "Investigating", "value": 1 },
+      { "id": 3, "label": "Resolved", "value": 2 }
+    ],
+    "typeOptions": [
+      { "id": 1, "label": "Missing Bank Entry", "value": "Missing Bank Entry" },
+      { "id": 2, "label": "Amount Mismatch", "value": "Amount Mismatch" },
+      { "id": 3, "label": "Duplicate Entry", "value": "Duplicate Entry" }
+    ],
+    "data": [
+      {
+        "id": "REC-001",
+        "type": "Missing Bank Entry",
+        "student": "Dharmik Jinjala",
+        "classDivision": "10-A",
+        "amount": "₹ 10,000",
+        "transactionId": "TXN123456",
+        "date": "12-12-2024",
+        "status": 2
+      },
+      {
+        "id": "REC-002",
+        "type": "Amount Mismatch",
+        "student": "Parth Ghusar",
+        "classDivision": "11-B",
+        "amount": "₹ 12,000",
+        "transactionId": "TXN789012",
+        "date": "10-12-2024",
+        "status": 0
+      },
+      {
+        "id": "REC-003",
+        "type": "Duplicate Entry",
+        "student": "Prerna Atre",
+        "classDivision": "12-D",
+        "amount": "₹ 1,000",
+        "transactionId": "TXN123458",
+        "date": "06-12-2024",
+        "status": 0
+      },
+      {
+        "id": "REC-004",
+        "type": "Missing Bank Entry",
+        "student": "Mayur Solanki",
+        "classDivision": "6-A",
+        "amount": "₹ 500",
+        "transactionId": "TXN123450",
+        "date": "26-12-2024",
+        "status": 1
+      },
+      {
+        "id": "REC-005",
+        "type": "Duplicate Entry",
+        "student": "Vishal Makwana",
+        "classDivision": "9-D",
+        "amount": "₹ 6,350",
+        "transactionId": "TXN123488",
+        "date": "21-12-2024",
+        "status": 2
+      }
+    ],
+    "tableColumns": [
+      {
+        "id": "id",
+        "label": "ID",
+        "minWidth": "80px",
+        "align": "left",
+        "sticky": true,
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "type",
+        "label": "Type",
+        "minWidth": "150px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "enum"
+      },
+      {
+        "id": "student",
+        "label": "Student",
+        "minWidth": "150px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "classDivision",
+        "label": "Class/Division",
+        "minWidth": "130px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "amount",
+        "label": "Amount",
+        "minWidth": "100px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "transactionId",
+        "label": "Transaction ID",
+        "minWidth": "140px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "date",
+        "label": "Date",
+        "minWidth": "100px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "date"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "minWidth": "100px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "enum"
+      },
+      {
+        "id": "actions",
+        "label": "Actions",
+        "isFilter": false,
+        "isSort": false,
+        "sticky": true,
+        "align": "left",
+        "minWidth": "60px"
+      }
+    ],
+    "statusColorMapping": {
+      "0": { "color": "warning", "variant": "outlined" },
+      "1": { "color": "info", "variant": "filled" },
+      "2": { "color": "success", "variant": "filled" },
+      "default": { "color": "default", "variant": "outlined" }
+    }
+  },
+
+
+
+  "bankStatements": {
+    "statusOptions": [
+      { "id": 1, "label": "Processing", "value": 0 },
+      { "id": 2, "label": "Processed", "value": 1 }
+    ],
+    "bankOptions": [
+      { "id": 1, "label": "State Bank of India", "value": "State Bank of India" },
+      { "id": 2, "label": "HDFC Bank", "value": "HDFC Bank" },
+      { "id": 3, "label": "Bank of Baroda", "value": "Bank of Baroda" },
+      { "id": 4, "label": "IDFC Bank", "value": "IDFC Bank" },
+      { "id": 5, "label": "ICICI Bank", "value": "ICICI Bank" }
+    ],
+    "data": [
+      {
+        "id": 1,
+        "statementId": "STMT-001",
+        "bankName": "State Bank of India",
+        "accountNumber": "****1234",
+        "uploadDate": "12-12-2024",
+        "transactions": "156",
+        "status": 1
+      },
+      {
+        "id": 2,
+        "statementId": "STMT-002",
+        "bankName": "HDFC Bank",
+        "accountNumber": "****5678",
+        "uploadDate": "10-12-2024",
+        "transactions": "89",
+        "status": 1
+      },
+      {
+        "id": 3,
+        "statementId": "STMT-003",
+        "bankName": "Bank of Baroda",
+        "accountNumber": "****5679",
+        "uploadDate": "06-12-2024",
+        "transactions": "83",
+        "status": 1
+      },
+      {
+        "id": 4,
+        "statementId": "STMT-004",
+        "bankName": "IDFC Bank",
+        "accountNumber": "****3456",
+        "uploadDate": "26-12-2024",
+        "transactions": "34",
+        "status": 0
+      },
+      {
+        "id": 5,
+        "statementId": "STMT-005",
+        "bankName": "ICICI Bank",
+        "accountNumber": "****9876",
+        "uploadDate": "21-12-2024",
+        "transactions": "50",
+        "status": 0
+      }
+    ],
+    "tableColumns": [
+      {
+        "id": "statementId",
+        "label": "Statement ID",
+        "minWidth": "150px",
+        "align": "left",
+        "sticky": true,
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "bankName",
+        "label": "Bank Name",
+        "minWidth": "150px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "enum"
+      },
+      {
+        "id": "accountNumber",
+        "label": "Account Number",
+        "minWidth": "160px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "string"
+      },
+      {
+        "id": "uploadDate",
+        "label": "Upload Date",
+        "minWidth": "130px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "date"
+      },
+      {
+        "id": "transactions",
+        "label": "Transactions",
+        "minWidth": "120px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "number"
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "minWidth": "100px",
+        "align": "left",
+        "isFilter": true,
+        "filterType": "enum"
+      },
+      {
+        "id": "actions",
+        "label": "Actions",
+        "isFilter": false,
+        "isSort": false,
+        "sticky": true,
+        "align": "left",
+        "minWidth": "60px"
+      }
+    ],
+    "statusColorMapping": {
+      "0": { "color": "info", "variant": "outlined" },
+      "1": { "color": "success", "variant": "filled" },
+      "default": { "color": "default", "variant": "outlined" }
+    }
+  },
+
+
+
+  "uploadDialog": {
+    "statementNameOptions": [
+      { "id": 1, "value": "Monthly - November 2024", "label": "Monthly - November 2024" },
+      { "id": 2, "value": "Monthly - December 2024", "label": "Monthly - December 2024" },
+      { "id": 3, "value": "Quarterly - Q4 2024", "label": "Quarterly - Q4 2024" },
+      { "id": 4, "value": "Annual - 2024", "label": "Annual - 2024" }
+    ],
+    "bankOptions": [
+      { "id": 1, "value": "State Bank of India", "label": "State Bank of India" },
+      { "id": 2, "value": "HDFC Bank", "label": "HDFC Bank" },
+      { "id": 3, "value": "ICICI Bank", "label": "ICICI Bank" },
+      { "id": 4, "value": "Punjab National Bank", "label": "Punjab National Bank" },
+      { "id": 5, "value": "Bank of Baroda", "label": "Bank of Baroda" },
+      { "id": 6, "value": "Axis Bank", "label": "Axis Bank" },
+      { "id": 7, "value": "Kotak Mahindra Bank", "label": "Kotak Mahindra Bank" },
+      { "id": 8, "value": "IndusInd Bank", "label": "IndusInd Bank" }
+    ],
+    "statementPeriodOptions": [
+      { "id": 1, "value": "January 2025", "label": "January 2025" },
+      { "id": 2, "value": "February 2025", "label": "February 2025" },
+      { "id": 3, "value": "March 2025", "label": "March 2025" },
+      { "id": 4, "value": "April 2025", "label": "April 2025" },
+      { "id": 5, "value": "May 2025", "label": "May 2025" },
+      { "id": 6, "value": "June 2025", "label": "June 2025" },
+      { "id": 7, "value": "July 2025", "label": "July 2025" },
+      { "id": 8, "value": "August 2025", "label": "August 2025" },
+      { "id": 9, "value": "September 2025", "label": "September 2025" },
+      { "id": 10, "value": "October 2025", "label": "October 2025" },
+      { "id": 11, "value": "November 2024", "label": "November 2024" },
+      { "id": 12, "value": "December 2024", "label": "December 2024" }
+    ],
+    "validationSchema": {
+      "statementName": {
+        "required": true,
+        "message": "Statement Name is required"
+      },
+      "selectedBank": {
+        "required": true,
+        "message": "Bank selection is required"
+      },
+      "statementPeriod": {
+        "required": true,
+        "message": "Statement Period is required"
+      },
+      "description": {
+        "required": false
+      }
+    },
+    "formFields": [
+      {
+        "id": "statementName",
+        "name": "statementName",
+        "label": "Statement Name *",
+        "type": "select",
+        "placeholder": "Statement Name *",
+        "required": true
+      },
+      {
+        "id": "selectedBank",
+        "name": "selectedBank",
+        "label": "Bank Name *",
+        "type": "select",
+        "placeholder": "Select Bank *",
+        "required": true
+      },
+      {
+        "id": "statementPeriod",
+        "name": "statementPeriod",
+        "label": "Statement Period *",
+        "type": "select",
+        "placeholder": "Select Statement Period *",
+        "required": true
+      },
+      {
+        "id": "description",
+        "name": "description",
+        "label": "Description",
+        "type": "textarea",
+        "placeholder": "Description",
+        "required": false,
+        "rows": 3
+      }
+    ],
+    "fileUpload": {
+      "acceptedFormats": [".pdf", ".csv", ".xlsx", ".xls"],
+      "title": "Upload Statement File",
+      "dropText": "Drop your bank statement here or click to browse",
+      "supportedFormatsText": "Supported formats: PDF, CSV, Excel",
+      "successMessage": "uploaded successfully",
+      "icon": "solar:cloud-upload-bold"
+    },
+    "dialog": {
+      "title": "Bank Statement Upload",
+      "tooltipText": "Upload your bank statement to begin reconciliation. Provide statement details and attach the file for processing.",
+      "maxWidth": "sm",
+      "width": "580px",
+      "buttons": {
+        "cancel": {
+          "text": "Cancel",
+          "icon": "cancel",
+          "variant": "outlined"
+        },
+        "submit": {
+          "text": "Process Statement",
+          "icon": "material-symbols:description",
+          "variant": "contained"
+        }
+      }
+    },
+    "successToast": {
+      "message": "Bank Statement {fileName} uploaded and processed successfully"
+    }
+  }
+}
