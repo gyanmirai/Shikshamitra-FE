@@ -214,7 +214,6 @@ const store = configureStore({
       .concat(feeHeadApi.middleware)
       .concat(feeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
-      .concat(ChargeCategoryApi.middleware)
       .concat(ExpenseCategoryApi.middleware)
       .concat(chargesApi.middleware),
 });
