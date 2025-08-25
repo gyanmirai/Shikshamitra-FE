@@ -134,7 +134,7 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This modal displays the details of the selected charge."
+              title="This modal is used to view all details related to a particular charge."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

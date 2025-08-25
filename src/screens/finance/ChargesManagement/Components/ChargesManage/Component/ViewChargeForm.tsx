@@ -1,4 +1,4 @@
-import { Box, Button, DialogActions } from '@mui/material';
+import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
@@ -20,7 +20,13 @@ const ChargeDetailsCard: React.FC<Props> = ({ charge, isActionShow = false }) =>
     <Scrollbar sx={{ height: '500px' }}>
       <ChargeFirstDetailsCard charge={charge} />
       <RequestorInfoCard charge={charge} />
+      {isActionShow && (
+        <Box sx={{ p: 2 }}>
+          <TextField fullWidth multiline rows={3} label="Remarks/Comment" size="small" />
+        </Box>
+      )}
     </Scrollbar>
+
     {isActionShow && (
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button

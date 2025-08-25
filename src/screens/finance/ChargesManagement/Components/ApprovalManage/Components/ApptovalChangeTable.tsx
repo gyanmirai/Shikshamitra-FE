@@ -1,12 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 
 import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
 
+import {
+  ChargesPriorityStatus,
+  ChargesPriorityStatusOptions,
+} from 'src/enums/charges-priority-status';
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,
@@ -25,10 +28,7 @@ interface ChargesApprovalTableProps {
 }
 
 const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onView }) => {
-  const approveDialog = useBoolean();
-
   const tabs = useTabs('all');
-  const [selectedChargeName, setSelectedChargeName] = useState<string | null>(null);
 
   // Calculate counts by status
   const chargeCounts = useMemo(
@@ -138,10 +138,16 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
           {
             id: 'priority',
             label: 'Priority',
-            filterType: 'number',
             align: 'left',
-            render: (value) =>
-              value === 1 ? 'Low' : value === 2 ? 'Medium' : value === 3 ? 'High' : 'Urgent',
+            filterType: 'enum',
+            enumOptions: ChargesPriorityStatusOptions,
+            render(value, row) {
+              return (
+                <Typography sx={{ fontSize: '13px' }}>
+                  {ChargesPriorityStatus[value as ChargesPriorityStatus]}
+                </Typography>
+              );
+            },
           },
           { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
           {

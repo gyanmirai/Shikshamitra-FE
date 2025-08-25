@@ -45,12 +45,12 @@ const ApproveManage = () => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Charge</Typography>
+            <Typography variant="h5">Charge Request Review</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This modal displays the details of the selected charge."
+              title="This modal allows the admin to review complete details of a specific charge request and take action to approve or reject it."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

@@ -2,8 +2,12 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import {
+  ChargesPriorityStatus,
+  ChargesPriorityStatusOptions,
+} from 'src/enums/charges-priority-status';
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,
@@ -64,9 +68,17 @@ const ChargesTable = ({
       },
       {
         id: 'priority',
-        filterType: 'number',
         label: 'Priority',
         align: 'left',
+        filterType: 'enum',
+        enumOptions: ChargesPriorityStatusOptions,
+        render(value, row) {
+          return (
+            <Typography sx={{ fontSize: '13px' }}>
+              {ChargesPriorityStatus[value as ChargesPriorityStatus]}
+            </Typography>
+          );
+        },
       },
       { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
       {

@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -18,11 +19,14 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IChargeFormProps } from './type';
 
 const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const formik = useFormik({
     initialValues: {
       chargeCategory: '',
@@ -40,9 +44,27 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
     },
     validationSchema: Yup.object({
       chargeCategory: Yup.string().required('Charge Category is required'),
-      description: Yup.string().required('Description is required'),
-      amount: Yup.number().required('Amount is required'),
-      dueDate: Yup.date().required('Due Date is required'),
+      description: Yup.string().required('Purpose/Description is required'),
+      amount: Yup.number().min(1, 'Amount must be greater than 0').required('Amount is required'),
+      dueDate: Yup.mixed()
+        .required('Due Date is required')
+        .test(
+          'is-valid-dayjs',
+          'Due Date must be a valid date',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        .test(
+          'min-date',
+          (value) =>
+            `Due Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+          (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+        )
+        .test(
+          'max-date',
+          (value) =>
+            `Due Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+          (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+        ),
       priority: Yup.string().required('Priority is required'),
       academicYear: Yup.string().required('Academic Year is required'),
       board: Yup.string().required('Board is required'),
@@ -126,50 +148,65 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
           </Grid>
 
           <Grid item xs={12}>
-            <TextField
-              name="description"
-              label="Purpose/Description *"
-              multiline
-              minRows={3}
-              fullWidth
-              value={values.description}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={!!(touched.description && errors.description)}
-              helperText={(touched.description && errors.description) as string}
-            />
+            <ShakingTextField error={!!(touched.description && errors.description) || false}>
+              <TextField
+                name="description"
+                label="Purpose/Description *"
+                multiline
+                minRows={3}
+                fullWidth
+                value={values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(touched.description && errors.description)}
+                helperText={(touched.description && errors.description) as string}
+              />
+            </ShakingTextField>
           </Grid>
 
           <Grid item xs={12}>
-            <TextField
-              name="amount"
-              label="Amount *"
-              type="number"
-              fullWidth
-              value={values.amount}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={!!(touched.amount && errors.amount)}
-              helperText={(touched.amount && errors.amount) as string}
-            />
+            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name="amount"
+                value={values.amount || ''}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  val = val.replace(/[₹,\s]/g, '');
+                  setFieldValue('amount', Number(val));
+                  setFieldTouched('amount', false);
+                }}
+                sx={{
+                  width: '100%',
+                  padding: '0',
+                  borderRadius: 1,
+                }}
+                error={!!(touched.amount && errors.amount)}
+                helperText={(touched.amount && errors.amount) as string}
+              />
+            </ShakingTextField>
           </Grid>
 
           <Grid item xs={12}>
-            <DatePicker
-              label="Due Date *"
-              name="dueDate"
-              value={values.dueDate}
-              onChange={(newValue) => setFieldValue('dueDate', newValue)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  error: !!(touched.dueDate && errors.dueDate),
-                  helperText: (touched.dueDate && errors.dueDate) as string,
-                  onBlur: () => setFieldTouched('dueDate', true),
-                },
-              }}
-            />
+            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+              <DatePicker
+                label="Due Date *"
+                name="dueDate"
+                value={values.dueDate}
+                onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!(touched.dueDate && errors.dueDate),
+                    helperText: (touched.dueDate && errors.dueDate) as string,
+                    onBlur: () => setFieldTouched('dueDate', true),
+                  },
+                }}
+              />
+            </ShakingTextField>
           </Grid>
 
           <Grid item xs={12}>
@@ -178,9 +215,9 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
                 name="priority"
                 label="Priority *"
                 options={[
-                  { id: 'LOW', name: 'Low' },
-                  { id: 'MEDIUM', name: 'Medium' },
-                  { id: 'HIGH', name: 'High' },
+                  { id: 'Low', name: 'Low' },
+                  { id: 'Medium', name: 'Medium' },
+                  { id: 'High', name: 'High' },
                 ]}
                 labelKey="name"
                 valueKey="id"

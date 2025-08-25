@@ -1116,7 +1116,7 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+3',
         },
         {
-          title: 'Charge Management',
+          title: 'Charges Management',
           path: '/finance/charge-management',
           _action: 'charge-management',
           shortcutKey: 'Alt+F+3',

@@ -58,7 +58,7 @@
         { "id": "ST-305", "name": "Vikram Chauhan", "division": "A" }
       ],
       "amount": 3000,
-      "priority": 3,
+      "priority": 0,
       "dueDate": "2025-09-15",
       "status": 1,
       "description": "Annual sports and physical education fee for Class 8.",
