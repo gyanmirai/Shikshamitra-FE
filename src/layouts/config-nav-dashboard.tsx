@@ -1260,6 +1260,20 @@ const financeModule = {
             //   shortcutKey: 'Alt+F+S+5',
             //   shortcutKeyName: 'Alt+F+S+5',
             // },
+            {
+              title: 'Charge Category',
+              path: '/finance/settings/chrgeCategory',
+              _action: 'charge-category',
+              shortcutKey: 'Alt+F+S+6',
+              shortcutKeyName: 'Alt+F+S+6',
+            },
+            {
+              title: 'Expense Category',
+              path: '/finance/settings/expenseCategories',
+              _action: 'expense-category',
+              shortcutKey: 'Alt+F+7',
+              shortcutKeyName: 'Alt+F+7',
+            },
             // {
             //   title: 'Tax Setting',
             //   path: '/finance/settings/tax-setting',

@@ -26,8 +26,10 @@ import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
 import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
+import { ChargeCategoryApi } from './finance/chargeCategory';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
+import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -136,6 +138,8 @@ const reducers = combineReducers({
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
   [feeHeadApi.reducerPath]: feeHeadApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
+  [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
+  [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
 });
 
 const store = configureStore({
@@ -203,7 +207,9 @@ const store = configureStore({
       .concat(studentInvoiceApi.middleware)
       .concat(studentReceiptApi.middleware)
       .concat(feeHeadApi.middleware)
-      .concat(feeCategoryApi.middleware),
+      .concat(feeCategoryApi.middleware)
+      .concat(ChargeCategoryApi.middleware)
+      .concat(ExpenseCategoryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
