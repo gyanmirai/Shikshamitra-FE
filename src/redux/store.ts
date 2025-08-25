@@ -12,11 +12,11 @@ import { boardApi } from './board/boardApi';
 import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
-import { feeHeadApi } from './feeHead/feeHeadApi';
 import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
+import { feeHeadApi } from './feeHeadApi/feeHeadApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import globalStateReducer from './globalState/globalSlice';
@@ -27,6 +27,7 @@ import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ConcessionApi } from './feeConcession/feeConcession';
+import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -99,7 +100,6 @@ const reducers = combineReducers({
   [StudentInquiryApi.reducerPath]: StudentInquiryApi.reducer,
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
-  [feeHeadApi.reducerPath]: feeHeadApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
   [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
@@ -134,6 +134,8 @@ const reducers = combineReducers({
   [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
   [studentInvoiceApi.reducerPath]: studentInvoiceApi.reducer,
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
+  [feeHeadApi.reducerPath]: feeHeadApi.reducer,
+  [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
 });
 
 const store = configureStore({
@@ -199,7 +201,9 @@ const store = configureStore({
       .concat(receiptApi.middleware)
       .concat(FeeRefundApi.middleware)
       .concat(studentInvoiceApi.middleware)
-      .concat(studentReceiptApi.middleware),
+      .concat(studentReceiptApi.middleware)
+      .concat(feeHeadApi.middleware)
+      .concat(feeCategoryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
