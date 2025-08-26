@@ -29,6 +29,7 @@ import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
+import { BudgetsCategoryApi } from './finance/budgetsCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -104,6 +105,7 @@ const reducers = combineReducers({
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
   [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
+  [BudgetsCategoryApi.reducerPath]: BudgetsCategoryApi.reducer,
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
@@ -171,6 +173,7 @@ const store = configureStore({
       .concat(feeHeadApi.middleware)
       .concat(paymentStatusOptionApi.middleware)
       .concat(budgetCategoryApi.middleware)
+      .concat(BudgetsCategoryApi.middleware)
       .concat(organizationUnitApi.middleware)
       .concat(EntranceExamSlotApi.middleware)
       .concat(EntranceExamApi.middleware)

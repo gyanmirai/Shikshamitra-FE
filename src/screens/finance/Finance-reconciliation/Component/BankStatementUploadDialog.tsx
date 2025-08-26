@@ -59,8 +59,6 @@ const BankStatementUploadDialog = ({ open, onClose }: BankStatementUploadDialogP
     onSubmit: async (values) => {
       try {
         setIsUploading(true);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
         shikshaMitraToast.success({
           message: 'Bank Statement uploaded and processed successfully',
         });

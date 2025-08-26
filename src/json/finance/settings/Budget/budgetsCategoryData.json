@@ -1,0 +1,79 @@
+{
+  "budgetsCategories": [
+    {
+      "id": 1,
+      "categoryName": "Academic",
+      "code": "ACD",
+      "createdBy": "Dharmik Jinjala",
+      "description": "Academic related expenses and resources"
+    },
+    {
+      "id": 2,
+      "categoryName": "Infrastructure",
+      "code": "INFRA",
+      "createdBy": "Prerna Atre",
+      "description": "Infrastructure development and maintenance"
+    },
+    {
+      "id": 3,
+      "categoryName": "Staff & Salaries",
+      "code": "STAFF",
+      "createdBy": "Mayur Solanki",
+      "description": "Staff salaries and benefits"
+    },
+    {
+      "id": 4,
+      "categoryName": "Operations",
+      "code": "OPS",
+      "createdBy": "Admin User",
+      "description": "Daily operational expenses"
+    }
+  ],
+  "budgetsSubCategories": [
+    {
+      "id": 1,
+      "subCategoryName": "Books",
+      "code": "BK",
+      "category": "Academic",
+      "categoryId": 1,
+      "createdBy": "Dharmik Jinjala",
+      "description": "Textbooks, reference materials, e-learning resources."
+    },
+    {
+      "id": 2,
+      "subCategoryName": "Utilities",
+      "code": "UTIL",
+      "category": "Infrastructure",
+      "categoryId": 2,
+      "createdBy": "Prerna Atre",
+      "description": "Repairs, renovations, painting, safety checks."
+    },
+    {
+      "id": 3,
+      "subCategoryName": "Teaching Salaries",
+      "code": "TEACH",
+      "category": "Staff & Salaries",
+      "categoryId": 3,
+      "createdBy": "Mayur Solanki",
+      "description": "Salaries, increments, and benefits for teaching staff."
+    },
+    {
+      "id": 4,
+      "subCategoryName": "Laboratory Equipment",
+      "code": "LAB",
+      "category": "Academic",
+      "categoryId": 1,
+      "createdBy": "Dharmik Jinjala",
+      "description": "Laboratory equipment, chemicals, and maintenance."
+    },
+    {
+      "id": 5,
+      "subCategoryName": "Administrative Salaries",
+      "code": "ADMIN",
+      "category": "Staff & Salaries",
+      "categoryId": 3,
+      "createdBy": "Mayur Solanki",
+      "description": "Administrative staff salaries and benefits."
+    }
+  ]
+}
