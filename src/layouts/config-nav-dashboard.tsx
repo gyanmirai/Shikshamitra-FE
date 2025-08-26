@@ -1281,6 +1281,20 @@ const financeModule = {
               shortcutKey: 'Alt+F+7',
               shortcutKeyName: 'Alt+F+7',
             },
+            {
+               title: 'Budget Category',
+              path: '/finance/settings/budget-category',
+              _action: 'budget-category-setting',
+              shortcutKey: 'Alt+F+S+8',
+              shortcutKeyName: 'Alt+F+S+8',
+            },
+            {
+              title: 'Budget Sub Category',
+              path: '/finance/settings/budget-sub-category',
+              _action: 'budget-sub-category-setting',
+              shortcutKey: 'Alt+F+S+9',
+              shortcutKeyName: 'Alt+F+S+9',
+            },
             // {
             //   title: 'Tax Setting',
             //   path: '/finance/settings/tax-setting',
