@@ -1,0 +1,37 @@
+{
+    "feeCategoryData" : [
+  {
+    "id": "1",
+    "feeCategoryName": "Tuition Fee"
+  },
+  {
+    "id": "2",
+    "feeCategoryName": "Library Fee"
+  },
+  {
+    "id": "3",
+    "feeCategoryName": "Laboratory Fee"
+  },
+  {
+    "id": "4",
+    "feeCategoryName": "Sports Fee"
+  },
+  {
+    "id": "5",
+    "feeCategoryName": "Transport Fee"
+  },
+  {
+    "id": "6",
+    "feeCategoryName": "Examination Fee"
+  },
+  {
+    "id": "7",
+    "feeCategoryName": "Hostel Fee"
+  },
+  {
+    "id": "8",
+    "feeCategoryName": "Miscellaneous Fee"
+  }
+]
+
+}

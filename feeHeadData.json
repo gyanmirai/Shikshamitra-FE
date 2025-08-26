@@ -1,0 +1,34 @@
+{
+  "feeHeadData"  :[
+  { 
+    "id": "FH-001",
+    "feeCategoryId": "Tuition Fee",
+    "feeHeadName": "Regular Academic Fee",
+    "description": "Covers teaching and academic expenses"
+  },
+  {
+    "id": "FH-002",
+    "feeCategoryId": "Library Fee", 
+    "feeHeadName": "Library Access and Resources",
+    "description": "Access to library resources and services"
+  },
+  {
+    "id": "FH-003",
+    "feeCategoryId": "Laboratory Fee",
+    "feeHeadName": "Science Lab Usage",
+    "description": "Covers lab usage and materials"
+  },
+  {
+    "id": "FH-004",
+    "feeCategoryId": "Sports Fee",
+    "feeHeadName": "Physical Education and Sports",
+    "description": "Participation in sports and activities"
+  },
+  {
+    "id": "FH-005",
+    "feeCategoryId": "Transport Fee",
+    "feeHeadName": "School Transportation",
+    "description": "School bus and transport facilities"
+  }
+]
+}
