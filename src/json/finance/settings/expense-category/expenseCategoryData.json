@@ -1,0 +1,44 @@
+{
+  "budgetOptions": [
+    {
+      "id": "1",
+      "name": "Hardwares Expenses 2025"
+    },
+    {
+      "id": "2", 
+      "name": "Furniture Repairing 2025"
+    },
+    {
+      "id": "3",
+      "name": "Benches 2025"
+    },
+    {
+      "id": "4",
+      "name": "Software Expenses 2025"
+    },
+    {
+      "id": "5",
+      "name": "Maintenance 2025"
+    }
+  ],
+  "expenseCategories": [
+    {
+      "id": "1",
+      "expenseCategoryName": "Internet Bills",
+      "budget": "Hardwares Expenses 2025",
+      "description": "All Internet Bills expenses will record in this category"
+    },
+    {
+      "id": "2", 
+      "expenseCategoryName": "Furniture",
+      "budget": "Furniture Repairing 2025",
+      "description": "All Furniture repairing expenses will record in this category"
+    },
+    {
+      "id": "3",
+      "expenseCategoryName": "Benches",
+      "budget": "Benches 2025", 
+      "description": "All Benches expenses will record in this category"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+    "chargeCategories": [
+        {
+            "id": "1",
+            "chargeName": "Library Fine",
+            "isRefundable": "Yes"
+        },
+        {
+            "id": "2",
+            "chargeName": "Transport Damage",
+            "isRefundable": "No"
+        },
+        {
+            "id": "3",
+            "chargeName": "Hostel Maintenance",
+            "isRefundable": "Yes"
+        }
+    ]
+}
