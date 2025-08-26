@@ -212,7 +212,8 @@ const store = configureStore({
       .concat(feeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
-      .concat(ExpenseCategoryApi.middleware),
+      .concat(ExpenseCategoryApi.middleware)
+      .concat(chargesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
