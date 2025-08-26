@@ -1116,6 +1116,13 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+3',
         },
         {
+          title: 'Charges Management',
+          path: '/finance/charge-management',
+          _action: 'charge-management',
+          shortcutKey: 'Alt+F+3',
+          shortcutKeyName: 'Alt+F+3',
+        },
+        {
           title: 'Fee Refund',
           path: '/finance/fee-refund',
           _action: 'fee-refund',
