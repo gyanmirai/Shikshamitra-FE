@@ -143,6 +143,7 @@ const reducers = combineReducers({
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
+  [chargesApi.reducerPath]: chargesApi.reducer,
 });
 
 const store = configureStore({
@@ -214,7 +215,8 @@ const store = configureStore({
       .concat(feeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
-      .concat(ExpenseCategoryApi.middleware),
+      .concat(ExpenseCategoryApi.middleware)
+      .concat(chargesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
