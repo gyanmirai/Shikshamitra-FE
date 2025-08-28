@@ -101,7 +101,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           </>
         }
         columns={[
-          { id: 'name', label: 'Name', align: 'left' },
+          { id: 'name', label: 'Name', align: 'left', sticky: true },
           { id: 'board', label: 'Board', align: 'left' },
           { id: 'medium', label: 'Medium', align: 'left' },
           { id: 'className', label: 'Class', align: 'left' },
@@ -110,17 +110,20 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             id: 'totalFees',
             label: 'Total Fees',
             align: 'left',
+            filterType: 'number',
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
             id: 'paidFees',
             label: 'Paid Fees',
+            filterType: 'number',
             align: 'left',
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
             id: 'pendingFees',
             label: 'Pending Fees',
+            filterType: 'number',
             align: 'left',
             render: (value) => `₹ ${value.toLocaleString()}`,
           },

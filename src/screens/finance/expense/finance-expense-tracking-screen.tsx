@@ -176,7 +176,7 @@ const FinanceExpenseTrackingScreen = () => {
                 },
               },
             ]}
-            data={tableData}
+            data={tableData.detailedExpenseData}
           />
         </>
       )}
