@@ -13,6 +13,7 @@ import { classApi } from './class/classApi';
 import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { incomeApi } from './incomeApi/incomeApi';
+import { budgetApi } from './budgetApi/budgetApi';
 import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
@@ -41,6 +42,7 @@ import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
+import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
@@ -148,6 +150,8 @@ const reducers = combineReducers({
   [chargesApi.reducerPath]: chargesApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
   [incomeDetailsApi.reducerPath]: incomeDetailsApi.reducer,
+  [budgetApi.reducerPath]: budgetApi.reducer,
+  [budgetSubCategoryApi.reducerPath]: budgetSubCategoryApi.reducer,
 });
 
 const store = configureStore({
@@ -223,7 +227,9 @@ const store = configureStore({
       .concat(chargesApi.middleware)
       .concat(chargesApi.middleware)
       .concat(incomeApi.middleware)
-      .concat(incomeDetailsApi.middleware),
+      .concat(incomeDetailsApi.middleware)
+      .concat(budgetApi.middleware)
+      .concat(budgetSubCategoryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

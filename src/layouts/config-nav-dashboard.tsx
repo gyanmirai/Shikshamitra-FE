@@ -1190,13 +1190,13 @@ const financeModule = {
         //   shortcutKey: 'Alt+F+9',
         //   shortcutKeyName: 'Alt+F+9',
         // },
-        // {
-        //   title: 'Budgeting',
-        //   path: '/finance/budgeting',
-        //   _action: 'finance-budget',
-        //   shortcutKey: 'Alt+F+10',
-        //   shortcutKeyName: 'Alt+F+10',
-        // },
+        {
+          title: 'Budgeting',
+          path: '/finance/budgeting',
+          _action: 'finance-budget',
+          shortcutKey: 'Alt+F+10',
+          shortcutKeyName: 'Alt+F+10',
+        },
         {
           title: 'Reports',
           path: '/finance/reports',

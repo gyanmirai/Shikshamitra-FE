@@ -1,0 +1,175 @@
+import type { FormikProps } from 'formik';
+
+import { Box, Grid, Chip, TextField, Typography, IconButton } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
+
+import { Iconify } from 'src/components/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+interface ISubCategory {
+  category: string;
+  subCategory: string;
+  amount: number | string;
+  notes: string;
+}
+
+interface IBudgetFormValues {
+  totalBudgetAmount: number | string;
+  subCategories: ISubCategory[];
+}
+
+const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
+  const { values, setFieldValue, touched, setFieldTouched, errors } = formik;
+  console.log('values[-----------', values);
+
+  const handleRemove = (index: number) => {
+    const updated = [...values.subCategories];
+    updated.splice(index, 1);
+    setFieldValue('subCategories', updated);
+  };
+
+  return (
+    <Box>
+      {/* Total Budget Amount */}
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+        Total Budget Amount: ₹{Number(values.totalBudgetAmount).toLocaleString('en-IN')}
+      </Typography>
+
+      {/* Sub Category Items */}
+      {values.subCategories.map((item, index) => (
+        <Grid
+          key={index}
+          container
+          spacing={2}
+          alignItems="center"
+          sx={{
+            border: '1px dashed #ccc',
+            borderRadius: 2,
+            mb: 2,
+            pb: 2,
+          }}
+        >
+          {/* Index */}
+          <Grid item xs={12} md={1}>
+            <Typography variant="h6">{index + 1}.</Typography>
+          </Grid>
+
+          {/* Category (Chip) */}
+          <Grid item xs={12} md={2}>
+            <Chip label={item.category} color="default" variant="outlined" />
+          </Grid>
+
+          {/* Sub Category */}
+          <Grid item xs={12} md={3}>
+            <TextField
+              label="Sub Category"
+              value={item.subCategory}
+              fullWidth
+              disabled
+              size="small"
+            />
+          </Grid>
+
+          {/* Amount */}
+          <Grid item xs={12} md={3}>
+            <ShakingTextField
+              error={
+                !!(
+                  touched?.subCategories?.[index]?.amount &&
+                  (typeof errors?.subCategories?.[index] === 'object'
+                    ? errors?.subCategories?.[index]?.amount
+                    : undefined)
+                )
+              }
+            >
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name={`subCategories[${index}].amount`}
+                value={item.amount || ''}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  val = val.replace(/[₹,\s]/g, '');
+                  setFieldValue(`subCategories[${index}].amount`, Number(val));
+                  setFieldTouched(`subCategories.${index}.amount`, false);
+                }}
+                error={
+                  !!(
+                    touched?.subCategories?.[index]?.amount &&
+                    (typeof errors?.subCategories?.[index] === 'object'
+                      ? errors?.subCategories?.[index]?.amount
+                      : undefined)
+                  )
+                }
+                helperText={
+                  touched?.subCategories?.[index]?.amount
+                    ? typeof errors?.subCategories?.[index] === 'object'
+                      ? errors?.subCategories?.[index]?.amount
+                      : errors?.subCategories?.[index]
+                    : ''
+                }
+                sx={{
+                  width: '100%',
+                  padding: '0',
+                  borderRadius: 1,
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Notes */}
+          <Grid item xs={12} md={2}>
+            <ShakingTextField
+              error={
+                !!(
+                  touched?.subCategories?.[index]?.notes &&
+                  (typeof errors?.subCategories?.[index] === 'object'
+                    ? errors?.subCategories?.[index]?.notes
+                    : undefined)
+                )
+              }
+            >
+              <TextField
+                label="Notes"
+                value={item.notes}
+                onChange={(e) => {
+                  setFieldValue(`subCategories[${index}].notes`, e.target.value);
+                  setFieldTouched(`subCategories.${index}.notes`, false);
+                }}
+                error={
+                  !!(
+                    touched?.subCategories?.[index]?.notes &&
+                    (typeof errors?.subCategories?.[index] === 'object'
+                      ? errors?.subCategories?.[index]?.notes
+                      : undefined)
+                  )
+                }
+                helperText={
+                  touched?.subCategories?.[index]?.notes
+                    ? typeof errors?.subCategories?.[index] === 'object'
+                      ? errors?.subCategories?.[index]?.notes
+                      : errors?.subCategories?.[index]
+                    : ''
+                }
+                fullWidth
+                size="small"
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Delete Button */}
+          <Grid item xs={12} md={1} textAlign="center">
+            <IconButton color="error" onClick={() => handleRemove(index)}>
+              <Iconify icon={GlobalIcons.delete} />
+            </IconButton>
+          </Grid>
+        </Grid>
+      ))}
+    </Box>
+  );
+};
+
+export default Step2Allocation;

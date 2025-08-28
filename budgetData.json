@@ -1,0 +1,157 @@
+{
+    "budgetData" : [
+  {
+    "budgetTitle": "Annual Science Fair",
+    "budgetCategory": "Academic",
+    "budgetSubCategories": ["Lab Equipment", "Guest Lectures", "Student Kits"],
+    "startDate": "01-09-2025",
+    "endDate": "15-09-2025",
+    "totalBudgetAmount": 150000,
+    "unallocated" : 40,
+    "allocated" : 50,
+    "spendingThreshold": "80",
+    "departments": ["Science", "Mathematics", "Arts"],
+    "description": "Budget allocation for annual science fair including equipment, guest speakers, and student participation kits.",
+    "status" : 0,
+    "subCategories": [
+      {
+        "category": "Academic",
+        "subCategory": "Lab Equipment",
+        "amount": 60000,
+        "notes": "Includes chemicals, apparatus, and safety gear."
+      },
+      {
+        "category": "Academic",
+        "subCategory": "Guest Lectures",
+        "amount": 40000,
+        "notes": "Honorarium and travel expenses for guest speakers."
+      },
+      {
+        "category": "Academic",
+        "subCategory": "Student Kits",
+        "amount": 50000,
+        "notes": "Kits for student projects and presentations."
+      }
+    ]
+  },
+  {
+    "budgetTitle": "Annual Cultural Festival",
+    "budgetCategory": "Cultural",
+    "budgetSubCategories": ["Stage Setup", "Costumes", "Sound & Lights"],
+    "startDate": "05-10-2025",
+    "endDate": "10-10-2025",
+    "totalBudgetAmount": 100000,
+    "unallocated" : 40,
+    "allocated" : 30,
+    "spendingThreshold": "75",
+    "departments": ["Music", "Dance", "Drama"],
+    "description": "Cultural fest showcasing talent in music, dance, and theater.",
+    "status" : 1,
+    "subCategories": [
+      {
+        "category": "Cultural",
+        "subCategory": "Stage Setup",
+        "amount": 30000,
+        "notes": "Stage decoration and arrangements."
+      },
+      {
+        "category": "Cultural",
+        "subCategory": "Costumes",
+        "amount": 25000,
+        "notes": "Costumes for performers."
+      },
+      {
+        "category": "Cultural",
+        "subCategory": "Sound & Lights",
+        "amount": 45000,
+        "notes": "Professional sound and lighting setup."
+      }
+    ]
+  },
+  {
+    "budgetTitle": "Sports Week",
+    "budgetCategory": "Sports",
+    "unallocated" : 60,
+    "allocated" : 70,
+    "budgetSubCategories": ["Equipment", "Prizes", "Refreshments"],
+    "startDate": "01-11-2025",
+    "endDate": "07-11-2025",
+    "totalBudgetAmount": 80000,
+    "spendingThreshold": "70",
+    "departments": ["Physical Education", "Sports Club"],
+    "description": "Annual inter-school sports competition.",
+    "subCategories": [
+      {
+        "category": "Sports",
+        "subCategory": "Equipment",
+        "amount": 30000,
+        "notes": "Purchase of balls, nets, and track kits."
+      },
+      {
+        "category": "Sports",
+        "subCategory": "Prizes",
+        "amount": 20000,
+        "notes": "Trophies and medals for winners."
+      },
+      {
+        "category": "Sports",
+        "subCategory": "Refreshments",
+        "amount": 30000,
+        "notes": "Snacks and drinks for players and staff."
+      }
+    ],
+    "status" : 1
+  },
+  {
+    "budgetTitle": "IT Infrastructure Upgrade",
+    "budgetCategory": "Infrastructure",
+    "budgetSubCategories": ["Computers", "Networking", "Software"],
+    "startDate": "01-12-2025",
+    "endDate": "20-12-2025",
+    "totalBudgetAmount": 200000,
+    "unallocated" : 90,
+    "allocated" : 80,
+    "spendingThreshold": "85",
+    "departments": ["IT Department"],
+    "description": "Upgrading school IT infrastructure with modern hardware and software.",
+    "subCategories": [
+      {
+        "category": "Infrastructure",
+        "subCategory": "Computers",
+        "amount": 120000,
+        "notes": "50 new desktops for labs."
+      },
+      {
+        "category": "Infrastructure",
+        "subCategory": "Networking",
+        "amount": 50000,
+        "notes": "Campus-wide high-speed WiFi setup."
+      },
+      {
+        "category": "Infrastructure",
+        "subCategory": "Software",
+        "amount": 30000,
+        "notes": "Licenses for educational software."
+      }
+    ],
+    "status" : 1
+  }
+],
+"budgetSubCategoryData" :{
+  "Academic": [
+    { "value": "Lab Equipment", "label": "Laboratory Equipment" },
+    { "value": "Staff Training", "label": "Staff Training" },
+    { "value": "Books & Journals", "label": "Books & Journals" }
+  ],
+  "Administrative": [
+    { "value": "Office Supplies", "label": "Office Supplies" },
+    { "value": "Staff Salaries", "label": "Staff Salaries" },
+    { "value": "Workshops", "label": "Workshops" }
+  ],
+  "Infrastructure": [
+    { "value": "Building Maintenance", "label": "Building Maintenance" },
+    { "value": "Furniture", "label": "Furniture" },
+    { "value": "IT Equipment", "label": "IT Equipment" }
+  ]
+}
+}
