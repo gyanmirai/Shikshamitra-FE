@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 import React, { useState } from 'react';
 
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
@@ -12,7 +14,14 @@ import {
   IconButton,
 } from '@mui/material';
 
+import {
+  FeeCollectionStatusType,
+  FeeCollectionStatusTypeColors,
+} from 'src/enums/fee-collection-type';
+
 import { Label } from 'src/components/label';
+
+import ChargesList from './ChargesList';
 
 import type { ITermsToCollectProps } from './type';
 
@@ -54,7 +63,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       }}
     >
       <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
-        Select Terms to Collect
+        Select Installment to Collect Fees
       </Typography>
       {terms?.map((term) => (
         <Box
@@ -115,12 +124,19 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     <Typography fontWeight={500}>
                       ₹ {head.paid.toLocaleString()}/ ₹ {head.total.toLocaleString()}
                     </Typography>
-                    <Label color={head.status === 'Paid' ? 'success' : 'warning'} variant="soft">
-                      {head.status}
+                    <Label
+                      color={
+                        FeeCollectionStatusTypeColors[
+                          head.status as FeeCollectionStatusType
+                        ] as LabelColor
+                      }
+                    >
+                      {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
                     </Label>
                   </Box>
                 </Box>
               ))}
+              <ChargesList charges={term.charges} selectedCharges={[]} toggleSelect={() => {}} />
             </Box>
           </Collapse>
         </Box>

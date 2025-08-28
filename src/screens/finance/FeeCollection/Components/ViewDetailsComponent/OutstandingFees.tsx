@@ -1,7 +1,6 @@
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetOutstandingFeesQuery } from 'src/redux/feeCollection/outstandingFeeData';
 
-import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentFee } from '../type';
@@ -21,26 +20,10 @@ const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
           id: 'amount',
           label: 'Amount',
           align: 'left',
+          filterType: 'number',
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
-        { id: 'dueDate', label: 'Due Date', align: 'left' },
-        {
-          id: 'status',
-          label: 'Status',
-          align: 'left',
-          render: (value) => {
-            const colors: Record<string, 'success' | 'warning' | 'error'> = {
-              Paid: 'success',
-              Pending: 'warning',
-              Overdue: 'error',
-            };
-            return (
-              <Label color={colors[value]} variant="soft">
-                {value}
-              </Label>
-            );
-          },
-        },
+        { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
       ]}
       data={outstandingFeeData || []}
     />

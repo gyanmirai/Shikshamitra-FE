@@ -1,5 +1,12 @@
+import type { LabelColor } from 'src/components/label';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeConcessionsQuery } from 'src/redux/feeCollection/feeConcession';
+import {
+  ConcessionStatusType,
+  ConcessionStatusTypeColor,
+  ConcessionStatusTypeOptions,
+} from 'src/enums/concession-type';
 
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -23,17 +30,13 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           id: 'status',
           label: 'Status',
           align: 'left',
-          render: (value) => {
-            const colors: Record<string, 'success' | 'warning' | 'error' | 'info'> = {
-              Approved: 'success',
-              'Under Review': 'info',
-              Pending: 'warning',
-              Rejected: 'error',
-            };
+          filterType: 'enum',
+          enumOptions: ConcessionStatusTypeOptions,
+          sticky: true,
+          render(value, row) {
+            const color = ConcessionStatusTypeColor[value as ConcessionStatusType] as LabelColor;
             return (
-              <Label color={colors[value]} variant="soft">
-                {value}
-              </Label>
+              <Label color={color}>{ConcessionStatusType[value as ConcessionStatusType]}</Label>
             );
           },
         },

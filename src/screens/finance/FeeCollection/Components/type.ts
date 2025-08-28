@@ -57,6 +57,8 @@ export interface IStudentFee {
   paidFees: number;
   pendingFees: number;
   overdueFees: number;
+  chargesPaid?: number;
+  chargesTotal?: number;
   status: string;
   terms: IFeeTerm[];
   paymentDetails?: IPaymentDetails;
@@ -71,7 +73,16 @@ export interface IFeeHead {
   name: string;
   paid: number;
   total: number;
-  status: 'Paid' | 'Pending';
+  status: number;
+}
+
+export interface IFeeCharge {
+  id: string;
+  name: string;
+  paid: number;
+  total: number;
+  dueDate: string;
+  status: number;
 }
 
 export interface ITerm {
@@ -81,6 +92,7 @@ export interface ITerm {
   paid: number;
   total: number;
   feeHeads: IFeeHead[];
+  charges?: IFeeCharge[];
 }
 
 export interface ITermsToCollectProps {
