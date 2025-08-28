@@ -48,6 +48,7 @@ export const GlobalIcons = {
   tick: 'mdi:tick-circle',
   reject: 'fluent:text-change-reject-24-filled',
   lockIcon: 'mdi:lock-outline',
+  archive: 'mdi:archive',
 };
 
 export const GlobalIconColors = {

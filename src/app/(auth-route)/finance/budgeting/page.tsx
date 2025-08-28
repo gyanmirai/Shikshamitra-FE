@@ -1,7 +1,7 @@
 import React from 'react';
 
-import FinanceNewBudgetingScreen from 'src/screens/finance/budgeting/finance-new-budgeting';
+import ScheduleBudget from 'src/screens/finance/BudgetManagement';
 
-const FinanceBudgeting = () => <FinanceNewBudgetingScreen />;
+const FinanceBudgeting = () => <ScheduleBudget />;
 
 export default FinanceBudgeting;
