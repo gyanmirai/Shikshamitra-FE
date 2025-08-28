@@ -1,24 +1,99 @@
-[
+{
+  "detailedExpenseData": [
     {
-      "id": 3,
-      "expenseCategory": "Internet Bills",
-      "expenseAmount": "1500",
-      "paymentMethod": "Credit Card",
-      "date": "2024-09-15",
-      "paymentStatus": "Paid",
-      "action": "View",
-      "expenseList": [
-        {
-          "expenseName": "Admin",
-          "amount": 500,
-          "date": "11-10-2024"
-        },
-        {
-          "expenseName": "School",
-          "amount": 1000,
-          "date": "11-10-2024"
-        }
-      ]
+      "id": "1",
+      "expenseCategory": "Salaries & Wages",
+      "budget": "Academic Budget 2025",
+      "budgetSubCategory": "Teaching Staff",
+      "expenseName": "Monthly Salaries",
+      "amount": 100000,
+      "paymentMethod": "Bank Transfer",
+      "date": "2025-08-25",
+      "notes": "Monthly salary payment for teaching staff"
+    },
+    {
+      "id": "2",
+      "expenseCategory": "Utilities & Maintenance",
+      "budget": "Academic Budget 2025",
+      "budgetSubCategory": "Electricity & Water",
+      "expenseName": "Monthly Utilities",
+      "amount": 50000,
+      "paymentMethod": "Bank Transfer",
+      "date": "2025-08-20",
+      "notes": "Electricity and water bills"
+    },
+    {
+      "id": "3",
+      "expenseCategory": "Learning Materials",
+      "budget": "Academic Budget 2025",
+      "budgetSubCategory": "Books & Supplies",
+      "expenseName": "Educational Materials",
+      "amount": 30000,
+      "paymentMethod": "Cash",
+      "date": "2025-08-15",
+      "notes": "Books and classroom supplies"
     }
-  ]
-  
+  ],
+  "detailedExpenseTableData": [
+    {
+      "id": "1",
+      "expenseCategory": "Math Textbooks",
+      "expenseDate": "16-08-2025",
+      "budgetSubCategory": "Textbooks Books",
+      "paymentMethod": "Cash",
+      "amount": 30000
+    },
+    {
+      "id": "2",
+      "expenseCategory": "Art & Craft Supplies",
+      "expenseDate": "04-08-2025",
+      "budgetSubCategory": "Classroom Supplies",
+      "paymentMethod": "Bank Transfer",
+      "amount": 30000
+    },
+    {
+      "id": "3",
+      "expenseCategory": "E Learning License",
+      "expenseDate": "01-08-2025",
+      "budgetSubCategory": "E-Learning Tools",
+      "paymentMethod": "UPI",
+      "amount": 40000
+    }
+  ],
+    "expenseOptions": {
+    "categoryOptions": [
+      { 
+        "value": "Learning Materials", 
+        "label": "Learning Materials", 
+        "budget": "Academic Budget 2025" 
+      },
+      {
+        "value": "Utilities & Maintenance",
+        "label": "Utilities & Maintenance",
+        "budget": "Academic Budget 2025"
+      },
+      { 
+        "value": "Salaries & Wages", 
+        "label": "Salaries & Wages", 
+        "budget": "Academic Budget 2025" 
+      }
+    ],
+    "subCategoryOptions": [
+      { "value": "Classroom Supplies", "label": "Classroom Supplies" },
+      { "value": "Textbooks Books", "label": "Textbooks Books" },
+      { "value": "E-Learning Tools", "label": "E-Learning Tools" },
+      { "value": "Teaching Staff", "label": "Teaching Staff" },
+      { "value": "Electricity & Water", "label": "Electricity & Water" },
+      { "value": "Books & Supplies", "label": "Books & Supplies" }
+    ],
+    "paymentMethodOptions": [
+      { "value": "Cash", "label": "Cash" },
+      { "value": "Bank Transfer", "label": "Bank Transfer" },
+      { "value": "UPI", "label": "UPI" },
+      { "value": "Credit Card", "label": "Credit Card" }
+    ],
+    "budgetOptions": [
+      { "value": "Academic Budget 2025", "label": "Academic Budget 2025" }
+    ]
+  }
+}
