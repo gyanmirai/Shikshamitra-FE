@@ -28,6 +28,7 @@ import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ChargeCategoryApi } from './finance/chargeCategory';
+import { expenseApi } from './finance/expenseApi/expenseApi';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
@@ -54,6 +55,7 @@ import { studentReceiptApi } from './invoiceAndReceipt/studentReceiptApi';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
+import { expenseDetailsApi } from './finance/expenseApi/expenseDetailedApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
@@ -144,6 +146,8 @@ const reducers = combineReducers({
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
   [chargesApi.reducerPath]: chargesApi.reducer,
+  [expenseApi.reducerPath]: expenseApi.reducer,
+  [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
 });
 
 const store = configureStore({
@@ -216,7 +220,9 @@ const store = configureStore({
       .concat(ChargeCategoryApi.middleware)
       .concat(ChargeCategoryApi.middleware)
       .concat(ExpenseCategoryApi.middleware)
-      .concat(chargesApi.middleware),
+      .concat(chargesApi.middleware)
+      .concat(expenseApi.middleware)
+      .concat(expenseDetailsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

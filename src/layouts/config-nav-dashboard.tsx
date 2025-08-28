@@ -1198,6 +1198,13 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+11',
         },
         {
+          title: 'Expense Tracking',
+          path: '/finance/expenseTracking',
+          _action: 'finance-expense-tracking',
+          shortcutKey: 'Alt+F+11',
+          shortcutKeyName: 'Alt+F+11',
+        },
+        {
           title: 'Notification',
           path: '/finance/finance-notification',
           _action: 'finance-notification',
