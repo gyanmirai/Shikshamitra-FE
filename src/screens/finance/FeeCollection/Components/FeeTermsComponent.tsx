@@ -20,6 +20,7 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import { Label } from 'src/components/label';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import ChargesList from './ChargesList';
 
@@ -58,94 +59,100 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
         borderRadius: 2,
         boxShadow: 2,
         bgcolor: theme.palette.background.paper,
-        mb: 2,
-        mt: 2,
+        height: '100%',
       }}
     >
       <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
         Select Installment to Collect Fees
       </Typography>
-      {terms?.map((term) => (
-        <Box
-          key={term.id}
-          sx={{
-            border: '1px solid #ddd',
-            borderRadius: 2,
-            mb: 1.5,
-            overflow: 'hidden',
-          }}
-        >
-          <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Checkbox
-                checked={selectedTerms.includes(term.id)}
-                onChange={() => toggleSelect(term.id)}
-              />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {term.name}
+      <Scrollbar
+        sx={{
+          maxHeight: 'calc(100vh - 300px)', // adjust offset according to your header/footer
+          minHeight: 'auto',
+        }}
+      >
+        {terms?.map((term) => (
+          <Box
+            key={term.id}
+            sx={{
+              border: '1px solid #ddd',
+              borderRadius: 2,
+              mb: 1.5,
+              overflow: 'hidden',
+            }}
+          >
+            <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Checkbox
+                  checked={selectedTerms.includes(term.id)}
+                  onChange={() => toggleSelect(term.id)}
+                />
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {term.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Due: {term.dueDate}
+                  </Typography>
+                </Box>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography fontWeight={600}>
+                  ₹ {term.paid.toLocaleString()}/ ₹ {term.total.toLocaleString()}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Due: {term.dueDate}
-                </Typography>
+                <IconButton size="small" onClick={() => toggleExpand(term.id)}>
+                  {expanded === term.id ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
               </Box>
             </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography fontWeight={600}>
-                ₹ {term.paid.toLocaleString()}/ ₹ {term.total.toLocaleString()}
-              </Typography>
-              <IconButton size="small" onClick={() => toggleExpand(term.id)}>
-                {expanded === term.id ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            </Box>
-          </Box>
 
-          <Collapse in={expanded === term.id}>
-            <Divider />
-            <Box px={2} py={1.5}>
-              <Typography variant="body2" color="primary" fontWeight={600} mb={1}>
-                Fee Head Breakdown
-              </Typography>
-              {term.feeHeads.map((head) => (
-                <Box
-                  key={head.name}
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  p={1}
-                  sx={{
-                    border: '1px solid #eee',
-                    borderRadius: 1,
-                    mb: 1,
-                  }}
-                >
-                  <Typography>{head.name}</Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography fontWeight={500}>
-                      ₹ {head.paid.toLocaleString()}/ ₹ {head.total.toLocaleString()}
-                    </Typography>
-                    <Label
-                      color={
-                        FeeCollectionStatusTypeColors[
-                          head.status as FeeCollectionStatusType
-                        ] as LabelColor
-                      }
-                    >
-                      {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
-                    </Label>
+            <Collapse in={expanded === term.id}>
+              <Divider />
+              <Box px={2} py={1.5}>
+                <Typography variant="body2" color="primary" fontWeight={600} mb={1}>
+                  Fee Head Breakdown
+                </Typography>
+                {term.feeHeads.map((head) => (
+                  <Box
+                    key={head.name}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    p={1}
+                    sx={{
+                      border: '1px solid #eee',
+                      borderRadius: 1,
+                      mb: 1,
+                    }}
+                  >
+                    <Typography>{head.name}</Typography>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography fontWeight={500}>
+                        ₹ {head.paid.toLocaleString()}/ ₹ {head.total.toLocaleString()}
+                      </Typography>
+                      <Label
+                        color={
+                          FeeCollectionStatusTypeColors[
+                            head.status as FeeCollectionStatusType
+                          ] as LabelColor
+                        }
+                      >
+                        {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
+                      </Label>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
-              <ChargesList charges={term.charges} selectedCharges={[]} toggleSelect={() => {}} />
-            </Box>
-          </Collapse>
-        </Box>
-      ))}
-      {showError && errorMessage && (
-        <Typography variant="caption" color="error" mt={1}>
-          {errorMessage}
-        </Typography>
-      )}
+                ))}
+                <ChargesList charges={term.charges} selectedCharges={[]} toggleSelect={() => {}} />
+              </Box>
+            </Collapse>
+          </Box>
+        ))}
+        {showError && errorMessage && (
+          <Typography variant="caption" color="error" mt={1}>
+            {errorMessage}
+          </Typography>
+        )}
+      </Scrollbar>
     </Card>
   );
 };

@@ -242,21 +242,21 @@
     "paid": 0,
     "total": 10000,
     "feeHeads": [
-      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": "Pending" },
-      { "name": "Library Fee", "paid": 0, "total": 3000, "status": "Pending" },
-      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": "Pending" }
+      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+      { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
     ]
   },
   {
-    "id": "3",
+    "id": "3", 
     "name": "March 2025",
     "dueDate": "30-03-2025",
     "paid": 0,
     "total": 10000,
     "feeHeads": [
-      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": "Pending" },
-      { "name": "Library Fee", "paid": 0, "total": 3000, "status": "Pending" },
-      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": "Pending" }
+      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+      { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
     ]
   }
 ],
