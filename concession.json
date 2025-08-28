@@ -1,77 +1,81 @@
+
 {
-  "concessionStudentInfo": [
-    {
-      "studentName": "Aarav Mehta",
-      "rollNo": "10A01",
-      "sibling": "Anaya Mehta", 
-      "contactNo": "9876543210",
-      "classDivision": "10 - A",
-      "grNo": "GR1001",
-      "parentName": "Rajesh Mehta",
-      "email": "rajesh.mehta@example.com",
-      "avatarUrl": "/images/students/aarav.jpg",
-      "boardMedium": "English",
-      "concessionType": "Sibling",
-      "reason": "Has sibling studying in same school",
-      "status": 1
-    },
-    {
-      "studentName": "Kavya Patel",
-      "rollNo": "9B12",
-      "contactNo": "9876501234",
-      "classDivision": "9 - B", 
-      "grNo": "GR1002",
-      "parentName": "Neeta Patel",
-      "email": "neeta.patel@example.com",
-      "avatarUrl": "/images/students/kavya.jpg",
-      "boardMedium": "English",
-      "concessionType": "Merit",
-      "reason": "Academic excellence",
-      "status": 0
-    },
-    {
-      "studentName": "Rohan Sharma",
-      "rollNo": "8C07",
-      "sibling": "Rahul Sharma",
-      "contactNo": "9876004567",
-      "classDivision": "8 - C",
-      "grNo": "GR1003",
-      "parentName": "Vikram Sharma",
-      "email": "vikram.sharma@example.com",
-      "avatarUrl": "/images/students/rohan.jpg",
-      "boardMedium": "Hindi",
-      "concessionType": "Sibling",
-      "reason": "Has sibling studying in same school",
-      "status": 1
-    },
-    {
-      "studentName": "Simran Kaur",
-      "rollNo": "7A05",
-      "contactNo": "9876098765",
-      "classDivision": "7 - A",
-      "grNo": "GR1004",
-      "parentName": "Harpreet Kaur",
-      "email": "harpreet.kaur@example.com",
-      "avatarUrl": "/images/students/simran.jpg",
-      "boardMedium": "English",
-      "concessionType": "Financial",
-      "reason": "Family income below threshold",
-      "status": 2
-    },
-    {
-      "studentName": "Aditya Joshi",
-      "rollNo": "11S03",
-      "sibling": "Aryan Joshi",
-      "contactNo": "9876123456",
-      "classDivision": "11 - Science",
-      "grNo": "GR1005",
-      "parentName": "Suresh Joshi",
-      "email": "suresh.joshi@example.com",
-      "avatarUrl": "/images/students/aditya.jpg",
-      "boardMedium": "English",
-      "concessionType": "Sibling",
-      "reason": "Has sibling studying in same school",
-      "status": 1
-    }
-  ]
+  "concessionData" : [
+  {
+    "studentName": "Riya Patel",
+    "rollNo": "12",
+    "sibling": "Rahul Patel",
+    "contactNo": "9876543210",
+    "classDivision": "10-A",
+    "grNo": "GR1023",
+    "parentNaforme": "Mehul Patel",
+    "parentName": "Mehul Patel",
+    "email": "riya.patel@example.com",
+    "avatarUrl": "https://example.com/avatars/riya.png",
+    "boardMedium": "English",
+    "concessionType": "Scholarship",
+    "reason": "Merit-based",
+    "status": 1,
+    "totalConcession": 2,
+    "concessions": [
+      {
+        "concessionType": "Scholarship",
+        "reason": "Merit-based",
+        "status": 1
+      },
+      {
+        "concessionType": "Sibling Discount",
+        "reason": "Elder brother in same school",
+        "status": 0
+      }
+    ]
+  },
+  {
+    "studentName": "Aarav Shah",
+    "rollNo": "8",
+    "contactNo": "9988776655",
+    "classDivision": "9-B",
+    "grNo": "GR2045",
+    "parentNaforme": "Kunal Shah",
+    "parentName": "Kunal Shah",
+    "email": "aarav.shah@example.com",
+    "avatarUrl": "https://example.com/avatars/aarav.png",
+    "boardMedium": "Gujarati",
+    "concessionType": "Financial Aid",
+    "reason": "Low Income Family",
+    "status": 1,
+    "totalConcession": 1,
+    "concessions": [
+      {
+        "concessionType": "Financial Aid",
+        "reason": "Low Income Family",
+        "status": 1
+      }
+    ]
+  },
+  {
+    "studentName": "Simran Desai",
+    "rollNo": "5",
+    "sibling": "Priya Desai",
+    "contactNo": "9123456780",
+    "classDivision": "8-C",
+    "grNo": "GR3056",
+    "parentNaforme": "Anita Desai",
+    "parentName": "Anita Desai",
+    "email": "simran.desai@example.com",
+    "avatarUrl": "https://example.com/avatars/simran.png",
+    "boardMedium": "English",
+    "concessionType": "Sports Quota",
+    "reason": "State Level Player",
+    "status": 0,
+    "totalConcession": 1,
+    "concessions": [
+      {
+        "concessionType": "Sports Quota",
+        "reason": "State Level Player",
+        "status": 0
+      }
+    ]
+  }
+]
 }
