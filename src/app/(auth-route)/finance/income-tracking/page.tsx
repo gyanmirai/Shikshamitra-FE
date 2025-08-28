@@ -1,7 +1,7 @@
 import React from 'react';
 
-import FinanceIncomeTrackingScreen from 'src/screens/finance/income-tracking/finance-income-tracking';
+import IncomeTracking from 'src/screens/finance/IncomeTracking';
 
-const FinanceIncomeTracking = () => <FinanceIncomeTrackingScreen />;
+const FinanceIncomeTracking = () => <IncomeTracking />;
 
 export default FinanceIncomeTracking;

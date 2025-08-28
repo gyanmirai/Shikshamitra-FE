@@ -1,0 +1,57 @@
+{
+    "incomeData" : [
+  {
+    "incomeCategory": "Tuition Fee",
+    "budget": "School Budget 2025",
+    "budgetSubCategory": "Primary Section",
+    "incomeName": "Annual Tuition",
+    "amount": 15000,
+    "paymentMethod": "Cash",
+    "date": "2025-08-22",
+    "notes": "Payment received for the first semester"
+  },
+  {
+    "incomeCategory": "Donation",
+    "budget": "School Fund",
+    "budgetSubCategory": "Library",
+    "incomeName": "Book Donation",
+    "amount": 5000,
+    "paymentMethod": "Bank Transfer",
+    "date": "2025-07-15",
+    "notes": "Donation received for new books"
+  },
+  {
+    "incomeCategory": "Transport Fee",
+    "budget": "Transport Budget 2025",
+    "budgetSubCategory": "Bus Services",
+    "incomeName": "Bus Pass Fee",
+    "amount": 2000,
+    "paymentMethod": "Online Payment",
+    "date": "2025-08-01",
+    "notes": "Quarterly bus pass fee for students"
+  }
+],
+"detailedIncomeData"  : [
+  {
+    "incomeName": "Class 1 – Term 1",
+    "receivedDate": "10-08-2025", 
+    "budgetSubCategory": "Primary Education",
+    "paymentMethod": "Cash",
+    "amount": "30,000"
+  },
+  {
+    "incomeName": "Class 8 – Full Year",
+    "receivedDate": "04-08-2025",
+    "budgetSubCategory": "Middle School", 
+    "paymentMethod": "Bank Transfer",
+    "amount": "30,000"
+  },
+  {
+    "incomeName": "Semester 2",
+    "receivedDate": "01-08-2025",
+    "budgetSubCategory": "Higher Secondary",
+    "paymentMethod": "UPI", 
+    "amount": "40,000"
+  }
+]
+}
