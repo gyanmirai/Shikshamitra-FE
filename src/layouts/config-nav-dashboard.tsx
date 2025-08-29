@@ -1296,6 +1296,13 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+7',
             },
             {
+              title: 'Income Category',
+              path: '/finance/settings/incomeCategories',
+              _action: 'expense-category',
+              shortcutKey: 'Alt+F+7',
+              shortcutKeyName: 'Alt+F+7',
+            },
+            {
               title: 'Budget Category',
               path: '/finance/settings/budget-category',
               _action: 'budget-category-setting',

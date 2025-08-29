@@ -60,22 +60,22 @@
       "amount": 40000
     }
   ],
-    "expenseOptions": {
+  "expenseOptions": {
     "categoryOptions": [
-      { 
-        "value": "Learning Materials", 
-        "label": "Learning Materials", 
-        "budget": "Academic Budget 2025" 
+      {
+        "value": "Learning Materials",
+        "label": "Learning Materials",
+        "budget": "Academic Budget 2025"
       },
       {
         "value": "Utilities & Maintenance",
         "label": "Utilities & Maintenance",
         "budget": "Academic Budget 2025"
       },
-      { 
-        "value": "Salaries & Wages", 
-        "label": "Salaries & Wages", 
-        "budget": "Academic Budget 2025" 
+      {
+        "value": "Salaries & Wages",
+        "label": "Salaries & Wages",
+        "budget": "Academic Budget 2025"
       }
     ],
     "subCategoryOptions": [
@@ -92,8 +92,37 @@
       { "value": "UPI", "label": "UPI" },
       { "value": "Credit Card", "label": "Credit Card" }
     ],
+    "budgetOptions": [{ "value": "Academic Budget 2025", "label": "Academic Budget 2025" }]
+  },
+  "incomeCategoryData": [
+    {
+      "id": "1",
+      "incomeCategoryName": "Donation",
+      "budget": "Income Budget 2025",
+      "description": "All Donation income will record in this category."
+    },
+    {
+      "id": "2",
+      "incomeCategoryName": "Event Income",
+      "budget": "Cultural & Sports Event Income 2025",
+      "description": "Primary source of income collected from students as academic fees for the..."
+    },
+    {
+      "id": "3",
+      "incomeCategoryName": "Tuition Fees",
+      "budget": "Annual Tuition Income 2025",
+      "description": "Income generated from participation fees, sponsorships, and ticket sales of..."
+    }
+  ],
+  "incomeOptions": {
     "budgetOptions": [
-      { "value": "Academic Budget 2025", "label": "Academic Budget 2025" }
+      { "value": "Income Budget 2025", "label": "Income Budget 2025" },
+      { "value": "Annual Income Budget 2025", "label": "Annual Income Budget 2025" },
+      {
+        "value": "Cultural & Sports Event Income 2025",
+        "label": "Cultural & Sports Event Income 2025"
+      },
+      { "value": "Annual Tuition Income 2025", "label": "Annual Tuition Income 2025" }
     ]
   }
 }

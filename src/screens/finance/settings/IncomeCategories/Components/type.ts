@@ -1,0 +1,25 @@
+import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+
+export interface IIncomeCategory {
+  id: string;
+  incomeCategoryName: string;
+  budget: string;
+  description?: string;
+}
+
+export interface IIncomeCategoryTableProps {
+  data: IIncomeCategory[];
+  onAddIncomeCategory: any;
+  editData: IIncomeCategory | null;
+  open: boolean;
+  setOpenDialog: (value: boolean) => void;
+  setEditData: (value: IIncomeCategory | null) => void;
+  onDelete: (row: IIncomeCategory) => void;
+  onEdit: (row: IIncomeCategory) => void;
+}
+
+export interface IIncomeCategoryFormProps {
+  open: UseBooleanReturn;
+  onClose: (e: any, isSubmit: boolean) => void;
+  editData?: IIncomeCategory | null;
+}
