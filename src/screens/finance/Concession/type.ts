@@ -1,11 +1,18 @@
 import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
+export interface IConcession {
+  concessionType: string;
+  reason: string;
+  status?: number; // e.g., Pending / Approved / Rejected
+}
+
 export interface IStudentInfo {
   studentName: string;
   rollNo: string;
   sibling?: string;
   contactNo: string;
   classDivision: string;
+  parentNaforme: string; // typo? maybe parentName?
   grNo: string;
   parentName: string;
   email: string;
@@ -14,6 +21,8 @@ export interface IStudentInfo {
   concessionType?: string;
   reason?: string;
   status?: number;
+  totalConcession: number;
+  concessions?: IConcession[]; // 👈 multiple concessions
 }
 
 export interface IConcessionDocument {

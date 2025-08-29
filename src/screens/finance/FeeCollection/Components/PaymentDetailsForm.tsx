@@ -14,7 +14,6 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FeeTermsComponent from './FeeTermsComponent';
@@ -120,257 +119,271 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
 
   return (
     <Box display="flex" flexDirection="column">
-      <Grid item xs={12}>
-        <FeeTermsComponent
-          terms={feeTermsData}
-          selectedTerms={formik.values.selectedTerms}
-          onTermSelect={(selectedTerms) => formik.setFieldValue('selectedTerms', selectedTerms)}
-          showError={formik.touched.selectedTerms && Boolean(formik.errors.selectedTerms)}
-          errorMessage={formik.errors.selectedTerms as string}
-        />
-      </Grid>
-      <Card
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          boxShadow: 2,
-          bgcolor: theme.palette.background.paper,
-        }}
-      >
-        <Typography variant="h6" color="primary.main" fontWeight={600}>
-          Payment Details
-        </Typography>
-        <DialogScrollContent>
-          <Scrollbar sx={{ pt: 2, height: '250px' }}>
-            <Grid container spacing={2}>
-              {/* Terms Selection Section */}
+      <Grid container spacing={3}>
+        <Grid item xs={6} mt={2} mb={2}>
+          <FeeTermsComponent
+            terms={feeTermsData}
+            selectedTerms={formik.values.selectedTerms}
+            onTermSelect={(selectedTerms) => formik.setFieldValue('selectedTerms', selectedTerms)}
+            showError={formik.touched.selectedTerms && Boolean(formik.errors.selectedTerms)}
+            errorMessage={formik.errors.selectedTerms as string}
+          />
+        </Grid>
+        <Grid item xs={6} mt={2} mb={2}>
+          <Card
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 2,
+              bgcolor: theme.palette.background.paper,
+              height: '100%',
+            }}
+          >
+            <Scrollbar
+              sx={{
+                maxHeight: 'calc(100vh - 300px)', // adjust offset according to your header/footer
+                minHeight: 'auto',
+                pr: 1,
+              }}
+            >
+              <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
+                Payment Details
+              </Typography>
 
-              <Grid item xs={12} sm={4}>
-                <NumericFormatCustom
-                  fullWidth
-                  label="Total Payable Amount"
-                  value={`₹${formik.values.totalAmount}`}
-                  disabled
-                  size="small"
-                />
-              </Grid>
+              <Grid container spacing={2}>
+                {/* Terms Selection Section */}
 
-              <Grid item xs={12} sm={4}>
-                <ShakingTextField
-                  error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount)}
-                >
+                <Grid item xs={12} sm={6}>
                   <NumericFormatCustom
                     fullWidth
-                    label="Received Amount *"
+                    label="Total Payable Amount"
+                    value={`₹${formik.values.totalAmount}`}
+                    disabled
                     size="small"
-                    name="receivedAmount"
-                    value={formik.values.receivedAmount}
-                    onChange={formik.handleChange}
-                    error={formik.touched.receivedAmount && Boolean(formik.errors.receivedAmount)}
-                    helperText={
-                      (formik.touched.receivedAmount && formik.errors.receivedAmount) as string
-                    }
                   />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid item xs={12} sm={4}>
-                <ShakingTextField
-                  error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
-                >
-                  <CustomSelect
-                    options={Object.keys(paymentMethodsConfig).map((method) => ({
-                      value: method,
-                      label: method.charAt(0).toUpperCase() + method.slice(1),
-                    }))}
-                    label="Payment Methods *"
-                    value={formik.values.selectedMethods}
-                    onChange={(value) => formik.setFieldValue('selectedMethods', value)}
-                    error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
-                    helperText={
-                      (formik.touched.selectedMethods && formik.errors.selectedMethods) as string
-                    }
-                    multiple
-                    formControlProps={{
-                      sx: { width: '100%' },
-                    }}
-                    name="selectedMethods"
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {formik.values.selectedMethods.map((method: string) => (
-                <Grid item xs={12} key={method}>
-                  <SectionCard key={method} title={method}>
-                    {paymentMethodsConfig[method as keyof typeof paymentMethodsConfig]?.map(
-                      (field: IPaymentFieldConfig) => (
-                        <Grid item xs={12} key={`${method}-${field.name}`} sm={4}>
-                          {field.type === 'date' ? (
-                            <ShakingTextField
-                              error={
-                                (formik.touched as any)[method]?.[field.name] &&
-                                Boolean((formik.errors as any)[method]?.[field.name])
-                              }
-                            >
-                              <DatePicker
-                                label={field.label}
-                                value={
-                                  formik.values[method][field.name]
-                                    ? dayjs(formik.values[method][field.name])
-                                    : null
-                                }
-                                onChange={(date) =>
-                                  formik.setFieldValue(`${method}.${field.name}`, date)
-                                }
-                                sx={{ width: '100%' }}
-                                slotProps={{
-                                  textField: {
-                                    size: 'small',
-                                    fullWidth: true,
-                                    error:
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      Boolean((formik.errors as any)[method]?.[field.name]),
-                                    helperText:
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      (formik.errors as any)[method]?.[field.name],
-                                  },
-                                }}
-                              />
-                            </ShakingTextField>
-                          ) : field.type === 'select' ? (
-                            <ShakingTextField
-                              error={
-                                (formik.touched as any)[method]?.[field.name] &&
-                                Boolean((formik.errors as any)[method]?.[field.name])
-                              }
-                            >
-                              <TextField
-                                select
-                                fullWidth
-                                label={field.label}
-                                name={`${method}.${field.name}`}
-                                value={formik.values[method][field.name]}
-                                onChange={formik.handleChange}
-                                size="small"
-                                error={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  Boolean((formik.errors as any)[method]?.[field.name])
-                                }
-                                helperText={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  (formik.errors as any)[method]?.[field.name]
-                                }
-                                sx={{ width: '100%' }}
-                              >
-                                {field.options?.map((opt: any) => (
-                                  <MenuItem key={opt} value={opt}>
-                                    {opt}
-                                  </MenuItem>
-                                ))}
-                              </TextField>
-                            </ShakingTextField>
-                          ) : field.type === 'multiline' ? (
-                            <ShakingTextField
-                              error={
-                                (formik.touched as any)[method]?.[field.name] &&
-                                Boolean((formik.errors as any)[method]?.[field.name])
-                              }
-                            >
-                              <TextField
-                                fullWidth
-                                multiline
-                                sx={{ width: '100%' }}
-                                minRows={2}
-                                size="small"
-                                label={field.label}
-                                name={`${method}.${field.name}`}
-                                value={formik.values[method][field.name]}
-                                onChange={formik.handleChange}
-                                error={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  Boolean((formik.errors as any)[method]?.[field.name])
-                                }
-                                helperText={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  (formik.errors as any)[method]?.[field.name]
-                                }
-                              />
-                            </ShakingTextField>
-                          ) : field.type === 'amount' ? (
-                            <ShakingTextField
-                              error={
-                                (formik.touched as any)[method]?.[field.name] &&
-                                Boolean((formik.errors as any)[method]?.[field.name])
-                              }
-                            >
-                              <NumericFormatCustom
-                                size="small"
-                                fullWidth
-                                label={field.label}
-                                name={`${method}.${field.name}`}
-                                value={formik.values[method][field.name]}
-                                onChange={formik.handleChange}
-                                error={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  Boolean((formik.errors as any)[method]?.[field.name])
-                                }
-                                helperText={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  (formik.errors as any)[method]?.[field.name]
-                                }
-                              />
-                            </ShakingTextField>
-                          ) : (
-                            <ShakingTextField
-                              error={
-                                (formik.touched as any)[method]?.[field.name] &&
-                                Boolean((formik.errors as any)[method]?.[field.name])
-                              }
-                            >
-                              <TextField
-                                fullWidth
-                                type={field.type}
-                                label={field.label}
-                                size="small"
-                                name={`${method}.${field.name}`}
-                                value={formik.values[method][field.name]}
-                                onChange={formik.handleChange}
-                                error={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  Boolean((formik.errors as any)[method]?.[field.name])
-                                }
-                                helperText={
-                                  (formik.touched as any)[method]?.[field.name] &&
-                                  (formik.errors as any)[method]?.[field.name]
-                                }
-                                inputProps={
-                                  field.type === 'number' ? { min: field.min, max: field.max } : {}
-                                }
-                              />
-                            </ShakingTextField>
-                          )}
-                        </Grid>
-                      )
-                    )}
-                  </SectionCard>
                 </Grid>
-              ))}
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  label="Notes"
-                  name="notes"
-                  value={formik.values.notes}
-                  onChange={formik.handleChange}
-                />
+                <Grid item xs={12} sm={6}>
+                  <ShakingTextField
+                    error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount)}
+                  >
+                    <NumericFormatCustom
+                      fullWidth
+                      label="Received Amount *"
+                      size="small"
+                      name="receivedAmount"
+                      value={formik.values.receivedAmount}
+                      onChange={formik.handleChange}
+                      error={formik.touched.receivedAmount && Boolean(formik.errors.receivedAmount)}
+                      helperText={
+                        (formik.touched.receivedAmount && formik.errors.receivedAmount) as string
+                      }
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <ShakingTextField
+                    error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
+                  >
+                    <CustomSelect
+                      options={Object.keys(paymentMethodsConfig).map((method) => ({
+                        value: method,
+                        label: method.charAt(0).toUpperCase() + method.slice(1),
+                      }))}
+                      label="Payment Methods *"
+                      value={formik.values.selectedMethods}
+                      onChange={(value) => formik.setFieldValue('selectedMethods', value)}
+                      error={
+                        formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)
+                      }
+                      helperText={
+                        (formik.touched.selectedMethods && formik.errors.selectedMethods) as string
+                      }
+                      multiple
+                      formControlProps={{
+                        sx: { width: '100%' },
+                      }}
+                      name="selectedMethods"
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                {formik.values.selectedMethods.map((method: string) => (
+                  <Grid item xs={12} key={method}>
+                    <SectionCard key={method} title={method}>
+                      {paymentMethodsConfig[method as keyof typeof paymentMethodsConfig]?.map(
+                        (field: IPaymentFieldConfig) => (
+                          <Grid item xs={6} key={`${method}-${field.name}`}>
+                            {field.type === 'date' ? (
+                              <ShakingTextField
+                                error={
+                                  (formik.touched as any)[method]?.[field.name] &&
+                                  Boolean((formik.errors as any)[method]?.[field.name])
+                                }
+                              >
+                                <DatePicker
+                                  label={field.label}
+                                  value={
+                                    formik.values[method][field.name]
+                                      ? dayjs(formik.values[method][field.name])
+                                      : null
+                                  }
+                                  onChange={(date) =>
+                                    formik.setFieldValue(`${method}.${field.name}`, date)
+                                  }
+                                  sx={{ width: '100%' }}
+                                  slotProps={{
+                                    textField: {
+                                      size: 'small',
+                                      fullWidth: true,
+                                      error:
+                                        (formik.touched as any)[method]?.[field.name] &&
+                                        Boolean((formik.errors as any)[method]?.[field.name]),
+                                      helperText:
+                                        (formik.touched as any)[method]?.[field.name] &&
+                                        (formik.errors as any)[method]?.[field.name],
+                                    },
+                                  }}
+                                />
+                              </ShakingTextField>
+                            ) : field.type === 'select' ? (
+                              <ShakingTextField
+                                error={
+                                  (formik.touched as any)[method]?.[field.name] &&
+                                  Boolean((formik.errors as any)[method]?.[field.name])
+                                }
+                              >
+                                <TextField
+                                  select
+                                  fullWidth
+                                  label={field.label}
+                                  name={`${method}.${field.name}`}
+                                  value={formik.values[method][field.name]}
+                                  onChange={formik.handleChange}
+                                  size="small"
+                                  error={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    Boolean((formik.errors as any)[method]?.[field.name])
+                                  }
+                                  helperText={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    (formik.errors as any)[method]?.[field.name]
+                                  }
+                                  sx={{ width: '100%' }}
+                                >
+                                  {field.options?.map((opt: any) => (
+                                    <MenuItem key={opt} value={opt}>
+                                      {opt}
+                                    </MenuItem>
+                                  ))}
+                                </TextField>
+                              </ShakingTextField>
+                            ) : field.type === 'multiline' ? (
+                              <ShakingTextField
+                                error={
+                                  (formik.touched as any)[method]?.[field.name] &&
+                                  Boolean((formik.errors as any)[method]?.[field.name])
+                                }
+                              >
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  sx={{ width: '100%' }}
+                                  minRows={2}
+                                  size="small"
+                                  label={field.label}
+                                  name={`${method}.${field.name}`}
+                                  value={formik.values[method][field.name]}
+                                  onChange={formik.handleChange}
+                                  error={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    Boolean((formik.errors as any)[method]?.[field.name])
+                                  }
+                                  helperText={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    (formik.errors as any)[method]?.[field.name]
+                                  }
+                                />
+                              </ShakingTextField>
+                            ) : field.type === 'amount' ? (
+                              <ShakingTextField
+                                error={
+                                  (formik.touched as any)[method]?.[field.name] &&
+                                  Boolean((formik.errors as any)[method]?.[field.name])
+                                }
+                              >
+                                <NumericFormatCustom
+                                  size="small"
+                                  fullWidth
+                                  label={field.label}
+                                  name={`${method}.${field.name}`}
+                                  value={formik.values[method][field.name]}
+                                  onChange={formik.handleChange}
+                                  error={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    Boolean((formik.errors as any)[method]?.[field.name])
+                                  }
+                                  helperText={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    (formik.errors as any)[method]?.[field.name]
+                                  }
+                                />
+                              </ShakingTextField>
+                            ) : (
+                              <ShakingTextField
+                                error={
+                                  (formik.touched as any)[method]?.[field.name] &&
+                                  Boolean((formik.errors as any)[method]?.[field.name])
+                                }
+                              >
+                                <TextField
+                                  fullWidth
+                                  type={field.type}
+                                  label={field.label}
+                                  size="small"
+                                  name={`${method}.${field.name}`}
+                                  value={formik.values[method][field.name]}
+                                  onChange={formik.handleChange}
+                                  error={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    Boolean((formik.errors as any)[method]?.[field.name])
+                                  }
+                                  helperText={
+                                    (formik.touched as any)[method]?.[field.name] &&
+                                    (formik.errors as any)[method]?.[field.name]
+                                  }
+                                  inputProps={
+                                    field.type === 'number'
+                                      ? { min: field.min, max: field.max }
+                                      : {}
+                                  }
+                                />
+                              </ShakingTextField>
+                            )}
+                          </Grid>
+                        )
+                      )}
+                    </SectionCard>
+                  </Grid>
+                ))}
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    label="Notes"
+                    name="notes"
+                    value={formik.values.notes}
+                    onChange={formik.handleChange}
+                  />
+                </Grid>
               </Grid>
-            </Grid>
-          </Scrollbar>
-        </DialogScrollContent>
-      </Card>
+            </Scrollbar>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

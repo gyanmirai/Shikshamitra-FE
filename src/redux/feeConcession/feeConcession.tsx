@@ -12,8 +12,8 @@ export const ConcessionApi = createApi({
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
         // Handle mock route
-        if (url === '/concessionStudentInfo') {
-          return { data: concessionData.concessionStudentInfo };
+        if (url === '/concessionData') {
+          return { data: concessionData.concessionData };
         }
         return {
           error: {
@@ -26,7 +26,7 @@ export const ConcessionApi = createApi({
   endpoints: (builder) => ({
     getConcessions: builder.query({
       query: () => ({
-        url: '/concessionStudentInfo',
+        url: '/concessionData',
         method: 'GET',
       }),
       providesTags: ['Concession'],

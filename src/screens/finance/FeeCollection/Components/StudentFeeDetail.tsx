@@ -1,6 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
-import { Box, Card, Avatar, useTheme, Typography } from '@mui/material';
+import Link from 'next/link';
+
+import { Box, Card, Grid, Avatar, useTheme, Typography } from '@mui/material';
 
 import {
   FeeCollectionStatusType,
@@ -8,6 +10,7 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 
 import type { IStudentFee } from './type';
 
@@ -63,78 +66,134 @@ export const FeeSummaryCard = ({
           )}
 
           {/* Fee Info Row */}
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <FeeDetailBox
-              label="Total Fees"
-              amount={student?.totalFees ?? 0}
-              color={theme.palette.grey[800]}
-              bgColor={theme.palette.grey[100]}
-            />
-            <FeeDetailBox
-              label="Paid Fees"
-              amount={student?.paidFees ?? 0}
-              color={theme.palette.success.main}
-              bgColor={theme.palette.success.lighter}
-            />
-            <FeeDetailBox
-              label="Pending Fees"
-              amount={student?.pendingFees ?? 0}
-              color={theme.palette.warning.main}
-              bgColor={theme.palette.warning.lighter}
-            />
-            <FeeDetailBox
-              label="Overdue Fees"
-              amount={student?.overdueFees ?? 0}
-              color={theme.palette.error.main}
-              bgColor={theme.palette.error.lighter}
-            />
-            <FeeDetailBox
-              label="Charges"
-              amount={Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0)}
-              color={theme.palette.info.main}
-              bgColor={theme.palette.info.lighter}
-            />
-          </Box>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:currency-inr"
+                title="Total Fees"
+                count={student?.totalFees ?? 0}
+                color="text.primary"
+                bgColor="background.neutral"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:cash-check"
+                title="Paid Fees"
+                count={student?.paidFees ?? 0}
+                color="success.main"
+                bgColor="success.lighter"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:cash-clock"
+                title="Pending Fees"
+                count={student?.pendingFees ?? 0}
+                color="warning.main"
+                bgColor="warning.lighter"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:cash-remove"
+                title="Overdue Fees"
+                count={student?.overdueFees ?? 0}
+                color="error.main"
+                bgColor="error.lighter"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:cash-plus"
+                title="Charges"
+                count={Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0)}
+                color="info.main"
+                bgColor="info.lighter"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
+          </Grid>
         </Box>
       </Box>
     </Card>
   );
 };
 
-/** Sub-box component inside the card */
-const FeeDetailBox = ({
-  label,
-  amount,
-  color,
-  bgColor,
-}: {
-  label: string;
-  amount: number;
+interface ILabel {
+  name: string;
+  color: LabelColor;
+}
+
+export interface IStudentEnrollmentCardProps {
+  icon: string;
+  title: string;
+  count: number | string;
   color: string;
   bgColor: string;
-}) => (
-  <Box
-    sx={{
-      border: '1px solid',
-      borderColor: color,
-      bgcolor: bgColor,
-      borderRadius: 3,
-      p: 2,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      height: 100,
-      flex: 1,
-      mb: 2,
-    }}
-  >
-    <Typography variant="body1" color={color} sx={{ mb: 1 }}>
-      {label}
-    </Typography>
-    <Typography variant="h6" fontWeight="bold" sx={{ color }}>
-      ₹ {amount.toLocaleString('en-IN')}
-    </Typography>
+  href?: string;
+  labels?: ILabel[];
+  index?: number;
+}
+
+export const FinanceCollectionCard = ({
+  icon,
+  title,
+  count,
+  color,
+  bgColor,
+  href = '',
+  labels = [],
+  index,
+}: IStudentEnrollmentCardProps) => (
+  <Box component={Link} href={href} sx={{ textDecoration: 'none', maxWidth: '200px' }}>
+    <Card
+      sx={{
+        p: 1.5,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 3,
+        flexGrow: 1,
+        cursor: 'pointer',
+        height: '100%',
+        width: '100%',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 'var(--shadows-8)',
+          scale: 1.02,
+        },
+      }}
+    >
+      <Box>
+        <Typography variant="subtitle1">{title}</Typography>
+        <Typography variant="h5">{count}</Typography>
+        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+          {labels.map((label, idx) => (
+            <Label key={idx} color={label.color}>
+              {label.name}
+            </Label>
+          ))}
+        </Box>
+      </Box>
+      <Iconify
+        icon={icon}
+        sx={{
+          height: '40px',
+          width: '40px',
+          color,
+        }}
+      />
+    </Card>
   </Box>
 );

@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ConcessionRequestForm from './Components/ConcessionRequestForm';
 import StudentConcessionTable from './Components/StudentConcessionTable';
+import ViewStudentAllConcession from './Components/ViewStudentAllConcession';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
@@ -25,6 +26,7 @@ const Concession = () => {
   // Boolean state to control the visibility of add concession request modal/form
   const addConcessionRequest = useBoolean();
   const viewConcessionRequest = useBoolean();
+  const onViewAllConcession = useBoolean();
 
   const { data: concessionData, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
@@ -60,6 +62,10 @@ const Concession = () => {
           setSelectedConcessionForView(data);
           viewConcessionRequest.onTrue();
         }}
+        onViewAllConcession={(data) => {
+          setSelectedConcession(data);
+          onViewAllConcession.onTrue();
+        }}
       />
 
       <CustomDialog
@@ -92,6 +98,19 @@ const Concession = () => {
           student={selectedConcession as IStudentInfo}
         />
       </CustomDialog>
+
+      <CustomDialog
+        open={onViewAllConcession.value}
+        title={`${selectedConcession?.studentName} concession`}
+        handleClose={() => {
+          setSelectedConcession(null);
+          onViewAllConcession.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        {selectedConcession && <ViewStudentAllConcession data={selectedConcession} />}
+      </CustomDialog>
+
       <CustomDialog
         open={viewConcessionRequest.value}
         title={
