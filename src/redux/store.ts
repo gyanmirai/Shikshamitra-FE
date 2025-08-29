@@ -31,6 +31,7 @@ import { ReconciliationApi } from './finance/reconciliation';
 import { ConcessionTypeApi } from './finance/concessionType';
 import { ChargeCategoryApi } from './finance/chargeCategory';
 import { expenseApi } from './finance/expenseApi/expenseApi';
+import { incomeCategoryApi } from './finance/incomeCategory';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
@@ -156,6 +157,7 @@ const reducers = combineReducers({
   [incomeDetailsApi.reducerPath]: incomeDetailsApi.reducer,
   [budgetApi.reducerPath]: budgetApi.reducer,
   [budgetSubCategoryApi.reducerPath]: budgetSubCategoryApi.reducer,
+  [incomeCategoryApi.reducerPath]: incomeCategoryApi.reducer,
 });
 
 const store = configureStore({
@@ -235,7 +237,8 @@ const store = configureStore({
       .concat(incomeApi.middleware)
       .concat(incomeDetailsApi.middleware)
       .concat(budgetApi.middleware)
-      .concat(budgetSubCategoryApi.middleware),
+      .concat(budgetSubCategoryApi.middleware)
+      .concat(incomeCategoryApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
