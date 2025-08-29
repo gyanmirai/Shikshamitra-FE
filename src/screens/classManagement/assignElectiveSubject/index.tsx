@@ -231,6 +231,7 @@ const AssignElectiveSubject = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+      p
       <Box
         sx={{
           display: 'flex',
@@ -296,7 +297,6 @@ const AssignElectiveSubject = () => {
           </Button>
         </Box>
       </Box>
-
       <CustomizableTable
         tableId="elective-subject-table"
         noDataText={<>No Students Found</>}
@@ -375,7 +375,6 @@ const AssignElectiveSubject = () => {
         ]}
         data={students}
       />
-
       <ConfirmDialog
         open={resetDialog.value}
         onClose={() => resetDialog.onFalse()}
@@ -392,7 +391,6 @@ const AssignElectiveSubject = () => {
           </Button>
         }
       />
-
       <ConfirmDialog
         open={saveDialog.value}
         onClose={() => saveDialog.onFalse()}

@@ -1369,6 +1369,13 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
         },
+        // {
+        //   title: 'Book Management',
+        //   path: '/library/book-management',
+        //   _action: 'book-management',
+        //   shortcutKey: 'Alt+L+2',
+        //   shortcutKeyName: 'Alt+L+2',
+        // },
         {
           title: 'Member Management',
           path: '/library/member-management',
@@ -1426,6 +1433,13 @@ const libraryModule = {
               _action: 'notification-setting',
               shortcutKey: 'Alt+L+S+2',
               shortcutKeyName: 'Alt+L+S+2',
+            },
+            {
+              title: 'Book Category',
+              path: '/library/settings/book-category',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+1',
+              shortcutKeyName: 'Alt+L+S+1',
             },
           ],
         },

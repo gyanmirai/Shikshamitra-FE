@@ -1,0 +1,59 @@
+{
+  "bookManagementData": [
+    {
+      "id": 1,
+      "title": "Introduction to Algorithms",
+      "isbn": "9780262033848",
+      "author": "Thomas H. Cormen",
+      "publisher": "MIT Press",
+      "subject": "Computer Science",
+      "category": "Textbook",
+      "language": "English",
+      "createdOn": "15-03-2024"
+    },
+    {
+      "id": 2,
+      "title": "Clean Code",
+      "isbn": "9780132350884", 
+      "author": "Robert C. Martin",
+      "publisher": "Prentice Hall",
+      "subject": "Software Engineering",
+      "category": "Programming",
+      "language": "English",
+      "createdOn": "15-03-2024"
+    },
+    {
+      "id": 3,
+      "title": "The Pragmatic Programmer",
+      "isbn": "9780201616224",
+      "author": "Andrew Hunt, David Thomas",
+      "publisher": "Addison-Wesley",
+      "subject": "Software Development",
+      "category": "Programming",
+      "language": "English",
+      "createdOn": "15-03-2024"
+    },
+    {
+      "id": 4,
+      "title": "Artificial Intelligence: A Modern Approach",
+      "isbn": "9780136042594",
+      "author": "Stuart Russell, Peter Norvig",
+      "publisher": "Pearson",
+      "subject": "Artificial Intelligence",
+      "category": "Textbook",
+      "language": "English",
+      "createdOn": "15-03-2024"
+    },
+    {
+      "id": 5,
+      "title": "Design Patterns: Elements of Reusable Object-Oriented Software",
+      "isbn": "9780201633610",
+      "author": "Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides",
+      "publisher": "Addison-Wesley",
+      "subject": "Software Engineering",
+      "category": "Reference",
+      "language": "English",
+      "createdOn": "15-03-2024"
+    }
+  ]
+}
