@@ -119,7 +119,13 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
         tableId="charges-approval-table"
         noDataText="No Charges Found"
         columns={[
-          { id: 'category', label: 'Charge Category', align: 'left' },
+          {
+            id: 'category',
+            label: 'Charge Category',
+            align: 'left',
+            minWidth: '160px',
+            isFilter: true,
+          },
           { id: 'class', label: 'Class', align: 'left' },
           {
             id: 'divisions',
@@ -149,7 +155,14 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
               );
             },
           },
-          { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
+          {
+            id: 'dueDate',
+            label: 'Due Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: '110px',
+            isFilter: true,
+          },
           {
             id: 'status',
             label: 'Status',
