@@ -1,0 +1,76 @@
+{
+  "issueReturnFormData": [
+    {
+      "memberId": "M001",
+      "memberName": "Rahul Sharma",
+      "bookCategory": "Science",
+      "bookTitle": "Introduction to Physics",
+      "edition": "3rd Edition",
+      "dueDate": "2025-09-20",
+      "returnDate": "2025-09-15",
+      "bookCondition": "",
+      "fineAmount": "",
+      "requestedDate": "2025-08-20",
+      "status": 0
+    },
+    {
+      "memberId": "M002", 
+      "memberName": "Anjali Patel",
+      "bookCategory": "Literature",
+      "bookTitle": "Pride and Prejudice",
+      "edition": "2nd Edition",
+      "dueDate": "2025-09-15",
+      "returnDate": "2025-09-20",
+      "bookCondition": "",
+      "fineAmount": "",
+      "requestedDate": "2025-08-15",
+      "status": 1
+    },
+    {
+      "memberId": "M003",
+      "memberName": "Amit Verma", 
+      "bookCategory": "Mathematics",
+      "bookTitle": "Discrete Mathematics",
+      "edition": "5th Edition",
+      "dueDate": "2025-09-18",
+      "returnDate": "2025-09-18",
+      "bookCondition": "",
+      "fineAmount": "",
+      "requestedDate": "2025-08-18",
+      "status": 2
+    },
+    {
+      "memberId": "M004",
+      "memberName": "Sneha Reddy",
+      "bookCategory": "History", 
+      "bookTitle": "World War II",
+      "edition": "1st Edition",
+      "dueDate": "2025-09-10",
+      "returnDate": "2025-09-25",
+      "bookCondition": "",
+      "fineAmount": "",
+      "requestedDate": "2025-08-10",
+      "status": 3
+    }
+  ],
+  "reservedBookData" : [
+  {
+    "memberId": "DDVS001",
+    "memberName": "Dharmik Jinjala",
+    "notificationSentOn": "01-08-2025",
+    "status": 0
+  },
+  {
+    "memberId": "DDVS002",
+    "memberName": "Prerna Atre",
+    "notificationSentOn": "13-08-2025",
+    "status": 1
+  },
+  {
+    "memberId": "DDVS003",
+    "memberName": "Mayur Solanki",
+    "notificationSentOn": "20-08-2025",
+    "status": 2
+  }
+]
+}

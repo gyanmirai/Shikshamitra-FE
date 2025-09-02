@@ -15,7 +15,7 @@ const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
       tableId="student-fee-details"
       noDataText="Fee Data Not Found"
       columns={[
-        { id: 'feeHead', label: 'Fee Head', align: 'left' },
+        { id: 'feeHead', label: 'Fee Head', align: 'left', isFilter: true },
         {
           id: 'amount',
           label: 'Amount',

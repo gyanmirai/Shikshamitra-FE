@@ -1369,6 +1369,13 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
         },
+        {
+          title: 'Issued Books',
+          path: '/library/issued-books',
+          _action: 'issued-books',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
+        },
         // {
         //   title: 'Book Management',
         //   path: '/library/book-management',

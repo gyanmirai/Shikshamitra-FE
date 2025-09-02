@@ -50,20 +50,28 @@ const ChargesTable = ({
       </>
     }
     columns={[
-      { id: 'category', label: 'Charge Category', align: 'left' },
-      { id: 'class', label: 'Class', align: 'left' },
+      {
+        id: 'category',
+        label: 'Charge Category',
+        align: 'left',
+        minWidth: '160px',
+        isFilter: true,
+      },
+      { id: 'class', label: 'Class', align: 'left', isFilter: true },
       {
         id: 'divisions',
         label: 'Divisions',
         align: 'left',
+        isFilter: true,
         render: (value) => <Box>{value.join(', ')}</Box>,
       },
-      { id: 'students', label: 'Students', align: 'left', filterType: 'number' },
+      { id: 'students', label: 'Students', align: 'left', filterType: 'number', isFilter: true },
       {
         id: 'amount',
         label: 'Amount',
         filterType: 'number',
         align: 'left',
+        isFilter: true,
         render: (value) => `₹ ${value.toLocaleString()}`,
       },
       {
@@ -71,6 +79,7 @@ const ChargesTable = ({
         label: 'Priority',
         align: 'left',
         filterType: 'enum',
+        isFilter: true,
         enumOptions: ChargesPriorityStatusOptions,
         render(value, row) {
           return (
@@ -80,7 +89,7 @@ const ChargesTable = ({
           );
         },
       },
-      { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
+      { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date', minWidth: '110px' },
       {
         id: 'status',
         label: 'Status',

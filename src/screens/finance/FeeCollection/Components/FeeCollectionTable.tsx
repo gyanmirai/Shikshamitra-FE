@@ -101,16 +101,18 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           </>
         }
         columns={[
-          { id: 'name', label: 'Name', align: 'left', sticky: true },
-          { id: 'board', label: 'Board', align: 'left' },
-          { id: 'medium', label: 'Medium', align: 'left' },
-          { id: 'className', label: 'Class', align: 'left' },
-          { id: 'division', label: 'Division', align: 'left' },
+          { id: 'name', label: 'Name', align: 'left', isFilter: true, sticky: true },
+          { id: 'board', label: 'Board', isFilter: true, align: 'left' },
+          { id: 'medium', label: 'Medium', isFilter: true, align: 'left' },
+          { id: 'className', label: 'Class', isFilter: true, align: 'left' },
+          { id: 'division', label: 'Division', isFilter: true, align: 'left' },
           {
             id: 'totalFees',
             label: 'Total Fees',
             align: 'left',
+            isFilter: true,
             filterType: 'number',
+            minWidth: '120px',
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
@@ -118,6 +120,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             label: 'Paid Fees',
             filterType: 'number',
             align: 'left',
+            minWidth: '110px',
+            isFilter: true,
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
@@ -125,12 +129,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             label: 'Pending Fees',
             filterType: 'number',
             align: 'left',
+            isFilter: true,
+            minWidth: '130px',
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
             id: 'status',
             label: 'Status',
             align: 'left',
+            isFilter: true,
             filterType: 'enum',
             enumOptions: FeeCollectionStatusOptions,
             sticky: true,
