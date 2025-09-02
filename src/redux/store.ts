@@ -45,6 +45,7 @@ import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
+import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
@@ -67,6 +68,7 @@ import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
+import { reservationBookApi } from './book-reservation-api/book-reservation-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
@@ -162,6 +164,8 @@ const reducers = combineReducers({
   [incomeCategoryApi.reducerPath]: incomeCategoryApi.reducer,
   [bookManagementApi.reducerPath]: bookManagementApi.reducer,
   [bookCategoryApi.reducerPath]: bookCategoryApi.reducer,
+  [issueReturnFormApi.reducerPath]: issueReturnFormApi.reducer,
+  [reservationBookApi.reducerPath]: reservationBookApi.reducer,
 });
 
 const store = configureStore({
@@ -244,7 +248,9 @@ const store = configureStore({
       .concat(budgetSubCategoryApi.middleware)
       .concat(incomeCategoryApi.middleware)
       .concat(bookManagementApi.middleware)
-      .concat(bookCategoryApi.middleware),
+      .concat(bookCategoryApi.middleware)
+      .concat(issueReturnFormApi.middleware)
+      .concat(reservationBookApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
