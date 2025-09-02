@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -14,12 +14,15 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import BookForm from './Components/BookManageForm';
+import BookDetails from './Components/BookDetails';
 import BookManagementTable from './Components/BookManagementTable';
 
 const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
@@ -157,7 +160,19 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
       {/* View Details */}
       <CustomDialog
-        title="View Book"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Book Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View comprehensive book information including title, author, category, availability status and other relevant details."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={viewDialog.value}
         handleClose={() => {
           viewDialog.onFalse();
@@ -165,7 +180,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
         }}
         maxWidth="md"
       >
-        rfghbj
+        <BookDetails book={selectedBook} />
       </CustomDialog>
     </Box>
   );

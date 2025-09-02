@@ -1,3 +1,5 @@
+import type { LibraryBookStatus } from 'src/enums/library-book-status';
+
 export interface IBookTableProps {
   data: any[];
   onView?: (data: any) => void;
@@ -33,4 +35,18 @@ export interface IBookFormProps {
   open: boolean;
   onClose: (event: any, success?: boolean) => void;
   editData?: IBookPayload | null;
+}
+
+export interface IBookInformationCardProps {
+  book: IBookPayload;
+}
+
+// Props type
+export interface IBookIssued {
+  memberId: string;
+  memberName: string;
+  copyNo: number;
+  issuedOn: string;
+  returnOn: string;
+  status: LibraryBookStatus;
 }
