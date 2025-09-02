@@ -25,7 +25,7 @@
       "name": "Parth Ghusar",
       "currentIssue": 2,
       "overdueReturn": 0,
-      "memberStatus": "Active"
+      "memberStatus": "Inactive"
     },
     {
       "id": "4",
@@ -43,7 +43,7 @@
       "name": "Raj Baku",
       "currentIssue": 7,
       "overdueReturn": 0,
-      "memberStatus": "Active"
+      "memberStatus": "Inactive"
     }
   ],
   "roleOptions": [
@@ -101,5 +101,68 @@
   "selectStatusOptions": [
     { "value": "Active", "label": "Active" },
     { "value": "Inactive", "label": "Inactive" }
+  ],
+  "mockIssuedBooks": [
+    {
+      "id": "1",
+      "bookId": "BK001",
+      "bookTitle": "Introduction to Physics",
+      "issueDate": "01-09-2023",
+      "dueDate": "15-09-2023",
+      "returnDate": "14-09-2023",
+      "status": "Returned"
+    },
+    {
+      "id": "2",
+      "bookId": "BK002",
+      "bookTitle": "Advanced Mathematics",
+      "issueDate": "05-09-2023",
+      "dueDate": "19-09-2023",
+      "returnDate": null,
+      "status": "Issued"
+    },
+    {
+      "id": "3",
+      "bookId": "BK003",
+      "bookTitle": "Chemistry Fundamentals",
+      "issueDate": "20-08-2023",
+      "dueDate": "03-09-2023",
+      "returnDate": null,
+      "status": "Overdue"
+    }
+  ],
+  "mockReservedBooks": [
+    {
+      "id": "1",
+      "bookId": "BK004",
+      "bookTitle": "Biology Basics",
+      "reservationDate": "10-09-2023",
+      "status": "Active"
+    },
+    {
+      "id": "2",
+      "bookId": "BK005",
+      "bookTitle": "History of India",
+      "reservationDate": "12-09-2023",
+      "status": "Cancelled"
+    }
+  ],
+  "mockFinesCharges": [
+    {
+      "id": "1",
+      "bookTitle": "Panchtantra",
+      "amount": 50,
+      "reason": "Late return of 'Chemistry Fundamentals'",
+      "dateIssued": "04-09-2023",
+      "status": "Paid"
+    },
+    {
+      "id": "2",
+      "bookTitle": "Akbar Birbal ",
+      "amount": 30,
+      "reason": "Damaged cover of 'Advanced Mathematics'",
+      "dateIssued": "15-09-2023",
+      "status": "Unpaid"
+    }
   ]
 }

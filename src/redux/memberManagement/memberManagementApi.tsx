@@ -38,6 +38,16 @@ export const memberManagementApi = createApi({
         if (url === '/selectStatusOptions') {
           return { data: memberManagementData.selectStatusOptions };
         }
+        if (url === '/mockIssuedBooks') {
+          return { data: memberManagementData.mockIssuedBooks };
+        }
+        if (url === '/mockReservedBooks') {
+          return { data: memberManagementData.mockReservedBooks };
+        }
+        if (url === '/mockFinesCharges') {
+          return { data: memberManagementData.mockFinesCharges };
+        }
+        // Return 404 for unknown routes
         return {
           error: {
             status: 404,
@@ -127,6 +137,27 @@ export const memberManagementApi = createApi({
       }),
       providesTags: ['StatusOptions'],
     }),
+    getIssuedBooks: builder.query({
+      query: () => ({
+        url: '/mockIssuedBooks',
+        method: 'GET',
+      }),
+      providesTags: ['MemberManagement'],
+    }),
+    getReservedBooks: builder.query({
+      query: () => ({
+        url: '/mockReservedBooks',
+        method: 'GET',
+      }),
+      providesTags: ['MemberManagement'],
+    }),
+    getFinesCharges: builder.query({
+      query: () => ({
+        url: '/mockFinesCharges',
+        method: 'GET',
+      }),
+      providesTags: ['MemberManagement'],
+    }),
   }),
 });
 
@@ -141,4 +172,7 @@ export const {
   useGetBookCategoryOptionsQuery,
   useGetBookTitleOptionsQuery,
   useGetSelectStatusOptionsQuery,
+  useGetIssuedBooksQuery,
+  useGetReservedBooksQuery,
+  useGetFinesChargesQuery,
 } = memberManagementApi;

@@ -23,6 +23,7 @@ import MemberForm from './Components/MemberManageForm';
 import ChangeStatusForm from './Components/ChangeStatusForm';
 import MakeReservationForm from './Components/MakeReservationForm';
 import MemberManagementTable from './Components/MemberManagementTable';
+import MemberDetailedViewComponent from './Components/MemberDetailedViewComponent';
 
 const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control member form visibility
@@ -117,7 +118,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
         ) : (
           <CustomBreadcrumbs
             heading="Member Management"
-            description="View and manage all created fee structures. Use the actions to view details, make changes, or delete a structure. Click 'Create New Fee Structure' to define a new one for any board, medium or class."
+            description="This screen displays the list of all library members along with their details, and provides an option to add new members."
             links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Member Management' }]}
             sx={{ px: 1 }}
             action={
@@ -169,7 +170,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             <CustomTooltip
               arrow
               placement="right"
-              title="Form to record and request student fee refunds."
+              title="This modal allows the librarian to fill in all required details and register a new member in the library system."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -192,7 +193,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             <CustomTooltip
               arrow
               placement="right"
-              title="Upload your bank statement to begin reconciliation. Provide statement details and attach the file for processing."
+              title="This modal allows the librarian to update a member's status by selecting from the dropdown (Active / Inactive)."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -216,7 +217,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             <CustomTooltip
               arrow
               placement="right"
-              title="Form to record and request student fee refunds."
+              title="This modal allows the libraian to reserve a sepecific book for a selected student."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -232,15 +233,32 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
 
       {/* View Details */}
       <CustomDialog
-        title="View Member"
-        open={viewDialog.value}
         handleClose={() => {
           viewDialog.onFalse();
           setSelectedMember(null);
         }}
-        maxWidth="md"
+        open={viewDialog.value}
+        maxWidth="lg"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Member Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="This modal displays the detailed profile of a specific member, including their personal information, currently issued books, reserved books, and fines & charges history."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
-        Member details content here
+        <MemberDetailedViewComponent
+          member={selectedMember}
+          onClose={() => {
+            viewDialog.onFalse();
+            setSelectedMember(null);
+          }}
+        />
       </CustomDialog>
     </Box>
   );
