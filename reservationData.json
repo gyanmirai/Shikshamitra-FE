@@ -1,0 +1,38 @@
+{
+    "reservationData" :[
+  {
+    "memberId": "DDVS001",
+    "memberName": "Dharmik Jinjala",
+    "role": "Student",
+    "reservedOn": "10-08-2025",
+    "bookCategory": "Text Book",
+    "bookTitle": "Introduction to Physics",
+    "edition": "01"
+  },
+  {
+    "memberId": "DDVS002",
+    "memberName": "Prerna Atre",
+    "role": "Teacher",
+    "reservedOn": "12-08-2025",
+    "bookCategory": "Reference Book",
+    "bookTitle": "Computer Networks",
+    "edition": "05"
+  },
+  {
+    "memberId": "DDVS003",
+    "memberName": "Mayur Solanki",
+    "role": "Student",
+    "reservedOn": "15-08-2025",
+    "bookCategory": "Magazine",
+    "bookTitle": "Science Today",
+    "edition": "August 2025"
+  },
+  {
+    "memberId": "DDVS004",
+    "memberName": "Krishna Patel",
+    "role": "Librarian",
+    "reservedOn": "18-08-2025"
+  }
+]
+}
+
