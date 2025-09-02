@@ -26,7 +26,7 @@ const ChargesList: React.FC<ChargesListProps> = ({ charges, selectedCharges, tog
     const newSelected = selectedCharges.includes(selectedId)
       ? selectedCharges.filter((c) => c !== selectedId) // remove
       : [...selectedCharges, selectedId]; // add
-    toggleSelect(newSelected); // ✅ notify parent too
+    toggleSelect(newSelected); // notify parent too
   };
 
   return (

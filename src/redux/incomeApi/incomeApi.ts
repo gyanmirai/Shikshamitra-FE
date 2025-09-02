@@ -13,7 +13,7 @@ export const incomeApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/incomeData') {
-          return { data: incomeData };
+          return { data: incomeData.incomeData };
         }
         return {
           error: {

@@ -116,7 +116,7 @@ const IncomeTracking = () => {
           </Card>
         ) : (
           <IncomeTable
-            data={incomeData}
+            data={incomeData || []}
             addIncome={addIncomeDialog}
             setEditData={setSelectedIncome}
             onEdit={(data) => {
