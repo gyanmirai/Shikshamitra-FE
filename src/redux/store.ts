@@ -66,6 +66,7 @@ import { StudentLeaveApi } from './student/student-leave/student-leave-api';
 import { expenseDetailsApi } from './finance/expenseApi/expenseDetailedApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
+import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { reservationBookApi } from './book-reservation-api/book-reservation-api';
@@ -164,6 +165,7 @@ const reducers = combineReducers({
   [incomeCategoryApi.reducerPath]: incomeCategoryApi.reducer,
   [bookManagementApi.reducerPath]: bookManagementApi.reducer,
   [bookCategoryApi.reducerPath]: bookCategoryApi.reducer,
+  [memberManagementApi.reducerPath]: memberManagementApi.reducer,
   [issueReturnFormApi.reducerPath]: issueReturnFormApi.reducer,
   [reservationBookApi.reducerPath]: reservationBookApi.reducer,
 });
@@ -249,6 +251,7 @@ const store = configureStore({
       .concat(incomeCategoryApi.middleware)
       .concat(bookManagementApi.middleware)
       .concat(bookCategoryApi.middleware)
+      .concat(memberManagementApi.middleware)
       .concat(issueReturnFormApi.middleware)
       .concat(reservationBookApi.middleware),
 });
