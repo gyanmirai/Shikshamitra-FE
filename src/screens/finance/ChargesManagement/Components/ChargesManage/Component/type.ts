@@ -25,11 +25,15 @@ export interface IChargeData {
 export interface IChargeFormProps {
   open: UseBooleanReturn;
   onClose: (event?: any, reason?: boolean) => void;
+  editData?: IChargeData | null; // Data to be edited
+  isEdit?: boolean; // Flag to indicate if form is in edit mode
 }
 
 export interface ViewChargeProps {
-  charge: IChargeData;
+  charge: IChargeData | null; // Made nullable for consistency
+  isActionShow?: boolean;
 }
+
 export interface RequestorInfoProps {
   charge: IChargeData | null;
 }

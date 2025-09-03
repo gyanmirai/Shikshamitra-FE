@@ -1,337 +1,392 @@
 {
-"feeCollectionData": [
-  {
-    "id": 1,
-    "name": "Dharmik Jinjala",
-    "profileImage": "/images/student1.jpg",
-    "rollNumber": "2024001", 
-    "board": "CBSE",
-    "medium": "English",
-    "className": "10",
-    "division": "A",
-    "totalFees": 50000,
-    "paidFees": 50000,
-    "pendingFees": 0,
-    "overdueFees": 0,
-    "status": 2,
-    "terms": [
-      {
-        "id": "1",
-        "name": "Term 1",
-        "dueDate": "30-06-2024",
-        "amount": 25000,
-        "paid": 25000,
-        "status": 2
+  "feeCollectionData": [
+    {
+      "id": 1,
+      "name": "Dharmik Jinjala",
+      "profileImage": "/images/student1.jpg",
+      "rollNumber": "01",
+      "grNumber": "GR2024001",
+      "board": "CBSE",
+      "medium": "English",
+      "className": "10",
+      "division": "A",
+      "totalFees": 50000,
+      "paidFees": 50000,
+      "pendingFees": 0,
+      "overdueFees": 0,
+      "status": 0,
+      "terms": [
+        {
+          "id": "1",
+          "name": "Term 1",
+          "dueDate": "30-06-2024",
+          "amount": 25000,
+          "paid": 25000,
+          "status": 2
+        },
+        {
+          "id": "2",
+          "name": "Term 2",
+          "dueDate": "30-12-2024",
+          "amount": 25000,
+          "paid": 25000,
+          "status": 2
+        }
+      ],
+      "paymentDetails": {
+        "bankName": "SBI",
+        "accountNumber": "XXXX1234",
+        "ifscCode": "SBIN0001234"
       },
-      {
-        "id": "2",
-        "name": "Term 2", 
-        "dueDate": "30-12-2024",
-        "amount": 25000,
-        "paid": 25000,
-        "status": 2
-      }
-    ],
-    "paymentDetails": {
-      "bankName": "SBI",
-      "accountNumber": "XXXX1234",
-      "ifscCode": "SBIN0001234"
+      "contactNumber": "9876543210",
+      "admissionDate": "01-04-2024",
+      "parentName": "Rajesh Jinjala",
+      "email": "dharmik.j@example.com",
+      "rollNumber": "01",
+      "grNumber": "GR2024001"
     },
-    "contactNumber": "9876543210",
-    "admissionDate": "01-04-2024",
-    "grNumber": "GR2024001",
-    "parentName": "Rajesh Jinjala",
-    "email": "dharmik.j@example.com"
-  },
-  {
-    "id": 2,
-    "name": "Dharmik Jinjala",
-    "profileImage": "/images/student2.jpg",
-    "rollNumber": "2024002",
-    "board": "GSEB", 
-    "medium": "English",
-    "className": "02",
-    "division": "C",
-    "totalFees": 10000,
-    "paidFees": 5000,
-    "pendingFees": 5000,
-    "overdueFees": 2000,
-    "status": 1,
-    "terms": [
-      {
-        "id": "1",
-        "name": "Term 1",
-        "dueDate": "30-06-2024",
-        "amount": 5000,
-        "paid": 5000,
-        "status": 2
+    {
+      "id": 2,
+      "name": "Dharmik Jinjala",
+      "profileImage": "/images/student2.jpg",
+      "rollNumber": "02",
+      "grNumber": "GR2024002",
+      "board": "GSEB",
+      "medium": "English",
+      "className": "02",
+      "division": "C",
+      "totalFees": 10000,
+      "paidFees": 5000,
+      "pendingFees": 5000,
+      "overdueFees": 5000,
+      "status": 1,
+      "terms": [
+        {
+          "id": "1",
+          "name": "Term 1",
+          "dueDate": "30-06-2024",
+          "amount": 5000,
+          "paid": 5000,
+          "status": 2
+        },
+        {
+          "id": "2",
+          "name": "Term 2",
+          "dueDate": "30-12-2024",
+          "amount": 5000,
+          "paid": 0,
+          "status": 0
+        }
+      ],
+      "paymentDetails": {
+        "bankName": "HDFC",
+        "accountNumber": "XXXX5678",
+        "ifscCode": "HDFC0005678"
       },
-      {
-        "id": "2",
-        "name": "Term 2",
-        "dueDate": "30-12-2024",
-        "amount": 5000,
-        "paid": 0,
-        "status": 0
-      }
-    ],
-    "paymentDetails": {
-      "bankName": "HDFC",
-      "accountNumber": "XXXX5678",
-      "ifscCode": "HDFC0005678"
+      "contactNumber": "9876543211",
+      "admissionDate": "01-04-2024",
+      "parentName": "Rajesh Jinjala",
+      "email": "dharmik.j@example.com"
     },
-    "contactNumber": "9876543211",
-    "admissionDate": "01-04-2024",
-    "grNumber": "GR2024002",
-    "parentName": "Rajesh Jinjala",
-    "email": "dharmik.j@example.com"
-  },
-  {
-    "id": 3,
-    "name": "Dharmik Jinjala",
-    "profileImage": "/images/student3.jpg",
-    "rollNumber": "2024003",
-    "board": "CBSE",
-    "medium": "Gujarati",
-    "className": "06",
-    "division": "D",
-    "totalFees": 20000,
-    "paidFees": 15000,
-    "pendingFees": 5000,
-    "overdueFees": 0,
-    "status": 1,
-    "terms": [
-      {
-        "id": "1",
-        "name": "Term 1",
-        "dueDate": "30-06-2024",
-        "amount": 10000,
-        "paid": 10000,
-        "status": 2
+    {
+      "id": 3,
+      "name": "Dharmik Jinjala",
+      "profileImage": "/images/student3.jpg",
+      "rollNumber": "03",
+      "grNumber": "GR2024003",
+      "board": "CBSE",
+      "medium": "Gujarati",
+      "className": "06",
+      "division": "D",
+      "totalFees": 20000,
+      "paidFees": 15000,
+      "pendingFees": 5000,
+      "overdueFees": 5000,
+      "status": 2,
+      "terms": [
+        {
+          "id": "1",
+          "name": "Term 1",
+          "dueDate": "30-06-2024",
+          "amount": 10000,
+          "paid": 10000,
+          "status": 2
+        },
+        {
+          "id": "2",
+          "name": "Term 2",
+          "dueDate": "30-12-2024",
+          "amount": 10000,
+          "paid": 5000,
+          "status": 1
+        }
+      ],
+      "paymentDetails": {
+        "bankName": "ICICI",
+        "accountNumber": "XXXX9012",
+        "ifscCode": "ICIC0009012"
       },
-      {
-        "id": "2",
-        "name": "Term 2",
-        "dueDate": "30-12-2024",
-        "amount": 10000,
-        "paid": 5000,
-        "status": 1
-      }
-    ],
-    "paymentDetails": {
-      "bankName": "ICICI",
-      "accountNumber": "XXXX9012",
-      "ifscCode": "ICIC0009012"
+      "contactNumber": "9876543212",
+      "admissionDate": "01-04-2024",
+      "parentName": "Rajesh Jinjala",
+      "email": "dharmik.j@example.com"
     },
-    "contactNumber": "9876543212",
-    "admissionDate": "01-04-2024",
-    "grNumber": "GR2024003",
-    "parentName": "Rajesh Jinjala",
-    "email": "dharmik.j@example.com"
-  },
-  {
-    "id": 4,
-    "name": "Dharmik Jinjala",
-    "profileImage": "/images/student4.jpg",
-    "rollNumber": "2024004",
-    "board": "GSEB",
-    "medium": "Gujarati",
-    "className": "08",
-    "division": "B",
-    "totalFees": 30000,
-    "paidFees": 30000,
-    "pendingFees": 0,
-    "overdueFees": 0,
-    "status": 2,
-    "terms": [
-      {
-        "id": "1",
-        "name": "Term 1",
-        "dueDate": "30-06-2024",
-        "amount": 15000,
-        "paid": 15000,
-        "status": 2
+    {
+      "id": 4,
+      "name": "Dharmik Jinjala",
+      "profileImage": "/images/student4.jpg",
+      "rollNumber": "04",
+      "grNumber": "GR2024004",
+      "board": "GSEB",
+      "medium": "Gujarati",
+      "className": "08",
+      "division": "B",
+      "totalFees": 30000,
+      "paidFees": 30000,
+      "pendingFees": 0,
+      "overdueFees": 0,
+      "status": 0,
+      "terms": [
+        {
+          "id": "1",
+          "name": "Term 1",
+          "dueDate": "30-06-2024",
+          "amount": 15000,
+          "paid": 15000,
+          "status": 2
+        },
+        {
+          "id": "2",
+          "name": "Term 2",
+          "dueDate": "30-12-2024",
+          "amount": 15000,
+          "paid": 15000,
+          "status": 2
+        }
+      ],
+      "paymentDetails": {
+        "bankName": "Axis",
+        "accountNumber": "XXXX3456",
+        "ifscCode": "UTIB0003456"
       },
-      {
-        "id": "2",
-        "name": "Term 2",
-        "dueDate": "30-12-2024",
-        "amount": 15000,
-        "paid": 15000,
-        "status": 2
-      }
-    ],
-    "paymentDetails": {
-      "bankName": "Axis",
-      "accountNumber": "XXXX3456",
-      "ifscCode": "UTIB0003456"
+      "contactNumber": "9876543213",
+      "admissionDate": "01-04-2024",
+      "parentName": "Rajesh Jinjala",
+      "email": "dharmik.j@example.com"
     },
-    "contactNumber": "9876543213",
-    "admissionDate": "01-04-2024",
-    "grNumber": "GR2024004",
-    "parentName": "Rajesh Jinjala",
-    "email": "dharmik.j@example.com"
-  },
-  {
-    "id": 5,
-    "name": "Dharmik Jinjala",
-    "profileImage": "/images/student5.jpg",
-    "rollNumber": "2024005",
-    "board": "CBSE",
-    "medium": "English",
-    "className": "12",
-    "division": "A",
-    "totalFees": 60000,
-    "paidFees": 0,
-    "pendingFees": 60000,
-    "overdueFees": 30000,
-    "status": 0,
-    "terms": [
-      {
-        "id": "1",
-        "name": "Term 1",
-        "dueDate": "30-06-2024",
-        "amount": 30000,
-        "paid": 0,
-        "status": 0
+    {
+      "id": 5,
+      "name": "Dharmik Jinjala",
+      "profileImage": "/images/student5.jpg",
+      "rollNumber": "05",
+      "grNumber": "GR2024005",
+      "board": "CBSE",
+      "medium": "English",
+      "className": "12",
+      "division": "A",
+      "totalFees": 60000,
+      "paidFees": 0,
+      "pendingFees": 60000,
+      "overdueFees": 0,
+      "status": 0,
+      "terms": [
+        {
+          "id": "1",
+          "name": "Term 1",
+          "dueDate": "30-06-2024",
+          "amount": 30000,
+          "paid": 0,
+          "status": 0
+        },
+        {
+          "id": "2",
+          "name": "Term 2",
+          "dueDate": "30-12-2024",
+          "amount": 30000,
+          "paid": 0,
+          "status": 0
+        }
+      ],
+      "paymentDetails": {
+        "bankName": "BOB",
+        "accountNumber": "XXXX7890",
+        "ifscCode": "BARB0007890"
       },
-      {
-        "id": "2",
-        "name": "Term 2",
-        "dueDate": "30-12-2024",
-        "amount": 30000,
-        "paid": 0,
-        "status": 0
-      }
-    ],
-    "paymentDetails": {
-      "bankName": "BOB",
-      "accountNumber": "XXXX7890",
-      "ifscCode": "BARB0007890"
+      "contactNumber": "9876543214",
+      "admissionDate": "01-04-2024",
+      "parentName": "Rajesh Jinjala",
+      "email": "dharmik.j@example.com"
+    }
+  ],
+  "terms": [
+    {
+      "id": "1",
+      "name": "January 2025",
+      "dueDate": "30-01-2025",
+      "paid": 4000,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ],
+      "charges": [
+        { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500, "status": 1 },
+        { "name": "Sports Fee", "paid": 0, "dueDate": "30-01-2025", "total": 2000, "status": 0 },
+        {
+          "name": "Technology Fee",
+          "paid": 1000,
+          "dueDate": "30-01-2025",
+          "total": 1000,
+          "status": 1
+        },
+        {
+          "name": "Development Fee",
+          "paid": 0,
+          "dueDate": "30-01-2025",
+          "total": 1500,
+          "status": 0
+        }
+      ]
     },
-    "contactNumber": "9876543214",
-    "admissionDate": "01-04-2024",
-    "grNumber": "GR2024005",
-    "parentName": "Rajesh Jinjala",
-    "email": "dharmik.j@example.com"
-  }
-],
-"terms" : [
-  {
-    "id": "1",
-    "name": "January 2025",
-    "dueDate": "30-01-2025",
-    "paid": 4000,
-    "total": 10000,
-    "feeHeads": [
-      { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 1 },
-      { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
-    ],
-    "charges": [
-      { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500, "status": 1 },
-      { "name": "Sports Fee", "paid": 0, "dueDate": "30-01-2025", "total": 2000, "status": 0 },
-      { "name": "Technology Fee", "paid": 1000, "dueDate": "30-01-2025", "total": 1000, "status": 1 },
-      { "name": "Development Fee", "paid": 0, "dueDate": "30-01-2025", "total": 1500, "status": 0 }
-    ]
-  },
-  {
-    "id": "2",
-    "name": "February 2025",
-    "dueDate": "28-02-2025",
-    "paid": 0,
-    "total": 10000,
-    "feeHeads": [
-      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
-      { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
-    ]
-  },
-  {
-    "id": "3", 
-    "name": "March 2025",
-    "dueDate": "30-03-2025",
-    "paid": 0,
-    "total": 10000,
-    "feeHeads": [
-      { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
-      { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-      { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
-    ]
-  }
-],
-"paymentHistory" : [
-  {
-    "receiptNo": "REC-2025-100",
-    "date": "10-01-2025",
-    "amount": 10000,
-    "paymentMethod": "Cash",
-    "status": "Successful"
-  },
-  {
-    "receiptNo": "REC-2025-150",
-    "date": "10-02-2025",
-    "amount": 10000,
-    "paymentMethod": "UPI",
-    "status": "Successful"
-  },
-  {
-    "receiptNo": "REC-2025-207",
-    "date": "10-03-2025",
-    "amount": 10000,
-    "paymentMethod": "Cheque",
-    "status": "Successful"
-  },
-  {
-    "receiptNo": "REC-2025-305",
-    "date": "10-04-2025",
-    "amount": 10000,
-    "paymentMethod": "Net Banking",
-    "status": "Successful"
-  }
-],
-"feeConcession" : [
-  {
-    "id": 1,
-    "concessionType": "Sibling Discount",
-    "reason": "Reduction in fees for families with more than one child enrolled in the school.",
-    "status": 0
-  },
-  {
-    "id": 2,
-    "concessionType": "Merit Scholarship", 
-    "reason": "Awarded based on outstanding academic performance or achievements.",
-    "status": 1
-  }
-],
-"outstandingFeeData" : [
-  {
-    "id": 1,
-    "feeHead": "Tuition Fee",
-    "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": "Overdue"
-  },
-  {
-    "id": 2,
-    "feeHead": "Library Fee",
-    "amount": 10000,
-    "dueDate": "30-09-2025",
-    "status": "Overdue"
-  },
-  {
-    "id": 3,
-    "feeHead": "Transport Fee",
-    "amount": 7000,
-    "dueDate": "30-10-2025",
-    "status": "Overdue"
-  },
-  {
-    "id": 4,
-    "feeHead": "Lab Fee",
-    "amount": 1000,
-    "dueDate": "30-10-2025",
-    "status": "Overdue"
-  }
-]
+    {
+      "id": "2",
+      "name": "February 2025",
+      "dueDate": "28-02-2025",
+      "paid": 0,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "March 2025",
+      "dueDate": "30-03-2025",
+      "paid": 0,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ]
+    }
+  ],
+  "paymentHistory": [
+    {
+      "receiptNo": "REC-2025-100",
+      "date": "10-01-2025",
+      "amount": 10000,
+
+      "paymentMethod": "Cash",
+      "status": "Successful"
+    },
+    {
+      "receiptNo": "REC-2025-150",
+      "date": "10-02-2025",
+      "amount": 10000,
+
+      "paymentMethod": "UPI",
+      "status": "Successful"
+    },
+    {
+      "receiptNo": "REC-2025-207",
+      "date": "10-03-2025",
+      "amount": 10000,
+
+      "paymentMethod": "Cheque",
+      "status": "Successful"
+    },
+    {
+      "receiptNo": "REC-2025-305",
+      "date": "10-04-2025",
+      "amount": 10000,
+
+      "paymentMethod": "Net Banking",
+      "status": "Successful"
+    }
+  ],
+  "feeConcession": [
+    {
+      "id": 1,
+      "concessionType": "Sibling Discount",
+      "amount": 5000,
+      "feeHead": "Tuition Fee",
+      "reason": "Reduction in fees for families with more than one child enrolled in the school.",
+      "status": 0
+    },
+    {
+      "id": 2,
+      "concessionType": "Merit Scholarship",
+      "amount": 4000,
+      "feeHead": "Tuition Fee",
+      "reason": "Awarded based on outstanding academic performance or achievements.",
+      "status": 1
+    },
+    {
+      "id": 3,
+      "concessionType": "Early Payment Discount",
+      "amount": 2000,
+      "feeHead": "Total Fees",
+      "reason": "Incentive for parents who pay the full annual fees before the start of the academic year.",
+      "status": 0
+    },
+    {
+      "id": 4,
+      "concessionType": "Library Fee Waiver",
+      "amount": 1500,
+      "feeHead": "Library Fee",
+      "reason": "Waiver of library fees for students actively participating in library activities.",
+      "status": 1
+    },
+    {
+      "id": 5,
+      "concessionType": "Academic Excellence Award",
+      "amount": 8000,
+      "feeHead": "Academic Fee",
+      "reason": "Recognition for students maintaining exceptional academic standards throughout the year.",
+      "status": 0
+    }
+  ],
+  "outstandingFeeData": [
+    {
+      "id": 1,
+      "feeHead": "Tuition Fee",
+      "amount": 10000,
+      "dueDate": "30-09-2025",
+      "status": "Overdue"
+    },
+    {
+      "id": 2,
+      "feeHead": "Library Fee",
+      "amount": 10000,
+      "dueDate": "30-09-2025",
+      "status": "Overdue"
+    },
+    {
+      "id": 3,
+      "feeHead": "Transport Fee",
+      "amount": 7000,
+      "dueDate": "30-10-2025",
+      "status": "Overdue"
+    },
+    {
+      "id": 4,
+      "feeHead": "Lab Fee",
+      "amount": 1000,
+      "dueDate": "30-10-2025",
+      "status": "Overdue"
+    }
+  ],
+  "allBoard": [
+    { "id": 1, "name": "CBSE" },
+    { "id": 2, "name": "GSEB" }
+  ],
+  "allMedium": [
+    { "id": 1, "name": "English" },
+    { "id": 2, "name": "Gujarati" },
+    { "id": 3, "name": "Hindi" }
+  ]
 }
