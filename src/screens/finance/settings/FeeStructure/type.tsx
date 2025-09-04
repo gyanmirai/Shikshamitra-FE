@@ -11,6 +11,7 @@ export interface IClassWiseFeeItem {
 }
 
 export interface IClassWiseFeeData {
+  feeStructureName: string; // class-level fee structure name
   status: FeeStructureClassStatusType;
   feeItems: IClassWiseFeeItem[];
 }
@@ -27,7 +28,7 @@ export interface IFeeStructure {
   totalClass?: number;
   paymentMethod: string[];
   feeStructureClasses: {
-    [className: string]: IClassWiseFeeData;
+    [className: string]: IClassWiseFeeData[];
   };
 }
 
@@ -51,5 +52,6 @@ export interface IFeeStructureFormProps {
 export interface FeeStructureCardProps {
   className: string;
   feeItems: IClassWiseFeeItem[];
+  structureIndex: number;
   formik: FormikProps<IFeeStructure>;
 }
