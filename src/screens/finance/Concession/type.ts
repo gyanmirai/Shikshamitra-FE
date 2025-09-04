@@ -1,8 +1,16 @@
 import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
 export interface IConcession {
+  board: string;
+  medium: string;
+  className: string;
+  division: string;
+  studentName: string;
   concessionType: string;
   reason: string;
+  feeHead: string;
+  documentStatus?: number;
+  documents: IConcessionDocument[];
   status?: number; // e.g., Pending / Approved / Rejected
 }
 
@@ -44,7 +52,7 @@ export interface IConcessionFormProps {
   open: boolean;
   onClose: (data?: any, refresh?: boolean) => void;
   student: IStudentInfo;
-  editData?: IConcessionFormValues;
+  editData?: IConcession;
 }
 
 export interface IStudentTableProps {
@@ -55,4 +63,9 @@ export interface IStudentTableProps {
 export interface IStudentAdminTableProps {
   data: IViewConcessionRequestProps[];
   onViewConcession: (student: IViewConcessionRequestProps) => void;
+}
+
+export interface IReasonApprovalFormProps {
+  onClose: (e: any, isSubmit: boolean) => void;
+  mode: string;
 }

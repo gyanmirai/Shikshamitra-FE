@@ -82,6 +82,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         fullWidth
         label="Concession Type"
         size="small"
+        disabled
         value="Sibling Discount"
         sx={{ mb: 2 }}
       >
@@ -90,17 +91,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         <MenuItem value="Partial">Partial Concession</MenuItem>
         <MenuItem value="Scholarship">Scholarship</MenuItem>
       </TextField>
-
-      {/* 🔹 Reason */}
-      <TextField
-        fullWidth
-        label="Reason of Concession Request"
-        size="small"
-        multiline
-        rows={3}
-        value="Reduction in fees for families with more than one child enrolled in the school."
-        sx={{ mb: 2 }}
-      />
 
       {/* 🔹 Documents Table (using your CustomizableTable) */}
       <CustomizableTable
@@ -162,9 +152,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         ]}
         data={documents || []}
       />
-
-      {/* 🔹 Remarks */}
-      <TextField fullWidth label="Remarks" size="small" sx={{ mt: 2, mb: 2 }} />
     </DialogScrollContent>
     <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
       <Grid item>
