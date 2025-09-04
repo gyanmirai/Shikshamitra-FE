@@ -11,4 +11,5 @@ export const getInitialIncomeData = (
   paymentMethod: editData?.paymentMethod ?? '',
   date: editData?.date ?? null, // default today
   notes: editData?.notes ?? '',
+  paymentDetails: editData?.paymentDetails ?? {},
 });

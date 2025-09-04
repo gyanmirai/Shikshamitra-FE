@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -15,8 +15,10 @@ import { useGetBudgetDataQuery } from 'src/redux/budgetApi/budgetApi';
 // import budgetTableData from 'src/json/budget/budgetTableData.json'; // <-- your budget data JSON
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -177,16 +179,37 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
       {/* View Details */}
       <CustomDialog
-        title="View Budget"
         open={viewDialog.value}
         handleClose={() => {
           viewDialog.onFalse();
-          setSelectedBudget(null);
+          setTimeout(() => {
+            setSelectedBudget(null);
+          }, 200);
         }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Budget</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal shows the complete details of the selected budget including category, amount, allocations, and other relevant information."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="md"
       >
-        {/* <ViewBudgetComp budgetData={selectedBudget} /> */}
-        <BudgetDetailsCard budget={selectedBudget} />
+        <BudgetDetailsCard
+          budget={selectedBudget}
+          handleClose={() => {
+            viewDialog.onFalse();
+            setTimeout(() => {
+              setSelectedBudget(null);
+            }, 200);
+          }}
+        />
       </CustomDialog>
     </Box>
   );
