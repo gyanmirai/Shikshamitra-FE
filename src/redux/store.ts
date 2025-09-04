@@ -44,6 +44,7 @@ import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
+import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
@@ -171,6 +172,7 @@ const reducers = combineReducers({
   [memberManagementApi.reducerPath]: memberManagementApi.reducer,
   [issueReturnFormApi.reducerPath]: issueReturnFormApi.reducer,
   [reservationBookApi.reducerPath]: reservationBookApi.reducer,
+  [bookIssuedApi.reducerPath]: bookIssuedApi.reducer,
   [bookCategoryOptionsApi.reducerPath]: bookCategoryOptionsApi.reducer,
   [reservationRequestApi.reducerPath]: reservationRequestApi.reducer,
   [reservationDataApi.reducerPath]: reservationDataApi.reducer,
@@ -260,9 +262,10 @@ const store = configureStore({
       .concat(memberManagementApi.middleware)
       .concat(issueReturnFormApi.middleware)
       .concat(reservationBookApi.middleware)
+      .concat(bookIssuedApi.middleware)
       .concat(bookCategoryOptionsApi.middleware)
       .concat(reservationRequestApi.middleware)
-      .concat(reservationDataApi.middleware),
+      .concat(reservationDataApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;

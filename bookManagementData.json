@@ -9,6 +9,8 @@
       "subject": "Computer Science",
       "category": "Textbook",
       "language": "English",
+      "edition": "3rd",
+      "numberOfCopies": 5,
       "createdOn": "15-03-2024"
     },
     {
@@ -20,6 +22,8 @@
       "subject": "Software Engineering",
       "category": "Programming",
       "language": "English",
+      "edition": "1st",
+      "numberOfCopies": 3,
       "createdOn": "15-03-2024"
     },
     {
@@ -31,6 +35,8 @@
       "subject": "Software Development",
       "category": "Programming",
       "language": "English",
+      "edition": "2nd",
+      "numberOfCopies": 4,
       "createdOn": "15-03-2024"
     },
     {
@@ -42,6 +48,8 @@
       "subject": "Artificial Intelligence",
       "category": "Textbook",
       "language": "English",
+      "edition": "4th",
+      "numberOfCopies": 2,
       "createdOn": "15-03-2024"
     },
     {
@@ -53,7 +61,43 @@
       "subject": "Software Engineering",
       "category": "Reference",
       "language": "English",
+      "edition": "1st",
+      "numberOfCopies": 3,
       "createdOn": "15-03-2024"
     }
-  ]
+  ],
+  "bookIssuedData" : [
+  {
+    "memberId": "LIB001",
+    "memberName": "Dharmik Jinjala",
+    "copyNo": 1,
+    "issuedOn": "10-08-2025",
+    "returnOn": "30-08-2025",
+    "status": 0
+  },
+  {
+    "memberId": "LIB002",
+    "memberName": "Prerna Atre",
+    "copyNo": 2,
+    "issuedOn": "06-08-2025",
+    "returnOn": "26-08-2025",
+    "status": 1
+  },
+  {
+    "memberId": "LIB003",
+    "memberName": "Mayur Solanki",
+    "copyNo": 1,
+    "issuedOn": "29-07-2025",
+    "returnOn": "19-08-2025",
+    "status": 1
+  },
+  {
+    "memberId": "LIB004",
+    "memberName": "Parth Ghussar",
+    "copyNo": 1,
+    "issuedOn": "12-06-2025",
+    "returnOn": "02-07-2025",
+    "status": 1
+  }
+]
 }
