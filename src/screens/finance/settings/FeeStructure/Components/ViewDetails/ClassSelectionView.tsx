@@ -7,8 +7,10 @@ import {
   FeeStructureClassStatusTypeColors,
 } from 'src/enums/fee-structure-statusType';
 
+import type { IClassWiseFeeData } from '../../type';
+
 interface ClassSelectionViewProps {
-  feeStructureClasses: Record<string, { status: FeeStructureClassStatusType; feeItems?: any[] }>;
+  feeStructureClasses: Record<string, IClassWiseFeeData[]>; // ✅ FIXED
   selectedClass: string | null;
   onSelectClass: (className: string) => void;
 }
@@ -27,7 +29,8 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
       <Grid item xs={12}>
         <Box display="flex" flexWrap="wrap" gap={1}>
           {Object.keys(feeStructureClasses).map((className) => {
-            const { status } = feeStructureClasses[className];
+            // take the first structure’s status for display
+            const status = feeStructureClasses[className][0]?.status;
             const isSelected = selectedClass === className;
 
             return (
@@ -44,7 +47,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
                     textTransform: 'none',
                     fontWeight: 500,
                   }}
-                  onClick={() => onSelectClass(className)} // ✅ pass up
+                  onClick={() => onSelectClass(className)}
                 >
                   {className.replace('Class ', '')}
                 </Button>
@@ -54,7 +57,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
         </Box>
       </Grid>
 
-      {/* Legend stays same */}
+      {/* Legend */}
       <Grid item xs={12}>
         <Box display="flex" alignItems="center" gap={3} mb={2}>
           {[
@@ -62,8 +65,9 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             FeeStructureClassStatusType.Completed,
             FeeStructureClassStatusType.Remaining,
           ].map((statusKey) => {
+            // count how many classes have first structure with this status
             const count = Object.values(feeStructureClasses).filter(
-              (cls) => cls.status === statusKey
+              (cls) => cls[0]?.status === statusKey
             ).length;
 
             const dotColor =

@@ -33,6 +33,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   const addNewFeeStructureDialog = useBoolean();
   const [selectedClass, setSelectedClass] = useState('');
   // 🔹 Handle Add Fee Structure globally
+  console.log('formik values----', formik.values);
 
   return (
     <>
