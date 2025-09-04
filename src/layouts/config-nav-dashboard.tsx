@@ -1144,6 +1144,13 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+4',
         },
         {
+          title: 'Reconciliation',
+          path: '/finance/reconciliation',
+          _action: 'reconciliation',
+          shortcutKey: 'Alt+F+5',
+          shortcutKeyName: 'Alt+F+5',
+        },
+        {
           title: 'Income Tracking',
           path: '/finance/income-tracking',
           _action: 'income-tracking',
