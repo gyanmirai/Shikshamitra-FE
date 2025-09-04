@@ -72,5 +72,71 @@
     "notificationSentOn": "20-08-2025",
     "status": 2
   }
+],
+"bookCategoryData" : [
+  {
+    "id": "cat1",
+    "label": "Text Book",
+    "value": "Text Book",
+    "titles": [
+      {
+        "id": "title1",
+        "label": "Introduction to Physics",
+        "value": "Introduction to Physics",
+        "author": "H.C. Verma",
+        "quantity": 25,
+        "editions": [
+          { "id": "ed1", "label": "01", "value": "01" },
+          { "id": "ed2", "label": "02", "value": "02" }
+        ]
+      },
+      {
+        "id": "title2",
+        "label": "Advanced Chemistry",
+        "value": "Advanced Chemistry",
+        "author": "O.P. Tandon",
+        "quantity": 0,
+        "editions": [
+          { "id": "ed1", "label": "01", "value": "01" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat2",
+    "label": "Reference Book",
+    "value": "Reference Book",
+    "titles": [
+      {
+        "id": "title3",
+        "label": "Introduction to Physics",
+        "value": "Introduction to Physics",
+        "author": "Resnick & Halliday",
+        "quantity": 10,
+        "editions": [
+          { "id": "ed3", "label": "01", "value": "01" }
+        ]
+      }
+    ]
+  }
+],
+"reservationRequestData" : [
+  {
+    "memberId": "DDVS001",
+    "memberName": "Dharmik Jinjala",
+    "reservationDate": "01-08-2025"
+  },
+  {
+    "memberId": "DDVS002",
+    "memberName": "Prerna Atre",
+    "reservationDate": "13-08-2025"
+  },
+  {
+    "memberId": "DDVS003",
+    "memberName": "Mayur Solanki",
+    "reservationDate": "20-08-2025"
+  }
 ]
+
+
 }

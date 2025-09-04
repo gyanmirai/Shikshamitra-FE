@@ -1,7 +1,7 @@
 import React from 'react';
 
-import LibraryMemberManagementScreen from 'src/screens/library/member-management/library-member-management';
+import MemberManagement from 'src/screens/library/MemberManagement';
 
-const LibraryMemberManagement = () => <LibraryMemberManagementScreen />;
+const LibraryMemberManagement = () => <MemberManagement />;
 
 export default LibraryMemberManagement;

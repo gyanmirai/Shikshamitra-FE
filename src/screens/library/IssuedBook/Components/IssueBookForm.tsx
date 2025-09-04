@@ -24,6 +24,8 @@ import { GlobalIcons } from 'src/utils/icons';
 
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
+import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
 
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -35,54 +37,19 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { getInitialValues } from './IssueInitialValues';
 import { getIssueBookSchema } from './IssurFormValidationSchema';
 
-import type { IssueBookFormProps } from './type';
-
-// ------------------ Options Dummy ------------------
-const bookCategoryOptions = [
-  {
-    id: 'cat1',
-    label: 'Text Book',
-    value: 'Text Book',
-    titles: [
-      {
-        id: 'title1',
-        label: 'Introduction to Physics',
-        value: 'Introduction to Physics',
-        author: 'H.C. Verma',
-        quantity: 25,
-        editions: [
-          { id: 'ed1', label: '01', value: '01' },
-          { id: 'ed2', label: '02', value: '02' },
-        ],
-      },
-      {
-        id: 'title2',
-        label: 'Advanced Chemistry',
-        value: 'Advanced Chemistry',
-        author: 'O.P. Tandon',
-        quantity: 0,
-        editions: [{ id: 'ed1', label: '01', value: '01' }],
-      },
-    ],
-  },
-  {
-    id: 'cat2',
-    label: 'Reference Book',
-    value: 'Reference Book',
-    titles: [
-      {
-        id: 'title3',
-        label: 'Introduction to Physics',
-        value: 'Introduction to Physics',
-        author: 'Resnick & Halliday',
-        quantity: 10,
-        editions: [{ id: 'ed3', label: '01', value: '01' }],
-      },
-    ],
-  },
-];
+import type { ITitle, IEdition, IssueBookFormProps, IBookCategoryOption } from './type';
 
 const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }) => {
+  //   Fetch issued/returned books
+  const { data: bookCategoryOptions } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBookCategoryOptionsQuery,
+  });
+
+  const { data: reservationRequestData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReservationRequestDataQuery,
+  });
   const [bookSelected, setBookSelected] = useState(false);
   const [showReservation, setShowReservation] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -179,17 +146,15 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     },
   });
 
-  const selectedCategory = bookCategoryOptions.find(
-    (cat) => cat.value === formik.values.bookCategory
+  const selectedCategory = bookCategoryOptions?.find(
+    (cat: IBookCategoryOption) => cat.value === formik.values.bookCategory
   );
 
   const selectedBook = selectedCategory?.titles.find(
-    (title) => title.value === formik.values.bookTitle
+    (title: ITitle) => title.value === formik.values.bookTitle
   );
 
   const availableQuantity = selectedBook?.quantity || 0;
-
-  console.log('formik00000000000', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -200,11 +165,13 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
-                options={bookCategoryOptions.map((item) => ({
-                  id: item.id,
-                  label: item.label,
-                  value: item.value,
-                }))}
+                options={
+                  bookCategoryOptions?.map((item: IBookCategoryOption) => ({
+                    id: item?.id,
+                    label: item?.label,
+                    value: item?.value,
+                  })) ?? []
+                }
                 value={formik.values.bookCategory}
                 onChange={(val) => {
                   if (formik.values.bookCategory !== val) {
@@ -226,14 +193,17 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
+                disabled={!formik.values.bookCategory}
                 options={
                   bookCategoryOptions
-                    .find((cat) => cat.value === formik.values.bookCategory)
-                    ?.titles.map((title) => ({
-                      id: title.id,
-                      label: title.label,
-                      value: title.value,
-                    })) || []
+                    ?.find(
+                      (cat: IBookCategoryOption) => cat?.value === formik?.values?.bookCategory
+                    )
+                    ?.titles?.map((title: ITitle) => ({
+                      id: title?.id,
+                      label: title?.label,
+                      value: title?.value,
+                    })) ?? []
                 }
                 value={formik.values.bookTitle}
                 onChange={(val) => {
@@ -254,15 +224,16 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
               <CustomSelect
                 label="Edition *"
+                disabled={!formik.values.bookTitle}
                 options={
                   bookCategoryOptions
-                    .find((cat) => cat.value === formik.values.bookCategory)
-                    ?.titles.find((title) => title.value === formik.values.bookTitle)
-                    ?.editions.map((edition) => ({
-                      id: edition.id,
-                      label: edition.label,
-                      value: edition.value,
-                    })) || []
+                    ?.find((cat: IBookCategoryOption) => cat.value === formik.values.bookCategory)
+                    ?.titles?.find((title: ITitle) => title.value === formik.values.bookTitle)
+                    ?.editions?.map((edition: IEdition) => ({
+                      id: edition?.id,
+                      label: edition?.label,
+                      value: edition?.value,
+                    })) ?? []
                 }
                 value={formik.values.edition}
                 onChange={(val) => {
@@ -299,14 +270,25 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   <Alert
                     severity="error"
                     action={
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        size="small"
-                        onClick={() => setShowReservation(true)}
-                      >
-                        Make Reservation
-                      </Button>
+                      <>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          onClick={() => setShowReservation(true)}
+                        >
+                          Make Reservation
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={() => setShowReservation(false)}
+                          sx={{ ml: 1 }}
+                        >
+                          Dismiss
+                        </Button>
+                      </>
                     }
                     sx={{
                       display: 'flex',
@@ -330,25 +312,9 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                     columns={[
                       { id: 'memberId', label: 'Member ID' },
                       { id: 'memberName', label: 'Member Name' },
-                      { id: 'reservationDate', label: 'Reservation Date' },
+                      { id: 'reservationDate', label: 'Reservation Date', filterType: 'date' },
                     ]}
-                    data={[
-                      {
-                        memberId: 'DDVS001',
-                        memberName: 'Dharmik Jinjala',
-                        reservationDate: '01-08-2025',
-                      },
-                      {
-                        memberId: 'DDVS002',
-                        memberName: 'Prerna Atre',
-                        reservationDate: '13-08-2025',
-                      },
-                      {
-                        memberId: 'DDVS003',
-                        memberName: 'Mayur Solanki',
-                        reservationDate: '20-08-2025',
-                      },
-                    ]}
+                    data={reservationRequestData || []}
                   />
                 </Grid>
               )}

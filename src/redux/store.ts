@@ -67,13 +67,17 @@ import { StudentLeaveApi } from './student/student-leave/student-leave-api';
 import { expenseDetailsApi } from './finance/expenseApi/expenseDetailedApi';
 import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
+import { memberManagementApi } from './memberManagement/memberManagementApi';
+import { reservationDataApi } from './reservationDataApi/reservationDataApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { reservationBookApi } from './book-reservation-api/book-reservation-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
+import { reservationRequestApi } from './reservationRequestApi/reservationRequestApi';
 import { StudentTakeAttendanceApi } from './student/take-attendance/take-attendace-api';
+import { bookCategoryOptionsApi } from './bookCategoryOptionsApi/bookCategoryOptionApi';
 import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-rule-api';
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
@@ -165,9 +169,13 @@ const reducers = combineReducers({
   [incomeCategoryApi.reducerPath]: incomeCategoryApi.reducer,
   [bookManagementApi.reducerPath]: bookManagementApi.reducer,
   [bookCategoryApi.reducerPath]: bookCategoryApi.reducer,
+  [memberManagementApi.reducerPath]: memberManagementApi.reducer,
   [issueReturnFormApi.reducerPath]: issueReturnFormApi.reducer,
   [reservationBookApi.reducerPath]: reservationBookApi.reducer,
   [bookIssuedApi.reducerPath]: bookIssuedApi.reducer,
+  [bookCategoryOptionsApi.reducerPath]: bookCategoryOptionsApi.reducer,
+  [reservationRequestApi.reducerPath]: reservationRequestApi.reducer,
+  [reservationDataApi.reducerPath]: reservationDataApi.reducer,
 });
 
 const store = configureStore({
@@ -251,9 +259,13 @@ const store = configureStore({
       .concat(incomeCategoryApi.middleware)
       .concat(bookManagementApi.middleware)
       .concat(bookCategoryApi.middleware)
+      .concat(memberManagementApi.middleware)
       .concat(issueReturnFormApi.middleware)
       .concat(reservationBookApi.middleware)
-      .concat(bookIssuedApi.middleware),
+      .concat(bookIssuedApi.middleware)
+      .concat(bookCategoryOptionsApi.middleware)
+      .concat(reservationRequestApi.middleware)
+      .concat(reservationDataApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;

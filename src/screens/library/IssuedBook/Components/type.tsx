@@ -28,3 +28,25 @@ export interface ReturnBookFormProps {
   onClose: (values: any, submitted: boolean) => void;
   editData?: any;
 }
+
+export interface IEdition {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface ITitle {
+  id: string;
+  label: string;
+  value: string;
+  author: string;
+  quantity: number;
+  editions: IEdition[];
+}
+
+export interface IBookCategoryOption {
+  id: string;
+  label: string;
+  value: string;
+  titles: ITitle[];
+}

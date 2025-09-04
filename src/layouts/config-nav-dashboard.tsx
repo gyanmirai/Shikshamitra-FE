@@ -1376,6 +1376,13 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
         },
+        {
+          title: 'Reservation Management',
+          path: '/library/reservation-management',
+          _action: 'reservation-management',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
+        },
         // {
         //   title: 'Book Management',
         //   path: '/library/book-management',
