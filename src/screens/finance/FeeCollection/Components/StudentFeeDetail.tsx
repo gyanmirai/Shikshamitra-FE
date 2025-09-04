@@ -123,6 +123,17 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
+            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+              <FinanceCollectionCard
+                icon="mdi:cash-minus"
+                title="Concessions"
+                count={Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0)}
+                color="info.main"
+                bgColor="info.lighter"
+                href="#"
+                labels={[]}
+              />
+            </Grid>
           </Grid>
         </Box>
       </Box>

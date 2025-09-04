@@ -23,10 +23,12 @@ import type { IChargeData } from './type';
 const ChargesTable = ({
   data,
   onView,
+  onEdit,
   onAddCharge,
 }: {
   data: IChargeData[];
   onView: (data: IChargeData) => void;
+  onEdit: (data: IChargeData) => void;
   onAddCharge: () => void;
 }) => (
   <CustomizableTable
@@ -121,8 +123,10 @@ const ChargesTable = ({
             <ThreeDotsActions
               placement="right-top"
               showViewIcon
+              showEditIcon
               showThreeDots={false}
               handleViewClick={() => onView(row as IChargeData)}
+              handleEditClick={() => onEdit(row as IChargeData)}
             />
           );
         },

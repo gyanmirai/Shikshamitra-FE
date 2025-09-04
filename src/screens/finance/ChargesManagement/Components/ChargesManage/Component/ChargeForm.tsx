@@ -24,11 +24,44 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 
 import type { IChargeFormProps } from './type';
 
-const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
+const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const formik = useFormik({
-    initialValues: {
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+
+  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  });
+
+  // Get current board, medium and medium setter from global state
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Memoize initial values to prevent re-creation on every render
+  const initialValues = useMemo(() => {
+    if (isEdit && editData) {
+      return {
+        chargeCategory: editData.category || '',
+        description: editData.description || '',
+        amount: editData.amount || '',
+        dueDate: editData.dueDate ? dayjs(editData.dueDate) : null,
+        priority: editData.priority?.toString() || '',
+        academicYear: editData.academicYear || '',
+        board: editData.board || '',
+        medium: editData.medium || '',
+        class: editData.class || '',
+        divisions: editData.divisions || [],
+        students: editData.studentList || [],
+        additionalNotes: editData.additionalNotes || '',
+      };
+    }
+    return {
       chargeCategory: '',
       description: '',
       amount: '',
@@ -40,8 +73,13 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
       class: '',
       divisions: [],
       students: [],
-      additionalNotes: '', // This field is optional
-    },
+      additionalNotes: '',
+    };
+  }, [isEdit, editData]);
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
     validationSchema: Yup.object({
       chargeCategory: Yup.string().required('Charge Category is required'),
       description: Yup.string().required('Purpose/Description is required'),
@@ -66,9 +104,6 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
       priority: Yup.string().required('Priority is required'),
-      academicYear: Yup.string().required('Academic Year is required'),
-      board: Yup.string().required('Board is required'),
-      medium: Yup.string().required('Medium is required'),
       class: Yup.string().required('Class is required'),
       divisions: Yup.array()
         .min(1, 'At least one division must be selected')
@@ -76,41 +111,58 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
       students: Yup.array()
         .min(1, 'At least one student must be selected')
         .required('Students are required'),
-      additionalNotes: Yup.string().required('Additional Notes are required'),
     }),
     onSubmit: (values) => {
-      console.log('Charge Form Submit:', values);
+      onClose(null, true);
     },
   });
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-  const { values, touched, errors, setFieldValue, setFieldTouched, initialValues } = formik;
 
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
+  const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
-  // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
+  // Update classes when medium changes (only when medium changes)
   useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
-    setClass(allClasses[0]?.name || '');
-  }, [medium]);
+    if (medium?.educationMediumStages) {
+      const allClasses = medium.educationMediumStages.flatMap(
+        (stage: Organization) => stage.standards || []
+      );
+      setAllClass(allClasses);
+    }
+  }, [medium]); // Only depend on medium
+
+  // Load divisions when class changes and allClass is available
+  useEffect(() => {
+    if (values.class && allClass.length > 0) {
+      const selectedClassDivisions =
+        allClass.find((cls) => cls.id === values.class || cls.name === values.class)?.divisions ||
+        [];
+
+      const divisionsWithAll = [
+        {
+          id: 'all',
+          name: 'All',
+          creationTime: '',
+          creatorId: '',
+          lastModificationTime: '',
+          lastModifierId: '',
+          strength: 0,
+          standardId: '',
+        },
+        ...selectedClassDivisions,
+      ];
+      setAllDivision(divisionsWithAll);
+    }
+  }, [values.class, allClass]); // Only depend on class value and allClass
+
+  // Fetch students when class and divisions are selected
+  useEffect(() => {
+    if (values.class && values.divisions.length > 0) {
+      const filterCriteria = {
+        classIds: [values.class],
+        divisionIds: values.divisions.filter((d) => d !== 'all'),
+      };
+      getStudents(filterCriteria);
+    }
+  }, [values.class, values.divisions, getStudents]);
 
   // Student table data
   const tableData = useMemo(
@@ -119,7 +171,7 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
         ...item,
         name: `${item.firstName} ${item.lastName} ${item.middleName}`,
       })) || [],
-    [StudentsData?.items]
+    [StudentsData?.items] // Added dependency array
   );
 
   return (
@@ -132,9 +184,13 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
                 name="chargeCategory"
                 label="Charge Category *"
                 options={[
+                  { id: 'Tuition Fee', name: 'Tuition Fee' },
                   { id: 'COMPETITION', name: 'Competition Fee' },
                   { id: 'EXAM', name: 'Exam Fee' },
                   { id: 'LAB', name: 'Lab Fee' },
+                  { id: 'LIBRARY', name: 'Library Fee' },
+                  { id: 'TRANSPORT', name: 'Transport Fee' },
+                  { id: 'SPORTS', name: 'Sports Fee' },
                 ]}
                 labelKey="name"
                 valueKey="id"
@@ -147,24 +203,98 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
-            <ShakingTextField error={!!(touched.description && errors.description) || false}>
-              <TextField
-                name="description"
-                label="Purpose/Description *"
-                multiline
-                minRows={3}
-                fullWidth
-                value={values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={!!(touched.description && errors.description)}
-                helperText={(touched.description && errors.description) as string}
+          <Grid item xs={6}>
+            <ShakingTextField error={!!(touched.class && errors.class) || false}>
+              <CustomSelect
+                name="class"
+                label="Class *"
+                options={allClass}
+                labelKey="name"
+                valueKey="id"
+                value={values.class}
+                onChange={(value) => {
+                  setFieldValue('class', value);
+
+                  // Get divisions for the selected class
+                  const selectedClassDivisions =
+                    allClass.find((cls) => cls.id === value || cls.name === value)?.divisions || [];
+
+                  const divisionsWithAll = [
+                    {
+                      id: 'all',
+                      name: 'All',
+                      creationTime: '',
+                      creatorId: '',
+                      lastModificationTime: '',
+                      lastModifierId: '',
+                      strength: 0,
+                      standardId: '',
+                    },
+                    ...selectedClassDivisions,
+                  ];
+                  setAllDivision(divisionsWithAll);
+
+                  // Only set default divisions for new entries
+                  if (!isEdit) {
+                    const allDivisionIds = ['all', ...selectedClassDivisions.map((div) => div.id)];
+                    setFieldValue('divisions', allDivisionIds);
+                  }
+                }}
+                error={!!(touched.class && errors.class) || false}
+                helperText={(touched.class && errors.class) || ''}
+                formControlProps={{ sx: { width: '100%' } }}
+                multiple={false}
               />
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={6}>
+            <ShakingTextField error={!!(touched.divisions && errors.divisions) || false}>
+              <CustomSelect
+                name="divisions"
+                label="Division *"
+                labelKey="name"
+                valueKey="id"
+                multiple
+                disabled={!values.class}
+                options={allDivision}
+                value={values.divisions}
+                onChange={(val) => {
+                  const value = val as string[];
+                  const divisionOptions = allDivision.filter((d) => d.id !== 'all');
+                  const allDivisionIds = divisionOptions.map((d) => d.id);
+                  const isAllClicked = value.includes('all');
+                  const wasAllPreviouslySelected = (values.divisions as string[]).includes('all');
+
+                  if (isAllClicked && !wasAllPreviouslySelected) {
+                    setFieldValue('divisions', ['all', ...allDivisionIds]);
+                  } else if (!isAllClicked && wasAllPreviouslySelected) {
+                    setFieldValue('divisions', []);
+                  } else if (isAllClicked && wasAllPreviouslySelected) {
+                    const selectedWithoutAll = value.filter((id) => id !== 'all');
+                    if (selectedWithoutAll.length === allDivisionIds.length) {
+                      setFieldValue('divisions', ['all', ...allDivisionIds]);
+                    } else {
+                      setFieldValue('divisions', selectedWithoutAll);
+                    }
+                  } else {
+                    const selectedWithoutAll = value.filter((id) => id !== 'all');
+                    if (selectedWithoutAll.length === allDivisionIds.length) {
+                      setFieldValue('divisions', ['all', ...allDivisionIds]);
+                    } else {
+                      setFieldValue('divisions', selectedWithoutAll);
+                    }
+                  }
+                  setFieldTouched('divisions', false);
+                }}
+                formControlProps={{ sx: { width: '100%' } }}
+                error={!!(touched.divisions && errors.divisions)}
+                helperText={(touched.divisions && errors.divisions) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid item xs={6}>
             <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
               <NumericFormatCustom
                 size="small"
@@ -189,11 +319,12 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={6}>
             <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
               <DatePicker
                 label="Due Date *"
                 name="dueDate"
+                format="DD/MM/YYYY"
                 value={values.dueDate}
                 onChange={(newValue) => setFieldValue('dueDate', newValue)}
                 slotProps={{
@@ -215,9 +346,9 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
                 name="priority"
                 label="Priority *"
                 options={[
-                  { id: 'Low', name: 'Low' },
-                  { id: 'Medium', name: 'Medium' },
-                  { id: 'High', name: 'High' },
+                  { id: '0', name: 'Low' },
+                  { id: '1', name: 'Medium' },
+                  { id: '2', name: 'High' },
                 ]}
                 labelKey="name"
                 valueKey="id"
@@ -230,103 +361,6 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
-            <ShakingTextField error={!!(touched.class && errors.class) || false}>
-              <CustomSelect
-                name="class"
-                label="Class *"
-                options={allClass}
-                labelKey="name"
-                valueKey="id"
-                value={values.class}
-                onChange={(value) => {
-                  // Set the selected class value
-                  setFieldValue('class', value);
-
-                  // Get divisions for the selected class
-                  const selectedClassDivisions =
-                    allClass.find((cls) => cls.id === value)?.divisions || [];
-
-                  // Add 'All' option to divisions list with full Division interface structure
-                  const divisionsWithAll = [
-                    {
-                      id: 'all',
-                      name: 'All',
-                      creationTime: '',
-                      creatorId: '',
-                      lastModificationTime: '',
-                      lastModifierId: '',
-                      strength: 0,
-                      standardId: '',
-                    },
-                    ...selectedClassDivisions,
-                  ];
-                  setAllDivision(divisionsWithAll);
-                  // Set 'all' as default selected division and include all actual divisions
-                  const allDivisionIds = ['all', ...selectedClassDivisions.map((div) => div.id)];
-                  setFieldValue('divisions', allDivisionIds);
-                }}
-                error={!!(touched.class && errors.class) || false}
-                helperText={(touched.class && errors.class) || ''}
-                formControlProps={{ sx: { width: '100%' } }}
-                multiple={false}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12}>
-            <ShakingTextField error={!!(touched.divisions && errors.divisions) || false}>
-              <CustomSelect
-                name="divisions"
-                label="Division *"
-                labelKey="name"
-                valueKey="id"
-                multiple
-                disabled={!values.class}
-                options={[
-                  { id: 'all', name: 'All' },
-                  ...(allClass?.find((i: Standards) => i.id === values.class)?.divisions || []),
-                ]}
-                value={values.divisions}
-                onChange={(val) => {
-                  const value = val as string[];
-                  const divisionOptions =
-                    allClass?.find((i: Standards) => i.id === values.class)?.divisions || [];
-                  const allDivisionIds = divisionOptions.map((d) => d.id);
-                  const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (values.divisions as string[]).includes('all');
-
-                  if (isAllClicked && !wasAllPreviouslySelected) {
-                    // Select all divisions when "All" is clicked
-                    setFieldValue('divisions', ['all', ...allDivisionIds]);
-                  } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    // Deselect all when "All" is unchecked
-                    setFieldValue('divisions', []);
-                  } else if (isAllClicked && wasAllPreviouslySelected) {
-                    // Handle individual selections while "All" is selected
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allDivisionIds.length) {
-                      setFieldValue('divisions', ['all', ...allDivisionIds]);
-                    } else {
-                      setFieldValue('divisions', selectedWithoutAll);
-                    }
-                  } else {
-                    // Handle individual selections without "All"
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allDivisionIds.length) {
-                      setFieldValue('divisions', ['all', ...allDivisionIds]);
-                    } else {
-                      setFieldValue('divisions', selectedWithoutAll);
-                    }
-                  }
-                  setFieldTouched('divisions', false);
-                }}
-                formControlProps={{ sx: { width: '100%' } }}
-                error={!!(touched.divisions && errors.divisions)}
-                helperText={(touched.divisions && errors.divisions) as string}
-              />
-            </ShakingTextField>
-          </Grid>
           <Grid item xs={12}>
             <ShakingTextField error={!!(touched.students && errors.students) || false}>
               <Autocomplete
@@ -342,6 +376,7 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
                 }
                 options={tableData}
                 getOptionLabel={(option: any) => option?.name || ''}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -352,6 +387,23 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
                     helperText={(touched.students && errors.students) as string}
                   />
                 )}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid item xs={12}>
+            <ShakingTextField error={!!(touched.description && errors.description) || false}>
+              <TextField
+                name="description"
+                label="Purpose/Description *"
+                multiline
+                minRows={3}
+                fullWidth
+                value={values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(touched.description && errors.description)}
+                helperText={(touched.description && errors.description) as string}
               />
             </ShakingTextField>
           </Grid>
@@ -381,13 +433,15 @@ const ChargeForm = ({ open, onClose }: IChargeFormProps) => {
           Cancel
         </Button>
         <Button
-          startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
           type="submit"
           variant="contained"
           size="small"
-          onClick={(e: any) => formik.handleSubmit(e)}
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
         >
-          Submit
+          {isEdit ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

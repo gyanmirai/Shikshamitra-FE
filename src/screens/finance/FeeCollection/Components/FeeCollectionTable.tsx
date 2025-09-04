@@ -2,9 +2,10 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
 
-import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
-import { Box, Button, MenuList, MenuItem, TextField, IconButton } from '@mui/material';
+import { Box, MenuList, MenuItem } from '@mui/material';
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAllBoardQuery, useGetAllMediumQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
@@ -13,6 +14,7 @@ import {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -28,7 +30,22 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onCollectFee,
   onView,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
+  const [board, setBoard] = useState('');
+  const [medium, setMedium] = useState('');
+
+  const { data: allBoardData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllBoardQuery,
+  });
+
+  const { data: allMediumData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllMediumQuery,
+  });
+
+  // Provide fallback empty arrays to prevent undefined errors
+  const allBoard = allBoardData || [];
+  const allMedium = allMediumData || [];
 
   const actions = ({ row, popover }: any) => (
     <MenuList>
@@ -43,38 +60,31 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   );
 
   return (
-    <>
-      <Box display="flex" gap={2}>
-        <TextField
-          variant="outlined"
-          size="small"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <>
-                {searchValue ? (
-                  <IconButton
-                    size="small"
-                    sx={{ mr: '-12px', p: 1 }}
-                    onClick={() => setSearchValue('')}
-                  >
-                    <ClearIcon />
-                  </IconButton>
-                ) : (
-                  <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
-                    <SearchIcon />
-                  </IconButton>
-                )}
-              </>
-            ),
+    <Box>
+      <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
+        <CustomSelect
+          label="Board"
+          name="board"
+          options={allBoard}
+          valueKey="name"
+          labelKey="name"
+          formControlProps={{ sx: { width: '25%' } }}
+          value={board}
+          onChange={(value) => {
+            setBoard(value as string);
           }}
-          label="Search Student by Name, GR No, Class or Roll No"
-          sx={{ width: '100%' }}
         />
-        <Button onClick={() => {}} variant="contained" size="small" sx={{ marginTop: 0.5 }}>
-          Search
-        </Button>
+        <CustomSelect
+          options={allMedium}
+          value={medium}
+          onChange={(val) => {
+            setMedium(val as string);
+          }}
+          label="Medium"
+          valueKey="name"
+          labelKey="name"
+          formControlProps={{ sx: { width: '25%' } }}
+        />
       </Box>
       <CustomizableTable
         tableId="fee-collection-table"
@@ -102,10 +112,10 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         }
         columns={[
           { id: 'name', label: 'Name', align: 'left', isFilter: true, sticky: true },
-          { id: 'board', label: 'Board', isFilter: true, align: 'left' },
-          { id: 'medium', label: 'Medium', isFilter: true, align: 'left' },
-          { id: 'className', label: 'Class', isFilter: true, align: 'left' },
-          { id: 'division', label: 'Division', isFilter: true, align: 'left' },
+          { id: 'className', label: 'Class', isFilter: true, align: 'left', minWidth: '90px' },
+          { id: 'division', label: 'Division', isFilter: true, align: 'left', minWidth: '90px' },
+          { id: 'grNumber', label: 'GR No.', align: 'left', isFilter: true, minWidth: '90px' },
+          { id: 'rollNumber', label: 'Roll No.', align: 'left', isFilter: true, minWidth: '90px' },
           {
             id: 'totalFees',
             label: 'Total Fees',
@@ -113,15 +123,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             isFilter: true,
             filterType: 'number',
             minWidth: '120px',
-            render: (value) => `₹ ${value.toLocaleString()}`,
-          },
-          {
-            id: 'paidFees',
-            label: 'Paid Fees',
-            filterType: 'number',
-            align: 'left',
-            minWidth: '110px',
-            isFilter: true,
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
@@ -134,6 +135,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
           {
+            id: 'overdueFees',
+            label: 'Overdue Fees',
+            filterType: 'number',
+            align: 'left',
+            minWidth: '140px',
+            isFilter: true,
+            render: (value) => `₹ ${value.toLocaleString()}`,
+          },
+          {
             id: 'status',
             label: 'Status',
             align: 'left',
@@ -141,6 +151,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             filterType: 'enum',
             enumOptions: FeeCollectionStatusOptions,
             sticky: true,
+            minWidth: '90px',
             render(value, row) {
               const color = FeeCollectionStatusTypeColors[
                 value as FeeCollectionStatusType
@@ -174,9 +185,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             },
           },
         ]}
-        data={data}
+        data={data || []} // Add fallback for data as well
       />
-    </>
+    </Box>
   );
 };
 

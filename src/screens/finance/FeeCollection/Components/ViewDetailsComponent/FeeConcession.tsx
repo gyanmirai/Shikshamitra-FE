@@ -26,6 +26,8 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
       columns={[
         { id: 'concessionType', label: 'Concession Type', align: 'left' },
         { id: 'reason', label: 'Reason of Concession Type', align: 'left' },
+        { id: 'amount', label: 'Amount', align: 'left' },
+        { id: 'feeHead', label: 'Fee Head', align: 'left', minWidth: '130px' },
         {
           id: 'status',
           label: 'Status',

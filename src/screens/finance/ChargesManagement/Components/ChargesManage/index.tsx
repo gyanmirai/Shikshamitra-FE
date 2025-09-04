@@ -9,7 +9,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargesQuery } from 'src/redux/chargesApi/chargesApi';
-// import { useGetChargeDataQuery } from 'src/redux/charges/chargeApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { Iconify } from 'src/components/iconify';
@@ -32,8 +31,9 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
     currentQueryAndMutation: useGetChargesQuery,
   });
 
-  // Boolean hook to control view charge details dialog visibility
+  // Boolean hooks to control dialog visibility
   const viewChargeDetailsDialog = useBoolean();
+  const editChargeDialog = useBoolean();
 
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -62,6 +62,31 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
     }
   };
 
+  /**
+   * Handles closing of the edit charge dialog
+   * @param _e - Event object (unused)
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
+  const handleEditClose = (_e: any, isSubmit?: boolean) => {
+    // Helper function to reset changes state after a delay
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+        setSelectedChargeData(null);
+      }, 200);
+    };
+
+    // Close dialog if form was submitted or user confirms leaving with unsaved changes
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      editChargeDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      // Close dialog if there are no unsaved changes
+      editChargeDialog.onFalse();
+      setSelectedChargeData(null);
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ChargesTable
@@ -70,11 +95,16 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
           viewChargeDetailsDialog.onTrue();
           setSelectedChargeData(data);
         }}
+        onEdit={(data) => {
+          editChargeDialog.onTrue();
+          setSelectedChargeData(data);
+        }}
         onAddCharge={() => {
           addChargeDialog.onTrue();
         }}
       />
 
+      {/* Add Charge Dialog */}
       <CustomDialog
         open={addChargeDialog.value}
         handleClose={() => {
@@ -98,19 +128,21 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
         <ChargeForm open={addChargeDialog} onClose={handleClose} />
       </CustomDialog>
 
+      {/* Edit Charge Dialog */}
       <CustomDialog
-        open={addChargeDialog.value}
+        open={editChargeDialog.value}
         handleClose={() => {
-          addChargeDialog?.onFalse();
+          editChargeDialog?.onFalse();
+          setSelectedChargeData(null);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Create Charge</Typography>
+            <Typography variant="h5">Update Charge</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This modal is used to create a new charge by filling in all the required fields."
+              title="This modal is used to edit an existing charge by modifying the required fields."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -118,9 +150,15 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
         }
         maxWidth="sm"
       >
-        <ChargeForm open={addChargeDialog} onClose={handleClose} />
+        <ChargeForm
+          open={editChargeDialog}
+          onClose={handleEditClose}
+          editData={selectedChargeData}
+          isEdit
+        />
       </CustomDialog>
 
+      {/* View Charge Dialog */}
       <CustomDialog
         open={viewChargeDetailsDialog.value}
         handleClose={() => {

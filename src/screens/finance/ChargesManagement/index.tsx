@@ -25,7 +25,7 @@ const TABS = [
   },
   {
     value: 'other',
-    label: 'Other Charges',
+    label: 'Approvals',
     icon: <Iconify icon="mdi:cash-multiple" width={20} />,
     component: (props: any) => <ApproveManage {...props} />,
   },

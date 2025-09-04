@@ -15,6 +15,12 @@ export const financeFeeCollectionApi = createApi({
         if (url === '/feeCollectionData') {
           return { data: feeCollection.feeCollectionData };
         }
+        if (url === '/allBoard') {
+          return { data: feeCollection.allBoard };
+        }
+        if (url === '/allMedium') {
+          return { data: feeCollection.allMedium };
+        }
         return {
           error: {
             status: 404,
@@ -31,7 +37,22 @@ export const financeFeeCollectionApi = createApi({
       }),
       providesTags: ['Finance-Fee-Collection'],
     }),
+    getAllBoard: builder.query({
+      query: () => ({
+        url: '/allBoard',
+        method: 'GET',
+      }),
+      providesTags: ['Finance-Fee-Collection'],
+    }),
+    getAllMedium: builder.query({
+      query: () => ({
+        url: '/allMedium',
+        method: 'GET',
+      }),
+      providesTags: ['Finance-Fee-Collection'],
+    }),
   }),
 });
 
-export const { useGetFinanceFeeCollectionQuery } = financeFeeCollectionApi;
+export const { useGetFinanceFeeCollectionQuery, useGetAllBoardQuery, useGetAllMediumQuery } =
+  financeFeeCollectionApi;
