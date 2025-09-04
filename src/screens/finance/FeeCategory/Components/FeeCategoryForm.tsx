@@ -52,13 +52,17 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                 size="small"
                 value={formik.values.feeCategoryName}
                 onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '') // allow only letters & spaces
+                  let value = e.target.value
+                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
+                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                    .trimStart(); // Remove leading spaces
+                  value = value
                     .split(' ')
                     .map((word) =>
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                     )
                     .join(' ');
+
                   formik.setFieldValue('feeCategoryName', value);
                 }}
                 error={formik.touched.feeCategoryName && Boolean(formik.errors.feeCategoryName)}

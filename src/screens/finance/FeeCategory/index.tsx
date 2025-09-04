@@ -78,7 +78,7 @@ const FeeCategoryCreation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Fee Category"
-        description="Manage all fee categories such as Academic, Transport, Hostel. Use the actions to edit or delete existing categories. Click ‘Add Fee Category’ to create a new one."
+        description="Manage all fee categories such as Academic, Hostel. Use the actions to edit or delete existing categories. Click ‘Add Fee Category’ to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Setting', href: '/finance/setting' },
