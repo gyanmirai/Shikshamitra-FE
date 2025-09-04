@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
-import { Add } from '@mui/icons-material';
 import { Box, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
@@ -27,36 +26,23 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onViewConcession,
   onViewAllConcession,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        {onRequestConcession && (
-          <>
-            <MenuItem
-              onClick={() => {
-                onRequestConcession(row as IStudentInfo);
-                pop.onClose();
-              }}
-            >
-              <Add />
-              Request Concession
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                onViewAllConcession?.(row as IStudentInfo);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.eye} />
-              View Concession
-            </MenuItem>
-          </>
-        )}
+        <>
+          <MenuItem
+            onClick={() => {
+              onViewAllConcession?.(row as IStudentInfo);
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.eye} />
+            View Concession
+          </MenuItem>
+        </>
       </MenuList>
     ),
-    [onRequestConcession, onViewAllConcession]
+    [onViewAllConcession]
   );
 
   return (
@@ -77,6 +63,21 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             </Box>
           ),
         },
+        { id: 'grNo', label: 'GR No.', align: 'left', isFilter: true, minWidth: 80 },
+        {
+          id: 'rollNo',
+          label: 'Roll No.',
+          align: 'left',
+          isFilter: true,
+          filterType: 'number',
+          minWidth: 90,
+        },
+        {
+          id: 'classDivision',
+          label: 'Class/Division',
+          align: 'left',
+          minWidth: 120,
+        },
         {
           id: 'parentName',
           label: 'Parent Name',
@@ -92,28 +93,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           id: 'contactNo',
           label: 'Contact No.',
           align: 'left',
-        },
-        {
-          id: 'boardMedium',
-          label: 'Board/Medium',
-          align: 'left',
-          minWidth: 120,
-        },
-        {
-          id: 'classDivision',
-          label: 'Class/Division',
-          align: 'left',
-          minWidth: 120,
-        },
-        {
-          id: 'rollNo',
-          label: 'Roll No.',
-          align: 'left',
-        },
-        {
-          id: 'grNo',
-          label: 'GR No.',
-          align: 'left',
+          minWidth: 150,
         },
         {
           id: 'actions',

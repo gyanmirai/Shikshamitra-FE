@@ -3,14 +3,16 @@
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
-import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetConcessionsQuery } from 'src/redux/feeConcession/feeConcession';
 
 import { Iconify } from 'src/components/iconify';
@@ -19,8 +21,9 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ConcessionRequestForm from './Components/ConcessionRequestForm';
+import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
+import NewConcessionRequestForm from './Components/NewConcessionRequest';
 import ViewStudentAllConcession from './Components/ViewStudentAllConcession';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
@@ -41,16 +44,36 @@ const Concession = () => {
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-
+  // Redux state and dispatch
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Redux dispatch function for dispatching actions to update the store
+  const dispatch = useDispatch();
   // Boolean state to control the visibility of add concession request modal/form
   const addConcessionRequest = useBoolean();
   const viewConcessionRequest = useBoolean();
   const onViewAllConcession = useBoolean();
+  const onConfirmDialg = useBoolean();
+  const [selectedMode, setSelectedMode] = useState('');
 
   const { data: concessionData, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionsQuery,
   });
+
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      addConcessionRequest.onFalse();
+      setSelectedConcession(null);
+      dispatch(setIsChanges(false));
+      onConfirmDialg.onFalse();
+      setSelectedMode('');
+    } else if (!isChanges) {
+      addConcessionRequest.onFalse();
+      setSelectedConcession(null);
+      onConfirmDialg.onFalse();
+      setSelectedMode('');
+    }
+  };
 
   // State to store th  e selected student concession data
   // null when no student is selected
@@ -76,6 +99,16 @@ const Concession = () => {
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Concession', href: '/finance/concession-type' },
         ]}
+        action={
+          <Button
+            onClick={() => addConcessionRequest.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+          >
+            Request Concession
+          </Button>
+        }
         sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -139,24 +172,33 @@ const Concession = () => {
         }}
         maxWidth="sm"
       >
-        <ConcessionRequestForm
+        <NewConcessionRequestForm
           open={addConcessionRequest.value}
-          onClose={(data, refresh) => {
-            addConcessionRequest.onFalse();
-            setSelectedConcession(null);
-          }}
+          onClose={handleClose}
           student={selectedConcession as IStudentInfo}
         />
       </CustomDialog>
 
       <CustomDialog
         open={onViewAllConcession.value}
-        title={`${selectedConcession?.studentName} concession`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{`${selectedConcession?.studentName}'s Concession History`}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View complete history of concession requests and their status for this student"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         handleClose={() => {
           setSelectedConcession(null);
           onViewAllConcession.onFalse();
         }}
-        maxWidth="sm"
+        maxWidth="md"
       >
         {selectedConcession && <ViewStudentAllConcession data={selectedConcession} />}
       </CustomDialog>
@@ -191,15 +233,51 @@ const Concession = () => {
           student={selectedConcessionForView as unknown as IStudentInfo}
           documents={selectedConcessionForView?.documents}
           onApprove={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Approve');
             // Handle approve logic
           }}
           onReject={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Reject');
             // Handle reject logic
           }}
           onMismatch={() => {
             // Handle mismatch logic
           }}
         />
+      </CustomDialog>
+
+      {/* Approve Concession Dialog */}
+      <CustomDialog
+        open={onConfirmDialg.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedMode === 'Approve' ? 'Approve Concession' : 'Reject Concession'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedMode === 'Approve'
+                  ? "Approve the student's concession request"
+                  : "Reject the student's concession request"
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          onConfirmDialg.onFalse();
+          setSelectedMode('');
+          setSelectedConcession(null);
+        }}
+        maxWidth="sm"
+      >
+        <ReasonApprovalForm onClose={handleClose} mode={selectedMode} />
       </CustomDialog>
     </Box>
   );

@@ -21,11 +21,13 @@
       {
         "concessionType": "Scholarship",
         "reason": "Merit-based",
+        "documentStatus" : 0,
         "status": 1
       },
       {
         "concessionType": "Sibling Discount",
         "reason": "Elder brother in same school",
+        "documentStatus" : 1,
         "status": 0
       }
     ]
@@ -49,6 +51,7 @@
       {
         "concessionType": "Financial Aid",
         "reason": "Low Income Family",
+        "documentStatus" : 0,
         "status": 1
       }
     ]
@@ -73,6 +76,7 @@
       {
         "concessionType": "Sports Quota",
         "reason": "State Level Player",
+        "documentStatus" : 0,
         "status": 0
       }
     ]
