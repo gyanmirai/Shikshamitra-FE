@@ -6,9 +6,9 @@ export const getInitialPaymentTermData = (
   id: editData?.id || '',
   paymentTermName: editData?.paymentTermName || '',
   totalInstallments: editData?.totalInstallments || '',
-  academicYearId: editData?.academicYearId || '',
-  academicYear: editData?.academicYear || '',
-  board: editData?.board || '',
-  medium: editData?.medium || '',
+  // academicYearId: editData?.academicYearId || '',
+  // academicYear: editData?.academicYear || '',
+  // board: editData?.board || '',
+  // medium: editData?.medium || '',
   installments: editData?.installments || [],
 });

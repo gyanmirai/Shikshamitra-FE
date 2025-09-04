@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -11,6 +15,7 @@ import { useGetConcessionsQuery } from 'src/redux/feeConcession/feeConcession';
 
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -23,6 +28,20 @@ import type { IStudentInfo } from './type';
 import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
 const Concession = () => {
+  //   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const {
+    currentYear,
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Local state to store filtered boards based on academic year
+  const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
+
   // Boolean state to control the visibility of add concession request modal/form
   const addConcessionRequest = useBoolean();
   const viewConcessionRequest = useBoolean();
@@ -41,6 +60,13 @@ const Concession = () => {
   // State to store th  e selected student concession data
   // null when no student is selected
   const [selectedConcession, setSelectedConcession] = useState<IStudentInfo | null>(null);
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -52,6 +78,30 @@ const Concession = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <CustomSelect
+          label="Board *"
+          options={boards || []}
+          labelKey="name"
+          valueKey="id"
+          value={selectedBoard}
+          onChange={(value) => {
+            setSelectedBoard(value as string);
+            setSelectedMedium('');
+          }}
+          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+        />
+        <CustomSelect
+          label="Medium *"
+          options={mediums || []}
+          labelKey="name"
+          disabled={!selectedBoard}
+          valueKey="id"
+          value={selectedMedium}
+          onChange={(value) => setSelectedMedium(value as string)}
+          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+        />
+      </Box>
       <StudentConcessionTable
         data={concessionData}
         onRequestConcession={(data) => {

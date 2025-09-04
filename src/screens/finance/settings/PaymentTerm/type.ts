@@ -15,10 +15,10 @@ export interface IPaymentTerm {
   id: string | number;
   paymentTermName: string;
   totalInstallments: number | string;
-  academicYearId: string;
-  academicYear?: string;
-  board: string;
-  medium: string;
+  // academicYearId: string;
+  // academicYear?: string;
+  // board: string;
+  // medium: string;
   installments: IInstallment[];
 }
 

@@ -6,6 +6,7 @@ export interface IClassWiseFeeItem {
   feeCategory: string;
   feeHead: string;
   amount: number;
+  isOneTime: boolean;
   required: boolean;
 }
 
@@ -37,6 +38,7 @@ export interface IFeeStructureTableProps {
   setEditData: (data: IFeeStructure | null) => void;
   onDelete?: (data: IFeeStructure) => void;
   onEdit?: (data: IFeeStructure) => void;
+  onView?: (data: IFeeStructure) => void;
   onToggle?: (data: IFeeStructure) => void;
 }
 

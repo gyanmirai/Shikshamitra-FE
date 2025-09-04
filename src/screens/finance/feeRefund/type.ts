@@ -8,6 +8,7 @@ export interface IStudentFeeData {
   medium: string;
   class: string;
   division: string;
+  grNo: string;
   rollNo: string;
   totalPaidFees: number;
   totalPendingFees: number;
@@ -43,4 +44,17 @@ export interface IRefundFormValues {
   reason: string;
   remarks?: string;
   paymentDetails?: Record<string, any>;
+}
+
+export interface IRefund {
+  board: string;
+  medium: string;
+  className: string;
+  division: string;
+  student: string;
+  paidTerms: string;
+  amountApplicable: number | '';
+  refundAmount: number | '';
+  refundMethod: string;
+  reason: string;
 }

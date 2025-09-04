@@ -26,6 +26,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   onDelete,
   onEdit,
   onToggle,
+  onView,
 }) => {
   const theme = useTheme();
   console.log('data====', data);
@@ -73,7 +74,6 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         },
         { id: 'receiptBook', label: 'Receipt Book', align: 'left' },
         { id: 'paymentTerm', label: 'Payment Term', align: 'left' },
-        { id: 'totalFeeHead', label: 'Total Fee Head', align: 'left' },
         { id: 'totalClass', label: 'Total Class', align: 'left' },
         {
           id: 'status',
@@ -148,6 +148,10 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               showEditIcon
+              showViewIcon
+              handleViewClick={() => {
+                onView?.(row as IFeeStructure);
+              }}
               handleEditClick={() => {
                 // TODO: Imp lement edit functionality
                 onEdit?.(row as IFeeStructure);

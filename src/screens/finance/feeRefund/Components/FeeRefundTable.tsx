@@ -101,12 +101,23 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             id: 'name',
             label: 'Name',
             align: 'left',
+            minWidth: 170,
+            sticky: true,
             render: (value, row) => (
               <Box display="flex" alignItems="center" gap={1}>
                 <Avatar src={row.avatarUrl} sx={{ width: 32, height: 32 }} />
                 {row.name}
               </Box>
             ),
+          },
+          { id: 'grNo', label: 'GR No.', align: 'left', isFilter: true, minWidth: 80 },
+          {
+            id: 'rollNo',
+            label: 'Roll No.',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
+            minWidth: 80,
           },
           { id: 'board', label: 'Board', align: 'left', isFilter: true },
           { id: 'medium', label: 'Medium', align: 'left', isFilter: true },
@@ -129,8 +140,6 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             isFilter: true,
             render: (value) => `₹ ${value.toLocaleString()}`,
           },
-
-          // 🔹 New Columns (Refund details)
           {
             id: 'refundAmount',
             label: 'Refund Amount',

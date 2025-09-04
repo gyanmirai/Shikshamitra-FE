@@ -1,8 +1,9 @@
 import type { FormikErrors } from 'formik';
-import type { Board, AcademicYear } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 
 import { DatePicker } from '@mui/x-date-pickers';
@@ -10,14 +11,8 @@ import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { GlobalIcons } from 'src/utils/icons';
 
-import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -30,32 +25,13 @@ import { paymentTermValidationSchema } from './PayementTermValidationSchema';
 import type { IInstallment, IFeeStructureFormProps } from '../type';
 
 const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, editData }) => {
-  // Fetch academic year data using custom query hook
-  const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetYearQuery,
-  });
-
-  // Lazy query hook to fetch classes by medium
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetClassByMediumQuery,
-  });
-
-  // Fetch board data using custom query hook
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-  });
-
-  // Local state to store filtered boards based on academic year
-  const [boards, setBoards] = useState([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
     initialValues: getInitialPaymentTermData(editData),
-    validationSchema: paymentTermValidationSchema,
+    validationSchema: paymentTermValidationSchema(currentYear),
     validateOnChange: true,
     // Handle form submission
     onSubmit: (values) => {
@@ -72,10 +48,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
     },
   });
 
-  console.log('formik.values---', formik.values);
-
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState();
-
   const [installments, setInstallments] = useState(formik.values.installments || []);
 
   // Update installments when number changes
@@ -85,7 +57,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
     if (count > 0) {
       // Calculate default percentage per installment
       // Calculate equal percentage for all installments
-      const equalPercentage = Math.round(100 / count);
+      const equalPercentage = Number((100 / count).toFixed(2));
       const updated = Array.from({ length: count }, (_, i) => ({
         index: i,
         id: i + 1,
@@ -105,25 +77,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.totalInstallments]);
-
-  useEffect(() => {
-    if (editData) {
-      // Filter boards based on academic year ID from edit data
-      const findBoards = board?.items.filter(
-        (item: Board) => item.academicYearId === editData.academicYear
-      );
-      setBoards(findBoards);
-      const year = academicYear?.items?.find(
-        (item: AcademicYear) => item.id === formik.values.academicYear
-      );
-      setSelectedAcademicYear(year?.name || '');
-
-      // Fetch classes if education medium ID exists in edit data
-      if (editData.medium) {
-        getClassByMedium(editData.medium);
-      }
-    }
-  }, [academicYear?.items, board?.items, editData, formik.values.academicYear, getClassByMedium]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -169,7 +122,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              {/* <Grid item xs={12} md={4}>
                 <ShakingTextField
                   error={!!(formik.touched.academicYearId && formik.errors.academicYearId) || false}
                 >
@@ -252,7 +205,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
-              </Grid>
+              </Grid> */}
             </Grid>
 
             {/* Installments Table with CustomizableTable */}
@@ -477,12 +430,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                     );
                                   }}
                                   format="DD-MM-YYYY"
-                                  minDate={dayjs(
-                                    `${formik.values.academicYear?.split('-')?.[0]}-01-01`
-                                  )}
-                                  maxDate={dayjs(
-                                    `${formik.values.academicYear?.split('-')?.[1]}-12-31`
-                                  )}
                                   slotProps={{
                                     textField: {
                                       fullWidth: true,

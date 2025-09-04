@@ -49,6 +49,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({ formik, className, onClose }
           feeCategory: selected.category,
           feeHead: selected.feeHead,
           amount: 0,
+          isOneTime: false,
           required: true,
         });
       }

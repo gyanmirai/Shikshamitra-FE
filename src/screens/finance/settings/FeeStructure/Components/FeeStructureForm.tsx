@@ -8,8 +8,10 @@ import { LoadingButton } from '@mui/lab';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import {
   Box,
+  Chip,
   Card,
   Grid,
+  Paper,
   Button,
   useTheme,
   TextField,
@@ -423,37 +425,48 @@ const FeeStructureForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edi
             )}
             {Object.entries(formik.values.feeStructureClasses)
               .filter(([_, data]) => data.status === FeeStructureClassStatusType.Current)
-              .map(([className, data]) => (
-                <SectionCard key={className} title={`Fee Structure - Class ${className}`}>
-                  {/* this will be used in future so, i'm commenting this
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<Iconify icon={GlobalIcons.submit} />}
-                      size="small"
-                      onClick={() => {
-                        const updatedClasses = { ...formik.values.feeStructureClasses };
+              .map(([className, data]) => {
+                const totalFeeAmount =
+                  data.feeItems?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+                return (
+                  <Paper sx={{ p: 2, mb: 3, position: 'relative' }} elevation={6} key={className}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" pb={2}>
+                      <Typography variant="h6" color="primary.main">
+                        {`Fee Structure - Class ${className}`}
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <CustomSelect
+                          name="class"
+                          label="Copy Fee Structure From"
+                          disabled={!formik.values.medium}
+                          options={classes || []}
+                          value=""
+                          labelKey="name"
+                          valueKey="id"
+                          onChange={(value) => {
+                            // formik.setFieldValue('class', value);
+                          }}
+                          formControlProps={{ fullWidth: true, sx: { minWidth: '250px' } }}
+                        />
 
-                        Object.keys(updatedClasses).forEach((cls) => {
-                          if (cls === className) {
-                            updatedClasses[cls].status = FeeStructureClassStatusType.Completed;
-                          }
-                        });
-
-                        formik.setFieldValue('feeStructureClasses', updatedClasses);
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </Box> */}
-
-                  <FeeStructureCard
-                    className={className}
-                    feeItems={data.feeItems || []}
-                    formik={formik}
-                  />
-                </SectionCard>
-              ))}
+                        <Chip
+                          label={`Total Fee Amount : ₹${totalFeeAmount}`}
+                          color="default"
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+                    </Box>
+                    <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <FeeStructureCard
+                        className={className}
+                        feeItems={data.feeItems || []}
+                        formik={formik}
+                      />
+                    </Grid>
+                  </Paper>
+                );
+              })}
           </Scrollbar>
           <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
