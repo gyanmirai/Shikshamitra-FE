@@ -23,6 +23,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FeeStructureForm from './Components/FeeStructureForm';
 import FeeStructureTable from './Components/FeeStructureTable';
+import ViewFeeStructure from './Components/ViewDetails/ViewFeeStructure';
 
 import type { IFeeStructure } from './type';
 
@@ -32,6 +33,7 @@ const FeeStructure = () => {
   // Custom hook to manage dialog open/close state
   const addFeeStructureDialog = useBoolean();
   const confirmDialog = useBoolean();
+  const viewFeeStructureDialog = useBoolean();
 
   const { data: feeStructure, isLoading: feeStructureLoading } = useQueryAndMutation({
     type: 'query',
@@ -78,23 +80,29 @@ const FeeStructure = () => {
           ]}
           sx={{ px: 1, mb: 2 }}
         />
-      ) : (
+      ) : viewFeeStructureDialog.value ? (
         <CustomBreadcrumbs
-          heading="Fee Structure"
-          description={
-            addFeeStructureDialog.value
-              ? 'Access detailed information on the selected subject, such as name, code, curriculum mapping, and assessment criteria to support structured academic planning.'
-              : 'Define and organize academic subjects by linking them to classes, setting subject codes, and outlining curriculum requirements to ensure effective teaching-learning process.'
-          }
+          heading="View Fee Structure"
+          description="View detailed information about the selected fee structure including categories, amounts and applicable groups."
+          isBack
+          onBack={() => {
+            viewFeeStructureDialog.onFalse();
+            setSelectedFeeStructure(null);
+          }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fee Structure', href: '/finance/fee-structure' },
           ]}
-          isBack={addFeeStructureDialog.value}
-          onBack={() => {
-            addFeeStructureDialog.onFalse();
-            setSelectedFeeStructure(null);
-          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Fee Structure"
+          description="Define and organize fee structures by configuring categories, amounts and payment schedules to ensure effective fee management."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fee Structure', href: '/finance/fee-structure' },
+          ]}
           action={
             <Button
               onClick={() => addFeeStructureDialog.onTrue()}
@@ -118,7 +126,7 @@ const FeeStructure = () => {
               open={addFeeStructureDialog}
             />
           </Card>
-        ) : (
+        ) : !viewFeeStructureDialog.value ? (
           <FeeStructureTable
             data={feeStructure}
             addFeeStructure={addFeeStructureDialog}
@@ -132,9 +140,26 @@ const FeeStructure = () => {
               confirmDialog.onTrue();
               setSelectedFeeStructure(data);
             }}
+            onView={(data) => {
+              viewFeeStructureDialog.onTrue();
+              setSelectedFeeStructure(data);
+            }}
           />
-        )}
+        ) : null}
       </>
+
+      {viewFeeStructureDialog.value && (
+        <ViewFeeStructure
+          open={viewFeeStructureDialog}
+          onClose={() => {
+            viewFeeStructureDialog.onFalse();
+            setTimeout(() => {
+              setSelectedFeeStructure(null);
+            }, 200);
+          }}
+          data={selectedFeeStructure}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmDialog.value}

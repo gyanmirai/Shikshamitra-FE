@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
@@ -39,11 +40,11 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                 spacing: 3,
                 alignItems: 'center',
                 p: 1,
-                gap: 3,
+                gap: 2,
                 mb: 4,
               }}
             >
-              <Grid item xs={0.5}>
+              <Grid item xs={0.1}>
                 <Typography variant="h6">{index + 1}.</Typography>
               </Grid>
               <Grid item xs={2} pt={0}>
@@ -65,7 +66,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={3} pt={0}>
+              <Grid item xs={2} pt={0}>
                 <TextField
                   label="Fee Head"
                   disabled
@@ -80,18 +81,52 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                 />
               </Grid>
               <Grid item xs={2} pt={0}>
-                <TextField
-                  label="Amount"
+                <NumericFormatCustom
                   size="small"
-                  type="number"
-                  value={item.amount}
+                  fullWidth
+                  label="Amount"
+                  name={`feeStructureClasses.${className}.feeItems.${index}.amount`}
+                  value={item.amount || ''}
                   onChange={(e) => {
+                    let val = e.target.value;
+                    val = val.replace(/[₹,\s]/g, '');
                     const updatedItems = [...feeItems];
-                    updatedItems[index].amount = Number(e.target.value);
+                    updatedItems[index].amount = Number(val);
                     formik.setFieldValue(`feeStructureClasses.${className}.feeItems`, updatedItems);
                   }}
-                  fullWidth
+                  sx={{
+                    width: '100%',
+                    padding: '0',
+                    borderRadius: 1,
+                  }}
+                  // error={
+                  //   !!(
+                  //     formik?.touched?.feeStructureClasses?.[className]?.feeItems?.[index]
+                  //       ?.amount &&
+                  //     formik?.errors?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount
+                  //   )
+                  // }
+                  // helperText={
+                  //   formik?.touched?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount &&
+                  //   formik?.errors?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount
+                  //     ? formik.errors.feeStructureClasses[className].feeItems[index].amount
+                  //     : ''
+                  // }
                 />
+              </Grid>
+              <Grid item xs={2} pt={0} display="flex" alignItems="center">
+                <Switch
+                  checked={item.isOneTime}
+                  onChange={(event) => {
+                    formik.setFieldValue(
+                      `feeStructureClasses.${className}.feeItems[${index}].isOneTime`,
+                      event.target.checked
+                    );
+                  }}
+                />
+                <Typography variant="body2" sx={{ mr: 0.5 }}>
+                  One Time Fee
+                </Typography>
               </Grid>
               <Grid item xs={2} pt={0} display="flex" alignItems="center">
                 <Switch
@@ -103,11 +138,11 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                     );
                   }}
                 />
-                <Typography variant="body2" sx={{ mr: 1 }}>
+                <Typography variant="body2" sx={{ mr: 0.5 }}>
                   Optional
                 </Typography>
               </Grid>
-              <Grid item xs={0.5} ml={6}>
+              <Grid item xs={0.5} ml={2}>
                 <IconButton
                   color="error"
                   onClick={() => {

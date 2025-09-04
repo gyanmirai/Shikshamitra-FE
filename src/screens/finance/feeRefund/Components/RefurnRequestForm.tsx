@@ -20,7 +20,7 @@ import { refundValidation } from './ConcessionRefundValidation';
 
 import type { IRefundFormProps, IRefundFormValues } from '../type';
 
-const termOptions = [
+export const termOptions = [
   { name: 'Quarter 1', amount: 5000 },
   { name: 'Quarter 2', amount: 5000 },
   { name: 'Quarter 3', amount: 5000 },

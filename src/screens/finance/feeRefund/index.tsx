@@ -5,7 +5,8 @@ import type { RootState } from 'src/redux/store';
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,12 +23,14 @@ import RefundRequestForm from './Components/RefurnRequestForm';
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import RefundProcessForm from './Components/RefundProcessForm';
 import StudentFeeRefundTable from './Components/FeeRefundTable';
+import NewFeeRequestRefundForm from './Components/NewFeeRequest';
 
 import type { IStudentFeeData } from './type';
 
 const FeeRefund = () => {
   // Boolean state to control the visibility of add concession request modal/form
   const addRefundRequest = useBoolean();
+  const createRefundRequest = useBoolean();
   const viewRefundRequest = useBoolean();
   const processRefundDialog = useBoolean();
   // Redux state for tracking unsaved changes
@@ -62,6 +65,7 @@ const FeeRefund = () => {
     // If form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       setSelectedFeeRefund(null);
+      createRefundRequest.onFalse();
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
       processRefundDialog.onFalse();
@@ -70,6 +74,7 @@ const FeeRefund = () => {
     // If no unsaved changes, simply close the dialog
     else if (!isChanges) {
       setSelectedFeeRefund(null);
+      createRefundRequest.onFalse();
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
       processRefundDialog.onFalse();
@@ -88,6 +93,16 @@ const FeeRefund = () => {
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fee Refund', href: '/finance/fee-refund' },
         ]}
+        action={
+          <Button
+            onClick={() => createRefundRequest.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+          >
+            Fee Refund
+          </Button>
+        }
         sx={{ px: 1, mb: 2 }}
       />
 
@@ -106,6 +121,30 @@ const FeeRefund = () => {
           processRefundDialog.onTrue();
         }}
       />
+
+      <CustomDialog
+        open={createRefundRequest.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Create Fee Refund</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Form to create and submit new fee refund requests."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          setSelectedFeeRefund(null);
+          createRefundRequest.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        <NewFeeRequestRefundForm open={createRefundRequest} onClose={handleClose} student={null} />
+      </CustomDialog>
 
       <CustomDialog
         open={addRefundRequest.value}
