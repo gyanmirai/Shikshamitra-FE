@@ -21,8 +21,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import FeeStructureForm from './Components/FeeStructureForm';
 import FeeStructureTable from './Components/FeeStructureTable';
+import FeeStructureFormStepper from './Components/NewStructureForm';
 import ViewFeeStructure from './Components/ViewDetails/ViewFeeStructure';
 
 import type { IFeeStructure } from './type';
@@ -120,10 +120,10 @@ const FeeStructure = () => {
         {/* Subject form card for creating/editing subjects */}
         {addFeeStructureDialog.value ? (
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <FeeStructureForm
-              editData={selectedFeeStructure}
-              onClose={handleClose}
+            <FeeStructureFormStepper
               open={addFeeStructureDialog}
+              onClose={handleClose}
+              editData={selectedFeeStructure}
             />
           </Card>
         ) : !viewFeeStructureDialog.value ? (

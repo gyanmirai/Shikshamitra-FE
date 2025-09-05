@@ -22,6 +22,7 @@ interface FeeHeadOption {
 interface Props {
   formik: FormikProps<IFeeStructure>;
   className: string;
+  feeStructureIndex: number;
   onClose: (e: any, isSubmit: boolean) => void;
 }
 
@@ -31,18 +32,31 @@ const feeHeadOptions: FeeHeadOption[] = [
   { category: 'Transport', feeHead: 'Transport Fee' },
 ];
 
-const AddFeeHeadDialogContent: React.FC<Props> = ({ formik, className, onClose }) => {
+const AddFeeHeadDialogContent: React.FC<Props> = ({
+  formik,
+  className,
+  feeStructureIndex,
+  onClose,
+}) => {
   const [selectedFeeHead, setSelectedFeeHead] = useState<string[]>([]);
 
   const handleSubmit = () => {
-    // Handle case when no fee heads are selected
     if (!selectedFeeHead.length) return;
 
-    const currentClassData = formik.values.feeStructureClasses[className] || { feeItems: [] };
-    const updatedItems = [...(currentClassData.feeItems || [])];
+    // ✅ Get current fee structure array for the class
+    const classFeeStructures = formik.values.feeStructureClasses[className] || [];
 
-    // Add each selected fee head to the items array
-    (selectedFeeHead as string[]).forEach((feeHeadValue) => {
+    // ✅ Get the specific fee structure to update
+    const currentStructure = classFeeStructures[feeStructureIndex];
+
+    if (!currentStructure) {
+      console.error('Fee structure not found at index', feeStructureIndex);
+      return;
+    }
+
+    const updatedItems = [...(currentStructure.feeItems || [])];
+
+    selectedFeeHead.forEach((feeHeadValue) => {
       const selected = feeHeadOptions.find((opt) => opt.feeHead === feeHeadValue);
       if (selected) {
         updatedItems.push({
@@ -55,10 +69,17 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({ formik, className, onClose }
       }
     });
 
-    formik.setFieldValue(`feeStructureClasses.${className}`, {
-      ...currentClassData,
+    // ✅ Replace feeItems for the specific fee structure
+    const updatedStructure = {
+      ...currentStructure,
       feeItems: updatedItems,
-    });
+    };
+
+    const updatedClassFeeStructures = [...classFeeStructures];
+    updatedClassFeeStructures[feeStructureIndex] = updatedStructure;
+
+    // ✅ Set back in formik
+    formik.setFieldValue(`feeStructureClasses.${className}`, updatedClassFeeStructures);
 
     onClose(null, true);
     setSelectedFeeHead([]);
