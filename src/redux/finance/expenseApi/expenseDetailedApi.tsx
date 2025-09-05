@@ -20,6 +20,11 @@ export const expenseDetailsApi = createApi({
             data: expenseDetailsData.expenseOptions,
           };
         }
+        if (url === '/paymentMethodsConfig') {
+          return {
+            data: expenseDetailsData.paymentMethodsConfig,
+          };
+        }
         return {
           error: {
             status: 404,
@@ -27,7 +32,7 @@ export const expenseDetailsApi = createApi({
           },
         };
       },
-  tagTypes: ['ExpenseDetails', 'ExpenseOptions'],
+  tagTypes: ['ExpenseDetails', 'ExpenseOptions', 'paymentMethodsConfig'],
   endpoints: (builder) => ({
     getExpenseDetails: builder.query({
       query: () => ({
@@ -43,7 +48,18 @@ export const expenseDetailsApi = createApi({
       }),
       providesTags: ['ExpenseOptions'],
     }),
+    getPaymentMethodsConfig: builder.query({
+      query: () => ({
+        url: '/paymentMethodsConfig',
+        method: 'GET',
+      }),
+      providesTags: ['paymentMethodsConfig'],
+    }),
   }),
 });
 
-export const { useGetExpenseDetailsQuery, useGetExpenseOptionsQuery } = expenseDetailsApi;
+export const {
+  useGetExpenseDetailsQuery,
+  useGetExpenseOptionsQuery,
+  useGetPaymentMethodsConfigQuery,
+} = expenseDetailsApi;

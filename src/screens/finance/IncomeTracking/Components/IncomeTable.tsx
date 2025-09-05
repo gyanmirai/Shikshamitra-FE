@@ -53,6 +53,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         id: 'incomeCategory',
         label: 'Income Category',
         align: 'left',
+        minWidth: '160px',
       },
       {
         id: 'budget',
@@ -63,11 +64,13 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         id: 'budgetSubCategory',
         label: 'Budget Sub Category',
         align: 'left',
+        minWidth: '190px',
       },
       {
         id: 'incomeName',
         label: 'Income Name',
         align: 'left',
+        minWidth: '160px',
       },
       {
         id: 'amount',
@@ -80,6 +83,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         id: 'paymentMethod',
         label: 'Payment Method',
         align: 'left',
+        minWidth: '160px',
       },
       {
         id: 'date',
@@ -91,6 +95,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         id: 'notes',
         label: 'Notes',
         align: 'left',
+        minWidth: '150px',
       },
       {
         id: 'actions',

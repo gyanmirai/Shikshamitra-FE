@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
-import incomeData from '../../../financeIncomeData.json'; // your mock JSON
+import incomeData from '../../../financeIncomeData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -11,9 +11,12 @@ export const incomeApi = createApi({
   baseQuery: isDev
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
-        // Handle mock route
+        // Handle mock routes
         if (url === '/incomeData') {
           return { data: incomeData.incomeData };
+        }
+        if (url === '/paymentMethodsConfig') {
+          return { data: incomeData.paymentMethodsConfig };
         }
         return {
           error: {
@@ -22,7 +25,7 @@ export const incomeApi = createApi({
           },
         };
       },
-  tagTypes: ['Income'],
+  tagTypes: ['Income', 'paymentMethodsConfig'],
   endpoints: (builder) => ({
     getIncomes: builder.query({
       query: () => ({
@@ -31,7 +34,14 @@ export const incomeApi = createApi({
       }),
       providesTags: ['Income'],
     }),
+    getIncomePaymentMethodsConfig: builder.query({
+      query: () => ({
+        url: '/paymentMethodsConfig',
+        method: 'GET',
+      }),
+      providesTags: ['paymentMethodsConfig'],
+    }),
   }),
 });
 
-export const { useGetIncomesQuery } = incomeApi;
+export const { useGetIncomesQuery, useGetIncomePaymentMethodsConfigQuery } = incomeApi;

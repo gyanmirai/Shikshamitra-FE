@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IExpenseFormValues {
+  paymentDetails: any;
   expenseCategory: string;
   budget: string;
   budgetSubCategory: string;

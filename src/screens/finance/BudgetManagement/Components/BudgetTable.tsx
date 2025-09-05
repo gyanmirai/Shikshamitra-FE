@@ -136,14 +136,27 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
         tableId="budget-table"
         noDataText="Budget Data Not Found"
         columns={[
-          { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+          { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
           { id: 'budgetCategory', label: 'Type', align: 'left' },
-          { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
-          { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+          {
+            id: 'startDate',
+            label: 'Start Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: '120px',
+          },
+          {
+            id: 'endDate',
+            label: 'End Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: '120px',
+          },
           {
             id: 'totalBudgetAmount',
             label: 'Total Budget Amount',
             align: 'left',
+            minWidth: '190px',
             filterType: 'number',
           },
           { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },

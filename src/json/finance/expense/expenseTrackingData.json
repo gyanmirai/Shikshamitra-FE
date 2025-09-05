@@ -92,7 +92,9 @@
       { "value": "UPI", "label": "UPI" },
       { "value": "Credit Card", "label": "Credit Card" }
     ],
-    "budgetOptions": [{ "value": "Academic Budget 2025", "label": "Academic Budget 2025" }]
+    "budgetOptions": [
+      { "value": "Academic Budget 2025", "label": "Academic Budget 2025" }
+    ]
   },
   "incomeCategoryData": [
     {
@@ -123,6 +125,32 @@
         "label": "Cultural & Sports Event Income 2025"
       },
       { "value": "Annual Tuition Income 2025", "label": "Annual Tuition Income 2025" }
+    ]
+  },
+  "paymentMethodsConfig": {
+    "Cash": [],
+    "Cheque": [
+      { "name": "chequeNumber", "label": "Cheque Number *", "type": "text", "required": true },
+      { "name": "bankName", "label": "Bank Name *", "type": "text", "required": true },
+      { "name": "chequeDate", "label": "Cheque Date *", "type": "date", "required": true },
+      { "name": "payeeName", "label": "Cheque Holder Name *", "type": "text", "required": true }
+    ],
+    "Bank Transfer": [
+      { "name": "transactionId", "label": "Transaction ID / UTR Number *", "type": "text", "required": true },
+      { "name": "transferDate", "label": "Transfer Date *", "type": "date", "required": true },
+      { "name": "accountHolderName", "label": "Account Holder Name *", "type": "text", "required": true }
+    ],
+    "UPI": [
+      { "name": "upiId", "label": "UPI ID *", "type": "text", "required": true },
+      { "name": "transactionId", "label": "Transaction ID *", "type": "text", "required": true },
+      { "name": "transactionDate", "label": "Transaction Date *", "type": "date", "required": true },
+      { "name": "payeeName", "label": "Payee Name *", "type": "text", "required": true }
+    ],
+    "Credit Card": [
+      { "name": "cardNumber", "label": "Card Number (Last 4 digits) *", "type": "text", "required": true },
+      { "name": "cardHolderName", "label": "Card Holder Name *", "type": "text", "required": true },
+      { "name": "transactionDate", "label": "Transaction Date *", "type": "date", "required": true },
+      { "name": "authorizationCode", "label": "Authorization Code *", "type": "text", "required": true }
     ]
   }
 }

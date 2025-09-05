@@ -1157,6 +1157,13 @@ const financeModule = {
           shortcutKey: 'Alt+F+4',
           shortcutKeyName: 'Alt+F+4',
         },
+        {
+          title: 'Expense Tracking',
+          path: '/finance/expenseTracking',
+          _action: 'finance-expense-tracking',
+          shortcutKey: 'Alt+F+11',
+          shortcutKeyName: 'Alt+F+11',
+        },
         // {
         //   title: 'Reconciliation',
         //   path: '',
@@ -1208,13 +1215,6 @@ const financeModule = {
           title: 'Reports',
           path: '/finance/reports',
           _action: 'finance-reports',
-          shortcutKey: 'Alt+F+11',
-          shortcutKeyName: 'Alt+F+11',
-        },
-        {
-          title: 'Expense Tracking',
-          path: '/finance/expenseTracking',
-          _action: 'finance-expense-tracking',
           shortcutKey: 'Alt+F+11',
           shortcutKeyName: 'Alt+F+11',
         },
