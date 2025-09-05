@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -25,8 +22,8 @@ const PresetCategoryAndDepartmentForBudget = () => {
 
   return (
     <Box>
-      <Grid container display="flex" flexDirection="column">
-        <Grid item xs={12} md={12}>
+      <Grid container display="flex" flexDirection="column" spacing={2}>
+        <Grid size={{ xs: 12 }}>
           <CustomizableTable
             noDataText={
               <>
@@ -58,7 +55,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
               {
                 id: 'budgetCategoryName',
                 label: 'Categories',
-                render(value, row) {
+                render(value) {
                   return (
                     <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
                       {value}
@@ -74,7 +71,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
                 sticky: true,
                 align: 'left',
                 minWidth: 50,
-                render(value, row) {
+                render(_, row) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}
@@ -95,30 +92,16 @@ const PresetCategoryAndDepartmentForBudget = () => {
               },
             ]}
             data={[
-              {
-                id: 1,
-                budgetCategoryName: 'salary',
-              },
-              {
-                id: 2,
-                budgetCategoryName: 'utilities',
-              },
-              {
-                id: 3,
-                budgetCategoryName: 'supplies',
-              },
-              {
-                id: 4,
-                budgetCategoryName: 'maintenance',
-              },
-              {
-                id: 5,
-                budgetCategoryName: 'transportation',
-              },
+              { id: 1, budgetCategoryName: 'salary' },
+              { id: 2, budgetCategoryName: 'utilities' },
+              { id: 3, budgetCategoryName: 'supplies' },
+              { id: 4, budgetCategoryName: 'maintenance' },
+              { id: 5, budgetCategoryName: 'transportation' },
             ]}
           />
         </Grid>
 
+        {/* Delete Confirmation Dialog */}
         <ConfirmDialog
           open={dialogForDeleteConfirmation.value}
           onClose={() => {
@@ -133,12 +116,20 @@ const PresetCategoryAndDepartmentForBudget = () => {
             </>
           }
           action={
-            <LoadingButton variant="contained" color="error" size="small" onClick={() => {}}>
+            <LoadingButton
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => {
+                // handle delete logic here
+              }}
+            >
               Yes
             </LoadingButton>
           }
         />
 
+        {/* Add/Edit Budget Category Dialog */}
         <CustomDialog
           open={editDialog.value}
           handleClose={() => {
@@ -147,7 +138,7 @@ const PresetCategoryAndDepartmentForBudget = () => {
           }}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">{`${isEdit ? 'Update' : 'Add'} Budget Category`}</Typography>
+              <Typography variant="h5">{isEdit ? 'Update' : 'Add'} Budget Category</Typography>
               <CustomTooltip
                 arrow
                 placement="right"

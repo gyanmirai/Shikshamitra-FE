@@ -1,8 +1,7 @@
-import { useGetYearQuery } from 'src/redux/year/yearApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import CustomSelect from 'src/components/custom-select';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const RenderAcademicYear = (props: any) => {
   // Destructure formik and isEdit from props

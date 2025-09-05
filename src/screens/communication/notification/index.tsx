@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-
-import { Box, Tab, Card, Button } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useCallback } from 'react';
+import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import eventList from './component/eventList';

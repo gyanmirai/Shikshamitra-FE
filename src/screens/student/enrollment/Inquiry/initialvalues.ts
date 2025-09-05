@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-
 import calculateAge from 'src/utils/calculate-age';
 
 import type { IInquiryData } from '.';

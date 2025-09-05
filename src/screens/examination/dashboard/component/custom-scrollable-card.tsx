@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { styled } from '@mui/system';
+import { styled } from '@mui/material/styles';
 import { Box, Card, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 
 // Styled component for scrollable content with a visible scrollbar

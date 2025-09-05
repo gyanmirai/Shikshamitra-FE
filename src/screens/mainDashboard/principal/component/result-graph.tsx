@@ -2,13 +2,11 @@ import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
 import { useState } from 'react';
-
 import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // Sample Data (Class → Subject → Division-wise Marks)
 type ResultDataType = {

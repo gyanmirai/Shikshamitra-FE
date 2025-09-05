@@ -1,10 +1,8 @@
 import { useState } from 'react';
-
 import Menu from '@mui/material/Menu';
+import { varAlpha } from 'src/theme/styles';
 import { listClasses } from '@mui/material/List';
 import ButtonBase, { buttonBaseClasses } from '@mui/material/ButtonBase';
-
-import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from '../../iconify';
 import { ToolbarItem } from './toolbar-item';

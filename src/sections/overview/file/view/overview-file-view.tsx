@@ -1,20 +1,16 @@
 'use client';
 
+import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
+import { CONFIG } from 'src/config-global';
 import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Unstable_Grid2';
-import Typography from '@mui/material/Typography';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { CONFIG } from 'src/config-global';
-import { DashboardContent } from 'src/layouts/dashboard';
-
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
 import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 import { FileWidget } from '../../../file-manager/file-widget';
 import { FileUpgrade } from '../../../file-manager/file-upgrade';
@@ -107,11 +103,13 @@ export function OverviewFileView() {
     <>
       <DashboardContent maxWidth="xl">
         <Grid container spacing={3}>
-          <Grid xs={12} sx={{ display: { xs: 'block', sm: 'none' } }}>
+          {/* Storage Overview - Mobile Only */}
+          <Grid size={{ xs: 12 }} sx={{ display: { xs: 'block', sm: 'none' } }}>
             {renderStorageOverview}
           </Grid>
 
-          <Grid xs={12} sm={6} md={4}>
+          {/* Cloud Storage Widgets */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FileWidget
               title="Dropbox"
               value={GB / 10}
@@ -120,7 +118,7 @@ export function OverviewFileView() {
             />
           </Grid>
 
-          <Grid xs={12} sm={6} md={4}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FileWidget
               title="Drive"
               value={GB / 5}
@@ -129,7 +127,7 @@ export function OverviewFileView() {
             />
           </Grid>
 
-          <Grid xs={12} sm={6} md={4}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FileWidget
               title="OneDrive"
               value={GB / 2}
@@ -138,7 +136,8 @@ export function OverviewFileView() {
             />
           </Grid>
 
-          <Grid xs={12} md={6} lg={8}>
+          {/* Data Activity + Panels */}
+          <Grid size={{ xs: 12, md: 6, lg: 8 }}>
             <FileDataActivity
               title="Data activity"
               chart={{
@@ -207,7 +206,8 @@ export function OverviewFileView() {
             </Box>
           </Grid>
 
-          <Grid xs={12} md={6} lg={4}>
+          {/* Upload + Storage Overview + Upgrade */}
+          <Grid size={{ xs: 12, md: 6, lg: 4 }}>
             <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
               <UploadBox
                 onDrop={handleDrop}
@@ -233,6 +233,7 @@ export function OverviewFileView() {
                 }}
               />
 
+              {/* Storage Overview - Desktop Only */}
               <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{renderStorageOverview}</Box>
 
               <FileUpgrade />

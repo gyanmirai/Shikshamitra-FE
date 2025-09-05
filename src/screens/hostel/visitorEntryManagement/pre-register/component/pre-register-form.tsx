@@ -3,18 +3,15 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DateTimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getVisitorInitialValues } from '../initialValue';
 import { visitorValidationSchema } from '../validationSchema';
@@ -37,7 +34,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.visitorName && formik.errors.visitorName) || false}
                 >
@@ -55,7 +52,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.contactNo && formik.errors.contactNo) || false}
                 >
@@ -73,7 +70,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.relationship && formik.errors.relationship) || false}
                 >
@@ -91,7 +88,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DateTimePicker
                   disabled={isDisabled}
                   label="Select Start Date Time*"
@@ -120,7 +117,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DateTimePicker
                   disabled={isDisabled}
                   label="Select End Date Time*"
@@ -146,7 +143,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.reasonForVisit && formik.errors.reasonForVisit) || false}
                 >
@@ -165,7 +162,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

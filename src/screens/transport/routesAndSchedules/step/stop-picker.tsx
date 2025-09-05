@@ -1,11 +1,9 @@
 import L from 'leaflet';
 import React, { useState } from 'react';
-import { Popup, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
-
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, List, Button, ListItem, IconButton, Typography, ListItemText } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Popup, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
+import { Box, List, Button, ListItem, IconButton, Typography, ListItemText } from '@mui/material';
 
 interface BusStop {
   id: number;

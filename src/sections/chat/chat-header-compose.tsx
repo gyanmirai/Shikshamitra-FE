@@ -1,18 +1,15 @@
 import type { IChatParticipant } from 'src/types/chat';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
+import { varAlpha } from 'src/theme/styles';
+import { useState, useCallback } from 'react';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 import { SearchNotFound } from 'src/components/search-not-found';
 
 // ----------------------------------------------------------------------

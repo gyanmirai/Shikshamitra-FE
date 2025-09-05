@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Card, Button, useTheme, Typography, CardContent } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { varAlpha } from 'src/theme/styles';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Grid, Card, Button, Typography, CardContent } from '@mui/material';
 
 import { subjects } from '../dashboard';
 
@@ -18,7 +15,7 @@ const TotalStudents = () => {
   const dialog = useBoolean();
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card
         sx={{
           borderRadius: 2,

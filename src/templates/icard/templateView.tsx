@@ -1,9 +1,9 @@
 import React, { Fragment } from 'react';
-
 import { Save } from '@mui/icons-material';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   Box,
+  Grid,
   Select,
   Slider,
   Button,
@@ -14,8 +14,6 @@ import {
   Typography,
   FormControl,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
 
 interface TemplateViewProps {
   template: React.ReactNode;
@@ -49,7 +47,7 @@ const TemplateView = ({
       <Typography variant="h6">{label}</Typography>
 
       <Grid container spacing={2}>
-        <Grid xs={4}>
+        <Grid size={4}>
           <Typography variant="caption">Font Size</Typography>
           <Slider
             value={settings[field]?.fontSize}
@@ -62,7 +60,7 @@ const TemplateView = ({
             size="small"
           />
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <FormControl size="small" fullWidth>
             <InputLabel size="small">Font Weight</InputLabel>
             <Select
@@ -76,7 +74,7 @@ const TemplateView = ({
             </Select>
           </FormControl>
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <FormControl size="small" fullWidth>
             <InputLabel size="small">Text Transform</InputLabel>
             <Select
@@ -92,7 +90,7 @@ const TemplateView = ({
             </Select>
           </FormControl>
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <Typography variant="subtitle2">Color</Typography>
           <TextField
             type="color"
@@ -109,7 +107,7 @@ const TemplateView = ({
     <Box sx={{ mb: 2 }}>
       <Typography variant="h6">Header</Typography>
       <Grid container spacing={2}>
-        <Grid xs={4}>
+        <Grid size={4}>
           <Typography variant="caption">Font Size</Typography>
           <Slider
             value={settings.cardHeader?.fontSize}
@@ -122,7 +120,7 @@ const TemplateView = ({
             size="small"
           />
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <FormControl size="small" fullWidth>
             <InputLabel size="small">Font Weight</InputLabel>
             <Select
@@ -136,7 +134,7 @@ const TemplateView = ({
             </Select>
           </FormControl>
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <FormControl size="small" fullWidth>
             <InputLabel size="small">Text Transform</InputLabel>
             <Select
@@ -152,7 +150,7 @@ const TemplateView = ({
             </Select>
           </FormControl>
         </Grid>
-        <Grid xs={4}>
+        <Grid size={4}>
           <Typography variant="subtitle2">Color</Typography>
           <TextField
             type="color"
@@ -162,7 +160,7 @@ const TemplateView = ({
             sx={{ width: '100%' }}
           />
         </Grid>
-        <Grid xs={8}>
+        <Grid size={8}>
           <Typography variant="subtitle2">Background Color</Typography>
           <TextField
             type="color"
@@ -177,7 +175,7 @@ const TemplateView = ({
   );
   return isShowSettings ? (
     <Grid container width="100%" spacing={2}>
-      <Grid xs={4} sx={{ boxShadow: 'var(--shadows-4)', p: 0 }}>
+      <Grid size={4} sx={{ boxShadow: 'var(--shadows-4)', p: 0 }}>
         <Scrollbar sx={{ height: 'calc(100vh - 230px)', p: 2 }}>
           <TemplateSetting
             renderCardHeaderSettings={renderCardHeaderSettings}
@@ -187,7 +185,7 @@ const TemplateView = ({
         </Scrollbar>
       </Grid>
 
-      <Grid xs={8} display="flex" justifyContent="center" alignItems="center" position="relative">
+      <Grid size={8} display="flex" justifyContent="center" alignItems="center" position="relative">
         <Button
           startIcon={<Save />}
           sx={{ position: 'absolute', right: 0, top: 0 }}

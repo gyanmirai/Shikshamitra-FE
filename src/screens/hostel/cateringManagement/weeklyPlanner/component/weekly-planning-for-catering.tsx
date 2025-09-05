@@ -1,14 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Paper, TextField, Typography, Autocomplete } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/hostel/cateringManagement/weekly-menu-data.json';
-
 import CustomDialog from 'src/components/customDialog';
+import data from 'src/json/hostel/cateringManagement/weekly-menu-data.json';
+import { Box, Paper, TextField, Typography, Autocomplete } from '@mui/material';
 
 import AddWeeklyMenuDialog from './add-weekly-menu-dialog';
 

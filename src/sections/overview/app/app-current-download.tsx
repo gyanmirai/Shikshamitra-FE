@@ -5,11 +5,9 @@ import { Box } from '@mui/material';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
-import CardHeader from '@mui/material/CardHeader';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { Iconify } from 'src/components/iconify';
+import CardHeader from '@mui/material/CardHeader';
+import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------

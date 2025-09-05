@@ -5,22 +5,20 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Paper, Avatar, Button, useTheme, Typography } from '@mui/material';
-
-import {
-  AttendanceStatusType,
-  AttendanceStatusOptions,
-  AttendanceStatusTypeColors,
-} from 'src/enums/attendance-type';
-
 import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import UserHoverProfile from 'src/components/student-popover';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Paper, Avatar, Button, Typography } from '@mui/material';
+import {
+  AttendanceStatusType,
+  AttendanceStatusOptions,
+  AttendanceStatusTypeColors,
+} from 'src/enums/attendance-type';
 
 const classDummyData = [
   {
@@ -439,7 +437,7 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
   const theme = useTheme();
   return (
     <Grid container spacing={1} height="calc(100vh - 225px)">
-      <Grid item xs={3} height="100%">
+      <Grid size={{ xs: 3 }} height="100%">
         <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
           <Box
             display="flex"
@@ -466,10 +464,12 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               Division : <Label color="info"> {selectedDivision?.name} </Label>
             </Typography>
           </Box>
+
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
             <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
               {[1, 2, 3].map((student, index) => (
                 <Paper
+                  key={index}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -488,7 +488,7 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                   elevation={6}
                   onClick={() => setSelectedStudent(student)}
                 >
-                  <UserHoverProfile user={{ name: 'John Doe' }} avatarComp={<Avatar> JD</Avatar>} />
+                  <UserHoverProfile user={{ name: 'John Doe' }} avatarComp={<Avatar>JD</Avatar>} />
                   <Typography variant="h6">John Doe</Typography>
                   <Label color="success">85%</Label>
                 </Paper>
@@ -497,7 +497,8 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
           </Scrollbar>
         </Paper>
       </Grid>
-      <Grid item xs={9} height="100%">
+
+      <Grid size={{ xs: 9 }} height="100%">
         <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
           <Box display="flex" gap={2}>
             <DatePicker
@@ -513,9 +514,10 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
               slotProps={{ textField: { size: 'small' } }}
             />
           </Box>
+
           <Scrollbar sx={{ height: 'calc(100% -  60px)', p: 1 }}>
             <Grid container spacing={1}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <CustomizableTable
                   tableId="attendance-table"
                   data={[
@@ -552,7 +554,7 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                     { id: 'reason', label: 'Reason', minWidth: '10%' },
                     { id: 'remarks', label: 'Remarks', minWidth: '20%' },
                   ]}
-                />{' '}
+                />
               </Grid>
             </Grid>
           </Scrollbar>

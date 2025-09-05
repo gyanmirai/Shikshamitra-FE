@@ -1,14 +1,7 @@
 import React from 'react';
-
 import { Box, List, ListItem, Typography, ListItemText } from '@mui/material';
 
 import TransportMap from '../component/view-on-map-dialog';
-
-interface RoutePoint {
-  id: number;
-  name: string;
-  coordinates: [number, number];
-}
 
 interface RouteDetailsNew {
   startPoint: any;

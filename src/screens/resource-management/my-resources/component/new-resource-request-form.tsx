@@ -2,11 +2,8 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -14,6 +11,7 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { initialRequestResourceValues } from '../initialValue';
@@ -38,7 +36,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={2}>
               {/* Resource Name */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                   <TextField
                     fullWidth
@@ -53,7 +51,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Category */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.category && Boolean(formik.errors.category)}
                 >
@@ -69,7 +67,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Sub Category */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}
                 >
@@ -84,7 +82,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
                 </ShakingTextField>
               </Grid>
               {/* Quantity */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.quantity && Boolean(formik.errors.quantity)}
                 >
@@ -102,7 +100,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Measurement Unit */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.measurementUnit && Boolean(formik.errors.measurementUnit)}
                 >
@@ -120,7 +118,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Priority */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.priority && Boolean(formik.errors.priority)}
                 >
@@ -140,7 +138,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Required By Date */}
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.requiredByDate && Boolean(formik.errors.requiredByDate)}
                 >
@@ -166,7 +164,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Description */}
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={formik.touched.description && Boolean(formik.errors.description)}
                 >
@@ -190,7 +188,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
               </Grid>
 
               {/* Upload (Optional) */}
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

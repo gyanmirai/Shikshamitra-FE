@@ -3,7 +3,17 @@ import type { AttendanceStatusType } from 'src/enums/attendance-type';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { CalendarView } from 'src/sections/calendar/view';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
+import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
+import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
 import {
   Box,
   Card,
@@ -15,21 +25,6 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-import DetailRow from 'src/screens/communication/announcement/components/detailRow';
-import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
-import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-
-import { CalendarView } from 'src/sections/calendar/view';
 
 import type { StudentTabsComponentType } from '.';
 
@@ -128,9 +123,9 @@ const meetings = [
 
 const Communication = (props: StudentTabsComponentType) => {
   // State to manage meeting table data with initial meetings data
-  const [meetingTableData, setMeetingTableData] = useState(meetings);
+  const [meetingTableData] = useState(meetings);
   // State to manage survey table data with initial survey data
-  const [surveyTableData, setSurveyTableData] = useState<any | null>(scheduledSurveyData);
+  const [surveyTableData] = useState<any | null>(scheduledSurveyData);
   // Boolean state to control view details dialog visibility
   const viewDetailsDialog = useBoolean();
   // Boolean state to control view summary dialog visibility
@@ -149,7 +144,7 @@ const Communication = (props: StudentTabsComponentType) => {
   return (
     <Box>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card
             sx={{
               display: 'flex',
@@ -191,7 +186,7 @@ const Communication = (props: StudentTabsComponentType) => {
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card
             sx={{
               display: 'flex',
@@ -235,7 +230,7 @@ const Communication = (props: StudentTabsComponentType) => {
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card
             sx={{
               display: 'flex',
@@ -279,7 +274,7 @@ const Communication = (props: StudentTabsComponentType) => {
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card
             sx={{
               display: 'flex',

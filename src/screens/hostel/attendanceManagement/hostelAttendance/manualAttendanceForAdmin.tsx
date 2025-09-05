@@ -4,13 +4,13 @@ import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
-
+import React, { useState } from 'react';
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Stack, TextField, Autocomplete } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, TextField, Autocomplete } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import hostelManualAttendance from 'src/json/hostel/hostelAttendance/hostelManualAttendance.json';
 import {
   AttendanceStatusType,
@@ -18,25 +18,21 @@ import {
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
 
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 import type { IStudentHostelManualAttendance } from './type';
 
 const ManualHostelAttendanceForAdmin = () => {
   // State for storing the selected date
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const [_date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [rollCall, setRollCall] = useState<string>();
+  const [_rollCall, setRollCall] = useState<string>();
   // State for storing the selected hostel
-  const [hostel, setHostel] = useState<string>('');
+  const [_hostel, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [floor, setFloor] = useState<string>('');
+  const [_floor, setFloor] = useState<string>('');
   // Dialog state for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
   // State for storing the selected student data
-  const [selectedStudent, setSelectedStudent] = useState<IStudentHostelManualAttendance[]>([]);
+  const [_selectedStudent, setSelectedStudent] = useState<IStudentHostelManualAttendance[]>([]);
   // State for storing the students data
   const [studentsData, setStudentsData] =
     useState<IStudentHostelManualAttendance[]>(hostelManualAttendance);
@@ -48,16 +44,16 @@ const ManualHostelAttendanceForAdmin = () => {
   const totalPresent = studentsData?.filter((student) => student.isPresent).length || 0;
   const totalAbsent = totalStudents - totalPresent;
   // Handler function to open the send notification dialog
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
+  // const handlerSendNotification = () => {
+  //   if (!sendInstantNotificationDialogValue.value) {
+  //     sendInstantNotificationDialogValue.onTrue();
+  //   }
+  // };
 
-  const absentStudents = useMemo(
-    () => studentsData.filter((item: any) => !item.isPresent),
-    [studentsData]
-  );
+  // const absentStudents = useMemo(
+  //   () => studentsData.filter((item: any) => !item.isPresent),
+  //   [studentsData]
+  // );
 
   return (
     <Box display="flex" flexDirection="column">

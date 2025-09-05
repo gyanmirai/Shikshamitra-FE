@@ -1,9 +1,8 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { styled } from '@mui/material/styles';
 
 import { carouselClasses } from '../classes';
 

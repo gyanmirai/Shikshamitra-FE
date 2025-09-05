@@ -3,9 +3,15 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -23,15 +29,6 @@ import {
   LinearProgress,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface Grade {
   id: number;
@@ -125,42 +122,21 @@ const Setting = (props: TabComponentType) => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
-        {/* <CustomSelect
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%', my: 1 } }}
-          options={[
-            { value: 'standard', label: 'Standard' },
-            { value: 'advanced', label: 'Advanced' },
-            { value: 'custom', label: 'Custom' },
-          ]}
-          value="standard"
-          onChange={() => {}}
-          label="Grading System Selection"
-        /> */}
+      <Grid size={{ xs: 12 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" my={1}>
             Grading Scales
           </Typography>
-          <Button
-            startIcon={<Add />}
-            variant="contained"
-            onClick={() => {
-              dialog.onTrue();
-              // setIsEdit(false);
-              // setSelectedSubject(null);
-            }}
-          >
+          <Button startIcon={<Add />} variant="contained" onClick={() => dialog.onTrue()}>
             Add Grade Scale
           </Button>
         </Box>
+
         <CustomizableTable
           tableId="grade-table"
           columns={[
             { id: 'grade', label: 'Grade' },
-            {
-              id: 'range',
-              label: 'Range',
-            },
+            { id: 'range', label: 'Range' },
             {
               id: 'action',
               label: 'Action',
@@ -180,7 +156,6 @@ const Setting = (props: TabComponentType) => {
                         <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
                         Edit
                       </MenuItem>
-
                       <MenuItem
                         onClick={() => {
                           setSelectedGrade(row as any);
@@ -203,6 +178,7 @@ const Setting = (props: TabComponentType) => {
           ]}
           data={grades}
         />
+
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
           <Button variant="contained">Save</Button>
         </Box>
@@ -218,7 +194,7 @@ const Setting = (props: TabComponentType) => {
           onClose={dialog.onFalse}
           data={selectedGrade}
           isEdit={isEdit}
-        />{' '}
+        />
       </CustomDialog>
 
       <CustomDialog
@@ -229,9 +205,9 @@ const Setting = (props: TabComponentType) => {
       >
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete Grade {selectedGrade?.grade} ?
+            Are you sure you want to delete Grade {selectedGrade?.grade}?
           </DialogContentText>
-        </DialogContent>{' '}
+        </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleDelete} variant="contained" color="error">
@@ -240,7 +216,7 @@ const Setting = (props: TabComponentType) => {
         </DialogActions>
       </CustomDialog>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Weighting Adjustments
@@ -281,7 +257,8 @@ const Setting = (props: TabComponentType) => {
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             Grade Submission Settings
@@ -328,13 +305,15 @@ const Setting = (props: TabComponentType) => {
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={{ xs: 12 }}>
         <Typography variant="h6" my={1}>
           Notifications & Alerts
         </Typography>
         <Divider sx={{ my: 1 }} />
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1">Missing Grades Alert</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
@@ -359,7 +338,8 @@ const Setting = (props: TabComponentType) => {
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1">Overdue Assessments Alert</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
@@ -384,7 +364,8 @@ const Setting = (props: TabComponentType) => {
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1">Performance Alerts</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
@@ -402,7 +383,8 @@ const Setting = (props: TabComponentType) => {
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="subtitle1">Performance Alerts</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
@@ -462,7 +444,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Grade"
@@ -473,7 +455,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Start Range"
@@ -484,7 +467,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 error={formik.touched.startRange && Boolean(formik.errors.startRange)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="End Range"

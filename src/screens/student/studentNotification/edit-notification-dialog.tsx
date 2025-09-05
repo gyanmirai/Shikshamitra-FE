@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import {
   Box,
   Grid,
@@ -9,10 +11,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import CustomSelect from 'src/components/custom-select';
-import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
 
 import CustomPlaceholderInput from './textfiled-for-message-with-placeholder';
 
@@ -82,7 +80,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                 border="1px solid #ddd"
                 borderRadius="8px"
               >
-                <Grid item xl={6}>
+                <Grid size={{ lg: 6 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box display="flex" gap={2} alignItems="center">
                       <Typography variant="subtitle1">

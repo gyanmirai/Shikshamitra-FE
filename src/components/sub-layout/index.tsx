@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { usePathname } from 'next/navigation';
-
 import { Box, Slide } from '@mui/material';
-
+import { usePathname } from 'next/navigation';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 
 import { Scrollbar } from '../scrollbar';

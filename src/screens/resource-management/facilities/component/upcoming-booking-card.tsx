@@ -1,6 +1,5 @@
-import { Box, Card, Divider, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Divider, Typography } from '@mui/material';
 
 interface BookingCardProps {
   title: string;

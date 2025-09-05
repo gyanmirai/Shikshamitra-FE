@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { Box, Card, Stack, Divider, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { Box, Card, Stack, Divider, Typography } from '@mui/material';
 
 import type { IHostelRoomDetailCardProps } from './type';
 

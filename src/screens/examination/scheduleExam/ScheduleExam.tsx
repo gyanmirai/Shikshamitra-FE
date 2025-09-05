@@ -3,19 +3,15 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Box, Card, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import examTableData from 'src/json/examination/examTableData.json';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import examTableData from 'src/json/examination/examTableData.json';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/viewTimetableComp';

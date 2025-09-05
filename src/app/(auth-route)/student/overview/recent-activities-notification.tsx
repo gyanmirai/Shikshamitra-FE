@@ -1,12 +1,9 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Button } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Grid, Card, Button } from '@mui/material';
 
 const RecentActivitiesNotification = () => (
-  <Grid2 xs={12} md={6} display="flex" gap={1}>
+  <Grid size={{ xs: 12, md: 6 }} display="flex" gap={1}>
     <Card
       sx={{
         display: 'flex',
@@ -22,7 +19,7 @@ const RecentActivitiesNotification = () => (
             sx={{
               listStyle: 'none',
               width: '100%',
-              padding: 0,
+              p: 0,
             }}
           >
             {[
@@ -49,10 +46,10 @@ const RecentActivitiesNotification = () => (
         </Scrollbar>
       </Box>
     </Card>
+
     <Card
       sx={{
         p: 1,
-        // mt: 1,
         width: '100%',
       }}
     >
@@ -64,7 +61,7 @@ const RecentActivitiesNotification = () => (
             component="ul"
             sx={{
               listStyle: 'none',
-              padding: 0,
+              p: 0,
               width: '100%',
             }}
           >
@@ -86,7 +83,7 @@ const RecentActivitiesNotification = () => (
         </Scrollbar>
       </Box>
     </Card>
-  </Grid2>
+  </Grid>
 );
 
 export default RecentActivitiesNotification;

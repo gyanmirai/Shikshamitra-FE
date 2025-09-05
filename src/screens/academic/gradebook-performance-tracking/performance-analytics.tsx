@@ -4,15 +4,12 @@ import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, useTheme, CardHeader } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
-
+import { Chart, useChart } from 'src/components/chart';
+import { Box, Card, Grid, CardHeader } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Chart, useChart } from 'src/components/chart';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ClassPerformance from './performanceAnalytics/classPerformance';

@@ -1,8 +1,7 @@
 'use client';
 
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { School, AssignmentTurnedIn } from '@mui/icons-material';
-import { Box, Avatar, Typography, LinearProgress } from '@mui/material';
+import { Box, Grid, Avatar, Typography, LinearProgress } from '@mui/material';
 
 const DetailedStudentView = () => (
   <Box
@@ -41,8 +40,8 @@ const DetailedStudentView = () => (
     >
       A+
     </Typography>
-    <Grid2 container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
-      <Grid2 xs={6}>
+    <Grid container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
+      <Grid size={{ xs: 6 }}>
         <Box
           sx={{
             display: 'flex',
@@ -63,8 +62,9 @@ const DetailedStudentView = () => (
             95%
           </Typography>
         </Box>
-      </Grid2>
-      <Grid2 xs={6}>
+      </Grid>
+
+      <Grid size={{ xs: 6 }}>
         <Box
           sx={{
             display: 'flex',
@@ -99,8 +99,8 @@ const DetailedStudentView = () => (
             </Typography>
           </Box>
         </Box>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Card, Grid, Typography, CircularProgress } from '@mui/material';
-
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const StudentPerformance = () => (
   <>
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Student Comparison</Typography>
@@ -38,17 +36,13 @@ const StudentPerformance = () => (
         />
       </Card>
     </Grid>
-    <Grid item xs={12} md={6}>
-      <Card
-        sx={{
-          // Dark background color
-          padding: 2,
-          height: '100%',
-        }}
-      >
+
+    <Grid size={{ xs: 12, md: 6 }}>
+      <Card sx={{ p: 2, height: '100%' }}>
         <Typography variant="h6" gutterBottom>
           Performance Deviation
         </Typography>
+
         <Box display="flex" alignItems="center" mb={2}>
           <Box position="relative" display="inline-flex" mr={2}>
             <CircularProgress

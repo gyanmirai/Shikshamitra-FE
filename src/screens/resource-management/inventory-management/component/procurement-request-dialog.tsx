@@ -1,12 +1,10 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialProcurementValues } from './initialValue';
@@ -54,7 +52,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.selectItem && Boolean(formik.errors.selectItem)}
               >
@@ -75,7 +73,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                 <CustomSelect
                   autoFocus
@@ -93,7 +91,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
                 <CustomSelect
                   autoFocus
@@ -111,7 +109,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   name="quantity"
@@ -125,7 +123,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.estimatedCost && Boolean(formik.errors.estimatedCost)}
               >
@@ -142,7 +140,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.requestedBy && Boolean(formik.errors.requestedBy)}
               >
@@ -159,7 +157,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.prefrerredVendor && Boolean(formik.errors.prefrerredVendor)}
               >
@@ -176,7 +174,7 @@ const ProcurementResourceDialog: React.FC<IProcurementResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.justification && Boolean(formik.errors.justification)}
               >

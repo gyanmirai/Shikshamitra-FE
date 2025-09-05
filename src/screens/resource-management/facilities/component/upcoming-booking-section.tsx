@@ -1,12 +1,8 @@
 import React from 'react';
-
-import { Box, Card, Button, Typography } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import upcomingBookingData from 'src/json/ResourceManagement/facility/upcomingBookingData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button, Typography } from '@mui/material';
+import upcomingBookingData from 'src/json/ResourceManagement/facility/upcomingBookingData.json';
 
 import BookingCard from './upcoming-booking-card';
 

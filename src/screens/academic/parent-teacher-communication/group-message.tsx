@@ -1,8 +1,12 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import { Upload } from 'src/components/upload';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -15,12 +19,6 @@ import {
   FormControl,
   FormControlLabel,
 } from '@mui/material';
-
-import { Upload } from 'src/components/upload';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const GroupMessage = (props: TabComponentType) => {
   const [group, setGroup] = React.useState('entireSchool');
@@ -66,22 +64,25 @@ const GroupMessage = (props: TabComponentType) => {
       </Box>
 
       <Grid container spacing={2} style={{ padding: 20 }}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">Message Editor</Typography>
           <Upload />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">Templates</Typography>
           {/* Avatar icon for personalized templates */}
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <FormControlLabel control={<Switch color="primary" />} label="Immediate sending" />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <FormControlLabel control={<Switch color="primary" />} label="Scheduled sending" />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <DatePicker label="Schedule Date" />
         </Grid>
       </Grid>

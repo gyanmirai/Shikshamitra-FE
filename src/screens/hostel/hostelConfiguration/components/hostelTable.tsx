@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-
-import { Box, MenuItem, MenuList } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useCallback } from 'react';
+import { Box, MenuItem, MenuList } from '@mui/material';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import type { IHostelData, IHostelDataTableProps } from './type';
 

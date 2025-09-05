@@ -2,12 +2,10 @@ import type { Breakpoint } from '@mui/material/styles';
 import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-
-import { varAlpha, hideScrollY } from 'src/theme/styles';
-
 import { Logo } from 'src/components/logo';
+import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
+import { varAlpha, hideScrollY } from 'src/theme/styles';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
 import { settingMenu } from '../config-nav-dashboard';

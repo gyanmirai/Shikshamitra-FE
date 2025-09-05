@@ -1,19 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Button, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import studentGradeData from 'src/json/academic/examination/studentGradeData.json';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import studentGradeData from 'src/json/academic/examination/studentGradeData.json';
+import { Box, Button, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 
 import { AssignGrade } from './assignGradeForm';
 

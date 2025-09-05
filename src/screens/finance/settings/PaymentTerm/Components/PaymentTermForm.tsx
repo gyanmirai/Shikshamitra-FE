@@ -4,19 +4,16 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialPaymentTermData } from './PaymentTermInitialValues';
@@ -84,7 +81,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
         <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={!!(formik.touched.paymentTermName && formik.errors.paymentTermName)}
                 >
@@ -102,7 +99,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={!!(formik.touched.totalInstallments && formik.errors.totalInstallments)}
                 >
@@ -212,10 +209,10 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
             {installments.length > 0 && (
               <Box mt={2}>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <strong>Installments</strong>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <CustomizableTable
                       tableContainerProps={{ sx: { maxHeight: '300px' } }}
                       tableId="installments-table"

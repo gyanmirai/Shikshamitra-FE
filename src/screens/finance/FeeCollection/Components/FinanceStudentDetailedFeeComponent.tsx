@@ -3,15 +3,12 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
-
-import { Box, Tab, Card, Button } from '@mui/material';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import FeeConcession from './ViewDetailsComponent/FeeConcession';
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';

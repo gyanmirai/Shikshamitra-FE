@@ -5,30 +5,25 @@ import type { NavSectionProps, NavItemBaseProps } from 'src/components/nav-secti
 
 import Link from 'next/link';
 import nProgress from 'nprogress';
-import parse from 'autosuggest-highlight/parse';
-import match from 'autosuggest-highlight/match';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { useMemo, useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
 import SvgIcon from '@mui/material/SvgIcon';
+import { varAlpha } from 'src/theme/styles';
+import { useRouter } from 'src/routes/hooks';
+import { Label } from 'src/components/label';
+import parse from 'autosuggest-highlight/parse';
+import match from 'autosuggest-highlight/match';
+import { useHotkeys } from 'react-hotkeys-hook';
 import InputBase from '@mui/material/InputBase';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
+import { isExternalLink } from 'src/routes/utils';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useMemo, useState, useCallback } from 'react';
 import InputAdornment from '@mui/material/InputAdornment';
 import Dialog, { dialogClasses } from '@mui/material/Dialog';
-
-import { useRouter } from 'src/routes/hooks';
-import { isExternalLink } from 'src/routes/utils';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { SearchNotFound } from 'src/components/search-not-found';
 
 import { ResultItem } from './result-item';

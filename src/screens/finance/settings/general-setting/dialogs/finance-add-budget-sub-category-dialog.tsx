@@ -1,14 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { getInitialBudgetSubcategoryValues } from './initialValues';
 import { addBudgetSubcategoryValidationSchema } from './validationSchema';
@@ -63,7 +60,7 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
         }}
       >
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={touched.budgetCategoryId && Boolean(errors.budgetCategoryId)}>
               <CustomSelect
                 label="Budget Category *"
@@ -89,7 +86,7 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={isSubcategoryNameError}>
               <TextField
                 size="small"

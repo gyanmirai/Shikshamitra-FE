@@ -5,10 +5,8 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-
-import { fShortenNumber } from 'src/utils/format-number';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { fShortenNumber } from 'src/utils/format-number';
 import { Iconify, FlagIcon } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------

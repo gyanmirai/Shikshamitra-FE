@@ -6,9 +6,19 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { DialogScrollContent } from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
+import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
 import {
   Grid,
   Chip,
@@ -19,20 +29,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
-import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialValues } from './IssueInitialValues';
 import { getIssueBookSchema } from './IssurFormValidationSchema';
@@ -161,7 +157,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Book Category */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -189,7 +185,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -220,7 +216,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Edition */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
               <CustomSelect
                 label="Edition *"
@@ -250,7 +246,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           {/* Availability Indicator + Reservation */}
           {bookSelected && (
             <>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 {availableQuantity > 0 ? (
                   <Alert
                     severity="success"
@@ -305,7 +301,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
               </Grid>
 
               {showReservation && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="subtitle1">Reserved List</Typography>
                   <CustomizableTable
                     tableId="reservation-table"
@@ -322,7 +318,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           )}
 
           {/* Class */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
               <CustomSelect
                 label="Class *"
@@ -347,7 +343,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Division */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
               <CustomSelect
                 label="Division *"
@@ -371,7 +367,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Student */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.student && formik.errors.student) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -414,7 +410,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Quantity */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.quantity && formik.errors.quantity)}>
               <TextField
                 fullWidth
@@ -431,7 +427,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Issue Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
               <DatePicker
                 label="Issue Date *"
@@ -451,7 +447,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Due Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
               <DatePicker
                 label="Due Date *"

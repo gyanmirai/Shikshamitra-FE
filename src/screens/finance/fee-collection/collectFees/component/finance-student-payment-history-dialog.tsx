@@ -1,22 +1,18 @@
 // Add MenuItem import
 import React from 'react';
-
 import { Typography } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable'; // Make sure Iconify is correctly imported
 import type { LabelColor } from 'src/components/label';
 
+import { Label } from 'src/components/label';
+import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
-
 import {
   PaymentStatusType,
   PaymentStatusOptions,
   PaymentStatusTypeColors,
 } from 'src/enums/payment-status';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
 
 interface FinanceStudentPaymentHistoryDialogProps {
   dialogValue: boolean;

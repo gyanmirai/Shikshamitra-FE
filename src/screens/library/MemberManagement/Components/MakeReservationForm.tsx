@@ -4,24 +4,20 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Card, Button, Avatar, Typography, CardContent, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetBookTitleOptionsQuery,
-  useGetBookCategoryOptionsQuery,
-} from 'src/redux/memberManagement/memberManagementApi';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Card, Button, Avatar, Typography, CardContent, DialogActions } from '@mui/material';
+import {
+  useGetBookTitleOptionsQuery,
+  useGetBookCategoryOptionsQuery,
+} from 'src/redux/memberManagement/memberManagementApi';
 
 import { makeReservationValidationSchema } from './MemberManagementSchema';
 import { getInitialReservationData } from './MemberManagementInitialValues';
@@ -72,7 +68,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
             </Typography>
 
             <Grid container spacing={2} alignItems="center">
-              <Grid item>
+              <Grid size={12}>
                 <Avatar
                   src="/assets/images/avatar/avatar-1.jpg"
                   alt={selectedMember?.name || 'Member'}
@@ -80,9 +76,9 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs>
+              <Grid size={12}>
                 <Grid container spacing={2}>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Member Name
                     </Typography>
@@ -91,7 +87,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Member ID
                     </Typography>
@@ -100,7 +96,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Class/Division
                     </Typography>
@@ -109,7 +105,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Overdue Return Books
                     </Typography>
@@ -118,7 +114,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Role
                     </Typography>
@@ -127,7 +123,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Contact No.
                     </Typography>
@@ -136,7 +132,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Current Issued Books
                     </Typography>
@@ -145,7 +141,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Reserved Books
                     </Typography>
@@ -161,7 +157,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
 
         <Grid container spacing={2}>
           {/* Book Category */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -177,7 +173,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -193,7 +189,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
           </Grid>
 
           {/* Requested Date */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField
               error={!!(formik.touched.requestedDate && formik.errors.requestedDate) || false}
             >

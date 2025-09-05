@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-
+import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Grid,
@@ -10,21 +12,16 @@ import {
   Button,
   Tooltip,
   ListItem,
-  useTheme,
   Typography,
   CardContent,
 } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 
 import { subjects } from '../dashboard';
 
 const SubjectsList = () => {
   const theme = useTheme();
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card
         sx={{
           borderRadius: 2,

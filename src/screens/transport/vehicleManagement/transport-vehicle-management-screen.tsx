@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, Paper } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';

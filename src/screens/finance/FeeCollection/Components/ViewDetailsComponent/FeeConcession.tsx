@@ -1,5 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
+import { Label } from 'src/components/label';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeConcessionsQuery } from 'src/redux/feeCollection/feeConcession';
 import {
@@ -7,10 +10,6 @@ import {
   ConcessionStatusTypeColor,
   ConcessionStatusTypeOptions,
 } from 'src/enums/concession-type';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentFee } from '../type';
 

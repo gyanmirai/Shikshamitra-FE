@@ -3,11 +3,8 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -16,6 +13,7 @@ import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialResourceRequestMaintenanceValues } from '../initialValue';
@@ -44,7 +42,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
         <Scrollbar sx={{ p: 2, height: '100%', bgcolor: 'background.neutral' }}>
           <Grid container spacing={2}>
             {/* Name */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                 <TextField
                   disabled
@@ -59,7 +57,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.assignedDate && Boolean(formik.errors.assignedDate)}
               >
@@ -81,7 +79,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                 <CustomSelect
                   disabled
@@ -95,7 +93,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}
               >
@@ -111,7 +109,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   disabled
@@ -127,7 +125,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.measurementUnit && Boolean(formik.errors.measurementUnit)}
               >
@@ -146,7 +144,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
             </Grid>
 
             {/* Priority (Optional) */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
                 <CustomSelect
                   disabled={isDisabled}
@@ -164,7 +162,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.requiredByDate && Boolean(formik.errors.requiredByDate)}
               >
@@ -188,7 +186,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
             </Grid>
 
             {/* Issue Description */}
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.issueDescription && Boolean(formik.errors.issueDescription)}
               >
@@ -205,7 +203,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.reasonByAdmin && Boolean(formik.errors.reasonByAdmin)}
               >
@@ -221,7 +219,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.assignedEngineer && Boolean(formik.errors.assignedEngineer)}
               >
@@ -241,7 +239,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.costing && Boolean(formik.errors.costing)}>
                 <NumericFormatCustom
                   disabled={maintenanceStatus !== 'pending'}
@@ -257,7 +255,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
               </ShakingTextField>
             </Grid>
             {(maintenanceStatus === 'Not Repaired' || maintenanceStatus === 'dispose') && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={
                     formik.touched.notRepairbleReason && Boolean(formik.errors.notRepairbleReason)
@@ -281,7 +279,7 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
             )}
 
             {maintenanceStatus === 'Repair Completed' && (
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

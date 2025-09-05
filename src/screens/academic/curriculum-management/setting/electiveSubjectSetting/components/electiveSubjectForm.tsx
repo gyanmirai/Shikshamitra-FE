@@ -2,11 +2,7 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -14,6 +10,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getElectiveSubjectInitialValues } from './initialValues';
 import { electiveSubjectValidationSchema } from './validationSchema';
@@ -53,7 +50,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
           <Scrollbar sx={{ p: 2, height: '240px' }}> */}
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
               <TextField
                 fullWidth
@@ -61,7 +58,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 name="title"
                 onChange={(e) => {
                   const value = e.target.value
-                    // Remove everything except letters and spaces
+                    // Remove everything except letters, numbers, spaces, dash, colon
                     .replace(/[^a-zA-Z-:0-9\s]/g, '')
                     // Capitalize each word
                     .split(' ')
@@ -79,7 +76,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ResponsiveMultiSelect
               label="Select Subjects *"
               options={['Sanskrit', 'Hindi', 'Physical Training', 'Computer']}
@@ -104,7 +101,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
             >

@@ -1,12 +1,10 @@
 import React from 'react';
-
 import InfoIcon from '@mui/icons-material/Info';
 import RouteIcon from '@mui/icons-material/Route';
 import PersonIcon from '@mui/icons-material/Person';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import { Grid, Card, Stack, Avatar, Divider, Typography, CardContent } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Grid, Card, Stack, Avatar, Divider, Typography, CardContent } from '@mui/material';
 
 import type { IViewVehicleDetailsDialogProps } from '../interface/vehicle-interface';
 
@@ -17,7 +15,7 @@ const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ ve
   return (
     <Grid container spacing={3}>
       {/* General Information */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card elevation={3} sx={{ bgcolor: '#E5F6FD', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
@@ -45,7 +43,7 @@ const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ ve
       </Grid>
 
       {/* Insurance Details */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card elevation={3} sx={{ bgcolor: '#E8F5E9', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
@@ -72,7 +70,7 @@ const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ ve
       </Grid>
 
       {/* Registration Details */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card elevation={3} sx={{ bgcolor: '#FFF3E0', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
@@ -98,7 +96,7 @@ const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ ve
       </Grid>
 
       {/* Assigned Details */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card elevation={3} sx={{ bgcolor: '#EDE7F6', height: '100%' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
@@ -123,7 +121,7 @@ const ViewVehicleDetailsDialog: React.FC<IViewVehicleDetailsDialogProps> = ({ ve
       </Grid>
 
       {/* Assigned Students */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Card elevation={3} sx={{ bgcolor: '#F5F5F5' }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>

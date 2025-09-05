@@ -3,18 +3,15 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { getGatePassInitialValues } from '../initialValue';
 import { gatePassValidationSchema } from '../validationSchema';
@@ -37,7 +34,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.studentName && formik.errors.studentName) || false}
                 >
@@ -70,7 +67,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.reason && formik.errors.reason) || false}
                 >
@@ -89,7 +86,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   disabled={isDisabled}
                   label="Valid From *"
@@ -113,7 +110,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   disabled={isDisabled}
                   label="Valid Until *"
@@ -137,7 +134,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.specailInstructions && formik.errors.specailInstructions) ||

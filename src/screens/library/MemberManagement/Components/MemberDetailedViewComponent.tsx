@@ -1,16 +1,12 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Tab, Grid, Button, Avatar, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Tab, Grid, Button, Avatar, Typography } from '@mui/material';
 
 import IssuedBooks from './ViewDetailsComponent/IssuedBooks';
 import FinesCharges from './ViewDetailsComponent/FinesCharges';
@@ -78,7 +74,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
         </Typography>
 
         <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
-          <Grid item>
+          <Grid size={{ xs: 12 }}>
             <Avatar
               src="/assets/images/avatar/avatar-1.jpg"
               alt={member?.name || 'Member'}
@@ -86,9 +82,9 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
             />
           </Grid>
 
-          <Grid item xs>
+          <Grid size={{ xs: 12 }}>
             <Grid container spacing={2}>
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Member Name
                 </Typography>
@@ -101,7 +97,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Member ID
                 </Typography>
@@ -114,7 +110,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Current Issued Books
                 </Typography>
@@ -127,7 +123,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Overdue Return Books
                 </Typography>
@@ -140,7 +136,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Role
                 </Typography>
@@ -153,7 +149,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Contact No.
                 </Typography>
@@ -166,7 +162,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Pending Return Books
                 </Typography>
@@ -179,7 +175,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Reserved Books
                 </Typography>

@@ -4,12 +4,29 @@
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
-import Grid from '@mui/material/Unstable_Grid2';
+import { useBoolean } from 'src/hooks/use-boolean';
+import PhoneInput from 'src/components/phone-input';
+import { Scrollbar } from 'src/components/scrollbar';
+import SubmitButton from 'src/components/submit-button';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import FileUploader1 from 'src/components/custom-upload/custom-upload';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
 import {
-  Box,
+  useAddTenantMutation,
+  useGetAllTenantsQuery,
+  useGetTenantByIdQuery,
+  useUpdateTenantMutation,
+} from 'src/redux/tenant/tenantApi';
+import { Box ,
+  Grid,
   Card,
   Stack,
   Dialog,
@@ -20,28 +37,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useAddTenantMutation,
-  useGetAllTenantsQuery,
-  useGetTenantByIdQuery,
-  useUpdateTenantMutation,
-} from 'src/redux/tenant/tenantApi';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import { Scrollbar } from 'src/components/scrollbar';
-import SubmitButton from 'src/components/submit-button';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import FileUploader1 from 'src/components/custom-upload/custom-upload';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
 
 import { basicInformationvalidationSchema } from './validationSchema';
 
@@ -184,70 +179,62 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
         }}
       >
         <Grid container spacing={3}>
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Box>
               <Grid container spacing={3}>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
                     name="instituteName *"
                     label="Institute Name"
                     value={values.instituteName}
-                    onChange={(e) => {
-                      const newValue = capitalize(e.target.value);
-                      setFieldValue('instituteName', newValue);
-                    }}
+                    onChange={(e) => setFieldValue('instituteName', capitalize(e.target.value))}
                     error={touched.instituteName && Boolean(errors.instituteName)}
                     helperText={touched.instituteName && errors.instituteName}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
                     name="addressLine1"
                     label="Building No./Flat/House No. *"
                     value={values.addressLine1}
-                    onChange={(e) => {
-                      const newValue = capitalize(e.target.value);
-                      setFieldValue('addressLine1', newValue);
-                    }}
+                    onChange={(e) => setFieldValue('addressLine1', capitalize(e.target.value))}
                     error={touched.addressLine1 && Boolean(errors.addressLine1)}
                     helperText={touched.addressLine1 && errors.addressLine1}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
                     name="addressLine2"
                     label="Area/Locality/Road Name *"
                     value={values.addressLine2}
-                    onChange={(e) => {
-                      const newValue = capitalize(e.target.value);
-                      setFieldValue('addressLine2', newValue);
-                    }}
+                    onChange={(e) => setFieldValue('addressLine2', capitalize(e.target.value))}
                     error={touched.addressLine2 && Boolean(errors.addressLine2)}
                     helperText={touched.addressLine2 && errors.addressLine2}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
                     name="addressLine3"
                     label="Landmark"
                     value={values.addressLine3}
-                    onChange={(e) => {
-                      const newValue = capitalize(e.target.value);
-                      setFieldValue('addressLine3', newValue);
-                    }}
+                    onChange={(e) => setFieldValue('addressLine3', capitalize(e.target.value))}
                     error={touched.addressLine3 && Boolean(errors.addressLine3)}
                     helperText={touched.addressLine3 && errors.addressLine3}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <CountryComponent
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
@@ -257,15 +244,26 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     size="small"
                     value={values.country}
                     fullWidth
-                    // @ts-ignore
-                    error={touched.country && Boolean(errors?.country?.name)}
-                    // @ts-ignore
-                    helperText={touched.country && errors?.country?.name}
-                    // fieldProps={{ size: 'small' }}
+                    error={
+                      touched.country &&
+                      typeof errors.country === 'object' &&
+                      errors.country !== null &&
+                      'name' in errors.country &&
+                      Boolean((errors.country as any).name)
+                    }
+                    helperText={
+                      touched.country &&
+                      typeof errors.country === 'object' &&
+                      errors.country !== null &&
+                      'name' in errors.country
+                        ? (errors.country as any).name
+                        : ''
+                    }
                     textFieldProps={{ label: 'Country *', size: 'small' }}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <StateComponent
                     onChange={(_e, value) => {
                       setFieldValue('city', null);
@@ -281,20 +279,35 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     textFieldProps={{ label: 'State *', size: 'small' }}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <CityComponent
                     value={values.city}
                     onChange={(_e, value) => setFieldValue('city', value)}
                     stateValue={values.stateProvince}
                     fullWidth
-                    // @ts-ignore
-                    error={touched.city && Boolean(errors.city?.name)}
-                    // @ts-ignore
-                    helperText={touched.city && errors.city?.name}
+                    error={
+                      touched.city &&
+                      Boolean(
+                        typeof errors.city === 'object' &&
+                          errors.city !== null &&
+                          'name' in errors.city &&
+                          (errors.city as any).name
+                      )
+                    }
+                    helperText={
+                      touched.city &&
+                      typeof errors.city === 'object' &&
+                      errors.city !== null &&
+                      'name' in errors.city
+                        ? (errors.city as any).name
+                        : ''
+                    }
                     textFieldProps={{ label: 'City *', size: 'small' }}
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -302,10 +315,8 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     label="ZIP/Postal Code *"
                     value={values.zipPostalCode}
                     onChange={(e) => {
-                      const { value } = e.target;
-                      if (value.length <= 6) {
-                        setFieldValue('zipPostalCode', value);
-                      }
+                      if (e.target.value.length <= 6)
+                        setFieldValue('zipPostalCode', e.target.value);
                     }}
                     type="number"
                     error={touched.zipPostalCode && Boolean(errors.zipPostalCode)}
@@ -313,13 +324,11 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                   />
                 </Grid>
 
-                <Grid xs={12} sm={6} md={4} lg={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <PhoneInput
                     name="contactNumber"
                     value={values.contactNumber}
-                    onChange={(value) => {
-                      setFieldValue('contactNumber', value);
-                    }}
+                    onChange={(value) => setFieldValue('contactNumber', value)}
                     error={touched.contactNumber && Boolean(errors.contactNumber)}
                     helperText={touched.contactNumber && errors.contactNumber}
                     variant="outlined"
@@ -327,7 +336,8 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     size="small"
                   />
                 </Grid>
-                <Grid xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -341,15 +351,16 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
                     InputProps={{
                       startAdornment: (
                         <>
-                          <Iconify icon="mdi-light:email" />{' '}
-                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                          <Iconify icon="mdi-light:email" />
+                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />
                         </>
                       ),
                     }}
                   />
                 </Grid>
+
                 {!editData && (
-                  <Grid xs={12} sm={6} md={4} lg={3}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -367,36 +378,16 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
               </Grid>
             </Box>
           </Grid>
+
           {[
             { name: 'instituteLogo', title: 'Upload Institute Logo' },
             { name: 'instituteBanner', title: 'Upload Institute Banner' },
             { name: 'principleSign', title: 'Upload Principle Sign' },
-          ].map((item, index) => (
-            <Grid xs={4}>
-              <BasicInformationAssets
-                formik={formik}
-                name={item.name}
-                title={item.title}
-                key={item.name}
-              />
+          ].map((item) => (
+            <Grid key={item.name} size={{ xs: 4 }}>
+              <BasicInformationAssets formik={formik} name={item.name} title={item.title} />
             </Grid>
           ))}
-          {/* <Grid xs={4}>
-            <BasicInformationAssets
-              formik={formik}
-              name="instituteBanner"
-              title="Upload Institute Banner"
-              key="instituteBanner"
-            />
-          </Grid>
-          <Grid xs={4}>
-            <BasicInformationAssets
-              formik={formik}
-              name="principleSign"
-              title="Upload Principle Sign"
-              key="principleSign"
-            />
-          </Grid> */}
         </Grid>
       </Scrollbar>
 

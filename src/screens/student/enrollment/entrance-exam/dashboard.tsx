@@ -1,12 +1,22 @@
 import type { BoxProps, CardProps } from '@mui/material';
 
-import React, { useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import React, { useCallback } from 'react';
+import { orderBy } from 'src/utils/helper';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import { Upload, ViewAgenda } from '@mui/icons-material';
-import {
-  Box,
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import { fNumber, fShortenNumber } from 'src/utils/format-number';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
+import { Box ,
+  Grid,
   Card,
   Button,
   Avatar,
@@ -17,21 +27,6 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { orderBy } from 'src/utils/helper';
-import { fNumber, fShortenNumber } from 'src/utils/format-number';
-
-import { varAlpha } from 'src/theme/styles';
-import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 export const ResultForm = () => (
   <Box>
@@ -156,7 +151,8 @@ const EntranceExamDashboard = () => {
           </LoadingButton>
         }
       />
-      <Grid xs={12} md={4}>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             display: 'flex',
@@ -209,11 +205,11 @@ const EntranceExamDashboard = () => {
           </Box>
         </Card>
       </Grid>
-      <Grid xs={12} md={4}>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             display: 'flex',
-
             p: 3,
             height: '100%',
           }}
@@ -226,7 +222,8 @@ const EntranceExamDashboard = () => {
           </Box>
         </Card>
       </Grid>
-      <Grid xs={12} md={4}>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             display: 'flex',
@@ -246,7 +243,7 @@ const EntranceExamDashboard = () => {
         </Card>
       </Grid>
 
-      <Grid xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TopPerformer
           title="Top Performer"
           sx={{ height: '100%' }}
@@ -266,7 +263,8 @@ const EntranceExamDashboard = () => {
           ]}
         />
       </Grid>
-      <Grid xs={12} md={4}>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <AppCurrentDownload
           title="Pass-Fail Ratio"
           subheader="Number of students passed vs failed"
@@ -278,13 +276,9 @@ const EntranceExamDashboard = () => {
           }}
         />
       </Grid>
-      <Grid xs={12} md={4}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 3,
-          }}
-        >
+
+      <Grid size={{ xs: 12, md: 4 }}>
+        <Card sx={{ display: 'flex', p: 3 }}>
           <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ typography: 'subtitle2' }}>Quick Actions</Box>
             <Box display="flex" gap={2} flexWrap="wrap" pt={2}>
@@ -315,31 +309,20 @@ const EntranceExamDashboard = () => {
             tableId="scheduled-exam"
             columns={[
               { id: 'date', label: 'Date' },
-              {
-                id: 'name',
-                label: 'Student',
-              },
-              {
-                id: 'medium',
-                label: 'Medium',
-              },
-              {
-                id: 'class',
-                label: 'Class',
-              },
-              {
-                id: 'totalMarks',
-                label: 'Total Marks',
-              },
-              {
-                id: 'obtainedMarks',
-                label: 'Obtained Marks',
-              },
+              { id: 'name', label: 'Student' },
+              { id: 'medium', label: 'Medium' },
+              { id: 'class', label: 'Class' },
+              { id: 'totalMarks', label: 'Total Marks' },
+              { id: 'obtainedMarks', label: 'Obtained Marks' },
               {
                 id: 'percentage',
                 label: 'Percentage',
                 render(value, row) {
-                  return `${typeof row.obtainedMarks === 'string' ? 0 : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)}%`;
+                  return `${
+                    typeof row.obtainedMarks === 'string'
+                      ? 0
+                      : ((row.obtainedMarks / row.totalMarks) * 100).toFixed(2)
+                  }%`;
                 },
               },
               {
@@ -361,7 +344,7 @@ const EntranceExamDashboard = () => {
                 id: 'admission',
                 label: '',
                 isSort: false,
-                render(value, row) {
+                render() {
                   return (
                     <Button variant="contained" size="small" color="primary">
                       Admission
@@ -372,9 +355,7 @@ const EntranceExamDashboard = () => {
               {
                 id: 'action',
                 label: 'Action',
-                render: (value, row) => (
-                  <ThreeDotsActions placement="right-top" actions={actions} />
-                ),
+                render: () => <ThreeDotsActions placement="right-top" actions={actions} />,
               },
             ]}
             data={dummyData}

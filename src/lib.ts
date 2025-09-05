@@ -33,6 +33,6 @@ export const sessionOptions: SessionOptions = {
 };
 
 export async function getSession(): Promise<IronSession<SessionData>> {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+  const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
   return session;
 }

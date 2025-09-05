@@ -2,7 +2,6 @@ import type { BoxProps } from '@mui/material/Box';
 import type { CardProps } from '@mui/material/Card';
 
 import { useState } from 'react';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -10,12 +9,11 @@ import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import CardHeader from '@mui/material/CardHeader';
-import FormControlLabel from '@mui/material/FormControlLabel';
-
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------

@@ -1,6 +1,10 @@
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useEffect } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import { UploadBox } from 'src/components/upload/upload-box';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -11,13 +15,6 @@ import {
   Typography,
   DialogContent,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import { UploadBox } from 'src/components/upload/upload-box';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import { allStudents } from '../notification-data';
 import CommunicationChannel from './communication-channel-component';
@@ -116,8 +113,9 @@ const SendCustomAlert = () => {
       <DialogContent>
         {/* Select Class */}
         <Grid container spacing={2}>
+          {/* Filter Section */}
           <Grid container spacing={2} mt={2}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Class"
                 options={[
@@ -131,7 +129,7 @@ const SendCustomAlert = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Division"
                 options={[
@@ -145,7 +143,7 @@ const SendCustomAlert = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Role"
                 options={
@@ -162,7 +160,7 @@ const SendCustomAlert = () => {
               />
             </Grid>
 
-            <Grid item xs={12} display="flex" justifyContent="flex-end" gap={2}>
+            <Grid size={{ xs: 12 }} display="flex" justifyContent="flex-end" gap={2}>
               <Button
                 startIcon={<Iconify icon={GlobalIcons.resetFilter} />}
                 type="button"
@@ -180,7 +178,8 @@ const SendCustomAlert = () => {
             </Grid>
           </Grid>
 
-          <Grid item xs={12} pb="80px">
+          {/* Table Section */}
+          <Grid size={{ xs: 12 }} pb="80px">
             <CustomizableTable
               isFilter={false}
               isLoading={false}
@@ -204,15 +203,14 @@ const SendCustomAlert = () => {
                         }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedStudents(filteredStudents.map((student) => student.id));
+                            setSelectedStudents(filteredStudents.map((s) => s.id));
                           } else {
-                            setSelectedStudents([]); // Deselect all
+                            setSelectedStudents([]);
                           }
                         }}
                       />
                     );
                   },
-
                   render: (_, row) => (
                     <Checkbox
                       checked={selectedStudents.includes(row.id)}
@@ -226,184 +224,174 @@ const SendCustomAlert = () => {
               ]}
             />
           </Grid>
-        </Grid>
 
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            zIndex: 1000,
-            width: openBox ? '1000px' : '300px', // Adjust width when open
-            height: openBox ? '600px' : 'auto', // Adjust height when open
-            backgroundColor: 'white',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            boxShadow: 3,
-          }}
-        >
-          <Button
-            endIcon={openBox ? <Iconify icon="fe:arrow-down" /> : <Iconify icon="fe:arrow-up" />}
-            variant="outlined"
-            color="primary"
-            onClick={() => setOpenBox(!openBox)}
-            sx={{ width: '100%', borderRadius: 1 }}
+          {/* Fixed Communication Box */}
+          <Box
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              zIndex: 1000,
+              width: openBox ? '1000px' : '300px',
+              height: openBox ? '600px' : 'auto',
+              backgroundColor: 'white',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              boxShadow: 3,
+            }}
           >
-            Communication
-          </Button>
-          <Collapse in={openBox}>
-            <Box p={2}>
-              {/* Use the reusable CommunicationChannel component */}
-              <CommunicationChannel
-                forCustomAlerts
-                emailRecipents={['abc@gmail.com', 'xyz@gmail.com']}
-                mobileRecipients={['91888878778', '9865787689']}
-                handleInputChange={handleInputChange}
-              />
-            </Box>
-          </Collapse>
-        </Box>
+            <Button
+              endIcon={openBox ? <Iconify icon="fe:arrow-down" /> : <Iconify icon="fe:arrow-up" />}
+              variant="outlined"
+              color="primary"
+              onClick={() => setOpenBox(!openBox)}
+              sx={{ width: '100%', borderRadius: 1 }}
+            >
+              Communication
+            </Button>
+            <Collapse in={openBox}>
+              <Box p={2}>
+                <CommunicationChannel
+                  forCustomAlerts
+                  emailRecipents={['abc@gmail.com', 'xyz@gmail.com']}
+                  mobileRecipients={['91888878778', '9865787689']}
+                  handleInputChange={handleInputChange}
+                />
+              </Box>
+            </Collapse>
+          </Box>
 
-        {/* Communication Method Specific Inputs */}
-        <Grid container spacing={2} py="20px">
-          {/* Email Fields */}
-          {selectedMethods.email && (
-            <>
-              <Typography sx={{ pl: '20px', pt: '20px', fontSize: '17px' }}>
-                Email Details
-              </Typography>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Email Recipients"
-                  name="emailRecipients"
-                  value={formData.emailRecipients}
-                  onChange={handleInputChange}
-                  placeholder="user1@example.com, user2@example.com"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="CC Recipients"
-                  name="ccRecipients"
-                  value={formData.ccRecipients}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Email Subject"
-                  name="emailSubject"
-                  value={formData.emailSubject}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="Email Content"
-                  name="emailContent"
-                  value={formData.emailContent}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-            </>
-          )}
-
-          {/* SMS Fields */}
-          {selectedMethods.sms && (
-            <>
-              <Typography sx={{ pl: '20px', pt: '20px', fontSize: '17px' }}>Sms Details</Typography>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="SMS Recipients"
-                  name="phoneRecipients"
-                  value={formData.phoneRecipients}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="SMS Message"
-                  name="smsContent"
-                  value={formData.smsContent}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-            </>
-          )}
-
-          {/* WhatsApp Fields */}
-          {selectedMethods.whatsapp && (
-            <>
-              <Typography sx={{ pl: '20px', pt: '20px', fontSize: '17px' }}>
-                WhatsApp Details
-              </Typography>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="WhatsApp Recipients"
-                  name="whatsappRecipients"
-                  value={formData.whatsappRecipients}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="WhatsApp Message"
-                  name="whatsappMessage"
-                  value={formData.whatsappMessage}
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Attach Media (Optional)</Typography>
-                <UploadBox
-                  onDrop={(acceptedFiles) => handleMediaUpload(acceptedFiles)}
-                  placeholder={
-                    <Box
-                      sx={{
-                        gap: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        color: 'text.disabled',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Iconify icon="eva:cloud-upload-fill" width={40} />
-                      <Typography variant="body2">Upload Document</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
-                />
-              </Grid>
-
-              {/* Show Uploaded File Name */}
-              {whatsappMedia && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="textSecondary">
-                    Selected File: {whatsappMedia.name}
-                  </Typography>
+          {/* Communication Method Inputs */}
+          <Grid container spacing={2} py="20px">
+            {/* Email */}
+            {selectedMethods.email && (
+              <>
+                <Typography sx={{ pl: 2, pt: 2, fontSize: '17px' }}>Email Details</Typography>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="Email Recipients"
+                    name="emailRecipients"
+                    value={formData.emailRecipients}
+                    onChange={handleInputChange}
+                    placeholder="user1@example.com, user2@example.com"
+                  />
                 </Grid>
-              )}
-            </>
-          )}
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="CC Recipients"
+                    name="ccRecipients"
+                    value={formData.ccRecipients}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="Email Subject"
+                    name="emailSubject"
+                    value={formData.emailSubject}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Email Content"
+                    name="emailContent"
+                    value={formData.emailContent}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+              </>
+            )}
+
+            {/* SMS */}
+            {selectedMethods.sms && (
+              <>
+                <Typography sx={{ pl: 2, pt: 2, fontSize: '17px' }}>SMS Details</Typography>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="SMS Recipients"
+                    name="phoneRecipients"
+                    value={formData.phoneRecipients}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="SMS Message"
+                    name="smsContent"
+                    value={formData.smsContent}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+              </>
+            )}
+
+            {/* WhatsApp */}
+            {selectedMethods.whatsapp && (
+              <>
+                <Typography sx={{ pl: 2, pt: 2, fontSize: '17px' }}>WhatsApp Details</Typography>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="WhatsApp Recipients"
+                    name="whatsappRecipients"
+                    value={formData.whatsappRecipients}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="WhatsApp Message"
+                    name="whatsappMessage"
+                    value={formData.whatsappMessage}
+                    onChange={handleInputChange}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle1">Attach Media (Optional)</Typography>
+                  <UploadBox
+                    onDrop={(acceptedFiles) => handleMediaUpload(acceptedFiles)}
+                    placeholder={
+                      <Box
+                        sx={{
+                          gap: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'text.disabled',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        <Iconify icon="eva:cloud-upload-fill" width={40} />
+                        <Typography variant="body2">Upload Document</Typography>
+                      </Box>
+                    }
+                    sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
+                  />
+                </Grid>
+
+                {whatsappMedia && (
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="body2" color="textSecondary">
+                      Selected File: {whatsappMedia.name}
+                    </Typography>
+                  </Grid>
+                )}
+              </>
+            )}
+          </Grid>
         </Grid>
       </DialogContent>
     </form>

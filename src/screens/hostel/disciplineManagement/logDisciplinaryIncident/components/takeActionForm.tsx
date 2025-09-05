@@ -2,11 +2,20 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CustomSelect from 'src/components/custom-select';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -20,19 +29,6 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { incidentValidationSchema } from './validationSchema';
 import { getTakeActionInitialValues } from './takeActionInitialValues';
@@ -59,11 +55,10 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
       <form onSubmit={formik.handleSubmit}>
         <Box display="flex" flexDirection="column" gap={2}>
           <Scrollbar sx={{ p: 2, maxHeight: '70vh', overflowY: 'auto' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.hostelName && formik.errors.hostelName) || false}
-                >
+            <Grid container spacing={2}>
+              {/* Hostel Name */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.hostelName && formik.errors.hostelName)}>
                   <CustomSelect
                     size="small"
                     label="Hostel Name"
@@ -71,9 +66,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                     fullWidth
                     disabled
                     value={formik.values.hostelName}
-                    onChange={(val) => {
-                      formik.setFieldValue('hostelName', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('hostelName', val)}
                     error={formik.touched.hostelName && Boolean(formik.errors.hostelName)}
                     helperText={
                       formik.touched.hostelName && formik.errors.hostelName
@@ -85,10 +78,9 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.students && formik.errors.students) || false}
-                >
+              {/* Students */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.students && formik.errors.students)}>
                   <FormControl
                     fullWidth
                     error={formik.touched.students && Boolean(formik.errors.students)}
@@ -141,9 +133,10 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              {/* Incident Date */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentDate && formik.errors.incidentDate) || false}
+                  error={!!(formik.touched.incidentDate && formik.errors.incidentDate)}
                 >
                   <DatePicker
                     label="Incident Date"
@@ -166,9 +159,10 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              {/* Incident Time */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentTime && formik.errors.incidentTime) || false}
+                  error={!!(formik.touched.incidentTime && formik.errors.incidentTime)}
                 >
                   <TimePicker
                     label="Incident Time"
@@ -191,9 +185,10 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              {/* Incident Type */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentType && formik.errors.incidentType) || false}
+                  error={!!(formik.touched.incidentType && formik.errors.incidentType)}
                 >
                   <CustomSelect
                     size="small"
@@ -202,9 +197,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                     fullWidth
                     disabled
                     value={formik.values.incidentType}
-                    onChange={(val) => {
-                      formik.setFieldValue('incidentType', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('incidentType', val)}
                     error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                     helperText={
                       formik.touched.incidentType && formik.errors.incidentType
@@ -216,28 +209,22 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              {/* Incident Description */}
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
+                  error={!!(formik.touched.description && formik.errors.description)}
                 >
                   <Editor
                     value={formik.values.description}
-                    onChange={(value) => {
-                      // setQuestion(value);
-                      formik.setFieldValue('description', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('description', value)}
                     editable={false}
                     placeholder="Incident Description"
-                    error={formik.touched.description && Boolean(formik.errors.description)}
-                    helperText={
-                      formik.touched.description && formik.errors.description
-                        ? String(formik.errors.description)
-                        : ''
-                    }
-                  />{' '}
+                  />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Upload Attachments */}
+              <Grid size={{ xs: 12 }}>
                 <UploadBox
                   onDrop={() => {}}
                   disabled={!formik.values.actionName}
@@ -255,15 +242,12 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                       <Typography variant="body2">Drag Attachment</Typography>
                     </Box>
                   }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
+                  sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Take Action */}
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="h6">Take Action</Typography>
                 <Typography
                   variant="body2"
@@ -272,9 +256,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                   color="primary.main"
                   fontSize={12}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    addActionDialog.onTrue();
-                  }}
+                  onClick={() => addActionDialog.onTrue()}
                 >
                   Add Action ?
                 </Typography>
@@ -285,14 +267,14 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                 >
                   <DisciplineActionForm
                     dialog={addActionDialog}
-                    onClose={() => {
-                      addActionDialog.onFalse();
-                    }}
+                    onClose={() => addActionDialog.onFalse()}
                     editData={null}
-                  />{' '}
+                  />
                 </CustomDialog>
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Action Checkboxes */}
+              <Grid size={{ xs: 12 }}>
                 <Box display="flex" flexDirection="row" gap={2}>
                   {['Warning', 'Parent Meeting', 'Fine', 'Suspension', 'Community Service'].map(
                     (label) => (
@@ -310,24 +292,23 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
                   )}
                 </Box>
               </Grid>
-              <Grid item xs={12}>
-                <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
-                >
+
+              {/* Notes */}
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField error={!!(formik.touched.note && formik.errors.note)}>
                   <Editor
                     value={formik.values.note}
-                    onChange={(value) => {
-                      // setQuestion(value);
-                      formik.setFieldValue('note', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('note', value)}
                     placeholder="Notes"
-                  />{' '}
+                  />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Send Notification */}
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="h6">Send Notification</Typography>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box display="flex" flexDirection="row" gap={2}>
                   {['Student', 'Parent', 'Warden'].map((label) => (
                     <FormControlLabel

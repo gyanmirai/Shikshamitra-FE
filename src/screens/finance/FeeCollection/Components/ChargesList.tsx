@@ -1,15 +1,12 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Checkbox, Typography } from '@mui/material';
-
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
 
 import type { IFeeCharge } from './type';
 

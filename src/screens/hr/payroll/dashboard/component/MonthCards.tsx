@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef } from 'react';
-
 import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
 import { Box, Card, IconButton, Typography, CardContent } from '@mui/material';
 

@@ -1,5 +1,4 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
 import reconciliationData from '../../json/finance/reconicilation/reconicilationData.json';

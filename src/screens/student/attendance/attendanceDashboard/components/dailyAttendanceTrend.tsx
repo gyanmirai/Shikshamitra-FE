@@ -1,14 +1,11 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import React, { useState, useCallback } from 'react';
-
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
-
 import { fCurrency } from 'src/utils/format-number';
-
+import React, { useState, useCallback } from 'react';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 const DailyAttendanceTrend = () => (

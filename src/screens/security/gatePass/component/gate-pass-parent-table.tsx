@@ -2,19 +2,16 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
 import { Box } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import data from 'src/json/security/early-pass-request-data.json';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   CommonRequestStatusType,
   CommonRequestStatusTypeColor,
   CommonRequestStatusTypeOptions,
 } from 'src/enums/common-request-statusType';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type {
   IGetEarlyPassRequestFormValues,

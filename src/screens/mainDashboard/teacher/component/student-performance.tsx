@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-
 import { useTheme } from '@mui/material/styles';
 import { Box, CardHeader } from '@mui/material';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
-
 import { EcommerceSaleByGender } from 'src/sections/overview/e-commerce/ecommerce-sale-by-gender';
 
 type StudentDataType = {

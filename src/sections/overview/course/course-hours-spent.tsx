@@ -1,12 +1,10 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import { useState, useCallback } from 'react';
-
 import Card from '@mui/material/Card';
+import { useState, useCallback } from 'react';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
-
 import { Chart, useChart, ChartSelect } from 'src/components/chart';
 
 // ----------------------------------------------------------------------

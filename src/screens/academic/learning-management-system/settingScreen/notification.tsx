@@ -1,15 +1,13 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Switch, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Switch, Typography } from '@mui/material';
 
 const NotificationSetting = () => (
   <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
     <Grid container spacing={2} alignItems="flex-start" sx={{ mt: 2 }}>
-      <Grid xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Custom Notifications
         </Typography>
@@ -28,7 +26,8 @@ const NotificationSetting = () => (
           </Box>
         </Box>
       </Grid>
-      <Grid xs={12} md={4}>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Frequency Settings
         </Typography>

@@ -5,17 +5,13 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
 
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-
 import Alert from '@mui/material/Alert';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import { iconButtonClasses } from '@mui/material/IconButton';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { varAlpha, stylesMode } from 'src/theme/styles';
-
 import { bulletColor } from 'src/components/nav-section';
+import { iconButtonClasses } from '@mui/material/IconButton';
 import { useSettingsContext } from 'src/components/settings';
 
 import { Main } from './main';

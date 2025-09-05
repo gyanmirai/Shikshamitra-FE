@@ -23,12 +23,15 @@ const MuiDataGrid: Components<Theme>['MuiDataGrid'] = {
   defaultProps: {
     slots: {
       /* Column */
+      // @ts-ignore
       columnSortedAscendingIcon: (props: SvgIconProps) => (
         <DataGridArrowUpIcon sx={{ color: 'text.primary' }} {...props} />
       ),
+      // @ts-ignore
       columnSortedDescendingIcon: (props: SvgIconProps) => (
         <DataGridArrowDownIcon sx={{ color: 'text.primary' }} {...props} />
       ),
+      // @ts-ignore
       columnUnsortedIcon: (props: SvgIconProps) => (
         <DataGridArrowUpIcon
           fontSize={props.fontSize}
@@ -36,40 +39,60 @@ const MuiDataGrid: Components<Theme>['MuiDataGrid'] = {
           sx={{ color: 'text.disabled' }}
         />
       ),
+      // @ts-ignore
       columnMenuIcon: (props: SvgIconProps) => <DataGridMoreIcon width={20} {...props} />,
+      // @ts-ignore
       columnMenuSortAscendingIcon: (props: SvgIconProps) => <DataGridArrowUpIcon {...props} />,
+      // @ts-ignore
       columnMenuSortDescendingIcon: (props: SvgIconProps) => <DataGridArrowDownIcon {...props} />,
+      // @ts-ignore
       columnMenuFilterIcon: (props: SvgIconProps) => <DataGridFilterIcon {...props} />,
+      // @ts-ignore
       columnMenuHideIcon: (props: SvgIconProps) => <DataGridEyeCloseIcon {...props} />,
+      // @ts-ignore
       columnMenuManageColumnsIcon: (props: SvgIconProps) => <DataGridEyeIcon {...props} />,
+      // @ts-ignore
       columnSelectorIcon: (props: SvgIconProps) => <DataGridEyeIcon {...props} />,
+      // @ts-ignore
       /* Filter */
+      // @ts-ignore
       filterPanelDeleteIcon: (props: SvgIconProps) => <DataGridCloseIcon {...props} />,
+      // @ts-ignore
       openFilterButtonIcon: (props: SvgIconProps) => <DataGridFilterIcon {...props} />,
+      // @ts-ignore
       columnFilteredIcon: (props: SvgIconProps) => (
         <DataGridFilterIcon sx={{ width: 16, color: 'text.primary' }} {...props} />
       ),
       /* Density */
+      // @ts-ignore
       densityCompactIcon: (props: SvgIconProps) => <DataGridDensityCompactIcon {...props} />,
+      // @ts-ignore
       densityStandardIcon: (props: SvgIconProps) => <DataGridDensityStandardIcon {...props} />,
+      // @ts-ignore
       densityComfortableIcon: (props: SvgIconProps) => (
         <DataGridDensityComfortableIcon {...props} />
       ),
       /* Export */
+      // @ts-ignore
       exportIcon: (props: SvgIconProps) => <DataGridExportIcon {...props} />,
       /*  Quick Filter */
+      // @ts-ignore
       quickFilterIcon: (props: SvgIconProps) => (
         <DataGridSearchIcon sx={{ width: 24, height: 24, color: 'text.secondary' }} {...props} />
       ),
+      // @ts-ignore
       quickFilterClearIcon: (props: SvgIconProps) => <DataGridCloseIcon {...props} />,
     },
     slotProps: {
       basePopper: { placement: 'bottom-end' },
       baseChip: { size: 'small' },
       baseSwitch: { size: 'small' },
+      // @ts-ignore
       baseCheckbox: { size: 'small', disableRipple: true },
       baseInputLabel: { shrink: true },
+      // @ts-ignore
       baseTextField: { variant: 'outlined' },
+      // @ts-ignore
       baseSelect: { native: true, variant: 'outlined' },
     },
   },

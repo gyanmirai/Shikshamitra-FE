@@ -4,12 +4,10 @@ import 'driver.js/dist/driver.css';
 
 import React from 'react';
 import { driver } from 'driver.js';
-
-import { Box, Paper, styled, Container } from '@mui/material';
-
+import { styled } from '@mui/material/styles';
+import { Box, Paper, Container } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateTenantMutation } from 'src/redux/tenant/tenantApi';
-
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import WelcomeScreen from './welcom-screen';

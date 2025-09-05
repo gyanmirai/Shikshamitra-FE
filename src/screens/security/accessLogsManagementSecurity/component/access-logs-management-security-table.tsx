@@ -2,26 +2,21 @@ import type { LabelColor } from 'src/components/label/types';
 
 import dayjs from 'dayjs';
 import React from 'react';
-
-import { Button, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import { Button, MenuItem, MenuList } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/security/access-logs-security-data.json';
 import {
   AccessLogsManagementSecurityStatusType,
   AccessLogsManagementSecurityStatusTypeColor,
   AccessLogsManagementSecurityStatusTypeOptions,
 } from 'src/enums/accessLogs-management-security-table-statusType';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import GateAcessDenyDialog from './gate-access-deny-dialog';
 

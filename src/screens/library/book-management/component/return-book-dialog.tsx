@@ -1,7 +1,16 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 import {
   Box,
   Grid,
@@ -12,19 +21,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import { paymentModes, reservationData } from '../data/data';
 
@@ -104,7 +100,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
             <Grid container spacing={3} pt="10px">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="bookTitle"
@@ -116,7 +112,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="bookTitle"
@@ -128,7 +124,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
               {/* 
-                            <Grid item xs={12} md={6}>
+                            <Grid size={{ xs: 12, md: 6 }}>
                                 <TextField
                                     fullWidth
                                     name="bookAuthor"
@@ -140,7 +136,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                                 />
                             </Grid> */}
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   label="Member ID"
@@ -151,7 +147,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="memberName"
@@ -163,7 +159,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Due Date"
                   value={formik.values.dueDate}
@@ -172,7 +168,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                   disabled
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Return Date"
                   value={formik.values.receivedDate}
@@ -181,7 +177,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                   disabled
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Condition"
                   options={[]}
@@ -191,7 +187,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="fineAmount"
@@ -202,7 +198,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                   disabled
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="fineReason"
@@ -214,7 +210,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormattedAmountInput
                   label="Received Fine Amount"
                   value={receivedFineAmount}
@@ -223,7 +219,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
               </Grid>
 
               {/* Payment Mode */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   select
                   fullWidth
@@ -243,7 +239,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
 
               {/* Dynamic Fields for Online Payment */}
               {selectedPaymentMode === 'online' && (
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
                     name="upiId"
@@ -258,7 +254,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
               {/* Dynamic Fields for Bank Transfer */}
               {selectedPaymentMode === 'bank' && (
                 <>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       name="bankAccount"
@@ -268,7 +264,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       name="ifsc"
@@ -278,7 +274,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       name="accountHolder"
@@ -292,7 +288,7 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
               )}
 
               {/* Reservation List Table */}
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <CustomizableTable
                   tableId="reservation-list"
                   isFilter={false}
@@ -460,7 +456,7 @@ export default ReturnBookDialog;
 //                 <form onSubmit={formik.handleSubmit}>
 //                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
 //                         <Grid container spacing={3} pt="10px">
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Book ID"
 //                                     options={[]}
@@ -492,7 +488,7 @@ export default ReturnBookDialog;
 //                                 </TextField> */}
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="bookTitle"
@@ -504,7 +500,7 @@ export default ReturnBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="bookAuthor"
@@ -516,7 +512,7 @@ export default ReturnBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 
 //                                 <CustomSelect
 //                                     label="Member ID"
@@ -548,7 +544,7 @@ export default ReturnBookDialog;
 //                                 {/* </TextField> */}
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="memberName"
@@ -560,7 +556,7 @@ export default ReturnBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <DatePicker
 //                                     label="Due Date"
 //                                     value={formik.values.dueDate}
@@ -570,7 +566,7 @@ export default ReturnBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="fineAmount"
@@ -581,7 +577,7 @@ export default ReturnBookDialog;
 //                                     disabled
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <FormattedAmountInput
 //                                     label="Received Fine Amount"
 //                                     value={receivedFineAmount}
@@ -651,7 +647,7 @@ export default ReturnBookDialog;
 //                 <form onSubmit={formik.handleSubmit}>
 //                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
 //                         <Grid container spacing={3} pt="10px">
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="bookID"
@@ -661,7 +657,7 @@ export default ReturnBookDialog;
 //                                     size="small"
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="bookTitle"
@@ -671,7 +667,7 @@ export default ReturnBookDialog;
 //                                     size="small"
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="memberID"
@@ -682,7 +678,7 @@ export default ReturnBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <DatePicker
 //                                     label="Due Date"
 //                                     value={formik.values.date}
@@ -691,7 +687,7 @@ export default ReturnBookDialog;
 //                                     disabled
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <TextField
 //                                     fullWidth
 //                                     name="fineAmount"

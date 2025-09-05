@@ -1,16 +1,13 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { receiptBookValidationSchema } from '../validationSchema';
@@ -72,7 +69,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={3}>
             {/* Receipt Book Name Field */}
-            <Grid item xs={12} sm={12}>
+            <Grid size={{ xs: 12, sm: 12 }}>
               {(() => {
                 const field = 'receiptBookName';
                 const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -87,9 +84,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                       label="Receipt Book Name *"
                       value={formik.values[field]}
                       onChange={(e) => {
-                        const value = e.target.value
-                          // Remove everything except letters and spaces
-                          .replace(/[^a-zA-Z0-9\s]/g, '');
+                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                         formik.setFieldValue(field, value);
                       }}
                       error={error}
@@ -101,7 +96,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
             </Grid>
 
             {/* Receipt Book Code Field */}
-            <Grid item xs={12} sm={12} pb="20px">
+            <Grid size={{ xs: 12, sm: 12 }} pb="20px">
               {(() => {
                 const field = 'receiptBookCode';
                 const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -115,9 +110,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                       label="Receipt Book Code *"
                       value={formik.values[field]}
                       onChange={(e) => {
-                        const value = e.target.value
-                          // Remove everything except letters and spaces
-                          .replace(/[^a-zA-Z0-9\s]/g, '');
+                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                         formik.setFieldValue(field, value);
                       }}
                       error={error}

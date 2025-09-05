@@ -2,8 +2,10 @@ import type { Dayjs } from 'dayjs';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { TimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import {
   Tab,
   Grid,
@@ -15,10 +17,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 
 interface FinanceCategoryNotificationDialogForOverDueFeeProps {
   open: boolean;
@@ -93,7 +91,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
             <Grid container spacing={2} pt={3}>
               {/* Rule Selection */}
 
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <CustomSelect
                   label="Select Rule"
                   options={[{ label: 'X days after the due date', value: 'X days after due' }]}
@@ -103,7 +101,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
               </Grid>
 
               {triggerType === 'X days after due' && (
-                <Grid item lg={6}>
+                <Grid size={{ lg: 6 }}>
                   <TextField
                     size="small"
                     label="Enter the day"
@@ -114,7 +112,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
                 </Grid>
               )}
 
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <CustomSelect
                   multiple
                   label="Select Recipient"
@@ -128,7 +126,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   label="Generate at"
                   format="HH:mm"
@@ -139,7 +137,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
                 />
               </Grid>
               {/* Notification Template */}
-              <Grid item lg={12}>
+              <Grid size={{ lg: 12 }}>
                 <CustomSelect
                   label="Select Template"
                   options={Object.keys(templateMessages).map((key) => ({
@@ -152,7 +150,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
               </Grid>
 
               {selectedTemplate && (
-                <Grid item lg={12}>
+                <Grid size={{ lg: 12 }}>
                   <TextField
                     multiline
                     rows={3}
@@ -166,7 +164,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
               )}
 
               {/* Recurrence */}
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <FormControlLabel
                   control={
                     <Switch checked={recurrence} onChange={() => setRecurrence(!recurrence)} />
@@ -176,7 +174,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
               </Grid>
 
               {recurrence && (
-                <Grid item lg={6}>
+                <Grid size={{ lg: 6 }}>
                   <TextField
                     size="small"
                     label="Repeat Every (Days)"

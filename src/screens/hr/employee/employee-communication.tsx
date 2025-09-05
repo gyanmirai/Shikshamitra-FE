@@ -1,9 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useCallback } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { varAlpha } from 'src/theme/styles';
+import { useTabs } from 'src/hooks/use-tabs';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useCallback } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import { CalendarView } from 'src/sections/calendar/view';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { EventStatus, AnnouncementStatus } from 'src/enums/announcement-status';
+import { getImportanceLevelColor } from 'src/screens/communication/announcement/components/getImportantColor';
 import {
   Box,
   Tab,
@@ -18,24 +27,10 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
-
-import { varAlpha } from 'src/theme/styles';
-import { EventStatus, AnnouncementStatus } from 'src/enums/announcement-status';
-import { getImportanceLevelColor } from 'src/screens/communication/announcement/components/getImportantColor';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-
-import { CalendarView } from 'src/sections/calendar/view';
-
 const EmployeeCommunication = ({ employee }: any) => (
   <Box>
     <Grid container spacing={2}>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
         <Card
           sx={{
             display: 'flex',
@@ -50,14 +45,7 @@ const EmployeeCommunication = ({ employee }: any) => (
               <Typography variant="subtitle1">New Announcement</Typography>
             </Box>
             <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  width: '100%',
-                  padding: 0,
-                }}
-              >
+              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
                 {[
                   'New Announcement',
                   'New Announcement',
@@ -65,10 +53,10 @@ const EmployeeCommunication = ({ employee }: any) => (
                   'New Announcement',
                   'New Announcement',
                   'New Announcement',
-                ].map((exam, index) => (
+                ].map((item, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
+                      {item}
                     </Button>
                   </Box>
                 ))}
@@ -77,7 +65,8 @@ const EmployeeCommunication = ({ employee }: any) => (
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
         <Card
           sx={{
             display: 'flex',
@@ -97,18 +86,11 @@ const EmployeeCommunication = ({ employee }: any) => (
               <Typography variant="subtitle1">Upcoming Events</Typography>
             </Box>
             <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  width: '100%',
-                  padding: 0,
-                }}
-              >
-                {['Upcoming Events', 'Upcoming Events'].map((exam, index) => (
+              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
+                {['Upcoming Events', 'Upcoming Events'].map((item, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
+                      {item}
                     </Button>
                   </Box>
                 ))}
@@ -117,7 +99,8 @@ const EmployeeCommunication = ({ employee }: any) => (
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
         <Card
           sx={{
             display: 'flex',
@@ -137,18 +120,11 @@ const EmployeeCommunication = ({ employee }: any) => (
               <Typography variant="subtitle1">New Messages</Typography>
             </Box>
             <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  width: '100%',
-                  padding: 0,
-                }}
-              >
-                {['New Messages', 'New Messages'].map((exam, index) => (
+              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
+                {['New Messages', 'New Messages'].map((item, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
+                      {item}
                     </Button>
                   </Box>
                 ))}
@@ -157,7 +133,8 @@ const EmployeeCommunication = ({ employee }: any) => (
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
         <Card
           sx={{
             display: 'flex',
@@ -177,18 +154,11 @@ const EmployeeCommunication = ({ employee }: any) => (
               <Typography variant="subtitle1">Scheduled Meetings</Typography>
             </Box>
             <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  width: '100%',
-                  padding: 0,
-                }}
-              >
-                {['Scheduled Meetings', 'Scheduled Meetings'].map((exam, index) => (
+              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
+                {['Scheduled Meetings', 'Scheduled Meetings'].map((item, index) => (
                   <Box component="li" key={index} sx={{ mb: 1 }}>
                     <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {exam}
+                      {item}
                     </Button>
                   </Box>
                 ))}
@@ -198,6 +168,7 @@ const EmployeeCommunication = ({ employee }: any) => (
         </Card>
       </Grid>
     </Grid>
+
     <CalendarView />
 
     <EmployeeAnnouncement />

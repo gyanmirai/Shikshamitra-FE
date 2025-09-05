@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, Card, Switch } from '@mui/material';
-
-import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
 
 const HrEventHolidayNotificationManagementScreen = () => {
   const notificationData = [

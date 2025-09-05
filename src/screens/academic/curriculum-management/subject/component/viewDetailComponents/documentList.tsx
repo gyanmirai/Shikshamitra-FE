@@ -1,5 +1,7 @@
 // src/components/DocumentList.tsx
 
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import {
   Box,
   List,
@@ -10,10 +12,6 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
 
 import type { IDocType, IDocument } from '../type';
 

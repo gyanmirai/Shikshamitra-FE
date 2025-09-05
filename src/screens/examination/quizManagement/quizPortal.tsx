@@ -1,5 +1,9 @@
+import { styled } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetQuizListQuery } from 'src/redux/academics/examination/quiz-management-api';
 import {
   Box,
   Grid,
@@ -8,19 +12,11 @@ import {
   Radio,
   Stack,
   Button,
-  styled,
   TextField,
   Typography,
   RadioGroup,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetQuizListQuery } from 'src/redux/academics/examination/quiz-management-api';
-
-import { Iconify } from 'src/components/iconify';
 
 // Styled components
 interface QuestionNumberProps {
@@ -422,7 +418,7 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
       </Box>
 
       <Grid container spacing={3} padding={2}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Stack spacing={3}>
             <QuestionDisplay
               question={{
@@ -446,7 +442,8 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
             />
           </Stack>
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        <Grid size={{ xs: 12, md: 4 }}>
           <QuestionList
             totalQuestions={quizList.length}
             currentQuestion={currentQuestion}

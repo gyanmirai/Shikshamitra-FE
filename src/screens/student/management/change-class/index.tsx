@@ -2,24 +2,20 @@
 
 import type { Standards } from 'src/types/school';
 
-import { useDispatch } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
 import { Save } from '@mui/icons-material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { StudentApi } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
-
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
 
 import type { ITableClassDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';

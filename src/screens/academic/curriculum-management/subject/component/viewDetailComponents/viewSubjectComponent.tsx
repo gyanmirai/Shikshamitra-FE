@@ -1,22 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Box, Tab, Tabs, Grid, Paper, Divider, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { SubjectType } from 'src/enums/subject-type';
+import { Scrollbar } from 'src/components/scrollbar';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Box, Tab, Tabs, Grid, Paper, Divider, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
@@ -82,7 +78,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
 
   return (
     <Grid container spacing={1} height="calc(100vh - 225px)">
-      <Grid item xs={3} height="100%">
+      <Grid size={{ xs: 3 }} height="100%">
         <Paper elevation={3} sx={{ p: 2, height: '100%' }}>
           <Box
             display="flex"
@@ -111,10 +107,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     subject?.status as PublishUnpublishStatusType
                   ] as LabelColor
                 }
-                sx={{
-                  ml: 'auto',
-                  p: 2,
-                }}
+                sx={{ ml: 'auto', p: 2 }}
               >
                 {
                   PublishUnpublishStatusType[
@@ -140,9 +133,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     borderRadius: 1,
                     backgroundColor:
                       expandedSubject === sub.subjectCode ? 'action.selected' : 'transparent',
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    },
+                    '&:hover': { backgroundColor: 'action.hover' },
                   }}
                 >
                   <SubjectColorIndicator color={sub?.subjectColor} />
@@ -155,7 +146,8 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
           </Scrollbar>
         </Paper>
       </Grid>
-      <Grid item xs={9} height="100%">
+
+      <Grid size={{ xs: 9 }} height="100%">
         <Paper elevation={3} sx={{ height: '100%', p: 2 }}>
           {subject?.subjects?.map(
             (sub) =>

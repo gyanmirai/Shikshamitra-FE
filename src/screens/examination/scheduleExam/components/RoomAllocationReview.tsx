@@ -4,10 +4,8 @@ import type { Division } from 'src/types/school';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-
 import RoomIcon from '@mui/icons-material/Room';
 import { Chip, Grid, Stack, Typography } from '@mui/material';
-
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IRoomDetails, IExamFormValues, ISubjectRoomDetail } from '../type';
@@ -39,17 +37,17 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
     <SectionCard title="Room Allocation">
       {Object.entries(roomDetails as IRoomDetails).map(
         ([subjectName, subjectDetail]: [string, ISubjectRoomDetail]) => (
-            <Grid item xs={12} key={subjectName}>
+          <Grid size={{ xs: 12 }} key={subjectName}>
             <SectionCard key={subjectName} title={`${subjectName}`}>
-              {/* <Stack spacing={2}> */}
               {Object.entries(subjectDetail.divisions).map(([divisionName, divisionData]) => (
-                <Grid item xs={12} display="flex" flexDirection="column" key={divisionName}>
+                <Grid size={{ xs: 12 }} display="flex" flexDirection="column" key={divisionName}>
                   <Typography fontWeight={600} display="flex" alignItems="center" mb={1}>
                     <RoomIcon sx={{ fontSize: 18, mr: 0.5, color: 'primary.main' }} />
                     Division :{' '}
                     {divisions?.find((div: Division) => div.id === divisionName)?.name ||
                       divisionName}
                   </Typography>
+
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {divisionData.roomIds?.map((room: string, index: number) => (
                       <Chip key={index} label={`${room}`} variant="outlined" />
@@ -57,7 +55,6 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
                   </Stack>
                 </Grid>
               ))}
-              {/* </Stack> */}
             </SectionCard>
           </Grid>
         )

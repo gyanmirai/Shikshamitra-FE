@@ -1,36 +1,31 @@
 import type { IFileManager } from 'src/types/file';
 
-import { useState, useCallback } from 'react';
-
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
+import { varAlpha } from 'src/theme/styles';
+import { useState, useCallback } from 'react';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
 import { useTheme } from '@mui/material/styles';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import ListItemText from '@mui/material/ListItemText';
-import TableRow, { tableRowClasses } from '@mui/material/TableRow';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDoubleClick } from 'src/hooks/use-double-click';
-import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
-
 import { fData } from 'src/utils/format-number';
-import { fDate, fTime } from 'src/utils/format-time';
-
-import { varAlpha } from 'src/theme/styles';
-
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { fDate, fTime } from 'src/utils/format-time';
+import ListItemText from '@mui/material/ListItemText';
+import { useDoubleClick } from 'src/hooks/use-double-click';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import TableRow, { tableRowClasses } from '@mui/material/TableRow';
+import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { FileManagerShareDialog } from './file-manager-share-dialog';
 import { FileManagerFileDetails } from './file-manager-file-details';

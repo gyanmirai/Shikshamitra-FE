@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
@@ -10,13 +10,20 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
-  if (!loading && user) {
-    router.push('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [loading, user, router]);
+
   if (loading) {
     return <SplashScreen />;
   }
+
+  if (!loading && user) {
+    return null; // render nothing while redirect happens
+  }
+
   return children;
 };
 

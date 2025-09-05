@@ -2,13 +2,40 @@ import type { Board, AcademicYear } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { useDispatch } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
-import { isEqual, cloneDeep, capitalize } from 'lodash';
-
 import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 // FormHelperText is already imported via the destructured import from @mui/material below
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import calculateAge from 'src/utils/calculate-age';
+import PhoneInput from 'src/components/phone-input';
+import { useMemo, useState, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { isEqual, cloneDeep, capitalize } from 'lodash';
+import CustomSelect from 'src/components/custom-select';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
+import {
+  useAddStudentInquiryMutation,
+  useUpdateStudentInquiryMutation,
+} from 'src/redux/student/inquiry/inquiry-api';
 import {
   Box,
   Grid,
@@ -25,38 +52,6 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import calculateAge from 'src/utils/calculate-age';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preference/inquiry-preference-api';
-import {
-  useAddStudentInquiryMutation,
-  useUpdateStudentInquiryMutation,
-} from 'src/redux/student/inquiry/inquiry-api';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { inquiryInitialValues } from './initialvalues';
 import { inquiryValidationSchema } from './validationSchema';
@@ -279,7 +274,7 @@ const InquiryForm = ({
             }}
           >
             <SectionCard title="Basic Details">
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
                   <CustomSelect
                     name="academicYear"
@@ -307,7 +302,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.board && errors.board) || false}>
                   <CustomSelect
                     name="board"
@@ -329,7 +324,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
                   <CustomSelect
                     name="medium"
@@ -354,7 +349,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.class && errors.class) || false}>
                   <CustomSelect
                     name="class"
@@ -374,7 +369,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.firstName && errors.firstName) || false}>
                   <TextField
                     fullWidth
@@ -392,7 +387,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.middleName && errors.middleName) || false}>
                   <TextField
                     fullWidth
@@ -410,7 +405,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.lastName && errors.lastName) || false}>
                   <TextField
                     fullWidth
@@ -428,7 +423,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.dateOfBirth && errors.dateOfBirth) || false}>
                   <DatePicker
                     label="Date of Birth *"
@@ -456,7 +451,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
                   <FormControl
                     fullWidth
@@ -487,7 +482,7 @@ const InquiryForm = ({
                   </FormControl>
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={!!(touched.previousSchool && errors.previousSchool) || false}
                 >
@@ -510,7 +505,7 @@ const InquiryForm = ({
             </SectionCard>
 
             <SectionCard title="Inquiry Details">
-              <Grid item xs={12} md={4} mb={1}>
+              <Grid size={{ xs: 12, md: 4 }} mb={1}>
                 <ShakingTextField
                   error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}
                 >
@@ -534,7 +529,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4} mb={1}>
+              <Grid size={{ xs: 12, md: 4 }} mb={1}>
                 <ShakingTextField>
                   <CustomSelect
                     label="Inquiry Preference"
@@ -561,7 +556,7 @@ const InquiryForm = ({
             </SectionCard>
 
             <SectionCard title="Contact Information">
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.email && errors.email) || false}>
                   <TextField
                     value={values.email}
@@ -586,7 +581,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={!!(touched.primaryContactNumber && errors.primaryContactNumber) || false}
                 >
@@ -604,7 +599,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={
                     !!(touched.secondaryContactNumber && errors.secondaryContactNumber) || false
@@ -629,7 +624,7 @@ const InquiryForm = ({
               </Grid>
             </SectionCard>
             <SectionCard title="Address Details">
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.addressLine1 && errors.addressLine1) || false}>
                   <TextField
                     name="addressLine1"
@@ -643,7 +638,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.addressLine2 && errors.addressLine2) || false}>
                   <TextField
                     name="addressLine2"
@@ -657,7 +652,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.addressLine3 && errors.addressLine3) || false}>
                   <TextField
                     name="addressLine3"
@@ -672,7 +667,7 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.country && errors.country) || false}>
                   <CountryComponent
                     value={values.country}
@@ -691,7 +686,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.state && errors?.state) || false}>
                   <StateComponent
                     value={values.state}
@@ -712,7 +707,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.city && errors.city) || false}>
                   <CityComponent
                     value={values.city}
@@ -728,7 +723,7 @@ const InquiryForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={4}>
+              <Grid size={4}>
                 <ShakingTextField error={!!(touched.pinCode && errors.pinCode) || false}>
                   <TextField
                     name="pinCode"

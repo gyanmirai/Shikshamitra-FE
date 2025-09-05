@@ -1,14 +1,15 @@
 // import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import { useFormik } from 'formik';
+import { useTabs } from 'src/hooks/use-tabs';
 import { useMemo, useState, useCallback } from 'react';
-
+import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Tab, Box, Card, Grid, TextField } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
   useUpdateEmployeeMutation,
@@ -16,11 +17,6 @@ import {
   useUpdateFamilyInformationMutation,
   useUpdateExperienceInformationMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { CustomTabs } from 'src/components/custom-tabs';
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 // import {
 //   FamilyFields,
@@ -350,9 +346,10 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                 {' '}
                 {fields[activeTabIndex].map((field: FieldsType, index: number) => (
                   <Grid
-                    item
-                    xs={[1, 2].includes(activeTabIndex) ? 12 : 4}
-                    md={[1, 2].includes(activeTabIndex) ? 12 : 4}
+                    size={{
+                      xs: [1, 2].includes(activeTabIndex) ? 12 : 4,
+                      md: [1, 2].includes(activeTabIndex) ? 12 : 4,
+                    }}
                     key={field.name}
                     {...field.gridProps}
                     mb="15px"

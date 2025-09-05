@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-
-import { Button, Typography, DialogActions, DialogContent } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Button, Typography, DialogActions, DialogContent } from '@mui/material';
 
 const CreateNotificationTemplates = () => {
   const templateData = [

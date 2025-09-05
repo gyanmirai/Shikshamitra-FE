@@ -2,9 +2,8 @@ import type { TextFieldProps } from '@mui/material';
 import type { NumericFormatProps } from 'react-number-format';
 
 import React from 'react';
-import { NumericFormat } from 'react-number-format';
-
 import { TextField } from '@mui/material';
+import { NumericFormat } from 'react-number-format';
 
 const NumericFormatCustom = ({
   value,

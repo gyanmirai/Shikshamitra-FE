@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, Grid, Button } from '@mui/material';
 import { Save, RestartAlt } from '@mui/icons-material';
-
-import eleciveSubjectsData from 'src/json/academic/curriculum/choose-elective-subject.json';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import eleciveSubjectsData from 'src/json/academic/curriculum/choose-elective-subject.json';
 
 import ElectiveSubjectCard from './components/ElectiveSubjectCard';
 
@@ -67,7 +64,7 @@ const ChooseElectiveSubject = () => {
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {electiveSubjects.map((category) => (
-          <Grid item xs={12} md={4} key={category.title}>
+          <Grid size={{ xs: 12, md: 4 }} key={category.title}>
             <ElectiveSubjectCard
               title={category.title}
               subjects={category.subjects}

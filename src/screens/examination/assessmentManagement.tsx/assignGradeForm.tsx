@@ -1,12 +1,9 @@
 import { useFormik } from 'formik';
 import { PDFViewer } from '@react-pdf/renderer';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import type { AssignGradeProps } from './type';
 
@@ -37,7 +34,7 @@ export const AssignGrade: React.FC<AssignGradeProps> = ({
             </PDFViewer>
           )}
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 options={[
                   { value: 'A+', label: 'A+' },
@@ -55,14 +52,13 @@ export const AssignGrade: React.FC<AssignGradeProps> = ({
                 label="Grade"
                 name="grade"
                 value={formik.values.grade}
-                onChange={(val) => {
-                  formik.setFieldValue('grade', val);
-                }}
+                onChange={(val) => formik.setFieldValue('grade', val)}
                 formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <TextField
                 placeholder="Detailed Feedback"
                 multiline

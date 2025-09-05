@@ -1,8 +1,7 @@
 import type { AutocompleteRenderOptionState } from '@mui/material';
 
-import { useRef, useState, useLayoutEffect } from 'react';
-
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { useRef, useState, useLayoutEffect } from 'react';
 import { Box, Chip, Checkbox, TextField, Autocomplete } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 

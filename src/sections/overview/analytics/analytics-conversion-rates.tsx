@@ -3,11 +3,9 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { fNumber } from 'src/utils/format-number';
-
 import { Chart, useChart } from 'src/components/chart';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 

@@ -2,7 +2,8 @@
 
 import React from 'react';
 
-import { Box, useTheme, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 import { GlobalIcons } from 'src/utils/icons';
 

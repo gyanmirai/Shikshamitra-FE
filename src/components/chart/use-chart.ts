@@ -1,6 +1,5 @@
-import { useTheme } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 
 import type { ChartOptions } from './types';
 
@@ -97,10 +96,12 @@ export function useChart(options?: ChartOptions): ChartOptions {
       ...options?.states,
       hover: {
         ...options?.states?.hover,
+        // @ts-ignore
         filter: { type: 'darken', value: 0.88, ...options?.states?.hover?.filter },
       },
       active: {
         ...options?.states?.active,
+        // @ts-ignore
         filter: { type: 'darken', value: 0.88, ...options?.states?.active?.filter },
       },
     },

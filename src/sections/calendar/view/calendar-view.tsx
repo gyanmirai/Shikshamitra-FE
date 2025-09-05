@@ -17,15 +17,12 @@ import interactionPlugin from '@fullcalendar/interaction';
 import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
 import { useTheme } from '@mui/material/styles';
-import DialogTitle from '@mui/material/DialogTitle';
-
 import { useBoolean } from 'src/hooks/use-boolean';
+import DialogTitle from '@mui/material/DialogTitle';
 import { useSetState } from 'src/hooks/use-set-state';
-
-import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
-
 import { DashboardContent } from 'src/layouts/dashboard';
 import { updateEvent, useGetEvents } from 'src/actions/calendar';
+import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { StyledCalendar } from '../styles';
 import { useEvent } from '../hooks/use-event';

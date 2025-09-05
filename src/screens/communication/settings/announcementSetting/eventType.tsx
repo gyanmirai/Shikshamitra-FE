@@ -4,7 +4,16 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useState } from 'react';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -18,19 +27,6 @@ import {
   DialogContent,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { eventTypeValidationSchema } from '../validationSchema';
 
@@ -316,10 +312,8 @@ const EventForm: React.FC<IEventFormProps> = ({ onSubmit, data = null, isEdit = 
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '330px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.eventType && formik.errors.eventType) || false}
-              >
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!(formik.touched.eventType && formik.errors.eventType)}>
                 <TextField
                   fullWidth
                   label="Event Type"
@@ -332,9 +326,9 @@ const EventForm: React.FC<IEventFormProps> = ({ onSubmit, data = null, isEdit = 
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={!!(formik.touched.eventTypeDesc && formik.errors.eventTypeDesc) || false}
+                error={!!(formik.touched.eventTypeDesc && formik.errors.eventTypeDesc)}
               >
                 <TextField
                   fullWidth
@@ -349,7 +343,8 @@ const EventForm: React.FC<IEventFormProps> = ({ onSubmit, data = null, isEdit = 
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={

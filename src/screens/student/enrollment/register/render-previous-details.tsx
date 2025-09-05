@@ -1,9 +1,6 @@
 import { capitalize } from 'lodash';
-
 import { Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import {
   CardActions,
   SectionCard,
@@ -15,7 +12,7 @@ export const previousSchoolFields: FieldsType[] = [
   {
     name: 'schoolName',
     label: ' School Name',
-    gridProps: { xs: 12, sm: 12, md: 12 },
+    gridProps: { size: { xs: 12, sm: 12, md: 12 } },
     type: 'text',
     otherProps: ({ formik }: any) => ({
       onChange: (e: any) => {
@@ -62,7 +59,7 @@ const RenderPreviousSchoolFields = (props: any) => {
         )
       }
     >
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -81,7 +78,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -92,7 +89,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -106,7 +103,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -120,7 +117,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -134,7 +131,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -148,7 +145,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={4} md={3}>
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
           fullWidth

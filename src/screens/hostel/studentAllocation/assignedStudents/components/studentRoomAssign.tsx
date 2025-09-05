@@ -1,14 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { getStudentRoomAssignInitialValues } from './initialValues';
 import { studentRoomAssignValidationSchema } from './validationSchema';
@@ -34,7 +31,7 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomType && formik.errors.roomType) || false}
                 >
@@ -69,7 +66,7 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomName && formik.errors.roomName) || false}
                 >
@@ -106,7 +103,7 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.bedNumber && formik.errors.bedNumber) || false}
                 >

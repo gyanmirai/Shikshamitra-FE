@@ -3,14 +3,12 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { Box, Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Grid, useTheme } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ExamsList from './component/examList';
@@ -97,8 +95,9 @@ const IndividualStudentProgress = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+
       <Grid container spacing={3} justifyContent="center" alignItems="center">
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <CustomSelect
             label="Class"
             options={classData?.items || []}
@@ -106,17 +105,15 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             valueKey="id"
             onChange={(val) => {
               const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              // formik.setFieldValue('class', selectedClass?.name || '');
-              setSearchParams?.({
-                classId: val as string,
-              });
+              setSearchParams?.({ classId: val as string });
               setDivisionOptions(selectedClass?.divisions || []);
             }}
             value={classes}
             formControlProps={{
               sx: { width: '100%', maxWidth: '150px' },
             }}
-          />{' '}
+          />
+
           <CustomSelect
             label="Division"
             disabled={!classes}
@@ -125,14 +122,13 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             options={divisionOptions}
             value={division}
             onChange={(val) => {
-              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-              // formik.setFieldValue('division', selectedDivision?.name || '');
               setDivision(val as string);
             }}
             formControlProps={{
               sx: { width: '100%', maxWidth: '150px' },
             }}
-          />{' '}
+          />
+
           <CustomSelect
             label="Select Student"
             options={[
@@ -142,21 +138,24 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             ]}
             value={selectedStudent}
             isSearch
-            onChange={(val) => {
-              setSelectedStudent(val as string);
-            }}
+            onChange={(val) => setSelectedStudent(val as string)}
             formControlProps={{
               sx: { width: '100%', maxWidth: '150px' },
             }}
           />
         </Grid>
-        {/* <StudentProfile user={dummyStudent} /> */}
+
+        {/* Student profile component */}
         <StudentProfile student={dummyStudent} />
+
+        {/* Progress over time */}
         <ProgressOverTime />
-        <Grid item xs={12} md={6}>
+
+        {/* Assignments and Exams */}
+        <Grid size={{ xs: 12, md: 6 }}>
           <AssignmentsList />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ExamsList />
         </Grid>
       </Grid>

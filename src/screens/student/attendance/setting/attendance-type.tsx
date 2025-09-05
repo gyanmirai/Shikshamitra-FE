@@ -3,35 +3,30 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  useGetStudentAttendanceTypeQuery,
-  useAddStudentAttendanceTypeMutation,
-  useDeleteStudentAttendanceTypeMutation,
-  useUpdateStudentAttendanceTypeMutation,
-} from 'src/redux/student/attendance-type/attendance-type-api';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useGetStudentAttendanceTypeQuery,
+  useAddStudentAttendanceTypeMutation,
+  useDeleteStudentAttendanceTypeMutation,
+  useUpdateStudentAttendanceTypeMutation,
+} from 'src/redux/student/attendance-type/attendance-type-api';
 
 import type { IAttendanceRule } from './type';
 

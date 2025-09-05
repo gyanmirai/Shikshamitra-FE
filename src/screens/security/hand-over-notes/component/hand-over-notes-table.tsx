@@ -1,16 +1,12 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Autocomplete } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/security/guard-management/all-guard-handover-data.json';
-
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, TextField, Autocomplete } from '@mui/material';
+import data from 'src/json/security/guard-management/all-guard-handover-data.json';
 
 import CheckInCheckOutDialog from '../../guard-management/my-duties/component/check-in-check-out-dialog';
 
@@ -26,7 +22,7 @@ const HandOverNotesTable = () => {
   return (
     <>
       <Box display="flex" alignItems="center" flexDirection="row" gap={2}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
@@ -41,7 +37,7 @@ const HandOverNotesTable = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="End Date"
             format="DD-MM-YYYY"
@@ -56,7 +52,7 @@ const HandOverNotesTable = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Autocomplete
             loading={false}
             noOptionsText="No Guard Found"

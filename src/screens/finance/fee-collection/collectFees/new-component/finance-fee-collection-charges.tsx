@@ -1,22 +1,17 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState, useEffect } from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { formatNumber } from 'src/utils/formate_number';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import studentChargesData from 'src/json/finance/fee-collection/studentChargesData.json';
 import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
   FinancePaymentHistoryStatusTypeColors,
 } from 'src/enums/finance-payment-history';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const FinanceFeeCollectionCharges = () => {
   // Dialog state for charge collection modal

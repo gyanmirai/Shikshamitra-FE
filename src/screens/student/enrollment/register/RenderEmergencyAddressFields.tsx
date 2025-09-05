@@ -1,6 +1,5 @@
-import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
-
 import CityComponent from 'src/components/stardard-address/city-component';
+import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
@@ -9,7 +8,7 @@ const RenderEmergencyAddressFields = (props: any) => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControlLabel
           disabled={!isEdit}
           control={
@@ -45,7 +44,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           label="Emergency Address Same as Local Address"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine1"
@@ -60,7 +59,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           size="small"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine2"
@@ -75,7 +74,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           size="small"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="emergencyAddressLine3"
@@ -91,7 +90,7 @@ const RenderEmergencyAddressFields = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <CountryComponent
           value={formik.values.emergencyCountry}
           onChange={(_e, value) => {
@@ -103,7 +102,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           helperText={formik.touched.emergencyCountry && formik.errors.emergencyCountry}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <StateComponent
           value={formik.values.emergencyState}
           onChange={(_e, value) => {
@@ -116,7 +115,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           countryValue={formik.values.emergencyCountry}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <CityComponent
           value={formik.values.emergencyCity}
           onChange={(_e, value) => formik.setFieldValue('emergencyCity', value)}
@@ -126,7 +125,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           disabled={!isEdit}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           name="emergencyPincode"
           disabled={!isEdit}

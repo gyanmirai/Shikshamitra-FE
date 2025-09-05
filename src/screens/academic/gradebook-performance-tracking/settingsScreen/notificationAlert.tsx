@@ -1,17 +1,16 @@
 import React from 'react';
-
-import { Box, Card, Grid, Button, Checkbox, TextField, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Button, Checkbox, TextField, Typography } from '@mui/material';
 
 const NotificationAlert = () => (
   <Grid container spacing={2}>
-    <Grid item xs={12}>
+    <Grid size={{ xs: 12 }}>
       <Typography variant="h6" my={1}>
         Notifications & Alerts
       </Typography>
     </Grid>
-    <Grid item xs={12} md={6}>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 2, height: '100%' }}>
         <Typography variant="subtitle1">Missing Grades Alert</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
@@ -36,7 +35,8 @@ const NotificationAlert = () => (
         </Box>
       </Card>
     </Grid>
-    <Grid item xs={12} md={6}>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 2, height: '100%' }}>
         <Typography variant="subtitle1">Overdue Assessments Alert</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
@@ -61,7 +61,8 @@ const NotificationAlert = () => (
         </Box>
       </Card>
     </Grid>
-    <Grid item xs={12} md={6}>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 2, height: '100%' }}>
         <Typography variant="subtitle1">Performance Alerts</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>

@@ -2,11 +2,9 @@ import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState } from 'react';
-
-import { Card, Divider, useTheme, CardHeader } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import { Card, Divider, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const OrganizationStatus = () => {

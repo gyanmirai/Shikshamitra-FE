@@ -7,18 +7,14 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React from 'react';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 // Initial form values for the report generation form
 const initialValues = {
@@ -80,20 +76,14 @@ const Reports = (props: TabComponentType) => {
               <Box sx={{ p: 2 }}>
                 <Grid container spacing={2}>
                   {/* Report Type Selection */}
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect
                         label="List of Reports"
                         name="report"
                         options={[
-                          {
-                            value: 'Course Completion Report',
-                            label: 'Course Completion Report',
-                          },
-                          {
-                            value: 'Course Engagement Report',
-                            label: 'Course Engagement Report',
-                          },
+                          { value: 'Course Completion Report', label: 'Course Completion Report' },
+                          { value: 'Course Engagement Report', label: 'Course Engagement Report' },
                           {
                             value: 'Subject Performance Report',
                             label: 'Subject Performance Report',
@@ -106,8 +96,9 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.report && errors.report}</FormHelperText>
                     </Field>
                   </Grid>
+
                   {/* Class Selection */}
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.className && errors.className} fullWidth>
                       <CustomSelect
                         label="Class"
@@ -124,7 +115,7 @@ const Reports = (props: TabComponentType) => {
                   </Grid>
 
                   {/* Subject Selection */}
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                       <CustomSelect
                         label="Subject"
@@ -144,7 +135,7 @@ const Reports = (props: TabComponentType) => {
                   </Grid>
 
                   {/* Start Date Selection */}
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
                         label="Start Date"
@@ -159,7 +150,7 @@ const Reports = (props: TabComponentType) => {
                   </Grid>
 
                   {/* End Date Selection */}
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                       <DatePicker
                         label="End Date"
@@ -172,8 +163,9 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.endDate && errors.endDate}</FormHelperText>
                     </Field>
                   </Grid>
+
                   {/* Submit Button */}
-                  <Grid item xs={12} justifyContent="flex-end" display="flex">
+                  <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex">
                     <Button
                       startIcon={<Iconify icon={GlobalIcons.generateReport} />}
                       type="submit"

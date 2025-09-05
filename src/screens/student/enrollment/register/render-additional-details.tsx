@@ -1,16 +1,13 @@
-import { Grid, TextField } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { YesNoArray } from 'src/enums/yes-no';
+import { Grid, TextField } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import PhoneInput from 'src/components/phone-input';
+import CustomSelect from 'src/components/custom-select';
 import { CategoryArray } from 'src/enums/studnet-category';
 import {
   CardActions,
   SectionCard,
 } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
-import PhoneInput from 'src/components/phone-input';
-import CustomSelect from 'src/components/custom-select';
 
 import type { FieldsType } from './type';
 
@@ -43,7 +40,7 @@ const RenderAdditionalDetails = (props: any) => {
         )
       }
     >
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           options={CategoryArray}
           disabled={!isAdditionalDetailsEditable.value}
@@ -57,7 +54,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
           options={YesNoArray as any}
@@ -70,7 +67,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           fullWidth
           label="BPL Card No."
@@ -85,7 +82,7 @@ const RenderAdditionalDetails = (props: any) => {
           helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
         />
       </Grid>
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
           options={YesNoArray as any}
@@ -98,7 +95,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           fullWidth
           label="Second Language"
@@ -114,7 +111,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <PhoneInput
           disabled={!isAdditionalDetailsEditable.value}
           name="emergencyContactNo"
@@ -126,7 +123,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           fullWidth
           label="Emergency Relative Name"
@@ -142,7 +139,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           fullWidth
           label="Emergency Relation"
@@ -158,7 +155,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
           options={YesNoArray as any}
@@ -172,7 +169,7 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={6} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
           options={YesNoArray as any}
@@ -195,7 +192,7 @@ export const additionalDetailsFields: FieldsType[] = [
     label: 'Category',
     type: 'text',
     otherProps: {},
-    gridProps: { xs: 12, sm: 12, md: 12 },
+    gridProps: { size: { xs: 12, sm: 12, md: 12 } },
     renderComp(props: any) {
       return <RenderAdditionalDetails {...props} />;
     },

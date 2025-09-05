@@ -1,9 +1,7 @@
 import React from 'react';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 interface RouteAvailableNotifyDialogProps {
   dialogValue: boolean;
@@ -15,16 +13,14 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
   dialogValue,
   onClose,
   selectedEntry,
-}) => {
-  const data = [];
-  return (
+}) => (
     <CustomDialog maxWidth="sm" title="Notify" open={dialogValue} handleClose={onClose}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>
         {/* <Typography variant='body1' sx={{ pb: "15px" }}>
                     Are You Sure Want to Declined ?
                 </Typography> */}
         <Grid container spacing={2}>
-          {/* <Grid item xs={12} md={12}>
+          {/* <Grid size={12}>
                         <CustomSelect
                             label="Select Reason"
                             options={[
@@ -44,7 +40,7 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
                         />
                     </Grid>
 
-                    <Grid item xs={12} md={12}>
+                    <Grid size={12}>
                         <TextField
                             multiline
 
@@ -58,7 +54,7 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
 
 
                     </Grid> */}
-          <Grid item xs={12} md={12}>
+          <Grid size={12}>
             <TextField
               multiline
               rows={3}
@@ -79,6 +75,5 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
       </DialogActions>
     </CustomDialog>
   );
-};
 
 export default RouteAvailableNotifyDialog;

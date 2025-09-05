@@ -1,7 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { Editor } from 'src/components/editor';
 import { Add, Save } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Card,
@@ -14,13 +18,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Editor } from 'src/components/editor';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const Notification = () => {
   const dialog = useBoolean();

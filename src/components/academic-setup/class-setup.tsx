@@ -4,11 +4,22 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
+import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Autocomplete, LoadingButton } from '@mui/lab';
+import { useTabs } from 'src/hooks/use-tabs';
+import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { boardApi } from 'src/redux/board/boardApi';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
+import {
+  useGetClassQuery,
+  useAddClassMutation,
+  useDeleteClassMutation,
+  useUpdateClassMutation,
+} from 'src/redux/class/classApi';
 import {
   Tab,
   Box,
@@ -18,24 +29,10 @@ import {
   MenuList,
   MenuItem,
   TextField,
+  Autocomplete,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { boardApi } from 'src/redux/board/boardApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
-import {
-  useGetClassQuery,
-  useAddClassMutation,
-  useDeleteClassMutation,
-  useUpdateClassMutation,
-} from 'src/redux/class/classApi';
 
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Card, Stack, Typography } from '@mui/material';
 
 import AssignedTeacherItem from './assignedTeacherCard';

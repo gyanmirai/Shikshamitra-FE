@@ -3,12 +3,20 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -21,18 +29,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const LateArrivalPolicy = () => {
   const leaveRuleDialog = useBoolean();
@@ -228,7 +224,7 @@ const LateArrivalPolicyForm = ({
         <form onSubmit={() => {}}>
           <Scrollbar sx={{ p: 2, height: '200px', bgcolor: 'background.neutral' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   size="small"
                   name="policyName"
@@ -236,7 +232,7 @@ const LateArrivalPolicyForm = ({
                   label="Policy Name"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   label="Grace Period (Min)"
                   name="gracePeriod"
@@ -247,7 +243,7 @@ const LateArrivalPolicyForm = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="lateArrivalThreshold"
                   size="small"
@@ -255,7 +251,7 @@ const LateArrivalPolicyForm = ({
                   label="Late Arrival Threshold(Days)"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="penaltyAmount"
                   onChange={formik.handleChange}
@@ -289,7 +285,7 @@ const AssignEmployeeForm = () => (
     <form onSubmit={() => {}}>
       <Scrollbar sx={{ p: 2, height: '150px', bgcolor: 'background.neutral' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Autocomplete
               options={[
                 { id: 1, organization: 'All' },
@@ -325,7 +321,7 @@ const AssignEmployeeForm = () => (
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Autocomplete
               options={[
                 { id: 1, employee: 'All' },

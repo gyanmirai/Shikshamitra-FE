@@ -1,9 +1,7 @@
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { ArrowForward } from '@mui/icons-material';
 import { Box, Grid, Button, Container, Typography } from '@mui/material';
-
-import { Label } from 'src/components/label';
 
 const HomeHero = () => (
   <Box
@@ -31,9 +29,7 @@ const HomeHero = () => (
     <Container sx={{ height: '100%' }}>
       <Grid container sx={{ height: '100%' }} spacing={2}>
         <Grid
-          item
-          xs={12}
-          md={6}
+          size={{ xs: 12, md: 6 }}
           display="flex"
           gap={3}
           justifyContent="center"
@@ -49,14 +45,15 @@ const HomeHero = () => (
             </Label>{' '}
             Shikshamitra ERP System
           </Typography>
-          <Typography
-            variant="h2"
-            color="#000000"
-            fontWeight={800}
-          >{`"Simplify School Operations with Our All-in-One ERP System."`}</Typography>
-          <Typography variant="subtitle1" color="#000000" fontWeight={700}>
-            {`"Empower your institution with seamless management tools."`}
+
+          <Typography variant="h2" color="#000000" fontWeight={800}>
+            Simplify School Operations with Our All-in-One ERP System.
           </Typography>
+
+          <Typography variant="subtitle1" color="#000000" fontWeight={700}>
+            Empower your institution with seamless management tools.
+          </Typography>
+
           <Box display="flex" gap="16px">
             <Button
               variant="contained"
@@ -66,6 +63,7 @@ const HomeHero = () => (
             >
               EXPLORE PLATFORM
             </Button>
+
             <Button
               variant="outlined"
               color="success"
@@ -85,10 +83,9 @@ const HomeHero = () => (
             </Button>
           </Box>
         </Grid>
+
         <Grid
-          item
-          xs={12}
-          md={6}
+          size={{ xs: 12, md: 6 }}
           sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}
         >
           <Box

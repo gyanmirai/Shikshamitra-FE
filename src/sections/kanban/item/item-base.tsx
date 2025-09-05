@@ -3,20 +3,17 @@ import type { IKanbanTask } from 'src/types/kanban';
 import type { StackProps } from '@mui/material/Stack';
 import type { DraggableSyntheticListeners } from '@dnd-kit/core';
 
-import { memo, useEffect, forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import ListItem from '@mui/material/ListItem';
-import Typography from '@mui/material/Typography';
-import { styled, useTheme } from '@mui/material/styles';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
-
-import { varAlpha, stylesMode } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import { memo, useEffect, forwardRef } from 'react';
 import { imageClasses } from 'src/components/image';
+import { styled, useTheme } from '@mui/material/styles';
+import { varAlpha, stylesMode } from 'src/theme/styles';
+import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { kanbanClasses } from '../classes';
 

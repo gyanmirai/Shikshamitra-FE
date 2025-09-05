@@ -1,16 +1,13 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import type { IAddNewMemberDialogProps } from '../member-dialog-interface';
 
@@ -61,7 +58,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                 </Box>
               ))}
             <Grid container spacing={3} pt="10px">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="name"
@@ -71,7 +68,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="name"
@@ -82,7 +79,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Year"
                   options={[]}
@@ -93,7 +90,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Member"
                   options={[]}
@@ -104,7 +101,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Requested Date"
                   value={formik.values.issueDate}
@@ -120,7 +117,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                 />
               </Grid>
 
-              {/* <Grid item xs={12} md={6}>
+              {/* <Grid size={{ xs: 12, md: 6 }}>
                                 <TextField
                                     fullWidth
                                     name="borrowingLimit"
@@ -131,7 +128,7 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                                 />
                             </Grid> */}
               {isRenewMembership && data !== null && data.memberStatus === 'Expired' && (
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
                     label="Renewal Duration"
                     options={[]}

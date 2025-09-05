@@ -1,7 +1,6 @@
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetOutstandingFeesQuery } from 'src/redux/feeCollection/outstandingFeeData';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentFee } from '../type';
 

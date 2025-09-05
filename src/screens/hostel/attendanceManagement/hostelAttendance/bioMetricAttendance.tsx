@@ -4,32 +4,29 @@ import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useState, useCallback } from 'react';
-
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import React, { useState, useCallback } from 'react';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, MenuItem, MenuList, TextField, Autocomplete } from '@mui/material';
-
 import {
   BiometricHostelAttendanceType,
   BiometricHostelAttendanceColor,
   BiometricHostelAttendanceOptions,
 } from 'src/enums/biometric-hostel-attendance';
 
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 const BiometricHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [block, setBlock] = useState<string>('');
+  const [_block, setBlock] = useState<string>('');
   // State for storing the selected hostel
-  const [hostel, setHostel] = useState<string>('');
+  const [_hostel, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [room, setRoom] = useState<string>('');
+  const [_room, setRoom] = useState<string>('');
 
   // Actions to be displayed in the three-dot menu
   const actions = useCallback(

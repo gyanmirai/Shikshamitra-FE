@@ -4,22 +4,12 @@ import type { StepIconProps } from '@mui/material';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import {
-  Box,
-  Step,
-  styled,
-  Button,
-  Stepper,
-  StepLabel,
-  StepConnector,
-  stepConnectorClasses,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { styled } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { stepConnectorClasses } from '@mui/material/StepConnector';
+import { Box, Step, Button, Stepper, StepLabel, StepConnector } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';

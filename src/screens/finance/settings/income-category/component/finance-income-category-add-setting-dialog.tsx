@@ -1,10 +1,8 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 interface FinanceIncomeCategoryAddSettingDialogProps {
   dialogValue: boolean;

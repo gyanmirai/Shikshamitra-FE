@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomizableTable from 'src/components/customizabaleTable';
 

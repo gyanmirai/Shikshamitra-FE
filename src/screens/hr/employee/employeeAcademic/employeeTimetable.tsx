@@ -1,7 +1,6 @@
 import type { TimetableSlot } from 'src/screens/academic/timetable-schedule-management/timeTable/type';
 
 import React from 'react';
-
 import TimeTableView from 'src/screens/academic/timetable-schedule-management/timeTable/component/timeTableView';
 
 const employeeTimetable: TimetableSlot[] = [

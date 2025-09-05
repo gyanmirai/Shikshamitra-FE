@@ -5,12 +5,11 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
 import DialogTitle from '@mui/material/DialogTitle';
+import { Scrollbar } from 'src/components/scrollbar';
 import DialogActions from '@mui/material/DialogActions';
 import InputAdornment from '@mui/material/InputAdornment';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 
 import { FileManagerInvitedItem } from './file-manager-invited-item';
 

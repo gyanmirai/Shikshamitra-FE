@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Tab, Box } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetEmployeeCustomAttendanceRuleQuery } from 'src/redux/employee/employeeApi';
 
 import Notification from './notification';
 import AttendanceRule from './attendance-rule';

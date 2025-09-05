@@ -1,10 +1,7 @@
 'use client';
 
 import React from 'react';
-
-import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
-
+import { Box , Grid } from '@mui/material';
 import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
 
 import ElectiveSubjectPopularity from './components/electiveSubjectPopularity';
@@ -53,57 +50,65 @@ const activities = [
 
 const ClassManagementDashboard = () => (
   <Box>
-    <Grid2 container spacing={2} sx={{ mb: 2 }}>
-      <Grid2 xs={12}>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
         <ClassManagementDashboardOverview />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <ElectiveSubjectPopularity />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <RecentActivities activities={activities} />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <ClassManagementTeacherAssignment />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <ClassTeacherAssignment />
-      </Grid2>
-      <Grid2 xs={12}>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
         <ClassManagementSubjectProgress />
-      </Grid2>
-      {/* <Grid2 xs={12} md={6}>
-        <ProfileDashboardAttendance />
-      </Grid2>{' '}
-      <Grid2 xs={12} md={6}>
-        <ProfileDashboardAttendance />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
-        <StudentHomeworkAssignments />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
-        <RecentActivities activities={activities} />
-      </Grid2>
-      <Grid2 xs={12}>
-        <ProfileDashboardAttendanceTrend />
-      </Grid2> */}
-      {/* <Grid2 xs={12}>
-          <Card sx={{ height: '100%', p: 2 }}>
-            <Grid2 xs={12} md={6}>
-              <BoardEnrollmentStatus />
-            </Grid2>
-            <Grid2 xs={12} md={6}>
-              <OrganizationStatus />
-            </Grid2>
-          </Card>
-        </Grid2> */}
-      {/* <Grid2 xs={12}>
-          <EntranceExamCard />
-        </Grid2>
-        <Grid2 xs={12}>
-          <EnrollmentActivities />
-        </Grid2> */}
-    </Grid2>
+      </Grid>
+
+      {/* Commented code (optional conversion if needed)
+  <Grid size={{ xs: 12, md: 6 }}>
+    <ProfileDashboardAttendance />
+  </Grid>
+  <Grid size={{ xs: 12, md: 6 }}>
+    <ProfileDashboardAttendance />
+  </Grid>
+  <Grid size={{ xs: 12, md: 6 }}>
+    <StudentHomeworkAssignments />
+  </Grid>
+  <Grid size={{ xs: 12, md: 6 }}>
+    <RecentActivities activities={activities} />
+  </Grid>
+  <Grid size={{ xs: 12 }}>
+    <ProfileDashboardAttendanceTrend />
+  </Grid>
+  <Grid size={{ xs: 12 }}>
+    <Card sx={{ height: '100%', p: 2 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <BoardEnrollmentStatus />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <OrganizationStatus />
+      </Grid>
+    </Card>
+  </Grid>
+  <Grid size={{ xs: 12 }}>
+    <EntranceExamCard />
+  </Grid>
+  <Grid size={{ xs: 12 }}>
+    <EnrollmentActivities />
+  </Grid>
+  */}
+    </Grid>
 
     {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}

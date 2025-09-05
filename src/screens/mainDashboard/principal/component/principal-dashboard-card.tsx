@@ -3,11 +3,10 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import Link from 'next/link';
-
-import { Box, Card, useTheme, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 interface IPrincipalDashboardCardProps {

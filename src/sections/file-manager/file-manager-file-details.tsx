@@ -1,27 +1,23 @@
 import type { IFile } from 'src/types/file';
 import type { DrawerProps } from '@mui/material/Drawer';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
+import { useState, useCallback } from 'react';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
+import { fData } from 'src/utils/format-number';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import Autocomplete from '@mui/material/Autocomplete';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { fData } from 'src/utils/format-number';
 import { fDateTime } from 'src/utils/format-time';
-
-import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import Autocomplete from '@mui/material/Autocomplete';
 import { fileFormat, FileThumbnail } from 'src/components/file-thumbnail';
 
 import { FileManagerShareDialog } from './file-manager-share-dialog';

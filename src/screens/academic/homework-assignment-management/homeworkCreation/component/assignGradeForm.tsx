@@ -3,7 +3,13 @@
 import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
 
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
 import {
   Box,
   Grid,
@@ -15,16 +21,6 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { assignGradeValidationSchema } from './validationSchema';
 import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
@@ -66,7 +62,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         {/* <form onSubmit={formik.handleSubmit}> */}
         <Scrollbar sx={{ p: 2, height: '500px' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box display="flex" gap={2}>
                 <Typography variant="body2">
                   <strong>Name : </strong>
@@ -78,15 +74,16 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} mb={-2}>
+
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Student Submission</Typography>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <Card
                 key={document.id}
                 sx={{
                   p: 2,
-
                   border: '1px solid',
                   borderColor: 'divider',
                   display: 'flex',
@@ -119,10 +116,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               </Card>
             </Grid>
 
-            <Grid item xs={12} mb={-2}>
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Description</Typography>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <Box
                 sx={{
                   border: '1px solid #e0e0e0',
@@ -159,12 +157,11 @@ I have completed all answers according to the given instructions and provided sc
               </Box>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
                 error={!!(formik.touched.feedback && formik.errors.feedback) || false}
               >
                 <TextField
-                  // placeholder="Enter Feedback"
                   label="Feedback *"
                   multiline
                   size="small"

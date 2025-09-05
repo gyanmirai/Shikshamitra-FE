@@ -1,5 +1,4 @@
 import React from 'react';
-
 import StudentReportsScreen from 'src/screens/student/reports';
 
 const StudentReports = () => <StudentReportsScreen />;

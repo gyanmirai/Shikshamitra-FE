@@ -17,7 +17,12 @@ import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
 import type { FeeStructureCardProps } from '../type';
 
-const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems, formik }) => {
+const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
+  className,
+  feeItems,
+  structureIndex,
+  formik,
+}) => {
   // Dialog state for adding new fee head
   const addFeeHeadDialog = useBoolean();
   // State to track the index of fee head selected for deletion
@@ -27,9 +32,9 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
   const deleteFeeStructureDialog = useBoolean();
 
   return (
-    <Grid xs={12} key={className} sx={{ ml: 3, mt: 2 }}>
+    <Grid size={12} key={className} sx={{ ml: 3, mt: 2 }}>
       {feeItems.length > 0 && (
-        <Scrollbar sx={{ height: '100%', mb: 2 }}>
+        <Scrollbar sx={{ height: '150px', mb: 2 }}>
           {feeItems.map((item, index) => (
             <Grid
               container
@@ -44,10 +49,10 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                 mb: 4,
               }}
             >
-              <Grid item xs={0.1}>
+              <Grid size={0.1}>
                 <Typography variant="h6">{index + 1}.</Typography>
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <TextField
                   label="Category"
                   size="small"
@@ -66,7 +71,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <TextField
                   label="Fee Head"
                   disabled
@@ -80,19 +85,22 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <NumericFormatCustom
                   size="small"
                   fullWidth
                   label="Amount"
-                  name={`feeStructureClasses.${className}.feeItems.${index}.amount`}
+                  name={`feeStructureClasses.${className}[${index}].feeItems.${index}.amount`}
                   value={item.amount || ''}
                   onChange={(e) => {
                     let val = e.target.value;
                     val = val.replace(/[₹,\s]/g, '');
                     const updatedItems = [...feeItems];
                     updatedItems[index].amount = Number(val);
-                    formik.setFieldValue(`feeStructureClasses.${className}.feeItems`, updatedItems);
+                    formik.setFieldValue(
+                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].amount`,
+                      Number(val)
+                    );
                   }}
                   sx={{
                     width: '100%',
@@ -114,12 +122,12 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   // }
                 />
               </Grid>
-              <Grid item xs={2} pt={0} display="flex" alignItems="center">
+              <Grid size={2} pt={0} display="flex" alignItems="center">
                 <Switch
                   checked={item.isOneTime}
                   onChange={(event) => {
                     formik.setFieldValue(
-                      `feeStructureClasses.${className}.feeItems[${index}].isOneTime`,
+                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].isOneTime`,
                       event.target.checked
                     );
                   }}
@@ -128,12 +136,12 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   One Time Fee
                 </Typography>
               </Grid>
-              <Grid item xs={2} pt={0} display="flex" alignItems="center">
+              <Grid size={2} pt={0} display="flex" alignItems="center">
                 <Switch
                   checked={item.required}
                   onChange={(event) => {
                     formik.setFieldValue(
-                      `feeStructureClasses.${className}.feeItems[${index}].required`,
+                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].required`,
                       event.target.checked
                     );
                   }}
@@ -142,7 +150,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
                   Optional
                 </Typography>
               </Grid>
-              <Grid item xs={0.5} ml={2}>
+              <Grid size={0.5} ml={2}>
                 <IconButton
                   color="error"
                   onClick={() => {
@@ -188,6 +196,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ className, feeItems
         <AddFeeHeadDialogContent
           formik={formik}
           className={className}
+          feeStructureIndex={structureIndex}
           onClose={addFeeHeadDialog.onFalse}
         />
       </CustomDialog>

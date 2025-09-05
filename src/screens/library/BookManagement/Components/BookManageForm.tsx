@@ -1,16 +1,10 @@
 import type { FormikErrors } from 'formik';
 
 import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Grid, Card, Button, Switch, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -18,6 +12,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Card, Button, Switch, TextField, DialogActions } from '@mui/material';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { bookValidationSchema } from './BookValidationSchema';
 import { getInitialBookData } from './BookManageInitialValues';
@@ -77,7 +73,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
           >
             <SectionCard title="General Information">
               {/* Title */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                   <TextField
                     fullWidth
@@ -104,7 +100,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* ISBN */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.isbn && formik.errors.isbn)}>
                   <TextField
                     fullWidth
@@ -131,7 +127,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Author */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.author && formik.errors.author)}>
                   <TextField
                     fullWidth
@@ -158,7 +154,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Publisher */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.publisher && formik.errors.publisher)}>
                   <TextField
                     fullWidth
@@ -185,7 +181,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Subject */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
                   <TextField
                     fullWidth
@@ -212,7 +208,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Category */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
                   <CustomSelect
                     label="Category *"
@@ -235,7 +231,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Edition */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
                   <TextField
                     fullWidth
@@ -254,7 +250,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Language */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
                   <CustomSelect
                     label="Language *"
@@ -281,7 +277,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               {/* Number of Copies */}
-              <Grid item xs={4} md={4}>
+              <Grid size={{ xs: 4, md: 4 }}>
                 <ShakingTextField
                   error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
                 >
@@ -301,7 +297,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <CustomUpload
                   multiple
                   previewCount={6}
@@ -319,7 +315,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
             {copies.length > 0 && (
               <Box mt={2}>
                 <SectionCard title="Manage Copies">
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <CustomizableTable
                       tableId="copies-table"
                       isSearch={false}

@@ -1,7 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
+import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetIssuedBooksQuery } from 'src/redux/bookIssuedData/bookIssuedDataApi';
 import {
@@ -9,9 +10,6 @@ import {
   LibraryBookStatusColors,
   LibraryBookStatusOptions,
 } from 'src/enums/library-book-status';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const IssuedBooksTable = () => {
   const { data: issuedBooks, isLoading: yearLoading } = useQueryAndMutation({

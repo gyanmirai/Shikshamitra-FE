@@ -3,9 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Box, Grid } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -54,7 +52,7 @@ const StudentProgressTracking = (props: TabComponentType) => {
       </Box>
 
       <Grid container mt={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Box sx={{ width: '100%', margin: 'auto' }}>
             <RenderTabs />
           </Box>

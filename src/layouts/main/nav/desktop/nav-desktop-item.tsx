@@ -2,18 +2,14 @@ import type { LinkProps } from '@mui/material/Link';
 
 import { m } from 'framer-motion';
 import { forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import { styled } from '@mui/material/styles';
-import ButtonBase from '@mui/material/ButtonBase';
-import CardActionArea from '@mui/material/CardActionArea';
-
-import { RouterLink } from 'src/routes/components';
-
 import { CONFIG } from 'src/config-global';
-
+import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
+import { RouterLink } from 'src/routes/components';
+import CardActionArea from '@mui/material/CardActionArea';
 import { useNavItem } from 'src/components/nav-section/hooks';
 
 import type { NavItemProps, NavItemStateProps } from '../types';

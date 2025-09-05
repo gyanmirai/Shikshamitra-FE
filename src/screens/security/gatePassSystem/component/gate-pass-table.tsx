@@ -2,19 +2,16 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
 import { Box } from '@mui/material';
-
+import { Label } from 'src/components/label';
 import data from 'src/json/security/gate-pass-request-data.json';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   GatePassRequestStatusType,
   GatePassRequestStatusColor,
   GatePassRequestStatusOptions,
 } from 'src/enums/gate-pass-request-status';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type {
   IGatePassFormValues,

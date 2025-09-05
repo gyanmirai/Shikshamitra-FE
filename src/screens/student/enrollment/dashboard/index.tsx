@@ -3,15 +3,11 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import { useRouter } from 'next/navigation';
-import React, { useState, useCallback } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
-
 import { fNumber } from 'src/utils/format-number';
 import 'src/utils/convertABPPermissionToNavigation';
-
+import React, { useState, useCallback } from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box , Grid, Card, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
@@ -21,45 +17,44 @@ import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
 import EnrollmentActivities from '../../studentProfile/studentDashbordComponent/recentEnrollmentActivities';
 
-const EnrollmentDashboardScreen = () => {
-  const router = useRouter();
-
-  return (
+const EnrollmentDashboardScreen = () => (
     <Box>
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid size={{ xs: 12 }}>
           <Overview />
-        </Grid2>
-        <Grid2 xs={12}>
-          <AdmissionOverTime />
-        </Grid2>
-        <Grid2 xs={12}>
-          <Card sx={{ height: '100%', p: 2 }}>
-            <Grid2 container spacing={2}>
-              <Grid2 xs={12} md={6}>
-                <BoardEnrollmentStatus />
-              </Grid2>
-              <Grid2 xs={12} md={6}>
-                <OrganizationStatus />
-              </Grid2>
-            </Grid2>
-          </Card>
-        </Grid2>
+        </Grid>
 
-        <Grid2 xs={12}>
+        <Grid size={{ xs: 12 }}>
+          <AdmissionOverTime />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card sx={{ height: '100%', p: 2 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <BoardEnrollmentStatus />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <OrganizationStatus />
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
           <EntranceExamCard />
-        </Grid2>
-        <Grid2 xs={12}>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
           <EnrollmentActivities />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2> */}
     </Box>
   );
-};
 
 export default EnrollmentDashboardScreen;
 

@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { Tab, Box, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
+import { Tab, Box, Card } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 import { CustomTabs } from '../custom-tabs';

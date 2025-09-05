@@ -1,16 +1,14 @@
 import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
-
-import { Box, Card, Grid, Avatar, useTheme, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 
 import type { IStudentFee } from './type';
 
@@ -67,8 +65,8 @@ export const FeeSummaryCard = ({
 
           {/* Fee Info Row */}
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+          <Grid container spacing={3} columns={{ xs: 12, sm: 12, md: 12, lg: 60 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:currency-inr"
                 title="Total Fees"
@@ -79,7 +77,8 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:cash-check"
                 title="Paid Fees"
@@ -90,7 +89,8 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:cash-clock"
                 title="Pending Fees"
@@ -101,7 +101,8 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:cash-remove"
                 title="Overdue Fees"
@@ -112,7 +113,8 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:cash-plus"
                 title="Charges"
@@ -123,7 +125,7 @@ export const FeeSummaryCard = ({
                 labels={[]}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4} lg={2.4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
               <FinanceCollectionCard
                 icon="mdi:cash-minus"
                 title="Concessions"

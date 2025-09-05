@@ -1,12 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Box, Tab, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { Iconify } from 'src/components/iconify';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
 import TransportStopsSettingScreen from './stops/transport-stops-setting-screen';

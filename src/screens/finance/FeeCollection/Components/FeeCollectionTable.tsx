@@ -1,9 +1,12 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { Box, MenuList, MenuItem } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllBoardQuery, useGetAllMediumQuery } from 'src/redux/feeCollection/feeCollection';
 import {
@@ -11,12 +14,6 @@ import {
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IFeeData, IFeeTableProps } from './type';
 

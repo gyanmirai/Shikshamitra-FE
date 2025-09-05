@@ -1,14 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, Card, Switch } from '@mui/material';
-
-import notificationData from 'src/json/finance/notification/feeCollectionNotificationData.json';
-import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import notificationData from 'src/json/finance/notification/feeCollectionNotificationData.json';
+import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
 
 const FeeCollectionNotificationManagement = () => {
   const [open, setOpen] = useState(false);

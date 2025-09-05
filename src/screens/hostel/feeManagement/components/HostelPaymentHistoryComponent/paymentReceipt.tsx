@@ -1,20 +1,17 @@
 import React from 'react';
-
-import { Box, Grid, Button, Divider, Typography } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-import { numberToWords } from 'src/utils/numberToWords';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { formatNumber } from 'src/utils/formate_number';
+import { numberToWords } from 'src/utils/numberToWords';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, Button, Divider, Typography } from '@mui/material';
 
 const PaymentReceipt = () => (
   <Box>
     <Scrollbar sx={{ height: '450px' }}>
       <Grid container spacing={2} mb={2} justifyContent="flex-start">
-        <Grid item xs={12} md={12}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <Box
             sx={{
               p: 1.5,
@@ -32,7 +29,7 @@ const PaymentReceipt = () => (
                 container
                 sx={{ fontSize: '1rem', alignItems: 'flex-start', justifyContent: 'space-between' }}
               >
-                <Grid item xs={5}>
+                <Grid size={{ xs: 5 }}>
                   <Box display="flex" flexDirection="column" alignItems="flex-start">
                     <Typography variant="body2" noWrap>
                       <strong> From:</strong>
@@ -45,7 +42,7 @@ const PaymentReceipt = () => (
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={5}>
+                <Grid size={{ xs: 5 }}>
                   <Box display="flex" flexDirection="column" alignItems="flex-start">
                     <Typography variant="body2" noWrap>
                       <strong> To:</strong>
@@ -106,6 +103,7 @@ const PaymentReceipt = () => (
                 { feeHead: 'Hostel Mess', amount: 800, feeHeadMonth: 'March' },
               ]}
             />
+
             <Box mt={7} display="flex" justifyContent="space-between" sx={{ fontSize: '0.875rem' }}>
               <Box>
                 <Typography>

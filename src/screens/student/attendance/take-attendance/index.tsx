@@ -6,10 +6,26 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
+import { convertBase64Format } from 'src/utils/base64Formate';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import {
+  useGetAttendanceByFilterQuery,
+  useFillStudentAttendanceMutation,
+} from 'src/redux/student/take-attendance/take-attendace-api';
 import {
   Box,
   Chip,
@@ -24,27 +40,6 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { convertBase64Format } from 'src/utils/base64Formate';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import { varAlpha } from 'src/theme/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetAttendanceByFilterQuery,
-  useFillStudentAttendanceMutation,
-} from 'src/redux/student/take-attendance/take-attendace-api';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const TakeAttendanceScreen = () => {
   const [fillStudentAttendance, { isLoading: isSavedAttendanceLoading }] = useQueryAndMutation({
@@ -501,7 +496,7 @@ export default TakeAttendanceScreen;
 const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any) => {
   const a = null;
   return (
-    <Grid item xs={12} sm={6} md={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
       <Paper
         elevation={3}
         sx={{

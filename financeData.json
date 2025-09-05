@@ -1,53 +1,143 @@
   {
     "feeStructure": [
-    {
-      "feeStructureName": "Class 1 Structure",
-      "board": "GSEB",
-      "medium": "English",
-      "receiptBook": "GSEB",
-      "paymentTerm": "Monthly",
-      "paymentMethod": ["Online", "Cash"],
-      "totalFeeHead": 5,
-      "totalClass": 1,
-      "status": 1,
-      "feeStructureClasses": {
-        "Class 1": {
-          "status": 1,
-          "feeItems": [
-            {
-              "feeCategory": "Tuition",
-              "feeHead": "Tuition Fee",
-              "amount": 10000,
-              "required": true
-            },
-            {
-              "feeCategory": "Hostel",
-              "feeHead": "Hostel Fee",
+ {
+  "feeStructureName": "Class 1 Structure",
+  "academicYear": "3a1829b5-05f8-7b40-8173-29abcf1f24ba",
+  "board": "3a1829b5-060c-564c-ac22-d08effd8c3cf",
+  "medium": "3a19e063-2a6d-33f9-c526-7b7a226ce1a7",
+  "receiptBook": "GSEB",
+  "paymentTerm": "Monthly",
+  "paymentMethod": [
+    "Online",
+    "Cash"
+  ],
+  "totalFeeHead": 5,
+  "totalClass": 1,
+  "feeStructureClasses": {
+    "1": [
+      {
+        "feeStructureName": "Class 1 Structure",
+        "status": 1,
+        "feeItems": [
+          {
+            "feeCategory": "Tuition",
+            "feeHead": "Tuition Fee",
             "amount": 10000,
+            "isOneTime": false,
+            "required": true
+          },
+          {
+            "feeCategory": "Hostel",
+            "feeHead": "Hostel Fee",
+            "amount": 10000,
+            "isOneTime": false,
             "required": true
           },
           {
             "feeCategory": "Transport",
             "feeHead": "Transport Fee",
             "amount": 10000,
+            "isOneTime": false,
             "required": true
           },
           {
             "feeCategory": "Admission",
             "feeHead": "Admission Fee",
             "amount": 5000,
+            "isOneTime": false,
             "required": true
           },
           {
             "feeCategory": "Sports",
             "feeHead": "Sport Fee",
             "amount": 12000,
+            "isOneTime": false,
             "required": true
           }
         ]
       }
-    }
-  }
+    ],
+    "2": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "3": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "4": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "5": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "6": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "7": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "8": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "9": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "10": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "11": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ],
+    "12": [
+      {
+        "feeStructureName": "",
+        "status": 2,
+        "feeItems": []
+      }
+    ]
+  },
+  "status": 1
+}
+
   ],
   "paymentTerms": [
   {

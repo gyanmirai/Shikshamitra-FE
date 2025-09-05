@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Grid, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import DashboardCard from 'src/components/dasboard-card';
 
@@ -13,7 +11,7 @@ const VisitorSummary = () => (
       Visitor Summary
     </Typography>
     <Grid container spacing={3}>
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Visitors Entered Today"
           mainText="68"
@@ -26,7 +24,7 @@ const VisitorSummary = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Pending Exits"
           mainText="12"
@@ -39,7 +37,7 @@ const VisitorSummary = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Flagged Entries"
           mainText="2"

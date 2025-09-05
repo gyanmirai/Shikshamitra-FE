@@ -1,8 +1,7 @@
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
-
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 
 const RenderClass = (props: any) => {
   const { formik, isEdit } = props;

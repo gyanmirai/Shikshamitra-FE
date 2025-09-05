@@ -2,10 +2,8 @@ import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, TextField } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -60,7 +58,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
         {/* Budget Title */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.budgetTitle && formik.errors.budgetTitle)}>
             <TextField
               fullWidth
@@ -69,9 +67,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               value={formik.values.budgetTitle}
               onChange={(e) => {
                 const value = e.target.value
-                  // Remove everything except letters and spaces
                   .replace(/[^a-zA-Z\s]/g, '')
-                  // Capitalize each word
                   .split(' ')
                   .map((word) =>
                     word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -88,7 +84,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Budget Category */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.budgetCategory && formik.errors.budgetCategory)}
           >
@@ -98,7 +94,6 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               onChange={(val) => {
                 formik.setFieldValue('budgetCategory', val);
                 formik.setFieldTouched('budgetCategory', false);
-                // reset subcategories when category changes
                 formik.setFieldValue('budgetSubCategories', []);
               }}
               label="Budget Category *"
@@ -110,7 +105,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Budget Sub Category */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.budgetSubCategories && formik.errors.budgetSubCategories)}
           >
@@ -124,7 +119,6 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               onChange={(val: string[]) => {
                 formik.setFieldValue('budgetSubCategories', val);
                 formik.setFieldTouched('budgetSubCategories', false);
-                // create structured objects in subCategories
                 const updated = val.map((subCat) => ({
                   category: formik.values.budgetCategory,
                   subCategory: subCat,
@@ -146,7 +140,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Start Date */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.startDate && formik.errors.startDate)}>
             <DatePicker
               value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
@@ -164,15 +158,9 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                   error: formik.touched.startDate && Boolean(formik.errors.startDate),
                   helperText: formik.touched.startDate ? formik.errors.startDate : ' ',
                   FormHelperTextProps: {
-                    sx: {
-                      margin: 0,
-                      position: 'static',
-                      whiteSpace: 'normal',
-                    },
+                    sx: { margin: 0, position: 'static', whiteSpace: 'normal' },
                   },
-                  InputLabelProps: {
-                    sx: { lineHeight: '1.2em' },
-                  },
+                  InputLabelProps: { sx: { lineHeight: '1.2em' } },
                 },
               }}
             />
@@ -180,7 +168,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* End Date */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.endDate && formik.errors.endDate)}>
             <DatePicker
               value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
@@ -198,15 +186,9 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                   error: formik.touched.endDate && Boolean(formik.errors.endDate),
                   helperText: formik.touched.endDate ? formik.errors.endDate : ' ',
                   FormHelperTextProps: {
-                    sx: {
-                      margin: 0,
-                      position: 'static',
-                      whiteSpace: 'normal',
-                    },
+                    sx: { margin: 0, position: 'static', whiteSpace: 'normal' },
                   },
-                  InputLabelProps: {
-                    sx: { lineHeight: '1.2em' },
-                  },
+                  InputLabelProps: { sx: { lineHeight: '1.2em' } },
                 },
               }}
             />
@@ -214,7 +196,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Department */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.departments && formik.errors.departments)}>
             <ResponsiveMultiSelect
               label="Department *"
@@ -235,7 +217,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Total Budget Amount */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.totalBudgetAmount && formik.errors.totalBudgetAmount)}
           >
@@ -246,26 +228,19 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               name="totalBudgetAmount"
               value={formik.values.totalBudgetAmount || ''}
               onChange={(e) => {
-                let val = e.target.value;
-                val = val.replace(/[₹,\s]/g, '');
-                console.log('val----', val);
-
+                const val = e.target.value.replace(/[₹,\s]/g, '');
                 formik.setFieldValue('totalBudgetAmount', Number(val));
                 formik.setFieldTouched('totalBudgetAmount', false);
               }}
               error={formik.touched.totalBudgetAmount && Boolean(formik.errors.totalBudgetAmount)}
               helperText={formik.touched.totalBudgetAmount && formik.errors.totalBudgetAmount}
-              sx={{
-                width: '100%',
-                padding: '0',
-                borderRadius: 1,
-              }}
+              sx={{ width: '100%', padding: 0, borderRadius: 1 }}
             />
           </ShakingTextField>
         </Grid>
 
         {/* Spending Threshold */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.spendingThreshold && formik.errors.spendingThreshold)}
           >
@@ -283,7 +258,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Description */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
             <TextField
               fullWidth

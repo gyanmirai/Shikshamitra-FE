@@ -5,11 +5,10 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import { useResponsive } from 'src/hooks/use-responsive';
 import FormHelperText from '@mui/material/FormHelperText';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-
-import { useResponsive } from 'src/hooks/use-responsive';
 
 import type { UseDateRangePickerReturn } from './types';
 

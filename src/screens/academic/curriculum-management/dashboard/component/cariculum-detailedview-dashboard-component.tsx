@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import CustomAccordion from 'src/components/custom-accordian';
 
 const CarriculumDetailedviewDashboardComponent = () => {

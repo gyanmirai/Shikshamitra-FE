@@ -4,11 +4,9 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
-import { CONFIG } from 'src/config-global';
-
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------

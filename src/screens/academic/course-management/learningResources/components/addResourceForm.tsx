@@ -5,17 +5,14 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from '../validationSchema';
@@ -81,7 +78,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Class selection dropdown */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
                 >
@@ -98,8 +95,9 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Subject selection dropdown */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.subject && formik.errors.subject) || false}
                 >
@@ -120,7 +118,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.chapter && formik.errors.chapter) || false}
                 >
@@ -143,8 +141,9 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Resource title input */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
                 >
@@ -163,7 +162,7 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               </Grid>
 
               {/* File upload box */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Upload
                   thumbnail
                   value={formik.values.document}

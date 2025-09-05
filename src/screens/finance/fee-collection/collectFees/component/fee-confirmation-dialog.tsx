@@ -1,12 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
-import { Button, Typography, DialogActions, DialogContent } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import { Button, Typography, DialogActions, DialogContent } from '@mui/material';
 
 interface FeeConfirmationDialogProps {
   open: boolean;

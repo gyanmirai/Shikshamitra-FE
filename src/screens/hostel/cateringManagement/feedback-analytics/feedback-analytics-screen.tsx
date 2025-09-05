@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 import FeedbackAnalyticsTable from './component/feedback-analytics-table';

@@ -1,14 +1,11 @@
 import React from 'react';
-
 import { Card, Grid } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ActivityStudentEnrollment = () => (
-  <Grid item xs={12} sx={{ mt: 2 }}>
+  <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
     <Card sx={{ p: 2 }}>
       <AnalyticsWebsiteVisits
         title="Student Enrollment in Different Activities"

@@ -2,12 +2,9 @@ import type { IChatAttachment } from 'src/types/chat';
 
 import Stack from '@mui/material/Stack';
 import Collapse from '@mui/material/Collapse';
-import ListItemText from '@mui/material/ListItemText';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { fDateTime } from 'src/utils/format-time';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import ListItemText from '@mui/material/ListItemText';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 
 import { CollapseButton } from './styles';

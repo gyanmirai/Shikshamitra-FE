@@ -1,13 +1,11 @@
 'use client';
 
 import React from 'react';
-
 import { Grid, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const AssignmentTable = () => (
-  <Grid item xs={12}>
+  <Grid size={12}>
     <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
       Assignment Table
     </Typography>

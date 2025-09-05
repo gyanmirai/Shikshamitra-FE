@@ -1,11 +1,9 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialSubCategoryValues } from '../initialValue';
@@ -41,7 +39,7 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
           {/* Category Name Field */}
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
             >
@@ -63,7 +61,7 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
           </Grid>
 
           {/* Subcategory Field */}
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.subcategoryName && Boolean(formik.errors.subcategoryName)}
             >

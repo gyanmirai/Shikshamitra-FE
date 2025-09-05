@@ -1,17 +1,14 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { Card, Typography } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,
   ScheduleExamStatusOptions,
 } from 'src/enums/schedule-exam-status';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const AcademicDashboardExams = () => (
   <Card sx={{ p: 3, height: '100%', borderRadius: 3 }}>

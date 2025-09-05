@@ -1,15 +1,12 @@
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetReservedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
   BookReservationStatusTypeColors,
   BookReservationStatusTypeOptions,
 } from 'src/enums/library-status-types';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMember } from '../type';
 

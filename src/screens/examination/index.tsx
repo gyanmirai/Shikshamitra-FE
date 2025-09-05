@@ -1,16 +1,12 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Tab, Box, Card, Button } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';

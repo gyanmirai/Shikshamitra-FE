@@ -3,15 +3,12 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
-import { fPercent, fCurrency } from 'src/utils/format-number';
-
 import { CONFIG } from 'src/config-global';
-
 import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
+import { fPercent, fCurrency } from 'src/utils/format-number';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 

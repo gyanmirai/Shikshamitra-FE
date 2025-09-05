@@ -3,12 +3,9 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useMemo } from 'react';
-
 import { Box, Tab, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelFeeManagementSetting from './components/feeManagement/feeManagement';

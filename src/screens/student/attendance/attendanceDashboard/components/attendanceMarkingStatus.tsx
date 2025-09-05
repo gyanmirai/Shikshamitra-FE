@@ -1,9 +1,7 @@
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { Box, Card, Stack, Divider, Typography, LinearProgress } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
 
 const AttendanceStatusCard = () => {
   const totalClasses = 32;

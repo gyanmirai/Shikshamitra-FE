@@ -1,13 +1,11 @@
 import type { Board } from 'src/types/school';
 
 import { capitalize } from 'lodash';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
-
-import CustomSelect from 'src/components/custom-select';
 
 const RenderAcademicYear = (props: any) => {
   // Destructure props to get value, row (unused), and onChange function

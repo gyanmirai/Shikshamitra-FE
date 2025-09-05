@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, alpha, Button } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles/utils';
-
+import { Box, Button } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
 
 interface CommonCtaComponentProps {
   bookHandler: () => void;

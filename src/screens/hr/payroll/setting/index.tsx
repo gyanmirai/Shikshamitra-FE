@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
 import { Box, Tab, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import SalaryStructure from './salary-structure';
 import EarningComponent from './earning-component';

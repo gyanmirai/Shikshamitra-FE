@@ -6,15 +6,12 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import * as Yup from 'yup';
 import React, { useState } from 'react';
 import { Form, Field, Formik } from 'formik';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 const initialValues = {
   report: '',
@@ -142,7 +139,7 @@ const Reports = (props: TabComponentType) => {
               <Form>
                 <Box sx={{ p: 2 }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6} md={4}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                       <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                         <CustomSelect
                           label="List of Reports"
@@ -160,11 +157,11 @@ const Reports = (props: TabComponentType) => {
                           value={values.report}
                           onChange={(value) => {
                             setFieldValue('report', value);
-                            // Reset form fields when report type changes
+                            // Reset dependent fields
                             setFieldValue('className', '');
                             setClasses('');
                             setFieldValue('division', '');
-                            setDivision(''); // Reset division state
+                            setDivision('');
                             setFieldValue('subject', '');
                             setFieldValue('students', []);
                             setFieldValue('assignmentType', '');
@@ -177,7 +174,7 @@ const Reports = (props: TabComponentType) => {
                       </Field>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={4}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                       <Field
                         as={FormControl}
                         error={touched.className && errors.className}
@@ -205,7 +202,7 @@ const Reports = (props: TabComponentType) => {
                     </Grid>
 
                     {showField.division && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field
                           as={FormControl}
                           error={touched.division && errors.division}
@@ -233,7 +230,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.subject && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                           <CustomSelect
                             label="Subject"
@@ -254,7 +251,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.students && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field
                           as={FormControl}
                           error={touched.students && errors.students}
@@ -284,7 +281,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.assignmentType && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field
                           as={FormControl}
                           error={touched.assignmentType && errors.assignmentType}
@@ -311,7 +308,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.assignmentTitle && values.assignmentType && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field
                           as={FormControl}
                           error={touched.assignmentTitle && errors.assignmentTitle}
@@ -338,7 +335,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.startDate && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field
                           as={FormControl}
                           error={touched.startDate && errors.startDate}
@@ -358,7 +355,7 @@ const Reports = (props: TabComponentType) => {
                     )}
 
                     {showField.endDate && (
-                      <Grid item xs={12} sm={6} md={4}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                           <DatePicker
                             label="End Date"
@@ -373,7 +370,7 @@ const Reports = (props: TabComponentType) => {
                       </Grid>
                     )}
 
-                    <Grid item xs={12} justifyContent="flex-end" display="flex">
+                    <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex">
                       <Button type="submit" variant="contained">
                         Generate Report
                       </Button>

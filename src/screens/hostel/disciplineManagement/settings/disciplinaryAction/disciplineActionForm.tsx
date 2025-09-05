@@ -1,14 +1,11 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { DisciplineActionFormProps } from './type';
@@ -39,7 +36,7 @@ const DisciplineActionForm: React.FC<DisciplineActionFormProps> = ({
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.disciplineActionName && formik.errors.disciplineActionName)
@@ -63,7 +60,7 @@ const DisciplineActionForm: React.FC<DisciplineActionFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description)}
                 >

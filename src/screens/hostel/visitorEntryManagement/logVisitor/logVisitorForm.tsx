@@ -2,8 +2,14 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -13,15 +19,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getVisitorInitialValues } from './initialValues';
 import { visitorValidationSchema } from './validationSchema';
@@ -43,7 +40,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.visitorName && formik.errors.visitorName) || false}
                 >
@@ -60,7 +57,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.contactNo && formik.errors.contactNo) || false}
                 >
@@ -77,7 +74,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.personToVisit && formik.errors.personToVisit) || false}
                 >
@@ -103,7 +100,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DateTimePicker
                   label="Entry Date Time *"
                   value={formik.values.entryTime}
@@ -124,7 +121,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DateTimePicker
                   label="Exit Date Time *"
                   format="HH:mm"
@@ -146,7 +143,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.reasonForVisit && formik.errors.reasonForVisit) || false}
                 >
@@ -162,7 +159,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

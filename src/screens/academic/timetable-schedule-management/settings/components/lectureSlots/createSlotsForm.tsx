@@ -8,20 +8,17 @@ import dayjs from 'dayjs';
 import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
-import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getInitialValues } from './initialValues';
 import { getValidationSchema } from './validationSchema';
@@ -143,7 +140,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
           }}
         >
           <Grid container spacing={3}>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                 <CustomSelect
                   options={allClass}
@@ -164,7 +161,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <ShakingTextField error={!!(formik.touched.schoolHours && formik.errors.schoolHours)}>
                 <TextField
                   fullWidth
@@ -178,7 +175,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <ShakingTextField
                 error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
               >
@@ -204,7 +201,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <ShakingTextField error={!!(formik.touched.totalSlots && formik.errors.totalSlots)}>
                 <TextField
                   fullWidth
@@ -213,13 +210,9 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   type="number"
                   inputProps={{ min: 0, max: 20 }}
                   value={formik.values.totalSlots}
-                  onChange={(e) => {
-                    handleCreateSlots(e);
-                  }}
+                  onChange={(e) => handleCreateSlots(e)}
                   onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                   }}
                   error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
                   helperText={(formik.touched.totalSlots && formik.errors.totalSlots) as string}

@@ -1,7 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Grid,
@@ -16,8 +16,6 @@ import {
   Typography,
   TableContainer,
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
 
 import type { IExpenseFormValues } from './type';
 
@@ -50,7 +48,7 @@ const ViewExpenseData = ({
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Typography
               variant="body2"
               sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
@@ -61,7 +59,8 @@ const ViewExpenseData = ({
               Learning Materials
             </Typography>
           </Grid>
-          <Grid item xs={3}>
+
+          <Grid size={{ xs: 12, md: 3 }}>
             <Typography
               variant="body2"
               sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
@@ -72,7 +71,8 @@ const ViewExpenseData = ({
               Academic Budget 2025
             </Typography>
           </Grid>
-          <Grid item xs={3}>
+
+          <Grid size={{ xs: 12, md: 3 }}>
             <Typography
               variant="body2"
               sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
@@ -83,7 +83,8 @@ const ViewExpenseData = ({
               3
             </Typography>
           </Grid>
-          <Grid item xs={3}>
+
+          <Grid size={{ xs: 12, md: 3 }}>
             <Typography
               variant="body2"
               sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}

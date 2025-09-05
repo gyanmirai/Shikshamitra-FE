@@ -1,13 +1,10 @@
 'use client';
 
 import { useFormik } from 'formik';
-
-import { Box, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Button, DialogActions } from '@mui/material';
 import UploadDocument from 'src/components/upload-document/uploadDocument';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 

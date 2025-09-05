@@ -2,8 +2,16 @@ import type { Division, Standards } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
   Grid,
@@ -16,18 +24,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface TStudentGroup {
   id: number;
@@ -200,46 +196,29 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       groupType: '',
       dynamicGroup: '',
       students: [],
-
-      // Academic Group Specific
       academicSubjects: [],
       minPer: '',
       maxPer: '',
       aggregatePerformance: true,
-
-      // Extracurricular Group Specific
       activityType: [],
-      performanceLevels: [],
-
-      // Attendance Group Specific
+      performanceLevels: [] as string[],
       attendanceThreshold: '',
       attendancePeriod: null,
-
-      // Behavioral Group Specific
       behavioralTags: [],
-      behavioralParticipations: [],
+      behavioralParticipations: [] as string[],
     },
-    onSubmit: (values) => {
-      console.log('Form Submitted', values);
-    },
+    onSubmit: (values) => console.log('Form Submitted', values),
   });
 
   const resetDynamicGroupFields = () => {
-    // Reset Academic Group fields
     formik.setFieldValue('academicSubjects', []);
     formik.setFieldValue('minPer', '');
     formik.setFieldValue('maxPer', '');
     formik.setFieldValue('aggregatePerformance', false);
-
-    // Reset Extracurricular Group fields
     formik.setFieldValue('activityType', []);
     formik.setFieldValue('performanceLevels', []);
-
-    // Reset Attendance Group fields
     formik.setFieldValue('attendanceThreshold', '');
     formik.setFieldValue('attendancePeriod', null);
-
-    // Reset Behavioral Group fields
     formik.setFieldValue('behavioralTags', []);
     formik.setFieldValue('behavioralParticipations', []);
   };
@@ -249,12 +228,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Academic':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Academic Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -266,7 +245,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {!formik.values.aggregatePerformance && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Select Subjects"
                   multiple
@@ -282,7 +261,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 />
               </Grid>
             )}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -294,7 +273,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 InputProps={{ inputProps: { min: 0 } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -312,12 +291,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Extracurricular':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Extracurricular Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Activity Type"
                 multiple
@@ -329,7 +308,6 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 ]}
                 value={formik.values.activityType}
                 onChange={(val) => {
-                  // Reset performance levels when activity types change
                   const performanceLevels = val.map(() => '');
                   formik.setFieldValue('activityType', val);
                   formik.setFieldValue('performanceLevels', performanceLevels);
@@ -338,14 +316,14 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {formik.values.activityType.map((activity, index) => (
-              <Grid item xs={12} md={6} key={activity}>
+              <Grid size={{ xs: 12, md: 6 }} key={activity}>
                 <TextField
                   fullWidth
                   size="small"
                   label={`Performance Level for ${activity}`}
                   value={formik.values.performanceLevels[index] || ''}
                   onChange={(e) => {
-                    const newPerformanceLevels: any = [...formik.values.performanceLevels];
+                    const newPerformanceLevels = [...formik.values.performanceLevels];
                     newPerformanceLevels[index] = e.target.value;
                     formik.setFieldValue('performanceLevels', newPerformanceLevels);
                   }}
@@ -359,12 +337,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Attendance':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Attendance-Based Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -382,12 +360,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Behavioral':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Behavioral Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Behavioral Tags"
                 multiple
@@ -406,16 +384,14 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {formik.values.behavioralTags.map((tag, index) => (
-              <Grid item xs={12} md={6} key={tag}>
+              <Grid size={{ xs: 12, md: 6 }} key={tag}>
                 <TextField
                   fullWidth
                   size="small"
                   label={`Participation for ${tag}`}
                   value={formik.values.behavioralParticipations[index] || ''}
                   onChange={(e) => {
-                    const newBehavioralParticipations: any = [
-                      ...formik.values.behavioralParticipations,
-                    ];
+                    const newBehavioralParticipations = [...formik.values.behavioralParticipations];
                     newBehavioralParticipations[index] = e.target.value;
                     formik.setFieldValue('behavioralParticipations', newBehavioralParticipations);
                   }}
@@ -436,7 +412,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -455,7 +431,8 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Division"
                 disabled={!classes}
@@ -473,7 +450,8 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Group Name"
@@ -485,7 +463,8 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 helperText={formik.touched.groupName && formik.errors.groupName}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Group Type"
                 options={[
@@ -500,9 +479,10 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
+
             {formik.values.groupType === 'Dynamic' && (
               <>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
                     label="Select Dynamic Group"
                     options={[
@@ -519,14 +499,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </Grid>
-
-                {/* Conditional rendering of specific group fields */}
                 {renderDynamicGroupFields()}
               </>
             )}
 
             {formik.values.groupType === 'Static' && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Select Students"
                   multiple
@@ -536,15 +514,14 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                     { value: 'student3', label: 'Student 3' },
                   ]}
                   value={formik.values.students}
-                  onChange={(val) => {
-                    formik.setFieldValue('students', val);
-                  }}
+                  onChange={(val) => formik.setFieldValue('students', val)}
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />
               </Grid>
             )}
           </Grid>
         </Scrollbar>
+
         <DialogActions>
           {formik.values.groupType === 'Dynamic' && (
             <Button startIcon={<Iconify icon="mdi:eye" />}>Preview Students</Button>

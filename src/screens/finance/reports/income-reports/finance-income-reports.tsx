@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-
-import { Box, Grid, Card, Menu, Button, useTheme, MenuItem, Typography } from '@mui/material';
-
-import { exportGraphData } from 'src/utils/exportGraph';
-import { exportCurrentVisitsData } from 'src/utils/exportDiffGraph';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-
+import { exportCurrentVisitsData } from 'src/utils/exportDiffGraph';
+import { Box, Grid, Card, Menu, Button, MenuItem, Typography } from '@mui/material';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const FinanceIncomeReports = () => {
   const theme = useTheme();
@@ -185,7 +181,7 @@ const FinanceIncomeReports = () => {
   return (
     <>
       <Grid container spacing={3}>
-        <Grid item lg={6} xs={12}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Card sx={{ px: 2 }}>
             <Box
               display="flex"
@@ -234,9 +230,8 @@ const FinanceIncomeReports = () => {
             </Box>
 
             <Grid container spacing={3} py="14px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <AnalyticsCurrentVisits
-                  //   title="Income Source Breakdown"
                   chart={{
                     series: [
                       { label: 'Fees', value: 3500 },
@@ -250,7 +245,7 @@ const FinanceIncomeReports = () => {
           </Card>
         </Grid>
 
-        <Grid item lg={6} xs={12}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Card sx={{ px: 2 }}>
             <Box
               display="flex"
@@ -299,11 +294,9 @@ const FinanceIncomeReports = () => {
             </Box>
 
             <Grid container spacing={3} pb="85px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <PerformanceOverTime
                   id="demo__4"
-                  // title="Monthly/Yearly Trend"
-                  // subheader="(+43%) than last year"
                   chart={{
                     categories: [
                       'Jan',

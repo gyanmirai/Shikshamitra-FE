@@ -1,7 +1,6 @@
 import type { IconButtonOwnProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
-
 import { Box, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';

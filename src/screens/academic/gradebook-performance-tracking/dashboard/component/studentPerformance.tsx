@@ -1,19 +1,18 @@
 'use client';
 
 import React from 'react';
-
-import { Card, Grid, alpha, useTheme } from '@mui/material';
-
+import { Card, Grid } from '@mui/material';
+import { alpha , useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const StudentPerformance = () => {
   const theme = useTheme();
   return (
-    <Grid item xs={12} md={12}>
+    <Grid size={{ xs: 12, md: 12 }}>
       <Card sx={{ p: 2 }}>
         <AnalyticsWebsiteVisits
           title="Student Performance Levels"
-          //   subheader="(+43%) than last year"
+          // subheader="(+43%) than last year"
           chart={{
             categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
             series: [

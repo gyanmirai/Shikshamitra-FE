@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Grid, Typography } from '@mui/material';
 
 // Define color scale for density
@@ -228,9 +227,7 @@ const Heatmap = () => (
   <Grid container spacing={1}>
     {heatmapData.map((stop, index) => (
       <Grid
-        item
-        xs={2}
-        sm={1}
+        size={{ xs: 2, sm: 1 }}
         key={index}
         style={{
           backgroundColor: getColorForDensity(stop.data[0]),

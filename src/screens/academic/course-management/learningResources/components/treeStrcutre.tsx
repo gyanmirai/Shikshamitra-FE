@@ -1,21 +1,16 @@
 import { Icon } from '@iconify/react';
 import React, { useEffect } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
-
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { Box, Card, Button, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
-
+import { PDFViewer } from '@react-pdf/renderer';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { Scrollbar } from 'src/components/scrollbar';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import { Box, Card, Button, IconButton, Typography } from '@mui/material';
+import { CertificateDocument } from 'src/templates/student-certificates/bonofied-certificate-1';
 
 import { dummyData } from './treeData';
 

@@ -2,16 +2,13 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -48,7 +45,7 @@ const RefundRequestForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
       <DialogScrollContent>
         <StudentRefundInfo student={student} />
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={formik.touched.paidTerm && Boolean(formik.errors.paidTerm)}>
               <CustomSelect
                 label="Paid Term *"
@@ -71,7 +68,7 @@ const RefundRequestForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={formik.touched.applicableAmount && Boolean(formik.errors.applicableAmount)}
             >
@@ -91,7 +88,7 @@ const RefundRequestForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={formik.touched.refundAmount && Boolean(formik.errors.refundAmount)}
             >
@@ -113,7 +110,7 @@ const RefundRequestForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={formik.touched.refundMethod && Boolean(formik.errors.refundMethod)}
             >
@@ -138,7 +135,7 @@ const RefundRequestForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
               <TextField
                 fullWidth

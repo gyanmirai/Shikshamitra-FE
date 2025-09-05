@@ -4,36 +4,31 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import Add from '@mui/icons-material/Add';
-import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
-
+import { Label } from 'src/components/label';
+import { useState, useCallback } from 'react';
 import { GenderType } from 'src/enums/gender';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { useSearchParam } from 'src/hooks/use-search-param';
+import { convertBase64Format } from 'src/utils/base64Formate';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
@@ -425,7 +420,7 @@ const HrEmployee = () => {
             >
               <Box bgcolor="background.neutral" p={2}>
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Sections
                       title="Earning"
                       organization={editData?.educationMediumStageId}
@@ -433,7 +428,7 @@ const HrEmployee = () => {
                       type={0}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Sections
                       title="Deduction"
                       organization={editData?.educationMediumStageId}

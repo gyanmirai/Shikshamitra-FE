@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
-
-import { Box, Card, Avatar, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import calculateAge from 'src/utils/calculate-age';
-import { convertBase64Format } from 'src/utils/base64Formate';
-
 import { CONFIG } from 'src/config-global';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import calculateAge from 'src/utils/calculate-age';
+import { Box, Card, Avatar, Typography } from '@mui/material';
+import { convertBase64Format } from 'src/utils/base64Formate';
 
 import { students } from '../student-fee-data/student-fee-data';
 

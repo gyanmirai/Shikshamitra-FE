@@ -3,11 +3,8 @@
 import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React from 'react';
-
 import { Tooltip, Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IReadOnlyFeeStructureTableProps } from '../fee-structure-interface';

@@ -3,11 +3,10 @@ import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-
-import { Box, Card, Chip, useTheme, ListItem, Typography, ListItemText } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
+import { Box, Card, Chip, ListItem, Typography, ListItemText } from '@mui/material';
 
 interface IStudentData {
   name: string;

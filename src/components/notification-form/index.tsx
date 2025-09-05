@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import {
   Box,
   Grid,
@@ -55,7 +54,7 @@ const NotificationForm = () => {
 
       {notificationType === 'daily' && (
         <Grid container spacing={2} pt="20px">
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               size="small"
               label="Select Time"
@@ -73,7 +72,7 @@ const NotificationForm = () => {
 
       {notificationType === 'weekly' && (
         <Grid container spacing={2} pt="20px">
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
               label="Day of the Week"
               options={weekdays}
@@ -81,7 +80,7 @@ const NotificationForm = () => {
               onChange={(e) => setDayOfWeek(e)}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               size="small"
               label="Select Time"
@@ -99,12 +98,12 @@ const NotificationForm = () => {
 
       {notificationType === 'monthly' && (
         <Grid container spacing={2} pt="20px">
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               size="small"
               label="Day of the Month"
               type="number"
-              value={time}
+              value={dayOfMonth}
               onChange={(e) => setDayOfMonth(e.target.value)}
               fullWidth
               InputLabelProps={{
@@ -112,7 +111,7 @@ const NotificationForm = () => {
               }}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               size="small"
               label="Select Time"

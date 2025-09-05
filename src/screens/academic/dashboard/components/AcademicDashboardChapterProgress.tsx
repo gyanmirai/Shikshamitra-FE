@@ -1,7 +1,6 @@
+import { Card } from '@mui/material';
 import React, { useState } from 'react';
-
-import { Card, useTheme } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AcademicDashboardChapterProgress = () => {

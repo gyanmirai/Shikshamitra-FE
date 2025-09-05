@@ -1,7 +1,6 @@
 import React from 'react';
-import { Page, Text, View, Image, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
-
 import { numberToWords } from 'src/utils/numberToWords';
+import { Page, Text, View, Image, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
 
 // PDF styles
 const styles = StyleSheet.create({

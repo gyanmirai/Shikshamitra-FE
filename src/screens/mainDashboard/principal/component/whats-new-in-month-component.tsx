@@ -1,5 +1,8 @@
 import React from 'react';
-
+import { useTabs } from 'src/hooks/use-tabs';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 import {
   Tab,
   Box,
@@ -11,12 +14,6 @@ import {
   ListItemText,
   ListItemAvatar,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
 interface Birthday {
   id: number;

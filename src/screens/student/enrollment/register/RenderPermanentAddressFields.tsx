@@ -1,6 +1,5 @@
-import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
-
 import CityComponent from 'src/components/stardard-address/city-component';
+import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
@@ -8,7 +7,7 @@ const RenderPermanentAddressFields = (props: any) => {
   const { formik, isEdit } = props;
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControlLabel
           disabled={!isEdit}
           control={
@@ -46,7 +45,7 @@ const RenderPermanentAddressFields = (props: any) => {
           label="Permanent Address Same as Local Address"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine1"
@@ -61,7 +60,7 @@ const RenderPermanentAddressFields = (props: any) => {
           size="small"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine2"
@@ -76,7 +75,7 @@ const RenderPermanentAddressFields = (props: any) => {
           size="small"
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           disabled={!isEdit}
           name="permanentAddressLine3"
@@ -92,7 +91,7 @@ const RenderPermanentAddressFields = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <CountryComponent
           value={formik.values.permanentCountry}
           onChange={(_e, value) => {
@@ -104,7 +103,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <StateComponent
           value={formik.values.permanentState}
           onChange={(_e, value) => {
@@ -117,7 +116,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <CityComponent
           value={formik.values.permanentCity}
           onChange={(_e, value) => formik.setFieldValue('permanentCity', value)}
@@ -127,7 +126,7 @@ const RenderPermanentAddressFields = (props: any) => {
           disabled={!isEdit}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           name="permanentPincode"
           disabled={!isEdit}

@@ -1,14 +1,11 @@
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Add, RemoveCircle } from '@mui/icons-material';
-import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Add, RemoveCircle } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';

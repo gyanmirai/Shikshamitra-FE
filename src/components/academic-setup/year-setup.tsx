@@ -6,34 +6,19 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import dynamic from 'next/dynamic';
-import { useDispatch } from 'react-redux';
-import { useState, useEffect, useCallback, cloneElement } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { DatePicker } from '@mui/x-date-pickers';
-import {
-  Box,
-  Stack,
-  Button,
-  Select,
-  MenuList,
-  MenuItem,
-  useTheme,
-  Typography,
-  FormControl,
-  DialogActions,
-} from '@mui/material';
-
+import { useDispatch } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useTheme } from '@mui/material/styles';
 import { flattenArray } from 'src/utils/helper';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
+import { DatePicker } from '@mui/x-date-pickers';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
 import { useDeleteDivisionMutation } from 'src/redux/division/divisionApi';
+import React, { useState, useEffect, useCallback, cloneElement } from 'react';
 import { useDeleteOrganizationMutation } from 'src/redux/oraganization/oraganization';
 import { boardApi, useGetBoardsQuery, useDeleteBoardMutation } from 'src/redux/board/boardApi';
 import {
@@ -42,6 +27,17 @@ import {
   useDeleteYearMutation,
   useUpdateYearMutation,
 } from 'src/redux/year/yearApi';
+import {
+  Box,
+  Stack,
+  Button,
+  Select,
+  MenuList,
+  MenuItem,
+  Typography,
+  FormControl,
+  DialogActions,
+} from '@mui/material';
 
 import { Iconify } from '../iconify';
 import RenderView from './render-view';
@@ -64,7 +60,7 @@ type RoleData = {
   children?: RoleData[];
   depth?: number;
   type: 'Education Board' | 'Standard' | 'Division' | 'Medium' | 'Organization' | 'Academic Year';
-  RenderThreeDotsAction?: (props: any) => JSX.Element | null;
+  RenderThreeDotsAction?: (props: any) => React.JSX.Element | null;
   parentsData: OrgChartListProps['parentsData'];
 };
 
@@ -721,7 +717,7 @@ export function TreeList({ data, depth, nodeItem, parentsData }: OrgChartListPro
     [];
 
   let type: RoleData['type'] = 'Education Board';
-  let RenderThreeDotsAction: (data: any) => JSX.Element | null = () => null;
+  let RenderThreeDotsAction: (data: any) => React.JSX.Element | null = () => null;
   const newParentsData = { ...parentsData };
   if (data?.educationMediums) {
     type = 'Education Board';

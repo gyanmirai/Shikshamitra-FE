@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Switch, Button, TextField, DialogActions, DialogContent } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Switch, Button, TextField, DialogActions, DialogContent } from '@mui/material';
 
 const FinanceNotificationTable = () => {
   const [open, setOpen] = useState(false); // State to manage dialog visibility

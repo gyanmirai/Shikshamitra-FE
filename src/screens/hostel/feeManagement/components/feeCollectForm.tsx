@@ -1,12 +1,10 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
-
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { collectFeeValidationSchema } from './validationSchema';
@@ -81,16 +79,12 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
             Hostel Fees
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <ShakingTextField
-                error={!!(formik.touched.dueAmount && formik.errors.dueAmount) || false}
-              >
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ShakingTextField error={!!(formik.touched.dueAmount && formik.errors.dueAmount)}>
                 <NumericFormatCustom
                   label="Due Amount *"
                   value={formik.values.dueAmount}
-                  onChange={(e) => {
-                    formik.setFieldValue('dueAmount', e.target.value);
-                  }}
+                  onChange={(e) => formik.setFieldValue('dueAmount', e.target.value)}
                   size="small"
                   fullWidth
                   error={formik.touched.dueAmount && Boolean(formik.errors.dueAmount)}
@@ -102,16 +96,15 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
-                error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount) || false}
+                error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount)}
               >
                 <NumericFormatCustom
                   label="Received Amount *"
                   value={formik.values.receivedAmount}
-                  onChange={(e) => {
-                    formik.setFieldValue('receivedAmount', e.target.value);
-                  }}
+                  onChange={(e) => formik.setFieldValue('receivedAmount', e.target.value)}
                   size="small"
                   fullWidth
                   error={formik.touched.receivedAmount && Boolean(formik.errors.receivedAmount)}
@@ -124,10 +117,9 @@ const CollectFeesForm: React.FC<ICollectFeesFormProps> = ({ open, onClose, stude
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <ShakingTextField
-                error={!!(formik.touched.paymentMode && formik.errors.paymentMode) || false}
-              >
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <ShakingTextField error={!!(formik.touched.paymentMode && formik.errors.paymentMode)}>
                 <Autocomplete
                   multiple
                   options={['Cash', 'Online']}

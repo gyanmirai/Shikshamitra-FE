@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Switch, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import rubricTableData from 'src/json/academic/examination/rubricTableData.json';
-
+import { Box, Switch, Button } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import rubricTableData from 'src/json/academic/examination/rubricTableData.json';
 
 import RubricCreationForm from './rubricCreationForm';
 

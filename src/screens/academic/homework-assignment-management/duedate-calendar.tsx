@@ -1,17 +1,13 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-
 import { CalendarView } from 'src/sections/calendar/view';
+import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 const DueDateCalendar = (props: TabComponentType) => {
   const dialog = useBoolean();

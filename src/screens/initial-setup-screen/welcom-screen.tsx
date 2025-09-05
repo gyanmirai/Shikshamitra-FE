@@ -1,7 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
-
-import { Box, Grid, List, useTheme, ListItem, Typography, ListItemText } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { Box, Grid, List, ListItem, Typography, ListItemText } from '@mui/material';
 
 const WelcomeScreen = ({ formik }: any) => {
   const theme = useTheme();
@@ -17,9 +17,7 @@ const WelcomeScreen = ({ formik }: any) => {
     >
       {/* Left side - School Illustration */}
       <Grid
-        item
-        xs={12}
-        md={6}
+        size={{ xs: 12, md: 6 }}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -58,9 +56,7 @@ const WelcomeScreen = ({ formik }: any) => {
 
       {/* Right side - Welcome Text and Information */}
       <Grid
-        item
-        xs={12}
-        md={6}
+        size={{ xs: 12, md: 6 }}
         sx={{
           display: 'flex',
           flexDirection: 'column',

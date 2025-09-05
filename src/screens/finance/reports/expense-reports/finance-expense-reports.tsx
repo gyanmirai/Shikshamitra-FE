@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-
-import { Box, Grid, Card, Menu, Button, useTheme, MenuItem, Typography } from '@mui/material';
-
-import { exportGraphData } from 'src/utils/exportGraph';
-import { exportCurrentVisitsData } from 'src/utils/exportDiffGraph';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-
+import { exportCurrentVisitsData } from 'src/utils/exportDiffGraph';
+import { Box, Grid, Card, Menu, Button, MenuItem, Typography } from '@mui/material';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const FinanceExpenseReports = () => {
   const theme = useTheme();
@@ -186,7 +182,7 @@ const FinanceExpenseReports = () => {
   return (
     <>
       <Grid container spacing={3}>
-        <Grid item lg={6} xs={12}>
+        <Grid size={{ lg: 6, xs: 12 }}>
           <Card sx={{ px: 2 }}>
             <Box
               display="flex"
@@ -234,16 +230,9 @@ const FinanceExpenseReports = () => {
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
-            {/* <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
-                <Button onClick={handleExportExpenseCategoryPDF} variant="contained" size="small">
-                    Export to PDF
-                </Button>
-                <Button onClick={handleExportExpenseCategoryExcel} variant="contained" size="small">
-                    Export to Excel
-                </Button>
-            </Box> */}
+
             <Grid container spacing={3} py="14px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <AnalyticsCurrentVisits
                   chart={{
                     series: [
@@ -259,7 +248,7 @@ const FinanceExpenseReports = () => {
           </Card>
         </Grid>
 
-        <Grid item lg={6} xs={12}>
+        <Grid size={{ lg: 6, xs: 12 }}>
           <Card sx={{ px: 2 }}>
             <Box
               display="flex"
@@ -310,7 +299,7 @@ const FinanceExpenseReports = () => {
             </Box>
 
             <Grid container spacing={3} py="14px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <PerformanceOverTime
                   id="demo__4"
                   chart={{

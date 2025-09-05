@@ -4,11 +4,9 @@ import type { ChartOptions } from 'src/components/chart';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
-
-import { fNumber, fPercent } from 'src/utils/format-number';
-
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import { fNumber, fPercent } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 

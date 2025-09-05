@@ -1,11 +1,9 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -39,7 +37,7 @@ const AddMealSlotsDialog: React.FC<IAddMealSlotsDialogProps> = ({ data, isEdit, 
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} pb="10px">
+            <Grid size={{ xs: 12 }} pb="10px">
               <ShakingTextField
                 error={formik.touched.mealSlotsName && Boolean(formik.errors.mealSlotsName)}
               >
@@ -59,7 +57,7 @@ const AddMealSlotsDialog: React.FC<IAddMealSlotsDialogProps> = ({ data, isEdit, 
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={{ xs: 12 }} pb="10px">
               <ShakingTextField
                 error={formik.touched.description && Boolean(formik.errors.description)}
               >

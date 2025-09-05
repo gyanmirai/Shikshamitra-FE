@@ -6,50 +6,45 @@ import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CommonCalender from 'src/components/calender';
+import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
   Switch,
   Button,
-  useTheme,
   TextField,
   Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useAddEventHolidayMutation,
   useDeleteEventHolidayMutation,
   useUpdateEventHolidayMutation,
   useLazyGetEventHolidayByDateQuery,
 } from 'src/redux/eventHoliday/eventHolidayApi';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CommonCalender from 'src/components/calender';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { eventAndHolidayInitialValues } from './initialValue';
 import { eventAndHolidayValidationSchema } from './validationSchema';
@@ -455,7 +450,7 @@ export const HrEventsAndHolidaysForm = ({
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <TextField
                   fullWidth
@@ -469,7 +464,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField
                 error={formik.touched.startDate && Boolean(formik.errors.startDate)}
               >
@@ -490,7 +485,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <DatePicker
                   format="DD-MM-YYYY"
@@ -509,7 +504,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                 <TextField
                   label="Description *"
@@ -526,7 +521,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControlLabel
                 disabled={isCalenderPreview}
                 control={

@@ -1,18 +1,16 @@
 'use client';
 
 import React from 'react';
-
-import { Card, Grid, alpha, useTheme } from '@mui/material';
-
+import { Card, Grid } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AttendaceOverview = () => {
   const theme = useTheme();
   return (
     <Grid container spacing={2} mt={2}>
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <AppCurrentDownload
           title="Attendance Overview"
           chart={{
@@ -23,11 +21,11 @@ const AttendaceOverview = () => {
           }}
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <AnalyticsWebsiteVisits
             title="Student Performance Levels"
-            //   subheader="(+43%) than last year"
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
               series: [

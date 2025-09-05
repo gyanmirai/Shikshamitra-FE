@@ -1,17 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import PersonIcon from '@mui/icons-material/Person';
 import { red, pink, blue } from '@mui/material/colors';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Card, Stack, Avatar, Button, Divider, Typography } from '@mui/material';
-
 import {
   EmployeeAttendanceStatus,
   EmployeeAttendanceStatusColor,
 } from 'src/enums/employee-attendance-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 const leaveTypes = [
   {

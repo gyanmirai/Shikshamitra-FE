@@ -1,13 +1,9 @@
 import React from 'react';
-
-import { Card, Grid, useTheme, Typography, CardContent } from '@mui/material';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
 import { varAlpha } from 'src/theme/styles';
-
 import { Chart } from 'src/components/chart';
-
+import { useTheme } from '@mui/material/styles';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import { Card, Grid, Typography, CardContent } from '@mui/material';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -17,9 +13,8 @@ const DashboardChart = () => {
   const theme = useTheme();
   return (
     <>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <AppCurrentDownload
-          // icon="mdi:account-group"
           title="Employee Count by Group"
           subheader=""
           chart={{
@@ -32,7 +27,7 @@ const DashboardChart = () => {
         />
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <EcommerceYearlySales
           id="demo__4"
           title="Attendance Trends"
@@ -60,10 +55,7 @@ const DashboardChart = () => {
                     name: 'Total Attendance',
                     data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
                   },
-                  {
-                    name: 'Primary',
-                    data: [10, 41, 35, 69, 91, 148, 35, 51, 49, 62, 51, 49],
-                  },
+                  { name: 'Primary', data: [10, 41, 35, 69, 91, 148, 35, 51, 49, 62, 51, 49] },
                 ],
               },
               {
@@ -73,10 +65,7 @@ const DashboardChart = () => {
                     name: 'Total Attendance',
                     data: [91, 148, 35, 51, 49, 10, 41, 35, 51, 49, 62, 69],
                   },
-                  {
-                    name: 'Primary',
-                    data: [49, 62, 69, 91, 10, 41, 35, 51, 148, 35, 51, 49],
-                  },
+                  { name: 'Primary', data: [49, 62, 69, 91, 10, 41, 35, 51, 148, 35, 51, 49] },
                 ],
               },
             ],
@@ -86,7 +75,7 @@ const DashboardChart = () => {
         />
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsCurrentVisits
           title="Leave Analysis"
           chart={{
@@ -100,7 +89,7 @@ const DashboardChart = () => {
         />
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%' }}>
           <AnalyticsWebsiteVisits
             title="Payroll Distribution"
@@ -109,16 +98,8 @@ const DashboardChart = () => {
               categories: ['Admin', 'Teaching', 'Non-teaching', 'Support', 'Other'],
               series: [{ name: 'Payroll', data: [15000, 12000, 8000, 10000, 5000] }],
               options: {
-                yaxis: {
-                  labels: {
-                    formatter: (value: number) => `${formatCurrency(value)}`,
-                  },
-                },
-                tooltip: {
-                  y: {
-                    formatter: (value: number) => `${formatCurrency(value)}`,
-                  },
-                },
+                yaxis: { labels: { formatter: (value: number) => `${formatCurrency(value)}` } },
+                tooltip: { y: { formatter: (value: number) => `${formatCurrency(value)}` } },
               },
             }}
             sx={{ height: '100%' }}
@@ -126,7 +107,7 @@ const DashboardChart = () => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ height: '100%' }}>
             <Typography variant="h6">Employee Retention Ratio</Typography>
@@ -136,11 +117,7 @@ const DashboardChart = () => {
               options={{
                 xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'] },
                 colors: ['#FFA600'],
-                chart: {
-                  toolbar: {
-                    show: false,
-                  },
-                },
+                chart: { toolbar: { show: false } },
               }}
               height="100%"
             />

@@ -1,10 +1,7 @@
 import React from 'react';
-
 import { Box, Typography } from '@mui/material';
-
-import TransportMap from 'src/screens/transport/routesAndSchedules/component/view-on-map-dialog';
-
 import { Iconify } from 'src/components/iconify/iconify';
+import TransportMap from 'src/screens/transport/routesAndSchedules/component/view-on-map-dialog';
 
 import { studentDetails } from './transport-profile-data/data';
 

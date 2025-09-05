@@ -1,33 +1,28 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 import {
   useGetProfessionalTaxQuery,
   useAddProfessionalTaxMutation,
   useDeleteProfessionalTaxMutation,
   useUpdateProfessionalTaxMutation,
 } from 'src/redux/ProfessionalTax/ProfessionalTaxApi';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 interface IProfessionalTaxRange {
   id: string;

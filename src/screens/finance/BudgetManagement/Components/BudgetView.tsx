@@ -53,7 +53,7 @@ const BudgetDetailsCard: React.FC<{
           </Box>
           <Grid container spacing={2}>
             {/* Budget Title */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Typography variant="body2" color="text.secondary">
                 Budget Title
               </Typography>
@@ -63,7 +63,7 @@ const BudgetDetailsCard: React.FC<{
             </Grid>
 
             {/* Budget Category */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Typography variant="body2" color="text.secondary">
                 Budget Category
               </Typography>
@@ -71,7 +71,7 @@ const BudgetDetailsCard: React.FC<{
             </Grid>
 
             {/* Time Period */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Typography variant="body2" color="text.secondary">
                 Time Period
               </Typography>
@@ -88,7 +88,7 @@ const BudgetDetailsCard: React.FC<{
             Budget Utilization
           </Typography>
           <Grid container spacing={2} textAlign="center">
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Box
                 sx={{
                   bgcolor: '#E8F9F1',
@@ -106,7 +106,7 @@ const BudgetDetailsCard: React.FC<{
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Box
                 sx={{
                   bgcolor: '#FFF3E0',
@@ -124,7 +124,7 @@ const BudgetDetailsCard: React.FC<{
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <Box
                 sx={{
                   bgcolor: '#FFF9E6',

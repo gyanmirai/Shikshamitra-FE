@@ -1,8 +1,7 @@
-import { useDropzone } from 'react-dropzone';
-import React, { useState, useCallback } from 'react';
-
 import { Close } from '@mui/icons-material';
+import { useDropzone } from 'react-dropzone';
 import CloseIcon from '@mui/icons-material/Close';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Grid,
@@ -233,9 +232,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         <Box mt={2}>
           <Grid container spacing={2}>
             {files.slice(0, previewCount).map((file, index) => (
-              <Grid item key={index}>
-                {renderFilePreview(file)}
-              </Grid>
+              <Grid key={index}>{renderFilePreview(file)}</Grid>
             ))}
           </Grid>
           {files.length > previewCount && (
@@ -377,9 +374,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         <DialogContent>
           <Grid container spacing={2}>
             {files.map((file, index) => (
-              <Grid item key={index}>
-                {renderFilePreview(file)}
-              </Grid>
+              <Grid key={index}>{renderFilePreview(file)}</Grid>
             ))}
           </Grid>
         </DialogContent>

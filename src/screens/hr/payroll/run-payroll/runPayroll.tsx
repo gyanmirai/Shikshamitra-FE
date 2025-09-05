@@ -5,8 +5,10 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import CustomDialog from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -19,10 +21,6 @@ import {
   Typography,
   FormControl,
 } from '@mui/material';
-
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import VerifyPayrollComponent from './component/verifyPayrollComponent';
 
@@ -136,7 +134,7 @@ const RunPayroll = () => {
         <Card sx={{ p: 2, mt: 2 }}>
           <Typography variant="h6">Employee Paybles</Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomizableTable
                 isFilter={false}
                 isShowedDense={false}
@@ -185,7 +183,7 @@ const RunPayroll = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <CustomizableTable
                 isFilter={false}
                 isShowedDense={false}
@@ -232,7 +230,7 @@ const RunPayroll = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <CustomizableTable
                 noDataText={<>No PT found</>}
                 isFilter={false}
@@ -279,7 +277,7 @@ const RunPayroll = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomizableTable
                 noDataText={<>No PF Deduction found</>}
                 isFilter={false}
@@ -327,7 +325,7 @@ const RunPayroll = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomizableTable
                 noDataText={<>No ESIC Deduction found</>}
                 isFilter={false}
@@ -387,7 +385,8 @@ const RunPayroll = () => {
           <Box display="flex" alignItems="center" gap={1}>
             Run Payroll
             <Typography fontSize={14} color="text.secondary" component="span">
-              ( {` Month :- ${month?.format('MMMM')}, Organization :- ${organizationValue?.name}`}){' '}
+              ( {` Month :- ${month?.format('MMMM')}, Organization :- ${organizationValue?.name}`}
+              ){' '}
             </Typography>
           </Box>
         }

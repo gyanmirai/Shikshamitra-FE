@@ -6,9 +6,18 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
 import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -22,19 +31,6 @@ import {
   DialogContent,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TSubject {
   name: string;
@@ -433,7 +429,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '200px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 name="curriculumName"
@@ -443,7 +439,8 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 size="small"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -458,39 +455,7 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
               />
             </Grid>
 
-            {/* <Grid item xs={12} md={6}>
-              <CustomSelect
-                label="Predefined Template"
-                name="predefinedTemplate"
-                options={[
-                  { value: 'MathTemplate', label: 'Math Template' },
-                  { value: 'ScienceTemplate', label: 'Science Template' },
-                  { value: 'EnglishTemplate', label: 'English Template' },
-                  { value: 'GujaratiTemplate', label: 'Gujarati Template' },
-                ]}
-                value=""
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                onChange={(value) => {}}
-              />
-              <Typography
-                onClick={() => {
-                  setSearchParams?.({
-                    tab: 'settings',
-                  });
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  textAlign: 'right',
-                  color: 'blue',
-                  fontWeight: 'bold',
-                }}
-              >
-                Add Template ?
-              </Typography>
-            </Grid> */}
-
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Subject"
                 name="subjects"
@@ -506,7 +471,8 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 onChange={(value) => formik.setFieldValue('subjects', value)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label="Start Date"
                 name="startDate"
@@ -516,7 +482,8 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label="End Date"
                 name="endDate"
@@ -526,7 +493,8 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <DateTimePicker
                 label="Schedule Date"
                 value={formik.values.scheduleDate}
@@ -542,55 +510,6 @@ const CurriculumForm: React.FC<CurriculumFormProps> = ({
                 disablePast
               />
             </Grid>
-            {/* <Grid item xs={12}>
-              <UploadBox
-                onDrop={handleFileUpload}
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Upload Document</Typography>
-                  </Box>
-                }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
-              />
-            </Grid>
-            {documents.length > 0 && (
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Uploaded Documents
-                </Typography>
-                <List>
-                  {documents.map((doc, index) => (
-                    <ListItem
-                      key={doc.id}
-                      secondaryAction={
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleRemoveDocument(doc.id as unknown as string)}
-                        >
-                          <Iconify icon="mdi:delete" />
-                        </IconButton>
-                      }
-                    >
-                      <ListItemText primary={doc.name} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Grid>
-            )} */}
           </Grid>
         </Scrollbar>
         <DialogActions>

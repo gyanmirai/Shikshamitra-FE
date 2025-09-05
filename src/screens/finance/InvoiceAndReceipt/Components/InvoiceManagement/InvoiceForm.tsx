@@ -2,23 +2,19 @@ import type { Board, Division, Standards, AcademicYear } from 'src/types/school'
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import type { InvoiceFormProps } from './type';
 
@@ -124,7 +120,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <CustomSelect
               name="academicYear"
               label="Academic Year *"
@@ -149,7 +145,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
             />
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.board && errors.board) || false}>
               <CustomSelect
                 name="board"
@@ -171,7 +168,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
               <CustomSelect
                 name="medium"
@@ -196,7 +194,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.invoiceType && errors.invoiceType) || false}>
               <CustomSelect
                 name="invoiceType"
@@ -218,7 +217,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.class && errors.class) || false}>
               <CustomSelect
                 name="class"
@@ -233,7 +233,6 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                   setFieldValue('class', value);
                   setFieldValue('divisions', []);
 
-                  // Get divisions for selected class
                   const selectedClass = classes?.find((c: Standards) => c.id === value);
                   if (selectedClass?.divisions) {
                     setAllDivision(selectedClass.divisions);
@@ -245,7 +244,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <CustomSelect
               options={allDivision}
               label="Division *"
@@ -261,7 +261,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               disabled={formik.values.class.length === 0}
             />
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.students && errors.students) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -277,7 +278,6 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                     <Chip
                       label={option.name}
                       variant="soft"
-                      // color="default"
                       size="small"
                       {...getTagProps({ index })}
                     />
@@ -303,7 +303,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(touched.installmentName && errors.installmentName) || false}
             >

@@ -1,21 +1,18 @@
 import type { ICalendarEvent } from 'src/types/calendar';
 import type { EventClickArg, CalendarOptions, EventSourceInput } from '@fullcalendar/core';
 
+import { Card } from '@mui/material';
 import React, { useEffect } from 'react';
 import Calendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
+import { fDate } from 'src/utils/format-time';
+import { useTheme } from '@mui/material/styles';
 // eslint-disable-next-line import/no-duplicates
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
-import interactionPlugin from '@fullcalendar/interaction';
-
-import { Card, useTheme } from '@mui/material';
-
-import { fDate } from 'src/utils/format-time';
-
 import { DashboardContent } from 'src/layouts/dashboard';
-
+import interactionPlugin from '@fullcalendar/interaction';
 import { StyledCalendar } from 'src/sections/calendar/styles';
 import { useCalendar } from 'src/sections/calendar/hooks/use-calendar';
 import { CalendarToolbar } from 'src/sections/calendar/calendar-toolbar';

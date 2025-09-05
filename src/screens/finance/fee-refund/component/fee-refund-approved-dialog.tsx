@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
-
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import SubmitButton from 'src/components/submit-button';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { studentPayment } from '../data/fee-refund-approved-dialog-data';
 
@@ -214,33 +210,35 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
           ]}
           data={[...paymentHistoryData, totalRow]}
         />
-        <Grid item xs={12} spacing={2} sx={{ pt: '20px' }}>
-          <TextField
-            multiline
-            rows={4}
-            name="Reason For Refund"
-            label="Reason For Refund"
-            value="Paid Twice"
-            onChange={() => {}}
-            size="small"
-            fullWidth
-            disabled
-          />
-        </Grid>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12 }} sx={{ pt: '20px' }}>
+            <TextField
+              multiline
+              rows={4}
+              name="Reason For Refund"
+              label="Reason For Refund"
+              value="Paid Twice"
+              onChange={() => {}}
+              size="small"
+              fullWidth
+              disabled
+            />
+          </Grid>
 
-        <Grid item xs={12} spacing={2} sx={{ pt: '20px' }}>
-          <TextField
-            multiline
-            rows={4}
-            name="remarks"
-            label="Remarks"
-            value={feeRefundremark}
-            onChange={(e) => {
-              setFeeRefundRemark(capitalizeWords(e.target.value));
-            }}
-            size="small"
-            fullWidth
-          />
+          <Grid size={{ xs: 12 }} sx={{ pt: '20px' }}>
+            <TextField
+              multiline
+              rows={4}
+              name="remarks"
+              label="Remarks"
+              value={feeRefundremark}
+              onChange={(e) => {
+                setFeeRefundRemark(capitalizeWords(e.target.value));
+              }}
+              size="small"
+              fullWidth
+            />
+          </Grid>
         </Grid>
       </Scrollbar>
       <DialogActions>

@@ -2,11 +2,9 @@
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { announcementCatValidationSchema } from '../../validationSchema';
 
@@ -48,9 +46,9 @@ export const CategoryForm: React.FC<ICategoryFormProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={!!(formik.touched.categoryName && formik.errors.categoryName) || false}
+                error={!!(formik.touched.categoryName && formik.errors.categoryName)}
               >
                 <TextField
                   fullWidth
@@ -69,12 +67,9 @@ export const CategoryForm: React.FC<ICategoryFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={
-                  !!(formik.touched.categoryDescription && formik.errors.categoryDescription) ||
-                  false
-                }
+                error={!!(formik.touched.categoryDescription && formik.errors.categoryDescription)}
               >
                 <TextField
                   fullWidth

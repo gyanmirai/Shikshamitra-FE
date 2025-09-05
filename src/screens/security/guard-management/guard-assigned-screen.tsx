@@ -1,9 +1,10 @@
 'use client';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import data from 'src/json/security/guard-management/guard-list.json';
 import {
   Box,
   Grid,
@@ -16,10 +17,6 @@ import {
   Typography,
   TableContainer,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/security/guard-management/guard-list.json';
 
 import GuardList from './component/guard-list';
 import ItemCardWithActions from './component/guard-duty-hours-cell';
@@ -196,7 +193,7 @@ const GuardRosterScreen = () => {
   return (
     <>
       <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="40px">
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             disabled
             label="Start Date"
@@ -207,7 +204,7 @@ const GuardRosterScreen = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             disabled
             label="End Date"

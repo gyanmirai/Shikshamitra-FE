@@ -23,7 +23,7 @@ const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
 
         <Grid container spacing={1}>
           {fields.map((field) => (
-            <Grid item xs={12} sm={6} md={3} key={field.label}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={field.label}>
               <Typography variant="caption" color="text.secondary">
                 {field.label}
               </Typography>

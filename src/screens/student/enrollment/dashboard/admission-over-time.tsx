@@ -1,10 +1,9 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useCallback } from 'react';
-
-import { Card, Grid, useTheme, CardHeader, Typography } from '@mui/material';
-
+import { Card, Grid, CardHeader, Typography } from '@mui/material';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 const AdmissionOverTime = () => {
@@ -29,7 +28,7 @@ const AdmissionOverTime = () => {
     },
   });
   return (
-    <Grid xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 3, boxShadow: 'var(--shadows-4)', height: '100%' }}>
         <Typography variant="h6">Enrollment Trend</Typography>
         <Chart

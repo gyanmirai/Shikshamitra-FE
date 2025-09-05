@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-
 import { View403 } from 'src/sections/error';
 
 const TeacherPermission = ({ children }: { children: React.ReactNode }) => {

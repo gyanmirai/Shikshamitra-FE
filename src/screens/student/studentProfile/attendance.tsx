@@ -3,32 +3,28 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomTooltip from 'src/components/custom-tooltip';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Paper,
-  Badge,
-  alpha,
-  Button,
-  Divider,
-  useTheme,
-  Typography,
-  ButtonGroup,
-  CircularProgress,
-} from '@mui/material';
-
 import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  Box,
+  Grid,
+  Paper,
+  Badge,
+  Button,
+  Divider,
+  Typography,
+  ButtonGroup,
+  CircularProgress,
+} from '@mui/material';
 
 import { AttendanceChart, YearlyAttendance } from './attendanceChart';
 
@@ -190,7 +186,7 @@ const Attendance = (props: StudentTabsComponentType) => {
       </Paper>
       <Divider sx={{ my: 2 }} />
       <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Box flexGrow={1}>
             {activeButton === 'monthly' ? (
               // @ts-ignore
@@ -311,7 +307,7 @@ const Attendance = (props: StudentTabsComponentType) => {
             )}
           </Box>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper
             elevation={0}
             sx={{
@@ -347,7 +343,7 @@ const Attendance = (props: StudentTabsComponentType) => {
               }}
               slots={{
                 day: (prop: any) => {
-                  const { day, today } = prop;
+                  const { day } = prop;
 
                   const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;

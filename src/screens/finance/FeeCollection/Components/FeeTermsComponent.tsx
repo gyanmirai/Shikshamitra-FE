@@ -1,26 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Divider,
-  useTheme,
-  Checkbox,
-  Collapse,
-  Typography,
-  IconButton,
-} from '@mui/material';
-
+import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
 
 import ChargesList from './ChargesList';
 

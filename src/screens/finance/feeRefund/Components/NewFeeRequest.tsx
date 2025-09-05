@@ -3,22 +3,18 @@ import type { Board, Medium, Division } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { termOptions } from './RefurnRequestForm';
 import { refundValidationSchema } from './NewRequestValidation';
@@ -107,7 +103,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Board */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
               <CustomSelect
                 name="board"
@@ -130,7 +126,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Medium */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
               <CustomSelect
                 label="Medium *"
@@ -147,7 +143,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Class */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
               <CustomSelect
                 label="Class *"
@@ -164,7 +160,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Division */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
               <CustomSelect
                 label="Division *"
@@ -181,7 +177,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Student */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.student && formik.errors.student) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -223,7 +219,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Paid Terms */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.paidTerms && formik.errors.paidTerms)}>
               <CustomSelect
                 label="Paid Terms *"
@@ -244,7 +240,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Amount Applicable For Refund */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.amountApplicable && formik.errors.amountApplicable)}
             >
@@ -262,7 +258,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Refund Amount */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.refundAmount && formik.errors.refundAmount)}>
               <NumericFormatCustom
                 size="small"
@@ -281,7 +277,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Refund Method */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.refundMethod && formik.errors.refundMethod)}>
               <CustomSelect
                 label="Refund Method *"
@@ -302,7 +298,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
           </Grid>
 
           {/* Reason of Refund */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 fullWidth

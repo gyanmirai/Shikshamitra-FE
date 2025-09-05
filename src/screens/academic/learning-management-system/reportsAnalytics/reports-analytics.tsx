@@ -3,10 +3,9 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, useTheme, Typography } from '@mui/material';
-
+import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 

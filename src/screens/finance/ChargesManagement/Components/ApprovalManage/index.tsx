@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetChargesQuery } from 'src/redux/chargesApi/chargesApi';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetChargesQuery } from 'src/redux/chargesApi/chargesApi';
 
 import ChargesApprovalTable from './Components/ApptovalChangeTable';
 import ChargeDetailsCard from '../ChargesManage/Component/ViewChargeForm';

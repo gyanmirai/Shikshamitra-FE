@@ -1,8 +1,8 @@
 import type { CardProps } from '@mui/material';
 import type { IExamFormValues } from 'src/screens/examination/scheduleExam/type';
 
-import { Card, useTheme, CardHeader } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import { Card, CardHeader } from '@mui/material';
 import examTableData from 'src/json/examination/examTableData.json';
 import ScheduledExamTable from 'src/screens/examination/scheduleExam/components/scheduleExamTable';
 

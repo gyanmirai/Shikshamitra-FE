@@ -1,15 +1,12 @@
 import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
+import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
-
-import { useTheme } from '@mui/material';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEventHolidayByDateQuery } from 'src/redux/eventHoliday/eventHolidayApi';
-
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEventHolidayByDateQuery } from 'src/redux/eventHoliday/eventHolidayApi';
 
 import { HrEventsAndHolidaysForm } from '../events-holidays';
 

@@ -1,14 +1,10 @@
 import React from 'react';
-
-import { Box, Grid, Typography, IconButton } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Typography, IconButton } from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentReceiptDataQuery } from 'src/redux/invoiceAndReceipt/studentReceiptApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IFeeReceipt } from '../type';
 
@@ -26,42 +22,49 @@ export default function StudentTableView({
       {/* Student Info Card */}
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
         <Grid container spacing={2}>
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Student Name :</b> {selectedStudent?.student}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Roll No. :</b> {selectedStudent?.rollNo || '-'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Class/Division :</b> {`${selectedStudent?.class}-${selectedStudent?.division}`}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>GR No. :</b> {selectedStudent?.grNo || '-'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Payment Term :</b> {selectedStudent?.paymentTerm || '-'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Total Paid Fees :</b> ₹ {selectedStudent?.totalPaidFees?.toLocaleString() || '-'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Pending Fees :</b> ₹ {selectedStudent?.totalPendingFees?.toLocaleString() || '-'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Last Payment Date :</b> {selectedStudent?.lastPaymentDate || '-'}
             </Typography>

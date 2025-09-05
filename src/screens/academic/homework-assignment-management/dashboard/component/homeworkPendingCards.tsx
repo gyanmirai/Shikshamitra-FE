@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Grid, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { Grid, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 export const assignmentData = [
@@ -45,7 +43,7 @@ const HomeworkPendingCards = () => {
 
   return (
     <Grid container spacing={2} mt={1}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Typography variant="h6">My Assignments</Typography>
         <CustomizableTable
           tableId="assignment-table"
@@ -104,7 +102,7 @@ const HomeworkPendingCards = () => {
               dueDate: '2024-02-12',
               status: 'Pending',
               assignmentCheckStatus: 'Pending',
-              grade: '', // No grade as it's not checked yet
+              grade: '',
             },
             {
               assignmentTitle: 'History Essay',
@@ -128,7 +126,7 @@ const HomeworkPendingCards = () => {
               dueDate: '2024-02-20',
               status: 'Pending',
               assignmentCheckStatus: 'Pending',
-              grade: '', // No grade as it's not checked yet
+              grade: '',
             },
           ]}
         />

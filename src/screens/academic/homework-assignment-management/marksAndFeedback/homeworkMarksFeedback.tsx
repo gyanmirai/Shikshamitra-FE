@@ -6,11 +6,9 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-
-import { Box, TextField, Autocomplete } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
 

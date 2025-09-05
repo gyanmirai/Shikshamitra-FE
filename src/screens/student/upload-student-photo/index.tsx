@@ -1,20 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Select, Divider, MenuItem, InputLabel, IconButton, FormControl } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { UploadAvatar } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
+import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box , Grid, Select, Divider, MenuItem, InputLabel, IconButton, FormControl } from '@mui/material';
+
 
 const UploadStudentPhotoScreen = () => {
   const { data: classes, isLoading } = useQueryAndMutation({
@@ -52,8 +48,8 @@ const UploadStudentPhotoScreen = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <Divider sx={{ mb: 2 }} />
-      <Grid2 container spacing={2}>
-        <Grid2 xs={4}>
+      <Grid container spacing={2}>
+        <Grid size={4}>
           <FormControl fullWidth>
             <InputLabel id="class-select-label" size="small">
               Class
@@ -79,8 +75,8 @@ const UploadStudentPhotoScreen = () => {
               )}
             </Select>
           </FormControl>
-        </Grid2>
-        <Grid2 xs={4}>
+        </Grid>
+        <Grid size={4}>
           <FormControl fullWidth>
             <InputLabel id="division-select-label" size="small">
               Division
@@ -106,8 +102,8 @@ const UploadStudentPhotoScreen = () => {
               )}
             </Select>
           </FormControl>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       {division && (
         <CustomizableTable

@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Box, Tab, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TransportRouteNotificationManagementScreen from './component/transport-route-notification-management-screen';

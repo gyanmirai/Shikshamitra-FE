@@ -2,19 +2,15 @@
 
 import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
 
-import React, { useMemo, useState } from 'react';
-
 import { Box, Tab, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import LeaveHistory from './leave-history';
 import LeaveCalender from './leave-calender';

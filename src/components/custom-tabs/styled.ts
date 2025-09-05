@@ -1,6 +1,6 @@
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 export const StyledTab = styled(Tab)(({ theme }) => ({
   margin: '0px 2px',

@@ -20,7 +20,9 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialExpenseData } from './ExpenseInitialValues';
@@ -92,7 +94,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
     switch (field.type) {
       case 'date':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <DatePicker
                 label={field.label}
@@ -118,7 +120,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
       case 'select':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <CustomSelect
                 label={field.label}
@@ -137,7 +139,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
       case 'multiline':
         return (
-          <Grid item xs={12} key={field.name}>
+          <Grid size={12} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <TextField
                 fullWidth
@@ -156,7 +158,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
       case 'amount':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <NumericFormatCustom
                 size="small"
@@ -183,7 +185,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
       default:
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <TextField
                 fullWidth
@@ -245,7 +247,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.expenseCategory && formik.errors.expenseCategory)}
                 >
@@ -270,7 +272,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
                   <TextField
                     fullWidth
@@ -286,7 +288,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
                 >
@@ -305,7 +307,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.expenseName && formik.errors.expenseName)}
                 >
@@ -331,7 +333,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                   <NumericFormatCustom
                     size="small"
@@ -355,7 +357,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
                   <DatePicker
                     label="Date *"
@@ -376,7 +378,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
                 >
@@ -402,7 +404,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
               {/* Dynamic Payment Method Fields */}
               {paymentFields.length > 0 && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Box sx={{ mt: 2, mb: 1 }}>
                     {/* Payment Method Heading */}
                     <Typography
@@ -426,7 +428,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </Grid>
               )}
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField>
                   <TextField
                     fullWidth

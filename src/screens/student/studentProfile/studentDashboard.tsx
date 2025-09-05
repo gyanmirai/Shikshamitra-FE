@@ -1,7 +1,5 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-
+import { Grid } from '@mui/material';
 import AcademicTimetable from 'src/components/studentProfile/academicTimetable';
 
 import Overview from './studentDashbordComponent';
@@ -13,33 +11,30 @@ import SubjectsTeachersStudentDashboard from './studentDashbordComponent/subject
 
 import type { StudentTabsComponentType } from '.';
 
-const StudentDashboard = (props: StudentTabsComponentType) => {
-  const { tabs, student } = props;
-  return (
-    <Grid2 container spacing={2} sx={{ mb: 2 }}>
-      <Grid2 xs={12}>
+const StudentDashboard = (props: StudentTabsComponentType) => (
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={12}>
         <Overview />
-      </Grid2>
-      <Grid2 xs={12}>
+      </Grid>
+      <Grid size={12}>
         <AttendanceTrend />
-      </Grid2>
-      <Grid2 xs={12}>
+      </Grid>
+      <Grid size={12}>
         <AcademicTimetable />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
         <StudentExamsList />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
         <StudentHomeworkAssignments />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
         <SubjectPerformanceCards />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
         <SubjectsTeachersStudentDashboard />
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
-};
 
 export default StudentDashboard;

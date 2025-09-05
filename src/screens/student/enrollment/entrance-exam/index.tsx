@@ -7,36 +7,32 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
-import {
-  Box,
-  Paper,
-  Radio,
-  Button,
-  MenuItem,
-  MenuList,
-  useTheme,
-  TextField,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-  CircularProgress,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
+import isoWeek from 'dayjs/plugin/isoWeek';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { useSearchParam } from 'src/hooks/use-search-param';
+import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useMoveToAdmissionMutation } from 'src/redux/student/registration/registration-api';
 import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
 import {
@@ -44,27 +40,25 @@ import {
   EntranceExamStatusOptions,
   EntranceExamStatusTypeColors,
 } from 'src/enums/entranceExam-type';
+import { Box ,
+  Grid,
+  Paper,
+  Radio,
+  Button,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+  CircularProgress,
+} from '@mui/material';
 import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
   useUpdateEntranceExamMutation,
   useLazyGetStudentForSlotByDateQuery,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { EmptyContent } from 'src/components/empty-content';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
@@ -757,13 +751,15 @@ export const ExamForm = ({
           }}
         >
           <Grid container spacing={3}>
-            <Grid xs={4}>
+            <Grid size={{ xs: 4 }}>
               <Paper sx={{ height: '100%' }}>
                 <DateCalendar
                   value={formik.values.examDate}
                   onChange={(value) => {
                     formik.setFieldValue('examDate', value);
-                    handleGetAllStudentCount(value);
+                    if (value) {
+                      handleGetAllStudentCount(dayjs(value).format('YYYY-MM-DD'));
+                    }
                   }}
                   disablePast
                   slots={{
@@ -786,10 +782,11 @@ export const ExamForm = ({
                 </Typography>
               )}
             </Grid>
-            <Grid xs={8}>
+
+            <Grid size={{ xs: 8 }}>
               <Paper sx={{ p: 1, height: '100%' }}>
                 <Grid container spacing={2}>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Box>
                       <Box
                         display="flex"
@@ -802,14 +799,14 @@ export const ExamForm = ({
 
                       <Grid container spacing={2}>
                         {isStudentCountLoading ? (
-                          <Grid xs={12}>
+                          <Grid size={{ xs: 12 }}>
                             <Box className="loader" height={24} />
                           </Grid>
                         ) : formik.values.slots.length === 0 ? (
                           <EmptyContent title="Please select the date." />
                         ) : (
                           formik.values.slots.map((slot: any, index: number) => (
-                            <Grid xs={6} key={index}>
+                            <Grid size={{ xs: 6 }} key={index}>
                               <FormControlLabel
                                 sx={{ marginLeft: 1 }}
                                 control={

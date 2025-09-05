@@ -1,13 +1,10 @@
 import type { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 
 import { useFormik } from 'formik';
-
-import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 const HostelLeaveAbsent = ({
   handleClose,

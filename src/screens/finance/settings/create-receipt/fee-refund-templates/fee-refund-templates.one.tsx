@@ -1,8 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
-
 import { Box, Grid, Divider, Typography } from '@mui/material';
-
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
 import dummyReceipt from 'src/json/finance/create-receipt/fee-refund-template-one.json';
 
@@ -21,7 +19,7 @@ const FeeRefundTemplateOne = () => {
       // Returns a Grid component with formatted rows of payment information
       <Grid container spacing={1}>
         {rows.map((row, index) => (
-          <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
+          <Grid size={6} key={index} display="flex" justifyContent="flex-start">
             <Typography fontSize="10px">
               <strong>{row.label}:</strong> {row.value || '-'}
             </Typography>
@@ -61,7 +59,7 @@ const FeeRefundTemplateOne = () => {
 
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Box
           sx={{
             position: 'relative',
@@ -83,8 +81,8 @@ const FeeRefundTemplateOne = () => {
           </Typography>
 
           {/* From & To Section */}
-          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between' }}>
-            <Grid item xs={5}>
+          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between', gap: 1 }}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   From:
@@ -94,7 +92,7 @@ const FeeRefundTemplateOne = () => {
                 <Typography fontSize="10px">{from?.branch}</Typography>
               </Box>
             </Grid>
-            <Grid item xs={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   To:
@@ -113,9 +111,6 @@ const FeeRefundTemplateOne = () => {
           </Grid>
 
           {/* Payment Details */}
-          {/* <Typography fontSize="10px" fontWeight="bold" mt={2} mb={1} display={'flex'} justifyContent="flex-start">
-                        Payment Details
-                    </Typography> */}
           <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
             {renderPaymentDetails(dummyReceipt.paymentDetails)}
           </Box>

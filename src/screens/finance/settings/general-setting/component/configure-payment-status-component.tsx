@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -25,7 +22,7 @@ const ConfigurePaymentStatusComponent = () => {
   return (
     <Box py="20px" display="flex" flexDirection="column" gap={3}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={12}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <CustomizableTable
             noDataText={
               <>
@@ -91,22 +88,10 @@ const ConfigurePaymentStatusComponent = () => {
               },
             ]}
             data={[
-              {
-                id: 1,
-                paymentStatusName: 'paid',
-              },
-              {
-                id: 2,
-                paymentStatusName: 'pending',
-              },
-              {
-                id: 3,
-                paymentStatusName: 'overdue',
-              },
-              {
-                id: 4,
-                paymentStatusName: 'cancelled',
-              },
+              { id: 1, paymentStatusName: 'paid' },
+              { id: 2, paymentStatusName: 'pending' },
+              { id: 3, paymentStatusName: 'overdue' },
+              { id: 4, paymentStatusName: 'cancelled' },
             ]}
           />
         </Grid>

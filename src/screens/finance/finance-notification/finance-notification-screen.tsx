@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Button, MenuItem, MenuList } from '@mui/material';
-
-import StudentAutoNotificationConfigurationDialog from 'src/screens/student/studentNotification/component/studentAutoNotificationDialog';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+import StudentAutoNotificationConfigurationDialog from 'src/screens/student/studentNotification/component/studentAutoNotificationDialog';
 
 interface HeaderSectionProps {
   heading: string;

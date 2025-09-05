@@ -1,8 +1,4 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import React from 'react';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import ClassSelectionView from './ClassSelectionView';
 import FeeStructureViewCard from './FeeStructureViewCard';
@@ -14,7 +10,7 @@ const ViewFeeStructure = ({
   onClose,
   data: feeStructure,
 }: {
-  open: UseBooleanReturn;
+  open: any;
   onClose: () => void;
   data: IFeeStructure | null;
 }) => {
@@ -24,21 +20,28 @@ const ViewFeeStructure = ({
 
   return (
     <>
+      {/* Class Selection */}
       <ClassSelectionView
         feeStructureClasses={feeStructure.feeStructureClasses}
         selectedClass={selectedClass}
         onSelectClass={setSelectedClass}
       />
 
-      {/* ✅ show structure only when a class is selected */}
-      {selectedClass && (
-        <SectionCard title={`Fee Structure - Class ${selectedClass}`}>
-          <FeeStructureViewCard
-            className={selectedClass}
-            feeItems={feeStructure.feeStructureClasses[selectedClass]?.feeItems || []}
-          />
-        </SectionCard>
-      )}
+      {/* Fee Structure Details */}
+      {selectedClass &&
+        (feeStructure.feeStructureClasses[selectedClass] || []).map((structure, idx) => {
+          const totalFeeAmount =
+            structure.feeItems?.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) ||
+            0;
+
+          return (
+            <FeeStructureViewCard
+              key={idx}
+              className={selectedClass}
+              feeItems={structure.feeItems}
+            />
+          );
+        })}
     </>
   );
 };

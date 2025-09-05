@@ -2,15 +2,12 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
@@ -41,7 +38,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Fee Category Name */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.feeCategoryName && formik.errors.feeCategoryName) || false}
             >

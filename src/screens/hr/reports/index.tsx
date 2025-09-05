@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Tab, Box } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import OtherReports from './other-report';

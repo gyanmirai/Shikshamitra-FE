@@ -6,10 +6,17 @@ import type { Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -22,17 +29,6 @@ import {
   CardContent,
   Autocomplete,
 } from '@mui/material';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
-import { varAlpha } from 'src/theme/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const PaySlipGenerationScreen = () => {
   const [employee, setEmployee] = useState<string | null>(null);
@@ -228,7 +224,7 @@ const PaySlipGenerationScreen = () => {
         </Button>
       </Box>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Earning Section</Typography>
           <CustomizableTable
             noDataText="No Earning Found"
@@ -277,7 +273,7 @@ const PaySlipGenerationScreen = () => {
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Deduction Section</Typography>
           <CustomizableTable
             noDataText="No Deduction Found"
@@ -329,7 +325,7 @@ const PaySlipGenerationScreen = () => {
             ]}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Alert
             variant="outlined"
             icon={false}

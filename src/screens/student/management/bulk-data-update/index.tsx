@@ -2,13 +2,11 @@
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { Save } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, Autocomplete } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { allCategory } from './bulkDataFields';

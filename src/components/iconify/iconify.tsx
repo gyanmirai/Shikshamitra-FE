@@ -1,10 +1,9 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { Icon, disableCache } from '@iconify/react';
-
 import Box from '@mui/material/Box';
 import NoSsr from '@mui/material/NoSsr';
+import { Icon, disableCache } from '@iconify/react';
 
 import { iconifyClasses } from './classes';
 

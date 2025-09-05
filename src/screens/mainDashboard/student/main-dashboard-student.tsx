@@ -1,14 +1,10 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Divider, Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
-import SeoIllustration from 'src/assets/illustrations/seo-illustration';
-
+import { Box, Grid, Divider, Typography } from '@mui/material';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
+import SeoIllustration from 'src/assets/illustrations/seo-illustration';
 
 import OneLineInfoCard from './component/one-line-info-card';
 import UpcomingExamCard from './component/exam-card-for-student';
@@ -17,7 +13,7 @@ import { PrincipalDashboardCard } from '../principal/component/principal-dashboa
 
 const MainDashboardStudent = () => (
   <Grid container spacing={3} sx={{ px: 2 }}>
-    <Grid item lg={12}>
+    <Grid size={{ lg: 12 }}>
       <AppWelcome
         title={`Good Morning 👋 \n Jeet`}
         description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
@@ -25,7 +21,7 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={3}>
+    <Grid size={{ lg: 3 }}>
       <PrincipalDashboardCard
         dropdownLabel=""
         icon="noto:receipt"
@@ -43,7 +39,7 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={3}>
+    <Grid size={{ lg: 3 }}>
       <PrincipalDashboardCard
         dropdownLabel=""
         icon="noto:receipt"
@@ -57,7 +53,7 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={3}>
+    <Grid size={{ lg: 3 }}>
       <OneLineInfoCard
         items={[
           { title: 'Overall Performance', text: 'A+', icon: 'mdi:star', color: 'yellow' },
@@ -65,7 +61,7 @@ const MainDashboardStudent = () => (
         ]}
       />
     </Grid>
-    <Grid item lg={3}>
+    <Grid size={{ lg: 3 }}>
       <OneLineInfoCard
         items={[
           // { title: 'Overall Performance', text: 'A+', icon: 'mdi:star', color: "yellow" },
@@ -79,7 +75,7 @@ const MainDashboardStudent = () => (
       />
     </Grid>
 
-    <Grid item lg={6}>
+    <Grid size={{ lg: 6 }}>
       <UpcomingExamCard
         exams={[
           { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
@@ -89,7 +85,7 @@ const MainDashboardStudent = () => (
         ]}
       />
     </Grid>
-    <Grid item lg={6}>
+    <Grid size={{ lg: 6 }}>
       <UpcomingAssignmentCard
         assignments={[
           { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
@@ -99,12 +95,12 @@ const MainDashboardStudent = () => (
         ]}
       />
     </Grid>
-    <Grid item lg={12}>
+    <Grid size={{ lg: 12 }}>
       <Typography variant="h6">My Timetable</Typography>
       {/* <TimeTableView /> */}
     </Grid>
 
-    <Grid item lg={6} pb="30px">
+    <Grid size={{ lg: 6 }} pb="30px">
       <Typography variant="h6" mb="20px">
         My Fee Structure
       </Typography>

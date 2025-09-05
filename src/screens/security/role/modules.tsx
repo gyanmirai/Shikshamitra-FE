@@ -1,8 +1,12 @@
 //
 
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import React, { useRef, useState } from 'react';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { navData } from 'src/layouts/config-nav-dashboard';
 import {
   Box,
   Grid,
@@ -15,19 +19,11 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-import { navData } from 'src/layouts/config-nav-dashboard';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
 
-  const stackRef = useRef<any>();
+  const stackRef = useRef<any>(null);
   const [selectSubModule, setSelectSubModule] = useState<any>(null);
 
   return (
@@ -78,7 +74,7 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box
               sx={{
                 display: 'flex',

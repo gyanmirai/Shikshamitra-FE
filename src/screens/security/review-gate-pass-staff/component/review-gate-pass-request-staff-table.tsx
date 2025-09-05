@@ -2,23 +2,19 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { Box, Grid } from '@mui/material';
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomDialog from 'src/components/customDialog';
 import data from 'src/json/security/staff-request-data.json';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   CommonRequestStatusType,
   CommonRequestStatusTypeColor,
   CommonRequestStatusTypeOptions,
 } from 'src/enums/common-request-statusType';
-
-import { Label } from 'src/components/label';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import ReviewStaffGatePassRequestDialog from './review-staff-gate-pass-request-dialog';
 
@@ -36,7 +32,7 @@ const ReviewGatePassRequestStaffTable = () => {
   return (
     <Box>
       <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
@@ -51,7 +47,8 @@ const ReviewGatePassRequestStaffTable = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="End Date"
             format="DD-MM-YYYY"

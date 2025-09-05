@@ -2,20 +2,17 @@ import type { LabelColor } from 'src/components/label/types';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import procurementRequestData from 'src/json/ResourceManagement/procurementRequest/procurementRequestData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,
   ResourceBookingStatusTypeOptions,
 } from 'src/enums/resource-booking-status';
-
-import { Label } from 'src/components/label';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import AddProcurementRequestDialog from './add-procurement-request-dialog';
 

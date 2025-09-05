@@ -1,15 +1,12 @@
 'use client';
 
 import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
 import Button from '@mui/material/Button';
-import { useTheme } from '@mui/material/styles';
-import Grid from '@mui/material/Unstable_Grid2';
-
 import { today } from 'src/utils/format-time';
-
+import { useTheme } from '@mui/material/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
-
 import { svgColorClasses } from 'src/components/svg-color';
 
 import { AppWidget } from '../app-widget';
@@ -44,7 +41,7 @@ export function OverviewAppView() {
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <AppWelcome
             title={`Welcome back 👋 \n ${user?.displayName}`}
             description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
@@ -57,11 +54,11 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <AppFeatured list={[]} />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <AppWidgetSummary
             title="Total active users"
             percent={2.6}
@@ -73,7 +70,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <AppWidgetSummary
             title="Total installed"
             percent={0.2}
@@ -86,7 +83,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <AppWidgetSummary
             title="Total downloads"
             percent={-0.1}
@@ -99,7 +96,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppCurrentDownload
             title="Current download"
             subheader="Downloaded by operating system"
@@ -114,7 +111,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={8}>
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <AppAreaInstalled
             title="Area installed"
             subheader="(+43%) than last year"
@@ -163,7 +160,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <AppNewInvoice
             title="New invoice"
             tableData={[]}
@@ -177,19 +174,19 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppTopRelated title="Related applications" list={[]} />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppTopInstalledCountries title="Top installed countries" list={[]} />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AppTopAuthors title="Top authors" list={[]} />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
             <AppWidget
               title="Conversion"
@@ -206,7 +203,10 @@ export function OverviewAppView() {
                 series: 75,
                 colors: [theme.vars.palette.info.light, theme.vars.palette.info.main],
               }}
-              sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
+              sx={{
+                bgcolor: 'info.dark',
+                [`& .${svgColorClasses.root}`]: { color: 'info.light' },
+              }}
             />
           </Box>
         </Grid>

@@ -3,24 +3,10 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  useGetInquiryPreferenceQuery,
-  useAddInquiryPreferenceMutation,
-  useDeleteInquiryPreferenceMutation,
-  useUpdateInquiryPreferenceMutation,
-} from 'src/redux/student/inquiry-preference/inquiry-preference-api';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -28,8 +14,17 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useGetInquiryPreferenceQuery,
+  useAddInquiryPreferenceMutation,
+  useDeleteInquiryPreferenceMutation,
+  useUpdateInquiryPreferenceMutation,
+} from 'src/redux/student/inquiry-preference/inquiry-preference-api';
 
 import type { IInquiryPreference } from './type';
 

@@ -1,13 +1,10 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { getInitialPaymentStatusValues } from './initialValues';
 import { addPaymentStatusValidationSchema } from './validationSchema';
@@ -61,7 +58,7 @@ const AddPaymentStatusDialog: React.FC<IFinanceAddPaymentStatusDialogProps> = ({
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={isPaymentStatusNameError}>
               <TextField
                 size="small"

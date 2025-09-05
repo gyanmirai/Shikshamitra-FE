@@ -1,18 +1,14 @@
 import type { BoxProps } from '@mui/material/Box';
 import type { CardProps } from '@mui/material/Card';
 
-import Autoplay from 'embla-carousel-autoplay';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { varAlpha } from 'src/theme/styles';
+import { Image } from 'src/components/image';
+import Autoplay from 'embla-carousel-autoplay';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
 import { fShortenNumber } from 'src/utils/format-number';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Image } from 'src/components/image';
 import { Label, labelClasses } from 'src/components/label';
 import { Carousel, useCarousel, CarouselArrowBasicButtons } from 'src/components/carousel';
 

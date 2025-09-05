@@ -8,7 +8,15 @@ import type {
   CollisionDetection,
 } from '@dnd-kit/core';
 
+import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import { hideScrollY } from 'src/theme/styles';
+import Typography from '@mui/material/Typography';
+import { DashboardContent } from 'src/layouts/dashboard';
+import { EmptyContent } from 'src/components/empty-content';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { moveTask, moveColumn, useGetBoard } from 'src/actions/kanban';
 import {
   arrayMove,
   SortableContext,
@@ -28,17 +36,6 @@ import {
   getFirstCollision,
   MeasuringStrategy,
 } from '@dnd-kit/core';
-
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
-import FormControlLabel from '@mui/material/FormControlLabel';
-
-import { hideScrollY } from 'src/theme/styles';
-import { DashboardContent } from 'src/layouts/dashboard';
-import { moveTask, moveColumn, useGetBoard } from 'src/actions/kanban';
-
-import { EmptyContent } from 'src/components/empty-content';
 
 import { kanbanClasses } from '../classes';
 import { coordinateGetter } from '../utils';

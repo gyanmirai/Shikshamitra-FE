@@ -6,16 +6,12 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, useTheme, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { fileData } from 'src/components/file-thumbnail';
@@ -24,6 +20,7 @@ import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
@@ -88,7 +85,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Chapter Number Input */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box display="flex" gap={2}>
                   <Typography variant="body2">
                     <strong>Class : </strong>
@@ -100,14 +97,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
                 >
                   <TextField
                     fullWidth
                     label="Chapter Number *"
-                    // placeholder="Enter Chapter Number"
                     name="chapterNo"
                     type="number"
                     inputProps={{ min: 0 }}
@@ -124,15 +121,15 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Chapter Name Input */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
                 >
                   <TextField
                     fullWidth
                     label="Chapter Name  *"
-                    // placeholder="Enter Chapter Name"
                     name="chapterName"
                     value={formik.values.chapterName}
                     onChange={(e) => {
@@ -145,8 +142,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Start Time DatePicker */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                 >
@@ -164,7 +162,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       textField: {
                         fullWidth: true,
                         size: 'small',
-                        // placeholder: 'Select Start Date',
                         error: !!(formik.touched.startDate && formik.errors.startDate) || false,
                         helperText: formik.touched.startDate && formik.errors.startDate,
                       },
@@ -174,7 +171,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Grid>
 
               {/* End Time DatePicker */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                 >
@@ -191,7 +188,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     slotProps={{
                       textField: {
                         size: 'small',
-                        // placeholder: 'Select End Date',
                         error: !!(formik.touched.endDate && formik.errors.endDate) || false,
                         helperText: formik.touched.endDate && formik.errors.endDate,
                       },
@@ -201,10 +197,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               </Grid>
 
               {/* Rich Text Editor for Chapter Content */}
-              <Grid item xs={12} mb={-2}>
+              <Grid size={{ xs: 12 }} mb={-2}>
                 <Typography variant="subtitle2">Description</Typography>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Editor
                   value={formik.values.description}
                   onChange={(value) => {
@@ -227,8 +224,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   }}
                 />
               </Grid>
+
               {/* Document Upload Section */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <CustomUpload
                   multiple
                   previewCount={6}

@@ -7,11 +7,41 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { editorClasses } from 'src/components/editor/classes';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
+import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+  EmployeeLeaveStatusTypeColor,
+} from 'src/enums/employee-leave-status';
+import {
+  useGetStudentLeaveQuery,
+  useAddStudentLeaveMutation,
+  useChangeLeaveStatusMutation,
+} from 'src/redux/student/student-leave/student-leave-api';
 import {
   Box,
   Grid,
@@ -25,41 +55,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
-import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusOptions,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
-import {
-  useGetStudentLeaveQuery,
-  useAddStudentLeaveMutation,
-  useChangeLeaveStatusMutation,
-} from 'src/redux/student/student-leave/student-leave-api';
-
-import { Label } from 'src/components/label';
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { editorClasses } from 'src/components/editor/classes';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
 
@@ -539,7 +534,7 @@ const LeaveRequestForm = ({
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
               options={allOrganization}
               label="Organization"
@@ -551,7 +546,8 @@ const LeaveRequestForm = ({
               disabled={!medium}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -563,7 +559,8 @@ const LeaveRequestForm = ({
               disabled={!organization}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
               options={allDivision}
               label="Division"
@@ -575,16 +572,15 @@ const LeaveRequestForm = ({
               disabled={!classes}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomTooltip placement="top" title={student ? `${student}` : undefined}>
               <Autocomplete
                 loading={false}
                 noOptionsText="No Student Found"
                 sx={{ width: '100%' }}
                 value={student}
-                onChange={(e, value: any) => {
-                  setStudent(value);
-                }}
+                onChange={(e, value: any) => setStudent(value)}
                 options={StudentsData?.items || []}
                 getOptionLabel={(option: any) =>
                   `${option?.firstName || ''} ${option?.lastName || ''}`
@@ -606,8 +602,8 @@ const LeaveRequestForm = ({
           <Box component="form" mt={3}>
             <Grid container spacing={3}>
               {/* Row 1: Leave Type and Half Day Button */}
-              <Grid item xs={12} sm={values.isHalfDay ? 4 : 3}>
-                <ShakingTextField error={!!(touched.leaveType && errors.leaveType) || false}>
+              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
+                <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
                   <TextField
                     name="leaveType"
                     select
@@ -626,11 +622,13 @@ const LeaveRequestForm = ({
                     ))}
                   </TextField>
                 </ShakingTextField>
+
                 <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
                   <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
                 </CustomDialog>
               </Grid>
-              <Grid item xs={values.isHalfDay ? 4 : 3}>
+
+              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                 <Button
                   variant={values.isHalfDay ? 'contained' : 'outlined'}
                   color={values.isHalfDay ? 'primary' : 'inherit'}
@@ -638,9 +636,7 @@ const LeaveRequestForm = ({
                   fullWidth
                   onClick={() => {
                     setFieldValue('isHalfDay', !values.isHalfDay);
-                    if (!values.isHalfDay) {
-                      setFieldValue('endDate', null);
-                    }
+                    if (!values.isHalfDay) setFieldValue('endDate', null);
                   }}
                   sx={{
                     height: '36px',
@@ -658,8 +654,8 @@ const LeaveRequestForm = ({
                 </Button>
               </Grid>
 
-              {/* Row 2: Date Fields - Full Width */}
-              <Grid item xs={values.isHalfDay ? 4 : 3}>
+              {/* Row 2: Date Fields */}
+              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                 <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                   <DatePicker
                     label={values.isHalfDay ? 'Date *' : 'Start Date *'}
@@ -676,8 +672,9 @@ const LeaveRequestForm = ({
                   />
                 </ShakingTextField>
               </Grid>
+
               {!values.isHalfDay && (
-                <Grid item xs={values.isHalfDay ? 4 : 3}>
+                <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                   <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                     <DatePicker
                       label="End Date *"
@@ -696,16 +693,15 @@ const LeaveRequestForm = ({
                 </Grid>
               )}
 
-              {/* Row 3: Description and Upload Document */}
-              <Grid item xs={12} mb={-2}>
+              {/* Row 3: Description and Upload */}
+              <Grid size={{ xs: 12 }} mb={-2}>
                 <Typography variant="subtitle2">Leave Description</Typography>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField error={touched.description && Boolean(errors.description)}>
                   <Editor
-                    onChange={(value) => {
-                      setFieldValue('description', value);
-                    }}
+                    onChange={(value) => setFieldValue('description', value)}
                     placeholder="Leave description *"
                     error={touched.description && Boolean(errors.description)}
                     helperText={touched.description && errors.description}
@@ -733,21 +729,12 @@ const LeaveRequestForm = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <FileUploader
-                  // disabled={editData}
-                  // @ts-ignore
-                  value={values.docs}
+                  value={typeof values.docs === 'string' ? undefined : values.docs}
                   multiple={false}
-                  onChange={(value) => {
-                    // const reader = new FileReader();
-                    setFieldValue('docs', value);
-                    // reader.readAsDataURL(value as File);
-                    // reader.readAsDataURL(value as File);
-                    // reader.onload = () => {
-                    //   const base64String = reader.result;
-                    // };
-                  }}
+                  onChange={(value) => setFieldValue('docs', value)}
                   primaryText="Please Upload Your File"
                   secondaryText="Maximum file size is 5MB"
                 />

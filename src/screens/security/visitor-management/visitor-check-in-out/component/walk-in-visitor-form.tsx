@@ -3,16 +3,13 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { visitorWalkInValidationSchema } from './validationSchema';
@@ -36,7 +33,7 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={6} pb="10px">
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.visitorName && Boolean(formik.errors.visitorName)}
                 >
@@ -52,7 +49,8 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6} pb="10px">
+
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.visitorEmail && Boolean(formik.errors.visitorEmail)}
                 >
@@ -68,7 +66,8 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6} pb="10px">
+
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.visitorPhone && Boolean(formik.errors.visitorPhone)}
                 >
@@ -86,7 +85,7 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={6} pb="10px">
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.visitingDate && Boolean(formik.errors.visitingDate)}
                 >
@@ -110,14 +109,14 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   disabled={isDisabled}
                   label="Time *"
                   format="hh:mm A"
                   value={formik.values.visitingTime ? dayjs(formik.values.visitingTime) : null}
                   onChange={(val) => {
-                    // val is a Dayjs object or null
                     formik.setFieldValue('visitingTime', val ? val.toISOString() : null);
                   }}
                   slotProps={{
@@ -134,11 +133,9 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
-                  error={
-                    !!(formik.touched.visitingPurpose && formik.errors.visitingPurpose) || false
-                  }
+                  error={!!(formik.touched.visitingPurpose && formik.errors.visitingPurpose)}
                 >
                   <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
                     <Editor

@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';

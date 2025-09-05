@@ -2,20 +2,16 @@
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
@@ -57,7 +53,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField error={formik.touched.className && !!formik.errors.className}>
                   <CustomSelect
                     options={classData?.items || []}
@@ -79,7 +75,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.division && !!formik.errors.division}>
                   <CustomSelect
                     label="Division"
@@ -99,7 +95,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.subject && !!formik.errors.subject}>
                   <CustomSelect
                     label="Subject"
@@ -118,17 +114,17 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={formik.touched.assessmentTitle && Boolean(formik.errors.assessmentTitle)}
+                  error={formik.touched.assessmentTitle && !!formik.errors.assessmentTitle}
                 >
                   <TextField
                     fullWidth
-                    label="Assesment Title"
-                    name="assesmentTitle"
+                    label="Assessment Title"
+                    name="assessmentTitle"
                     value={formik.values.assessmentTitle}
                     onChange={formik.handleChange}
-                    error={formik.touched.assessmentTitle && Boolean(formik.errors.assessmentTitle)}
+                    error={formik.touched.assessmentTitle && !!formik.errors.assessmentTitle}
                     helperText={
                       (formik.touched.assessmentTitle && formik.errors.assessmentTitle) || ''
                     }
@@ -137,7 +133,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.assessmentType && !!formik.errors.assessmentType}
                 >
@@ -163,9 +159,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                   color="primary.main"
                   fontSize={12}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    assessmentTypeDialog.onTrue();
-                  }}
+                  onClick={() => assessmentTypeDialog.onTrue()}
                 >
                   Add Assessment Type
                 </Typography>
@@ -184,7 +178,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
               </Grid>
 
               {formik.values.assessmentType === 'exam' && (
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={formik.touched.examName && !!formik.errors.examName}>
                     <CustomSelect
                       label="Exam Name"
@@ -203,7 +197,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
               )}
 
               {formik.values.assessmentType === 'assignment' && (
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={formik.touched.assignmentName && !!formik.errors.assignmentName}
                   >
@@ -225,22 +219,18 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </Grid>
               )}
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={formik.touched.createDate && Boolean(formik.errors.createDate)}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={formik.touched.createDate && !!formik.errors.createDate}>
                   <DatePicker
                     label="Date"
                     value={formik.values.createDate}
-                    onChange={(val) => {
-                      formik.setFieldValue('createDate', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('createDate', val)}
                     format="DD-MM-YYYY"
                     slotProps={{
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        error: formik.touched.createDate && Boolean(formik.errors.createDate),
+                        error: formik.touched.createDate && !!formik.errors.createDate,
                         helperText: (formik.touched.createDate && formik.errors.createDate) || '',
                       },
                     }}
@@ -249,19 +239,17 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={formik.touched.dueDate && Boolean(formik.errors.dueDate)}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={formik.touched.dueDate && !!formik.errors.dueDate}>
                   <DatePicker
                     label="Due Date"
                     value={formik.values.dueDate}
-                    onChange={(val) => {
-                      formik.setFieldValue('dueDate', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('dueDate', val)}
                     slotProps={{
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
+                        error: formik.touched.dueDate && !!formik.errors.dueDate,
                         helperText: (formik.touched.dueDate && formik.errors.dueDate) || '',
                       },
                     }}
@@ -269,7 +257,7 @@ const AddNewAssessment: React.FC<AddNewAssessmentProps> = ({ onSubmit, data, isE
                   />
                 </ShakingTextField>
               </Grid>
-            </Grid>{' '}
+            </Grid>
           </Scrollbar>
           <DialogActions>
             {isEdit ? (

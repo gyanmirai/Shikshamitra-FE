@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-
-import { Box, Grid, Card, alpha, Typography, LinearProgress } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { Box, Grid, Card, Typography, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
@@ -21,7 +21,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
         const isSelected = selectedCourseId === course.id;
 
         return (
-          <Grid item xs={12} md={6} lg={3} key={course.id}>
+          <Grid size={{ xs: 12, md: 6, lg: 3 }} key={course.id}>
             <Card
               sx={{
                 display: 'flex',
@@ -44,7 +44,6 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
               <AppWidget
                 title={course.name}
                 color={course.color}
-                // icon="solar:user-rounded-bold"
                 chart={{ series: course.progress }}
                 completedChapter={course.completedChapter}
                 totalChapter={course.totalChapter}

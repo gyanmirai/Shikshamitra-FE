@@ -1,5 +1,4 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
 import budgetData from '../../../budgetData.json'; // <-- your mock JSON

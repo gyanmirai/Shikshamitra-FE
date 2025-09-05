@@ -4,24 +4,19 @@ import type { StackProps } from '@mui/material/Stack';
 import type { DraggableSyntheticListeners } from '@dnd-kit/core';
 
 import { useFormik } from 'formik';
-import { memo, useState, useEffect, forwardRef } from 'react';
-
 import Stack from '@mui/material/Stack';
 import ListItem from '@mui/material/ListItem';
 import { styled } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import { Box, Avatar, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha, stylesMode } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { varAlpha, stylesMode } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
+import { kanbanClasses } from 'src/sections/kanban/classes';
+import { memo, useState, useEffect, forwardRef } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-
-import { kanbanClasses } from 'src/sections/kanban/classes';
+import { Box, Avatar, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import RegisterForm from '../register/register-form';
 

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, TextField } from '@mui/material';
 
@@ -22,7 +21,7 @@ const AcademicYearSetup: React.FC<AcademicYearSetupProps> = ({
 }) => (
   <Box sx={{ mt: 2, width: '100%' }}>
     <Grid container spacing={2}>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <TextField
           size="small"
           fullWidth
@@ -35,7 +34,8 @@ const AcademicYearSetup: React.FC<AcademicYearSetupProps> = ({
           helperText={touched.academicYear?.name && errors.academicYear?.name}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="Start Date"
           value={values.academicYear.startDate ? values.academicYear.startDate : null}
@@ -53,7 +53,8 @@ const AcademicYearSetup: React.FC<AcademicYearSetupProps> = ({
           }}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"

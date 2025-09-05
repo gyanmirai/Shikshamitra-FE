@@ -1,11 +1,9 @@
 'use client';
 
+import { Grid } from '@mui/material';
 import Button from '@mui/material/Button';
-import { useTheme } from '@mui/material/styles';
-import Grid from '@mui/material/Unstable_Grid2';
-
 import { today } from 'src/utils/format-time';
-
+import { useTheme } from '@mui/material/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { MotivationIllustration } from 'src/assets/illustrations';
 
@@ -40,7 +38,7 @@ export function OverviewEcommerceView() {
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <EcommerceWelcome
             title={`Congratulations 🎉  \n ${user?.displayName}`}
             description="Best seller of the month you have done 57.6% more sales today."
@@ -53,11 +51,11 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceNewProducts list={[]} />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
             title="Product sold"
             percent={2.6}
@@ -69,7 +67,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
             title="Total balance"
             percent={-0.1}
@@ -82,7 +80,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <EcommerceWidgetSummary
             title="Sales profit"
             percent={0.6}
@@ -95,7 +93,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceSaleByGender
             title="Sale by gender"
             total={2324}
@@ -109,7 +107,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={8}>
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceYearlySales
             title="Yearly sales"
             subheader="(+43%) than last year"
@@ -160,11 +158,11 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={8}>
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceSalesOverview title="Sales overview" data={[]} />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceCurrentBalance
             title="Current balance"
             earning={25500}
@@ -174,7 +172,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={8}>
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceBestSalesman
             title="Best salesman"
             tableData={[]}
@@ -188,7 +186,7 @@ export function OverviewEcommerceView() {
           />
         </Grid>
 
-        <Grid xs={12} md={6} lg={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <EcommerceLatestProducts title="Latest products" list={[]} />
         </Grid>
       </Grid>

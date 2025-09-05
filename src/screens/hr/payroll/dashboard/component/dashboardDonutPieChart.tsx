@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Grid, useTheme } from '@mui/material';
-
+import { Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -12,7 +11,7 @@ const DashboardDonutPieChart = () => {
 
   return (
     <Grid container spacing={2} mt={2} mb={2}>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <AppCurrentDownload
           title="Payroll Analytics"
           subheader=""
@@ -25,7 +24,7 @@ const DashboardDonutPieChart = () => {
           }}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <AnalyticsCurrentVisits
           sx={{ height: '100%' }}
           title="Leave Analysis"
@@ -39,7 +38,7 @@ const DashboardDonutPieChart = () => {
           }}
         />
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <AppCurrentDownload
           sx={{ height: '100%' }}
           title="Average Pay Distribution"

@@ -1,15 +1,11 @@
 import React from 'react';
-
-import { Box, Stack, Avatar, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { convertBase64Format } from 'src/utils/base64Formate';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Avatar, Button, Typography } from '@mui/material';
 
 import ViewHostelRules from './components/viewHostelRules';
 import HostelRoomDetailCard from './components/hostelRoomDetailCard';

@@ -2,16 +2,13 @@
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Close } from '@mui/icons-material';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { validationSchema } from './validationSchema';
@@ -59,20 +56,17 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
         {/* <form onSubmit={formik.handleSubmit}> */}
         {/* <Scrollbar sx={{ p: 2, height: '150px' }}> */}
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.roomNumber && formik.errors.roomNumber)}>
               <TextField
                 disabled={isEdit}
                 label="Room No. *"
-                // placeholder="Enter Room Number"
                 size="small"
                 name="roomNumber"
                 type="number"
                 inputProps={{ min: 0 }}
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                    e.preventDefault();
-                  }
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                 }}
                 value={formik.values.roomNumber}
                 onChange={formik.handleChange}
@@ -83,12 +77,11 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.buildingName && formik.errors.buildingName)}>
               <TextField
                 disabled={isEdit}
                 label="Building Name *"
-                // placeholder="Enter Building Name"
                 size="small"
                 name="buildingName"
                 value={formik.values.buildingName}
@@ -100,20 +93,17 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.floor && formik.errors.floor)}>
               <TextField
                 disabled={isEdit}
                 name="floor"
                 label="Floor *"
                 inputProps={{ min: 0 }}
-                // placeholder="Enter Floor"
                 size="small"
                 type="number"
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                    e.preventDefault();
-                  }
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                 }}
                 value={formik.values.floor}
                 onChange={formik.handleChange}
@@ -124,19 +114,16 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.capacity && formik.errors.capacity)}>
               <TextField
                 name="capacity"
                 label="Room Capacity *"
-                // placeholder="Enter Room Capacity"
                 type="number"
                 inputProps={{ min: 0 }}
                 size="small"
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                    e.preventDefault();
-                  }
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                 }}
                 value={formik.values.capacity}
                 onChange={formik.handleChange}
@@ -147,6 +134,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
             </ShakingTextField>
           </Grid>
         </Grid>
+
         {/* </Scrollbar> */}
 
         {/* </form> */}

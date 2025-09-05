@@ -7,15 +7,12 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
-
-import { Box, Stack, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Stack, Button, DialogActions } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
 
 const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {

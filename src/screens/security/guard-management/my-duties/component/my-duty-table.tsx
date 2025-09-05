@@ -1,17 +1,13 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/security/guard-management/my-duties-data.json';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Grid, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/security/guard-management/my-duties-data.json';
 
 import CheckInCheckOutDialog from './check-in-check-out-dialog';
 
@@ -27,7 +23,7 @@ const MyDutytable = () => {
   return (
     <>
       <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="Start Date"
             format="DD-MM-YYYY"
@@ -42,7 +38,7 @@ const MyDutytable = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <DatePicker
             label="End Date"
             format="DD-MM-YYYY"

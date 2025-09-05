@@ -1,6 +1,5 @@
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
-
 import {
   Box,
   Card,
@@ -48,7 +47,7 @@ const OtherReports = () => (
         <Form>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                   <InputLabel size="small">List of reports</InputLabel>
                   <Select
@@ -67,7 +66,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.report && errors.report}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field as={FormControl} error={touched.department && errors.department} fullWidth>
                   <InputLabel size="small">Department</InputLabel>
                   <Select
@@ -85,7 +85,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.department && errors.department}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field as={FormControl} error={touched.status && errors.status} fullWidth>
                   <InputLabel size="small">Status</InputLabel>
                   <Select
@@ -104,7 +105,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.status && errors.status}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field as={FormControl} error={touched.designation && errors.designation} fullWidth>
                   <InputLabel size="small">Designation</InputLabel>
                   <Select
@@ -121,12 +123,12 @@ const OtherReports = () => (
                     <MenuItem value="director">Director</MenuItem>
                     <MenuItem value="peon">Peon</MenuItem>
                     <MenuItem value="receptionist">Receptionist</MenuItem>
-                    <MenuItem value="clerk">Clerk</MenuItem>
                   </Select>
                   <FormHelperText>{touched.designation && errors.designation}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field
                   as={FormControl}
                   error={touched.employeeType && errors.employeeType}
@@ -148,7 +150,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.employeeType && errors.employeeType}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field
                   as={FormControl}
                   error={touched.employeeGroup && errors.employeeGroup}
@@ -169,7 +172,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.employeeGroup && errors.employeeGroup}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Field as={FormControl} error={touched.gender && errors.gender} fullWidth>
                   <InputLabel size="small">Gender</InputLabel>
                   <Select
@@ -187,7 +191,8 @@ const OtherReports = () => (
                   <FormHelperText>{touched.gender && errors.gender}</FormHelperText>
                 </Field>
               </Grid>
-              <Grid item xs={12} justifyContent="flex-end" display="flex">
+
+              <Grid size={{ xs: 12 }} display="flex" justifyContent="flex-end">
                 <Button type="submit" variant="contained">
                   Generate Report
                 </Button>

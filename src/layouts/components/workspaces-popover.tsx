@@ -2,16 +2,14 @@
 
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
+import { Label } from 'src/components/label';
+import { useState, useCallback } from 'react';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
-import ButtonBase from '@mui/material/ButtonBase';
-
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------

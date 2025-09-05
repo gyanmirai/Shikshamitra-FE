@@ -1,13 +1,11 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Card, Alert, Button, MenuList, MenuItem, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Alert, Button, MenuList, MenuItem, Typography } from '@mui/material';
 
 const AfterPayrollComponent = () => (
   <>
@@ -122,7 +120,7 @@ const AfterPayrollComponent = () => (
     <Card sx={{ p: 2, mt: 2 }}>
       <Typography variant="h6">Employee Paybles</Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <CustomizableTable
             isFilter={false}
             isShowedDense={false}
@@ -168,7 +166,7 @@ const AfterPayrollComponent = () => (
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <CustomizableTable
             isFilter={false}
             isShowedDense={false}
@@ -212,7 +210,7 @@ const AfterPayrollComponent = () => (
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <CustomizableTable
             isFilter={false}
             isShowedDense={false}
@@ -256,7 +254,7 @@ const AfterPayrollComponent = () => (
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <CustomizableTable
             isFilter={false}
             isShowedDense={false}
@@ -301,7 +299,7 @@ const AfterPayrollComponent = () => (
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <CustomizableTable
             isFilter={false}
             isShowedDense={false}

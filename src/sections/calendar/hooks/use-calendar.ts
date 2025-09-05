@@ -3,9 +3,8 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { EventDropArg, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import type { ICalendarView, ICalendarRange, ICalendarEvent } from 'src/types/calendar';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import { useResponsive } from 'src/hooks/use-responsive';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
@@ -16,7 +15,7 @@ export function useCalendar({
   initialDate?: any;
   initialView?: any;
 } = {}) {
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
 
   const calendarEl = calendarRef.current;
 

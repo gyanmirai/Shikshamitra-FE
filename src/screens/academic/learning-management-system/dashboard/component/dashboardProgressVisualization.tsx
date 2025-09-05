@@ -1,13 +1,11 @@
 'use client';
 
 import React from 'react';
-
 import { Card, Grid, Typography } from '@mui/material';
-
 import { AnalyticsConversionRates } from 'src/screens/student/enrollment/dashboard';
 
 const DashboardProgressVisualization = () => (
-  <Grid item xs={12} mt={2}>
+  <Grid size={12} mt={2}>
     <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
       <Typography variant="h6">Progress Visualization</Typography>
       <AnalyticsConversionRates

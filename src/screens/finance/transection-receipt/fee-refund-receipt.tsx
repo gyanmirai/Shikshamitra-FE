@@ -1,8 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
-import { Page, Text, View, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
-
 import { formatNumber } from 'src/utils/formate_number';
+import { Page, Text, View, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
 
 import type { IFeeRefundReceiptPDFProps } from './fee-refund-receipt-interface';
 

@@ -4,7 +4,14 @@ import type { IDocument } from 'src/screens/academic/curriculum-management/subje
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+// eslint-disable-next-line import/extensions
+import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
 import {
   Box,
   Grid,
@@ -16,17 +23,6 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-// eslint-disable-next-line import/extensions
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
@@ -75,7 +71,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         {/* <form onSubmit={formik.handleSubmit}> */}
         <Scrollbar sx={{ p: 2, height: '280px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            {/* Student Info */}
+            <Grid size={{ xs: 12 }}>
               <Box display="flex" gap={2}>
                 <Typography variant="body2">
                   <strong>Name : </strong>
@@ -87,7 +84,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12}>
+
+            {/* Document Card */}
+            <Grid size={{ xs: 12 }}>
               <Card
                 key={document.id}
                 sx={{
@@ -114,20 +113,16 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 </Box>
 
                 <Tooltip title="Preview">
-                  <IconButton
-                    edge="end"
-                    aria-label="preview"
-                    // onClick={() => handleDownload(document)}
-                  >
+                  <IconButton edge="end" aria-label="preview">
                     <Iconify icon={GlobalIcons.eye} />
                   </IconButton>
                 </Tooltip>
               </Card>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
-              >
+
+            {/* Total Marks */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}>
                 <TextField
                   label="Total Marks"
                   fullWidth
@@ -141,33 +136,27 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks) || false}>
+
+            {/* Obtained Marks */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
                 <TextField
                   label="Obtained Marks *"
                   fullWidth
                   type="number"
                   name="marks"
                   disabled={!isEdit}
-                  inputProps={{
-                    min: 0,
-                    max: formik.values.totalMarks,
-                  }}
+                  inputProps={{ min: 0, max: formik.values.totalMarks }}
                   onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                   }}
                   onChange={(e) => {
                     const { value } = e.target;
-
                     if (value === '') {
                       formik.setFieldValue('marks', '');
                       return;
                     }
-
                     const numericValue = parseInt(value, 10);
-
                     if (!Number.isNaN(numericValue) && numericValue <= formik.values.totalMarks) {
                       formik.setFieldValue('marks', numericValue);
                     }
@@ -179,12 +168,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-              >
+
+            {/* Feedback */}
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
                 <TextField
-                  // placeholder="Enter Feedback"
                   label="Feedback"
                   multiline
                   size="small"

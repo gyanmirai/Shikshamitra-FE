@@ -5,16 +5,12 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
-
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import CustomSelect from 'src/components/custom-select';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import FinanceStudentFeeCardComponent from './studentFeeDetails/finance-student-fee-card-component';
 import FinanceStudentDetailedFeeComponent from './studentFeeDetails/finance-student-detailed-fee-component';

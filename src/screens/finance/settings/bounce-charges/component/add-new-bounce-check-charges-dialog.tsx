@@ -2,14 +2,11 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 
 interface AddNewBounceCheckChargesDialogProps {
   dialogValue: boolean;

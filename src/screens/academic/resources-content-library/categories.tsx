@@ -1,7 +1,8 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
+import { Iconify } from 'src/components/iconify';
 import { RemoveRedEye } from '@mui/icons-material';
 import {
   Box,
@@ -19,10 +20,6 @@ import {
   ListItemText,
   FormControlLabel,
 } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 
 const Categories = (props: TabComponentType) => {
   const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
@@ -95,7 +92,7 @@ const Categories = (props: TabComponentType) => {
         </Box>
       </Popover>
       <Grid container spacing={2}>
-        <Grid item xs={6} md={4}>
+        <Grid size={{ xs: 6, md: 4 }}>
           <Card
             sx={{ backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.16) }}
           >
@@ -134,7 +131,8 @@ const Categories = (props: TabComponentType) => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={4}>
+
+        <Grid size={{ xs: 6, md: 4 }}>
           <Card
             sx={{ backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.16) }}
           >
@@ -173,7 +171,8 @@ const Categories = (props: TabComponentType) => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={4}>
+
+        <Grid size={{ xs: 6, md: 4 }}>
           <Card sx={{ backgroundColor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.16) }}>
             <CardHeader
               title="Quizzes"
@@ -210,7 +209,7 @@ const Categories = (props: TabComponentType) => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>{' '}
+      </Grid>
     </Box>
   );
 };

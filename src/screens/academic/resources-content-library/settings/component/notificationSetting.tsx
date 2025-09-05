@@ -1,11 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Card, Switch, Typography } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
-
+import { Box, Card, Switch, Typography } from '@mui/material';
 import { FileStorageOverview } from 'src/sections/file-manager/file-storage-overview';
 
 const GB = 1000000000 * 24;

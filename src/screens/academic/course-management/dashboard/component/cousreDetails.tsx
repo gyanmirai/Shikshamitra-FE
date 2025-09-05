@@ -3,16 +3,12 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { Box , Grid } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const CousreDetails = () => {
   const [classes, setClasses] = useState('');
@@ -27,8 +23,8 @@ const CousreDetails = () => {
   });
 
   return (
-    <Grid2 container spacing={2} mt={2}>
-      <Grid2 xs={12}>
+    <Grid container spacing={2} mt={2}>
+      <Grid size={12}>
         <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
           <CustomSelect
             label="Class"
@@ -155,8 +151,8 @@ const CousreDetails = () => {
             },
           ]}
         />
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

@@ -1,32 +1,27 @@
 import type { CardProps } from '@mui/material/Card';
 import type { IFolderManager } from 'src/types/file';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
+import { CONFIG } from 'src/config-global';
 import Divider from '@mui/material/Divider';
+import { useState, useCallback } from 'react';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
-import ListItemText from '@mui/material/ListItemText';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
-
 import { fData } from 'src/utils/format-number';
-
-import { CONFIG } from 'src/config-global';
-
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import { useBoolean } from 'src/hooks/use-boolean';
+import ListItemText from '@mui/material/ListItemText';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { FileManagerShareDialog } from './file-manager-share-dialog';
 import { FileManagerFileDetails } from './file-manager-file-details';

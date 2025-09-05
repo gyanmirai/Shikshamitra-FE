@@ -4,19 +4,15 @@ import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Box, Button } from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 import RollCallSettingForm from './rollCallSettingForm';
@@ -31,7 +27,7 @@ const RollCallSetting = (props: TabComponentType) => {
   const dialogForDeleteConfirmation = useBoolean();
 
   // State to control form open/close
-  const [open, setOpen] = useState(false);
+  const [_open, setOpen] = useState(false);
 
   // State to store the selected roll call setting for editing
   const [selectedEntry, setSelectedEntry] = useState<IRollCallSetting | null>(null);

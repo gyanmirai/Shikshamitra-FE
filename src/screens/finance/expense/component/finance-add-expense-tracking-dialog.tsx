@@ -3,26 +3,21 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Box, Card, Grid, TextField } from '@mui/material';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { addExpenseDialogValidationSchema } from '../validationSchema';
 import BudgetCategoryDialog from '../../settings/general-setting/dialog/budget-category-dialog';
@@ -141,7 +136,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
         >
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <ShakingTextField
                   error={formik.touched.expenseCategory && Boolean(formik.errors.expenseCategory)}
                 >
@@ -157,8 +152,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                     helperText={
                       formik.touched.expenseCategory ? formik.errors.expenseCategory || '' : ''
                     }
-                    // addOtherItemOnClick={budgetCategoryDialog.onTrue}
-                    // addOtherItemText="Add New Category"
                   />
                 </ShakingTextField>
                 {budgetCategoryDialog.value && (
@@ -171,7 +164,8 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                   </CustomDialog>
                 )}
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 6 }}>
                 <ShakingTextField
                   error={formik.touched.expenseName && Boolean(formik.errors.expenseName)}
                 >
@@ -189,7 +183,8 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 6 }}>
                 <ShakingTextField
                   error={formik.touched.expenseAmount && Boolean(formik.errors.expenseAmount)}
                 >
@@ -205,7 +200,8 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 6 }}>
                 <ShakingTextField
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                 >
@@ -224,7 +220,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <DatePicker
                   label="Date *"
                   value={formik.values.date}
@@ -235,20 +231,7 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
                 />
               </Grid>
 
-              {/* <Grid item xs={6}>
-                <CustomSelect
-                  label="Payment Status"
-                  options={[]}
-                  value={formik.values.paymentStatus}
-                  onChange={(value) => formik.setFieldValue('paymentStatus', value)}
-                  formControlProps={{ sx: { minWidth: 140 }, fullWidth: true }}
-                  disabled={isEdit}
-                  error={formik.touched.paymentStatus && Boolean(formik.errors.paymentStatus)}
-                  helperText={formik.touched.paymentStatus ? formik.errors.paymentStatus || '' : ''}
-                />
-              </Grid> */}
-
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   multiline
                   rows={4}

@@ -1,16 +1,12 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography } from '@mui/material';
-
 import capitalizeWords from 'src/utils/capitalizeText';
-
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, TextField, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 
 import type { IFormikValues, IFeeRefundPaymentDialogProps } from '../fee-refund-interface';
 
@@ -108,7 +104,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
           />
           {formik.values.paymentMode === 'Online' && (
             <Grid container spacing={2}>
-              <Grid item xs={12} md={12}>
+              <Grid size={{ xs: 12, md: 12 }}>
                 <Typography variant="subtitle2">Online Details</Typography>
                 <TextField
                   name="transactionIdOnline"
@@ -124,7 +120,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
 
           {formik.values.paymentMode === 'Card' && (
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="transactionId"
                   label="Transaction ID"
@@ -134,7 +130,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormattedAmountInput
                   label="Card Amount"
                   value={cardAmountState}
@@ -146,7 +142,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
 
           {formik.values.paymentMode === 'Cheque' && (
             <Grid container spacing={2}>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   name="chequeNumber"
                   label="Cheque Number"
@@ -156,7 +152,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <DatePicker
                   label="Cheque Date"
                   value={formik.values.chequeDate}
@@ -164,7 +160,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
                   slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   name="bankName"
                   label="Bank Name"
@@ -174,7 +170,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <NumericFormatCustom
                   label="Cheque Amount"
                   value={chequeAmountState}

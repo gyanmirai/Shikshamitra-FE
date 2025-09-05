@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-
-import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
 import { ComponentBlock } from 'src/components/component-block';
+import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 
 interface FinanceBudgetEditBudgetDialogProps {
   dialogValue: boolean;

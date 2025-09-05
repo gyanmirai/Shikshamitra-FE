@@ -2,17 +2,13 @@
 
 import type { IChatParticipant } from 'src/types/chat';
 
+import { CONFIG } from 'src/config-global';
+import { today } from 'src/utils/format-time';
 import { useState, useEffect, useCallback } from 'react';
-
+import { EmptyContent } from 'src/components/empty-content';
 // import { paths } from 'src/routes/paths';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
-
-import { today } from 'src/utils/format-time';
-
-import { CONFIG } from 'src/config-global';
 import { useGetContacts, useGetConversation, useGetConversations } from 'src/actions/chat';
-
-import { EmptyContent } from 'src/components/empty-content';
 
 import { Layout } from '../layout';
 import { ChatNav } from '../chat-nav';

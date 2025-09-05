@@ -1,11 +1,8 @@
 import React from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, alpha, useTheme, Typography } from '@mui/material';
-
+import { Box , Grid, Typography } from '@mui/material';
+import { alpha , useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AssessmentDashboardReportComponent = () => {
@@ -49,11 +46,10 @@ const AssessmentDashboardReportComponent = () => {
           slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
-      <Grid2 container spacing={3}>
-        <Grid2 xs={12} md={6}>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <AnalyticsWebsiteVisits
             title="Distribution of grades"
-            //   subheader="(+43%) than last year"
             chart={{
               categories: ['Maths', 'Physics', 'Chemistry'],
               series: [
@@ -69,8 +65,8 @@ const AssessmentDashboardReportComponent = () => {
             }}
             sx={{ height: '100%' }}
           />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

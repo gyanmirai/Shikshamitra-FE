@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import {
   Box,
   Radio,
@@ -17,9 +18,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 
 const inspectionItems = [
   {

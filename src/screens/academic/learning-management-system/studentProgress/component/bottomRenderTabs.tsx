@@ -1,9 +1,7 @@
 'use client';
 
-import { Box, Tab, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import Quizzes from './quizes';

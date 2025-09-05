@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Tooltip, useTheme, Typography, CardContent } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Card, Tooltip, Typography, CardContent } from '@mui/material';
 
 type ExamStatus = 'Completed' | 'Upcoming' | 'In Progress';
 

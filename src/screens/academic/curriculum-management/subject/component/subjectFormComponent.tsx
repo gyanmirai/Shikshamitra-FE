@@ -6,22 +6,17 @@ import type { Standards, Organization } from 'src/types/school';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
-
-import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import SubjectCard from './subjectCardComponent';
 import { validationSchema } from './validationSchema';
@@ -441,26 +436,24 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Class selection */}
-              <Grid item xs={12} md={4}>
-                <ShakingTextField
-                  error={!!(formik.touched.className && formik.errors.className) || false}
-                >
+              <Grid size={{ xs: 12, md: 4 }}>
+                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     options={allClass}
                     label="Class *"
                     value={formik.values.className || selectedClass}
                     labelKey="name"
                     valueKey="name"
-                    // placeholder="Search Class"
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
 
-                      // Also update className for all subjects in the array
+                      // Update className for all subjects
                       if ((formik?.values?.subjects ?? []).length > 0) {
-                        const updatedSubjects = (formik?.values?.subjects ?? []).map((subject) => ({
-                          ...subject,
-                          className: val,
-                        }));
+                        const updatedSubjects =
+                          formik?.values?.subjects?.map((subject) => ({
+                            ...subject,
+                            className: val,
+                          })) || [];
                         formik.setFieldValue('subjects', updatedSubjects);
                       }
                     }}
@@ -472,9 +465,9 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
               </Grid>
 
               {/* Subject/Group selection */}
-              <Grid item xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
+                  error={!!(formik.touched.subjectName && formik.errors.subjectName)}
                 >
                   <Autocomplete
                     fullWidth
@@ -483,9 +476,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     options={subjectOptions}
                     getOptionLabel={(option) => option.label}
                     value={selectedOption}
-                    onChange={(_, newValue) => {
-                      handleSubjectChange(newValue);
-                    }}
+                    onChange={(_, newValue) => handleSubjectChange(newValue)}
                     ListboxProps={{
                       style: { maxHeight: 200, overflow: 'auto' },
                     }}
@@ -515,32 +506,6 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     )}
                   />
                 </ShakingTextField>
-                {/* <Box display="flex" justifyContent="space-between">
-                  <Box sx={{ display: 'inline-block' }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={500}
-                      color="primary.main"
-                      fontSize={12}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={addSubjectDialog.onTrue}
-                    >
-                      Add Subject
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'inline-block' }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={500}
-                      color="primary.main"
-                      fontSize={12}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={addElectiveSubjectDialog.onTrue}
-                    >
-                      Add Elective Group
-                    </Typography>
-                  </Box>
-                </Box> */}
 
                 <CustomDialog
                   open={addSubjectDialog.value}
@@ -549,12 +514,11 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 >
                   <SettingSubjectForm
                     open={addSubjectDialog}
-                    onClose={() => {
-                      addSubjectDialog.onFalse();
-                    }}
+                    onClose={() => addSubjectDialog.onFalse()}
                     editData={null}
                   />
                 </CustomDialog>
+
                 <CustomDialog
                   open={addElectiveSubjectDialog.value}
                   handleClose={addElectiveSubjectDialog.onFalse}
@@ -562,20 +526,16 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 >
                   <SettingElectiveSubjectForm
                     open={addElectiveSubjectDialog}
-                    onClose={() => {
-                      addElectiveSubjectDialog.onFalse();
-                    }}
+                    onClose={() => addElectiveSubjectDialog.onFalse()}
                     editData={null}
                   />
                 </CustomDialog>
-                {/* Add Subject link */}
               </Grid>
 
               {/* Subject Cards Section */}
-              {formik.values.subjects && formik.values.subjects.length > 0 && (
-                <Grid item xs={12}>
-                  {/* Map and render all subject cards */}
-                  {formik.values.subjects.map((subject, index) => (
+              {formik?.values?.subjects?.length && (
+                <Grid size={{ xs: 12 }}>
+                  {formik?.values?.subjects?.map((subject, index) => (
                     <SubjectCard
                       key={subject.id}
                       index={index}
@@ -586,7 +546,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                       teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}
                     />
-                  ))}{' '}
+                  ))}
                 </Grid>
               )}
             </Grid>

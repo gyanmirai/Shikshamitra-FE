@@ -1,12 +1,10 @@
 import React from 'react';
-
 import { Box, Card, Grid, Button, Typography } from '@mui/material';
-
 import { EcommerceWidgetSummary } from 'src/sections/overview/e-commerce/ecommerce-widget-summary';
 
 const DashboardMiddleChart = () => (
   <Grid container spacing={2} mt={2}>
-    <Grid item xs={12} md={4}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <Card
         sx={{
           p: 2,
@@ -36,7 +34,7 @@ const DashboardMiddleChart = () => (
         </Box>
       </Card>
     </Grid>
-    <Grid item xs={12} md={4}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <EcommerceWidgetSummary
         title="Total Employees"
         percent={8.2}
@@ -54,7 +52,7 @@ const DashboardMiddleChart = () => (
         }}
       />
     </Grid>
-    <Grid item xs={12} md={4}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <EcommerceWidgetSummary
         title="Total Compensation"
         percent={8.2}

@@ -1,8 +1,12 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -12,12 +16,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface IssueBookDialogProps {
   dialogValue: boolean;
@@ -104,7 +102,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
             <Grid container spacing={3} pt="10px">
               {/* Book Selection */}
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Standard"
                   options={[]} // Empty options for Standard
@@ -113,7 +111,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Division"
                   options={[]} // Empty options for Division
@@ -122,7 +120,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Autocomplete
                   loading={false}
                   noOptionsText="No Gr Found"
@@ -160,7 +158,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
               </Grid>
 
               {/* Member Selection */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Autocomplete
                   loading={false}
                   noOptionsText="No Student Found"
@@ -205,7 +203,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                                 /> */}
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Book Id"
                   value={formik.values.bookID}
@@ -214,7 +212,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Book Title"
                   options={bookData.map((book) => ({
@@ -226,7 +224,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Edition Year"
                   options={
@@ -242,7 +240,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Publisher"
                   options={
@@ -263,7 +261,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
               </Grid>
 
               {/* Dates */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Issue Date"
                   value={formik.values.issueDate}
@@ -279,7 +277,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Due Date"
                   value={formik.values.dueDate}
@@ -290,7 +288,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
               </Grid>
               {/* Added Books */}
               {addedBooks.length > 0 && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Typography variant="h6">Books to be Issued:</Typography>
                   <CustomizableTable
                     tableId="issue-book-table"
@@ -309,7 +307,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
               )}
               {/* Member Information Table */}
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Box
                   sx={{
                     p: 2,
@@ -459,7 +457,7 @@ export default IssueBookDialog;
 //                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', }}>
 //                         <Grid container spacing={3} pt="10px">
 //                             {/* Book Selection */}
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Book Title"
 //                                     options={bookData.map((book) => ({
@@ -471,7 +469,7 @@ export default IssueBookDialog;
 //                                     formControlProps={{ fullWidth: true, }}
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Edition Year"
 //                                     options={
@@ -488,7 +486,7 @@ export default IssueBookDialog;
 //                                     disabled={!formik.values.bookID}
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Publisher"
 //                                     options={
@@ -508,7 +506,7 @@ export default IssueBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Standard"
 //                                     options={
@@ -521,7 +519,7 @@ export default IssueBookDialog;
 //                                 />
 //                             </Grid>
 
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Division"
 //                                     options={
@@ -533,7 +531,7 @@ export default IssueBookDialog;
 
 //                                 />
 //                             </Grid>
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     label="Gr Number"
 //                                     options={
@@ -547,7 +545,7 @@ export default IssueBookDialog;
 //                             </Grid>
 
 //                             {/* Member Selection */}
-//                             <Grid item xs={12} md={6}>
+//                             <Grid size={{ xs: 12, md: 6 }}>
 //                                 <CustomSelect
 //                                     isSearch
 //                                     label="Student Name"
@@ -569,7 +567,7 @@ export default IssueBookDialog;
 //                             {/* Date Handling */}
 //                             {(formik.values.editionYear === 2020 || formik.values.editionYear === '') && (
 //                                 <>
-//                                     <Grid item xs={12} md={6}>
+//                                     <Grid size={{ xs: 12, md: 6 }}>
 //                                         <DatePicker
 //                                             label="Issue Date"
 //                                             value={formik.values.issueDate}
@@ -583,7 +581,7 @@ export default IssueBookDialog;
 //                                             slotProps={{ textField: { size: 'small', fullWidth: true } }}
 //                                         />
 //                                     </Grid>
-//                                     <Grid item xs={12} md={6}>
+//                                     <Grid size={{ xs: 12, md: 6 }}>
 //                                         <DatePicker
 //                                             label="Due Date"
 //                                             value={formik.values.dueDate}
@@ -596,7 +594,7 @@ export default IssueBookDialog;
 //                             )}
 
 //                             {formik.values.editionYear === 2021 && (
-//                                 <Grid item xs={12} md={6}>
+//                                 <Grid size={{ xs: 12, md: 6 }}>
 //                                     <DatePicker
 //                                         label="Requested Date"
 //                                         value={formik.values.RequestedDate}
@@ -608,7 +606,7 @@ export default IssueBookDialog;
 
 //                             {/* Reservation List Table */}
 //                             {(formik.values.memberID) &&
-//                                 <Grid item xs={12}>
+//                                 <Grid size={12}>
 //                                     <Box
 //                                         sx={{
 //                                             p: 2,
@@ -724,7 +722,7 @@ export default IssueBookDialog;
 // //                 <form onSubmit={formik.handleSubmit}>
 // //                     <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
 // //                         <Grid container spacing={3} pt="10px">
-// //                             <Grid item xs={12} md={6}>
+// //                             <Grid size={{ xs: 12, md: 6 }}>
 // //                                 <TextField
 // //                                     fullWidth
 // //                                     name="bookID"
@@ -734,7 +732,7 @@ export default IssueBookDialog;
 // //                                     size="small"
 // //                                 />
 // //                             </Grid>
-// //                             <Grid item xs={12} md={6}>
+// //                             <Grid size={{ xs: 12, md: 6 }}>
 // //                                 <TextField
 // //                                     fullWidth
 // //                                     name="memberID"
@@ -744,7 +742,7 @@ export default IssueBookDialog;
 // //                                     size="small"
 // //                                 />
 // //                             </Grid>
-// //                             <Grid item xs={12} md={6}>
+// //                             <Grid size={{ xs: 12, md: 6 }}>
 // //                                 <DatePicker
 // //                                     label="Suggested Return Date"
 // //                                     value={formik.values.date}
@@ -753,7 +751,7 @@ export default IssueBookDialog;
 // //                                     disabled
 // //                                 />
 // //                             </Grid>
-// //                             <Grid item xs={12} md={6}>
+// //                             <Grid size={{ xs: 12, md: 6 }}>
 // //                                 <DatePicker
 // //                                     label="Return Date"
 // //                                     value={formik.values.returnDate}

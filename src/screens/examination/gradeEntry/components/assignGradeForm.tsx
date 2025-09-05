@@ -1,14 +1,11 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IAssignGradeProps } from '../type';
@@ -47,12 +44,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
         {/* <form onSubmit={formik.handleSubmit}> */}
         <Scrollbar sx={{ p: 2, height: '200px', backgroundColor: 'background.paper' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               {/* <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}> */}
               <TextField
                 label="Total Marks *"
                 disabled
-                // placeholder="Enter Marks"
                 name="totalMarks"
                 type="number"
                 value={formik.values.totalMarks}
@@ -64,30 +60,25 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                     : undefined
                 }
                 size="small"
-                sx={{
-                  width: '100%',
-                }}
+                sx={{ width: '100%' }}
               />
               {/* </ShakingTextField> */}
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched?.marks && formik.errors.marks) || false}>
                 <TextField
                   label="Obtained Marks *"
-                  // placeholder="Enter Marks"
                   name="marks"
                   type="number"
                   value={formik.values.marks}
                   onChange={(e) => {
                     const { value } = e.target;
-
                     if (value === '') {
                       formik.setFieldValue('marks', '');
                       return;
                     }
-
                     const numericValue = parseInt(value, 10);
-
                     if (
                       !Number.isNaN(numericValue) &&
                       numericValue <= Number(formik.values.totalMarks)
@@ -96,17 +87,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                     }
                   }}
                   error={formik.touched.marks && Boolean(formik.errors.marks)}
-                  inputProps={{
-                    min: 0,
-                    max: formik.values.totalMarks,
-                  }}
+                  inputProps={{ min: 0, max: formik.values.totalMarks }}
                   helperText={
                     formik.touched.marks && formik.errors.marks ? formik.errors.marks : undefined
                   }
                   size="small"
-                  sx={{
-                    width: '100%',
-                  }}
+                  sx={{ width: '100%' }}
                   onKeyDown={(e) => {
                     if (['e', 'E', '+', '-', '.'].includes(e.key)) {
                       e.preventDefault();
@@ -115,13 +101,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
                 error={!!(formik.touched?.feedback && formik.errors.feedback) || false}
               >
                 <TextField
                   label="Feedback"
-                  // placeholder="Enter Feedback"
                   multiline
                   rows={3}
                   fullWidth

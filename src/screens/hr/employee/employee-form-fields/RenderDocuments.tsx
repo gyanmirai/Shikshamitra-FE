@@ -2,16 +2,18 @@ import type { LabelColor } from 'src/components/label';
 
 import { toast } from 'sonner';
 import { useState } from 'react';
-
-import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import UploadButton from 'src/components/upload-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetDocumentsQuery } from 'src/redux/document/documentApi';
+import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 import { DocumentType, DocumentFileType, convertFileAcceptType } from 'src/enums/documnet-type';
 import { DocumentStatusOptions, DocumentStatusTypeColors } from 'src/enums/document-statusType';
 import {
@@ -20,13 +22,6 @@ import {
   useGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import UploadButton from 'src/components/upload-button';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface ViewDocumentsProps {
   employeeId: string;

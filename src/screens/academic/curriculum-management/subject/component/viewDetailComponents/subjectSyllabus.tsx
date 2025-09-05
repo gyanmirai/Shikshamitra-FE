@@ -1,9 +1,7 @@
 import { useRef } from 'react';
-
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import type { ISubjectDetail } from '../type';
 

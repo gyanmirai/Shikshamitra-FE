@@ -1,8 +1,7 @@
 'use client';
 
-import { Button, DialogActions, DialogContent } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
+import { Button, DialogActions, DialogContent } from '@mui/material';
 
 import MeetingDetails from './meetingDetails';
 

@@ -4,28 +4,23 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
 
-import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
 import {
   useGetAccessControlQuery,
   useAddAccessControlMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Main screen component for access control functionality
 const AccessControlScreen = () => {

@@ -3,17 +3,14 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { varAlpha } from 'src/theme/styles/utils';
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 const initialValues = {
   report: '',
@@ -34,7 +31,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const TransportReportsScreen = () => {
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -77,7 +74,7 @@ const TransportReportsScreen = () => {
             <Form>
               <Box sx={{ p: 2 }}>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect
                         label="Report Type"
@@ -95,7 +92,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
                         label="Start Date"
@@ -109,7 +106,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                       <DatePicker
                         label="End Date"
@@ -123,7 +120,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.className && errors.className} fullWidth>
                       <CustomSelect
                         label="Class"
@@ -139,7 +136,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.vehicle && errors.vehicle} fullWidth>
                       <CustomSelect
                         label="Vehicle"
@@ -153,7 +150,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.driver && errors.driver} fullWidth>
                       <CustomSelect
                         label="Driver"
@@ -167,7 +164,7 @@ const TransportReportsScreen = () => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} justifyContent="flex-end" display="flex" gap={3}>
+                  <Grid size={12} justifyContent="flex-end" display="flex" gap={3}>
                     <Button
                       startIcon={<Iconify icon="ion:download" />}
                       variant="contained"

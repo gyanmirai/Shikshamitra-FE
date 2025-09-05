@@ -4,17 +4,13 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
-import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
+import { CalendarView } from 'src/sections/calendar/view';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
-
-import { CalendarView } from 'src/sections/calendar/view';
 
 const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
   const { setSearchParams } = props;
@@ -133,7 +129,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
           />
         )}
       </Box>
-      <Grid item xs={12} mt={3}>
+      <Grid size={12} mt={3}>
         <Card>
           <CardContent>
             <Typography variant="h6">Event Calendar</Typography>

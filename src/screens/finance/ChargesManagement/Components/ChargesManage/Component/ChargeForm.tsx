@@ -5,22 +5,18 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import type { IChargeFormProps } from './type';
 
@@ -178,7 +174,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.chargeCategory && errors.chargeCategory) || false}>
               <CustomSelect
                 name="chargeCategory"
@@ -203,7 +199,91 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.description && errors.description) || false}>
+              <TextField
+                name="description"
+                label="Purpose/Description *"
+                multiline
+                minRows={3}
+                fullWidth
+                value={values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(touched.description && errors.description)}
+                helperText={(touched.description && errors.description) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name="amount"
+                value={values.amount || ''}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  val = val.replace(/[₹,\s]/g, '');
+                  setFieldValue('amount', Number(val));
+                  setFieldTouched('amount', false);
+                }}
+                sx={{
+                  width: '100%',
+                  padding: '0',
+                  borderRadius: 1,
+                }}
+                error={!!(touched.amount && errors.amount)}
+                helperText={(touched.amount && errors.amount) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+              <DatePicker
+                label="Due Date *"
+                name="dueDate"
+                format="DD/MM/YYYY"
+                value={values.dueDate}
+                onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!(touched.dueDate && errors.dueDate),
+                    helperText: (touched.dueDate && errors.dueDate) as string,
+                    onBlur: () => setFieldTouched('dueDate', true),
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
+              <CustomSelect
+                name="priority"
+                label="Priority *"
+                options={[
+                  { id: '0', name: 'Low' },
+                  { id: '1', name: 'Medium' },
+                  { id: '2', name: 'High' },
+                ]}
+                labelKey="name"
+                valueKey="id"
+                value={values.priority}
+                onChange={(value) => setFieldValue('priority', value)}
+                error={!!(touched.priority && errors.priority) || false}
+                helperText={(touched.priority && errors.priority) || ''}
+                formControlProps={{ fullWidth: true }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.class && errors.class) || false}>
               <CustomSelect
                 name="class"
@@ -214,11 +294,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 value={values.class}
                 onChange={(value) => {
                   setFieldValue('class', value);
-
-                  // Get divisions for the selected class
                   const selectedClassDivisions =
-                    allClass.find((cls) => cls.id === value || cls.name === value)?.divisions || [];
-
+                    allClass.find((cls) => cls.id === value)?.divisions || [];
                   const divisionsWithAll = [
                     {
                       id: 'all',
@@ -233,12 +310,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     ...selectedClassDivisions,
                   ];
                   setAllDivision(divisionsWithAll);
-
-                  // Only set default divisions for new entries
-                  if (!isEdit) {
-                    const allDivisionIds = ['all', ...selectedClassDivisions.map((div) => div.id)];
-                    setFieldValue('divisions', allDivisionIds);
-                  }
+                  const allDivisionIds = ['all', ...selectedClassDivisions.map((div) => div.id)];
+                  setFieldValue('divisions', allDivisionIds);
                 }}
                 error={!!(touched.class && errors.class) || false}
                 helperText={(touched.class && errors.class) || ''}
@@ -248,7 +321,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.divisions && errors.divisions) || false}>
               <CustomSelect
                 name="divisions"
@@ -257,11 +330,15 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 valueKey="id"
                 multiple
                 disabled={!values.class}
-                options={allDivision}
+                options={[
+                  { id: 'all', name: 'All' },
+                  ...(allClass?.find((i: Standards) => i.id === values.class)?.divisions || []),
+                ]}
                 value={values.divisions}
                 onChange={(val) => {
                   const value = val as string[];
-                  const divisionOptions = allDivision.filter((d) => d.id !== 'all');
+                  const divisionOptions =
+                    allClass?.find((i: Standards) => i.id === values.class)?.divisions || [];
                   const allDivisionIds = divisionOptions.map((d) => d.id);
                   const isAllClicked = value.includes('all');
                   const wasAllPreviouslySelected = (values.divisions as string[]).includes('all');
@@ -294,74 +371,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6}>
-            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label="Amount *"
-                name="amount"
-                value={values.amount || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
-                  setFieldValue('amount', Number(val));
-                  setFieldTouched('amount', false);
-                }}
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
-                error={!!(touched.amount && errors.amount)}
-                helperText={(touched.amount && errors.amount) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={6}>
-            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-              <DatePicker
-                label="Due Date *"
-                name="dueDate"
-                format="DD/MM/YYYY"
-                value={values.dueDate}
-                onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: !!(touched.dueDate && errors.dueDate),
-                    helperText: (touched.dueDate && errors.dueDate) as string,
-                    onBlur: () => setFieldTouched('dueDate', true),
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12}>
-            <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-              <CustomSelect
-                name="priority"
-                label="Priority *"
-                options={[
-                  { id: '0', name: 'Low' },
-                  { id: '1', name: 'Medium' },
-                  { id: '2', name: 'High' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.priority}
-                onChange={(value) => setFieldValue('priority', value)}
-                error={!!(touched.priority && errors.priority) || false}
-                helperText={(touched.priority && errors.priority) || ''}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.students && errors.students) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -391,24 +401,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12}>
-            <ShakingTextField error={!!(touched.description && errors.description) || false}>
-              <TextField
-                name="description"
-                label="Purpose/Description *"
-                multiline
-                minRows={3}
-                fullWidth
-                value={values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={!!(touched.description && errors.description)}
-                helperText={(touched.description && errors.description) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               name="additionalNotes"
               label="Additional Notes"

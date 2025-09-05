@@ -1,23 +1,18 @@
 import type { IChatConversation } from 'src/types/chat';
 
 import { useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import AvatarGroup from '@mui/material/AvatarGroup';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemButton from '@mui/material/ListItemButton';
-
-import { useRouter, usePathname } from 'src/routes/hooks';
-
-import { useResponsive } from 'src/hooks/use-responsive';
-
-import { today, fToNow } from 'src/utils/format-time';
-
 import { clickConversation } from 'src/actions/chat';
+import ListItemText from '@mui/material/ListItemText';
+import { today, fToNow } from 'src/utils/format-time';
+import { useResponsive } from 'src/hooks/use-responsive';
+import ListItemButton from '@mui/material/ListItemButton';
+import { useRouter, usePathname } from 'src/routes/hooks';
 
 import { useNavItem } from './hooks/use-nav-item';
 

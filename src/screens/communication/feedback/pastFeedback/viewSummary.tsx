@@ -3,11 +3,8 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import React from 'react';
-
-import { Box, Card, Grid, Button, TextField, Typography } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
-
+import { Box, Card, Grid, Button, TextField, Typography } from '@mui/material';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const ViewSummary = () => (
@@ -16,7 +13,7 @@ const ViewSummary = () => (
     <Scrollbar sx={{ height: '500px' }}>
       <Grid container spacing={2}>
         {/* Survey metadata section */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Survey Metadata</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -33,8 +30,9 @@ const ViewSummary = () => (
             </Button>
           </Card>
         </Grid>
+
         {/* Analytics visualization section */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsCurrentVisits
               title="Multiple Choice Question"
@@ -51,10 +49,11 @@ const ViewSummary = () => (
           </Card>
         </Grid>
       </Grid>
+
       <Box sx={{ mt: 2 }}>
         <Grid container spacing={2}>
           {/* Qualitative responses analysis section */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ p: 2 }}>
               <Typography variant="h5" gutterBottom>
                 Qualitative responses analysis
@@ -84,7 +83,7 @@ const ViewSummary = () => (
           </Grid>
 
           {/* Overall survey insights section */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card sx={{ p: 2 }}>
               <Typography variant="h5" gutterBottom>
                 Overall Survey Insights

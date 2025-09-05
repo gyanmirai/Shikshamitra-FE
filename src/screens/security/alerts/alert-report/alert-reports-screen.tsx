@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AlertReportTable from './component/alert-report-table';

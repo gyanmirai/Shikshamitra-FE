@@ -1,16 +1,15 @@
 'use client';
 
 import React from 'react';
-
-import { CheckCircle } from '@mui/icons-material';
-import { Box, Grid, Card, useTheme, Typography } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
+import { CheckCircle } from '@mui/icons-material';
+import { Box, Grid, Card, Typography } from '@mui/material';
 
 const TotalGradeEntered = () => {
   const theme = useTheme();
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card
         elevation={3}
         sx={{

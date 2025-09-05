@@ -1,12 +1,11 @@
 'use client';
 
 import Box from '@mui/material/Box';
+import { CONFIG } from 'src/config-global';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { cardClasses } from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
-
-import { CONFIG } from 'src/config-global';
-import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CourseProgress } from '../course-progress';

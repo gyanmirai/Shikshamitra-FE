@@ -1,22 +1,18 @@
-import React, { useState } from 'react';
-
-import { Box } from '@mui/material'; // adjust the path as needed
+import { Box } from '@mui/material';
+import React, { useState } from 'react'; // adjust the path as needed
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
-import { useSelector, useDispatch } from 'react-redux';
-
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useSelector, useDispatch } from 'react-redux';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   HostelRoomStatusType,
   HostelRoomStatusColors,
   HostelRoomStatusOptions,
 } from 'src/enums/hostelRoom-status';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IHostelRoom, IFacilityQuantities, IHostelRoomTableProps } from './type';
 

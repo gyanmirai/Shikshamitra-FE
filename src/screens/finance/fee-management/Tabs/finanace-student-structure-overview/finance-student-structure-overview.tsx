@@ -6,26 +6,21 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import studentFeeStructureData from 'src/json/finance/student-fee-management/studentFeeStructureData.json';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import studentFeeStructureData from 'src/json/finance/student-fee-management/studentFeeStructureData.json';
 
 import FeeDetailsComponent from './component/fee-details-component';
 import FinanceEditFeeStructureForStudent from './component/finance-edit-fee-structure-for-student';

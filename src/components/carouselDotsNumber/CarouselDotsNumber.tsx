@@ -1,9 +1,7 @@
+import { Box, Card } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Card, alpha } from '@mui/material';
-
 import { AppWidget } from 'src/screens/classManagement/courseProgress/components/courseCardsGrid';
-
 import {
   Carousel,
   useCarousel,

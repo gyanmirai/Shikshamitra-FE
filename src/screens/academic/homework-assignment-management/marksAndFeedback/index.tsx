@@ -2,18 +2,14 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useMemo, useState } from 'react';
-
 import { Tab, Box, Card } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import HomeworkMarksAndFeedback from './homeworkMarksFeedback';
 import AssignmentMarksAndFeedback from './assignmentMarksFeedback';

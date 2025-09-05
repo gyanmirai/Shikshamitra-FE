@@ -2,9 +2,8 @@ import type { FileRejection } from 'react-dropzone';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-
 import { varAlpha } from 'src/theme/styles';
+import Typography from '@mui/material/Typography';
 
 import { fileData } from '../../file-thumbnail';
 

@@ -1,8 +1,7 @@
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import CustomSelect from 'src/components/custom-select';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const RenderBoard = (props: any) => {
   // Destructure formik from props

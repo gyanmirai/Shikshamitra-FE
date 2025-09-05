@@ -1,12 +1,11 @@
 import type { Theme } from '@mui/material';
 
 import React from 'react';
-
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import { useTheme, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
+import AddIcon from '@mui/icons-material/Add';
+import { useTheme } from '@mui/material/styles';
+import RemoveIcon from '@mui/icons-material/Remove';
+import { Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 interface CustomAccordionProps {
   title: string;

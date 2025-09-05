@@ -89,7 +89,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
     switch (field.type) {
       case 'date':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <DatePicker
                 label={field.label}
@@ -115,7 +115,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
       case 'select':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <CustomSelect
                 label={field.label}
@@ -134,7 +134,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
       case 'multiline':
         return (
-          <Grid item xs={12} key={field.name}>
+          <Grid size={12} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <TextField
                 fullWidth
@@ -153,7 +153,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
       case 'amount':
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <NumericFormatCustom
                 size="small"
@@ -180,7 +180,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
       default:
         return (
-          <Grid item xs={12} md={6} key={field.name}>
+          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
             <ShakingTextField error={!!fieldError}>
               <TextField
                 fullWidth
@@ -242,7 +242,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
                 >
@@ -266,7 +266,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
                   <TextField
                     fullWidth
@@ -282,7 +282,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
                 >
@@ -301,7 +301,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.incomeName && formik.errors.incomeName)}>
                   <TextField
                     fullWidth
@@ -325,7 +325,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                   <NumericFormatCustom
                     size="small"
@@ -349,7 +349,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
                 >
@@ -373,7 +373,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
                   <DatePicker
                     label="Date *"
@@ -394,7 +394,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
               {/* Dynamic Payment Method Fields */}
               {paymentFields.length > 0 && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Box sx={{ mt: 2, mb: 1 }}>
                     {/* Payment Method Heading */}
                     <Typography
@@ -418,7 +418,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 </Grid>
               )}
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField>
                   <TextField
                     fullWidth

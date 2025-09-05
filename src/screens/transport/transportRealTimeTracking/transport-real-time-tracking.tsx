@@ -5,12 +5,10 @@ import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 
 import L from 'leaflet';
+import { CONFIG } from 'src/config-global';
+import { Box, Typography } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { Popup, Marker, Polyline, TileLayer, MapContainer } from 'react-leaflet';
-
-import { Box, Typography } from '@mui/material';
-
-import { CONFIG } from 'src/config-global';
 
 const TransportRealTimeTrackingScreen = () => {
   const position: LatLngExpression = [21.149194021137408, 72.88653904334416];

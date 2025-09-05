@@ -3,15 +3,13 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -42,7 +40,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
         <Scrollbar sx={{ p: 2, height: '100%', bgcolor: 'background.neutral' }}>
           <Grid container spacing={2}>
             {/* Name */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                 <TextField
                   disabled
@@ -57,7 +55,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </ShakingTextField>
             </Grid>
             {requestStatusType !== 'New' && (
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.assignedDate && Boolean(formik.errors.assignedDate)}
                 >
@@ -81,7 +79,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </Grid>
             )}
 
-            {/* <Grid item xs={6} pb="10px">
+            {/* <Grid size={6} pb="10px">
                             <ShakingTextField error={formik.touched.vendor && Boolean(formik.errors.vendor)}>
                                 <TextField
                                     disabled
@@ -96,7 +94,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
                             </ShakingTextField>
                         </Grid> */}
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                 <CustomSelect
                   disabled
@@ -110,7 +108,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}
               >
@@ -126,7 +124,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   disabled
@@ -142,7 +140,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.measurementUnit && Boolean(formik.errors.measurementUnit)}
               >
@@ -161,7 +159,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
             </Grid>
 
             {/* Priority (Optional) */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
                 <CustomSelect
                   disabled={isDisabled}
@@ -179,7 +177,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.requiredByDate && Boolean(formik.errors.requiredByDate)}
               >
@@ -204,7 +202,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
 
             {/* Issue Description */}
             {requestStatusType !== 'New' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={formik.touched.issueDescription && Boolean(formik.errors.issueDescription)}
                 >
@@ -226,7 +224,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
             )}
 
             {requestStatusType === 'New' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={
                     formik.touched.reasonForNewResource &&
@@ -253,7 +251,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
             )}
 
             {requestStatusType === 'New' && (
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.approvedQuantity && Boolean(formik.errors.approvedQuantity)}
                 >
@@ -276,7 +274,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
                 </ShakingTextField>
               </Grid>
             )}
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.reasonByAdmin && Boolean(formik.errors.reasonByAdmin)}
               >

@@ -1,10 +1,7 @@
 'use client';
 
 import React from 'react';
-
-import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-
+import { Box, Grid } from '@mui/material';
 import activities from 'src/json/student/enrollementDashboard/recentActivities.json';
 
 import OverviewCard from './overview';
@@ -27,29 +24,31 @@ const upcomingBirthdays = [
 
 const Overview = () => (
   <Box>
-    <Grid2 container spacing={2} sx={{ mb: 2 }}>
-      <Grid2 xs={12}>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={12}>
         <OverviewCard />
-      </Grid2>
+      </Grid>
 
-      <Grid2 xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <HouseDistribution />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <BirthdaySection
           todaysBirthdays={todayBirthdays}
           upcomingBirthdays={upcomingBirthdays}
           title="Birthdays"
         />
-      </Grid2>
-      <Grid2 xs={12}>
-        <StudentStrengthClassWise />
-      </Grid2>
+      </Grid>
 
-      <Grid2 xs={12}>
+      <Grid size={12}>
+        <StudentStrengthClassWise />
+      </Grid>
+
+      <Grid size={12}>
         <RecentActivities activities={activities} />
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

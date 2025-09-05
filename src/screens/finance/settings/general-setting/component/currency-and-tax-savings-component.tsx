@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { Box, Switch, TextField, FormControlLabel } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Switch, TextField, FormControlLabel } from '@mui/material';
 
 const CurrencyAndTaxSavingsComponent = () => (
   <>

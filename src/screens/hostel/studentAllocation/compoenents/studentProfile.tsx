@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, Card, Avatar, useTheme, Typography } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Avatar, Typography } from '@mui/material';
 
 const { assetURL } = CONFIG.site;
 

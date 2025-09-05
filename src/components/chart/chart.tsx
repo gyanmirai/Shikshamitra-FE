@@ -3,9 +3,7 @@ import './styles.css';
 import type { BoxProps } from '@mui/material/Box';
 
 import dynamic from 'next/dynamic';
-
 import Box from '@mui/material/Box';
-
 import { withLoadingProps } from 'src/utils/with-loading-props';
 
 import { ChartLoading } from './chart-loading';

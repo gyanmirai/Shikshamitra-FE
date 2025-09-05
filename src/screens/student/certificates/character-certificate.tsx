@@ -3,13 +3,24 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import {
-  Box,
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box ,
+  Grid,
   Chip,
   Button,
   TextField,
@@ -18,22 +29,6 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const CharacterCertificate = () => {
   const dialog = useBoolean();
@@ -248,7 +243,7 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
               <CustomSelect
                 options={allOrganization}
@@ -266,7 +261,8 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.classes && errors.classes) || false}>
               <CustomSelect
                 options={allClass}
@@ -284,7 +280,8 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.division && errors.division) || false}>
               <CustomSelect
                 options={allDivision}
@@ -303,7 +300,8 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.student && errors.student) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -344,7 +342,8 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.creationDate && errors.creationDate) || false}>
               <DatePicker
                 label="Creation Date *"
@@ -363,7 +362,8 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.reason && errors.reason) || false}>
               <TextField
                 size="small"

@@ -2,13 +2,9 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -17,6 +13,7 @@ import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getInitialProcurementAndVendorValues } from '../initialValue';
 import { procurementAndVendorValidationSchema } from '../validationSchema';
@@ -43,7 +40,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.resourceCategory && Boolean(formik.errors.resourceCategory)}
               >
@@ -63,7 +60,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
               >
@@ -79,7 +76,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   name="quantity"
@@ -95,7 +92,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.expectedDeliveryDate && Boolean(formik.errors.expectedDeliveryDate)
@@ -118,7 +115,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
                 <Editor
                   onChange={(value) => {
@@ -139,7 +136,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} sx={{ pb: '10px' }}>
+            <Grid size={12} sx={{ pb: '10px' }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={

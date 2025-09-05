@@ -5,26 +5,22 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { cloneDeep } from 'lodash';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, TextField } from '@mui/material';
-
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { DatePicker } from '@mui/x-date-pickers';
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Grid, Card, TextField } from '@mui/material';
 import { convertBase64Format } from 'src/utils/base64Formate';
-
+import React, { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGenerateReportMutation } from 'src/redux/student/student-enrollment-report/student-enrollemt-report';
 import {
   StudentEnrollmentReportTitle,
   StudentEnrollmentReportTitleOptions,
 } from 'src/enums/studentEnrollmentReport';
-
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { getValidationSchema } from './validationSchema';
 
@@ -257,7 +253,7 @@ const StudentReportsScreen = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                 <CustomSelect
                   options={StudentEnrollmentReportTitleOptions}
                   label="Report *"
@@ -273,7 +269,7 @@ const StudentReportsScreen = () => {
                 />
               </Grid>
               {showField('class') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <CustomSelect
                     options={allClass}
                     label="Class"
@@ -328,7 +324,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('fromInquiryNumber') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     label="From Inquiry Number"
                     type="number"
@@ -348,7 +344,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('toInquiryNumber') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     label="To Inquiry Number"
                     type="number"
@@ -365,7 +361,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('gender') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <CustomSelect
                     options={[
                       { id: 'male', name: 'Male' },
@@ -388,7 +384,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('inquiryStatus') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <CustomSelect
                     options={[
                       { id: 'interest', name: 'Interest' },
@@ -412,7 +408,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('enrollmentNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -437,7 +433,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('fromDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <DatePicker
                     label="From Date"
                     value={formik.values.fromDate}
@@ -455,7 +451,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('toDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <DatePicker
                     label="To Date"
                     value={formik.values.toDate}
@@ -473,7 +469,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('enrollmentDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <DatePicker
                     label="Enrollment Date"
                     value={formik.values.enrollmentDate}
@@ -492,7 +488,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('dob') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <DatePicker
                     label="Date of Birth"
                     value={formik.values.dob}
@@ -510,7 +506,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('name') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="name"
                     label="Name"
@@ -525,7 +521,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('religion') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="religion"
                     label="Religion"
@@ -540,7 +536,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('cast') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="cast"
                     label="Caste"
@@ -555,7 +551,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('inquiryPreference') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="inquiryPreference"
                     label="Inquiry Preference"
@@ -572,7 +568,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('previousSchoolName') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="previousSchoolName"
                     label="Previous School Name"
@@ -591,7 +587,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('contactNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="contactNo"
                     label="Contact No"
@@ -606,7 +602,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('primaryContactNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="primaryContactNo"
                     label="Primary Contact No"
@@ -623,7 +619,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('secondaryContactNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="secondaryContactNo"
                     label="Secondary Contact No"
@@ -642,7 +638,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('email') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="email"
                     label="Email"
@@ -657,7 +653,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('studentCount') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="studentCount"
                     label="Student Count"
@@ -673,7 +669,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('classAdmitted') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="classAdmitted"
                     label="Class Admitted"
@@ -688,7 +684,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('lastClassPassed') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="lastClassPassed"
                     label="Last Class Passed"
@@ -703,7 +699,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('admissionDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <DatePicker
                     label="Admission Date"
                     value={formik.values.admissionDate}
@@ -722,7 +718,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('pincode') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="pincode"
                     label="Pin Code"
@@ -737,7 +733,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('cityArea') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="cityArea"
                     label="City Area"
@@ -752,7 +748,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('studentName') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="studentName"
                     label="Student Name"
@@ -767,7 +763,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('age') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="age"
                     label="Age"
@@ -783,7 +779,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('section') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="section"
                     label="Section"
@@ -798,7 +794,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('noOfBoys') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="noOfBoys"
                     label="No. of Boys"
@@ -814,7 +810,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('noOfGirls') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="noOfGirls"
                     label="No. of Girls"
@@ -830,7 +826,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('totalStudent') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="totalStudent"
                     label="Total Student"
@@ -846,7 +842,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('month') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="month"
                     label="Month"
@@ -861,7 +857,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('numberOfNewAdmission') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="numberOfNewAdmission"
                     label="Number of New Admission"
@@ -882,7 +878,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('withdrawals') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="withdrawals"
                     label="Withdrawals"
@@ -898,7 +894,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('netIncrease') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="netIncrease"
                     label="Net Increase"
@@ -914,7 +910,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('totalStudents') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="totalStudents"
                     label="Total Students"
@@ -930,7 +926,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('totalEnrollments') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="totalEnrollments"
                     label="Total Enrollments"
@@ -948,7 +944,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('newAdmissions') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="newAdmissions"
                     label="New Admissions"
@@ -964,7 +960,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('retentionRate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, md: 6, lg: 4 }}>
                   <TextField
                     name="retentionRate"
                     label="Retention Rate"
@@ -978,7 +974,7 @@ const StudentReportsScreen = () => {
                   />
                 </Grid>
               )}
-              <Grid item xs={12} justifyContent="flex-end" display="flex">
+              <Grid size={12} justifyContent="flex-end" display="flex">
                 <LoadingButton
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}
                   loading={isLoading}

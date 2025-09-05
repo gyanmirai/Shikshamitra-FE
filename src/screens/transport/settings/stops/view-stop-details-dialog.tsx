@@ -3,7 +3,6 @@
 import 'leaflet/dist/leaflet.css';
 
 import React, { useState } from 'react';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,10 +12,10 @@ interface ViewStopDetailDialogProps {
   onClose: () => void;
 }
 const ViewStopDetailDialog: React.FC<ViewStopDetailDialogProps> = ({ dialogValue, onClose }) => {
-  const [charges, setCharges] = useState('');
-  const handleChargesChange = (formattedValue: string, numericValue: number) => {
-    setCharges(formattedValue);
-  };
+  const [_charges, setCharges] = useState('');
+  // const handleChargesChange = (formattedValue: string, numericValue: number) => {
+  //   setCharges(formattedValue);
+  // };
   return (
     <CustomDialog
       maxWidth="md"

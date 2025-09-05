@@ -4,11 +4,25 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-
-import { Autocomplete, LoadingButton } from '@mui/lab';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { shikshaMitraToast } from 'src/components/toast';
+import sortQueryString from 'src/utils/sort-query-string';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Chip,
@@ -17,33 +31,15 @@ import {
   Checkbox,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import sortQueryString from 'src/utils/sort-query-string';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import {
   useGetStudentDocumentTypeQuery,
   useAddStudentDocumentTypeMutation,
   useUpdateStudentDocumentTypeMutation,
   useDeleteStudentDocumentTypeMutation,
 } from 'src/redux/student/document-type/document-type-api';
-
-import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IStudentDocument } from './type';
 

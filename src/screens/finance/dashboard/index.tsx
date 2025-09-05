@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Grid, useTheme } from '@mui/material';
-
+import { Box, Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
-
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
@@ -28,7 +26,7 @@ const FinanceDashboardScreen = () => {
 
       {/* Middle Section: Charts */}
       <Grid container spacing={2} sx={{ pt: 5 }}>
-        <Grid item xs={12} md={12}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <EcommerceYearlySales
             id=""
             title="Income vs. Expense"
@@ -79,15 +77,12 @@ const FinanceDashboardScreen = () => {
             }}
           />
         </Grid>
-        <Grid container spacing={2} sx={{ pt: '20px' }} />
       </Grid>
 
       <Grid container spacing={2} sx={{ pt: '20px' }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <BankingBalanceStatistics
             title="Expense statistics"
-            // subheader="Statistics on balance over time"
-
             chart={{
               series: [
                 {
@@ -96,7 +91,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Salaries', data: [24, 41, 35, 151, 49] },
                     { name: 'Maintenance', data: [24, 56, 77, 88, 99] },
-                    // { name: 'Investment', data: [40, 34, 77, 88, 99] },
                   ],
                 },
                 {
@@ -105,7 +99,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Salaries', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
                     { name: 'Maintenance', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-                    // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
                   ],
                 },
                 {
@@ -114,7 +107,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Salaries', data: [76, 42, 29, 41, 27, 96] },
                     { name: 'Maintenance', data: [46, 44, 24, 43, 44, 43] },
-                    // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
                   ],
                 },
               ],
@@ -122,11 +114,9 @@ const FinanceDashboardScreen = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6} px={1}>
+        <Grid size={{ xs: 12, md: 6 }} px={1}>
           <BankingBalanceStatistics
             title="Income statistics"
-            // subheader="Statistics on balance over time"
-
             chart={{
               series: [
                 {
@@ -135,7 +125,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Fee', data: [24, 41, 35, 151, 49] },
                     { name: 'Donation', data: [24, 56, 77, 88, 99] },
-                    // { name: 'Investment', data: [40, 34, 77, 88, 99] },
                   ],
                 },
                 {
@@ -144,7 +133,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Fee', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
                     { name: 'Donation', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-                    // { name: 'Investment', data: [25, 40, 38, 35, 20, 32, 27, 40, 21] },
                   ],
                 },
                 {
@@ -153,7 +141,6 @@ const FinanceDashboardScreen = () => {
                   data: [
                     { name: 'Fee', data: [76, 42, 29, 41, 27, 96] },
                     { name: 'Donation', data: [46, 44, 24, 43, 44, 43] },
-                    // { name: 'Investment', data: [23, 22, 37, 38, 32, 25] },
                   ],
                 },
               ],

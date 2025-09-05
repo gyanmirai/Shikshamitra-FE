@@ -2,25 +2,21 @@
 
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState, useCallback } from 'react';
-
-import { Box, Button, MenuItem, MenuList } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import React, { useState, useCallback } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import hostelGateVerificationData from 'src/json/hostel/hostelGateVerification/hostelGateVerificationData.json';
 import {
   HostelGateVerificationStatusType,
   HostelGateVerificationStatusColor,
   HostelGateVerificationStatusOptions,
 } from 'src/enums/gateapproval-hostel';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import type { IHostelGateVerification } from './type';
 
@@ -31,9 +27,7 @@ const GateApproval = () => {
   const markReturnDialog = useBoolean();
 
   // State to store and manage hostel gate verification data for students
-  const [studentsData, setStudentsData] = useState<IHostelGateVerification[]>(
-    hostelGateVerificationData
-  );
+  const [studentsData] = useState<IHostelGateVerification[]>(hostelGateVerificationData);
   // Actions to be displayed in the three-dot menu
   const actions = useCallback(
     ({ popover: pop, row }: any) => (

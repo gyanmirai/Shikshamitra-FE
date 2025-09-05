@@ -1,7 +1,20 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Label } from 'src/components/label/label';
+import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
+import PaymentReceipt from 'src/screens/hostel/feeManagement/components/HostelPaymentHistoryComponent/paymentReceipt';
+import {
+  PaymentStatusType,
+  PaymentStatusOptions,
+  PaymentStatusTypeColors,
+} from 'src/enums/payment-status';
 import {
   Box,
   Card,
@@ -14,24 +27,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-import PaymentReceipt from 'src/screens/hostel/feeManagement/components/HostelPaymentHistoryComponent/paymentReceipt';
-import {
-  PaymentStatusType,
-  PaymentStatusOptions,
-  PaymentStatusTypeColors,
-} from 'src/enums/payment-status';
-
-import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label/label';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import { students } from './finance-profile-data/finance-profile-fee-data';
 

@@ -1,17 +1,14 @@
 'use client';
 
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { assignGradeValidationSchema } from './validationSchema';
 
@@ -51,7 +48,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
         {/* <form onSubmit={formik.handleSubmit}> */}
         <Scrollbar sx={{ p: 2, height: '500px' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box display="flex" gap={2}>
                 <Typography variant="body2">
                   <strong>Name : </strong>
@@ -63,16 +60,17 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} mb={-2}>
+
+            <Grid size={{ xs: 12 }} mb={-2}>
               {/* <Typography variant="subtitle2">Student Submission</Typography> */}
             </Grid>
-            <Grid item xs={12} mb={-1}>
+
+            <Grid size={{ xs: 12 }} mb={-1}>
               <Editor
                 editable={false}
                 onChange={() => {}}
                 isToolbarShow={false}
                 value={`
-
 1. The sun rises in the east.
 2. Water boils at 100°C.
 3. Plants need water to grow.
@@ -80,10 +78,12 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
 I have completed all answers as per the instructions.`}
               />
             </Grid>
-            <Grid item xs={12} mb={-2}>
+
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Homework Description</Typography>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <Box
                 sx={{
                   border: '1px solid #e0e0e0',
@@ -119,12 +119,12 @@ I have completed all answers according to the given instructions and provided sc
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
                 error={!!(formik.touched.feedback && formik.errors.feedback) || false}
               >
                 <TextField
-                  // placeholder="Enter Feedback"
                   label="Feedback *"
                   multiline
                   size="small"

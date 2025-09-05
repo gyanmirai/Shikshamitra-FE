@@ -1,9 +1,11 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Box, MenuItem, MenuList } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetBankStatementsQuery } from 'src/redux/finance/reconciliation';
 import {
@@ -11,11 +13,6 @@ import {
   BankStatementsStatusColor,
   BankStatementsStatusOptions,
 } from 'src/enums/finance-reconcilition-bankstatements-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const BankStatements = () => {
   // API call to get bank statements data

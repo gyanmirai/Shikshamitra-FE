@@ -1,8 +1,7 @@
 // @ts-nocheck
 import React from 'react';
-import { Draggable, Droppable, DragDropContext } from 'react-beautiful-dnd';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
+import { Grid, Paper } from '@mui/material';
+import { Draggable, Droppable, DragDropContext } from '@hello-pangea/dnd';
 
 // const initialSections = [
 //   { id: '1', title: 'Section 1', content: 'Content for Section 1' },
@@ -32,33 +31,32 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Droppable droppableId="components">
         {(provided) => (
-          <Grid2 container spacing={2} ref={provided.innerRef} {...provided.droppableProps}>
+          <Grid container spacing={2} ref={provided.innerRef} {...provided.droppableProps}>
             {sections.map((section: any, index: number) => (
               <Draggable key={section.id} draggableId={section.id.toString()} index={index}>
                 {(p, snapshot) => (
-                  <Grid2
-                    xs={12}
-                    md={section.width}
-                    spacing={2}
+                  <Grid
+                    size={{ xs: 12, md: section.width }}
                     ref={p.innerRef}
                     {...p.draggableProps}
                     {...p.dragHandleProps}
-                    elevation={snapshot.isDragging ? 6 : 1}
-                    sx={{
-                      cursor: 'grab',
-                      userSelect: 'none',
-                    }}
-                    // variant="outlined"
-                    // label={section.title}
                   >
-                    {' '}
-                    {dashBoardSections[section.id]}
-                  </Grid2>
+                    <Paper
+                      elevation={snapshot.isDragging ? 6 : 1}
+                      sx={{
+                        cursor: 'grab',
+                        userSelect: 'none',
+                        p: 2, // optional padding
+                      }}
+                    >
+                      {dashBoardSections[section.id]}
+                    </Paper>
+                  </Grid>
                 )}
               </Draggable>
             ))}
             {provided.placeholder}
-          </Grid2>
+          </Grid>
         )}
       </Droppable>
     </DragDropContext>

@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 
 import IssuedBooksTable from './BookIssuedTable';

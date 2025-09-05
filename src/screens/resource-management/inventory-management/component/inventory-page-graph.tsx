@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-
 import { useTheme } from '@mui/material/styles';
 import { Box, Card, CardHeader } from '@mui/material';
-
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 const InventoryCategoryChart = () => {

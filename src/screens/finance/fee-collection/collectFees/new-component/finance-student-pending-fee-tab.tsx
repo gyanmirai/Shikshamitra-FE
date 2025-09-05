@@ -1,20 +1,16 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import studentPendingFeeData from 'src/json/finance/fee-collection/studentPendingFeeData.json';
 import {
   FinancePendingFeeStatusType,
   FinancePendingFeeStatusTypeColors,
   FinancePendingFeeStatusTypeOptions,
 } from 'src/enums/finance-pending-fee-status';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const FinanceStudentPendingFeeTab = () => (
   <>

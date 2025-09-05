@@ -1,21 +1,16 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useEffect } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import TemplatesOneFeeReceipt from 'src/screens/finance/viewReceipt/Templates/TemplatesOne';
-
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import TemplatesOneFeeReceipt from 'src/screens/finance/viewReceipt/Templates/TemplatesOne';
 
 import type { IFeeCollectionMonthWiseProps } from './fee-collection-monthwise-interface';
 
@@ -228,7 +223,6 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 />
               </Box>
             </Box>
-
             {/* Grouped Fee Sections */}
             {values.selectedTerms.length === 0 ? (
               <Typography sx={{ mt: 3 }} color="text.secondary">
@@ -261,14 +255,16 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                       const { key } = fee;
                       return (
                         <Grid container spacing={2} key={key} alignItems="center" sx={{ mb: 1 }}>
-                          <Grid item xs={3}>
+                          <Grid size={{ xs: 3 }}>
                             <Typography>{fee.month}</Typography>
                           </Grid>
-                          <Grid item xs={3}>
+
+                          <Grid size={{ xs: 3 }}>
                             <Typography>{formatNumber(fee.pending, 'INR')}</Typography>
                           </Grid>
+
                           {fee.pending > 0 && (
-                            <Grid item xs={3}>
+                            <Grid size={{ xs: 3 }}>
                               <TextField
                                 fullWidth
                                 label="Received Amount"
@@ -302,11 +298,10 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 );
               })
             )}
-
             {/* Payment Mode Select */}
             {values.selectedTerms.length !== 0 && (
               <Grid container mt={2}>
-                <Grid item xs={3}>
+                <Grid size={{ xs: 3 }}>
                   <CustomSelect
                     label="Select Payment Mode"
                     options={[
@@ -326,12 +321,11 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 </Grid>
               </Grid>
             )}
-
             {/* Payment Mode Details */}
             {paymentMode.includes('Cheque') && values.selectedTerms.length !== 0 && (
               <Box sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <TextField
                       label="Cheque No."
                       size="small"
@@ -340,7 +334,7 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                       onChange={(e) => setFieldValue('chequeDetails.chequeNo', e.target.value)}
                     />
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <TextField
                       label="Bank Name"
                       size="small"
@@ -349,7 +343,7 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                       onChange={(e) => setFieldValue('chequeDetails.bankName', e.target.value)}
                     />
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <DatePicker
                       label="Date on Cheque"
                       name="endDate"
@@ -372,11 +366,10 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 </Grid>
               </Box>
             )}
-
             {paymentMode.includes('Online') && values.selectedTerms.length !== 0 && (
               <Box sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       label="Transection No."
                       size="small"
@@ -388,11 +381,10 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 </Grid>
               </Box>
             )}
-
             {paymentMode.includes('Card') && values.selectedTerms.length !== 0 && (
               <Box sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <TextField
                       label="Transaction ID"
                       size="small"
@@ -404,7 +396,6 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
                 </Grid>
               </Box>
             )}
-
             {/* Summary */}
           </Scrollbar>
 

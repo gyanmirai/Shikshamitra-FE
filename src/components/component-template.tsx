@@ -2,16 +2,14 @@ import type { StackProps } from '@mui/material/Stack';
 import type { Theme, SxProps } from '@mui/material/styles';
 import type { ContainerProps } from '@mui/material/Container';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
+import { useState, useCallback } from 'react';
 import Container from '@mui/material/Container';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-
 import { useEventListener } from 'src/hooks/use-event-listener';
 
 // ----------------------------------------------------------------------

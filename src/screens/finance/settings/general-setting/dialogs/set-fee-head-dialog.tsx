@@ -1,16 +1,12 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useAddfeeHeadMutation, useUpdatefeeHeadMutation } from 'src/redux/feeHead/feeHeadApi';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { useAddfeeHeadMutation, useUpdatefeeHeadMutation } from 'src/redux/feeHead/feeHeadApi';
 
 import { getInitialSetFeeHeadValues } from './initialValues';
 import { setFeeHeadValidationSchema } from './validationSchema';
@@ -100,7 +96,7 @@ const SetFeeHeadDialog: React.FC<ISetFeeHeadDialogProps> = ({
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={isFeeHeadNameError}>
               <TextField
                 size="small"

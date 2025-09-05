@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
-import { Box, Typography, DialogContent } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
+import { Box, Typography, DialogContent } from '@mui/material';
 
 interface ReceivedAmountWarningDialogProps {
   open: boolean;

@@ -1,19 +1,15 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-
-import { Add as AddIcon } from '@mui/icons-material';
-import { Box, Tab, Card, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Add as AddIcon } from '@mui/icons-material';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import AttendanceType from './attendance-type';
 // import AttendanceRule from './attendance-rule'; // Uncomment if needed

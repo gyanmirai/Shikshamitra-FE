@@ -1,20 +1,15 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, Typography } from '@mui/material';
-
+import { Box , Grid, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import { AppAreaInstalled } from '../hr/dashboard/app-area-installed';
 
 const Reports = () => (
-  <Grid2 container spacing={2}>
-    <Grid2 xs={12} md={6}>
+  <Grid container spacing={2}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <AppAreaInstalled
         title="Comparison Graphs"
-        //   subheader="(+43%) than last year"
         selectSeries="class1"
         chart={{
           categories: [
@@ -59,26 +54,24 @@ const Reports = () => (
           ],
         }}
       />
-    </Grid2>
-    <Grid2 xs={12} md={6}>
+    </Grid>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <AnalyticsWebsiteVisits
         title="Performance Charts"
-        //   subheader="(+43%) than last year"
         chart={{
           categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
           series: [
             { name: 'Class average', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-            {
-              name: 'Individual student performance',
-              data: [51, 70, 47, 67, 40, 37, 24, 70, 24],
-            },
+            { name: 'Individual student performance', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
             { name: 'Subject-wise performance', data: [59, 65, 47, 89, 40, 37, 50, 70, 24] },
           ],
         }}
         sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
       />
-    </Grid2>
-    <Grid2 xs={12}>
+    </Grid>
+
+    <Grid size={{ xs: 12 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h4">Detailed Data</Typography>
         <Box display="flex" gap={2}>
@@ -96,8 +89,8 @@ const Reports = () => (
         ]}
         data={[]}
       />
-    </Grid2>
-  </Grid2>
+    </Grid>
+  </Grid>
 );
 
 export default Reports;

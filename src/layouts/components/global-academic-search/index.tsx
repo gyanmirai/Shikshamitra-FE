@@ -2,24 +2,21 @@ import type { Theme } from 'src/theme/types';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, AcademicYear } from 'src/types/school';
 
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useEffect, useCallback } from 'react';
-
 import { keyframes } from '@mui/system';
-import { Box, styled, Skeleton, TextField, Autocomplete } from '@mui/material';
-
-import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
-
+import { styled } from '@mui/material/styles';
+import { useDispatch, useSelector } from 'react-redux';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import React, { useMemo, useEffect, useCallback } from 'react';
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 import {
   setCurrentYear,
   setCurrentBoard,
   setCurrentMedium,
 } from 'src/redux/globalState/globalSlice';
-
-import CustomTooltip from 'src/components/custom-tooltip';
 
 import type { GlobalAcademicSearchOption } from './types';
 
@@ -43,7 +40,7 @@ const AnimatedWrapper = styled(Box, {
 })<{ error: boolean }>(({ theme, error }) => ({
   borderRadius: 5,
   ...(error && {
-    animation: `${createPulseAnimation(theme)} 1.5s infinite`,
+    animation: `${createPulseAnimation(theme as any)} 1.5s infinite`,
     border: `1px solid ${theme.palette.warning.main}90`,
   }),
 }));

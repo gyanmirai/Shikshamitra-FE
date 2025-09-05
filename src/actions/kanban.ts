@@ -3,7 +3,6 @@ import type { IKanban, IKanbanTask, IKanbanColumn } from 'src/types/kanban';
 
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
-
 import axios, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------

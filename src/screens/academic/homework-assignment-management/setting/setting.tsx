@@ -3,8 +3,10 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -16,10 +18,6 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssessmentTypeSetting from './assessmentType/assessmentTypeSetting';
 import HomeworkTypeSettingCard from './homeworkType/homeworkTypeSettingCard';
@@ -37,16 +35,16 @@ const Setting = (props: TabComponentType) => (
     />
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <HomeworkTypeSettingCard />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <AssessmentTypeSetting />
         </Grid>
       </Grid>
 
       <Grid container spacing={2} alignItems="stretch">
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             sx={{
               p: 2,
@@ -107,7 +105,7 @@ const Setting = (props: TabComponentType) => (
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             sx={{
               p: 2,

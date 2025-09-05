@@ -3,24 +3,19 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-
-import ChargesReceiptPDF from 'src/screens/finance/transection-receipt/charges-receipt';
-
+import { DatePicker } from '@mui/x-date-pickers';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import ChargesReceiptPDF from 'src/screens/finance/transection-receipt/charges-receipt';
+import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
 
 import { chargesData } from '../charges-data/charges_data';
 
@@ -115,17 +110,15 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
           </Box>
           <Grid container spacing={2}>
             {/* <Typography sx={{ pl: "20px", pt: "20px", fontWeight: "600", fontSize: "20px" }}  >Late Fee Charges</Typography> */}
-            <Grid item xs={12} md={12}>
+
+            <Grid size={{ xs: 12, md: 12 }}>
               <CustomizableTable
                 tableId="charges-table"
                 noDataText="No Charges Found"
                 searchFieldProps={{
                   placeholder: 'Search by Fee Head, Due date, Cheque Date, etc....',
                   label: 'Search by Fee Head, Due date, Cheque Date, etc....',
-                  sx: {
-                    maxWidth: '400px',
-                    width: '100%',
-                  },
+                  sx: { maxWidth: '400px', width: '100%' },
                 }}
                 columns={[
                   {
@@ -136,7 +129,6 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                     renderColumn() {
                       return <Checkbox checked={false} onChange={(e) => {}} />;
                     },
-
                     render: (value, row) => (
                       <Checkbox
                         checked={selectedCharges.includes(value)}
@@ -144,14 +136,11 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                       />
                     ),
                   },
-
                   { id: 'dueDate', label: 'Due Date', filterType: 'date' },
                   { id: 'feeHead', label: 'Fee Head' },
-
                   { id: 'checkDate', label: 'Cheque Date', filterType: 'date' },
                   { id: 'receivedCheckDate', label: 'Received Check Date', filterType: 'date' },
                   { id: 'chequeAmount', label: 'Cheque Amount', filterType: 'number' },
-                  // { id: "charges", label: "Charges" },
                   { id: 'bankName', label: 'Bank Name' },
                   {
                     id: 'noOfDay',
@@ -179,7 +168,6 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                     label: 'Total Charges',
                     filterType: 'formattedNumber',
                     align: 'right',
-
                     render(value, row) {
                       return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
                     },
@@ -190,7 +178,8 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
             </Grid>
 
             <Box pb="20px" />
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Payment Mode"
                 options={[
@@ -210,7 +199,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
             <Grid container spacing={2} mt={2}>
               {/* Online Payment Details */}
               {formik.values.paymentMode.includes('Online') && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Online Details
                   </Typography>
@@ -237,7 +226,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
 
               {/* Card Payment Details */}
               {formik.values.paymentMode.includes('Card') && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Card Details
                   </Typography>
@@ -264,12 +253,12 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
 
               {/* Cheque Payment Details */}
               {formik.values.paymentMode.includes('Cheque') && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Cheque Details
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <TextField
                         name="chequeNumber"
                         label="Cheque Number"
@@ -279,7 +268,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <DatePicker
                         label="Cheque Date"
                         value={formik.values.chequeDate}
@@ -292,7 +281,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                         }}
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <TextField
                         name="bankName"
                         label="Bank Name"
@@ -302,7 +291,7 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <NumericFormatCustom
                         size="small"
                         label="Cheque Amount"
@@ -315,25 +304,9 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
                   </Grid>
                 </Grid>
               )}
-
-              {/* Cash Payment Details */}
-              {/* {formik.values.paymentMode.includes('Cash') && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Cash Details
-                  </Typography>
-                  <NumericFormatCustom
-                    size="small"
-                    label="Cash Amount"
-                    name="cashAmount"
-                    value={formik.values.cashAmount}
-                    onChange={formik.handleChange}
-                    fullWidth
-                  />
-                </Grid>
-              )} */}
             </Grid>
           )}
+
           {chargesDialog.value && (
             <CustomDialog
               title="Charges"

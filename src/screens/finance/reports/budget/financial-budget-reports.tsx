@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, Menu, Button, MenuItem, Typography } from '@mui/material';
-
-import { exportGraphData } from 'src/utils/exportGraph';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
 import { Iconify } from 'src/components/iconify';
+import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Grid, Menu, Button, MenuItem, Typography } from '@mui/material';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const budgetOverviewData = [
   {
@@ -145,77 +141,82 @@ const FinancialBudgetReports = () => {
         }}
       />
 
-      <Grid item xs={12}>
-        <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="subtitle1">Spending vs. Allocation over time</Typography>
-            <Button onClick={handleMenuOpenTrend} size="small">
-              <Iconify icon="solar:download-bold" sx={{ height: '16px', width: '16px' }} />
-            </Button>
-            <Menu
-              anchorEl={anchorElTrend}
-              open={Boolean(anchorElTrend)}
-              onClose={handleMenuCloseTrend}
-            >
-              <MenuItem onClick={handleExportTrendPDF}>Export to PDF</MenuItem>
-              <MenuItem onClick={handleExportTrendExcel}>Export to Excel</MenuItem>
-            </Menu>
-          </Box>
-          <Box pt="15px" display="flex" flexDirection="row" gap={1}>
-            <CustomSelect
-              label="Organization"
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120 } }}
-            />
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12 }}>
+          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle1">Spending vs. Allocation over time</Typography>
+              <Button onClick={handleMenuOpenTrend} size="small">
+                <Iconify icon="solar:download-bold" sx={{ height: '16px', width: '16px' }} />
+              </Button>
+              <Menu
+                anchorEl={anchorElTrend}
+                open={Boolean(anchorElTrend)}
+                onClose={handleMenuCloseTrend}
+              >
+                <MenuItem onClick={handleExportTrendPDF}>Export to PDF</MenuItem>
+                <MenuItem onClick={handleExportTrendExcel}>Export to Excel</MenuItem>
+              </Menu>
+            </Box>
 
-            <CustomSelect
-              label="Year"
-              options={[]}
-              value=""
-              onChange={() => {}}
-              formControlProps={{ sx: { minWidth: 120 } }}
+            <Box pt="15px" display="flex" flexDirection="row" gap={1}>
+              <CustomSelect
+                label="Organization"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
+
+              <CustomSelect
+                label="Year"
+                options={[]}
+                value=""
+                onChange={() => {}}
+                formControlProps={{ sx: { minWidth: 120 } }}
+              />
+            </Box>
+
+            <PerformanceOverTime
+              id="demo__4"
+              chart={{
+                categories: [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ],
+                series: [
+                  {
+                    name: 'Budget Allocation',
+                    data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
+                  },
+                  {
+                    name: 'Spending',
+                    data: [49, 51, 35, 10, 41, 35, 51, 49, 62, 69, 91, 148],
+                  },
+                ],
+                options: {
+                  legend: {
+                    show: true,
+                    position: 'top',
+                  },
+                },
+              }}
+              sx={{ height: '100%', boxShadow: 'none' }}
             />
-          </Box>
-          <PerformanceOverTime
-            id="demo__4"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                {
-                  name: 'Budget Allocation',
-                  data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                },
-                {
-                  name: 'Spending',
-                  data: [49, 51, 35, 10, 41, 35, 51, 49, 62, 69, 91, 148],
-                },
-              ],
-              options: {
-                legend: {
-                  show: true,
-                  position: 'top',
-                },
-              },
-            }}
-            sx={{ height: '100%', boxShadow: 'none' }}
-          />
-        </Card>
+          </Card>
+        </Grid>
       </Grid>
+
       <Typography sx={{ pt: '15px', pb: '15px' }} variant="subtitle1">
         Budget Overview
       </Typography>

@@ -1,16 +1,14 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 const GeneralSettings = () => (
   <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
     <Card sx={{ p: 2 }}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <CustomSelect
             options={[
               { value: 'A', label: 'A' },
@@ -26,7 +24,7 @@ const GeneralSettings = () => (
             formControlProps={{ sx: { width: '100%' } }}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField label="Assignment Title" size="small" fullWidth />
         </Grid>
       </Grid>
@@ -40,7 +38,7 @@ const GeneralSettings = () => (
     <Card sx={{ p: 2 }}>
       <Typography variant="h6">Permissions</Typography>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Admin</Typography>
@@ -54,7 +52,8 @@ const GeneralSettings = () => (
             <Typography>Create</Typography>
           </Box>
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Teacher</Typography>
@@ -68,7 +67,8 @@ const GeneralSettings = () => (
             <Typography>Create</Typography>
           </Box>
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Checkbox onChange={() => {}} inputProps={{ 'aria-label': 'controlled' }} />
             <Typography>Assistant</Typography>

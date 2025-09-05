@@ -2,8 +2,10 @@ import type { Dayjs } from 'dayjs';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { TimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import {
   Tab,
   Grid,
@@ -15,10 +17,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 
 interface FinanceNotificationDialogForPendingFeeProps {
   open: boolean;
@@ -90,7 +88,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
 
           <Scrollbar sx={{ p: 0, height: '500px' }}>
             <Grid container spacing={2} pt={3}>
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <CustomSelect
                   label="Select Rule"
                   options={[{ label: 'X days before the due date', value: 'X days before due' }]}
@@ -100,7 +98,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
               </Grid>
 
               {triggerType === 'X days before due' && (
-                <Grid item lg={6}>
+                <Grid size={{ lg: 6 }}>
                   <TextField
                     size="small"
                     label="Enter the day(s) before due"
@@ -111,7 +109,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
                 </Grid>
               )}
 
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <CustomSelect
                   multiple
                   label="Select Recipient"
@@ -124,7 +122,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   label="Send Notification At"
                   format="HH:mm"
@@ -135,7 +133,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
                 />
               </Grid>
 
-              <Grid item lg={12}>
+              <Grid size={{ lg: 12 }}>
                 <CustomSelect
                   label="Select Template"
                   options={Object.keys(templateMessages).map((key) => ({
@@ -148,7 +146,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
               </Grid>
 
               {selectedTemplate && (
-                <Grid item lg={12}>
+                <Grid size={{ lg: 12 }}>
                   <TextField
                     multiline
                     rows={3}
@@ -161,7 +159,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
                 </Grid>
               )}
 
-              <Grid item lg={6}>
+              <Grid size={{ lg: 6 }}>
                 <FormControlLabel
                   control={
                     <Switch checked={recurrence} onChange={() => setRecurrence(!recurrence)} />
@@ -171,7 +169,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
               </Grid>
 
               {recurrence && (
-                <Grid item lg={6}>
+                <Grid size={{ lg: 6 }}>
                   <TextField
                     size="small"
                     label="Repeat Every (Days)"

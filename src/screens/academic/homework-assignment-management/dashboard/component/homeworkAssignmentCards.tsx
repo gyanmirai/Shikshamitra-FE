@@ -1,7 +1,9 @@
 'use client';
 
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useCallback } from 'react';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -12,10 +14,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const HomeworkAssignmentCards = () => {
   const [hoveredResource, setHoveredResource] = useState<string | null>(null);
@@ -46,8 +44,15 @@ const HomeworkAssignmentCards = () => {
   );
 
   return (
-    <Grid item xs={12}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+    <Grid size={{ xs: 12 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1,
+        }}
+      >
         <ToggleButtonGroup
           size="small"
           value={view}
@@ -73,36 +78,22 @@ const HomeworkAssignmentCards = () => {
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
+
       {view === 'homework' ? (
         <>
           <Typography variant="h6">Pending Homework Submission</Typography>
           <CustomizableTable
             tableId="pendingHomework-table"
             columns={[
-              {
-                id: 'homeworkTitle',
-                label: 'Homework Title',
-                align: 'left',
-                filterType: 'string',
-              },
-              {
-                id: 'publishedDate',
-                label: 'Published Date',
-                align: 'left',
-                filterType: 'date',
-              },
+              { id: 'homeworkTitle', label: 'Homework Title', align: 'left', filterType: 'string' },
+              { id: 'publishedDate', label: 'Published Date', align: 'left', filterType: 'date' },
               {
                 id: 'pendingStudents',
                 label: 'Pending Students',
+                align: 'left',
                 filterType: 'number',
-                align: 'left',
               },
-              {
-                id: 'dueDate',
-                label: 'Due Date',
-                align: 'left',
-                filterType: 'date',
-              },
+              { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
               {
                 id: 'actions',
                 label: 'Actions',
@@ -165,24 +156,14 @@ const HomeworkAssignmentCards = () => {
                 align: 'left',
                 filterType: 'string',
               },
-              {
-                id: 'publishedDate',
-                label: 'Published Date',
-                align: 'left',
-                filterType: 'date',
-              },
+              { id: 'publishedDate', label: 'Published Date', align: 'left', filterType: 'date' },
               {
                 id: 'pendingStudents',
                 label: 'Pending Students',
+                align: 'left',
                 filterType: 'number',
-                align: 'left',
               },
-              {
-                id: 'dueDate',
-                label: 'Due Date',
-                align: 'left',
-                filterType: 'date',
-              },
+              { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
               {
                 id: 'actions',
                 label: 'Actions',

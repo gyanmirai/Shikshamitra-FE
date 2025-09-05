@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Box, Card, Checkbox, Typography, FormControlLabel } from '@mui/material';
 
 const NotificationMethod = () => (

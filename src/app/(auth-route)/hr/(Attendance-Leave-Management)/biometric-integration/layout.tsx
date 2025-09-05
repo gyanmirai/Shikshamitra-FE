@@ -1,5 +1,4 @@
 import React from 'react';
-
 import TeacherPermission from 'src/components/teacher-permission';
 
 const BiometricIntegrationLayout = ({ children }: any) => (

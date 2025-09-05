@@ -4,13 +4,10 @@ import type { ColorType } from 'src/theme/core/palette';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
-
 import { stylesMode } from 'src/theme/styles';
-
+import { useTheme } from '@mui/material/styles';
 import { varFade } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
@@ -18,38 +15,38 @@ import { varFade } from 'src/components/animate';
 export function Lines({ strokeCount }: { strokeCount: number }) {
   const draw = {
     x: {
-      hidden: { x2: 0, strokeOpacity: 0 },
+      hidden: { scaleX: 0, strokeOpacity: 0 },
       visible: (i: number) => {
         const delay = 1 + i * 0.5;
         return {
-          x2: '100%',
+          scaleX: 1,
           strokeOpacity: 1,
           transition: {
             strokeOpacity: { delay, duration: 0.01 },
-            x2: {
+            scaleX: {
               delay,
               bounce: 0,
               duration: 1.5,
-              type: 'spring',
+              type: 'spring' as const,
             },
           },
         };
       },
     },
     y: {
-      hidden: { y2: 0, strokeOpacity: 0 },
+      hidden: { scaleY: 0, strokeOpacity: 0 },
       visible: (i: number) => {
         const delay = 1 + i * 0.5;
         return {
-          y2: '100%',
+          scaleY: 1,
           strokeOpacity: 1,
           transition: {
             strokeOpacity: { delay, duration: 0.01 },
-            y2: {
+            scaleY: {
               delay,
               bounce: 0,
               duration: 1.5,
-              type: 'spring',
+              type: 'spring' as const,
             },
           },
         };
@@ -71,6 +68,7 @@ export function Lines({ strokeCount }: { strokeCount: number }) {
           x2="100%"
           y1="50%"
           y2="50%"
+          // @ts-ignore
           variants={draw.x}
           style={{
             transform: translateY(index),
@@ -190,6 +188,7 @@ export function PlusIcon() {
   return (
     <>
       <m.path
+        // @ts-ignore
         variants={drawPlus}
         d="M8 0V16M16 8.08889H0"
         stroke="var(--hero-plus-stroke-color)"
@@ -197,6 +196,7 @@ export function PlusIcon() {
       />
 
       <m.path
+        // @ts-ignore
         variants={drawPlus}
         d="M8 0V16M16 8.08889H0"
         stroke="var(--hero-plus-stroke-color)"

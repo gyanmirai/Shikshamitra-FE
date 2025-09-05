@@ -1,16 +1,14 @@
 'use client';
 
+import type { JSX} from 'react';
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
-
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { Box , Grid, Card, Divider, CardHeader } from '@mui/material';
 
 import Overview from './components/overview';
 import RecentLeaveRequests from './components/recentLeaveRequests';
@@ -39,26 +37,27 @@ const StudentAttendanceDashboard = () => {
   return (
     <Box>
       {/* <CustomizableView sections={sections} setSections={setSections} /> */}
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid size={{ xs: 12 }}>
           <Overview />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <DailyAttendanceTrend />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <AttendanceStatusCard />
-        </Grid2>
-        {/* <Grid2 xs={12} md={6}>
-          <StudentBirthDate />
-        </Grid2> */}
-        <Grid2 xs={12}>
+        </Grid>
+
+        {/* <Grid size={{ xs: 12, md: 6 }}>
+    <StudentBirthDate />
+  </Grid> */}
+
+        <Grid size={{ xs: 12 }}>
           <RecentLeaveRequests />
-        </Grid2>
-      </Grid2>
-      {/* <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>{sections.map((section: any) => dashBoardSections[section.id])}</Grid2>
-      </Grid2> */}
+        </Grid>
+      </Grid>
     </Box>
   );
 };

@@ -1,11 +1,8 @@
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
-import React, { useMemo, useState } from 'react';
-
-import { Box, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Box, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 

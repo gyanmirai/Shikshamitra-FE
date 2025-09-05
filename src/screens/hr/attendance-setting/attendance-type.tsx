@@ -1,18 +1,15 @@
 import { useFormik } from 'formik';
+import { Add } from '@mui/icons-material';
 import React, { useCallback } from 'react';
 import { MuiColorInput } from 'mui-color-input';
-
-import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Button, MenuList, MenuItem, TextField, DialogActions } from '@mui/material';
 
 const AttendanceType = () => {
   const dialog = useBoolean();

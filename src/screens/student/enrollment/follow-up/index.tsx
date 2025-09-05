@@ -7,10 +7,29 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useDispatch } from 'react-redux';
-import React, { useMemo, useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { EmptyContent } from 'src/components/empty-content';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 import {
   Box,
   Grid,
@@ -22,6 +41,11 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  useGetFollowUpQuery,
+  useAddFollowUpMutation,
+  useGetAllFollowUpQuery,
+} from 'src/redux/student/follow-up/follow-up-api';
+import {
   Timeline,
   TimelineDot,
   TimelineItem,
@@ -31,34 +55,6 @@ import {
   TimelineSeparator,
   TimelineOppositeContent,
 } from '@mui/lab';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import { varAlpha } from 'src/theme/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
-import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
-import {
-  useGetFollowUpQuery,
-  useAddFollowUpMutation,
-  useGetAllFollowUpQuery,
-} from 'src/redux/student/follow-up/follow-up-api';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import { EmptyContent } from 'src/components/empty-content';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -295,7 +291,7 @@ export const CommunicationForm = ({
         </Scrollbar>
 
         <Grid container spacing={3} p={2}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.msg && formik.errors.msg) || false}>
               <TextField
                 fullWidth
@@ -320,7 +316,7 @@ export const CommunicationForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={isStatus ? 6 : 12}>
+          <Grid size={{ xs: 12, md: isStatus ? 6 : 12 }}>
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}>
               <DatePicker
                 label="Next Reminder Date *"
@@ -345,7 +341,7 @@ export const CommunicationForm = ({
           </Grid>
 
           {isStatus && (
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 options={FollowUpStatusTypeOptions}
                 value={formik.values.status}

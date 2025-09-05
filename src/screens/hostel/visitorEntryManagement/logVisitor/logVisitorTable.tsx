@@ -3,20 +3,17 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useCallback } from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Box, MenuItem, MenuList } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import visitorLogData from 'src/json/hostel/visitorManagement/visitorLogData.json';
 import {
   VisitorStatusType,
   VisitorStatusColors,
   VisitorStatusOptions,
 } from 'src/enums/visitor-status-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IVisitorData, IVisitorDataTableProps } from './type';
 

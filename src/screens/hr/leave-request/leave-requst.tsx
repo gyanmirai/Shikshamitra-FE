@@ -5,33 +5,29 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
-
-import { LoadingButton } from '@mui/lab';
-import { Grid, Button, Typography, DialogActions } from '@mui/material';
-import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
-
 import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
+import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { Grid, Button, Typography, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   useAddEmployeeLeaveMutation,
   useGetEmployeeLeavePolicyQuery,
   useEmployeeLeaveRequestStatusMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { TabComponentType } from '.';
 
@@ -211,7 +207,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                 <CustomSelect
                   isLoading={isLeavePolicyLoading}
@@ -231,7 +227,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
 
-            {/* <Grid item xs={12}>
+            {/* <Grid size={12}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -252,7 +248,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Grid> */}
             {values.isHalfDay ? (
               <>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <DatePicker
                     label="Date *"
                     onChange={(value) => setFieldValue('startDate', value)}
@@ -272,7 +268,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={touched.startTime && Boolean(errors.startTime)}>
                     <MobileTimePicker
                       label="Start time *"
@@ -290,7 +286,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={touched.endTime && Boolean(errors.endTime)}>
                     <MobileTimePicker
                       label="End Time *"
@@ -313,7 +309,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </>
             ) : (
               <>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
                       label="Start Date *"
@@ -338,7 +334,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                     <DateTimePicker
                       label="End Date *"
@@ -366,7 +362,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </>
             )}
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="subtitle2" gutterBottom sx={{ pl: 0.5 }}>
                 Leave Description *
               </Typography>
@@ -390,7 +386,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FileUploader
                 disabled={editData}
                 // @ts-ignore

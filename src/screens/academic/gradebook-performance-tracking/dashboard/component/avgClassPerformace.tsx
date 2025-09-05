@@ -1,13 +1,12 @@
 import React from 'react';
-
-import { Grid, Paper, useTheme, Typography, LinearProgress } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
+import { Grid, Paper, Typography, LinearProgress } from '@mui/material';
 
 const AvgClassPerformace = () => {
   const theme = useTheme();
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Paper
         elevation={3}
         sx={{
@@ -28,12 +27,12 @@ const AvgClassPerformace = () => {
         <Typography variant="h6">GPA: 3.2 (B)</Typography>
         <LinearProgress variant="determinate" value={80} sx={{ mt: 2, mb: 1 }} />
         <Grid container justifyContent="space-between">
-          <Grid item>
+          <Grid size={{ xs: 'auto' }}>
             <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>
               Highest: 4.0 (A)
             </Typography>
           </Grid>
-          <Grid item>
+          <Grid size={{ xs: 'auto' }}>
             <Typography variant="body2" color="error" sx={{ fontWeight: 'bold' }}>
               Lowest: 2.0 (C)
             </Typography>

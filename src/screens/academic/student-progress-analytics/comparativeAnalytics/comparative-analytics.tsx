@@ -3,13 +3,11 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Grid, useTheme, Typography } from '@mui/material';
-
+import { Box, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentVsClass from './component/studentVsClass';
@@ -69,7 +67,7 @@ const ComparativeAnalytics = (props: TabComponentType) => {
         <ClassComparison />
         <StudentVsClass />
         <StudentPerformance />
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="h6">Subject Comparison</Typography>
           <StudentSubjectPerformace />
         </Grid>

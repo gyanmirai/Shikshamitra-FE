@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-
-import { useTheme } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 }: any) => {
   const containerRef = useRef(null);

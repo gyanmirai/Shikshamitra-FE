@@ -2,10 +2,9 @@ import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
 import ButtonBase from '@mui/material/ButtonBase';
-
-import { CONFIG } from 'src/config-global';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 
 import { Block } from './styles';

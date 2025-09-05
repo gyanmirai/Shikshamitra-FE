@@ -2,8 +2,6 @@ import type { BoxProps } from '@mui/material/Box';
 import type { IDateValue } from 'src/types/common';
 import type { CardProps } from '@mui/material/Card';
 
-import AutoHeight from 'embla-carousel-auto-height';
-
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
@@ -13,10 +11,9 @@ import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-import ListItemText from '@mui/material/ListItemText';
-
 import { fDateTime } from 'src/utils/format-time';
-
+import AutoHeight from 'embla-carousel-auto-height';
+import ListItemText from '@mui/material/ListItemText';
 import { Carousel, useCarousel, CarouselArrowBasicButtons } from 'src/components/carousel';
 
 // ----------------------------------------------------------------------

@@ -5,7 +5,11 @@ import type {
 } from 'src/screens/student/studentNotification/edit-notification-dialog-interface';
 
 import React, { useState, useEffect } from 'react';
-
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
+import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiled-for-message-with-placeholder';
 import {
   Box,
   Grid,
@@ -15,13 +19,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiled-for-message-with-placeholder';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
 
 const CHANNEL_OPTIONS = [
   { value: 'WhatsApp', label: 'WhatsApp' },
@@ -93,7 +90,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                   border="1px solid #ddd"
                   borderRadius="8px"
                 >
-                  <Grid item xl={6}>
+                  <Grid size={{ xl: 6 }}>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Box display="flex" gap={2} alignItems="center">
                         <Typography variant="subtitle1">

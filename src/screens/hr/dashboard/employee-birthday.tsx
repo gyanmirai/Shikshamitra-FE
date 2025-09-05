@@ -1,5 +1,13 @@
 import Autoplay from 'embla-carousel-autoplay';
-
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import UserHoverProfile from 'src/components/student-popover';
+import {
+  Carousel,
+  useCarousel,
+  CarouselDotButtons,
+  CarouselArrowBasicButtons,
+} from 'src/components/carousel';
 import {
   Box,
   Card,
@@ -15,16 +23,6 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import UserHoverProfile from 'src/components/student-popover';
-import {
-  Carousel,
-  useCarousel,
-  CarouselDotButtons,
-  CarouselArrowBasicButtons,
-} from 'src/components/carousel';
-
 const EmployeeBirthDay = () => {
   // Initialize carousel with autoplay functionality
   // - loop: true enables continuous looping of carousel items
@@ -34,7 +32,7 @@ const EmployeeBirthDay = () => {
     Autoplay({ playOnInit: true, delay: 2000, stopOnMouseEnter: true }),
   ]);
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card
         sx={{
           p: 3,

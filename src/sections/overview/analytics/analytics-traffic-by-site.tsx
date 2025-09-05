@@ -2,15 +2,12 @@ import type { CardProps } from '@mui/material/Card';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-
-import { fShortenNumber } from 'src/utils/format-number';
-
-import { varAlpha } from 'src/theme/styles';
-
 import { SocialIcon } from 'src/components/iconify';
+import { fShortenNumber } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 

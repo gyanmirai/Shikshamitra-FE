@@ -1,22 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState } from 'react';
-
 import { Box } from '@mui/material';
-
+import React, { useState } from 'react';
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import hostelRoomData from 'src/json/hostel/hostelConfiguration/hostelRoomAllocation.json';
 import {
   HostelRoomStatusType,
   HostelRoomStatusColors,
   HostelRoomStatusOptions,
 } from 'src/enums/hostelRoom-status';
-
-import { Label } from 'src/components/label';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import StudentDetailsForRoom from './studentDetailsForRoom';
 

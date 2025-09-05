@@ -1,5 +1,4 @@
 import { CONFIG } from 'src/config-global';
-
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------

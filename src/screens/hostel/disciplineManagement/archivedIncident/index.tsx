@@ -1,15 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-
 import { Box } from '@mui/material';
-
+import React, { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import disciplineData from 'src/json/hostel/disciplineIncident/archivedDisciplineIncident.json';
-
 import CustomDialog from 'src/components/customDialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import disciplineData from 'src/json/hostel/disciplineIncident/archivedDisciplineIncident.json';
 
 import ViewDetailsComp from './components/viewDetailsComp';
 import ArchivedIncidentTable from './components/archivedIncidentTable';

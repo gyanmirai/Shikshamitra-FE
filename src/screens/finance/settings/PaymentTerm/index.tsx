@@ -3,20 +3,16 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetPaymentTermQuery } from 'src/redux/finance/paymentTerm';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetPaymentTermQuery } from 'src/redux/finance/paymentTerm';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import PaymentTermForm from './Components/PaymentTermForm';
 import PaymentTermTable from './Components/PaymentTermTable';

@@ -1,7 +1,7 @@
+import { alpha } from '@mui/material/styles';
 import { useRef, useState, useEffect } from 'react';
-
 import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
-import { Box, Card, alpha, Typography, IconButton, LinearProgress } from '@mui/material';
+import { Box, Card, Typography, IconButton, LinearProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 

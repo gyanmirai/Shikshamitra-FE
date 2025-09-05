@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -10,11 +12,7 @@ import {
   TextField,
   Typography,
   FormControlLabel,
-} from '@mui/material';
-
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs'; // Assuming you have this component
+} from '@mui/material'; // Assuming you have this component
 
 const LibraryNotificationSettingScreen = () => {
   const [frequency, setFrequency] = useState<any>('');
@@ -62,7 +60,7 @@ const LibraryNotificationSettingScreen = () => {
         </Typography>
         <Grid container spacing={3}>
           {/* Frequency Dropdown */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <CustomSelect
               label="Frequency"
               options={[
@@ -76,7 +74,7 @@ const LibraryNotificationSettingScreen = () => {
           </Grid>
 
           {/* Custom Frequency Input */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               label="Custom Frequency"
               size="small"
@@ -87,7 +85,7 @@ const LibraryNotificationSettingScreen = () => {
           </Grid>
 
           {/* Reminder Toggle */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -210,7 +208,7 @@ export default LibraryNotificationSettingScreen;
 //         </Typography>
 //         <Grid container spacing={3}>
 //           {/* Frequency Dropdown */}
-//           <Grid item xs={12} md={3}>
+//           <Grid size={{ xs: 12, md: 4 }}>
 //             <CustomSelect
 //               label="Frequency"
 //               options={[
@@ -225,7 +223,7 @@ export default LibraryNotificationSettingScreen;
 //           </Grid>
 
 //           {/* Custom Frequency Input */}
-//           <Grid item xs={12} md={3}>
+//           <Grid size={{ xs: 12, md: 4 }}>
 //             <TextField
 //               label="Custom Frequency"
 //               size="small"
@@ -256,7 +254,7 @@ export default LibraryNotificationSettingScreen;
 //         </Typography>
 //         <Grid container spacing={3} alignItems="center">
 //           {/* User Group Dropdown */}
-//           <Grid item xs={12} md={3}>
+//           <Grid size={{ xs: 12, md: 4 }}>
 //             <CustomSelect
 //               multiple
 //               label="User Group"

@@ -2,16 +2,12 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-
-import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
-import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
+import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -335,7 +331,7 @@ const LibraryDashboard = () => {
 
       {/* Main Dashboard Content */}
       <Grid container spacing={3} alignItems="stretch">
-        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <AnalyticsCurrentVisits
             title="Books by Category"
             chart={{ series: data }}
@@ -343,7 +339,7 @@ const LibraryDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <AppAreaInstalled
             isShowChartLegendValue={false}
             height={350} // or a unified height if needed
@@ -392,7 +388,7 @@ const LibraryDashboard = () => {
       <Grid>
         {/* <Typography variant='h6' >Borrowing & Reservation Trends</Typography>;
         <Typography fontSize="12px">Gain insights into borrowing patterns and popular books over time</Typography>; */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <EcommerceYearlySales
             isShowChartLegend={false}
             title="Monthly Borrowing Trends"
@@ -448,7 +444,7 @@ const LibraryDashboard = () => {
 
       {/* Replenishment Chart */}
       <Grid container spacing={3} sx={{ marginTop: 3 }}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <AppAreaInstalled
             isShowChartLegendValue={false}
             title="Reservation Trends Over Time"

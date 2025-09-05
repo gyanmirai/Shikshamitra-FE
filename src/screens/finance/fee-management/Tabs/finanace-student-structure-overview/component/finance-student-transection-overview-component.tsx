@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
 const data = [
   {

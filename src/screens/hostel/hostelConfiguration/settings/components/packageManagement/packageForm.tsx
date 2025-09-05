@@ -1,16 +1,13 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { getPackageInitialValues } from './getPackageInitialValues';
 import { packageValidationSchema } from './packageValidationSchema';
@@ -40,7 +37,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
                   <TextField
                     label="Package Name *"
@@ -59,7 +56,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Autocomplete
                   options={facilityOptions}
                   size="small"
@@ -84,7 +81,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
                 />{' '}
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                   <NumericFormatCustom
                     label="Monthly Amount (₹) *"
@@ -103,7 +100,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <ShakingTextField
                   error={!!(formik.touched.depositAmount && formik.errors.depositAmount)}
                 >
@@ -125,7 +122,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Editor
                   value={formik.values.otherFacilities}
                   onChange={(value) => {

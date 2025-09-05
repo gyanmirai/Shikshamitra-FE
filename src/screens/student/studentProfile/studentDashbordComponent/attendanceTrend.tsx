@@ -1,8 +1,7 @@
 import React from 'react';
-
-import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 const AttendanceTrend = () => {
   const theme = useTheme();
@@ -26,7 +25,7 @@ const AttendanceTrend = () => {
     },
   });
   return (
-    <Grid xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 3, boxShadow: 'var(--shadows-4)', height: '100%' }}>
         <Typography variant="h6">Attendance Trend (Last 6 Month)</Typography>
         <Chart

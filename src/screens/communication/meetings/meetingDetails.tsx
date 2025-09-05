@@ -1,10 +1,8 @@
 import React from 'react';
 import dayjs from 'dayjs';
-
-import { Box, Chip, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Chip, Typography } from '@mui/material';
 
 import DetailRow from '../announcement/components/detailRow';
 

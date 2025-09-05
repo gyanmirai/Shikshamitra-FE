@@ -1,14 +1,12 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import { useDropzone } from 'react-dropzone';
+import { useBoolean } from 'src/hooks/use-boolean';
 import FormHelperText from '@mui/material/FormHelperText';
 import { Card, IconButton, ListItemText } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';

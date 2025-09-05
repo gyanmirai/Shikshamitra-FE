@@ -1,16 +1,12 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { Box, Grid, Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
+import { Box, Grid, Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
 
 interface CollectFinesDialogProps {
   dialogValue: boolean;
@@ -83,13 +79,13 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
             <Grid container spacing={3} pt="10px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="h6">{data?.memberName}</Typography>
                 <Typography variant="body2">Gr Number: {data?.memberId}</Typography>
               </Grid>
 
               {/* Table for Fines */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <CustomizableTable
                   tableId="finesTable"
                   isFilter={false}
@@ -137,14 +133,14 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
               </Grid>
 
               {/* Fine Amount */}
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormattedAmountInput
                   label="Fine Amount"
                   value={fineAmountState}
                   onChange={handleFineAmountChange}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormattedAmountInput
                   label="Penalty Amount"
                   value={penaltyAmountState}
@@ -152,7 +148,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
                 />{' '}
               </Grid>
 
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   fullWidth
                   name="pReason"
@@ -166,7 +162,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
                 />
               </Grid>
               {/* Payment Mode */}
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <TextField
                   select
                   fullWidth
@@ -186,7 +182,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
 
               {/* Dynamic Fields for Online Payment */}
               {selectedPaymentMode === 'online' && (
-                <Grid item xs={12} md={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <TextField
                     fullWidth
                     name="upiId"
@@ -201,7 +197,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
               {/* Dynamic Fields for Bank Transfer */}
               {selectedPaymentMode === 'bank' && (
                 <>
-                  <Grid item xs={12} md={3}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
                       name="bankAccount"
@@ -211,7 +207,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={3}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
                       name="ifsc"
@@ -221,7 +217,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={3}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
                       name="accountHolder"
@@ -235,7 +231,7 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
               )}
 
               {/* Notes */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   rows={4}
                   multiline

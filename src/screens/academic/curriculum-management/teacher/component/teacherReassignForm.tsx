@@ -2,14 +2,11 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Grid, Button, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -37,7 +34,7 @@ const TeacherReassign: React.FC<ITeacherReassignProps> = ({ selectedTeacher, onS
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100px' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.assignedTeacher && formik.errors.assignedTeacher) || false

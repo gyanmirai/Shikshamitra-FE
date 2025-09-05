@@ -1,12 +1,10 @@
-import './code-highlight-block.css';
+import type { NodeViewProps } from '@tiptap/core';
 
-import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
+import { NodeViewWrapper, NodeViewContent, type ReactNodeViewProps } from '@tiptap/react';
 
 import { editorClasses } from '../classes';
 
-import type { EditorCodeHighlightBlockProps } from '../types';
-
-// ----------------------------------------------------------------------
+type EditorCodeHighlightBlockProps = ReactNodeViewProps & NodeViewProps;
 
 export function CodeHighlightBlock({
   node: {
@@ -34,7 +32,7 @@ export function CodeHighlightBlock({
       </select>
 
       <pre>
-        <NodeViewContent as="code" />
+        <NodeViewContent />
       </pre>
     </NodeViewWrapper>
   );

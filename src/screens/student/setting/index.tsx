@@ -1,11 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Tab, Box, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Tab, Box, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 

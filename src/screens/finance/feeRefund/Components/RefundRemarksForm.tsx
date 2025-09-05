@@ -3,15 +3,12 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import StudentRefundInfo from './StudentRefundInfo';
@@ -44,7 +41,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
 
         {/* Disabled Fields */}
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Paid Term"
               value={formik.values.paidTerm}
@@ -54,7 +51,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Amount Applicable For Refund"
               value={formik.values.applicableAmount}
@@ -64,7 +61,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Refund Amount"
               value={formik.values.refundAmount}
@@ -74,7 +71,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             />
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Refund Method"
               value={formik.values.refundMethod}
@@ -84,7 +81,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               label="Reason of Refund"
               value={formik.values.reason}
@@ -96,7 +93,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={formik.touched.remarks && Boolean(formik.errors.remarks)}>
               <TextField
                 fullWidth

@@ -3,11 +3,9 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
-import { Box, Card, Grid, Button, Switch, Checkbox, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Grid, Button, Switch, Checkbox, Typography } from '@mui/material';
 
 const NotificationSetting = (props: TabComponentType) => (
   <Box>
@@ -23,13 +21,13 @@ const NotificationSetting = (props: TabComponentType) => (
     />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Message Notifications
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
                 <Switch defaultChecked />
                 <Typography>Receive Notification for New Messages</Typography>
               </Box>
@@ -51,25 +49,19 @@ const NotificationSetting = (props: TabComponentType) => (
                 <Typography variant="body2">Parents</Typography>
               </Box>
             </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                mt: 'auto',
-                pt: 2,
-              }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto', pt: 2 }}>
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>{' '}
+          </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Announcement Notifications
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
                 <Switch defaultChecked />
                 <Typography>Receive Notification for New Announcement</Typography>
               </Box>
@@ -92,29 +84,23 @@ const NotificationSetting = (props: TabComponentType) => (
                 onChange={() => {}}
               />
             </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                mt: 'auto',
-                pt: 2,
-              }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto', pt: 2 }}>
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>{' '}
+          </Card>
         </Grid>
       </Grid>
     </Box>
+
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Event Notifications
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
                 <Switch defaultChecked />
                 <Typography>Receive Notification for Upcoming Events</Typography>
               </Box>
@@ -132,25 +118,19 @@ const NotificationSetting = (props: TabComponentType) => (
                 <Typography variant="body2">Remind me 1 day before events</Typography>
               </Box>
             </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                mt: 'auto',
-                pt: 2,
-              }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto', pt: 2 }}>
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>{' '}
+          </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Survey & Feedback Notifications
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
                 <Switch defaultChecked />
                 <Typography>Receive Alerts for New Surveys or Feedback</Typography>
               </Box>
@@ -165,17 +145,10 @@ const NotificationSetting = (props: TabComponentType) => (
                 onChange={() => {}}
               />
             </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                mt: 'auto',
-                pt: 8,
-              }}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto', pt: 8 }}>
               <Button variant="contained">Save</Button>
             </Box>
-          </Card>{' '}
+          </Card>
         </Grid>
       </Grid>
     </Box>

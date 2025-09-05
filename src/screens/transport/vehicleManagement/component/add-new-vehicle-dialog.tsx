@@ -1,11 +1,9 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 const assignedRoutesList = [
   { value: 'R101', label: 'R101' },
@@ -99,7 +97,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
           <form onSubmit={formik.handleSubmit}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <TextField
                     disabled={isEdit}
                     name="vehicleNumber"
@@ -110,7 +108,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <TextField
                     type="number"
                     name="capacity"
@@ -123,7 +121,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
                 </Grid>
               </Grid>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <TextField
                     disabled={isEdit}
                     name="model"
@@ -134,7 +132,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <CustomSelect
                     label="Driver"
                     options={driverList}
@@ -145,7 +143,7 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
                 </Grid>
               </Grid>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <CustomSelect
                     label="Route Assigned"
                     options={assignedRoutesList}

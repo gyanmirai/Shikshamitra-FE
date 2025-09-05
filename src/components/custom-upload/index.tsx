@@ -2,8 +2,9 @@ import type { BoxProps } from '@mui/material';
 import type { DragEvent, ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
-
 import { Close } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
 import {
   Box,
   Card,
@@ -17,10 +18,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
 
 import { Iconify } from '../iconify';
 import { shikshaMitraToast } from '../toast';

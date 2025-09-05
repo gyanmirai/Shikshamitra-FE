@@ -1,6 +1,5 @@
 // AssessmentManagementTable.tsx
 import { Box, Switch } from '@mui/material';
-
 import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';

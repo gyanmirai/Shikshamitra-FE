@@ -1,8 +1,6 @@
 import type { IKanbanTask } from 'src/types/kanban';
 
 import dayjs from 'dayjs';
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Chip from '@mui/material/Chip';
@@ -10,23 +8,21 @@ import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
+import { varAlpha } from 'src/theme/styles';
+import { useTabs } from 'src/hooks/use-tabs';
+import { useState, useCallback } from 'react';
 import { styled } from '@mui/material/styles';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import FormGroup from '@mui/material/FormGroup';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
-import FormControlLabel from '@mui/material/FormControlLabel';
-
-import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import LinearProgress from '@mui/material/LinearProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useDateRangePicker, CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 
 import { KanbanDetailsToolbar } from './kanban-details-toolbar';

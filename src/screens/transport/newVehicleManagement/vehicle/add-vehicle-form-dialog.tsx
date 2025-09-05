@@ -3,23 +3,19 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import React, { useMemo, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Create } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import { UploadBox } from 'src/components/upload';
+import { useDispatch, useSelector } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { vehicleManagementValidationSchema } from '../validationSchema';
 
@@ -113,7 +109,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
         >
           <Grid container spacing={2}>
             {/* Vehicle Name */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.vehicleName && Boolean(formik.errors.vehicleName)}
               >
@@ -134,7 +130,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Registration Number */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={
                   formik.touched.registrationNumber && Boolean(formik.errors.registrationNumber)
@@ -163,7 +159,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Vehicle Type */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.vehicleType && Boolean(formik.errors.vehicleType)}
               >
@@ -183,7 +179,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField error={formik.touched.fuelType && Boolean(formik.errors.fuelType)}>
                 <TextField
                   size="small"
@@ -200,7 +196,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Manufacturer */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.manufacturer && Boolean(formik.errors.manufacturer)}
               >
@@ -221,7 +217,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Seating Capacity */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.seatingCapacity && Boolean(formik.errors.seatingCapacity)}
               >
@@ -245,7 +241,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Insurance Policy Number */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={
                   formik.touched.insurancePolicyNumber &&
@@ -274,7 +270,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Insurance Expiry Date */}
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <DatePicker
                 label="Insurance Expiry Date"
                 name="insuranceExpiryDate"
@@ -306,7 +302,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Daily Inspection Checklist */}
-            {/* <Grid item xs={12} sx={{ pb: "10px" }}>
+            {/* <Grid size={12} sx={{ pb: "10px" }}>
                                 <TextField
                                     size="small"
                                     fullWidth
@@ -322,7 +318,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                                 />
                             </Grid> */}
 
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.assignedDriver && Boolean(formik.errors.assignedDriver)}
               >
@@ -336,7 +332,6 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                   value={formik.values.assignedDriver}
                   onChange={formik.handleChange}
                   formControlProps={{ sx: { minWidth: 275 } }}
-                  placeholder="No categories available"
                   error={formik.touched.assignedDriver && Boolean(formik.errors.assignedDriver)}
                   helperText={
                     formik.touched.assignedDriver ? String(formik.errors.assignedDriver) : ''
@@ -344,7 +339,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
               <ShakingTextField
                 error={formik.touched.assignedRoute && Boolean(formik.errors.assignedRoute)}
               >
@@ -358,7 +353,6 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                   value={formik.values.assignedRoute}
                   onChange={formik.handleChange}
                   formControlProps={{ sx: { minWidth: 275 } }}
-                  placeholder="No categories available"
                   error={formik.touched.assignedRoute && Boolean(formik.errors.assignedRoute)}
                   helperText={
                     formik.touched.assignedRoute ? String(formik.errors.assignedRoute) : undefined
@@ -368,7 +362,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
             </Grid>
 
             {/* Uploads */}
-            <Grid item xs={12} sx={{ pb: '10px' }}>
+            <Grid size={12} sx={{ pb: '10px' }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={
@@ -394,7 +388,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} sx={{ pb: '10px' }}>
+            <Grid size={12} sx={{ pb: '10px' }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={

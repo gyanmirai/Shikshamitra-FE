@@ -3,15 +3,12 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { TResource } from '../all-resources';
 
@@ -53,7 +50,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '250px' }}>
           <Grid container spacing={2} marginTop={1}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 disabled={isEdit}
                 label="Resource Title"
@@ -64,7 +61,8 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <TextField
                 disabled={isEdit}
                 label="Description"
@@ -77,7 +75,8 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 rows={3}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 label="Category"
                 options={[
@@ -92,22 +91,24 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, is
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            {/* <Grid item xs={12}>
-                <CustomSelect
-                  label="File Type"
-                  options={[
-                    { value: 'video', label: 'Video' },
-                    { value: 'audio', label: 'Audio' },
-                    { value: 'document', label: 'Document' },
-                  ]}
-                  value={formik.values.fileType}
-                  onChange={(val) => {
-                    formik.setFieldValue('fileType', val as string);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
-              </Grid> */}
-            <Grid item xs={12}>
+
+            {/* <Grid size={{ xs: 12 }}>
+      <CustomSelect
+        label="File Type"
+        options={[
+          { value: 'video', label: 'Video' },
+          { value: 'audio', label: 'Audio' },
+          { value: 'document', label: 'Document' },
+        ]}
+        value={formik.values.fileType}
+        onChange={(val) => {
+          formik.setFieldValue('fileType', val as string);
+        }}
+        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+      />
+    </Grid> */}
+
+            <Grid size={{ xs: 12 }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={

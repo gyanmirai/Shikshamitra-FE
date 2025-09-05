@@ -3,12 +3,9 @@
 import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useState } from 'react';
-
-import { Box, Checkbox } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Label } from 'src/components/label';
+import { Box, Checkbox } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';

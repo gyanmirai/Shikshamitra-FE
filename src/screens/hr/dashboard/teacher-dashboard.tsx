@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
-import { Box, Tab, Tabs } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Box, Tab, Tabs } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { TABS } from '../employee/employee-view';

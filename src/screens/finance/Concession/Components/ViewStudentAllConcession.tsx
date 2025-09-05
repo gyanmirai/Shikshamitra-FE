@@ -1,7 +1,8 @@
 import React from 'react';
-
+import { Label } from 'src/components/label';
+import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Grid, Typography } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   DocumentStatusType,
   DocumentStatusOptions,
@@ -13,10 +14,6 @@ import {
   ConcessionStatusTypeColors,
 } from 'src/enums/concession-status-type';
 
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 import type { IStudentInfo } from '../type';
 
 const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
@@ -26,7 +23,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
         Student Information
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Student Name
           </Typography>
@@ -35,7 +32,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Roll No.
           </Typography>
@@ -44,7 +41,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Sibling
           </Typography>
@@ -53,7 +50,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Contact No.
           </Typography>
@@ -62,7 +59,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Class/Division
           </Typography>
@@ -71,7 +68,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             GR No.
           </Typography>
@@ -80,7 +77,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Parent Name
           </Typography>
@@ -89,7 +86,7 @@ const ViewStudentAllConcession = ({ data }: { data: IStudentInfo }) => (
           </Typography>
         </Grid>
 
-        <Grid item xs={3}>
+        <Grid size={3}>
           <Typography variant="body2" color="text.secondary">
             Email
           </Typography>

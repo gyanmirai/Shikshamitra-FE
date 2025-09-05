@@ -3,24 +3,21 @@ import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
 import { useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Badge from '@mui/material/Badge';
 import Drawer from '@mui/material/Drawer';
+import { orderBy } from 'src/utils/helper';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { Scrollbar } from 'src/components/scrollbar';
 import ListItemText from '@mui/material/ListItemText';
+import { fDate, fDateTime } from 'src/utils/format-time';
+import { ColorPicker } from 'src/components/color-utils';
 import ListItemButton from '@mui/material/ListItemButton';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-
-import { orderBy } from 'src/utils/helper';
-import { fDate, fDateTime } from 'src/utils/format-time';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { ColorPicker } from 'src/components/color-utils';
 
 // ----------------------------------------------------------------------
 

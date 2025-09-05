@@ -3,10 +3,32 @@
 import _ from 'lodash';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
+import CancelButton from 'src/components/cancel-button';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  useGetPermissionsQuery,
+  useUpdatePermissionMutation,
+} from 'src/redux/permission/permissionApi';
+import {
+  useGetRolesQuery,
+  useAddRoleMutation,
+  useDeleteRoleMutation,
+  useUpdateRoleMutation,
+} from 'src/redux/role/roleApi';
 import {
   Box,
   Paper,
@@ -24,33 +46,6 @@ import {
   DialogActions,
   TableContainer,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetPermissionsQuery,
-  useUpdatePermissionMutation,
-} from 'src/redux/permission/permissionApi';
-import {
-  useGetRolesQuery,
-  useAddRoleMutation,
-  useDeleteRoleMutation,
-  useUpdateRoleMutation,
-} from 'src/redux/role/roleApi';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CancelButton from 'src/components/cancel-button';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import AssignModule from './modules';
 

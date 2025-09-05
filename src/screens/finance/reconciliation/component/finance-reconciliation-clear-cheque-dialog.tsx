@@ -1,20 +1,16 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, TextField, Typography, DialogActions } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { reconciliationDialogValidationSchema } from '../validationSchema';
 
@@ -73,8 +69,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Grid2 container spacing={2}>
-                <Grid2 xs={6}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="grNumber"
                     label="GR Number"
@@ -85,8 +81,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
-                <Grid2 xs={6}>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="studentName"
                     label="Student Name"
@@ -97,10 +93,11 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
-              </Grid2>
-              <Grid2 container spacing={2}>
-                <Grid2 xs={6}>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="class"
                     label="Class"
@@ -111,8 +108,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
-                <Grid2 xs={6}>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="chequeNo"
                     label="Cheque No"
@@ -123,10 +120,11 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
-              </Grid2>
-              <Grid2 container spacing={2}>
-                <Grid2 xs={6}>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="bankName"
                     label="Bank Name"
@@ -137,8 +135,8 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
-                <Grid2 xs={6}>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
                   <DatePicker
                     label="Cheque Date"
                     value={formik.values.chequeDate}
@@ -147,10 +145,11 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     disabled
                   />
-                </Grid2>
-              </Grid2>
-              <Grid2 container spacing={2}>
-                <Grid2 xs={6}>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 6 }}>
                   <TextField
                     name="amount"
                     label="Paid Amount"
@@ -161,25 +160,22 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                     fullWidth
                     disabled
                   />
-                </Grid2>
+                </Grid>
+
                 {fromClearCheck && (
-                  <Grid2 xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <DatePicker
                       label="Cheque Clear Date"
                       value={formik.values.chequeClearDate}
                       onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
                       format="DD-MM-YYYY"
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                        },
-                      }}
+                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     />
-                  </Grid2>
+                  </Grid>
                 )}
+
                 {!fromClearCheck && (
-                  <Grid2 xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <DatePicker
                       label="Cheque Bounce Date *"
                       value={formik.values.checkBounceDate}
@@ -187,12 +183,13 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       format="DD-MM-YYYY"
                       slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     />
-                  </Grid2>
+                  </Grid>
                 )}
-              </Grid2>
+              </Grid>
+
               {/* Bounce Charges */}
               {!fromClearCheck && (
-                <Grid2 xs={6} xl={6}>
+                <Grid size={{ xs: 6, xl: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.checkBounceCharges && Boolean(formik.errors.checkBounceCharges)
@@ -215,12 +212,13 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                       }
                     />
                   </ShakingTextField>
-                </Grid2>
+                </Grid>
               )}
+
               {!fromClearCheck && (
-                <Grid2 container spacing={2} pb="10px">
+                <Grid container spacing={2} pb="10px">
                   {/* Check Bounce Reason */}
-                  <Grid2 xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <ShakingTextField
                       error={
                         formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
@@ -246,10 +244,11 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
                         }
                       />
                     </ShakingTextField>
-                  </Grid2>
-                </Grid2>
+                  </Grid>
+                </Grid>
               )}
             </Box>
+
             <Box pt="17px" />
 
             <TextField

@@ -4,13 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-
-import { Box, Grid, Switch, Typography } from '@mui/material';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Switch, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
 
@@ -92,7 +89,7 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
 
   return (
     <SectionCard title={`${subjectName} • ${subjectData.examDate.format('DD-MM-YYYY')}`} key={key}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}
           isSearch={false}
@@ -135,7 +132,7 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
                       );
                     }}
                     formControlProps={{
-                      sx: { minWidth: '400px', fullWidth: '100%' },
+                      sx: { minWidth: '400px', width: '100%' },
                     }}
                   />
                 );

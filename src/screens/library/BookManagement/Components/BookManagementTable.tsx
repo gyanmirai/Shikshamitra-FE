@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 

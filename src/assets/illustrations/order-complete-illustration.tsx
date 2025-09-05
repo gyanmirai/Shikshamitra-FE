@@ -1,11 +1,9 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import { memo } from 'react';
-
 import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-
 import { CONFIG } from 'src/config-global';
+import { useTheme } from '@mui/material/styles';
 
 import { BackgroundShape } from './background-shape';
 

@@ -1,17 +1,13 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
   const { data: classData, isLoading } = useQueryAndMutation({
@@ -27,13 +23,12 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
       <form onSubmit={() => {}}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <CustomSelect
                 options={classData?.items || []}
                 value={classes}
                 onChange={(val) => {
                   const selectedClass = classData?.items?.find((i: any) => i.id === val);
-                  //   formik.setFieldValue('className', selectedClass?.name || '');
                   setClasses(val as string);
                   setDivisionOptions(selectedClass?.divisions || []);
                 }}
@@ -43,12 +38,9 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
                 valueKey="id"
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               />
-              {/* {formik.touched.className && formik.errors.className && (
-                  <FormHelperText error>{formik.errors.className}</FormHelperText>
-                )} */}
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Subject"
                 options={[
@@ -65,7 +57,7 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Point Scale"
                 options={[
@@ -83,53 +75,43 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Rubric Objective"
                 name="objective"
                 value=""
-                // onChange={formik.handleChange}
-                // error={formik.touched.assesmentTitle && Boolean(formik.errors.assesmentTitle)}
-                // helperText={formik.touched.assesmentTitle && formik.errors.assesmentTitle}
                 size="small"
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Rubric Description"
                 name="description"
                 value=""
-                // onChange={formik.handleChange}
-                // error={formik.touched.assesmentTitle && Boolean(formik.errors.assesmentTitle)}
-                // helperText={formik.touched.assesmentTitle && formik.errors.assesmentTitle}
                 size="small"
                 multiline
                 rows={3}
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label="Date"
                 value={dayjs()}
                 onChange={(val) => {
-                  //   formik.setFieldValue('dueDate', val);
+                  // formik.setFieldValue('dueDate', val);
                 }}
                 slotProps={{
                   textField: {
                     size: 'small',
                     fullWidth: true,
-                    // error: formik.touched.dueDate && Boolean(formik.errors.dueDate),
                   },
                 }}
                 disablePast
               />
-              {/* {formik.touched.dueDate && formik.errors.dueDate && (
-                  <FormHelperText error>{String(formik.errors.dueDate)}</FormHelperText>
-                )} */}
             </Grid>
           </Grid>
         </Scrollbar>

@@ -4,19 +4,15 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
-import { Box, Card, Chip, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import upcomingEventsData from 'src/json/communication/events/upcomingEventsData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Chip, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import upcomingEventsData from 'src/json/communication/events/upcomingEventsData.json';
 
 import AddEvent from './addeventForm';
 import EventDetailsCard from './components/eventDetailsComponent';

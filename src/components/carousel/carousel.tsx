@@ -1,7 +1,6 @@
-import { Children, isValidElement } from 'react';
-
 import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
+import { Children, isValidElement } from 'react';
 
 import { carouselClasses } from './classes';
 import { CarouselSlide } from './components/carousel-slide';
@@ -26,7 +25,7 @@ export const StyledRoot = styled(Box, {
 
 export const StyledContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'axis' && prop !== 'slideSpacing',
-})<StyledProps>(({ axis, slideSpacing }) => ({
+})<StyledProps & { component?: React.ElementType }>(({ axis, slideSpacing }) => ({
   display: 'flex',
   backfaceVisibility: 'hidden',
   ...(axis === 'x' && {

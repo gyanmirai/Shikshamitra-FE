@@ -1,13 +1,10 @@
 import dayjs from 'dayjs';
 import React from 'react';
-
-import { Box, MenuItem, MenuList } from '@mui/material';
-
-import data from 'src/json/ResourceManagement/myResources/my-resource-data.json';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/ResourceManagement/myResources/my-resource-data.json';
 
 import type { IMyResources, IMyResourcesTableProps } from '../my-resources-interface';
 

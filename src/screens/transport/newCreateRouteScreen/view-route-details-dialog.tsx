@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 interface ViewRouteDetailsDialogProps {
   onClose: () => void;
@@ -18,10 +16,6 @@ const ViewRouteDetailsDialog: React.FC<ViewRouteDetailsDialogProps> = ({
   dialogValue,
 }) => {
   const [openStop, setOpenStop] = useState(null);
-
-  const handleToggle = (index: any) => {
-    setOpenStop(openStop === index ? null : index);
-  };
 
   return (
     <CustomDialog maxWidth="md" title="Route Details" handleClose={onClose} open={dialogValue}>

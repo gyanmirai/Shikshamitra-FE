@@ -1,14 +1,11 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IReasonApprovalFormProps } from '../type';
@@ -30,7 +27,7 @@ const ReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 fullWidth

@@ -6,9 +6,8 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import SvgIcon from '@mui/material/SvgIcon';
 import { useTheme } from '@mui/material/styles';
-import ButtonBase, { buttonBaseClasses } from '@mui/material/ButtonBase';
-
 import { varAlpha, stylesMode } from 'src/theme/styles';
+import ButtonBase, { buttonBaseClasses } from '@mui/material/ButtonBase';
 
 import { carouselClasses } from '../classes';
 

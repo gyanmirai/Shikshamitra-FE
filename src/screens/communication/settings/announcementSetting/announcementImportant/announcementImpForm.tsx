@@ -2,11 +2,9 @@
 
 import { useState } from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { announcementImpValidationSchema } from '../../validationSchema';
 
@@ -44,9 +42,9 @@ export const ImportantForm: React.FC<IImportantFormProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={!!(formik.touched.importantLevel && formik.errors.importantLevel) || false}
+                error={!!(formik.touched.importantLevel && formik.errors.importantLevel)}
               >
                 <TextField
                   fullWidth
@@ -60,11 +58,9 @@ export const ImportantForm: React.FC<IImportantFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={
-                  !!(formik.touched.importantLevelDesc && formik.errors.importantLevelDesc) || false
-                }
+                error={!!(formik.touched.importantLevelDesc && formik.errors.importantLevelDesc)}
               >
                 <TextField
                   fullWidth

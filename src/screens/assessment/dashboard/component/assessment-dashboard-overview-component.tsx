@@ -1,8 +1,9 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import {
-  Box,
+import CustomSelect from 'src/components/custom-select';
+import { CalendarView } from 'src/sections/calendar/view';
+import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
+import { Box ,
+  Grid,
   Card,
   List,
   Button,
@@ -12,11 +13,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
-
-import CustomSelect from 'src/components/custom-select';
-
-import { CalendarView } from 'src/sections/calendar/view';
 
 const AssessmentDashboardOverviewComponent = () => {
   const completedAssessments: string[] = ['one', 'two', 'three'];
@@ -38,17 +34,17 @@ const AssessmentDashboardOverviewComponent = () => {
         </Button>
       </Box>
 
-      <Grid2 container spacing={3}>
-        <Grid2 xs={12} md={6} lg={6}>
-          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />{' '}
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={6}>
-          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />{' '}
-        </Grid2>
-      </Grid2>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
+          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
+          <ScrollableCard showFilter={false} title="Pending Exams" content={completedAssessments} />
+        </Grid>
+      </Grid>
 
-      <Grid2 container spacing={3}>
-        <Grid2 xs={12} md={6} lg={6}>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Typography component="span" variant="h6" gutterBottom>
               Average Grades per Assessment
@@ -80,15 +76,16 @@ const AssessmentDashboardOverviewComponent = () => {
               <Typography>Math Assessment</Typography>
             </Box>
           </Card>
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Typography component="span" variant="h6" gutterBottom>
-              Top and Underperforming or Students
+              Top and Underperforming Students
             </Typography>
 
-            <Grid2 container>
-              <Grid2 lg={6}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, lg: 6 }}>
                 <List>
                   {['Top Performing Students', 1, 2, 3].map((value, index) => (
                     <ListItem key={value} disableGutters>
@@ -99,9 +96,9 @@ const AssessmentDashboardOverviewComponent = () => {
                     </ListItem>
                   ))}
                 </List>
-              </Grid2>
+              </Grid>
 
-              <Grid2 lg={6}>
+              <Grid size={{ xs: 12, lg: 6 }}>
                 <List>
                   {['Underperforming Students', 1, 2, 3].map((value, index) => (
                     <ListItem key={value} disableGutters>
@@ -112,11 +109,11 @@ const AssessmentDashboardOverviewComponent = () => {
                     </ListItem>
                   ))}
                 </List>
-              </Grid2>
-            </Grid2>
+              </Grid>
+            </Grid>
           </Card>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       <Box display="flex" flexDirection="row" gap={3} sx={{ pt: '20px', pb: '20px' }}>
         <CustomSelect

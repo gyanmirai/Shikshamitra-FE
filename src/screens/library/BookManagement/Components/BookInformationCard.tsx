@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 import type { IBookInformationCardProps } from './type';
@@ -14,25 +13,25 @@ const BookInformationCard: React.FC<IBookInformationCardProps> = ({ book }) => (
 
         <Grid container spacing={3}>
           {/* Row 1 */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Book Name
             </Typography>
             <Typography variant="body1">{book?.title}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Book Category
             </Typography>
             <Typography variant="body1">{book?.category}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Language
             </Typography>
             <Typography variant="body1">{book?.language}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Publisher
             </Typography>
@@ -40,25 +39,25 @@ const BookInformationCard: React.FC<IBookInformationCardProps> = ({ book }) => (
           </Grid>
 
           {/* Row 2 */}
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Author
             </Typography>
             <Typography variant="body1">{book?.author}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Edition
             </Typography>
             <Typography variant="body1">{book?.edition}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Subject
             </Typography>
             <Typography variant="body1">{book?.subject}</Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Number of Copies
             </Typography>

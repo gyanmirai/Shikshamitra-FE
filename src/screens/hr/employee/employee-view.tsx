@@ -1,22 +1,18 @@
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
+import { useTabs } from 'src/hooks/use-tabs';
+import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-
-import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-
+import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
-import { Iconify } from 'src/components/iconify';
-import { EmptyContent } from 'src/components/empty-content';
-import { LoadingScreen } from 'src/components/loading-screen';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';

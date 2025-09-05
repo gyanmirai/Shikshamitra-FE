@@ -2,10 +2,8 @@
 
 import React from 'react';
 import dayjs from 'dayjs';
-
-import { Box, Button, Typography, DialogActions, DialogContent } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography, DialogActions, DialogContent } from '@mui/material';
 
 import type { IPublishSurveyDialogProps } from '../type';
 

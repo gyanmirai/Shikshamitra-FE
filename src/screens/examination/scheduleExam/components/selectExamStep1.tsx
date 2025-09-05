@@ -4,11 +4,8 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
-
-import { Box, Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Box, Grid, TextField } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -87,7 +84,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <ShakingTextField error={formik.touched.examType && Boolean(formik.errors.examType)}>
             <CustomSelect
               options={[
@@ -121,10 +118,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </CustomDialog>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField
-            error={!!(formik.touched.className && formik.errors.className) || false}
-          >
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+          <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
             <CustomSelect
               options={allClass}
               onChange={(val) => {
@@ -145,10 +140,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField
-            error={!!(formik.touched.divisions && formik.errors.divisions) || false}
-          >
+
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+          <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
             <CustomSelect
               label="Division *"
               labelKey="name"
@@ -163,57 +157,46 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               value={formik.values.divisions}
               onChange={(val) => {
                 const value = val as string[];
-
                 const divisionOptions =
                   allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
                   [];
-
                 const allDivisionIds = divisionOptions.map((d) => d.id);
                 const isAllClicked = value.includes('all');
                 const wasAllPreviouslySelected = formik.values.divisions.includes('all');
 
                 if (isAllClicked && !wasAllPreviouslySelected) {
-                  // "All" was just clicked - select all divisions
                   formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
                 } else if (!isAllClicked && wasAllPreviouslySelected) {
-                  // "All" was just unchecked - deselect all divisions
                   formik.setFieldValue('divisions', []);
                 } else if (isAllClicked && wasAllPreviouslySelected) {
-                  // Individual item was selected/deselected while "All" was already selected
                   const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                  if (selectedWithoutAll.length === allDivisionIds.length) {
-                    // All individual items are selected, keep "All" selected
-                    formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
-                  } else {
-                    // Not all individual items are selected, remove "All"
-                    formik.setFieldValue('divisions', selectedWithoutAll);
-                  }
+                  formik.setFieldValue(
+                    'divisions',
+                    selectedWithoutAll.length === allDivisionIds.length
+                      ? ['all', ...allDivisionIds]
+                      : selectedWithoutAll
+                  );
                 } else {
-                  // "All" is not selected, handle individual selections
                   const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                  if (selectedWithoutAll.length === allDivisionIds.length) {
-                    // All individual items are selected, add "All"
-                    formik.setFieldValue('divisions', ['all', ...allDivisionIds]);
-                  } else {
-                    // Not all items selected, just keep individual selections
-                    formik.setFieldValue('divisions', selectedWithoutAll);
-                  }
+                  formik.setFieldValue(
+                    'divisions',
+                    selectedWithoutAll.length === allDivisionIds.length
+                      ? ['all', ...allDivisionIds]
+                      : selectedWithoutAll
+                  );
                 }
-                formik.setFieldTouched(`divisions`, false);
-                const updatedRoomDetails = {
-                  ...(formik.values.roomDetails || {}),
-                };
 
+                formik.setFieldTouched(`divisions`, false);
+
+                // Update room details
+                const updatedRoomDetails = { ...(formik.values.roomDetails || {}) };
                 formik.values.subjects.forEach((subject) => {
                   const { subjectName } = subject;
-
                   const divisionsObj = value
                     .filter((code) => code !== 'all')
                     .reduce(
                       (acc, divisionId: string) => {
-                        acc[divisionId] = updatedRoomDetails?.[subjectName as string]?.divisions?.[
+                        acc[divisionId] = updatedRoomDetails?.[subjectName]?.divisions?.[
                           divisionId
                         ] ?? {
                           roomIds: [],
@@ -223,14 +206,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       },
                       {} as Record<string, IDivisionRoomDetail>
                     );
-
                   updatedRoomDetails[subjectName] = {
                     ...updatedRoomDetails[subjectName],
                     divisions: divisionsObj,
                     examDate: subject.examDate || null,
                   };
                 });
-
                 formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -246,9 +227,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <ShakingTextField
-            error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects) || false}
+            error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
           >
             <ResponsiveMultiSelect
               label="Subjects *"
@@ -267,22 +248,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 let updatedSelectedSubjects: string[] = [];
 
                 if (isAllSelected && !wasAllPreviouslySelected) {
-                  // Select all subjects
                   updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
                 } else if (!isAllSelected && wasAllPreviouslySelected) {
-                  // Deselect all
                   updatedSelectedSubjects = [];
                 } else if (isAllSelected && selectedCodes.length !== subjectOptions.length + 1) {
-                  // Prevent partial select when "All" is selected manually but not everything else
                   updatedSelectedSubjects = ['all', ...subjectOptions.map((s) => s.subjectCode)];
                 } else {
-                  // Remove 'all' if other subjects are being toggled
                   updatedSelectedSubjects = selectedCodes.filter((code) => code !== 'all');
                 }
 
                 formik.setFieldValue('selectedSubjects', updatedSelectedSubjects);
                 formik.setFieldTouched(`selectedSubjects`, false);
-                // Update subjects list
+
                 const updatedSubjects = updatedSelectedSubjects
                   .filter((code) => code !== 'all')
                   .map((code, index) => {
@@ -299,14 +276,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       passingMarks: null,
                     };
                   });
-
                 formik.setFieldValue('subjects', updatedSubjects);
 
-                // Update room details
                 const updatedRoomDetails: IRoomDetails = updatedSelectedSubjects.reduce(
                   (acc, subjectCode) => {
                     if (subjectCode === 'all') return acc;
-
                     const subject = subjectOptions.find((s) => s.subjectCode === subjectCode);
                     if (!subject) return acc;
 
@@ -316,23 +290,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         .filter((code) => code !== 'all')
                         .reduce(
                           (divAcc, divisionId) => {
-                            divAcc[divisionId] = {
-                              roomIds: [],
-                              capacity: 0,
-                            };
+                            divAcc[divisionId] = { roomIds: [], capacity: 0 };
                             return divAcc;
                           },
                           {} as Record<string, IDivisionRoomDetail>
                         ),
                       examDate: acc[subject.subjectName]?.examDate || null,
                     };
-
                     return acc;
                   },
                   {} as IRoomDetails
                 );
-
-                // Now set this into Formik
                 formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
               error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
@@ -345,22 +313,19 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
-          <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName) || false}>
+
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+          <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName)}>
             <TextField
               fullWidth
               label="Exam Name *"
               name="examName"
-              // placeholder="Enter Exam Name"
               value={formik.values.examName}
               onChange={(e) => {
-                const value = e.target.value
-                  // Remove everything except letters and spaces
-                  .replace(/[^a-zA-Z0-9\s]/g, '');
+                const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                 formik.setFieldValue('examName', value);
                 formik.setFieldTouched(`examName`, false);
               }}
-              // onChange={formik.handleChange}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
               helperText={formik.touched.examName && formik.errors.examName}
               size="small"

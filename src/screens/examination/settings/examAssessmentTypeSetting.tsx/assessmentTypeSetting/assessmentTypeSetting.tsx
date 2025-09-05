@@ -1,22 +1,17 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Box, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import assessmentTypeTableData from 'src/json/academic/examination/assessmentTypeTableData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import assessmentTypeTableData from 'src/json/academic/examination/assessmentTypeTableData.json';
 
 import AssessmentTypeForm from './assessmentTypeForm';
 

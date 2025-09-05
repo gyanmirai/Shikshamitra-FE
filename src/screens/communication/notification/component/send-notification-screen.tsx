@@ -1,6 +1,9 @@
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useEffect } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -10,12 +13,6 @@ import {
   DialogContent,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import { templates, allStudents } from '../notification-data';
 
@@ -75,8 +72,8 @@ const SendNotificationScreen = () => {
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
           <Grid container spacing={2} pt="20px">
-            {/* Select Class */}
-            <Grid item xs={12} md={4}>
+            {/* Select Class, Division & Role */}
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Class"
                 options={[
@@ -90,8 +87,7 @@ const SendNotificationScreen = () => {
               />
             </Grid>
 
-            {/* Select Division */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Division"
                 options={[
@@ -104,7 +100,8 @@ const SendNotificationScreen = () => {
                 formControlProps={{ fullWidth: true }}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Role"
                 options={
@@ -124,7 +121,7 @@ const SendNotificationScreen = () => {
 
           {/* Category & Template Selection */}
           <Grid container spacing={2} pt="20px">
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Event"
                 options={[{ label: 'Fees', value: 'Fees' }]}
@@ -134,7 +131,7 @@ const SendNotificationScreen = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <CustomSelect
                 label="Select Template"
                 options={
@@ -152,14 +149,16 @@ const SendNotificationScreen = () => {
             </Grid>
           </Grid>
 
+          {/* Communication Channel & Actions */}
           <Box
             display="flex"
             flexDirection="row"
             justifyContent="space-between"
             alignItems="center"
+            mt={3}
           >
             <Box display="flex" flexDirection="column">
-              <Typography sx={{ pt: '20px' }} variant="h6">
+              <Typography sx={{ pt: 2 }} variant="h6">
                 Select a Communication Channel
               </Typography>
               <Box display="flex" gap={2} flexDirection="row">

@@ -1,10 +1,10 @@
 import Draggable from 'react-draggable';
 import { MuiColorInput } from 'mui-color-input';
 import React, { useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
-
 import EditIcon from '@mui/icons-material/Edit';
+import { useReactToPrint } from 'react-to-print';
 import { Add, Cancel } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
@@ -25,8 +25,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
@@ -345,7 +343,7 @@ const StudentIDCardCreator = () => {
         </Button>
       </Box>
       <Grid container spacing={3}>
-        <Grid item xs={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
               label="Card Width(Px)"
@@ -386,7 +384,7 @@ const StudentIDCardCreator = () => {
               control={
                 <Switch
                   checked={isVisibleGrid.value}
-                  onChange={(e) => {
+                  onChange={() => {
                     isVisibleGrid.onToggle();
                   }}
                   name="showGridlines"
@@ -425,7 +423,8 @@ const StudentIDCardCreator = () => {
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={8}>
+
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper
             ref={printRef}
             elevation={4}
@@ -464,9 +463,9 @@ const StudentIDCardCreator = () => {
                   pointerEvents: 'none',
                   zIndex: 99,
                   backgroundImage: `
-                  linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-                  linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
-                `,
+              linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
+            `,
                   backgroundSize: '20px 20px',
                 }}
               />

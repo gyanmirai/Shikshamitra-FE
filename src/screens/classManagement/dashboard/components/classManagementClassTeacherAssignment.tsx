@@ -2,13 +2,11 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
-import { Box, Card, Stack, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Stack, Typography } from '@mui/material';
 
 const classTeacherData = [
   { className: '9A', teacher: 'Smit Patel', assigned: true },

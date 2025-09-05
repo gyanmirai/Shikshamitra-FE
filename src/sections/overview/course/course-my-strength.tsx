@@ -3,7 +3,6 @@ import type { CardProps } from '@mui/material/Card';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
 import { Chart, useChart } from 'src/components/chart';
 
 // ----------------------------------------------------------------------

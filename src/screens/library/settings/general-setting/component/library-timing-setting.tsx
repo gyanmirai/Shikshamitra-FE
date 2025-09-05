@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, TextField } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { libraryTimingDataDummy } from '../data/general-setting-data';

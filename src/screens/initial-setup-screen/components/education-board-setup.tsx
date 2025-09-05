@@ -1,11 +1,8 @@
 import type { Board } from 'src/types/school';
 
 import React from 'react';
-
 import { Box, Grid } from '@mui/material';
-
 import { BoardEnum } from 'src/enums/board';
-
 import CustomSelect from 'src/components/custom-select';
 
 interface EducationBoardProps {
@@ -29,7 +26,7 @@ const EducationBoardSetup = ({
 }: EducationBoardProps) => (
   <Box sx={{ mt: 1 }}>
     <Grid container spacing={2}>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <CustomSelect
           fullWidth
           id="board"

@@ -6,8 +6,12 @@ import type { LatLngExpression } from 'leaflet';
 
 import L from 'leaflet';
 import React, { useState } from 'react';
+import { CONFIG } from 'src/config-global';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import SubmitButton from 'src/components/submit-button';
 import { Popup, useMap, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
-
 import {
   Box,
   Grid,
@@ -17,13 +21,6 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-
-import { CONFIG } from 'src/config-global';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 
 import type { ITransportAddingStopDialogProps } from '../settings-interface';
 
@@ -146,7 +143,7 @@ const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
         {/* Search Section */}
 
         <Grid container sx={{ mt: 0 }} gap={1}>
-          <Grid item xs={3}>
+          <Grid size={3}>
             <Box display="flex" flexDirection="row" marginTop="30px" gap={2} alignItems="center">
               <TextField
                 size="small"
@@ -270,7 +267,7 @@ const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
 
           {/* Map Section */}
 
-          <Grid item xs={8}>
+          <Grid size={8}>
             <Box width="110%" height="600px">
               <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer

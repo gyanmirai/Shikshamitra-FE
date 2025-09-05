@@ -1,9 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
-
 import { Box, Grid, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IIncomeFormValues } from './type';
@@ -27,29 +25,44 @@ const ViewIncomeData = ({
       }}
     >
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <Typography>
-            <b>Income Category</b>
+        {/* Income Category */}
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Income Category
           </Typography>
-          <Typography>{incomeData?.incomeCategory}</Typography>
+          <Typography variant="body1" fontWeight={500}>
+            {incomeData?.incomeCategory || '-'}
+          </Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography>
-            <b>Budget</b>
+
+        {/* Budget */}
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Budget
           </Typography>
-          <Typography variant="body1">{incomeData?.budget}</Typography>
+          <Typography variant="body1" fontWeight={500}>
+            {incomeData?.budget || '-'}
+          </Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography>
-            <b>Budget Sub Category</b>
+
+        {/* Budget Sub Category */}
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Budget Sub Category
           </Typography>
-          <Typography variant="body1">{incomeData?.budgetSubCategory}</Typography>
+          <Typography variant="body1" fontWeight={500}>
+            {incomeData?.budgetSubCategory || '-'}
+          </Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography>
-            <b>Total Amount Received</b>
+
+        {/* Total Amount Received */}
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Typography variant="subtitle2" color="text.secondary">
+            Total Amount Received
           </Typography>
-          <Typography variant="body1">₹ {incomeData?.amount}</Typography>
+          <Typography variant="body1" fontWeight={500}>
+            ₹ {incomeData?.amount || 0}
+          </Typography>
         </Grid>
       </Grid>
     </Box>

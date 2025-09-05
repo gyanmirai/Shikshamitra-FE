@@ -2,17 +2,15 @@
 
 import Paper from '@mui/material/Paper';
 import Timeline from '@mui/lab/Timeline';
+import { varAlpha } from 'src/theme/styles';
 import TimelineDot from '@mui/lab/TimelineDot';
 import TimelineItem from '@mui/lab/TimelineItem';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 
 import { ComponentBlock } from '../component-block';
 import { ScrollToViewTemplate } from '../component-template';

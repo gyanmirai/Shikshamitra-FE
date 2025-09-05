@@ -1,20 +1,19 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { FiberManualRecord } from '@mui/icons-material';
-import { Box, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
-
 import { CalendarView } from 'src/sections/calendar/view';
+import { Box , Grid, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
+
 
 const RoomAllocation = (props: TabComponentType) => (
   <Box>
-    <Grid2 container spacing={2}>
-      <Grid2 xs={8}>
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 8 }}>
         <CalendarView />
-      </Grid2>
-      <Grid2 xs={4}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Typography variant="h6">List of Available Rooms</Typography>
         <List>
           <ListItem>
@@ -36,8 +35,8 @@ const RoomAllocation = (props: TabComponentType) => (
             <ListItemText primary="Room 3" />
           </ListItem>
         </List>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

@@ -1,13 +1,10 @@
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
-
-import { Box, MenuList, MenuItem } from '@mui/material';
-
-import visitorLogData from 'src/json/hostel/visitorManagement/pre-registerData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import visitorLogData from 'src/json/hostel/visitorManagement/pre-registerData.json';
 
 import type { IPreVisitorLog, IPreRegisterTableProps } from '../pre-register-interface';
 

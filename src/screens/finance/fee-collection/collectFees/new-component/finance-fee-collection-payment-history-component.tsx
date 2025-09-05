@@ -1,24 +1,19 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
-import { MenuItem, MenuList, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { formatNumber } from 'src/utils/formate_number';
-
+import { MenuItem, MenuList, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import studentPaymentHistoryData from 'src/json/finance/fee-collection/studentPaymentHistoryData.json';
 import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
   FinancePaymentHistoryStatusTypeColors,
 } from 'src/enums/finance-payment-history';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import FinanceStudentPaymentHistoryDialog from '../component/finance-student-payment-history-dialog';
 

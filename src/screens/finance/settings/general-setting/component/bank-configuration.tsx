@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
-
-import { Box, Grid, Button, TextField } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Button, TextField } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -15,15 +13,8 @@ const BankConfiguration = () => {
   useEffect(() => {});
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Grid item xs={12} md={6}>
-        <Box
-          pt="15px"
-          display="flex"
-          justifyItems="center"
-          alignItems="center"
-          flexDirection="row"
-          gap={3}
-        >
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Box pt="15px" display="flex" alignItems="center" flexDirection="row" gap={3}>
           <TextField name="AddNewBank" label="Add New Bank" size="small" />
 
           <Button startIcon={<Iconify icon="ic:outline-plus" />} variant="contained" size="small">
@@ -33,7 +24,7 @@ const BankConfiguration = () => {
       </Grid>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={12}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <Box>
             <CustomizableTable
               tableId="bank-configuration"

@@ -1,8 +1,18 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -14,21 +24,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
@@ -250,115 +245,127 @@ const EarningComponentForm = ({
       <DialogScrollContent>
         {/* General Information */}
         <SectionCard title="General Information">
-          <Grid item xs={12} sm={6}>
-            <ShakingTextField
-              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Component Name *"
-                name="componentName"
-                value={formik.values.componentName}
-                onChange={formik.handleChange}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField
                 error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-                helperText={(formik.touched.componentName && formik.errors.componentName) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <ShakingTextField
-              error={formik.touched.description && Boolean(formik.errors.description)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Description"
-                name="description"
-                multiline
-                rows={2}
-                value={formik.values.description}
-                onChange={formik.handleChange}
-              />
-            </ShakingTextField>
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Component Name *"
+                  name="componentName"
+                  value={formik.values.componentName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+                  helperText={
+                    (formik.touched.componentName && formik.errors.componentName) as string
+                  }
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField
+                error={formik.touched.description && Boolean(formik.errors.description)}
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  multiline
+                  rows={2}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                />
+              </ShakingTextField>
+            </Grid>
           </Grid>
         </SectionCard>
 
         {/* Earning Configuration */}
         <SectionCard title="Earning Configuration">
-          <Grid item xs={12} sm={6} md={4}>
-            <ShakingTextField
-              error={formik.touched.componentType && Boolean(formik.errors.componentType)}
-            >
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Component Type *"
-                name="componentType"
-                value={formik.values.componentType}
-                onChange={formik.handleChange}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <ShakingTextField
                 error={formik.touched.componentType && Boolean(formik.errors.componentType)}
-                helperText={(formik.touched.componentType && formik.errors.componentType) as string}
               >
-                {componentTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <ShakingTextField error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}>
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Depend on *"
-                name="dependOn"
-                value={formik.values.dependOn}
-                onChange={formik.handleChange}
-                error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
-                helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
-              >
-                {dependsOnOptions.map((dep) => (
-                  <MenuItem key={dep} value={dep}>
-                    {dep}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
-              <TextField
-                size="small"
-                fullWidth
-                label="Amount Percentage/Amount *"
-                name="amount"
-                value={formik.values.amount}
-                onChange={formik.handleChange}
-                error={formik.touched.amount && Boolean(formik.errors.amount)}
-                helperText={(formik.touched.amount && formik.errors.amount) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} alignItems="center" display="flex">
-            <FormControlLabel
-              control={
-                <Switch
+                <TextField
                   size="small"
-                  name="visibleInPayslip"
-                  checked={formik.values.visibleInPayslip}
+                  select
+                  fullWidth
+                  label="Component Type *"
+                  name="componentType"
+                  value={formik.values.componentType}
                   onChange={formik.handleChange}
+                  error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                  helperText={
+                    (formik.touched.componentType && formik.errors.componentType) as string
+                  }
+                >
+                  {componentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <ShakingTextField error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}>
+                <TextField
+                  size="small"
+                  select
+                  fullWidth
+                  label="Depend on *"
+                  name="dependOn"
+                  value={formik.values.dependOn}
+                  onChange={formik.handleChange}
+                  error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                  helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
+                >
+                  {dependsOnOptions.map((dep) => (
+                    <MenuItem key={dep} value={dep}>
+                      {dep}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Amount Percentage/Amount *"
+                  name="amount"
+                  value={formik.values.amount}
+                  onChange={formik.handleChange}
+                  error={formik.touched.amount && Boolean(formik.errors.amount)}
+                  helperText={(formik.touched.amount && formik.errors.amount) as string}
                 />
-              }
-              label="Visible in Payslip"
-            />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} display="flex" alignItems="center">
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    name="visibleInPayslip"
+                    checked={formik.values.visibleInPayslip}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Visible in Payslip"
+              />
+            </Grid>
           </Grid>
         </SectionCard>
       </DialogScrollContent>
+
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

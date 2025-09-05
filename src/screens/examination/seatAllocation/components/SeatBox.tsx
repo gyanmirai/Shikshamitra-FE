@@ -1,12 +1,9 @@
 import React from 'react';
-
 import { RemoveCircle } from '@mui/icons-material';
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import type { ISeat, IStudentRoomAssignment } from '../type';
 

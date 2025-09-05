@@ -2,11 +2,9 @@ import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
-
-import { Card, alpha, useTheme, CardHeader } from '@mui/material';
-
+import { Card, CardHeader } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-
+import { alpha, useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
 
 import { AnalyticsCurrentVisits } from './organization-status';

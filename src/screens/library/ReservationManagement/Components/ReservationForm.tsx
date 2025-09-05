@@ -5,23 +5,19 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
 import { reservationInitialValues } from './ResevationInitialValues';
 import { reservationValidationSchema } from './ReservationValidation';
@@ -149,7 +145,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Role */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
               <Autocomplete
                 disabled={isLoading}
@@ -179,7 +175,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           {formik.values.role === 'Student' && (
             <>
               {/* Class */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
                   <CustomSelect
                     label="Class *"
@@ -201,7 +197,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
               </Grid>
 
               {/* Division */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
                   <CustomSelect
                     label="Division *"
@@ -224,7 +220,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             </>
           )}
           {/* Member Dropdown for Non-Students */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
@@ -267,7 +263,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           </Grid>
 
           {/* Book Category */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -295,7 +291,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -322,7 +318,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           </Grid>
 
           {/* Edition */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
               <CustomSelect
                 label="Edition *"

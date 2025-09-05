@@ -1,15 +1,12 @@
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import { Box, Chip, MenuItem, MenuList } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   MemberStatusOptions,
   MemberStatusTypeColors,
 } from 'src/enums/member-management-statusType';
-
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMemberTableProps } from './type';
 

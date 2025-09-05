@@ -1,19 +1,17 @@
 'use client';
 
 import React from 'react';
-
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import DashboardCard from 'src/components/dasboard-card';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 const ResourceFacilitiesCardSection = () => {
   const theme = useTheme();
 
   return (
     <Grid container spacing={2} columns={5}>
-      <Grid item xs={1}>
+      <Grid size={1}>
         <DashboardCard
           title="Classrooms"
           mainText="50"
@@ -22,7 +20,7 @@ const ResourceFacilitiesCardSection = () => {
         />
       </Grid>
 
-      <Grid item xs={1}>
+      <Grid size={1}>
         <DashboardCard
           title="Laboratories"
           mainText="50"
@@ -31,7 +29,7 @@ const ResourceFacilitiesCardSection = () => {
         />
       </Grid>
 
-      <Grid item xs={1}>
+      <Grid size={1}>
         <DashboardCard
           title="Auditoriums"
           mainText="50"
@@ -40,7 +38,7 @@ const ResourceFacilitiesCardSection = () => {
         />
       </Grid>
 
-      <Grid item xs={1}>
+      <Grid size={1}>
         <DashboardCard
           title="Sports Facilities"
           mainText="50"
@@ -49,7 +47,7 @@ const ResourceFacilitiesCardSection = () => {
         />
       </Grid>
 
-      <Grid item xs={1}>
+      <Grid size={1}>
         <Card
           sx={{
             backgroundColor: '#c684ff',

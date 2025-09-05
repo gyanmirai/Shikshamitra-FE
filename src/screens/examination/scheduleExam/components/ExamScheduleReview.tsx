@@ -2,19 +2,16 @@ import type { FormikProps } from 'formik';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
 import { Box, Grid, Typography } from '@mui/material';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
 
 const ExamScheduleReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => (
   <SectionCard title="Subject Schedule">
     {/* Left Column */}
-    <Grid item xs={12}>
+    <Grid size={12}>
       <CustomizableTable
         tableId="exam-schedule-view"
         columns={[

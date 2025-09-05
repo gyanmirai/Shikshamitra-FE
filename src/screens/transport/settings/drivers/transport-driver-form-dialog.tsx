@@ -1,13 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { settingsValidationSchema } from '../validationSchema';
 
@@ -44,7 +42,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
           <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '500px' }}>
             <Grid container spacing={2}>
               {/* Name */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -58,7 +56,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -72,7 +70,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -87,7 +85,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
               </Grid>
 
               {/* Blood Group */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -109,7 +107,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
               {/* Address */}
 
               {/* Aadhar Card */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -123,7 +121,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
               {/* License Number */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -143,7 +141,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -157,7 +155,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -171,7 +169,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
               {/* Route */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -185,7 +183,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
               {/* Vehicle */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -199,7 +197,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -214,7 +212,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
               </Grid>
 
               {/* Emergency Contact */}
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -234,7 +232,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6} sx={{ pb: '10px' }}>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ pb: '10px' }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -247,7 +245,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                   // helperText={formik.touched.vehicle && formik.errors.vehicle}
                 />
               </Grid>
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={
@@ -272,7 +270,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={
@@ -297,7 +295,7 @@ const DriverFormDialog: React.FC<IDriverFormDialogProps> = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

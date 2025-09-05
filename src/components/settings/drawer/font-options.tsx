@@ -1,7 +1,6 @@
 import Box from '@mui/material/Box';
-import ButtonBase from '@mui/material/ButtonBase';
-
 import { CONFIG } from 'src/config-global';
+import ButtonBase from '@mui/material/ButtonBase';
 import { setFont, varAlpha, stylesMode } from 'src/theme/styles';
 
 import { Block } from './styles';

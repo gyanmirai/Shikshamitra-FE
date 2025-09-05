@@ -1,12 +1,9 @@
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-
-import { Box, Grid, Button, Divider, Typography } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, Button, Divider, Typography } from '@mui/material';
 
 interface ViewReceiptProps {
   dialogValue: boolean;
@@ -37,7 +34,7 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
         {/* Top Section */}
         <Box flexGrow={1}>
           <Grid container spacing={2} mb={3}>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <Box>
                 <Typography variant="h6">From</Typography>
                 <Typography>School Name</Typography>
@@ -45,7 +42,7 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
                 <Typography>Area/Locality/Road Name</Typography>
               </Box>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <Box>
                 <Typography variant="h6">To</Typography>
                 <Typography>Student Name</Typography>

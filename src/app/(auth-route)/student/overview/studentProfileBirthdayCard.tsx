@@ -1,5 +1,4 @@
 import { Box, Avatar, Typography } from '@mui/material';
-
 import UserHoverProfile from 'src/components/student-popover';
 
 interface BirthdayCardProfileProps {

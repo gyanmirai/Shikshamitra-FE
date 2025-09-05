@@ -2,25 +2,21 @@ import type { ICalendarEvent } from 'src/types/calendar';
 
 import { z as zod } from 'zod';
 import { useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-
 import Box from '@mui/material/Box';
+import { useForm } from 'react-hook-form';
 import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import LoadingButton from '@mui/lab/LoadingButton';
-import DialogActions from '@mui/material/DialogActions';
-
 import { uuidv4 } from 'src/utils/uuidv4';
-import { fIsAfter } from 'src/utils/format-time';
-
-import { createEvent, updateEvent, deleteEvent } from 'src/actions/calendar';
-
+import Tooltip from '@mui/material/Tooltip';
 import { toast } from 'src/components/snackbar';
 import { Form } from 'src/components/hook-form';
+import { fIsAfter } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { Scrollbar } from 'src/components/scrollbar';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DialogActions from '@mui/material/DialogActions';
+import { createEvent, updateEvent, deleteEvent } from 'src/actions/calendar';
 
 // ----------------------------------------------------------------------
 

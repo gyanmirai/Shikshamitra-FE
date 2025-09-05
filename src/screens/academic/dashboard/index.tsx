@@ -4,15 +4,11 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
+import { Box , Grid } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-
-import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-
-import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
-
 import CustomSelect from 'src/components/custom-select';
+import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
 
 import AcademicDashboardExams from './components/AcademicDashboardExams';
 import AcademicDashboardOverview from './components/AcademicDashboardOverview';
@@ -96,8 +92,8 @@ const AcademicDashboardScreen = () => {
   const router = useRouter();
   return (
     <Box>
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid size={{ xs: 12 }}>
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <CustomSelect
               options={allClass}
@@ -119,33 +115,40 @@ const AcademicDashboardScreen = () => {
               disabled={!classes}
             />
           </Box>
-        </Grid2>
-        <Grid2 xs={12}>
-          <AcademicDashboardOverview />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <AcademicDashbordAnalysisChart />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <AcademicDashboardChapterProgress />
-        </Grid2>
-        <Grid2 xs={12}>
-          <AcademicDashboardTimetable />
-        </Grid2>
+        </Grid>
 
-        <Grid2 xs={12} md={6}>
+        <Grid size={{ xs: 12 }}>
+          <AcademicDashboardOverview />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <AcademicDashbordAnalysisChart />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <AcademicDashboardChapterProgress />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <AcademicDashboardTimetable />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <AcademicDashboardTopPerformer />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <AcademicDashboardBottomPerformer />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <RecentActivities activities={activities} />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <AcademicDashboardExams />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

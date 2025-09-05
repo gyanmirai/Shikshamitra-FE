@@ -3,11 +3,8 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 import { CalendarView } from 'src/sections/calendar/view/calendar-view';
 
 import LmsDashboardCards from './component/lmsDashboardCards';

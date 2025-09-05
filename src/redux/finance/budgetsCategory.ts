@@ -1,5 +1,4 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
 import budgetsCategoryData from '../../json/finance/settings/Budget/budgetsCategoryData.json';

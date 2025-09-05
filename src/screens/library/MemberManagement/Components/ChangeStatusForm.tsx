@@ -1,19 +1,15 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetSelectStatusOptionsQuery } from 'src/redux/memberManagement/memberManagementApi';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetSelectStatusOptionsQuery } from 'src/redux/memberManagement/memberManagementApi';
 
 import type { IChangeStatusPayload, IChangeStatusFormProps } from './type';
 
@@ -43,7 +39,7 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Select Status */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
               <CustomSelect
                 label="Select Status *"
@@ -59,7 +55,7 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
           </Grid>
 
           {/* Remarks */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.remarks && formik.errors.remarks)}>
               <TextField
                 fullWidth

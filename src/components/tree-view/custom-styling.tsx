@@ -1,10 +1,9 @@
 import type { TreeViewBaseItem } from '@mui/x-tree-view/models';
 
 import { styled } from '@mui/material/styles';
+import { varAlpha, stylesMode } from 'src/theme/styles';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { TreeItem, treeItemClasses } from '@mui/x-tree-view/TreeItem';
-
-import { varAlpha, stylesMode } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------
 

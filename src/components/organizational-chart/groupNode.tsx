@@ -1,5 +1,5 @@
 // GroupNode.tsx
-import { alpha } from '@mui/system';
+import { alpha } from '@mui/material/styles';
 import { Box, Stack, Avatar, Typography } from '@mui/material';
 
 import type { NodeProps } from './types'; // Adjust import path if needed

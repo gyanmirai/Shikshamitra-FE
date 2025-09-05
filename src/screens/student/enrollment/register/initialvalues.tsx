@@ -1,11 +1,9 @@
 import dayjs from 'dayjs';
-
+import { GenderType } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
+import { Category } from 'src/enums/studnet-category';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { validatePhoneNumber } from 'src/utils/validate-phone-number';
-
-import { GenderType } from 'src/enums/gender';
-import { Category } from 'src/enums/studnet-category';
 
 import type { IInquiryData } from '../Inquiry';
 

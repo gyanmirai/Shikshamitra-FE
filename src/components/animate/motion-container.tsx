@@ -3,7 +3,6 @@ import type { BoxProps } from '@mui/material/Box';
 
 import { m } from 'framer-motion';
 import { forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 
 import { varContainer } from './variants';

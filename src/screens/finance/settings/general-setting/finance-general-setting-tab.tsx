@@ -1,21 +1,17 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-
 import Add from '@mui/icons-material/Add';
-import { Box, Tab, Card, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useSearchParam } from 'src/hooks/use-search-param';
+import { Box, Tab, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import SetFeeHeadDialog from './dialogs/set-fee-head-dialog';
 import SetPaymentTerm from './component/setting-up-payment-term';

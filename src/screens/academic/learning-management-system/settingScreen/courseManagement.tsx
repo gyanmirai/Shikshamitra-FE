@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Grid, Card, Button, Switch, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Card, Button, Switch, Typography } from '@mui/material';
 
 const CourseManagementSetting = () => {
   const [isCourseVisible, setIsCourseVisible] = useState(false);
@@ -19,7 +17,7 @@ const CourseManagementSetting = () => {
         </Button>
       </Box>
       <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ typography: 'subtitle1' }}>Template</Box>
 
@@ -63,17 +61,14 @@ const CourseManagementSetting = () => {
                         icon="solar:pen-bold"
                         sx={{ height: '18px', width: '18px', mr: 2, cursor: 'pointer' }}
                         onClick={() => {
-                          // setSelectedHomeworkType(category);
-                          // setIsEdit(true);
-                          // homeworkDialog.onTrue();
+                          // Edit action
                         }}
                       />
                       <Iconify
                         icon="mdi:delete"
                         sx={{ height: '18px', width: '18px', color: 'red', cursor: 'pointer' }}
                         onClick={() => {
-                          // setSelectedHomeworkType(category);
-                          // deleteConfirmDialog.onTrue();
+                          // Delete action
                         }}
                       />
                     </Box>
@@ -87,9 +82,7 @@ const CourseManagementSetting = () => {
                 size="small"
                 variant="contained"
                 onClick={() => {
-                  // homeworkDialog.onTrue();
-                  // setIsEdit(false);
-                  // setSelectedHomeworkType(null);
+                  // Add template action
                 }}
               >
                 Template
@@ -98,7 +91,7 @@ const CourseManagementSetting = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Switch

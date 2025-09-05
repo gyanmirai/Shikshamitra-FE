@@ -2,15 +2,12 @@ import React from 'react';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { TimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IRollCallFormProps } from './type';
@@ -41,7 +38,7 @@ const RollCallSettingForm: React.FC<IRollCallFormProps> = ({ dialog, onClose, ed
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={!!(formik.touched.rollCallName && formik.errors.rollCallName)}
                 >
@@ -58,7 +55,7 @@ const RollCallSettingForm: React.FC<IRollCallFormProps> = ({ dialog, onClose, ed
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TimePicker
                   label="Start Time *"
                   value={formik.values.startTime}
@@ -74,7 +71,7 @@ const RollCallSettingForm: React.FC<IRollCallFormProps> = ({ dialog, onClose, ed
                 />
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <TimePicker
                   label="End Time *"
                   value={formik.values.endTime}
@@ -89,7 +86,8 @@ const RollCallSettingForm: React.FC<IRollCallFormProps> = ({ dialog, onClose, ed
                   }}
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   size="small"
                   label="Description *"

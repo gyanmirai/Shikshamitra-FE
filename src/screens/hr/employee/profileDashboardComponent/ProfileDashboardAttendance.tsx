@@ -2,13 +2,10 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Badge, Paper, Typography } from '@mui/material';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
-
 import { Dot } from 'src/screens/student/studentProfile/attendance';
-
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const ProfileDashboardAttendance = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import Gradebook from 'src/screens/academic/gradebook-performance-tracking/gradebook/gradebook';
 
 const GradebookScreen = () => <Gradebook />;

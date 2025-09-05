@@ -1,7 +1,6 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { Box, Card, Paper, Button, TextField, Typography, CardContent } from '@mui/material';
 
 function SentMessage(props: TabComponentType) {

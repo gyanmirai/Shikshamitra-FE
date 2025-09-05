@@ -1,12 +1,10 @@
+import type { JSX} from 'react';
 import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
 
 import React, { useState } from 'react';
-
 import { fNumber } from 'src/utils/format-number';
-
-import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
-
 import CustomizableView from 'src/components/customizable-view';
+import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
 
 const Overview = () => {
   const [cards, setCards] = useState<ICardItem[]>([

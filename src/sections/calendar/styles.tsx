@@ -1,6 +1,5 @@
-import { styled } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { styled } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -81,7 +80,7 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
     border: 0,
     overflow: 'hidden',
     boxShadow: theme.customShadows.dropdown,
-    borderRadius: theme.shape.borderRadius * 1.5,
+    borderRadius: +theme.shape.borderRadius * 1.5,
     backgroundColor: theme.vars.palette.background.paper,
   },
   '& .fc .fc-popover-header': {

@@ -1,12 +1,9 @@
 import { IconButton } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetPaymentHistoryQuery } from 'src/redux/feeCollection/paymentHistory';
-
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetPaymentHistoryQuery } from 'src/redux/feeCollection/paymentHistory';
 
 import type { IStudentFee } from '../type';
 

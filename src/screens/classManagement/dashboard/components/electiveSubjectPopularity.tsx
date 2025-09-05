@@ -3,11 +3,10 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { Card } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Card, useTheme } from '@mui/material';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ElectiveSubjectPopularity = () => {

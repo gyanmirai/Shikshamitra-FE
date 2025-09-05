@@ -1,22 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
 import { Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Scrollbar } from 'src/components/scrollbar';
 import capitalizeWords from 'src/utils/capitalizeText';
+import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   FinancePaymentHistoryStatusType,
   FinancePaymentHistoryStatusOptions,
   FinancePaymentHistoryStatusTypeColors,
 } from 'src/enums/finance-payment-history';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface ChargesViewDetailsProps {
   dialogValue: boolean;

@@ -1,15 +1,12 @@
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetIssuedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
   BookIssueStatusTypeColors,
   BookIssueStatusTypeOptions,
 } from 'src/enums/library-status-types';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMember } from '../type';
 

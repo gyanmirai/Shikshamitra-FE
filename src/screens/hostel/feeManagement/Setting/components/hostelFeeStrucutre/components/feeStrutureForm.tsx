@@ -2,24 +2,19 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import HostelFeeHead from '../../hostelFeeHead/hostelFeeHead';
 import HostelPaymentMethodDialog from './hostelPaymentMethod';
@@ -106,7 +101,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ height: '450px' }}>
           <Grid container spacing={3} py="30px">
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={formik.touched.roomType && Boolean(formik.errors.roomType)}>
                 <CustomSelect
                   label="Room Type *"
@@ -123,7 +118,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
                 error={formik.touched.hostelFeeHead && Boolean(formik.errors.hostelFeeHead)}
               >
@@ -157,7 +153,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 </CustomDialog>
               )}
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}>
                 <NumericFormatCustom
                   size="small"
@@ -166,17 +163,11 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   name="grossFee"
                   value={formik.values.grossFee}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     const grossFees = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
                     const discountAmount = +(
                       formik.values.discountAmount?.match(/\d/g)?.join('') ?? '0'
                     );
-
-                    // Calculate payable fee
-                    const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
-
-                    // Set the calculated payable fee
-                    formik.setFieldValue('payableFee', payableFee);
+                    formik.setFieldValue('payableFee', Math.max(grossFees - discountAmount, 0));
                     formik.handleChange(e);
                   }}
                   error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
@@ -184,7 +175,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
                 error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
               >
@@ -197,11 +189,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   onChange={(e) => {
                     const discountAmount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
                     const grossFees = +(formik.values.grossFee?.match(/\d/g)?.join('') ?? '0');
-                    // Calculate payable fee
-                    const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
-
-                    // Set the calculated payable fee
-                    formik.setFieldValue('payableFee', payableFee);
+                    formik.setFieldValue('payableFee', Math.max(grossFees - discountAmount, 0));
                     formik.handleChange(e);
                   }}
                   error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
@@ -209,7 +197,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
                 error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
               >
@@ -227,7 +216,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <NumericFormatCustom
                 size="small"
                 fullWidth
@@ -239,7 +229,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 helperText={formik.touched.payableFee && formik.errors.payableFee}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
                 error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
               >
@@ -255,7 +246,6 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                   addOtherItemText="Add Payment Method"
                   addOtherItemOnClick={paymentMethodDialog.onTrue}
-                  // helperText={formik.touched.paymentMethod ? formik.errors.paymentMethod : undefined}
                 />
               </ShakingTextField>
               {paymentMethodDialog.value && (
@@ -268,7 +258,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 </CustomDialog>
               )}
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
                 error={
                   formik.touched.lateFeeChargesType && Boolean(formik.errors.lateFeeChargesType)
@@ -278,7 +269,6 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   label="Late Fee Charges Type *"
                   options={[
                     { value: 'perDay', label: 'Per Day' },
-
                     { value: 'none', label: 'None' },
                   ]}
                   value={formik.values.lateFeeChargesType}
@@ -289,12 +279,12 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   helperText={
                     formik.touched.lateFeeChargesType ? formik.errors.lateFeeChargesType : undefined
                   }
-                />{' '}
+                />
               </ShakingTextField>
             </Grid>
 
             {formik.values.lateFeeChargesType === 'perDay' && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={
                     formik.touched.lateFeeChargesAmount &&
@@ -319,7 +309,7 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                 </ShakingTextField>
               </Grid>
             )}
-          </Grid>{' '}
+          </Grid>
         </Scrollbar>
         <DialogActions>
           <Button

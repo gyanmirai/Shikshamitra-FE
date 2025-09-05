@@ -1,6 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useRef, useState } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import {
   Grid,
   Menu,
@@ -10,9 +11,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 
 const placeholderOptions = [
   { label: 'Fee Type', value: '[Fee Type]' },
@@ -65,9 +63,9 @@ const AddNotificationTemplateDialog = () => {
   return (
     <form onSubmit={formik.handleSubmit}>
       <DialogContent>
-        <Grid container spacing={2} pt="20px">
+        <Grid container spacing={2} pt={2}>
           {/* Category Selection */}
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <CustomSelect
               label="Select Category"
               options={[{ label: 'Fees', value: 'feeReminder' }]}
@@ -76,7 +74,8 @@ const AddNotificationTemplateDialog = () => {
               formControlProps={{ fullWidth: true }}
             />
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <CustomSelect
               label="Select Sub Category"
               options={[{ label: 'Overdue', value: 'overdue' }]}
@@ -85,7 +84,8 @@ const AddNotificationTemplateDialog = () => {
               formControlProps={{ fullWidth: true }}
             />
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <CustomSelect
               label="Select Type"
               options={[
@@ -98,7 +98,7 @@ const AddNotificationTemplateDialog = () => {
             />
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <CustomSelect
               label="Select Role"
               options={
@@ -114,9 +114,9 @@ const AddNotificationTemplateDialog = () => {
               formControlProps={{ fullWidth: true }}
             />
           </Grid>
-          {/* Template Name Field */}
 
-          <Grid item xs={6}>
+          {/* Template Name */}
+          <Grid size={{ xs: 6 }}>
             <TextField
               name="templateName"
               label="Template Name"
@@ -125,12 +125,11 @@ const AddNotificationTemplateDialog = () => {
               size="small"
               fullWidth
               margin="dense"
-              sx={{ margin: 0, padding: 0 }}
             />
           </Grid>
 
           {/* Editor with Placeholder Dropdown */}
-          <Grid item xs={12} display="flex" flexDirection="column">
+          <Grid size={{ xs: 12 }} display="flex" flexDirection="column">
             <Button
               variant="outlined"
               size="small"
@@ -141,14 +140,14 @@ const AddNotificationTemplateDialog = () => {
             </Button>
 
             <TextField
-              inputRef={editorRef} // Use inputRef instead of ref
+              inputRef={editorRef}
               value={formik.values.content}
               onChange={(e) => formik.setFieldValue('content', e.target.value)}
               multiline
               rows={6}
+              fullWidth
             />
 
-            {/* Dropdown for Placeholder Options */}
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
               {placeholderOptions.map((option) => (
                 <MenuItem key={option.value} onClick={() => handleInsertPlaceholder(option.value)}>

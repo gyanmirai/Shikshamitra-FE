@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import data from 'src/json/finance/fee-refund/feeRefundViewData.json';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/finance/fee-refund/feeRefundViewData.json';
 
 import type { IFinanceFeeRefundedViewDialogProps } from '../interface/fee-refund-interface';
 

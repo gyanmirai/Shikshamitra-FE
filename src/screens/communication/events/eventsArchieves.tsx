@@ -4,18 +4,14 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import eventsArchivesData from 'src/json/communication/events/eventsArchivesData.json';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import eventsArchivesData from 'src/json/communication/events/eventsArchivesData.json';
 
 import type { IEvent } from './type';
 

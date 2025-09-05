@@ -1,13 +1,9 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
-import { Box, Typography } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-
+import { Box , Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const ExamninationDashboardReportComponent = (props: TabComponentType) => (
@@ -42,8 +38,8 @@ const ExamninationDashboardReportComponent = (props: TabComponentType) => (
       />
     </Box>
 
-    <Grid2 container spacing={3}>
-      <Grid2 xs={12} md={6}>
+    <Grid container spacing={3}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsCurrentVisits
           title="Pass/Fail Rates"
           chart={{
@@ -54,8 +50,8 @@ const ExamninationDashboardReportComponent = (props: TabComponentType) => (
           }}
           sx={{ boxShadow: '' }}
         />
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

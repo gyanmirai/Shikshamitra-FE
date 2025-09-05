@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Box, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 
 const BudgetThresoldAlertComponent = () => (

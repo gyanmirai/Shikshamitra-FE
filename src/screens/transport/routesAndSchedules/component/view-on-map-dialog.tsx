@@ -5,14 +5,11 @@ import 'leaflet/dist/leaflet.css';
 import type { LatLngExpression } from 'leaflet';
 
 import L from 'leaflet';
-import React, { useState, useEffect } from 'react';
-import { Popup, Marker, Polyline, TileLayer, MapContainer } from 'react-leaflet';
-
-import { Box, List, ListItem, ListItemText } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
-
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
+import { Box, List, ListItem, ListItemText } from '@mui/material';
+import { Popup, Marker, Polyline, TileLayer, MapContainer } from 'react-leaflet';
 
 interface TransportMapProps {
   start: [number, number];

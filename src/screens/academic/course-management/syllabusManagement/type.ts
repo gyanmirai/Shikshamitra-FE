@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
@@ -47,7 +48,7 @@ export interface IChapterTableProps {
   setEditData: React.Dispatch<React.SetStateAction<IChapter | null>>;
   addChapterDialog: UseBooleanReturn;
   data: IChapter[];
-  actions: (params: { popover: any; row: IChapter }) => JSX.Element;
+  actions: (params: { popover: any; row: IChapter }) => React.JSX.Element;
   handleEyeClick: (subjectName: string) => void;
   onViewDocuments: (chapter: IChapter) => void;
 }

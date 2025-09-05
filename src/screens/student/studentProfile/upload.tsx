@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { FormHelperText } from '@mui/material';
-
 import { UploadAvatar } from 'src/components/upload';
 
 const Upload = ({ ...other }) => {

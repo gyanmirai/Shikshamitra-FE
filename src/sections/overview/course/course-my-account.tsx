@@ -2,15 +2,12 @@ import type { CardProps } from '@mui/material/Card';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import { varAlpha } from 'src/theme/styles';
+import { today } from 'src/utils/format-time';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-
-import { today } from 'src/utils/format-time';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
 import { AnimateAvatar } from 'src/components/animate';
 
 // ----------------------------------------------------------------------

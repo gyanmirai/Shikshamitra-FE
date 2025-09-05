@@ -1,18 +1,16 @@
 'use client';
 
+import type { JSX } from 'react';
 import type { CardProps } from '@mui/material';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
-import { Box, Card, Grid, alpha, useTheme, Typography } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import RecentResources from './component/recentResources';
@@ -59,11 +57,11 @@ const Dashboard = (props: TabComponentType) => {
       <Grid container spacing={2}>
         <RecentResources />
         <AnalyticsTrafficBySite list={quickStatsData} />
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ p: 2 }}>
             <AnalyticsWebsiteVisits
               title="Categories Overview"
-              //   subheader="(+43%) than last year"
+              // subheader="(+43%) than last year"
               chart={{
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                 series: [
@@ -101,7 +99,7 @@ export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Pro
   const theme = useTheme();
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card {...other}>
         <Box display="grid" gap={2} gridTemplateColumns="repeat(2, 1fr)" sx={{ p: 3 }}>
           {list.map((site) => (
@@ -121,7 +119,6 @@ export function AnalyticsTrafficBySite({ title, subheader, list, ...other }: Pro
               <Typography variant="h6" sx={{ mt: 1 }}>
                 {site.value}
               </Typography>
-
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {site.label}
               </Typography>

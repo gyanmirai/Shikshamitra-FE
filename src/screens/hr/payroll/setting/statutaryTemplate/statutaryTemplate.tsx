@@ -1,10 +1,18 @@
 'use client';
 
 import { useFormik } from 'formik';
-import React, { useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import React, { useCallback } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import {
   Box,
   Grid,
@@ -16,17 +24,6 @@ import {
   ListItemText,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const StatutoryTemplate = () => {
   const dialog = useBoolean();
@@ -255,8 +252,8 @@ const AddStatutoryComponent = ({
     <Box>
       <form onSubmit={handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-          <Grid container spacing={1}>
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="templateName"
                 label="Template Name"
@@ -266,7 +263,7 @@ const AddStatutoryComponent = ({
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 name="templateType"
                 label="Template Type"
@@ -284,7 +281,7 @@ const AddStatutoryComponent = ({
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="employeePercentage"
                 label="Employee Percentage"
@@ -294,7 +291,7 @@ const AddStatutoryComponent = ({
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="employerPercentage"
                 label="Employer Percentage"
@@ -304,14 +301,14 @@ const AddStatutoryComponent = ({
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2">For PT</Typography>
             </Grid>
-            <Grid item xs={12} />
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }} />
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2">For TDS</Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="tdsAmount"
                 label="TDS Amount"
@@ -323,6 +320,7 @@ const AddStatutoryComponent = ({
             </Grid>
           </Grid>
         </Scrollbar>
+
         <DialogActions>
           <Button variant="outlined">Cancel</Button>
           <LoadingButton variant="contained" type="submit">

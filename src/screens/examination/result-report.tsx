@@ -1,40 +1,31 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Button, Typography } from '@mui/material';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { Box , Grid, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const ResultReport = () => (
   <Box>
-    <Grid2 container spacing={2}>
-      <Grid2 xs={12} md={6}>
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <PerformanceOverview
           title="Performance Overview"
-          //   subheader="(+43%) than last year"
+          // subheader="(+43%) than last year"
           selectSeries="pass"
           chart={{
             categories: ['Math', 'English', 'Gujarati', 'Science', 'Social Science', 'Hindi'],
             series: [
-              {
-                name: 'Pass',
-                data: [44, 55, 41, 67, 22, 43],
-              },
-              {
-                name: 'Fail',
-                data: [13, 23, 20, 8, 13, 27],
-              },
+              { name: 'Pass', data: [44, 55, 41, 67, 22, 43] },
+              { name: 'Fail', data: [13, 23, 20, 8, 13, 27] },
             ],
           }}
         />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
-        <Box display="flex" gap={2}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Box display="flex" gap={2} mb={2} flexWrap="wrap">
           <CustomSelect
             label="sort by"
             options={[]}
@@ -56,6 +47,7 @@ const ResultReport = () => (
             CSV
           </Button>
         </Box>
+
         <CustomizableTable
           tableId="result-report-table"
           columns={[
@@ -115,8 +107,9 @@ const ResultReport = () => (
             },
           ]}
         />
-      </Grid2>
-      <Grid2 xs={12} md={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="h6" my={2}>
           Generate Exam Reports
         </Typography>
@@ -154,8 +147,8 @@ const ResultReport = () => (
             Export to CSV
           </Button>
         </Box>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

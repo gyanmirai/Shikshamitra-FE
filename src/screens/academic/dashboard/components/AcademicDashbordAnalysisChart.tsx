@@ -1,7 +1,6 @@
 import React from 'react';
-
-import { Card, useTheme } from '@mui/material';
-
+import { Card } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
 const AcademicDashbordAnalysisChart = () => {

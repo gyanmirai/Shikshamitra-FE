@@ -1,10 +1,7 @@
 import React from 'react';
-
 import { Grid, Typography } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 
 import DashboardCard from '../../../../../../components/dasboard-card';
 
@@ -14,7 +11,7 @@ const FinanceFeeTrackingComponent = () => (
       Fee Tracking
     </Typography>
     <Grid container spacing={3}>
-      <Grid item xs={12} md={6} lg={4}>
+      <Grid size={{ xs: 12, md: 6, lg: 4 }}>
         <DashboardCard
           title="Fee Collection"
           mainText={formatNumber(150000, 'INR')}
@@ -27,7 +24,7 @@ const FinanceFeeTrackingComponent = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={4}>
+      <Grid size={{ xs: 12, md: 6, lg: 4 }}>
         <DashboardCard
           title="Fee Pending"
           mainText={formatNumber(150000, 'INR')}
@@ -40,7 +37,7 @@ const FinanceFeeTrackingComponent = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={4}>
+      <Grid size={{ xs: 12, md: 6, lg: 4 }}>
         <DashboardCard
           title="Fee Due"
           mainText={formatNumber(150000, 'INR')}

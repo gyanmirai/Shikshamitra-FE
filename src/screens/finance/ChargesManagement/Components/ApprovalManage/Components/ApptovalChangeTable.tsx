@@ -1,11 +1,11 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo } from 'react';
-
-import { Box, Tab, Tabs, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Label } from 'src/components/label';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ChargesPriorityStatus,
   ChargesPriorityStatusOptions,
@@ -15,10 +15,6 @@ import {
   ChargesPaymentStatusColors,
   ChargesPaymentStatusOptions,
 } from 'src/enums/fee-charges-status';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IChargeData } from '../../ChargesManage/Component/type';
 

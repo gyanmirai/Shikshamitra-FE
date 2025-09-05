@@ -3,9 +3,22 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { Label, type LabelColor } from 'src/components/label';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import {
+  AuditStatusType,
+  AuditStatusTypeColor,
+  AuditStatusTypeOptions,
+} from 'src/enums/audit-status-type';
 import {
   Box,
   Grid,
@@ -16,23 +29,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import {
-  AuditStatusType,
-  AuditStatusTypeColor,
-  AuditStatusTypeOptions,
-} from 'src/enums/audit-status-type';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { Label, type LabelColor } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ResourceVerifiedAllocateDialog from './component/aknowledge-dialog';
 
@@ -240,7 +236,7 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
     <Box onSubmit={formik.handleSubmit} component="form">
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={!!formik.errors.assets && !!formik.touched.assets}>
               <Autocomplete
                 multiple
@@ -270,7 +266,7 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={!!formik.errors.assignStaffs && !!formik.touched.assignStaffs}>
               <Autocomplete
                 multiple
@@ -297,7 +293,7 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={!!formik.errors.startDate && !!formik.touched.startDate}>
               <DatePicker
                 label="Start Date*"
@@ -319,7 +315,7 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={!!formik.errors.dueDate && !!formik.touched.dueDate}>
               <DatePicker
                 label="Due Date *"

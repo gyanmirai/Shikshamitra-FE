@@ -1,9 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { TextField, DialogContent, DialogActions } from '@mui/material';
-
 import SubmitButton from 'src/components/submit-button';
+import { TextField, DialogContent, DialogActions } from '@mui/material';
 
 import type { IAddNotificationCategoryDialogProps } from '../notification-interface';
 

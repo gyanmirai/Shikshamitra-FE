@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -12,12 +14,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 const DashboardCourseOverview = () => (
-  <Grid item xs={12} mt={2}>
+  <Grid size={12} mt={2}>
     <Typography variant="h6">Course Overview</Typography>
     <CustomizableTable
       tableId="courseOverviewTable"

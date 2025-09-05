@@ -1,25 +1,11 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import React, { useState } from 'react';
-
-import {
-  Box,
-  Card,
-  Grid,
-  Chip,
-  Menu,
-  Button,
-  Tooltip,
-  useTheme,
-  MenuItem,
-  Typography,
-} from '@mui/material';
-
-import { exportGraphData } from 'src/utils/exportGraph';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Chip, Menu, Button, Tooltip, MenuItem, Typography } from '@mui/material';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const FinanceNetbalanceAnalyticsTab = () => {
   const theme = useTheme();
@@ -88,7 +74,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
         <Typography variant="h5">$36,963</Typography>
       </Box>
       <Grid container spacing={2}>
-        <Grid item md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box
             sx={{
               width: 1,
@@ -96,10 +82,10 @@ const FinanceNetbalanceAnalyticsTab = () => {
               gap: { xs: 1, md: 2.5 },
               flexDirection: { xs: 'column', md: 'row' },
               alignItems: { xs: 'center', md: 'flex-start' },
-              bgcolor: 'background.paper', // Background color
-              borderRadius: 2, // Rounded corners
-              boxShadow: 1, // Box shadow for elevation
-              p: 2, // Padding
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 1,
+              p: 2,
               position: 'relative',
             }}
           >
@@ -153,7 +139,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
           </Box>
         </Grid>
 
-        <Grid item md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box
             sx={{
               width: 1,
@@ -161,7 +147,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
               gap: { xs: 1, md: 2.5 },
               flexDirection: { xs: 'column', md: 'row' },
               alignItems: { xs: 'center', md: 'flex-start' },
-              bgcolor: 'background.paper', // Background color
+              bgcolor: 'background.paper',
               borderRadius: 2,
               boxShadow: 1,
               p: 2,
@@ -226,7 +212,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
       <Box pb="20px" />
 
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Income vs. Expenses Over Time</Typography>
@@ -242,6 +228,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
                 <MenuItem onClick={handleExportTrendExcel}>Export to Excel</MenuItem>
               </Menu>
             </Box>
+
             <Box pt="15px" display="flex" flexDirection="row" gap={1}>
               <CustomSelect
                 label="Organization"
@@ -259,6 +246,7 @@ const FinanceNetbalanceAnalyticsTab = () => {
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
+
             <PerformanceOverTime
               id="demo__4"
               chart={{
@@ -297,34 +285,36 @@ const FinanceNetbalanceAnalyticsTab = () => {
             />
           </Card>
         </Grid>
-        {/* 
-        <Grid item xs={12} md={4}>
-          <EcommerceWidgetSummary
-            title="Largest Income Source"
-            percent={2.6}
-            total={765}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
-            }}
-          />
-        </Grid> */}
 
-        {/* <Grid item xs={12} md={8}>
-          <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
-            <AnalyticsCurrentVisits
-              title="Largest Income Source"
-              chart={{
-                series: [
-                  { label: 'Salaries', value: 3500 },
-                  { label: 'Maintenance', value: 2500 },
-                  { label: 'Utilities', value: 1500 },
-                ],
-              }}
-              sx={{ height: '100%' }}
-            />
-          </Card>
-        </Grid> */}
+        {/*
+  <Grid size={{ xs: 12, md: 4 }}>
+    <EcommerceWidgetSummary
+      title="Largest Income Source"
+      percent={2.6}
+      total={765}
+      chart={{
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+        series: [22, 8, 35, 50, 82, 84, 77, 12],
+      }}
+    />
+  </Grid>
+
+  <Grid size={{ xs: 12, md: 8 }}>
+    <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
+      <AnalyticsCurrentVisits
+        title="Largest Income Source"
+        chart={{
+          series: [
+            { label: 'Salaries', value: 3500 },
+            { label: 'Maintenance', value: 2500 },
+            { label: 'Utilities', value: 1500 },
+          ],
+        }}
+        sx={{ height: '100%' }}
+      />
+    </Card>
+  </Grid>
+  */}
       </Grid>
 
       <Box py="15px" gap={3} display="flex" justifyContent="flex-end">

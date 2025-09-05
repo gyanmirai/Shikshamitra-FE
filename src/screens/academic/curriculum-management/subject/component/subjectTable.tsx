@@ -1,23 +1,20 @@
 // SubjectTable.tsx
 
 import { useCallback } from 'react';
-
-import { RemoveCircle } from '@mui/icons-material';
-import { Box, useTheme, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import { RemoveCircle } from '@mui/icons-material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectType, SubjectTypeOptions } from 'src/enums/subject-type';
+import { Box, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
 } from 'src/enums/publishUnpublish-status';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { ISubjectDetail, ISubjectFormValues, ISubjectTableProps } from './type';
 

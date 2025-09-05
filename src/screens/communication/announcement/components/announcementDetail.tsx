@@ -1,16 +1,14 @@
 'use client';
 
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   Box,
   Chip,
   Typography,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 
 import DetailRow from './detailRow';
 

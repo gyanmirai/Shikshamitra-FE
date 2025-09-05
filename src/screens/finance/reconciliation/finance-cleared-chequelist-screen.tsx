@@ -1,15 +1,11 @@
 'use client';
 
 import React from 'react';
-
 import { Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
-import data from 'src/json/finance/reconicilation/clearedChqueData.json';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import data from 'src/json/finance/reconicilation/clearedChqueData.json';
 
 const FinanceClearedChequeListScreen = () => (
   <>

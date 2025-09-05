@@ -2,9 +2,6 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
@@ -13,6 +10,7 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getMyResourceInitialValues } from '../initialValue';
@@ -36,7 +34,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
         <Scrollbar sx={{ p: 2, height: '100%', bgcolor: 'background.neutral' }}>
           <Grid container spacing={2}>
             {/* Name */}
-            {/* <Grid item xs={6} pb="10px">
+            {/* <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                                     <TextField
                                 disabled
@@ -52,7 +50,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                           
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.vendor && Boolean(formik.errors.vendor)}>
                                     <TextField
                                      disabled
@@ -68,7 +66,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                        
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                                     <CustomSelect
                                      disabled
@@ -83,7 +81,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                             
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}>
                                     <CustomSelect
                                      disabled
@@ -98,7 +96,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                             
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.condition && Boolean(formik.errors.condition)}>
                                     <CustomSelect
                                         disabled
@@ -117,7 +115,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                        
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.status && Boolean(formik.errors.status)}>
                                     <CustomSelect
                                      disabled
@@ -136,7 +134,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                            
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                                     <TextField
                                      disabled
@@ -153,7 +151,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                            
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.measurementUnit && Boolean(formik.errors.measurementUnit)}>
                                     <CustomSelect
                                      disabled
@@ -168,7 +166,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             </Grid>
 
                            
-                            <Grid item xs={6} pb="10px">
+                            <Grid size={6} pb="10px">
                                 <ShakingTextField error={formik.touched.assignedDate && Boolean(formik.errors.assignedDate)}>
                                     <DatePicker
                                         label="Assigned Date"
@@ -187,7 +185,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                                 </ShakingTextField>
                             </Grid>
                             
-                            <Grid item xs={12} pb="10px">
+                            <Grid size={12} pb="10px">
                                 <ShakingTextField error={formik.touched.description && Boolean(formik.errors.description)}>
                                     <Editor
                                         onChange={(value) => formik.setFieldValue('description', value)}
@@ -204,7 +202,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
                             */}
 
             {/* Priority (Optional) */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
                 <CustomSelect
                   label="Priority"
@@ -222,7 +220,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
             </Grid>
 
             {/* Issue Description */}
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.issueDescription && Boolean(formik.errors.issueDescription)}
               >
@@ -241,7 +239,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
             </Grid>
 
             {/* Upload (Image or Supporting Doc) */}
-            <Grid item xs={12} sx={{ pb: '10px' }}>
+            <Grid size={12} sx={{ pb: '10px' }}>
               <UploadBox
                 onDrop={() => {}} // implement file handler
                 placeholder={

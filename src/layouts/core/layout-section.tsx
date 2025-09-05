@@ -3,9 +3,8 @@
 import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 
 import Box from '@mui/material/Box';
-import GlobalStyles from '@mui/material/GlobalStyles';
-
 import { varAlpha } from 'src/theme/styles';
+import GlobalStyles from '@mui/material/GlobalStyles';
 
 import { layoutClasses } from '../classes';
 

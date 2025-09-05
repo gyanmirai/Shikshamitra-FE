@@ -4,11 +4,27 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { AccurateRateType } from 'src/enums/accurate-rate';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useGetEmployeeLeavePolicyQuery,
+  useDeleteEmployeeLeavePolicyMutation,
+} from 'src/redux/employee/employeeApi';
 import {
   Box,
   Grid,
@@ -24,27 +40,6 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { AccurateRateType } from 'src/enums/accurate-rate';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  useGetEmployeeLeavePolicyQuery,
-  useDeleteEmployeeLeavePolicyMutation,
-} from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
@@ -462,7 +457,7 @@ export const LeavePolicyForm = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <SectionCard title="General Policy Information">
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.policyTitle && formik.errors.policyTitle)}>
               <TextField
                 size="small"
@@ -474,7 +469,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
               error={!!(formik.touched.applicableRoles && formik.errors.applicableRoles)}
             >
@@ -505,7 +500,7 @@ export const LeavePolicyForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.leaveType && formik.errors.leaveType)}>
               <FormControl
                 fullWidth
@@ -534,7 +529,7 @@ export const LeavePolicyForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
               error={!!(formik.touched.maxLeavePerYear && formik.errors.maxLeavePerYear)}
             >
@@ -555,7 +550,7 @@ export const LeavePolicyForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
               error={!!(formik.touched.accrualMethod && formik.errors.accrualMethod)}
             >
@@ -584,7 +579,7 @@ export const LeavePolicyForm = ({
               </FormControl>
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
               error={!!(formik.touched.accrualStartDate && formik.errors.accrualStartDate)}
             >
@@ -607,7 +602,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
               error={!!(formik.touched.accrualEndDate && formik.errors.accrualEndDate)}
             >
@@ -631,7 +626,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Leave Eligibility Rules">
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -645,7 +640,7 @@ export const LeavePolicyForm = ({
             />
           </Grid>
 
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={!!(formik.touched.daysBeforeAllowed && formik.errors.daysBeforeAllowed)}
             >
@@ -665,7 +660,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={8} display="flex" gap={2}>
+          <Grid size={8} display="flex" gap={2}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -692,7 +687,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Leave Duration & Application Limits">
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={
                 !!(formik.touched.maxDaysPerApplication && formik.errors.maxDaysPerApplication)
@@ -719,7 +714,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={!!(formik.touched.minLeaveDuration && formik.errors.minLeaveDuration)}
             >
@@ -739,7 +734,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={
                 !!(
@@ -770,7 +765,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -786,7 +781,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Carry Forward & Encashment">
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -801,7 +796,7 @@ export const LeavePolicyForm = ({
           </Grid>
 
           {formik.values.carryForward && (
-            <Grid item xs={4}>
+            <Grid size={4}>
               <ShakingTextField
                 error={!!(formik.touched.maxCarryForward && formik.errors.maxCarryForward)}
               >
@@ -823,7 +818,7 @@ export const LeavePolicyForm = ({
             </Grid>
           )}
 
-          <Grid item xs={4}>
+          <Grid size={4}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -836,7 +831,7 @@ export const LeavePolicyForm = ({
               label="Encashment Allowed?"
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             {formik.values.encashmentAllowed && (
               <ShakingTextField
                 error={!!(formik.touched.encashmentMonth && formik.errors.encashmentMonth)}
@@ -870,7 +865,7 @@ export const LeavePolicyForm = ({
           </Grid>
 
           {/* {formik.values.encashmentAllowed && (
-            <Grid item xs={12} sm={4}>
+            <Grid size={{xs:12,md:4}}>
               <ShakingTextField
                 error={!!(formik.touched.encashmentMonth && formik.errors.encashmentMonth)}
               >
@@ -904,7 +899,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Application Timeline">
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={!!(formik.touched.applyAdvanceDays && formik.errors.applyAdvanceDays)}
             >
@@ -924,7 +919,7 @@ export const LeavePolicyForm = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ShakingTextField
               error={!!(formik.touched.cancelDeadline && formik.errors.cancelDeadline)}
             >
@@ -947,7 +942,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Additional Leave Rules">
-          <Grid item xs={4}>
+          <Grid size={4}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -963,7 +958,7 @@ export const LeavePolicyForm = ({
               <FormHelperText error>{formik.errors.attachmentRequired}</FormHelperText>
             )}
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -986,7 +981,7 @@ export const LeavePolicyForm = ({
           </Grid>
 
           {formik.values.sandwichRule && (
-            <Grid item xs={4}>
+            <Grid size={4}>
               <ShakingTextField
                 error={!!(formik.touched.sandwichCount && formik.errors.sandwichCount)}
               >
@@ -1010,7 +1005,7 @@ export const LeavePolicyForm = ({
         </SectionCard>
 
         <SectionCard title="Description & Notes">
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.notes && formik.errors.notes)}>
               <TextField
                 size="small"

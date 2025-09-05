@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Card, Grid, Typography } from '@mui/material';
 
 // import CustomizableTable from 'src/components/customizabaleTable';
@@ -65,19 +64,19 @@ const VehicleInformation: React.FC<VehicleInformationProps> = ({ vehicleData }) 
   // console.log("vehicleData",vehicleData)
   <Card sx={{ p: 2, borderRadius: 2, boxShadow: 2 }}>
     <Grid container spacing={2}>
-      <Grid item xs={6}>
+      <Grid size={6}>
         <Typography variant="subtitle2">Vehicle Registration Number:</Typography>
         <Typography variant="body2">{vehicleData.vehicleNumber}</Typography>
       </Grid>
-      <Grid item xs={6}>
+      <Grid size={6}>
         <Typography variant="subtitle2">Model:</Typography>
         <Typography variant="body2">{vehicleData.model}</Typography>
       </Grid>
-      <Grid item xs={6}>
+      <Grid size={6}>
         <Typography variant="subtitle2">Capacity:</Typography>
         <Typography variant="body2">{vehicleData.capacity}</Typography>
       </Grid>
-      <Grid item xs={6}>
+      <Grid size={6}>
         <Typography variant="subtitle2">Assigned Driver:</Typography>
         <Typography variant="body2">{vehicleData.driver}</Typography>
       </Grid>

@@ -3,10 +3,8 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
 import Alert from '@mui/material/Alert';
-import { useTheme } from '@mui/material/styles';
-
 import { usePathname } from 'src/routes/hooks';
-
+import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Main } from './main';

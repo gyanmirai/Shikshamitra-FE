@@ -1,10 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -12,6 +9,7 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getInitialIncidentResourceStatusValues } from '../initialValue';
 import { incidentResourceStatusValidationSchema } from '../validationSchema';
@@ -50,7 +48,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.incidentName && Boolean(formik.errors.incidentName)}
             >
@@ -67,7 +65,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
             >
@@ -85,7 +83,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.reportedDate && Boolean(formik.errors.reportedDate)}
             >
@@ -98,7 +96,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.reportedBy && Boolean(formik.errors.reportedBy)}
             >
@@ -115,7 +113,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.reporterRole && Boolean(formik.errors.reporterRole)}
             >
@@ -132,7 +130,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.reporterdepartment && Boolean(formik.errors.reporterdepartment)}
             >
@@ -152,7 +150,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={
                 formik.touched.incidentDescription && Boolean(formik.errors.incidentDescription)
@@ -176,7 +174,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
             >
@@ -193,7 +191,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} sx={{ pb: '10px' }}>
+          <Grid size={12} sx={{ pb: '10px' }}>
             <UploadBox
               onDrop={() => {}}
               placeholder={
@@ -218,7 +216,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               }}
             />
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField error={formik.touched.status && Boolean(formik.errors.status)}>
               <CustomSelect
                 label="Update Status *"
@@ -233,7 +231,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.actionTaken && Boolean(formik.errors.actionTaken)}
             >
@@ -252,7 +250,7 @@ const ViewIncidentReportDialog: React.FC<IViewEquipmentIncidentDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={
                 formik.touched.incidentDescription && Boolean(formik.errors.incidentDescription)

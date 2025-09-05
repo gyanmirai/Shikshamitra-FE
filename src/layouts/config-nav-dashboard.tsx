@@ -1,3 +1,5 @@
+import { CONFIG } from 'src/config-global';
+import { SvgColor } from 'src/components/svg-color';
 import {
   hrPath,
   classPath,
@@ -13,10 +15,6 @@ import {
   securityGuardPath,
   resourceManagementPath,
 } from 'src/routes/paths';
-
-import { CONFIG } from 'src/config-global';
-
-import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
 
