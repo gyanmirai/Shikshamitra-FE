@@ -119,9 +119,7 @@ const TakeAttendanceScreen = () => {
       standardId: classes,
       divisionId: division,
     },
-    options: {
-      skip: !(date && organization && classes && division),
-    },
+    options: { skip: !(date && organization && classes && division) },
   });
 
   const [studentData, setStudentData] = useState<any>([]);
@@ -178,12 +176,7 @@ const TakeAttendanceScreen = () => {
           }}
           format="DD-MM-YYYY"
           maxDate={dayjs()}
-          slotProps={{
-            textField: {
-              size: 'small',
-              sx: { maxWidth: '250px', width: '100%' },
-            },
-          }}
+          slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
         />
 
         <CustomSelect
@@ -243,14 +236,8 @@ const TakeAttendanceScreen = () => {
           sx={{
             color: 'success.main',
             borderColor: 'success.main',
-            '&:hover': {
-              borderColor: 'success.dark',
-              backgroundColor: 'success.lighter',
-            },
-            '&:disabled': {
-              color: 'text.disabled',
-              borderColor: 'text.disabled',
-            },
+            '&:hover': { borderColor: 'success.dark', backgroundColor: 'success.lighter' },
+            '&:disabled': { color: 'text.disabled', borderColor: 'text.disabled' },
             minWidth: '100px',
             fontWeight: 500,
             fontSize: '0.8rem',
@@ -272,14 +259,8 @@ const TakeAttendanceScreen = () => {
           sx={{
             color: 'error.main',
             borderColor: 'error.main',
-            '&:hover': {
-              borderColor: 'error.dark',
-              backgroundColor: 'error.lighter',
-            },
-            '&:disabled': {
-              color: 'text.disabled',
-              borderColor: 'text.disabled',
-            },
+            '&:hover': { borderColor: 'error.dark', backgroundColor: 'error.lighter' },
+            '&:disabled': { color: 'text.disabled', borderColor: 'text.disabled' },
             minWidth: '90px',
             fontWeight: 500,
             fontSize: '0.8rem',
@@ -310,14 +291,8 @@ const TakeAttendanceScreen = () => {
           sx={{
             color: 'warning.main',
             borderColor: 'warning.main',
-            '&:hover': {
-              borderColor: 'warning.dark',
-              backgroundColor: 'warning.lighter',
-            },
-            '&:disabled': {
-              color: 'text.disabled',
-              borderColor: 'text.disabled',
-            },
+            '&:hover': { borderColor: 'warning.dark', backgroundColor: 'warning.lighter' },
+            '&:disabled': { color: 'text.disabled', borderColor: 'text.disabled' },
             minWidth: '70px',
             fontWeight: 500,
             fontSize: '0.8rem',
@@ -430,11 +405,7 @@ const TakeAttendanceScreen = () => {
             <>
               <Typography
                 variant="body2"
-                sx={{
-                  color: 'text.secondary',
-                  whiteSpace: 'nowrap',
-                  fontWeight: 500,
-                }}
+                sx={{ color: 'text.secondary', whiteSpace: 'nowrap', fontWeight: 500 }}
               >
                 Absent Students:
               </Typography>
@@ -503,12 +474,12 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
           width: '100%',
 
           borderLeft: (theme) =>
-            `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.palette.success.main}`,
+            `4px solid ${!studentAttendanceData.isPresent ? theme.vars.palette.error.main : theme.vars.palette.success.main}`,
           cursor: 'pointer',
           background: (theme) =>
             !studentAttendanceData.isPresent
-              ? varAlpha(theme.palette.error.mainChannel, 0.05)
-              : varAlpha(theme.palette.success.mainChannel, 0.05),
+              ? varAlpha(theme.vars.palette.error.mainChannel, 0.05)
+              : varAlpha(theme.vars.palette.success.mainChannel, 0.05),
         }}
       >
         <Box display="flex" gap={1} p={1.5} alignItems="center">
@@ -523,9 +494,7 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
             <img
               src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
               alt="Student"
-              style={{
-                borderRadius: '50%',
-              }}
+              style={{ borderRadius: '50%' }}
             />
           </Box>
           <Box flexGrow={1} ml={1} gap={0.5}>
@@ -619,10 +588,10 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           sx: {
             background: (theme) =>
               tableData.isPresent === true
-                ? varAlpha(theme.palette.success.mainChannel, 0.08)
+                ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
                 : tableData.isPresent === false
-                  ? varAlpha(theme.palette.error.mainChannel, 0.08)
-                  : varAlpha(theme.palette.warning.mainChannel, 0.08),
+                  ? varAlpha(theme.vars.palette.error.mainChannel, 0.08)
+                  : varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
           },
         })}
         columns={[
@@ -714,12 +683,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             minWidth: '140px',
             isFilter: false,
           },
-          {
-            id: 'percentage',
-            label: 'Attendance %',
-            align: 'left',
-            minWidth: '145px',
-          },
+          { id: 'percentage', label: 'Attendance %', align: 'left', minWidth: '145px' },
           {
             id: 'remarks',
             label: 'Remarks',
@@ -745,10 +709,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                   rows={2}
                   sx={{
                     width: '100%',
-                    '& .MuiInputBase-input::placeholder': {
-                      color: 'text.secondary',
-                      opacity: 0.7,
-                    },
+                    '& .MuiInputBase-input::placeholder': { color: 'text.secondary', opacity: 0.7 },
                   }}
                 />
               ) : (
@@ -845,9 +806,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
-                        '&:hover': {
-                          backgroundColor: 'success.lighter',
-                        },
+                        '&:hover': { backgroundColor: 'success.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(
@@ -883,9 +842,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
-                        '&:hover': {
-                          backgroundColor: 'warning.lighter',
-                        },
+                        '&:hover': { backgroundColor: 'warning.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(
@@ -923,9 +880,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
-                        '&:hover': {
-                          backgroundColor: 'error.lighter',
-                        },
+                        '&:hover': { backgroundColor: 'error.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(

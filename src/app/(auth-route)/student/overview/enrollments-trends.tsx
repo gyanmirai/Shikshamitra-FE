@@ -80,10 +80,7 @@ type Props3 = {
   subheader?: string;
   chart: {
     seriesByClass: {
-      [classId: string]: {
-        categories: string[];
-        data: { name: string; data: number[] }[];
-      };
+      [classId: string]: { categories: string[]; data: { name: string; data: number[] }[] };
     };
   };
   classId: string;
@@ -116,13 +113,9 @@ export function AttendanceGraph({
 
   const chartOptions = useChart({
     stroke: { width: 2, colors: ['transparent'] },
-    colors: [theme.palette.primary.main],
+    colors: [theme.vars.palette.primary.main],
     xaxis: { categories: currentSeries?.categories || [] },
-    tooltip: {
-      y: {
-        formatter: (value: number) => fCurrency(value),
-      },
-    },
+    tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
   });
 
   return (

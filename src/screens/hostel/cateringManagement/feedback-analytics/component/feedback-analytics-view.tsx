@@ -51,7 +51,7 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
             onChange={(e, isExpanded) => setExpanded(isExpanded ? index : false)}
             sx={{
               boxShadow: 'none',
-              color: theme.palette.text.secondary,
+              color: theme.vars.palette.text.secondary,
               fontSize: '14px',
               '&:before': { display: 'none' },
             }}
@@ -59,11 +59,11 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
             <AccordionSummary
               expandIcon={null} // handled manually
               sx={{
-                borderBottom: `1px solid ${theme.palette.divider}`,
+                borderBottom: `1px solid ${theme.vars.palette.divider}`,
                 borderLeft:
                   expanded === index
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : `2px solid ${theme.palette.divider}`,
+                    ? `2px solid ${theme.vars.palette.primary.main}`
+                    : `2px solid ${theme.vars.palette.divider}`,
                 bgcolor: 'inherit',
                 '&.Mui-expanded': { minHeight: '40px' },
                 '& .MuiAccordionSummary-content.Mui-expanded': { margin: '0' },
@@ -79,7 +79,7 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
                       expanded === index
                         ? theme.typography.fontWeightBold
                         : theme.typography.fontWeightMedium,
-                    color: theme.palette.text.secondary,
+                    color: theme.vars.palette.text.secondary,
                   }}
                 >
                   {review.name}

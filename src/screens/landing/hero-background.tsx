@@ -13,16 +13,14 @@ import { Dots, Lines, Texts, Circles, PlusIcon } from './hero-svg';
 
 // ----------------------------------------------------------------------
 
-type Props = {
-  sx?: SxProps<Theme>;
-};
+type Props = { sx?: SxProps<Theme> };
 
 export function HeroBackground({ sx }: Props) {
   const theme = useTheme();
 
   const upMd = useResponsive('up', 'md');
 
-  const lightMode = theme.palette.mode === 'light';
+  const lightMode = theme.vars.palette.mode === 'light';
 
   const strokeCount = 12;
 

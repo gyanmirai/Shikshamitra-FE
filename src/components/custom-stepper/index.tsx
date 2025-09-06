@@ -70,51 +70,39 @@ interface CustomStepperWithFormikProps {
 }
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: any) => ({
-  '&.Mui-disabled': {
-    cursor: 'default !important',
-  },
+  '&.Mui-disabled': { cursor: 'default !important' },
   '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.palette.error.main : theme.palette.primary.main,
+    color: error ? theme.vars.palette.error.main : theme.vars.palette.primary.main,
   },
   '& .MuiStepLabel-label': {
-    color: error ? theme.palette.error.main : theme.palette.text.primary,
+    color: error ? theme.vars.palette.error.main : theme.vars.palette.text.primary,
     fontWeight: error ? 'bold' : 'normal',
   },
   '& .MuiStepLabel-iconContainer.Mui-disabled': {
     cursor: isDisabledLabel ? 'no-drop' : 'pointer !important',
     transition: 'all 0.3s ease-in-out',
-    '& svg:hover': {
-      opacity: isDisabledLabel ? 1 : 0.72,
-    },
+    '& svg:hover': { opacity: isDisabledLabel ? 1 : 0.72 },
   },
 }));
 
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
-  '&.Mui-disabled': {
-    cursor: 'pointer !important',
-  },
+  '&.Mui-disabled': { cursor: 'pointer !important' },
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
     top: 10,
     left: 'calc(-50% + 16px)',
     right: 'calc(50% + 16px)',
   },
   [`&.${stepConnectorClasses.active}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: theme.palette.primary.main,
-    },
+    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.vars.palette.primary.main },
   },
   [`&.${stepConnectorClasses.completed}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: theme.palette.primary.main,
-    },
+    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.vars.palette.primary.main },
   },
   [`& .${stepConnectorClasses.line}`]: {
     borderColor: '#eaeaf0',
     borderTopWidth: 3,
     borderRadius: 1,
-    ...theme.applyStyles('dark', {
-      borderColor: theme.palette.grey[800],
-    }),
+    ...theme.applyStyles('dark', { borderColor: theme.vars.palette.grey[800] }),
   },
 }));
 function CustomStepIcon(props: StepIconProps) {
@@ -126,7 +114,7 @@ function CustomStepIcon(props: StepIconProps) {
         height: 24,
         borderRadius: '50%',
         backgroundColor: (theme) =>
-          active || completed ? theme.palette.primary.main : theme.palette.grey[400],
+          active || completed ? theme.vars.palette.primary.main : theme.vars.palette.grey[400],
         color: '#fff',
         display: 'flex',
         alignItems: 'center',
@@ -218,11 +206,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             flex: 1,
             height: scrollbarHeight,
             overflow: 'auto',
-            '& .simplebar-content': {
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-            },
+            '& .simplebar-content': { height: '100%', display: 'flex', flexDirection: 'column' },
           }}
         >
           {formik && renderItem({ formik, activeStep, isBackClick })}

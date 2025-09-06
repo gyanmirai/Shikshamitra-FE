@@ -1,7 +1,7 @@
 import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box , Grid, Typography } from '@mui/material';
-import { alpha , useTheme } from '@mui/material/styles';
+import { Box, Grid, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -58,9 +58,9 @@ const AssessmentDashboardReportComponent = () => {
                 { name: 'C', data: [0, 67, 47] },
               ],
               colors: [
-                alpha(theme.palette.primary.dark, 0.8),
-                alpha(theme.palette.warning.main, 0.8),
-                alpha(theme.palette.error.main, 0.8),
+                alpha(theme.vars.palette.primary.dark, 0.8),
+                alpha(theme.vars.palette.warning.main, 0.8),
+                alpha(theme.vars.palette.error.main, 0.8),
               ],
             }}
             sx={{ height: '100%' }}

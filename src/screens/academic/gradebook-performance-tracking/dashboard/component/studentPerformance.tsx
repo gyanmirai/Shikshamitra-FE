@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Grid } from '@mui/material';
-import { alpha , useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const StudentPerformance = () => {
@@ -21,9 +21,9 @@ const StudentPerformance = () => {
               { name: 'Low', data: [51, 67, 47, 97, 40, 57, 24, 60, 24] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
-              alpha(theme.palette.error.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.error.main, 0.8),
             ],
           }}
           sx={{ height: '100%' }}

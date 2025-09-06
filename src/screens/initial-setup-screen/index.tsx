@@ -128,10 +128,7 @@ const InitialSetupScreen = () => {
   const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateTenantMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Tenant Updated Successfully',
-    },
+    popupConfig: { success: true, successMessage: 'Tenant Updated Successfully' },
   });
 
   /**
@@ -242,11 +239,7 @@ const InitialSetupScreen = () => {
                 <Paper
                   elevation={6}
                   id={`initial-${step}`}
-                  sx={{
-                    padding: 2,
-                    width: '100%',
-                    height: '100%',
-                  }}
+                  sx={{ padding: 2, width: '100%', height: '100%' }}
                 >
                   {CurrentComponent?.({ formik, activeStep }) || <> </>}
                 </Paper>
@@ -267,7 +260,7 @@ export default InitialSetupScreen;
 const ColorlibStepIconRoot = styled('div')<{
   ownerState: { completed?: boolean; active?: boolean };
 }>(({ theme, ownerState }) => ({
-  backgroundColor: theme.palette.grey[400],
+  backgroundColor: theme.vars.palette.grey[400],
   zIndex: 1,
   color: '#fff',
   width: 50,
@@ -277,10 +270,8 @@ const ColorlibStepIconRoot = styled('div')<{
   justifyContent: 'center',
   alignItems: 'center',
   ...(ownerState.active && {
-    background: theme.palette.primary.main,
+    background: theme.vars.palette.primary.main,
     boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
   }),
-  ...(ownerState.completed && {
-    background: theme.palette.primary.main,
-  }),
+  ...(ownerState.completed && { background: theme.vars.palette.primary.main }),
 }));

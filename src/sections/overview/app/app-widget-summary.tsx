@@ -14,18 +14,13 @@ type Props = CardProps & {
   title: string;
   total: number;
   percent: number;
-  chart: {
-    colors?: string[];
-    categories: string[];
-    series: number[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; categories: string[]; series: number[]; options?: ChartOptions };
 };
 
 export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main];
+  const chartColors = chart.colors ?? [theme.vars.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -62,15 +57,7 @@ export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }:
   );
 
   return (
-    <Card
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        p: 3,
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ display: 'flex', alignItems: 'center', p: 3, ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
         <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(total)}</Box>

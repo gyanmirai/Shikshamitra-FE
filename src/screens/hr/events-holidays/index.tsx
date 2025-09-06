@@ -119,14 +119,14 @@ const HrEventsAndHolidaysScreen = () => {
       eventHolidayData?.items.map((i: any) => ({
         ...i,
         start: i.startDate,
-        color: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        color: i.isHoliday ? theme.vars.palette.error.main : theme.vars.palette.success.main,
         end: i.endDate,
         allDay: false,
-        textColor: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        textColor: i.isHoliday ? theme.vars.palette.error.main : theme.vars.palette.success.main,
         title: i.isHoliday ? 'Holiday' : 'Event',
         description: i.reason,
       })) || [],
-    [eventHolidayData?.items, theme.palette.error.main, theme.palette.success.main]
+    [eventHolidayData?.items, theme.vars.palette.error.main, theme.vars.palette.success.main]
   );
 
   // Get selected calendar event data
@@ -153,11 +153,7 @@ const HrEventsAndHolidaysScreen = () => {
           onChange={(newValue) => {
             setDate(newValue);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
           Event & Holiday
@@ -280,8 +276,8 @@ const HrEventsAndHolidaysScreen = () => {
           //   sx: {
           //     borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
           //     background: row.isHoliday
-          //       ? varAlpha(theme.palette.error.mainChannel, 0.2)
-          //       : varAlpha(theme.palette.success.mainChannel, 0.2),
+          //       ? varAlpha(theme.vars.palette.error.mainChannel, 0.2)
+          //       : varAlpha(theme.vars.palette.success.mainChannel, 0.2),
           //   },
           // })}
         />
@@ -411,13 +407,9 @@ export const HrEventsAndHolidaysForm = ({
             },
           }).unwrap();
           if (value.isHoliday) {
-            shikshaMitraToast.success({
-              message: 'Holiday updated successfully',
-            });
+            shikshaMitraToast.success({ message: 'Holiday updated successfully' });
           } else {
-            shikshaMitraToast.success({
-              message: 'Event updated successfully',
-            });
+            shikshaMitraToast.success({ message: 'Event updated successfully' });
           }
         } else {
           // If creating new event, add it with provided values
@@ -429,13 +421,9 @@ export const HrEventsAndHolidaysForm = ({
             name: value.name,
           }).unwrap();
           if (value.isHoliday) {
-            shikshaMitraToast.success({
-              message: 'Holiday created successfully',
-            });
+            shikshaMitraToast.success({ message: 'Holiday created successfully' });
           } else {
-            shikshaMitraToast.success({
-              message: 'Event created successfully',
-            });
+            shikshaMitraToast.success({ message: 'Event created successfully' });
           }
         }
         // Close form after successful submission

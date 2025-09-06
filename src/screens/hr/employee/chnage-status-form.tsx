@@ -86,12 +86,7 @@ const ChangeStatusForm = ({
               <Box
                 component="li"
                 {...props}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  width: '100%',
-                }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
               >
                 {option.label}
                 <Box sx={{ marginLeft: 'auto' }}>
@@ -101,14 +96,14 @@ const ChangeStatusForm = ({
                       sx={{
                         color:
                           option.value === EmployeeStatusType.Active
-                            ? theme.palette.success.main
+                            ? theme.vars.palette.success.main
                             : option.value === EmployeeStatusType.Inactive
-                              ? theme.palette.error.main
+                              ? theme.vars.palette.error.main
                               : option.value === EmployeeStatusType.Left
-                                ? theme.palette.info.main
+                                ? theme.vars.palette.info.main
                                 : option.value === EmployeeStatusType.Retired
-                                  ? theme.palette.grey[500]
-                                  : theme.palette.grey[500],
+                                  ? theme.vars.palette.grey[500]
+                                  : theme.vars.palette.grey[500],
                       }}
                     >
                       <Iconify icon="mdi:information" width={20} />

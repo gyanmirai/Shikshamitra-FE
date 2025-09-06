@@ -24,24 +24,24 @@ import type { GlobalAcademicSearchOption } from './types';
 // Define keyframes using the theme
 const createPulseAnimation = (theme: Theme) => keyframes`
   0% {
-    box-shadow: 0 0 0 0 ${theme.palette.warning.main}99;
+    box-shadow: 0 0 0 0 ${theme.vars.palette.warning.main}99;
   }
   70% {
-    box-shadow: 0 0 0 6px ${theme.palette.warning.main}00;
+    box-shadow: 0 0 0 6px ${theme.vars.palette.warning.main}00;
   }
   100% {
-    box-shadow: 0 0 0 0 ${theme.palette.warning.main}00;
+    box-shadow: 0 0 0 0 ${theme.vars.palette.warning.main}00;
   }
 `;
 
 // Styled wrapper that animates on error
-const AnimatedWrapper = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'error',
-})<{ error: boolean }>(({ theme, error }) => ({
+const AnimatedWrapper = styled(Box, { shouldForwardProp: (prop) => prop !== 'error' })<{
+  error: boolean;
+}>(({ theme, error }) => ({
   borderRadius: 5,
   ...(error && {
     animation: `${createPulseAnimation(theme as any)} 1.5s infinite`,
-    border: `1px solid ${theme.palette.warning.main}90`,
+    border: `1px solid ${theme.vars.palette.warning.main}90`,
   }),
 }));
 /**

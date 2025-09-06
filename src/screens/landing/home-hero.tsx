@@ -4,13 +4,7 @@ import { ArrowForward } from '@mui/icons-material';
 import { Box, Grid, Button, Container, Typography } from '@mui/material';
 
 const HomeHero = () => (
-  <Box
-    sx={{
-      height: '734px',
-      width: '100%',
-      position: 'relative',
-    }}
-  >
+  <Box sx={{ height: '734px', width: '100%', position: 'relative' }}>
     <Box
       component="img"
       src="/assets/images/landing/gradient-image.svg"
@@ -71,9 +65,9 @@ const HomeHero = () => (
               sx={{
                 borderRadius: '0',
                 color: 'black',
-                border: (theme) => `2px solid ${theme.palette.success.main}`,
+                border: (theme) => `2px solid ${theme.vars.palette.success.main}`,
                 '&:hover': {
-                  border: (theme) => `2px solid ${theme.palette.success.main}`,
+                  border: (theme) => `2px solid ${theme.vars.palette.success.main}`,
                   outline: 'none',
                   boxShadow: 'none',
                 },

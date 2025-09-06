@@ -30,13 +30,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-const initialValues = {
-  report: '',
-  category: 'All',
-  year: 'All',
-  startDate: null,
-  endDate: null,
-};
+const initialValues = { report: '', category: 'All', year: 'All', startDate: null, endDate: null };
 
 const validationSchema = Yup.object().shape({
   report: Yup.string().required('Report is required'),
@@ -215,10 +209,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -230,10 +226,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="warning"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -244,11 +242,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="secondary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
-                        varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -260,10 +259,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >

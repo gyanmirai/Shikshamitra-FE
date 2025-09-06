@@ -144,10 +144,7 @@ const FinanceNewFeeStructureSetting = () => {
             }
             tableId="finance-fee-structure-setting-tab"
             columns={[
-              {
-                id: 'bookRecipt',
-                label: 'Receipt Book',
-              },
+              { id: 'bookRecipt', label: 'Receipt Book' },
               { id: 'applicableGrade', label: 'Class', filterType: 'number' },
 
               {
@@ -187,7 +184,9 @@ const FinanceNewFeeStructureSetting = () => {
                 isSort: false,
                 render(value, row) {
                   const statusColor =
-                    value === true ? theme.palette.success.main : theme.palette.text.secondary;
+                    value === true
+                      ? theme.vars.palette.success.main
+                      : theme.vars.palette.text.secondary;
                   return (
                     <CustomTooltip
                       title={value === true ? 'Active' : 'InActive'}
@@ -223,11 +222,7 @@ const FinanceNewFeeStructureSetting = () => {
                       >
                         <Iconify
                           icon={GlobalIcons.tick}
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            color: statusColor,
-                          }}
+                          sx={{ width: 20, height: 20, color: statusColor }}
                         />
                       </IconButton>
                     </CustomTooltip>

@@ -68,11 +68,7 @@ const TeacherAttendanceTracking = ({
           // setDate(value);
         }}
         sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { size: 'small' } }}
       />
       &nbsp;
       <DatePicker
@@ -84,19 +80,15 @@ const TeacherAttendanceTracking = ({
           // setDate(value);
         }}
         sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { size: 'small' } }}
       />
       <Box display="flex" gap={2}>
         <Card
           sx={{
             maxWidth: 280,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
-            color: (theme) => theme.palette.primary.main,
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
+            color: (theme) => theme.vars.palette.primary.main,
             p: 2,
           }}
         >
@@ -109,8 +101,8 @@ const TeacherAttendanceTracking = ({
             maxWidth: 280,
             p: 2,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
-            color: (theme) => theme.palette.error.main,
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
+            color: (theme) => theme.vars.palette.error.main,
           }}
         >
           <Typography variant="subtitle1">Full Day Leave</Typography>
@@ -122,8 +114,8 @@ const TeacherAttendanceTracking = ({
             maxWidth: 280,
             p: 2,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            color: (theme) => theme.palette.warning.main,
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
+            color: (theme) => theme.vars.palette.warning.main,
           }}
         >
           <Typography variant="subtitle1">Half Day Leave</Typography>

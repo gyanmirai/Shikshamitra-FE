@@ -41,14 +41,8 @@ const DailyAttendanceTrend = () => (
             '27/06',
           ],
           data: [
-            {
-              name: 'Present',
-              data: [50, 35, 45, 55, 65, 45, 50, 60, 55, 48, 52, 56, 53, 57, 51],
-            },
-            {
-              name: 'Absent',
-              data: [30, 25, 28, 22, 18, 25, 22, 20, 23, 30, 27, 26, 24, 22, 28],
-            },
+            { name: 'Present', data: [50, 35, 45, 55, 65, 45, 50, 60, 55, 48, 52, 56, 53, 57, 51] },
+            { name: 'Absent', data: [30, 25, 28, 22, 18, 25, 22, 20, 23, 30, 27, 26, 24, 22, 28] },
           ],
         },
       ],
@@ -64,14 +58,7 @@ type Props = CardProps & {
   subheader?: string;
   chart: {
     colors?: string[];
-    series: {
-      name: string;
-      categories: string[];
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; categories: string[]; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -84,9 +71,9 @@ export function BankingBalanceStatistics({ title, subheader, chart, ...other }: 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    theme.palette.warning.main,
-    theme.palette.info.main,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.warning.main,
+    theme.vars.palette.info.main,
   ];
 
   const chartOptions = useChart({

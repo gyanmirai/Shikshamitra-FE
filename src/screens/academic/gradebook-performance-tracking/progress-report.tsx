@@ -36,9 +36,7 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         onChange={() => {}}
         value=""
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
 
       <CustomSelect
@@ -50,9 +48,7 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         onChange={() => {}}
         value=""
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
       <CustomSelect
         label="Grading Scale Assignment"
@@ -63,27 +59,15 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         value=""
         onChange={() => {}}
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
       <DatePicker
         label="Start Date"
-        slotProps={{
-          textField: {
-            sx: { width: '100%', maxWidth: '200px' },
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' } }}
       />
       <DatePicker
         label="End Date"
-        slotProps={{
-          textField: {
-            sx: { width: '100%', maxWidth: '200px' },
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' } }}
       />
       <Button variant="contained">Generate Report</Button>
     </Box>
@@ -251,7 +235,7 @@ const ProgressReport = (props: TabComponentType) => (
               borderRadius: '12px',
               maxWidth: '300px',
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.3),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.3),
             }}
           >
             <Typography variant="h5" fontWeight="bold" mb={2}>
@@ -384,7 +368,10 @@ export function PerformanceOverTime({ title, subheader, chart, ...other }: any) 
 
   // const [selectedSeries, setSelectedSeries] = useState('2023');
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+  ];
 
   const chartOptions = useChart({
     colors: chartColors,

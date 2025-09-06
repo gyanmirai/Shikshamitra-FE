@@ -15,7 +15,7 @@ const LmsDashboardCards = () => (
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
         }}
       >
         <Typography variant="h6" gutterBottom>
@@ -46,7 +46,7 @@ const LmsDashboardCards = () => (
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
         }}
       >
         <Typography variant="h6" gutterBottom>
@@ -74,7 +74,7 @@ const LmsDashboardCards = () => (
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.1),
         }}
       >
         <Typography variant="h6" gutterBottom>
@@ -102,7 +102,7 @@ const LmsDashboardCards = () => (
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
         }}
       >
         <Typography variant="h6" gutterBottom>

@@ -49,9 +49,9 @@ export function AnalyticsWebsiteVisits({
 
   // Define chart colors with fallback to default color palette using alpha transparency
   const chartColors = chart.colors ?? [
-    hexAlpha(theme.palette.primary.dark, 0.8),
-    hexAlpha(theme.palette.warning.main, 0.8),
-    hexAlpha(theme.palette.error.main, 0.8),
+    hexAlpha(theme.vars.palette.primary.dark, 0.8),
+    hexAlpha(theme.vars.palette.warning.main, 0.8),
+    hexAlpha(theme.vars.palette.error.main, 0.8),
   ];
 
   // Configure chart options by merging default settings with custom options
@@ -59,24 +59,13 @@ export function AnalyticsWebsiteVisits({
     // Set the color scheme for the chart
     colors: chartColors,
     // Configure stroke settings for chart elements
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
+    stroke: { width: 2, colors: ['transparent'] },
     // Set up x-axis configuration with categories
-    xaxis: {
-      categories: chart.categories,
-    },
+    xaxis: { categories: chart.categories },
     // Enable legend display
-    legend: {
-      show: true,
-    },
+    legend: { show: true },
     // Configure tooltip formatting
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
+    tooltip: { y: { formatter: (value: number) => `${value}` } },
     // Spread additional custom options from chart.options
     ...chart.options,
   });
@@ -92,9 +81,7 @@ export function AnalyticsWebsiteVisits({
             options={firstDropdownOptions}
             onChange={(e) => firstDropdownOnChange(e as string)}
             value={firstDropdownValue ?? ''}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '120px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
           />
         )}
         {secondDropdownOptions.length > 0 && secondDropdownOnChange && (
@@ -103,9 +90,7 @@ export function AnalyticsWebsiteVisits({
             options={secondDropdownOptions}
             onChange={(e) => secondDropdownOnChange(e as string)}
             value={secondDropdownValue ?? ''}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '120px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
           />
         )}
       </Box>

@@ -358,7 +358,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                       color: (theme) =>
                         formik.touched.gender && formik.errors.gender
                           ? '#ff563d !important'
-                          : `${theme.palette.common.black} !important`,
+                          : `${theme.vars.palette.common.black} !important`,
                       mr: 1,
                     }}
                   >
@@ -801,9 +801,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               }}
               error={formik.touched.country && Boolean(formik.errors.country?.name)}
               helperText={formik.touched.country && formik.errors.country?.name}
-              textFieldProps={{
-                label: 'Country *',
-              }}
+              textFieldProps={{ label: 'Country *' }}
               disabled={!isAddressDetailsEditable.value}
               onBlur={formik.handleBlur}
             />
@@ -825,9 +823,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               error={formik.touched.state && Boolean(formik.errors?.state?.name)}
               helperText={formik.touched.state && formik.errors?.state?.name}
               disabled={!isAddressDetailsEditable.value}
-              textFieldProps={{
-                label: 'State *',
-              }}
+              textFieldProps={{ label: 'State *' }}
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
@@ -843,9 +839,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               error={formik.touched.city && Boolean(formik.errors.city?.name)}
               helperText={formik.touched.city && formik.errors.city?.name}
               disabled={!isAddressDetailsEditable.value}
-              textFieldProps={{
-                label: 'City *',
-              }}
+              textFieldProps={{ label: 'City *' }}
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
@@ -874,10 +868,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   e.preventDefault();
                 }
               }}
-              inputProps={{
-                maxLength: 6,
-                pattern: '[0-9]*',
-              }}
+              inputProps={{ maxLength: 6, pattern: '[0-9]*' }}
             />
           </ShakingTextField>
         </Grid>

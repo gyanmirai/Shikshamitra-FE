@@ -25,13 +25,13 @@ const SubjectsList = () => {
       <Card
         sx={{
           borderRadius: 2,
-          backgroundColor: varAlpha(theme.palette.warning.mainChannel, 0.1),
+          backgroundColor: varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
           height: '100%',
         }}
       >
         <CardContent>
           <Box display="flex" alignItems="center" mb={2}>
-            <Iconify icon="solar:pen-bold" color={theme.palette.warning.main} sx={{ mr: 1 }} />
+            <Iconify icon="solar:pen-bold" color={theme.vars.palette.warning.main} sx={{ mr: 1 }} />
             <Typography variant="subtitle1">Pending Grade Submissions</Typography>
           </Box>
           <Typography variant="subtitle2" gutterBottom>

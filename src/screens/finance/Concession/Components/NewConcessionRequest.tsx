@@ -106,10 +106,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   // load students when class & division selected
   useEffect(() => {
     if (formik.values.className && formik.values.division) {
-      getStudents({
-        standardId: formik.values.className,
-        divisionId: formik.values.division,
-      });
+      getStudents({ standardId: formik.values.className, divisionId: formik.values.division });
     }
   }, [formik.values.className, formik.values.division, getStudents]);
 
@@ -332,7 +329,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       width={20}
                       sx={{
                         color: (theme) =>
-                          row.status === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                          row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
                         cursor: 'pointer',
                       }}
                     />

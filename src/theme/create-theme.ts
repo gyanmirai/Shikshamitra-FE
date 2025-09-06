@@ -18,12 +18,10 @@ export function createTheme(settings: SettingsState): Theme {
     direction: settings.direction,
     shape: { borderRadius: 8 },
     components,
-    typography: {
-      ...typography,
-      fontFamily: setFont(settings.fontFamily),
-    },
+    typography: { ...typography, fontFamily: setFont(settings.fontFamily) },
     cssVarPrefix: '',
     shouldSkipGeneratingVar,
+    colorSchemeSelector: 'data-mui-color-scheme',
   };
 
   /**
@@ -54,9 +52,7 @@ function shouldSkipGeneratingVar(keys: string[], value: string | number): boolea
     // 'transitions',
   ];
 
-  const skipPaletteKeys: {
-    [key: string]: string[];
-  } = {
+  const skipPaletteKeys: { [key: string]: string[] } = {
     global: ['tonalOffset', 'dividerChannel', 'contrastThreshold'],
     grey: ['A100', 'A200', 'A400', 'A700'],
     text: ['icon'],

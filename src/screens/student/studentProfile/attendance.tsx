@@ -30,11 +30,7 @@ import { AttendanceChart, YearlyAttendance } from './attendanceChart';
 
 import type { StudentTabsComponentType } from '.';
 
-type DotProps = {
-  sx?: React.CSSProperties;
-  color?: string;
-  children?: React.ReactNode;
-};
+type DotProps = { sx?: React.CSSProperties; color?: string; children?: React.ReactNode };
 
 export const Dot: React.FC<DotProps> = ({
   sx = {},
@@ -70,11 +66,7 @@ const Attendance = (props: StudentTabsComponentType) => {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        mt: 1,
-      }}
-    >
+    <Box sx={{ mt: 1 }}>
       {/* <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
@@ -142,11 +134,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           onChange={(newValue) => {
             setDate(newValue);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
           Overall Attendance&nbsp;
@@ -224,8 +212,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 }
                 chart={{
                   colors: [
-                    alpha(theme.palette.primary.main, 0.8),
-                    alpha(theme.palette.error.main, 0.8),
+                    alpha(theme.vars.palette.primary.main, 0.8),
+                    alpha(theme.vars.palette.error.main, 0.8),
                   ],
                   series: [
                     { label: 'Present', value: 75 },
@@ -274,8 +262,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 // subheader="(+43%) than last year"
                 chart={{
                   colors: [
-                    alpha(theme.palette.primary.main, 0.8),
-                    alpha(theme.palette.error.main, 0.8),
+                    alpha(theme.vars.palette.primary.main, 0.8),
+                    alpha(theme.vars.palette.error.main, 0.8),
                   ],
                   categories: [
                     'Jan',
@@ -292,14 +280,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                     'Dec',
                   ],
                   series: [
-                    {
-                      name: 'Present',
-                      data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30],
-                    },
-                    {
-                      name: 'Absent',
-                      data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0],
-                    },
+                    { name: 'Present', data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30] },
+                    { name: 'Absent', data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0] },
                   ],
                 }}
                 sx={{ width: '100%', boxShadow: 'var(--shadows-2)', borderRadius: 2 }}
@@ -334,12 +316,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 '& .MuiPickersCalendarHeader-root': {
                   display: 'none', // Hides the header (Month, Year, and Arrows)
                 },
-                '& .MuiDayCalendar-header': {
-                  justifyContent: 'space-around',
-                },
-                '& .MuiDayCalendar-weekContainer': {
-                  justifyContent: 'space-around',
-                },
+                '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+                '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
               }}
               slots={{
                 day: (prop: any) => {
@@ -380,20 +358,18 @@ const Attendance = (props: StudentTabsComponentType) => {
                             overflow: 'hidden',
                             fontWeight: disabled ? 400 : 600,
                             bgcolor: backgroundColor,
-                            '&:hover': {
-                              ...(absent ? { backgroundColor: 'unset' } : {}),
-                            },
+                            '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                             // background: (theme) =>
                             //   absent
-                            //     ? `${theme.palette.error.main} !important`
+                            //     ? `${theme.vars.palette.error.main} !important`
                             //     : today
                             //       ? 'transparent !important'
                             //       : '',
                             // ...(absent
                             //   ? { color: 'white !important' }
-                            //   : { color: (theme) => `${theme.palette.text.primary} !important` }),
+                            //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                             // border: (theme) =>
-                            //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
+                            //   today ? `2px solid ${theme.vars.palette.primary.main}` : 'none !important',
                             ...(isHalfDay
                               ? {
                                   '&::before': {
@@ -406,7 +382,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                                     height: '100%',
                                     // eslint-disable-next-line @typescript-eslint/no-shadow
                                     backgroundColor: (theme) =>
-                                      `${theme.palette.error.main} !important`,
+                                      `${theme.vars.palette.error.main} !important`,
                                     border: '2px solid transparent',
                                     zIndex: -1,
                                   },

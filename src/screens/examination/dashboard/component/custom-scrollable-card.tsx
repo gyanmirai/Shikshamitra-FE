@@ -14,11 +14,11 @@ const ScrollableContent = styled(Box)(({ theme }) => ({
     width: '8px', // Make the scrollbar wider for visibility
   },
   '&::-webkit-scrollbar-thumb': {
-    backgroundColor: theme.palette.grey[400], // Scrollbar thumb color
+    backgroundColor: theme.vars.palette.grey[400], // Scrollbar thumb color
     borderRadius: '4px', // Rounded corners for the scrollbar
   },
   '&::-webkit-scrollbar-track': {
-    backgroundColor: theme.palette.grey[200], // Scrollbar track color
+    backgroundColor: theme.vars.palette.grey[200], // Scrollbar track color
   },
 }));
 

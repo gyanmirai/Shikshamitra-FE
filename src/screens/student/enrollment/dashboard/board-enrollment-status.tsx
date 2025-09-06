@@ -22,9 +22,9 @@ const BoardEnrollmentStatus = () => {
             { label: 'Awaiting Result', value: 15 },
           ],
           colors: [
-            theme.palette.success.main,
-            theme.palette.warning.main,
-            theme.palette.error.main,
+            theme.vars.palette.success.main,
+            theme.vars.palette.warning.main,
+            theme.vars.palette.error.main,
           ],
         }}
         sx={{ boxShadow: 'none' }}
@@ -41,10 +41,7 @@ type Props2 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -53,8 +50,8 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    alpha(theme.palette.primary.dark, 0.24),
+    theme.vars.palette.primary.dark,
+    alpha(theme.vars.palette.primary.dark, 0.24),
   ];
 
   const chartOptions = useChart({
@@ -72,15 +69,10 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
     dataLabels: {
       enabled: true,
       offsetX: -6,
-      style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
+      style: { fontSize: '10px', colors: ['#FFFFFF', theme.vars.palette.text.primary] },
     },
     plotOptions: {
-      bar: {
-        horizontal: true,
-        borderRadius: 2,
-        barHeight: '30%',
-        dataLabels: { position: 'top' },
-      },
+      bar: { horizontal: true, borderRadius: 2, barHeight: '30%', dataLabels: { position: 'top' } },
     },
     ...chart.options,
   });

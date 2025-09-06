@@ -3,7 +3,7 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-import { alpha , useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -53,9 +53,9 @@ const SubjectAnalytics = () => {
               { name: '9-C', data: [51, 67, 47, 97] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
-              alpha(theme.palette.error.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.error.main, 0.8),
             ],
             options: {
               chart: {

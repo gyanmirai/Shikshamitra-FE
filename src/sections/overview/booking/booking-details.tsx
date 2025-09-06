@@ -35,15 +35,8 @@ type Props = CardProps & {
     status: string;
     checkIn: IDateValue;
     checkOut: IDateValue;
-    destination: {
-      name: string;
-      coverUrl: string;
-    };
-    customer: {
-      name: string;
-      avatarUrl: string;
-      phoneNumber: string;
-    };
+    destination: { name: string; coverUrl: string };
+    customer: { name: string; avatarUrl: string; phoneNumber: string };
   }[];
 };
 
@@ -81,16 +74,14 @@ export function BookingDetails({ title, subheader, headLabel, tableData, ...othe
 
 // ----------------------------------------------------------------------
 
-type RowItemProps = {
-  row: Props['tableData'][number];
-};
+type RowItemProps = { row: Props['tableData'][number] };
 
 function RowItem({ row }: RowItemProps) {
   const theme = useTheme();
 
   const popover = usePopover();
 
-  const lightMode = theme.palette.mode === 'light';
+  const lightMode = theme.vars.palette.mode === 'light';
 
   const handleDownload = () => {
     popover.onClose();

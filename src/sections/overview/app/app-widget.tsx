@@ -15,17 +15,16 @@ type Props = BoxProps & {
   icon: string;
   title: string;
   total: number;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: number; options?: ChartOptions };
 };
 
 export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.main,
+  ];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -106,13 +105,7 @@ export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
 
       <Iconify
         icon={icon}
-        sx={{
-          width: 120,
-          right: -40,
-          height: 120,
-          opacity: 0.08,
-          position: 'absolute',
-        }}
+        sx={{ width: 120, right: -40, height: 120, opacity: 0.08, position: 'absolute' }}
       />
     </Box>
   );

@@ -13,14 +13,7 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 type Props = CardProps & {
   title?: any;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
@@ -29,10 +22,10 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
   const chartSeries = chart.series.map((item: any) => item.value);
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.warning.light,
-    theme.palette.info.dark,
-    theme.palette.error.main,
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.light,
+    theme.vars.palette.info.dark,
+    theme.vars.palette.error.main,
   ];
 
   const chartOptions = useChart({
@@ -79,27 +72,16 @@ export function YearlyAttendance({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    hexAlpha(theme.palette.primary.dark, 0.8),
-    hexAlpha(theme.palette.warning.main, 0.8),
+    hexAlpha(theme.vars.palette.primary.dark, 0.8),
+    hexAlpha(theme.vars.palette.warning.main, 0.8),
   ];
 
   const chartOptions = useChart({
     colors: chartColors,
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: chart.categories,
-    },
-    legend: {
-      show: true,
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
+    stroke: { width: 2, colors: ['transparent'] },
+    xaxis: { categories: chart.categories },
+    legend: { show: true },
+    tooltip: { y: { formatter: (value: number) => `${value}` } },
     ...chart.options,
   });
 

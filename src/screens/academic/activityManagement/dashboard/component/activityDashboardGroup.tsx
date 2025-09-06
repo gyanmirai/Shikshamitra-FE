@@ -2,7 +2,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 import { Box, Card, Grid } from '@mui/material';
-import { alpha , useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -39,9 +39,7 @@ const ActivityDashboardGroup = () => {
                 setClasses1(val as string);
                 setDivisionOptions(selectedClass?.divisions || []);
               }}
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
-              }}
+              formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
             <CustomSelect
               label="Division"
@@ -53,9 +51,7 @@ const ActivityDashboardGroup = () => {
               onChange={(val) => {
                 setDivision1(val as string);
               }}
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
-              }}
+              formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
           </Box>
 
@@ -68,8 +64,8 @@ const ActivityDashboardGroup = () => {
                 { name: 'Static', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
               ],
               colors: [
-                alpha(theme.palette.warning.dark, 0.8),
-                alpha(theme.palette.secondary.main, 0.8),
+                alpha(theme.vars.palette.warning.dark, 0.8),
+                alpha(theme.vars.palette.secondary.main, 0.8),
               ],
             }}
             sx={{ height: '100%' }}

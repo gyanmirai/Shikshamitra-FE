@@ -16,13 +16,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
   selectSeries?: string;
@@ -46,10 +40,10 @@ export function AppAreaInstalled({
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.error.main,
-    theme.palette.warning.main,
-    hexAlpha(theme.palette.grey[500], 0.48),
+    theme.vars.palette.primary.main,
+    theme.vars.palette.error.main,
+    theme.vars.palette.warning.main,
+    hexAlpha(theme.vars.palette.grey[500], 0.48),
   ];
 
   const chartOptions = useChart({
@@ -95,19 +89,13 @@ export function AppAreaInstalled({
           colors={chartOptions?.colors}
           labels={chart.series[0].data.map((item) => item.name)}
           values={[fShortenNumber(1234), fShortenNumber(6789), fShortenNumber(1012)]}
-          sx={{
-            px: 3,
-            gap: 3,
-          }}
+          sx={{ px: 3, gap: 3 }}
         />
       ) : (
         <ChartLegends
           colors={chartOptions?.colors}
           labels={chart.series[0].data.map((item) => item.name)}
-          sx={{
-            px: 3,
-            gap: 3,
-          }}
+          sx={{ px: 3, gap: 3 }}
         />
       )}
 

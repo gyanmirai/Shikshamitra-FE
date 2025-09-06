@@ -150,7 +150,7 @@ const Communication = (props: StudentTabsComponentType) => {
               display: 'flex',
               p: 1,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
@@ -159,14 +159,7 @@ const Communication = (props: StudentTabsComponentType) => {
                 <Typography variant="subtitle1">New Announcement</Typography>
               </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    width: '100%',
-                    padding: 0,
-                  }}
-                >
+                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
                   {[
                     'Student record updated',
                     'Student attendance updated',
@@ -192,7 +185,7 @@ const Communication = (props: StudentTabsComponentType) => {
               display: 'flex',
               p: 1,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
@@ -206,14 +199,7 @@ const Communication = (props: StudentTabsComponentType) => {
                 <Typography variant="subtitle1">Upcoming Events</Typography>
               </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    width: '100%',
-                    padding: 0,
-                  }}
-                >
+                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
                   {[
                     'Student record updated',
                     'Student attendance updated',
@@ -236,7 +222,7 @@ const Communication = (props: StudentTabsComponentType) => {
               display: 'flex',
               p: 1,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
@@ -250,14 +236,7 @@ const Communication = (props: StudentTabsComponentType) => {
                 <Typography variant="subtitle1">New Messages</Typography>
               </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    width: '100%',
-                    padding: 0,
-                  }}
-                >
+                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
                   {[
                     'Student record updated',
                     'Student attendance updated',
@@ -280,7 +259,7 @@ const Communication = (props: StudentTabsComponentType) => {
               display: 'flex',
               p: 1,
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
             }}
           >
             <Box sx={{ flexGrow: 1 }}>
@@ -294,14 +273,7 @@ const Communication = (props: StudentTabsComponentType) => {
                 <Typography variant="subtitle1">Pending Survey</Typography>
               </Box>
               <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box
-                  component="ul"
-                  sx={{
-                    listStyle: 'none',
-                    width: '100%',
-                    padding: 0,
-                  }}
-                >
+                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
                   {[
                     'Student record updated',
                     'Student attendance updated',

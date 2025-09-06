@@ -5,11 +5,7 @@ import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { EcommerceSaleByGender } from 'src/sections/overview/e-commerce/ecommerce-sale-by-gender';
 
-type StudentDataType = {
-  [studentName: string]: {
-    [subject: string]: number;
-  };
-};
+type StudentDataType = { [studentName: string]: { [subject: string]: number } };
 
 // Sample Data (Student → Subject-wise Marks)
 const studentData: StudentDataType = {
@@ -40,10 +36,7 @@ export const StudentPerformanceChart = () => {
     setSelectedStudent(e);
   };
 
-  const studentOptions = Object.keys(studentData).map((name) => ({
-    value: name,
-    label: name,
-  }));
+  const studentOptions = Object.keys(studentData).map((name) => ({ value: name, label: name }));
 
   const subjects = Object.keys(studentData[selectedStudent] || {});
   const scores = subjects.map((subject) => studentData[selectedStudent][subject]);
@@ -67,9 +60,7 @@ export const StudentPerformanceChart = () => {
     colors: chartColors,
     stroke: { width: 2, colors: ['transparent'] },
     xaxis: { categories: subjects },
-    tooltip: {
-      y: { formatter: (value: number) => `${value} Marks` },
-    },
+    tooltip: { y: { formatter: (value: number) => `${value} Marks` } },
     plotOptions: {
       bar: {
         distributed: true, // Assigns different colors to each bar
@@ -99,8 +90,8 @@ export const StudentPerformanceChart = () => {
       { label: 'Attendance', value: attendance },
     ],
     colors: [
-      [theme.palette.success.light, theme.palette.success.main],
-      [theme.palette.warning.light, theme.palette.warning.main],
+      [theme.vars.palette.success.light, theme.vars.palette.success.main],
+      [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
     ],
   };
 

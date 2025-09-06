@@ -39,14 +39,8 @@ const Categories = (props: TabComponentType) => {
         open={Boolean(anchorColumnEl)}
         anchorEl={anchorColumnEl}
         onClose={() => setColumnAnchorEl(null)}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
         <Box sx={{ p: 2, width: 250 }}>
           <TextField
@@ -94,7 +88,9 @@ const Categories = (props: TabComponentType) => {
       <Grid container spacing={2}>
         <Grid size={{ xs: 6, md: 4 }}>
           <Card
-            sx={{ backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.16) }}
+            sx={{
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
+            }}
           >
             <CardHeader
               title="Assignments"
@@ -134,7 +130,9 @@ const Categories = (props: TabComponentType) => {
 
         <Grid size={{ xs: 6, md: 4 }}>
           <Card
-            sx={{ backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.16) }}
+            sx={{
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
+            }}
           >
             <CardHeader
               title="Study Materials"
@@ -173,7 +171,9 @@ const Categories = (props: TabComponentType) => {
         </Grid>
 
         <Grid size={{ xs: 6, md: 4 }}>
-          <Card sx={{ backgroundColor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.16) }}>
+          <Card
+            sx={{ backgroundColor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.16) }}
+          >
             <CardHeader
               title="Quizzes"
               avatar={

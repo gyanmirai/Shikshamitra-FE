@@ -23,12 +23,7 @@ const SubLayout = ({ children }: any) => {
   const isNavMini = settings.navLayout === 'mini';
 
   return (
-    <Box
-      display="flex"
-      height="100%"
-      gap={2}
-      // sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
-    >
+    <Box display="flex" height="100%" gap={2}>
       {currentData?.length > 0 && (
         <Slide direction="right" in={isNavMini} mountOnEnter unmountOnExit>
           <Scrollbar
@@ -37,9 +32,10 @@ const SubLayout = ({ children }: any) => {
               height: '100%',
               width: '320px',
               // boxShadow: 'var(--shadows-3)',
-              bgcolor: (theme) => theme.palette.background.paper,
-              borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-              // borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              // bgcolor: (theme) => theme.vars.palette.background.paper,
+              backgroundColor: (theme) => theme.vars.palette.background.paper,
+              borderRight: (theme) => `1px solid ${theme.vars.palette.divider}`,
+              // borderTop: (theme) => `1px solid ${theme.vars.palette.divider}`,
               borderRadius: 1,
             }}
           >
@@ -63,7 +59,7 @@ const SubLayout = ({ children }: any) => {
 
           bgcolor: (theme) => 'transparent',
           // border: (theme) =>
-          //   currentData?.length ? `4px solid ${theme.palette.background.paper}` : 'none',
+          //   currentData?.length ? `4px solid ${theme.vars.palette.background.paper}` : 'none',
           borderRadius: 1,
           borderBottom: 'none',
           borderRight: 'none',

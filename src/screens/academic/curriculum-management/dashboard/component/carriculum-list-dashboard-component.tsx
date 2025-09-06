@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import { alpha , useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -188,16 +188,11 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                 ],
 
                 colors: [
-                  alpha(theme.palette.primary.dark, 0.8),
-                  alpha(theme.palette.warning.main, 0.8),
-                  alpha(theme.palette.error.main, 0.8),
+                  alpha(theme.vars.palette.primary.dark, 0.8),
+                  alpha(theme.vars.palette.warning.main, 0.8),
+                  alpha(theme.vars.palette.error.main, 0.8),
                 ],
-                options: {
-                  legend: {
-                    show: false,
-                    position: 'top',
-                  },
-                },
+                options: { legend: { show: false, position: 'top' } },
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />

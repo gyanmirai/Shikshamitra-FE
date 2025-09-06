@@ -9,7 +9,11 @@ import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart
 const AdmissionOverTime = () => {
   const theme = useTheme();
   const chartOptions = useChart({
-    colors: [theme.palette.warning.main, theme.palette.success.main, theme.palette.info.main],
+    colors: [
+      theme.vars.palette.warning.main,
+      theme.vars.palette.success.main,
+      theme.vars.palette.info.main,
+    ],
     xaxis: {
       categories: [
         'Jan',
@@ -34,18 +38,9 @@ const AdmissionOverTime = () => {
         <Chart
           type="area"
           series={[
-            {
-              name: 'Admission',
-              data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-            },
-            {
-              name: 'Inquiry',
-              data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-            },
-            {
-              name: 'Registration',
-              data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51],
-            },
+            { name: 'Admission', data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49] },
+            { name: 'Inquiry', data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50] },
+            { name: 'Registration', data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51] },
           ]}
           options={chartOptions}
           height={320}
@@ -65,13 +60,7 @@ type Props3 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -81,7 +70,10 @@ export function EcommerceYearlySales({ title, subheader, chart, ...other }: Prop
 
   const [selectedSeries, setSelectedSeries] = useState('2023');
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+  ];
 
   const chartOptions = useChart({
     colors: chartColors,

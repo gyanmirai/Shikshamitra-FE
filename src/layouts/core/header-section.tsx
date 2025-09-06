@@ -46,10 +46,7 @@ export type HeaderSectionProps = AppBarProps & {
     centerArea?: React.ReactNode;
     bottomArea?: React.ReactNode;
   };
-  slotProps?: {
-    toolbar?: ToolbarProps;
-    container?: ContainerProps;
-  };
+  slotProps?: { toolbar?: ToolbarProps; container?: ContainerProps };
 };
 
 export function HeaderSection({
@@ -73,16 +70,10 @@ export function HeaderSection({
         easing: theme.transitions.easing.easeInOut,
         duration: theme.transitions.duration.shorter,
       }),
-      [theme.breakpoints.up('sm')]: {
-        minHeight: 'auto',
-      },
-      [theme.breakpoints.up(layoutQuery)]: {
-        height: 'var(--layout-header-desktop-height)',
-      },
+      [theme.breakpoints.up('sm')]: { minHeight: 'auto' },
+      [theme.breakpoints.up(layoutQuery)]: { height: 'var(--layout-header-desktop-height)' },
     },
-    offset: {
-      ...bgBlur({ color: varAlpha(theme.vars.palette.background.defaultChannel, 0.8) }),
-    },
+    offset: { ...bgBlur({ color: varAlpha(theme.vars.palette.background.defaultChannel, 0.8) }) },
   };
 
   return (
@@ -92,7 +83,7 @@ export function HeaderSection({
       sx={{
         zIndex: 'var(--layout-header-zIndex)',
         boxShadow: 'var(--shadows-1)',
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.vars.palette.background.paper,
         ...sx,
       }}
       {...other}
@@ -110,12 +101,7 @@ export function HeaderSection({
       >
         <Container
           {...slotProps?.container}
-          sx={{
-            height: 1,
-            display: 'flex',
-            alignItems: 'center',
-            ...slotProps?.container?.sx,
-          }}
+          sx={{ height: 1, display: 'flex', alignItems: 'center', ...slotProps?.container?.sx }}
         >
           {slots?.leftArea}
 

@@ -177,10 +177,10 @@ export default ShiftManageMentScreen;
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
   '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.palette.error.main : theme.palette.primary.main,
+    color: error ? theme.vars.palette.error.main : theme.vars.palette.primary.main,
   },
   '& .MuiStepLabel-label': {
-    color: error ? theme.palette.error.main : theme.palette.text.primary,
+    color: error ? theme.vars.palette.error.main : theme.vars.palette.text.primary,
     fontWeight: error ? 'bold' : 'normal',
   },
 }));
@@ -197,11 +197,7 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useUpdateShiftMutation,
   });
-  const formik = useFormik<{
-    name: string;
-    startTime: Dayjs | null;
-    endTime: Dayjs | null;
-  }>({
+  const formik = useFormik<{ name: string; startTime: Dayjs | null; endTime: Dayjs | null }>({
     initialValues: {
       name: editData?.shiftName || '',
       startTime: editData?.startTime ? dayjs(editData?.startTime, 'HH:mm:ss') : null,
@@ -314,27 +310,15 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
 
   const validation = (index: number) => {
     if (index === 0 && formik.errors.name && formik.touched.name) {
-      return {
-        msg: formik.errors.name,
-        value: true,
-      };
+      return { msg: formik.errors.name, value: true };
     }
     if (index === 1 && formik.errors.startTime && formik.touched.startTime) {
-      return {
-        msg: formik.errors.startTime,
-        value: true,
-      };
+      return { msg: formik.errors.startTime, value: true };
     }
     if (index === 2 && formik.errors.endTime && formik.touched.endTime) {
-      return {
-        msg: formik.errors.endTime,
-        value: true,
-      };
+      return { msg: formik.errors.endTime, value: true };
     }
-    return {
-      msg: '',
-      value: false,
-    };
+    return { msg: '', value: false };
   };
   return (
     <Box

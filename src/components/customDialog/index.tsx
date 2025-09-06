@@ -67,9 +67,7 @@ const CustomDialog = ({
           <IconButton
             aria-label="close"
             onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
-            sx={{
-              color: theme.palette.grey[500],
-            }}
+            sx={{ color: theme.vars.palette.grey[500] }}
           >
             <Close />
           </IconButton>

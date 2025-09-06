@@ -11,20 +11,9 @@ const InventoryCategoryChart = () => {
   const [selectedMonth, setSelectedMonth] = useState('April');
   const [selectedYear, setSelectedYear] = useState('2025');
 
-  const dataByMonthYear: {
-    [key: string]: {
-      available: number[];
-      issued: number[];
-    };
-  } = {
-    'April-2025': {
-      available: [24, 41, 35, 50],
-      issued: [12, 22, 18, 30],
-    },
-    'March-2025': {
-      available: [20, 33, 28, 40],
-      issued: [15, 20, 10, 25],
-    },
+  const dataByMonthYear: { [key: string]: { available: number[]; issued: number[] } } = {
+    'April-2025': { available: [24, 41, 35, 50], issued: [12, 22, 18, 30] },
+    'March-2025': { available: [20, 33, 28, 40], issued: [15, 20, 10, 25] },
   };
 
   const key = `${selectedMonth}-${selectedYear}`;
@@ -35,7 +24,7 @@ const InventoryCategoryChart = () => {
     { name: 'Issued', data: chartData.issued },
   ];
 
-  const chartColors = [theme.palette.primary.dark, theme.palette.warning.main];
+  const chartColors = [theme.vars.palette.primary.dark, theme.vars.palette.warning.main];
 
   const chartOptions = useChart({
     stroke: { width: 2, colors: ['transparent'] },
@@ -69,14 +58,7 @@ const InventoryCategoryChart = () => {
       <ChartLegends
         colors={chartColors}
         labels={['Available', 'Issued']}
-        sx={{
-          px: 3,
-          gap: 2,
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          mb: 2,
-          mt: -1,
-        }}
+        sx={{ px: 3, gap: 2, flexDirection: 'row', alignItems: 'flex-start', mb: 2, mt: -1 }}
       />
 
       <Chart

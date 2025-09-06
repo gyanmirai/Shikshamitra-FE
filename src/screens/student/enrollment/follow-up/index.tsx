@@ -131,10 +131,12 @@ const FollowUpScreen: React.FC = () => {
               return (
                 <IconButton
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
-                    color: (theme) => theme.palette.primary.main,
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
+                    color: (theme) => theme.vars.palette.primary.main,
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
                     },
                     height: '24px',
                     width: '24px',
@@ -165,12 +167,7 @@ const FollowUpScreen: React.FC = () => {
 export default FollowUpScreen;
 
 interface IFollowUpResponse {
-  followUps: {
-    message: string;
-    author: string;
-    timestamp: string;
-    dueDate: string;
-  }[];
+  followUps: { message: string; author: string; timestamp: string; dueDate: string }[];
   inquiryStatusType: number;
   dueDate: string;
 }
@@ -194,15 +191,9 @@ export const CommunicationForm = ({
     type: 'query',
     currentQueryAndMutation: useGetFollowUpQuery,
     params: studentEnrollmentId,
-    options: {
-      skip: !studentEnrollmentId,
-    },
+    options: { skip: !studentEnrollmentId },
   });
-  const formik = useFormik<{
-    msg: string;
-    status: FollowUpStatusType;
-    dueDate: Dayjs | null;
-  }>({
+  const formik = useFormik<{ msg: string; status: FollowUpStatusType; dueDate: Dayjs | null }>({
     initialValues: {
       msg: '',
       status: data?.inquiryStatusType ?? FollowUpStatusType.Pending,

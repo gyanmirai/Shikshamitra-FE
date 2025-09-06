@@ -74,13 +74,7 @@ export const AccessControlForm = ({
     organizations: string[];
     standards: string[];
     divisions: string[];
-  }>({
-    boards: [],
-    mediums: [],
-    organizations: [],
-    standards: [],
-    divisions: [],
-  });
+  }>({ boards: [], mediums: [], organizations: [], standards: [], divisions: [] });
 
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -89,10 +83,7 @@ export const AccessControlForm = ({
   const [addAccessControl, { isLoading: isAddAccessControlLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAccessControlMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Access Control added successfully',
-    },
+    popupConfig: { success: true, successMessage: 'Access Control added successfully' },
   });
 
   // Query hook for fetching existing access control data
@@ -100,9 +91,7 @@ export const AccessControlForm = ({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: user?.id,
-    options: {
-      skip: !user?.id,
-    },
+    options: { skip: !user?.id },
   });
 
   // Effect to populate form with existing access control data
@@ -212,7 +201,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
         ...(hasChildren && isExpanded.value
           ? {
               '&::before': {
-                borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
+                borderLeft: (theme) => `1px dashed ${theme.vars.palette.primary.main}`,
                 content: '""',
                 height: '80%',
                 width: '100%',
@@ -229,10 +218,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          '&:hover': {
-            bgcolor: 'action.hover',
-            borderRadius: 1,
-          },
+          '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
         }}
       >
         <Box
@@ -244,7 +230,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
             justifyContent: 'center',
             borderRadius: '50%',
             p: 0.2,
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
             visibility: hasChildren ? 'initial' : 'hidden',
           }}
         >
@@ -455,7 +441,7 @@ const BoardScreenStep = ({
           ...(hasChildren && isExpanded
             ? {
                 '&::before': {
-                  borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
+                  borderLeft: (theme) => `1px dashed ${theme.vars.palette.primary.main}`,
                   content: '""',
                   height: '80%',
                   width: '100%',
@@ -472,10 +458,7 @@ const BoardScreenStep = ({
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            '&:hover': {
-              bgcolor: 'action.hover',
-              borderRadius: 1,
-            },
+            '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
           }}
         >
           <Box
@@ -487,7 +470,7 @@ const BoardScreenStep = ({
               justifyContent: 'center',
               borderRadius: '50%',
               p: 0.2,
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
               visibility: hasChildren ? 'initial' : 'hidden',
             }}
           >

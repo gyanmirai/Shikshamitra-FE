@@ -16,13 +16,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -33,9 +27,9 @@ export function AppAreaInstalled({ title, subheader, chart, ...other }: Props) {
   const [selectedSeries, setSelectedSeries] = useState('2023');
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    theme.palette.warning.main,
-    theme.palette.info.main,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.warning.main,
+    theme.vars.palette.info.main,
   ];
 
   const chartOptions = useChart({
@@ -73,10 +67,7 @@ export function AppAreaInstalled({ title, subheader, chart, ...other }: Props) {
         colors={chartOptions?.colors}
         labels={chart.series[0].data.map((item) => item.name)}
         values={[fShortenNumber(1234), fShortenNumber(6789), fShortenNumber(1012)]}
-        sx={{
-          px: 3,
-          gap: 3,
-        }}
+        sx={{ px: 3, gap: 3 }}
       />
 
       <Chart

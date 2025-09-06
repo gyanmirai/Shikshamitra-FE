@@ -17,10 +17,7 @@ type Props = CardProps & {
   total: number;
   chart: {
     colors?: string[][];
-    series: {
-      label: string;
-      value: number;
-    }[];
+    series: { label: string; value: number }[];
     options?: ChartOptions;
   };
 };
@@ -31,9 +28,12 @@ export function EcommerceSaleByGender({ title, subheader, total, chart, ...other
   const chartSeries = chart.series.map((item) => item.value);
 
   const chartColors = chart.colors ?? [
-    [theme.palette.primary.light, theme.palette.primary.main],
-    [hexAlpha(theme.palette.warning.light, 0.8), hexAlpha(theme.palette.warning.main, 0.8)],
-    [hexAlpha(theme.palette.error.light, 0.8), hexAlpha(theme.palette.error.main, 0.8)],
+    [theme.vars.palette.primary.light, theme.vars.palette.primary.main],
+    [
+      hexAlpha(theme.vars.palette.warning.light, 0.8),
+      hexAlpha(theme.vars.palette.warning.main, 0.8),
+    ],
+    [hexAlpha(theme.vars.palette.error.light, 0.8), hexAlpha(theme.vars.palette.error.main, 0.8)],
   ];
 
   const chartOptions = useChart({

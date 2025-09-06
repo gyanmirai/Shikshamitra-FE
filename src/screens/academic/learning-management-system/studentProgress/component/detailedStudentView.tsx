@@ -12,7 +12,7 @@ const DetailedStudentView = () => (
       justifyContent: 'center',
       height: '100%',
       padding: 3,
-      backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#333' : '#f5f5f5'),
+      backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#333' : '#f5f5f5'),
       borderRadius: 2,
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     }}
@@ -23,21 +23,14 @@ const DetailedStudentView = () => (
       sx={{
         width: 120,
         height: 120,
-        border: (theme) => `3px solid ${theme.palette.primary.main}`,
+        border: (theme) => `3px solid ${theme.vars.palette.primary.main}`,
         marginBottom: 2,
       }}
     />
     <Typography variant="h4" fontWeight="bold" sx={{ marginBottom: 1 }}>
       John Doe
     </Typography>
-    <Typography
-      variant="h5"
-      sx={{
-        color: '#4caf50',
-        fontWeight: 'bold',
-        marginBottom: 3,
-      }}
-    >
+    <Typography variant="h5" sx={{ color: '#4caf50', fontWeight: 'bold', marginBottom: 3 }}>
       A+
     </Typography>
     <Grid container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
@@ -47,13 +40,17 @@ const DetailedStudentView = () => (
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#424242' : 'white'),
+            backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#424242' : 'white'),
             padding: 2,
             borderRadius: 1,
           }}
         >
           <School
-            sx={{ fontSize: 40, color: (theme) => theme.palette.primary.main, marginBottom: 1 }}
+            sx={{
+              fontSize: 40,
+              color: (theme) => theme.vars.palette.primary.main,
+              marginBottom: 1,
+            }}
           />
           <Typography variant="subtitle1" color="textSecondary">
             Average Grade
@@ -70,13 +67,17 @@ const DetailedStudentView = () => (
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#424242' : 'white'),
+            backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#424242' : 'white'),
             padding: 2,
             borderRadius: 1,
           }}
         >
           <AssignmentTurnedIn
-            sx={{ fontSize: 40, color: (theme) => theme.palette.primary.main, marginBottom: 1 }}
+            sx={{
+              fontSize: 40,
+              color: (theme) => theme.vars.palette.primary.main,
+              marginBottom: 1,
+            }}
           />
           <Typography variant="subtitle1" color="textSecondary">
             Assignments Completed
@@ -88,10 +89,9 @@ const DetailedStudentView = () => (
               sx={{
                 height: 10,
                 borderRadius: 5,
-                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#555' : '#e0e0e0'),
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#4caf50',
-                },
+                backgroundColor: (theme) =>
+                  theme.vars.palette.mode === 'dark' ? '#555' : '#e0e0e0',
+                '& .MuiLinearProgress-bar': { backgroundColor: '#4caf50' },
               }}
             />
             <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 0.5 }}>

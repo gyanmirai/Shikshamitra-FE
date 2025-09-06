@@ -57,9 +57,7 @@ const ClassComparison = () => {
               setDivisionOptions(selectedClass?.divisions || []);
             }}
             value={classes2}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
 
@@ -73,16 +71,11 @@ const ClassComparison = () => {
               { name: '', data: [51, 67, 47, 97] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
-              alpha(theme.palette.error.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.error.main, 0.8),
             ],
-            options: {
-              legend: {
-                show: false,
-                position: 'top',
-              },
-            },
+            options: { legend: { show: false, position: 'top' } },
           }}
           sx={{ height: '100%', boxShadow: 'none' }}
         />

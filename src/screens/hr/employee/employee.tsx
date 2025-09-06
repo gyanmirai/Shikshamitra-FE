@@ -82,10 +82,7 @@ const HrEmployee = () => {
     data: employee,
     isLoading,
     refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
-  });
+  } = useQueryAndMutation({ type: 'query', currentQueryAndMutation: useGetEmployeeQuery });
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
       if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -257,7 +254,7 @@ const HrEmployee = () => {
                           sx={{
                             height: 32,
                             width: 32,
-                            border: (theme) => `1px solid ${theme.palette.grey[400]}`,
+                            border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
                           }}
                         />{' '}
                         {value}
@@ -265,12 +262,7 @@ const HrEmployee = () => {
                     );
                   },
                 },
-                {
-                  id: 'employeeCode',
-                  label: 'Employee Code',
-                  minWidth: '150px',
-                  align: 'left',
-                },
+                { id: 'employeeCode', label: 'Employee Code', minWidth: '150px', align: 'left' },
 
                 {
                   id: 'dob',
@@ -309,17 +301,8 @@ const HrEmployee = () => {
                     return EmployeeGroupType[row?.employeeGroup];
                   },
                 },
-                {
-                  id: 'shiftName',
-                  label: 'Shift',
-                  align: 'left',
-                  minWidth: '12vw',
-                },
-                {
-                  id: 'organization',
-                  label: 'Organization',
-                  align: 'left',
-                },
+                { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
+                { id: 'organization', label: 'Organization', align: 'left' },
                 {
                   id: 'roleValue',
                   label: 'Role',
@@ -412,11 +395,7 @@ const HrEmployee = () => {
               open={payrollDialog.value}
               handleClose={handleClosePayroll}
               title="Payroll Structure"
-              paperProps={{
-                sx: {
-                  maxHeight: '70vh',
-                },
-              }}
+              paperProps={{ sx: { maxHeight: '70vh' } }}
             >
               <Box bgcolor="background.neutral" p={2}>
                 <Grid container spacing={3}>

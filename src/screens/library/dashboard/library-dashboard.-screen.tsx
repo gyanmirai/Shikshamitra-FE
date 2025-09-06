@@ -85,13 +85,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="ix:library"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
               <Box
                 sx={{
@@ -138,13 +132,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="map:library"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -193,13 +181,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="material-symbols-light:slide-library-sharp"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -247,13 +229,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="tabler:calendar-due"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -301,13 +277,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="heroicons:user-group"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -347,9 +317,9 @@ const LibraryDashboard = () => {
             selectSeries="Standard 1"
             chart={{
               colors: [
-                theme.palette.info.main,
-                theme.palette.primary.main,
-                theme.palette.warning.main,
+                theme.vars.palette.info.main,
+                theme.vars.palette.primary.main,
+                theme.vars.palette.warning.main,
               ],
               categories: ['Fiction', 'Non-fiction', 'TextBook', 'Refrences'],
               series: [
@@ -395,10 +365,10 @@ const LibraryDashboard = () => {
             subheader=""
             chart={{
               colors: [
-                theme.palette.primary.main,
-                theme.palette.warning.main,
-                theme.palette.secondary.main,
-                theme.palette.error.main,
+                theme.vars.palette.primary.main,
+                theme.vars.palette.warning.main,
+                theme.vars.palette.secondary.main,
+                theme.vars.palette.error.main,
               ],
               categories: [
                 'Jan',
@@ -418,22 +388,10 @@ const LibraryDashboard = () => {
                 {
                   name: 'Standard 1',
                   data: [
-                    {
-                      name: 'Fiction',
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                    {
-                      name: 'Non-Fiction',
-                      data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77],
-                    },
-                    {
-                      name: 'TextBook',
-                      data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77],
-                    },
-                    {
-                      name: 'Refrences',
-                      data: [56, 13, 34, 10, 77, 99, 69, 91, 148, 35, 51, 49],
-                    },
+                    { name: 'Fiction', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] },
+                    { name: 'Non-Fiction', data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77] },
+                    { name: 'TextBook', data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77] },
+                    { name: 'Refrences', data: [56, 13, 34, 10, 77, 99, 69, 91, 148, 35, 51, 49] },
                   ],
                 },
               ],

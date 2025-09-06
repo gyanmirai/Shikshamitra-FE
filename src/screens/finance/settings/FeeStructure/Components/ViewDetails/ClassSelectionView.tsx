@@ -43,11 +43,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
                       status as keyof typeof FeeStructureClassStatusTypeColors
                     ]
                   }
-                  sx={{
-                    minWidth: 80,
-                    textTransform: 'none',
-                    fontWeight: 500,
-                  }}
+                  sx={{ minWidth: 80, textTransform: 'none', fontWeight: 500 }}
                   onClick={() => onSelectClass(className)}
                 >
                   {className.replace('Class ', '')}
@@ -73,10 +69,10 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
 
             const dotColor =
               statusKey === FeeStructureClassStatusType.Current
-                ? theme.palette.success.main
+                ? theme.vars.palette.success.main
                 : statusKey === FeeStructureClassStatusType.Completed
-                  ? theme.palette.success.light
-                  : theme.palette.grey[400];
+                  ? theme.vars.palette.success.light
+                  : theme.vars.palette.grey[400];
 
             return (
               <Box key={statusKey} display="flex" alignItems="center" gap={1}>

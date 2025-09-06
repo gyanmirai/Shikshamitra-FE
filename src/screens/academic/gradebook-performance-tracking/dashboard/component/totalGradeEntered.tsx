@@ -18,12 +18,9 @@ const TotalGradeEntered = () => {
           display: 'flex',
           alignItems: 'center',
           height: '100%',
-          bgcolor: varAlpha(theme.palette.secondary.mainChannel, 0.1),
+          bgcolor: varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
           transition: 'all 0.3s ease',
-          '&:hover': {
-            boxShadow: 'var(--shadows-8)',
-            scale: 1.03,
-          },
+          '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
           cursor: 'pointer',
         }}
       >

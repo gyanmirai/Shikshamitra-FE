@@ -6,7 +6,7 @@ import { Box, Card, Grid, Typography } from '@mui/material';
 const AttendanceTrend = () => {
   const theme = useTheme();
   const chartOptions = useChart({
-    colors: [theme.palette.primary.main, theme.palette.error.main],
+    colors: [theme.vars.palette.primary.main, theme.vars.palette.error.main],
     xaxis: {
       categories: [
         'Jan',
@@ -31,14 +31,8 @@ const AttendanceTrend = () => {
         <Chart
           type="area"
           series={[
-            {
-              name: 'Total Present',
-              data: [22, 25, 28, 24, 26, 27, 25, 23, 24, 26, 28, 25],
-            },
-            {
-              name: 'Total Absent',
-              data: [3, 2, 4, 1, 3, 2, 4, 2, 1, 3, 2, 3],
-            },
+            { name: 'Total Present', data: [22, 25, 28, 24, 26, 27, 25, 23, 24, 26, 28, 25] },
+            { name: 'Total Absent', data: [3, 2, 4, 1, 3, 2, 4, 2, 1, 3, 2, 3] },
           ]}
           options={chartOptions}
           height={320}
@@ -49,7 +43,7 @@ const AttendanceTrend = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="subtitle2">Total Present Days</Typography>
             <Typography
-              color={theme.palette.primary.main}
+              color={theme.vars.palette.primary.main}
               variant="subtitle1"
               sx={{ fontWeight: 700 }}
             >
@@ -59,7 +53,7 @@ const AttendanceTrend = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="subtitle2">Total Present Days</Typography>
             <Typography
-              color={theme.palette.error.main}
+              color={theme.vars.palette.error.main}
               variant="subtitle1"
               sx={{ fontWeight: 700 }}
             >

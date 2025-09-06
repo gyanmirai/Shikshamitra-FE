@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX} from 'react';
+import type { JSX } from 'react';
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
-import { Box , Grid, Card, Divider, CardHeader } from '@mui/material';
+import { Box, Grid, Card, Divider, CardHeader } from '@mui/material';
 
 import Overview from './components/overview';
 import RecentLeaveRequests from './components/recentLeaveRequests';
@@ -17,22 +17,10 @@ import AttendanceStatusCard from './components/attendanceMarkingStatus';
 
 const StudentAttendanceDashboard = () => {
   const [sections, setSections] = useState([
-    {
-      id: '0',
-      title: 'Over View',
-    },
-    {
-      id: '1',
-      title: 'Daily Attendance Trend',
-    },
-    {
-      id: '2',
-      title: 'Attendance Marking Status',
-    },
-    {
-      id: '3',
-      title: 'Recent Leave Requests',
-    },
+    { id: '0', title: 'Over View' },
+    { id: '1', title: 'Daily Attendance Trend' },
+    { id: '2', title: 'Attendance Marking Status' },
+    { id: '3', title: 'Recent Leave Requests' },
   ]);
   return (
     <Box>
@@ -67,23 +55,16 @@ export default StudentAttendanceDashboard;
 type Props1 = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 export function AttendanceOverview({ title, subheader, chart, ...other }: Props1): JSX.Element {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    theme.palette.primary.lighter,
-    theme.palette.primary.light,
-    theme.palette.primary.darker,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.primary.lighter,
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.darker,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -106,11 +87,7 @@ export function AttendanceOverview({ title, subheader, chart, ...other }: Props1
           labels: {
             value: { formatter: (value: number | string) => fNumber(value) },
             total: {
-              formatter: (w: {
-                globals: {
-                  seriesTotals: number[];
-                };
-              }) => {
+              formatter: (w: { globals: { seriesTotals: number[] } }) => {
                 const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return fNumber(sum);
               },

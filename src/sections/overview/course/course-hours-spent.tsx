@@ -14,13 +14,7 @@ type Props = CardProps & {
   subheader?: string;
   chart: {
     colors?: string[];
-    series: {
-      name: string;
-      categories: string[];
-      data: {
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; categories: string[]; data: { data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -32,7 +26,7 @@ export function CourseHoursSpent({ title, subheader, chart, ...other }: Props) {
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
-  const chartColors = chart.colors ?? [theme.palette.text.primary];
+  const chartColors = chart.colors ?? [theme.vars.palette.text.primary];
 
   const chartOptions = useChart({
     grid: { padding: { left: 24 } },

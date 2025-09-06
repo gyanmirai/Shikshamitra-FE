@@ -22,7 +22,7 @@ const DashboardChart = () => {
               { label: 'Non-teaching Staff', value: 50 },
               { label: 'Teaching Staff', value: 70 },
             ],
-            colors: [theme.palette.primary.light, theme.palette.primary.darker],
+            colors: [theme.vars.palette.primary.light, theme.vars.palette.primary.darker],
           }}
         />
       </Grid>
@@ -69,7 +69,10 @@ const DashboardChart = () => {
                 ],
               },
             ],
-            colors: [theme.palette.primary.main, varAlpha(theme.palette.warning.mainChannel, 0.5)],
+            colors: [
+              theme.vars.palette.primary.main,
+              varAlpha(theme.vars.palette.warning.mainChannel, 0.5),
+            ],
           }}
           sx={{ height: 1 }}
         />

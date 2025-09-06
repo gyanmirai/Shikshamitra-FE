@@ -145,9 +145,9 @@ const HRDashboardAttendanceTrend = () => {
               },
             ],
             colors: [
-              theme.palette.primary.dark,
-              theme.palette.error.main,
-              theme.palette.warning.main,
+              theme.vars.palette.primary.dark,
+              theme.vars.palette.error.main,
+              theme.vars.palette.warning.main,
             ],
           }}
           sx={{ height: '100%' }}

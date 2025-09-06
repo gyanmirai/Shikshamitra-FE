@@ -209,16 +209,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   }}
                   placeholder="Description"
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': {
-                      borderColor: theme.palette.text.primary,
-                    },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     ...(!!formik.errors.description && {
-                      borderColor: theme.palette.error.main,
+                      borderColor: theme.vars.palette.error.main,
                     }),
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                   }}

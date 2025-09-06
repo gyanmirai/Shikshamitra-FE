@@ -15,14 +15,7 @@ type Props = CardProps & {
   subheader?: string;
   chart: {
     colors?: string[];
-    series: {
-      name: string;
-      categories?: string[];
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; categories?: string[]; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -35,29 +28,19 @@ export function FileDataActivity({ title, subheader, chart, ...other }: Props) {
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.error.main,
-    theme.palette.warning.main,
-    hexAlpha(theme.palette.grey[500], 0.48),
+    theme.vars.palette.primary.main,
+    theme.vars.palette.error.main,
+    theme.vars.palette.warning.main,
+    hexAlpha(theme.vars.palette.grey[500], 0.48),
   ];
 
   const chartOptions = useChart({
-    chart: {
-      stacked: true,
-    },
+    chart: { stacked: true },
     colors: chartColors,
-    stroke: {
-      width: 0,
-    },
-    legend: {
-      show: true,
-    },
-    xaxis: {
-      categories: currentSeries?.categories,
-    },
-    tooltip: {
-      y: { formatter: (value: number) => fData(value) },
-    },
+    stroke: { width: 0 },
+    legend: { show: true },
+    xaxis: { categories: currentSeries?.categories },
+    tooltip: { y: { formatter: (value: number) => fData(value) } },
     ...chart.options,
   });
 

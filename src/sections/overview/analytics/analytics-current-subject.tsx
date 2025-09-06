@@ -15,10 +15,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -27,9 +24,9 @@ export function AnalyticsCurrentSubject({ title, subheader, chart, ...other }: P
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.warning.main,
-    theme.palette.info.main,
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+    theme.vars.palette.info.main,
   ];
 
   const chartOptions = useChart({
@@ -38,7 +35,7 @@ export function AnalyticsCurrentSubject({ title, subheader, chart, ...other }: P
     fill: { opacity: 0.48 },
     xaxis: {
       categories: chart.categories,
-      labels: { style: { colors: [...Array(6)].map(() => theme.palette.text.secondary) } },
+      labels: { style: { colors: [...Array(6)].map(() => theme.vars.palette.text.secondary) } },
     },
     ...chart.options,
   });

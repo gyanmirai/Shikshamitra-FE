@@ -33,8 +33,8 @@ const AttendaceOverview = () => {
                 { name: 'Quiz', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
               ],
               colors: [
-                alpha(theme.palette.primary.dark, 0.8),
-                alpha(theme.palette.warning.main, 0.8),
+                alpha(theme.vars.palette.primary.dark, 0.8),
+                alpha(theme.vars.palette.warning.main, 0.8),
               ],
             }}
             sx={{ height: '100%' }}

@@ -100,10 +100,10 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
                 const dotColor =
                   statusKey === FeeStructureClassStatusType.Current
-                    ? theme.palette.success.main
+                    ? theme.vars.palette.success.main
                     : statusKey === FeeStructureClassStatusType.Completed
-                      ? theme.palette.success.light
-                      : theme.palette.grey[400];
+                      ? theme.vars.palette.success.light
+                      : theme.vars.palette.grey[400];
 
                 return (
                   <Box key={statusKey} display="flex" alignItems="center" gap={1}>

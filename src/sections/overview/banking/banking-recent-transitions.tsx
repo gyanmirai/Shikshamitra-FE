@@ -85,16 +85,14 @@ export function BankingRecentTransitions({
 
 // ----------------------------------------------------------------------
 
-type RowItemProps = {
-  row: Props['tableData'][number];
-};
+type RowItemProps = { row: Props['tableData'][number] };
 
 function RowItem({ row }: RowItemProps) {
   const theme = useTheme();
 
   const popover = usePopover();
 
-  const lightMode = theme.palette.mode === 'light';
+  const lightMode = theme.vars.palette.mode === 'light';
 
   const handleDownload = () => {
     popover.onClose();
@@ -136,12 +134,7 @@ function RowItem({ row }: RowItemProps) {
       >
         <Avatar
           src={row.avatarUrl || ''}
-          sx={{
-            width: 48,
-            height: 48,
-            color: 'text.secondary',
-            bgcolor: 'background.neutral',
-          }}
+          sx={{ width: 48, height: 48, color: 'text.secondary', bgcolor: 'background.neutral' }}
         >
           {row.category === 'Fast food' && <Iconify icon="ion:fast-food" width={24} />}
           {row.category === 'Fitness' && <Iconify icon="ic:round-fitness-center" width={24} />}

@@ -12,23 +12,17 @@ import { Chart, useChart } from 'src/components/chart';
 
 type Props = CardProps & {
   total: number;
-  data: {
-    name: string;
-    usedStorage: number;
-    filesCount: number;
-    icon: React.ReactNode;
-  }[];
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  data: { name: string; usedStorage: number; filesCount: number; icon: React.ReactNode }[];
+  chart: { colors?: string[]; series: number; options?: ChartOptions };
 };
 
 export function FileStorageOverview({ data, total, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.palette.secondary.main, theme.palette.secondary.light];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.secondary.main,
+    theme.vars.palette.secondary.light,
+  ];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -78,14 +72,7 @@ export function FileStorageOverview({ data, total, chart, ...other }: Props) {
 
       <Stack
         spacing={3}
-        sx={{
-          px: 3,
-          pb: 5,
-          mt: -4,
-          zIndex: 1,
-          position: 'relative',
-          bgcolor: 'background.paper',
-        }}
+        sx={{ px: 3, pb: 5, mt: -4, zIndex: 1, position: 'relative', bgcolor: 'background.paper' }}
       >
         {data.map((category) => (
           <Stack

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
-import { Box , Grid, Card, Typography } from '@mui/material';
+import { Box, Grid, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
@@ -65,12 +65,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >
@@ -101,12 +98,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >
@@ -142,12 +136,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
             sx={{
               p: 2,
               height: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >

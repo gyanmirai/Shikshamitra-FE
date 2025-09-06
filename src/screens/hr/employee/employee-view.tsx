@@ -122,8 +122,8 @@ export function EmployeeCard({ employee }: any) {
             justifyContent: 'space-between',
             borderLeft: (theme) =>
               employee?.employeeStatusType === EmployeeStatusType.Active
-                ? `4px solid ${theme.palette.success.main}`
-                : `4px solid ${theme.palette.error.main}`,
+                ? `4px solid ${theme.vars.palette.success.main}`
+                : `4px solid ${theme.vars.palette.error.main}`,
             borderRadius: 1,
           }}
         >
@@ -137,7 +137,7 @@ export function EmployeeCard({ employee }: any) {
               sx={{
                 width: 64,
                 height: 64,
-                border: (theme) => `1px solid ${theme.palette.grey[400]}`,
+                border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
               }}
             />
             <Box>
@@ -184,17 +184,13 @@ export function EmployeeCard({ employee }: any) {
           sx={{
             px: 1.5,
 
-            '& .MuiTabs-flexContainer': {
-              gap: 1.5,
-            },
+            '& .MuiTabs-flexContainer': { gap: 1.5 },
           }}
           role="tablist"
         >
           {TABS.map((tab) => (
             <Tab
-              sx={{
-                fontSize: '12px',
-              }}
+              sx={{ fontSize: '12px' }}
               key={tab.value}
               value={tab.value}
               icon={tab.icon}
@@ -209,11 +205,7 @@ export function EmployeeCard({ employee }: any) {
         steps={TABS}
         isBackClick={isBackClick}
         step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-          },
-        }}
+        containerProps={{ sx: { p: 0 } }}
       >
         <Box>
           {currentActiveComponent?.component && (

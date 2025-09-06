@@ -11,13 +11,10 @@ const AvgClassPerformace = () => {
         elevation={3}
         sx={{
           p: 2,
-          bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.1),
+          bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
           height: '100%',
           transition: 'all 0.3s ease',
-          '&:hover': {
-            boxShadow: 'var(--shadows-8)',
-            scale: 1.03,
-          },
+          '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
           cursor: 'pointer',
         }}
       >

@@ -20,7 +20,7 @@ const DashboardDonutPieChart = () => {
               { label: 'Employee Payroll Run', value: 1224 },
               { label: 'Employee Payroll Remain', value: 53345 },
             ],
-            colors: [theme.palette.primary.light, theme.palette.primary.darker],
+            colors: [theme.vars.palette.primary.light, theme.vars.palette.primary.darker],
           }}
         />
       </Grid>
@@ -49,7 +49,7 @@ const DashboardDonutPieChart = () => {
               { label: 'Fixed Allowance', value: 50 },
               { label: 'Bonus', value: 60 },
             ],
-            colors: [theme.palette.primary.light, theme.palette.primary.darker],
+            colors: [theme.vars.palette.primary.light, theme.vars.palette.primary.darker],
           }}
         />
       </Grid>

@@ -15,11 +15,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 type Props = CardProps & {
   chart: {
     colors?: string[];
-    series: {
-      label: string;
-      percent: number;
-      total: number;
-    }[];
+    series: { label: string; percent: number; total: number }[];
     options?: ChartOptions;
   };
 };
@@ -30,8 +26,8 @@ export function BookingCheckInWidgets({ chart, ...other }: Props) {
   const smUp = useResponsive('up', 'sm');
 
   const chartColors = chart.colors ?? [
-    [theme.palette.primary.light, theme.palette.primary.main],
-    [theme.palette.warning.light, theme.palette.warning.main],
+    [theme.vars.palette.primary.light, theme.vars.palette.primary.main],
+    [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
   ];
 
   const chartOptions = useChart({

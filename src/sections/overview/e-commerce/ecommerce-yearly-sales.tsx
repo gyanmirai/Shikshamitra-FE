@@ -17,13 +17,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
   isShowChartLegend?: boolean;
@@ -43,7 +37,10 @@ export function EcommerceYearlySales({
   const [selectedSeries, setSelectedSeries] = useState(chart.series[0].name);
 
   // Define chart colors - use provided colors or fallback to theme defaults
-  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+  ];
 
   // Configure chart options with colors, categories and any additional options
   const chartOptions = useChart({

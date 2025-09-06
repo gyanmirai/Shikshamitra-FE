@@ -19,13 +19,13 @@ const TotalStudents = () => {
       <Card
         sx={{
           borderRadius: 2,
-          backgroundColor: varAlpha(theme.palette.info.mainChannel, 0.1),
+          backgroundColor: varAlpha(theme.vars.palette.info.mainChannel, 0.1),
           height: '100%',
         }}
       >
         <CardContent>
           <Box display="flex" alignItems="center" mb={2}>
-            <Iconify icon="mdi:reminder" color={theme.palette.info.main} sx={{ mr: 1 }} />
+            <Iconify icon="mdi:reminder" color={theme.vars.palette.info.main} sx={{ mr: 1 }} />
             <Typography variant="subtitle1" gutterBottom>
               Reminders
             </Typography>

@@ -46,11 +46,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
             color="primary.main"
             fontWeight={600}
             sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
+              '&:hover': { cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' },
             }}
           >
             Fee Structure
@@ -58,11 +54,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         </>
       }
       columns={[
-        {
-          id: 'feeStructureName',
-          label: 'Fee Structure Name',
-          align: 'left',
-        },
+        { id: 'feeStructureName', label: 'Fee Structure Name', align: 'left' },
         {
           id: 'board',
           label: 'Board/Medium',
@@ -89,8 +81,8 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           render(value, row) {
             const statusColor =
               value === FeeStructureLockStatusType.Locked
-                ? theme.palette.error.main
-                : theme.palette.success.main;
+                ? theme.vars.palette.error.main
+                : theme.vars.palette.success.main;
 
             return (
               <CustomTooltip
@@ -118,19 +110,12 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
                     backgroundColor: statusColor, // light background to indicate clickability
                     transition: 'transform 0.2s ease-in-out, background-color 0.2s',
                     cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'scale(1.1)',
-                      backgroundColor: statusColor,
-                    },
+                    '&:hover': { transform: 'scale(1.1)', backgroundColor: statusColor },
                   }}
                 >
                   <Iconify
                     icon={GlobalIcons.lockIcon}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      color: '#fff',
-                    }}
+                    sx={{ width: 20, height: 20, color: '#fff' }}
                   />
                 </IconButton>
               </CustomTooltip>

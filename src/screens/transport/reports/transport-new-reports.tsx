@@ -171,11 +171,11 @@ const TransportReportsScreen = () => {
                       color="primary"
                       sx={{
                         backgroundColor: (theme) =>
-                          varAlpha(theme.palette.primary.mainChannel, 0.1),
+                          varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                         color: 'primary.main',
                         '&:hover': {
                           backgroundColor: (theme) =>
-                            varAlpha(theme.palette.primary.mainChannel, 0.2),
+                            varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
                         },
                       }}
                     >
@@ -188,11 +188,11 @@ const TransportReportsScreen = () => {
                       color="warning"
                       sx={{
                         backgroundColor: (theme) =>
-                          varAlpha(theme.palette.warning.mainChannel, 0.1),
+                          varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                         color: 'warning.main',
                         '&:hover': {
                           backgroundColor: (theme) =>
-                            varAlpha(theme.palette.warning.mainChannel, 0.2),
+                            varAlpha(theme.vars.palette.warning.mainChannel, 0.2),
                         },
                       }}
                     >
@@ -205,11 +205,11 @@ const TransportReportsScreen = () => {
                       color="secondary"
                       sx={{
                         backgroundColor: (theme) =>
-                          varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                          varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                         color: 'secondary.main',
                         '&:hover': {
                           backgroundColor: (theme) =>
-                            varAlpha(theme.palette.secondary.mainChannel, 0.2),
+                            varAlpha(theme.vars.palette.secondary.mainChannel, 0.2),
                         },
                       }}
                     >

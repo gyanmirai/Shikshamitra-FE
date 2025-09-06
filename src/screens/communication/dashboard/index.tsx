@@ -6,7 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { alpha , useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { fShortenNumber } from 'src/utils/format-number';
 import { CalendarView } from 'src/sections/calendar/view';
@@ -135,9 +135,7 @@ const CommunicationDashboard = () => {
                 ]}
                 onChange={() => {}}
                 value=""
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Box>
             <AnalyticsWebsiteVisits
@@ -145,7 +143,7 @@ const CommunicationDashboard = () => {
               chart={{
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                 series: [{ name: 'Class 10-A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
-                colors: [alpha(theme.palette.primary.dark, 0.8)],
+                colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />
@@ -199,7 +197,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
     }
 
     // Fallback to standard palette if vars.palette fails
-    const standardPaletteColor = theme.palette[colorKey as keyof typeof theme.palette];
+    const standardPaletteColor = theme.vars.palette[colorKey as keyof typeof theme.vars.palette];
 
     if (
       standardPaletteColor &&
@@ -210,7 +208,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
     }
 
     // Default fallback
-    return theme.palette.primary.main;
+    return theme.vars.palette.primary.main;
   };
 
   // Generate gradient background
@@ -224,11 +222,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
         textDecoration: 'none',
         cursor: href ? 'pointer' : 'default',
         '&:hover': href
-          ? {
-              boxShadow: 6,
-              transform: 'scale(1.02)',
-              transition: '0.3s ease-in-out',
-            }
+          ? { boxShadow: 6, transform: 'scale(1.02)', transition: '0.3s ease-in-out' }
           : {},
       }}
       onClick={href ? undefined : () => {}}
@@ -254,14 +248,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
         {/* Icon */}
         <Iconify
           icon={icon}
-          sx={{
-            top: 24,
-            right: 10,
-            width: 36,
-            height: 36,
-            position: 'absolute',
-            zIndex: 1,
-          }}
+          sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute', zIndex: 1 }}
         />
 
         {/* Background Gradient */}
@@ -284,25 +271,11 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
   );
 };
 
-type Props = CardProps & {
-  title: string;
-  total: number;
-  percent?: number;
-  icon: string;
-};
+type Props = CardProps & { title: string; total: number; percent?: number; icon: string };
 
 export function BookingWidgetSummary({ title, percent, total, icon, sx, ...other }: Props) {
   return (
-    <Card
-      sx={{
-        p: 2,
-        pl: 3,
-        display: 'flex',
-        alignItems: 'center',
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ p: 2, pl: 3, display: 'flex', alignItems: 'center', ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ color: 'text.secondary', typography: 'subtitle2' }}>{title}</Box>
         <Box sx={{ my: 1.5, typography: 'h3' }}>{fShortenNumber(total)}</Box>

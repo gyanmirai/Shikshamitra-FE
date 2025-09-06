@@ -10,33 +10,28 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(15),
   height: theme.spacing(15),
   margin: '0 auto',
-  border: `3px solid ${theme.palette.primary.main}`,
+  border: `3px solid ${theme.vars.palette.primary.main}`,
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 'bold',
   marginBottom: theme.spacing(2),
-  color: theme.palette.primary.main,
+  color: theme.vars.palette.primary.main,
 }));
 
 const StatItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   marginBottom: theme.spacing(1),
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-  },
+  '&:hover': { backgroundColor: theme.vars.palette.action.hover },
 }));
 
-const StatLabel = styled(Typography)(({ theme }) => ({
-  marginLeft: theme.spacing(1),
-  flex: 1,
-}));
+const StatLabel = styled(Typography)(({ theme }) => ({ marginLeft: theme.spacing(1), flex: 1 }));
 
 const StatValue = styled(Typography)(({ theme }) => ({
   fontWeight: 'bold',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.vars.palette.background.paper,
   padding: theme.spacing(0.5, 1),
 }));
 

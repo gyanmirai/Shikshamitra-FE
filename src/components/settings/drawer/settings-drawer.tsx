@@ -134,18 +134,12 @@ export function SettingsDrawer({
 
   const renderNav = (
     <NavOptions
-      value={{
-        color: settings.navColor,
-        layout: settings.navLayout,
-      }}
+      value={{ color: settings.navColor, layout: settings.navLayout }}
       onClickOption={{
         color: (newValue) => settings.onUpdateField('navColor', newValue),
         layout: (newValue) => settings.onUpdateField('navLayout', newValue),
       }}
-      options={{
-        colors: ['integrate', 'apparent'],
-        layouts: ['vertical', 'horizontal', 'mini'],
-      }}
+      options={{ colors: ['integrate', 'apparent'], layouts: ['vertical', 'horizontal', 'mini'] }}
       hideNavColor={hideNavColor}
       hideNavLayout={hideNavLayout}
     />
@@ -167,10 +161,7 @@ export function SettingsDrawer({
       slotProps={{ backdrop: { invisible: true } }}
       sx={{
         [`& .${drawerClasses.paper}`]: {
-          ...paper({
-            theme,
-            color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
-          }),
+          ...paper({ theme, color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9) }),
           width: 360,
           ...sx,
         },

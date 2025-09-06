@@ -9,20 +9,13 @@ import { Chart, useChart } from 'src/components/chart';
 
 type Props = CardProps & {
   title: string;
-  chart: {
-    colors?: string[];
-    categories: string[];
-    series: {
-      name?: string;
-      data: number[];
-    }[];
-  };
+  chart: { colors?: string[]; categories: string[]; series: { name?: string; data: number[] }[] };
 };
 
 export function CourseMyStrength({ title, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main];
+  const chartColors = chart.colors ?? [theme.vars.palette.primary.main];
 
   const chartOptions = useChart({
     colors: chartColors,
@@ -33,12 +26,12 @@ export function CourseMyStrength({ title, chart, ...other }: Props) {
       labels: {
         style: {
           colors: [
-            theme.palette.text.disabled,
-            theme.palette.text.disabled,
-            theme.palette.text.disabled,
-            theme.palette.text.disabled,
-            theme.palette.text.disabled,
-            theme.palette.text.disabled,
+            theme.vars.palette.text.disabled,
+            theme.vars.palette.text.disabled,
+            theme.vars.palette.text.disabled,
+            theme.vars.palette.text.disabled,
+            theme.vars.palette.text.disabled,
+            theme.vars.palette.text.disabled,
           ],
         },
       },

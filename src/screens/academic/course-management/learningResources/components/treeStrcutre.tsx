@@ -190,14 +190,14 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
               justifyContent="center"
               height="100%"
               sx={{
-                backgroundColor: (theme) => theme.palette.background.neutral,
+                backgroundColor: (theme) => theme.vars.palette.background.neutral,
                 borderRadius: 1,
               }}
             >
               <Typography
                 variant="h3"
                 sx={{
-                  color: (theme) => theme.palette.text.secondary,
+                  color: (theme) => theme.vars.palette.text.secondary,
                   fontWeight: 'light',
                   textAlign: 'center',
                   opacity: 0.6,

@@ -216,7 +216,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const getStickyStyle = (col: IColumn): React.CSSProperties => {
     const base: React.CSSProperties = {
       position: col.sticky ? 'sticky' : 'static',
-      // background: col.sticky ? theme.palette.background.paper : undefined,
+      // background: col.sticky ? theme.vars.palette.background.paper : undefined,
     };
 
     const colId = col.id as string;
@@ -420,12 +420,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   };
 
   const clearFilter = () => {
-    handelChangeParams({
-      filterColumn: '',
-      filterType: 'contains',
-      filterValue: '',
-      page: 0,
-    });
+    handelChangeParams({ filterColumn: '', filterType: 'contains', filterValue: '', page: 0 });
     setAnchorEl(null);
   };
 
@@ -454,10 +449,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           unit: 'mm', // Units: 'pt', 'mm', 'cm', or 'in'
           format: [pageWidth, pageHeight], // Custom page size
         });
-        const columnData = columns.map((column) => ({
-          header: column.label,
-          dataKey: column.id,
-        }));
+        const columnData = columns.map((column) => ({ header: column.label, dataKey: column.id }));
         // @ts-ignore
         autoTable(doc, { columns: columnData, body: data });
         doc.save(`${data?.[0]?.fileName ?? 'table_data'}.pdf`);
@@ -479,10 +471,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   ) => {
     const newFilter = { column: columnId, type: filterTypes, value, valueType };
 
-    handelChangeParams({
-      filters: [...filters, newFilter],
-      page: 0,
-    });
+    handelChangeParams({ filters: [...filters, newFilter], page: 0 });
     setFilterAnchorEl(null);
   };
 
@@ -535,14 +524,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 open={Boolean(anchorColumnEl)}
                 anchorEl={anchorColumnEl}
                 onClose={() => setColumnAnchorEl(null)}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
               >
                 <Box
                   sx={{
@@ -677,16 +660,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
 
                           ...(column.sticky ? { backgroundImage: 'none' } : {}),
-                          '& .column-filter-icon': {
-                            opacity: 0,
-                            transition: 'opacity 0.3s ease',
-                          },
-                          '&:hover .column-filter-icon': {
-                            opacity: 1,
-                          },
+                          '& .column-filter-icon': { opacity: 0, transition: 'opacity 0.3s ease' },
+                          '&:hover .column-filter-icon': { opacity: 1 },
                           '&::after': {
                             borderRight: !column.sticky
-                              ? `1px solid ${theme.palette.grey[400]}`
+                              ? `1px solid ${theme.vars.palette.grey[400]}`
                               : 'none',
                             content: '""',
                             position: 'absolute',
@@ -696,9 +674,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             top: '50%',
                             transform: 'translateY(-50%)',
                           },
-                          '&:last-child::after': {
-                            borderRight: 'none',
-                          },
+                          '&:last-child::after': { borderRight: 'none' },
                           ...getStickyStyle(column),
                           position: 'sticky',
                         }}
@@ -894,10 +870,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 sx={{
                   '& *': { fontSize: '14px !important' },
                   '& svg': { fontSize: '18px !important' },
-                  '& .MuiToolbar-root': {
-                    minHeight: 'unset',
-                    height: 'auto',
-                  },
+                  '& .MuiToolbar-root': { minHeight: 'unset', height: 'auto' },
                 }}
               />
             )}
@@ -993,12 +966,7 @@ const ColumnFilterMenu: React.FC<{
     filterValue: null | string | Dayjs | number | { min: number; max: number };
     filterType: string;
   }>({
-    initialValues: {
-      min: null,
-      max: null,
-      filterValue: null,
-      filterType: '',
-    },
+    initialValues: { min: null, max: null, filterValue: null, filterType: '' },
     validationSchema: yup.object({
       filterType: yup.string().test('filterType', 'Filter type is required', (value) => {
         if (anchorEl?.column.filterType === 'enum') {
@@ -1006,21 +974,27 @@ const ColumnFilterMenu: React.FC<{
         }
         return !!value;
       }),
-      min: yup.number().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.required('Min value is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      max: yup.number().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.required('Max value is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
-      filterValue: yup.string().when('filterType', {
-        is: 'between',
-        then: (schema) => schema.nullable(),
-        otherwise: (schema) => schema.required('value is required'),
-      }),
+      min: yup
+        .number()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) => schema.required('Min value is required'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+      max: yup
+        .number()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) => schema.required('Max value is required'),
+          otherwise: (schema) => schema.nullable(),
+        }),
+      filterValue: yup
+        .string()
+        .when('filterType', {
+          is: 'between',
+          then: (schema) => schema.nullable(),
+          otherwise: (schema) => schema.required('value is required'),
+        }),
     }),
     onSubmit: (values) => {
       handleApply();
@@ -1110,13 +1084,7 @@ const ColumnFilterMenu: React.FC<{
         formik.resetForm();
         onClose();
       }}
-      slotProps={{
-        paper: {
-          sx: {
-            width: '260px',
-          },
-        },
-      }}
+      slotProps={{ paper: { sx: { width: '260px' } } }}
     >
       <Box component="form" sx={{ p: 2, maxWidth: 350 }} onSubmit={formik.handleSubmit}>
         {anchorEl?.column.filterType !== 'enum' && (

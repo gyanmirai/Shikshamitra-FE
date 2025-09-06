@@ -172,9 +172,7 @@ export function StudentProfile() {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
-    student: '',
-  });
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({ student: '' });
   const searchParams = getAllParams();
 
   // Query hook for fetching filtered student data
@@ -452,9 +450,7 @@ const StudentProfileView = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentByIdQuery,
     params: searchParams?.student,
-    options: {
-      skip: !searchParams?.student,
-    },
+    options: { skip: !searchParams?.student },
   });
   console.log(currentStudent, 'currentStudent==========>');
   return isLoading ? (
@@ -476,7 +472,7 @@ const StudentProfileView = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+            borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
             borderRadius: 1,
           }}
         >

@@ -49,9 +49,7 @@ const ClassProgress = (props: TabComponentType) => {
         }
       } else {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setSearchParams?.({ classId: firstClass.id });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -130,7 +128,7 @@ const ClassProgress = (props: TabComponentType) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.2),
                   height: '100%',
                   transition: 'all 0.3s ease',
                   '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
@@ -148,7 +146,7 @@ const ClassProgress = (props: TabComponentType) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.2),
                   transition: 'all 0.3s ease',
                   '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
                 }}
@@ -169,7 +167,7 @@ const ClassProgress = (props: TabComponentType) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.2),
                   transition: 'all 0.3s ease',
                   '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
                 }}

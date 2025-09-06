@@ -40,7 +40,8 @@ import {
   EntranceExamStatusOptions,
   EntranceExamStatusTypeColors,
 } from 'src/enums/entranceExam-type';
-import { Box ,
+import {
+  Box,
   Grid,
   Paper,
   Radio,
@@ -101,10 +102,7 @@ const EntranceExamScreen = () => {
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
-    popupConfig: {
-      successMessage: 'Student moved to Admission successfully.',
-      success: true,
-    },
+    popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
   });
 
   // Material-UI theme hook
@@ -172,14 +170,14 @@ const EntranceExamScreen = () => {
           ...i,
           start: startExamDate,
           end: endExamDate,
-          color: theme.palette[color].main,
+          color: theme.vars.palette[color].main,
           allDay: false,
-          textColor: theme.palette[color].main,
+          textColor: theme.vars.palette[color].main,
           title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
           description: i.reason,
         };
       }) || [],
-    [entranceExamData?.items, theme.palette]
+    [entranceExamData?.items, theme.vars.palette]
   );
 
   /**
@@ -270,12 +268,7 @@ const EntranceExamScreen = () => {
             label="Start Date"
             format="DD-MM-YYYY"
             value={startDate}
-            slotProps={{
-              textField: {
-                sx: { width: '250px' },
-                size: 'small',
-              },
-            }}
+            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             views={['year', 'month', 'day']}
             onChange={(value) => {
               setStartDate(value);
@@ -286,12 +279,7 @@ const EntranceExamScreen = () => {
             value={endDate}
             format="DD-MM-YYYY"
             views={['year', 'month', 'day']}
-            slotProps={{
-              textField: {
-                sx: { width: '250px' },
-                size: 'small',
-              },
-            }}
+            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             onChange={(value) => {
               setEndDate(value);
             }}
@@ -306,29 +294,11 @@ const EntranceExamScreen = () => {
           noDataText={<>No Entrance Exam Data Found </>}
           isLoading={isLoading}
           columns={[
-            {
-              id: 'name',
-              label: 'Student Name',
-              align: 'left',
-              sticky: true,
-              minWidth: 180,
-            },
+            { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
 
-            {
-              id: 'board',
-              label: 'Board',
-              align: 'left',
-            },
-            {
-              id: 'medium',
-              label: 'Medium',
-              align: 'left',
-            },
-            {
-              id: 'class',
-              label: 'Class',
-              align: 'left',
-            },
+            { id: 'board', label: 'Board', align: 'left' },
+            { id: 'medium', label: 'Medium', align: 'left' },
+            { id: 'class', label: 'Class', align: 'left' },
             { id: 'date', label: 'Date', filterType: 'date' },
             { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
             {
@@ -368,9 +338,7 @@ const EntranceExamScreen = () => {
                       value={value}
                       size={50}
                       thickness={3}
-                      sx={{
-                        color: value < 50 ? 'warning.main' : 'success.main',
-                      }}
+                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
                     />
                     <Box
                       sx={{
@@ -411,9 +379,7 @@ const EntranceExamScreen = () => {
                       value={value}
                       size={50}
                       thickness={3}
-                      sx={{
-                        color: value < 50 ? 'warning.main' : 'success.main',
-                      }}
+                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
                     />
                     <Box
                       sx={{
@@ -634,12 +600,7 @@ export const ExamForm = ({
 
   // Formik instance for form handling
   const formik = useFormik({
-    initialValues: {
-      examDate: null,
-      isConfirmed: false,
-      slots: allSlots || [],
-      slot: '',
-    },
+    initialValues: { examDate: null, isConfirmed: false, slots: allSlots || [], slot: '' },
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -670,12 +631,7 @@ export const ExamForm = ({
             const label = `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`;
             const studentCount = await getStudentCount(slot.id, formattedDate);
 
-            return {
-              ...slot,
-              label,
-              value: slot.id,
-              studentCount,
-            };
+            return { ...slot, label, value: slot.id, studentCount };
           })
         );
 
@@ -743,13 +699,7 @@ export const ExamForm = ({
             </Box>
           </Box>
         </Paper>
-        <Scrollbar
-          sx={{
-            p: 2,
-            bgcolor: 'background.neutral',
-            height: '100%',
-          }}
-        >
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 4 }}>
               <Paper sx={{ height: '100%' }}>

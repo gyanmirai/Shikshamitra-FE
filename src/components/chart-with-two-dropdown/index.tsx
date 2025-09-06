@@ -23,14 +23,7 @@ type Props = CardProps & {
     colors?: string[];
     series: {
       vehicleName: string;
-      durations: {
-        name: string;
-        categories: string[];
-        series: {
-          name: string;
-          data: any[];
-        }[];
-      }[];
+      durations: { name: string; categories: string[]; series: { name: string; data: any[] }[] }[];
     }[];
     options?: ChartOptions;
   };
@@ -77,12 +70,7 @@ export function ChartWithTwoDropDown({
   const [listOfSeriesOption, setListOfSeriesOption] = useState<string[]>([]);
   const [listOfDataOption, setListOfDataOption] = useState<string[]>([]);
   const [listOfLegend, setListOfLegend] = useState<string[]>([]);
-  const [listOfMonth, setListOfMonth] = useState<
-    {
-      month: string;
-      days: number;
-    }[]
-  >([]);
+  const [listOfMonth, setListOfMonth] = useState<{ month: string; days: number }[]>([]);
 
   // State for selected dropdown values
   const [selectedSeries, setSelectedSeries] = useState<string>(chart.series[0].durations[0].name);
@@ -99,9 +87,9 @@ export function ChartWithTwoDropDown({
   const memoizedChartOptions = useMemo(() => {
     // Define chartColors outside the memoized callback
     const chartColors = chart.colors ?? [
-      theme.palette.primary.dark,
-      theme.palette.warning.main,
-      theme.palette.info.main,
+      theme.vars.palette.primary.dark,
+      theme.vars.palette.warning.main,
+      theme.vars.palette.info.main,
     ];
     let lateShown = false;
     let onTimeShown = false;
@@ -112,38 +100,15 @@ export function ChartWithTwoDropDown({
       colors: chartColors,
       xaxis: { categories: currentSeries?.categories || [] },
       tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
-      dataLabels: {
-        enabled: selectedSeries !== 'Daily',
-      },
-      plotOptions: {
-        bar: {
-          columnWidth: selectedSeries === 'Daily' ? '80%' : '80%',
-        },
-      },
+      dataLabels: { enabled: selectedSeries !== 'Daily' },
+      plotOptions: { bar: { columnWidth: selectedSeries === 'Daily' ? '80%' : '80%' } },
       yaxis: [
-        {
-          title: {
-            text: 'Kilometers',
-          },
-        },
-        {
-          opposite: true,
-          title: {
-            text: 'Fuel Used (Liters)',
-          },
-        },
+        { title: { text: 'Kilometers' } },
+        { opposite: true, title: { text: 'Fuel Used (Liters)' } },
       ],
       series: [
-        {
-          name: 'Kilometers',
-          type: 'bar',
-          data: currentSeries?.series[0]?.data || [],
-        },
-        {
-          name: 'Fuel Used (Liters)',
-          type: 'line',
-          data: currentSeries?.series[1]?.data || [],
-        },
+        { name: 'Kilometers', type: 'bar', data: currentSeries?.series[0]?.data || [] },
+        { name: 'Fuel Used (Liters)', type: 'line', data: currentSeries?.series[1]?.data || [] },
       ],
 
       annotations: {
@@ -238,9 +203,9 @@ export function ChartWithTwoDropDown({
   }, [
     chart.colors,
     chart.options,
-    theme.palette.primary.dark,
-    theme.palette.warning.main,
-    theme.palette.info.main,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.warning.main,
+    theme.vars.palette.info.main,
     currentSeries?.categories,
     currentSeries?.series,
     currentSeries?.name,
@@ -268,10 +233,7 @@ export function ChartWithTwoDropDown({
       const daysInMonth = selectedMonthDetails?.days;
 
       // Prepare the data
-      const data = {
-        monthName: newValue,
-        days: daysInMonth,
-      };
+      const data = { monthName: newValue, days: daysInMonth };
 
       // Pass data to parent if needed
       if (monthFromComponent) {
@@ -377,9 +339,7 @@ export function ChartWithTwoDropDown({
             chart: {
               ...memoizedChartOptions.chart,
               id: 'my-export-chart', // 🔑 this is important
-              toolbar: {
-                show: false,
-              },
+              toolbar: { show: false },
             },
           }}
           height={320}

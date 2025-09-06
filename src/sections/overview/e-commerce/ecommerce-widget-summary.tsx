@@ -15,31 +15,22 @@ type Props = CardProps & {
   title: string;
   total: number;
   percent: number;
-  chart: {
-    colors?: string[];
-    categories: string[];
-    series: number[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; categories: string[]; series: number[]; options?: ChartOptions };
 };
 
 export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.main,
+  ];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
     colors: [chartColors[1]],
     xaxis: { categories: chart.categories },
-    grid: {
-      padding: {
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-      },
-    },
+    grid: { padding: { top: 6, left: 6, right: 6, bottom: 6 } },
     fill: {
       type: 'gradient',
       gradient: {
@@ -94,15 +85,7 @@ export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...ot
   );
 
   return (
-    <Card
-      sx={{
-        p: 3,
-        display: 'flex',
-        alignItems: 'center',
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ p: 3, display: 'flex', alignItems: 'center', ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
         <Box sx={{ my: 1.5, typography: 'h3' }}>{fNumber(total)}</Box>

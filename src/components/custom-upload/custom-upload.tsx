@@ -90,10 +90,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     [files, multiple, onChange, outputFormat]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    multiple,
-  });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple });
 
   const handleDelete = (file: FileWithPreview | string) => {
     const updatedFiles = files.filter((f) => f !== file);
@@ -134,9 +131,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
             border: '1px solid #ccc',
             width: 20,
             height: 20,
-            '&:hover': {
-              bgcolor: 'rgba(241, 241, 241, 1)',
-            },
+            '&:hover': { bgcolor: 'rgba(241, 241, 241, 1)' },
           }}
         >
           <CloseIcon fontSize="small" sx={{ width: 14, height: 14 }} />
@@ -179,7 +174,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         {...getRootProps()}
         sx={{
           border: (theme) =>
-            `1px dashed ${error ? theme.palette.error.main : theme.palette.grey[300]}`,
+            `1px dashed ${error ? theme.vars.palette.error.main : theme.vars.palette.grey[300]}`,
           borderRadius: 2,
           p: 2,
           textAlign: 'center',

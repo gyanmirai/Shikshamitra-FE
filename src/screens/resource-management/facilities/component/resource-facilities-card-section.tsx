@@ -61,22 +61,19 @@ const ResourceFacilitiesCardSection = () => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            '&:hover': {
-              boxShadow: 'var(--shadows-8)',
-              transform: 'scale(1.03)',
-            },
+            '&:hover': { boxShadow: 'var(--shadows-8)', transform: 'scale(1.03)' },
           }}
         >
           <Box display="flex" flexDirection="column" alignItems="center">
             <Iconify
-              color={theme.palette.common.white}
+              color={theme.vars.palette.common.white}
               icon="uis:calender"
               width={60}
               height={60}
             />
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 500, color: theme.palette.common.white }}
+              sx={{ fontWeight: 500, color: theme.vars.palette.common.white }}
             >
               Book Facility
             </Typography>

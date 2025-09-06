@@ -17,6 +17,7 @@ import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/component
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
 import ReduxProvider from '../redux/reduxProvider';
+import { InitColorSchemeScript } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -26,9 +27,7 @@ export const viewport: Viewport = {
   themeColor: primary.main,
 };
 
-type Props = {
-  children: React.ReactNode;
-};
+type Props = { children: React.ReactNode };
 
 export default async function RootLayout({ children }: Props) {
   const settings = CONFIG.isStaticExport ? defaultSettings : await detectSettings();
@@ -36,13 +35,17 @@ export default async function RootLayout({ children }: Props) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        {/* {getInitColorSchemeScript} */}
+        <InitColorSchemeScript
+          attribute="data"
+          modeStorageKey="theme-mode"
+          defaultMode={defaultSettings.colorScheme}
+        />
         <ReduxProvider>
           <KeyboardShortcut />
           <LocalizationProvider>
             <SettingsProvider
               settings={settings}
-              caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
+              // caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
             >
               <ThemeProvider>
                 <MotionLazy>

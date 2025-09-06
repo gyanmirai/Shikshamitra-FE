@@ -110,11 +110,7 @@ const PaySlipGenerationScreen = () => {
           label="Select Year Month"
           format="MMMM-YYYY"
           sx={{ maxWidth: '250px', width: '100%' }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Button variant="contained" startIcon={<Search />}>
           Search
@@ -125,7 +121,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -143,7 +139,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -161,7 +157,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -183,10 +179,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="primary"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             color: 'primary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             },
           }}
         >
@@ -198,10 +194,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="secondary"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             color: 'secondary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             },
           }}
         >
@@ -213,10 +209,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="warning"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
             color: 'warning.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
             },
           }}
         >
@@ -306,9 +302,7 @@ const PaySlipGenerationScreen = () => {
                     <Typography
                       variant="caption"
                       color="error"
-                      sx={{
-                        fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
-                      }}
+                      sx={{ fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal' }}
                     >
                       {formatCurrency(value)}
                     </Typography>

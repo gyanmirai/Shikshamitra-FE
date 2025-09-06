@@ -134,7 +134,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               p: 2,
               borderRadius: 2,
               boxShadow: 2,
-              bgcolor: theme.palette.background.paper,
+              bgcolor: theme.vars.palette.background.paper,
               height: '100%',
             }}
           >
@@ -200,9 +200,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                         (formik.touched.selectedMethods && formik.errors.selectedMethods) as string
                       }
                       multiple
-                      formControlProps={{
-                        sx: { width: '100%' },
-                      }}
+                      formControlProps={{ sx: { width: '100%' } }}
                       name="selectedMethods"
                     />
                   </ShakingTextField>

@@ -267,12 +267,7 @@ const InquiryForm = ({
           sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
           onSubmit={handleSubmit}
         >
-          <Scrollbar
-            sx={{
-              px: 1,
-              height: '100%',
-            }}
-          >
+          <Scrollbar sx={{ px: 1, height: '100%' }}>
             <SectionCard title="Basic Details">
               <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
@@ -463,7 +458,7 @@ const InquiryForm = ({
                         color: (theme) =>
                           touched.gender && errors.gender
                             ? '#ff563d !important'
-                            : `${theme.palette.common.black} !important`,
+                            : `${theme.vars.palette.common.black} !important`,
                         mr: 1,
                       }}
                     >
@@ -543,12 +538,7 @@ const InquiryForm = ({
                       setFieldValue('inquiryPreferences', value);
                       setFieldTouched('inquiryPreferences', true);
                     }}
-                    formControlProps={{
-                      fullWidth: true,
-                      sx: {
-                        maxWidth: 'unset',
-                      },
-                    }}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     addOtherItemOnClick={dialog.onTrue}
                   />
                 </ShakingTextField>
@@ -673,16 +663,11 @@ const InquiryForm = ({
                     value={values.country}
                     onChange={(_e: any, value: any) => {
                       setFieldValue('state', { name: '', isoCode: '' });
-                      setFieldValue('country', {
-                        name: value?.name,
-                        isoCode: value?.isoCode,
-                      });
+                      setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
                     }}
                     error={touched.country && Boolean(errors?.country?.name)}
                     helperText={(touched.country && errors?.country?.name) || ''}
-                    textFieldProps={{
-                      label: 'Country *',
-                    }}
+                    textFieldProps={{ label: 'Country *' }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -701,9 +686,7 @@ const InquiryForm = ({
                     error={touched.state && Boolean(errors?.state?.name)}
                     helperText={touched.state && errors?.state?.name}
                     countryValue={values.country}
-                    textFieldProps={{
-                      label: 'State *',
-                    }}
+                    textFieldProps={{ label: 'State *' }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -717,9 +700,7 @@ const InquiryForm = ({
                     error={touched.city && Boolean(errors?.city?.name)}
                     helperText={touched.city && errors?.city?.name}
                     stateValue={values.state}
-                    textFieldProps={{
-                      label: 'City *',
-                    }}
+                    textFieldProps={{ label: 'City *' }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -745,10 +726,7 @@ const InquiryForm = ({
                     }}
                     size="small"
                     label="PIN Code"
-                    inputProps={{
-                      maxLength: 6,
-                      min: 0,
-                    }}
+                    inputProps={{ maxLength: 6, min: 0 }}
                   />
                 </ShakingTextField>
               </Grid>

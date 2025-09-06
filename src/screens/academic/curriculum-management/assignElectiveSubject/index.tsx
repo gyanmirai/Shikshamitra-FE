@@ -161,10 +161,7 @@ const AssignElectiveSubject = () => {
         searchFieldProps={{
           placeholder: 'Search by Sr. No, GR No, Student Name...',
           label: 'Search by Sr. No, GR No, Student Name...',
-          sx: {
-            maxWidth: '400px',
-            width: '100%',
-          },
+          sx: { maxWidth: '400px', width: '100%' },
         }}
         columns={[
           { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
@@ -209,15 +206,17 @@ const AssignElectiveSubject = () => {
                         sx={{
                           color: isSelected
                             ? '#fff' // For contained: always white text
-                            : theme.palette.mode === 'dark'
+                            : theme.vars.palette.mode === 'dark'
                               ? '#fff'
                               : '#000', // For outlined: black in light, white in dark
-                          borderColor: theme.palette.primary.main,
-                          backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
+                          borderColor: theme.vars.palette.primary.main,
+                          backgroundColor: isSelected
+                            ? theme.vars.palette.primary.main
+                            : 'transparent',
                           '&:hover': {
                             backgroundColor: isSelected
-                              ? theme.palette.primary.dark
-                              : theme.palette.action.hover,
+                              ? theme.vars.palette.primary.dark
+                              : theme.vars.palette.action.hover,
                           },
                         }}
                       >
@@ -245,10 +244,7 @@ const AssignElectiveSubject = () => {
                         size="small"
                         color="primary"
                         onClick={() =>
-                          setStudentSelections((prev) => ({
-                            ...prev,
-                            [row.grNo]: subj.id,
-                          }))
+                          setStudentSelections((prev) => ({ ...prev, [row.grNo]: subj.id }))
                         }
                         sx={{
                           color: isSelected ? 'white' : 'primary',

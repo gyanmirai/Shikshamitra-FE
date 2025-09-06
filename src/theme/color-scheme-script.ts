@@ -1,8 +1,6 @@
 'use client';
 
 import { defaultSettings } from 'src/components/settings';
-import { getInitColorSchemeScript as _getInitColorSchemeScript } from '@mui/material/styles';
-
 // ----------------------------------------------------------------------
 
 export const schemeConfig = {
@@ -10,4 +8,4 @@ export const schemeConfig = {
   defaultMode: defaultSettings.colorScheme,
 };
 
-export const getInitColorSchemeScript = _getInitColorSchemeScript(schemeConfig);
+// export const getInitColorSchemeScript = <InitColorSchemeScript schemeConfig={schemeConfig} />;

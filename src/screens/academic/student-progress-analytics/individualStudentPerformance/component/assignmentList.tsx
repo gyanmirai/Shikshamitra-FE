@@ -77,7 +77,9 @@ const AssignmentsList = () => {
       sx={{
         borderRadius: 2,
         backgroundColor:
-          theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+          theme.vars.palette.mode === 'dark'
+            ? theme.vars.palette.grey[800]
+            : theme.vars.palette.grey[100],
         height: '100%',
       }}
     >
@@ -99,10 +101,7 @@ const AssignmentsList = () => {
                       <Box>
                         <Typography
                           variant="body2"
-                          sx={{
-                            color: getAssignmentColor(assignment.status),
-                            fontWeight: 'bold',
-                          }}
+                          sx={{ color: getAssignmentColor(assignment.status), fontWeight: 'bold' }}
                         >
                           Status: {assignment.status.toUpperCase()}
                         </Typography>
@@ -114,8 +113,8 @@ const AssignmentsList = () => {
                     slotProps={{
                       tooltip: {
                         sx: {
-                          color: theme.palette.mode === 'dark' ? 'white' : 'black',
-                          backgroundColor: theme.palette.mode === 'dark' ? 'black' : '#FAF9F6',
+                          color: theme.vars.palette.mode === 'dark' ? 'white' : 'black',
+                          backgroundColor: theme.vars.palette.mode === 'dark' ? 'black' : '#FAF9F6',
                         },
                       },
                     }}
@@ -125,9 +124,7 @@ const AssignmentsList = () => {
                         mb: 1,
                         cursor: 'pointer',
                         borderLeft: `4px solid ${getAssignmentColor(assignment.status)}`,
-                        '&:hover': {
-                          boxShadow: theme.shadows[3],
-                        },
+                        '&:hover': { boxShadow: theme.shadows[3] },
                       }}
                     >
                       <CardContent

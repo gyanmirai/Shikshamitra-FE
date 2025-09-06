@@ -38,7 +38,7 @@ export function BankingOverview({ sx, ...other }: CardProps) {
   const tabs = useTabs('income');
 
   const chartColors =
-    tabs.value === 'income' ? [theme.palette.primary.dark] : [theme.palette.warning.dark];
+    tabs.value === 'income' ? [theme.vars.palette.primary.dark] : [theme.vars.palette.warning.dark];
 
   const chartOptions = useChart({
     colors: chartColors,

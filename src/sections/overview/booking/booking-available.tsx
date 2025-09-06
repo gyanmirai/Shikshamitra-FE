@@ -15,14 +15,7 @@ import { Chart, useChart } from 'src/components/chart';
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    options?: ChartOptions;
-    series: {
-      label: string;
-      value: number;
-    }[];
-  };
+  chart: { colors?: string[]; options?: ChartOptions; series: { label: string; value: number }[] };
 };
 
 export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
@@ -32,7 +25,10 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
 
   const chartSeries = (chart.series.filter((i) => i.label === 'Sold out')[0].value / total) * 100;
 
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.main,
+  ];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -73,14 +69,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
         sx={{ mx: 'auto' }}
       />
 
-      <Box
-        sx={{
-          p: 5,
-          gap: 2,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <Box sx={{ p: 5, gap: 2, display: 'flex', flexDirection: 'column' }}>
         {chart.series.map((item) => (
           <Box
             key={item.label}

@@ -13,24 +13,17 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function AppCurrentDownload({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.darker,
-    theme.palette.primary.light,
-    theme.palette.primary.dark,
-    theme.palette.primary.lighter,
+    theme.vars.palette.primary.darker,
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.primary.lighter,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -53,11 +46,7 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
           labels: {
             value: { formatter: (value: number | string) => fNumber(value) },
             total: {
-              formatter: (w: {
-                globals: {
-                  seriesTotals: number[];
-                };
-              }) => {
+              formatter: (w: { globals: { seriesTotals: number[] } }) => {
                 const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return fNumber(sum);
               },
@@ -97,10 +86,10 @@ export function AppCurrentDownload2({ title, subheader, chart, ...other }: Props
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.darker,
-    theme.palette.primary.light,
-    theme.palette.primary.dark,
-    theme.palette.primary.lighter,
+    theme.vars.palette.primary.darker,
+    theme.vars.palette.primary.light,
+    theme.vars.palette.primary.dark,
+    theme.vars.palette.primary.lighter,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -123,11 +112,7 @@ export function AppCurrentDownload2({ title, subheader, chart, ...other }: Props
           labels: {
             value: { formatter: (value: number | string) => fNumber(value) },
             total: {
-              formatter: (w: {
-                globals: {
-                  seriesTotals: number[];
-                };
-              }) => {
+              formatter: (w: { globals: { seriesTotals: number[] } }) => {
                 const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return fNumber(sum);
               },

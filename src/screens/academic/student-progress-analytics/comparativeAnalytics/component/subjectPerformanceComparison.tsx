@@ -57,9 +57,7 @@ const SubjectPerformanceComparison = () => {
               setDivisionOptions(selectedClass?.divisions || []);
             }}
             value={classes1}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
             label="Subject"
@@ -71,9 +69,7 @@ const SubjectPerformanceComparison = () => {
             ]}
             onChange={() => {}}
             value=""
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
         <AnalyticsWebsiteVisits
@@ -86,9 +82,9 @@ const SubjectPerformanceComparison = () => {
               { name: 'Class 10-C', data: [51, 67, 47, 97, 40, 57, 24, 60, 24] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
-              alpha(theme.palette.error.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.error.main, 0.8),
             ],
           }}
           sx={{ height: '100%', boxShadow: 'none' }}

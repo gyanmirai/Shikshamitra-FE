@@ -130,7 +130,9 @@ const FinanceReceiptBookSetting = () => {
               isSort: false,
               render(value, row) {
                 const statusColor =
-                  value === true ? theme.palette.success.main : theme.palette.text.secondary;
+                  value === true
+                    ? theme.vars.palette.success.main
+                    : theme.vars.palette.text.secondary;
                 return (
                   <CustomTooltip
                     title={value === true ? 'Active' : 'InActive'}
@@ -158,19 +160,12 @@ const FinanceReceiptBookSetting = () => {
                         backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
                         transition: 'transform 0.2s ease-in-out, background-color 0.2s',
                         cursor: 'pointer',
-                        '&:hover': {
-                          transform: 'scale(1.1)',
-                          backgroundColor: 'rgba(0,0,0,0.08)',
-                        },
+                        '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
                       }}
                     >
                       <Iconify
                         icon={GlobalIcons.tick}
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          color: statusColor,
-                        }}
+                        sx={{ width: 20, height: 20, color: statusColor }}
                       />
                     </IconButton>
                   </CustomTooltip>

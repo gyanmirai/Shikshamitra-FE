@@ -10,20 +10,12 @@ const WelcomeScreen = ({ formik }: any) => {
     <Grid
       container
       spacing={2}
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        height: '100%',
-      }}
+      sx={{ backgroundColor: theme.vars.palette.background.default, height: '100%' }}
     >
       {/* Left side - School Illustration */}
       <Grid
         size={{ xs: 12, md: 6 }}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 3,
-        }}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}
       >
         <Box
           sx={{

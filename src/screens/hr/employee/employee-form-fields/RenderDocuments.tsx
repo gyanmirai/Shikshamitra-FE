@@ -36,15 +36,7 @@ const ViewDocuments = ({ employeeId, docId }: ViewDocumentsProps) => {
   });
 
   return (
-    <Box
-      height="60vh"
-      width="100%"
-      sx={{
-        '& iframe img': {
-          height: '100%',
-        },
-      }}
-    >
+    <Box height="60vh" width="100%" sx={{ '& iframe img': { height: '100%' } }}>
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : (
@@ -56,9 +48,7 @@ const ViewDocuments = ({ employeeId, docId }: ViewDocumentsProps) => {
             height: '100%',
             border: 'none',
             objectFit: 'contain',
-            '& img': {
-              height: '100%',
-            },
+            '& img': { height: '100%' },
           }}
           title="Employee Document"
         />
@@ -143,7 +133,9 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     width={20}
                     sx={{
                       color: (theme) =>
-                        row.statusVal === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                        row.statusVal === 'Uploaded'
+                          ? 'success.main'
+                          : theme.vars.palette.grey[500],
                       cursor: 'pointer',
                     }}
                   />
@@ -174,9 +166,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     justifyContent: 'center',
                     backgroundColor: 'transparent',
                     transition: 'background-color 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: '#e0e0e0',
-                    },
+                    '&:hover': { backgroundColor: '#e0e0e0' },
                     p: 0, // no extra padding
                     minWidth: 0, // prevent MUI buttons from stretching
                   }}
@@ -191,9 +181,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                       );
                     });
                     if (!acceptableFileFormats.includes(file?.type)) {
-                      shikshaMitraToast.error({
-                        message: `Please upload ${row.docType} file`,
-                      });
+                      shikshaMitraToast.error({ message: `Please upload ${row.docType} file` });
                       return;
                     }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
@@ -216,9 +204,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                       }
                     );
                   }}
-                  fileInputProps={{
-                    accept: convertFileAcceptType(row.documentTypes),
-                  }}
+                  fileInputProps={{ accept: convertFileAcceptType(row.documentTypes) }}
                 >
                   <Iconify icon="ci:file-upload" />
                 </UploadButton>

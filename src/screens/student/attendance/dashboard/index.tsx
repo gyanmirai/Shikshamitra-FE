@@ -25,44 +25,20 @@ const classDummyData = [
     name: '1',
     percentage: 35,
     divisions: [
-      {
-        name: 'A',
-        percentage: 90,
-      },
-      {
-        name: 'B',
-        percentage: 60,
-      },
-      {
-        name: 'C',
-        percentage: 30,
-      },
-      {
-        name: 'D',
-        percentage: 40,
-      },
+      { name: 'A', percentage: 90 },
+      { name: 'B', percentage: 60 },
+      { name: 'C', percentage: 30 },
+      { name: 'D', percentage: 40 },
     ],
   },
   {
     name: '2',
     percentage: 45,
     divisions: [
-      {
-        name: 'A',
-        percentage: 10,
-      },
-      {
-        name: 'B',
-        percentage: 60,
-      },
-      {
-        name: 'C',
-        percentage: 20,
-      },
-      {
-        name: 'D',
-        percentage: 40,
-      },
+      { name: 'A', percentage: 10 },
+      { name: 'B', percentage: 60 },
+      { name: 'C', percentage: 20 },
+      { name: 'D', percentage: 40 },
     ],
   },
 
@@ -70,220 +46,100 @@ const classDummyData = [
     name: '3',
     percentage: 78,
     divisions: [
-      {
-        name: 'A',
-        percentage: 85,
-      },
-      {
-        name: 'B',
-        percentage: 70,
-      },
-      {
-        name: 'C',
-        percentage: 75,
-      },
-      {
-        name: 'D',
-        percentage: 82,
-      },
+      { name: 'A', percentage: 85 },
+      { name: 'B', percentage: 70 },
+      { name: 'C', percentage: 75 },
+      { name: 'D', percentage: 82 },
     ],
   },
   {
     name: '4',
     percentage: 82,
     divisions: [
-      {
-        name: 'A',
-        percentage: 88,
-      },
-      {
-        name: 'B',
-        percentage: 79,
-      },
-      {
-        name: 'C',
-        percentage: 81,
-      },
-      {
-        name: 'D',
-        percentage: 80,
-      },
+      { name: 'A', percentage: 88 },
+      { name: 'B', percentage: 79 },
+      { name: 'C', percentage: 81 },
+      { name: 'D', percentage: 80 },
     ],
   },
   {
     name: '5',
     percentage: 76,
     divisions: [
-      {
-        name: 'A',
-        percentage: 80,
-      },
-      {
-        name: 'B',
-        percentage: 75,
-      },
-      {
-        name: 'C',
-        percentage: 72,
-      },
-      {
-        name: 'D',
-        percentage: 77,
-      },
+      { name: 'A', percentage: 80 },
+      { name: 'B', percentage: 75 },
+      { name: 'C', percentage: 72 },
+      { name: 'D', percentage: 77 },
     ],
   },
   {
     name: '6',
     percentage: 79,
     divisions: [
-      {
-        name: 'A',
-        percentage: 82,
-      },
-      {
-        name: 'B',
-        percentage: 78,
-      },
-      {
-        name: 'C',
-        percentage: 76,
-      },
-      {
-        name: 'D',
-        percentage: 80,
-      },
+      { name: 'A', percentage: 82 },
+      { name: 'B', percentage: 78 },
+      { name: 'C', percentage: 76 },
+      { name: 'D', percentage: 80 },
     ],
   },
   {
     name: '7',
     percentage: 81,
     divisions: [
-      {
-        name: 'A',
-        percentage: 84,
-      },
-      {
-        name: 'B',
-        percentage: 80,
-      },
-      {
-        name: 'C',
-        percentage: 79,
-      },
-      {
-        name: 'D',
-        percentage: 81,
-      },
+      { name: 'A', percentage: 84 },
+      { name: 'B', percentage: 80 },
+      { name: 'C', percentage: 79 },
+      { name: 'D', percentage: 81 },
     ],
   },
   {
     name: '8',
     percentage: 77,
     divisions: [
-      {
-        name: 'A',
-        percentage: 80,
-      },
-      {
-        name: 'B',
-        percentage: 75,
-      },
-      {
-        name: 'C',
-        percentage: 76,
-      },
-      {
-        name: 'D',
-        percentage: 77,
-      },
+      { name: 'A', percentage: 80 },
+      { name: 'B', percentage: 75 },
+      { name: 'C', percentage: 76 },
+      { name: 'D', percentage: 77 },
     ],
   },
   {
     name: '9',
     percentage: 83,
     divisions: [
-      {
-        name: 'A',
-        percentage: 86,
-      },
-      {
-        name: 'B',
-        percentage: 82,
-      },
-      {
-        name: 'C',
-        percentage: 81,
-      },
-      {
-        name: 'D',
-        percentage: 83,
-      },
+      { name: 'A', percentage: 86 },
+      { name: 'B', percentage: 82 },
+      { name: 'C', percentage: 81 },
+      { name: 'D', percentage: 83 },
     ],
   },
   {
     name: '10',
     percentage: 80,
     divisions: [
-      {
-        name: 'A',
-        percentage: 83,
-      },
-      {
-        name: 'B',
-        percentage: 79,
-      },
-      {
-        name: 'C',
-        percentage: 78,
-      },
-      {
-        name: 'D',
-        percentage: 80,
-      },
+      { name: 'A', percentage: 83 },
+      { name: 'B', percentage: 79 },
+      { name: 'C', percentage: 78 },
+      { name: 'D', percentage: 80 },
     ],
   },
   {
     name: '11',
     percentage: 75,
     divisions: [
-      {
-        name: 'A',
-        percentage: 78,
-      },
-      {
-        name: 'B',
-        percentage: 74,
-      },
-      {
-        name: 'C',
-        percentage: 73,
-      },
-      {
-        name: 'D',
-        percentage: 75,
-      },
+      { name: 'A', percentage: 78 },
+      { name: 'B', percentage: 74 },
+      { name: 'C', percentage: 73 },
+      { name: 'D', percentage: 75 },
     ],
   },
   {
     name: '12',
     percentage: 78,
     divisions: [
-      {
-        name: 'A',
-        percentage: 81,
-      },
-      {
-        name: 'B',
-        percentage: 77,
-      },
-      {
-        name: 'C',
-        percentage: 76,
-      },
-      {
-        name: 'D',
-        percentage: 78,
-      },
+      { name: 'A', percentage: 81 },
+      { name: 'B', percentage: 77 },
+      { name: 'C', percentage: 76 },
+      { name: 'D', percentage: 78 },
     ],
   },
 ];
@@ -316,11 +172,7 @@ const StudentAttendanceDashboardScreen = () => {
               maxDate={dayjs()} // This disables future months
               onChange={(newValue) => setSelectedMonth(newValue)}
               format="MMM"
-              slotProps={{
-                textField: {
-                  size: 'small',
-                },
-              }}
+              slotProps={{ textField: { size: 'small' } }}
             />
             <Label
               sx={{ cursor: 'pointer' }}
@@ -407,9 +259,7 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => {
         justifyContent: 'center',
         cursor: 'pointer',
         transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-          scale: '1.17',
-        },
+        '&:hover': { scale: '1.17' },
       }}
       elevation={5}
       onClick={() => setSelectedDivision({ ...item, class: classDetails })}
@@ -479,11 +329,8 @@ const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
                     cursor: 'pointer',
                     transition: 'all 0.3s ease-in-out',
                     background:
-                      selectedStudent === student ? theme.palette.action.hover : 'initial',
-                    '&:hover': {
-                      scale: '1.03',
-                      background: theme.palette.action.hover,
-                    },
+                      selectedStudent === student ? theme.vars.palette.action.hover : 'initial',
+                    '&:hover': { scale: '1.03', background: theme.vars.palette.action.hover },
                   }}
                   elevation={6}
                   onClick={() => setSelectedStudent(student)}

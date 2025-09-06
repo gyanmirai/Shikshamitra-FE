@@ -37,12 +37,8 @@ const ProfileDashboardAttendance = () => {
           '& .MuiPickersCalendarHeader-root': {
             display: 'none', // Hides the header (Month, Year, and Arrows)
           },
-          '& .MuiDayCalendar-header': {
-            justifyContent: 'space-around',
-          },
-          '& .MuiDayCalendar-weekContainer': {
-            justifyContent: 'space-around',
-          },
+          '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+          '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
         }}
         slots={{
           day: (prop: any) => {
@@ -79,20 +75,18 @@ const ProfileDashboardAttendance = () => {
                       overflow: 'hidden',
                       fontWeight: disabled ? 400 : 600,
                       bgcolor: backgroundColor,
-                      '&:hover': {
-                        ...(absent ? { backgroundColor: 'unset' } : {}),
-                      },
+                      '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                       // background: (theme) =>
                       //   absent
-                      //     ? `${theme.palette.error.main} !important`
+                      //     ? `${theme.vars.palette.error.main} !important`
                       //     : today
                       //       ? 'transparent !important'
                       //       : '',
                       // ...(absent
                       //   ? { color: 'white !important' }
-                      //   : { color: (theme) => `${theme.palette.text.primary} !important` }),
+                      //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                       // border: (theme) =>
-                      //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
+                      //   today ? `2px solid ${theme.vars.palette.primary.main}` : 'none !important',
                       ...(isHalfDay
                         ? {
                             '&::before': {
@@ -104,7 +98,8 @@ const ProfileDashboardAttendance = () => {
                               width: '50%',
                               height: '100%',
                               // eslint-disable-next-line @typescript-eslint/no-shadow
-                              backgroundColor: (theme) => `${theme.palette.error.main} !important`,
+                              backgroundColor: (theme) =>
+                                `${theme.vars.palette.error.main} !important`,
                               border: '2px solid transparent',
                               zIndex: -1,
                             },

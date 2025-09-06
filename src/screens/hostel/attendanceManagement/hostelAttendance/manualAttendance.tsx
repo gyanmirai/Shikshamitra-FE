@@ -70,11 +70,7 @@ const ManualHostelAttendance = () => {
           onChange={(value) => {
             setDate(value);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
 
         {/* Hostel Dropdown */}
@@ -198,8 +194,8 @@ const ManualHostelAttendance = () => {
           sx: {
             background: (theme) =>
               tableData.isPresent
-                ? varAlpha(theme.palette.success.mainChannel, 0.08)
-                : varAlpha(theme.palette.error.mainChannel, 0.08),
+                ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
+                : varAlpha(theme.vars.palette.error.mainChannel, 0.08),
           },
         })}
         columns={[
@@ -241,22 +237,9 @@ const ManualHostelAttendance = () => {
               );
             },
           },
-          {
-            id: 'roomNo',
-            label: 'Room No',
-            align: 'left',
-            minWidth: '100px',
-          },
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            align: 'left',
-          },
-          {
-            id: 'hostelName',
-            label: 'Hostel Name',
-            align: 'left',
-          },
+          { id: 'roomNo', label: 'Room No', align: 'left', minWidth: '100px' },
+          { id: 'studentName', label: 'Student Name', align: 'left' },
+          { id: 'hostelName', label: 'Hostel Name', align: 'left' },
           {
             id: 'isPresent',
             label: 'Attendance',
@@ -274,18 +257,14 @@ const ManualHostelAttendance = () => {
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
                         color: 'success.main',
-                        '&:hover': {
-                          backgroundColor: 'success.light',
-                        },
+                        '&:hover': { backgroundColor: 'success.light' },
                       },
                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
                         backgroundColor: 'success.main',
                       },
                       '& .MuiSwitch-switchBase:not(.Mui-checked)': {
                         color: 'error.main',
-                        '&:hover': {
-                          backgroundColor: 'error.light',
-                        },
+                        '&:hover': { backgroundColor: 'error.light' },
                       },
                       '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
                         backgroundColor: 'error.main',

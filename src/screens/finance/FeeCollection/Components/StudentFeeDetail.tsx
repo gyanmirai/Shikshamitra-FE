@@ -24,12 +24,7 @@ export const FeeSummaryCard = ({
 
   return (
     <Card
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        boxShadow: 2,
-        bgcolor: theme.palette.background.paper,
-      }}
+      sx={{ p: 2, borderRadius: 3, boxShadow: 2, bgcolor: theme.vars.palette.background.paper }}
     >
       <Box display="flex" gap={2} alignItems="center">
         {/* Avatar */}
@@ -182,10 +177,7 @@ export const FinanceCollectionCard = ({
         height: '100%',
         width: '100%',
         transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: 'var(--shadows-8)',
-          scale: 1.02,
-        },
+        '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.02 },
       }}
     >
       <Box>
@@ -199,14 +191,7 @@ export const FinanceCollectionCard = ({
           ))}
         </Box>
       </Box>
-      <Iconify
-        icon={icon}
-        sx={{
-          height: '40px',
-          width: '40px',
-          color,
-        }}
-      />
+      <Iconify icon={icon} sx={{ height: '40px', width: '40px', color }} />
     </Card>
   </Box>
 );

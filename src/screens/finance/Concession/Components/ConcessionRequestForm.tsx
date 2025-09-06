@@ -53,12 +53,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   editData,
 }) => {
   const formik = useFormik<IConcessionFormValues>({
-    initialValues: editData || {
-      studentName: '',
-      concessionType: '',
-      reason: '',
-      documents: [],
-    },
+    initialValues: editData || { studentName: '', concessionType: '', reason: '', documents: [] },
     validationSchema: concessionValidation,
     onSubmit: (values) => {
       shikshaMitraToast.success({ message: 'Concession request submitted successfully' });
@@ -177,7 +172,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       width={20}
                       sx={{
                         color: (theme) =>
-                          row.status === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                          row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
                         cursor: 'pointer',
                       }}
                     />

@@ -7,7 +7,7 @@ import { fNumber } from 'src/utils/format-number';
 import 'src/utils/convertABPPermissionToNavigation';
 import React, { useState, useCallback } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box , Grid, Card, CardHeader } from '@mui/material';
+import { Box, Grid, Card, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
@@ -18,43 +18,43 @@ import BoardEnrollmentStatus from './board-enrollment-status';
 import EnrollmentActivities from '../../studentProfile/studentDashbordComponent/recentEnrollmentActivities';
 
 const EnrollmentDashboardScreen = () => (
-    <Box>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12 }}>
-          <Overview />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <AdmissionOverTime />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <Card sx={{ height: '100%', p: 2 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <BoardEnrollmentStatus />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <OrganizationStatus />
-              </Grid>
-            </Grid>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <EntranceExamCard />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <EnrollmentActivities />
-        </Grid>
+  <Box>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <Overview />
       </Grid>
 
-      {/* <Grid2 container spacing={2}>
+      <Grid size={{ xs: 12 }}>
+        <AdmissionOverTime />
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <Card sx={{ height: '100%', p: 2 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <BoardEnrollmentStatus />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <OrganizationStatus />
+            </Grid>
+          </Grid>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <EntranceExamCard />
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <EnrollmentActivities />
+      </Grid>
+    </Grid>
+
+    {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2> */}
-    </Box>
-  );
+  </Box>
+);
 
 export default EnrollmentDashboardScreen;
 
@@ -64,10 +64,7 @@ type Props2 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -76,8 +73,8 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.dark,
-    alpha(theme.palette.primary.dark, 0.24),
+    theme.vars.palette.primary.dark,
+    alpha(theme.vars.palette.primary.dark, 0.24),
   ];
 
   const chartOptions = useChart({
@@ -95,15 +92,10 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
     dataLabels: {
       enabled: true,
       offsetX: -6,
-      style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
+      style: { fontSize: '10px', colors: ['#FFFFFF', theme.vars.palette.text.primary] },
     },
     plotOptions: {
-      bar: {
-        horizontal: true,
-        borderRadius: 2,
-        barHeight: '30%',
-        dataLabels: { position: 'top' },
-      },
+      bar: { horizontal: true, borderRadius: 2, barHeight: '30%', dataLabels: { position: 'top' } },
     },
     ...chart.options,
   });
@@ -130,13 +122,7 @@ type Props3 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -146,7 +132,10 @@ export function EcommerceYearlySales({ title, subheader, chart, ...other }: Prop
 
   const [selectedSeries, setSelectedSeries] = useState('2023');
 
-  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
+  const chartColors = chart.colors ?? [
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+  ];
 
   const chartOptions = useChart({
     colors: chartColors,

@@ -10,10 +10,7 @@ interface DragData {
 }
 const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; theme: Theme }) => {
   const handleDragStart = (e: React.DragEvent) => {
-    const dragData: DragData = {
-      type: 'student',
-      student,
-    };
+    const dragData: DragData = { type: 'student', student };
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -30,14 +27,10 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
         justifyContent: 'space-between',
         cursor: student.isRoomAssign ? 'pointer' : 'grab',
         transition: 'all 0.3s ease-in-out',
-        background: student.isRoomAssign ? theme.palette.action.selected : 'background.paper',
+        background: student.isRoomAssign ? theme.vars.palette.action.selected : 'background.paper',
         opacity: student.isRoomAssign ? 0.7 : 1,
-        '&:hover': {
-          scale: '1.03',
-        },
-        '&:active': {
-          cursor: 'grabbing',
-        },
+        '&:hover': { scale: '1.03' },
+        '&:active': { cursor: 'grabbing' },
       }}
       elevation={6}
       title={student.isRoomAssign ? 'Already Assign' : 'Drag to assign seat'}

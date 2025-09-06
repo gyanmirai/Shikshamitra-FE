@@ -52,14 +52,7 @@ export default OrganizationStatus;
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Props) {
@@ -68,10 +61,10 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
   const chartSeries = chart.series.map((item) => item.value);
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.warning.light,
-    theme.palette.info.dark,
-    theme.palette.error.main,
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.light,
+    theme.vars.palette.info.dark,
+    theme.vars.palette.error.main,
   ];
 
   const chartOptions = useChart({

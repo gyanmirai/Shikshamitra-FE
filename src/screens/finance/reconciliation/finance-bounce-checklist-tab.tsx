@@ -114,10 +114,12 @@ const FinanceBounceScreen = () => {
               return (
                 <IconButton
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
-                    color: (theme) => theme.palette.primary.main,
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
+                    color: (theme) => theme.vars.palette.primary.main,
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
                     },
                     height: '24px',
                     width: '24px',

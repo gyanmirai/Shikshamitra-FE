@@ -25,7 +25,8 @@ import {
   useGetTenantByIdQuery,
   useUpdateTenantMutation,
 } from 'src/redux/tenant/tenantApi';
-import { Box ,
+import {
+  Box,
   Grid,
   Card,
   Stack,
@@ -46,10 +47,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Tenant Added Successfully',
-    },
+    popupConfig: { success: true, successMessage: 'Tenant Added Successfully' },
   });
 
   /**
@@ -59,10 +57,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
   const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateTenantMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Tenant Updated Successfully',
-    },
+    popupConfig: { success: true, successMessage: 'Tenant Updated Successfully' },
   });
   const formik = useFormik<IFormValues>({
     initialValues: {
@@ -105,10 +100,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
               email: formValues.emailAddress,
               adminPassword: formValues.password,
               extraProperties: {
-                Country: {
-                  name: formValues.country?.name,
-                  isoCode: formValues.country?.isoCode,
-                },
+                Country: { name: formValues.country?.name, isoCode: formValues.country?.isoCode },
                 State: {
                   name: formValues.stateProvince?.name,
                   isoCode: formValues.stateProvince?.isoCode,
@@ -132,10 +124,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
             adminEmailAddress: formValues.emailAddress,
             adminPassword: formValues.password,
             extraProperties: {
-              Country: {
-                name: formValues.country?.name,
-                isoCode: formValues.country?.isoCode,
-              },
+              Country: { name: formValues.country?.name, isoCode: formValues.country?.isoCode },
               State: {
                 name: formValues.stateProvince?.name,
                 isoCode: formValues.stateProvince?.isoCode,
@@ -172,12 +161,7 @@ const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
       sx={{ minHeight: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}
       onSubmit={handleSubmit}
     >
-      <Scrollbar
-        sx={{
-          p: 2,
-          height: '100%',
-        }}
-      >
+      <Scrollbar sx={{ p: 2, height: '100%' }}>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
             <Box>
@@ -430,9 +414,7 @@ const BasicInformation = () => {
     type: 'query',
     currentQueryAndMutation: useGetTenantByIdQuery,
     params: store?.user?.profile.tenantid,
-    options: {
-      skip: !store?.user?.profile.tenantid,
-    },
+    options: { skip: !store?.user?.profile.tenantid },
   });
   useEffect(() => {
     setEditData(tenantDetail);
@@ -452,9 +434,7 @@ const BasicInformation = () => {
   const { data: tenants } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllTenantsQuery,
-    options: {
-      skip: !isSuperAdmin,
-    },
+    options: { skip: !isSuperAdmin },
   });
 
   return (
@@ -675,11 +655,9 @@ const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => 
             left: 16,
             top: '50%',
             transform: 'translateY(-50%)',
-            background: (theme) => theme.palette.grey[500],
+            background: (theme) => theme.vars.palette.grey[500],
             color: 'white',
-            '&:hover': {
-              background: (theme) => theme.palette.grey[600],
-            },
+            '&:hover': { background: (theme) => theme.vars.palette.grey[600] },
           }}
         >
           <ArrowBack />
@@ -697,11 +675,9 @@ const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => 
             right: 16,
             top: '50%',
             transform: 'translateY(-50%)',
-            background: (theme) => theme.palette.grey[500],
+            background: (theme) => theme.vars.palette.grey[500],
             color: 'white',
-            '&:hover': {
-              background: (theme) => theme.palette.grey[600],
-            },
+            '&:hover': { background: (theme) => theme.vars.palette.grey[600] },
           }}
         >
           <ArrowForward />

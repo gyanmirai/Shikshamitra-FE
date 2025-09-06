@@ -106,10 +106,12 @@ const SecurityReportsScreen = () => {
                     console.log('Download PDF clicked', formik.values);
                   }}
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -124,10 +126,12 @@ const SecurityReportsScreen = () => {
                     console.log('Download Excel clicked', formik.values);
                   }}
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -140,11 +144,12 @@ const SecurityReportsScreen = () => {
                   color="secondary"
                   type="submit"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
-                        varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     },
                   }}
                 >

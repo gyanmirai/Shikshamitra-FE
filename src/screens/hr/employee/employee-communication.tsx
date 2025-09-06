@@ -36,7 +36,7 @@ const EmployeeCommunication = ({ employee }: any) => (
             display: 'flex',
             p: 1,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
@@ -72,7 +72,7 @@ const EmployeeCommunication = ({ employee }: any) => (
             display: 'flex',
             p: 1,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
@@ -106,7 +106,7 @@ const EmployeeCommunication = ({ employee }: any) => (
             display: 'flex',
             p: 1,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
@@ -140,7 +140,7 @@ const EmployeeCommunication = ({ employee }: any) => (
             display: 'flex',
             p: 1,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
           }}
         >
           <Box sx={{ flexGrow: 1 }}>
@@ -185,24 +185,9 @@ const EmployeeAnnouncement = () => {
 
   const TABS = useMemo(
     () => [
-      {
-        value: 'Active',
-        label: 'Active',
-        count: 0,
-        color: 'primary',
-      },
-      {
-        value: 'Scheduled',
-        label: 'Scheduled',
-        count: 0,
-        color: 'default',
-      },
-      {
-        value: 'Pending',
-        label: 'Pending',
-        count: 0,
-        color: 'warning',
-      },
+      { value: 'Active', label: 'Active', count: 0, color: 'primary' },
+      { value: 'Scheduled', label: 'Scheduled', count: 0, color: 'default' },
+      { value: 'Pending', label: 'Pending', count: 0, color: 'warning' },
     ],
     []
   );
@@ -220,11 +205,7 @@ const EmployeeAnnouncement = () => {
       <Tabs
         value={tabs.value}
         onChange={tabs.onChange}
-        sx={{
-          mb: 1,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
-        }}
+        sx={{ mb: 1, '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
       >
         {TABS.map((tab) => (
           <Tab
@@ -404,18 +385,8 @@ const EmployeeEvent = () => {
 
   const TABS = useMemo(
     () => [
-      {
-        value: 'Completed',
-        label: 'Completed',
-        count: 0,
-        color: 'primary',
-      },
-      {
-        value: 'Scheduled',
-        label: 'Scheduled',
-        count: 0,
-        color: 'warning',
-      },
+      { value: 'Completed', label: 'Completed', count: 0, color: 'primary' },
+      { value: 'Scheduled', label: 'Scheduled', count: 0, color: 'warning' },
     ],
     []
   );
@@ -438,11 +409,7 @@ const EmployeeEvent = () => {
       <Tabs
         value={tabs.value}
         onChange={tabs.onChange}
-        sx={{
-          mb: 1,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
-        }}
+        sx={{ mb: 1, '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
       >
         {TABS.map((tab) => (
           <Tab
@@ -605,18 +572,8 @@ const EmployeeMeetings = () => {
 
   const TABS = useMemo(
     () => [
-      {
-        value: 'Completed',
-        label: 'Completed',
-        count: 0,
-        color: 'primary',
-      },
-      {
-        value: 'Scheduled',
-        label: 'Scheduled',
-        count: 0,
-        color: 'warning',
-      },
+      { value: 'Completed', label: 'Completed', count: 0, color: 'primary' },
+      { value: 'Scheduled', label: 'Scheduled', count: 0, color: 'warning' },
     ],
     []
   );
@@ -651,11 +608,7 @@ const EmployeeMeetings = () => {
       <Tabs
         value={tabs.value}
         onChange={tabs.onChange}
-        sx={{
-          mb: 1,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
-        }}
+        sx={{ mb: 1, '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
       >
         {TABS.map((tab) => (
           <Tab

@@ -87,11 +87,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
             color="primary.main"
             fontWeight={600}
             sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
+              '&:hover': { cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' },
             }}
           >
             Create Homework
@@ -99,18 +95,8 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         </>
       }
       columns={[
-        {
-          id: 'title',
-          label: 'Title',
-          align: 'left',
-          filterType: 'string',
-        },
-        {
-          id: 'homeworkType',
-          label: 'Type',
-          align: 'left',
-          filterType: 'string',
-        },
+        { id: 'title', label: 'Title', align: 'left', filterType: 'string' },
+        { id: 'homeworkType', label: 'Type', align: 'left', filterType: 'string' },
         {
           id: 'createdAt',
           label: 'Created On',
@@ -157,8 +143,8 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           render(value, row) {
             const statusColor =
               value === PublishUnpublishStatusType.Published
-                ? theme.palette.success.main
-                : theme.palette.text.secondary;
+                ? theme.vars.palette.success.main
+                : theme.vars.palette.text.secondary;
 
             return (
               <CustomTooltip
@@ -190,10 +176,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
                       backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
                       transition: 'transform 0.2s ease-in-out, background-color 0.2s',
                       cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'scale(1.1)',
-                        backgroundColor: 'rgba(0,0,0,0.08)',
-                      },
+                      '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
                     }}
                     disabled={value === PublishUnpublishStatusType.Published}
                   >
@@ -238,10 +221,9 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
                   (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
                 );
 
-                onViewDetails({
-                  ...row,
-                  divisionMeta: divisionData,
-                } as IHomework & { divisionMeta?: DivisionHomeworkMeta });
+                onViewDetails({ ...row, divisionMeta: divisionData } as IHomework & {
+                  divisionMeta?: DivisionHomeworkMeta;
+                });
               }}
             />
           ),

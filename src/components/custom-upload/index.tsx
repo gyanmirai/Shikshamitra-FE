@@ -82,9 +82,7 @@ const FileUploader = <T extends boolean = true>({
       const filteredFiles = newFiles.filter((file: File | FileData) => {
         const size = file instanceof File ? file.size : (file?.size ?? 0);
         if (size > maxSizeInBytes) {
-          shikshaMitraToast.error({
-            message: `File exceeds the 5 MB size limit.`,
-          });
+          shikshaMitraToast.error({ message: `File exceeds the 5 MB size limit.` });
           return false;
         }
         if (file instanceof File) return allowedTypes.includes(file.type);
@@ -173,7 +171,7 @@ const FileUploader = <T extends boolean = true>({
           top: -7,
           zIndex: 2,
           p: '1px',
-          background: (theme) => theme.palette.grey[200],
+          background: (theme) => theme.vars.palette.grey[200],
         }}
       >
         <Close sx={{ width: 16, height: 16 }} />
@@ -230,7 +228,7 @@ const FileUploader = <T extends boolean = true>({
         onDragOver={(e) => e.preventDefault()}
         sx={{
           border: (theme) =>
-            `1px dashed ${error ? theme.palette.error.main : theme.palette.grey[400]}`,
+            `1px dashed ${error ? theme.vars.palette.error.main : theme.vars.palette.grey[400]}`,
           padding: value && (Array.isArray(value) ? value.length > 0 : value) ? 1 : 2,
           borderRadius: 2,
           textAlign: value && (Array.isArray(value) ? value.length > 0 : value) ? 'left' : 'center',

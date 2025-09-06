@@ -17,10 +17,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     icons?: React.ReactNode[];
-    series: {
-      label: string;
-      value: number;
-    }[];
+    series: { label: string; value: number }[];
     options?: ChartOptions;
   };
 };
@@ -29,14 +26,14 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.palette.secondary.dark,
-    theme.palette.error.main,
-    theme.palette.primary.main,
-    theme.palette.warning.main,
-    theme.palette.info.dark,
-    theme.palette.info.main,
-    theme.palette.success.main,
-    theme.palette.warning.dark,
+    theme.vars.palette.secondary.dark,
+    theme.vars.palette.error.main,
+    theme.vars.palette.primary.main,
+    theme.vars.palette.warning.main,
+    theme.vars.palette.info.dark,
+    theme.vars.palette.info.main,
+    theme.vars.palette.success.main,
+    theme.vars.palette.warning.dark,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -45,7 +42,7 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
     chart: { offsetY: 12 },
     colors: chartColors,
     labels: chart.series.map((item) => item.label),
-    stroke: { width: 1, colors: [theme.palette.background.paper] },
+    stroke: { width: 1, colors: [theme.vars.palette.background.paper] },
     fill: { opacity: 0.88 },
     tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
     plotOptions: { pie: { donut: { labels: { show: false } } } },

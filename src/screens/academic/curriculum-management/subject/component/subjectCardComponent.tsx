@@ -293,15 +293,15 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('learningGoal')}
                   helperText={getError('learningGoal')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': { borderColor: theme.palette.text.primary },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('learningGoal') && {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                     }),
                   }}
                 />
@@ -321,15 +321,15 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('prerequisites')}
                   helperText={getError('prerequisites')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': { borderColor: theme.palette.text.primary },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('prerequisites') && {
-                      borderColor: theme.palette.error.main,
+                      borderColor: theme.vars.palette.error.main,
                     }),
                   }}
                 />
@@ -349,15 +349,15 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('description')}
                   helperText={getError('description')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': { borderColor: theme.palette.text.primary },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('description') && {
-                      borderColor: theme.palette.error.main,
+                      borderColor: theme.vars.palette.error.main,
                     }),
                   }}
                 />
