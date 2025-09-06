@@ -77,7 +77,7 @@ const AssignmentsList = () => {
       sx={{
         borderRadius: 2,
         backgroundColor:
-          theme.vars.palette.mode === 'dark'
+          theme.palette.mode === 'dark'
             ? theme.vars.palette.grey[800]
             : theme.vars.palette.grey[100],
         height: '100%',
@@ -113,8 +113,8 @@ const AssignmentsList = () => {
                     slotProps={{
                       tooltip: {
                         sx: {
-                          color: theme.vars.palette.mode === 'dark' ? 'white' : 'black',
-                          backgroundColor: theme.vars.palette.mode === 'dark' ? 'black' : '#FAF9F6',
+                          color: theme.palette.mode === 'dark' ? 'white' : 'black',
+                          backgroundColor: theme.palette.mode === 'dark' ? 'black' : '#FAF9F6',
                         },
                       },
                     }}

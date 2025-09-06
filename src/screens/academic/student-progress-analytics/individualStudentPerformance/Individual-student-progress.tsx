@@ -47,11 +47,9 @@ const IndividualStudentProgress = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
   const cardBgColor =
-    theme.vars.palette.mode === 'dark'
-      ? theme.vars.palette.grey[800]
-      : theme.vars.palette.grey[100];
+    theme.palette.mode === 'dark' ? theme.vars.palette.grey[800] : theme.vars.palette.grey[100];
   const textColor =
-    theme.vars.palette.mode === 'dark'
+    theme.palette.mode === 'dark'
       ? theme.vars.palette.common.white
       : theme.vars.palette.text.primary;
 

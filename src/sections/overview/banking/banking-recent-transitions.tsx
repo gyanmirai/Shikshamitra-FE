@@ -92,7 +92,7 @@ function RowItem({ row }: RowItemProps) {
 
   const popover = usePopover();
 
-  const lightMode = theme.vars.palette.mode === 'light';
+  const lightMode = theme.palette.mode === 'light';
 
   const handleDownload = () => {
     popover.onClose();

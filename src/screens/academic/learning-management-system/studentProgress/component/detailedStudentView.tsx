@@ -12,7 +12,7 @@ const DetailedStudentView = () => (
       justifyContent: 'center',
       height: '100%',
       padding: 3,
-      backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#333' : '#f5f5f5'),
+      backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#333' : '#f5f5f5'),
       borderRadius: 2,
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     }}
@@ -40,7 +40,7 @@ const DetailedStudentView = () => (
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#424242' : 'white'),
+            backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#424242' : 'white'),
             padding: 2,
             borderRadius: 1,
           }}
@@ -67,7 +67,7 @@ const DetailedStudentView = () => (
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: (theme) => (theme.vars.palette.mode === 'dark' ? '#424242' : 'white'),
+            backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#424242' : 'white'),
             padding: 2,
             borderRadius: 1,
           }}
@@ -89,8 +89,7 @@ const DetailedStudentView = () => (
               sx={{
                 height: 10,
                 borderRadius: 5,
-                backgroundColor: (theme) =>
-                  theme.vars.palette.mode === 'dark' ? '#555' : '#e0e0e0',
+                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#555' : '#e0e0e0'),
                 '& .MuiLinearProgress-bar': { backgroundColor: '#4caf50' },
               }}
             />

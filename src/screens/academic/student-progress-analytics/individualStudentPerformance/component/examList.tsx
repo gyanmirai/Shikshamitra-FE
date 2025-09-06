@@ -47,7 +47,7 @@ const ExamsList = () => {
       sx={{
         borderRadius: 2,
         backgroundColor:
-          theme.vars.palette.mode === 'dark'
+          theme.palette.mode === 'dark'
             ? theme.vars.palette.grey[800]
             : theme.vars.palette.grey[100],
         height: '100%',

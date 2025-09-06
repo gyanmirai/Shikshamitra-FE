@@ -206,7 +206,7 @@ const AssignElectiveSubject = () => {
                         sx={{
                           color: isSelected
                             ? '#fff' // For contained: always white text
-                            : theme.vars.palette.mode === 'dark'
+                            : theme.palette.mode === 'dark'
                               ? '#fff'
                               : '#000', // For outlined: black in light, white in dark
                           borderColor: theme.vars.palette.primary.main,

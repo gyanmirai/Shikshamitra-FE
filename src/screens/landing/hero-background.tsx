@@ -20,7 +20,7 @@ export function HeroBackground({ sx }: Props) {
 
   const upMd = useResponsive('up', 'md');
 
-  const lightMode = theme.vars.palette.mode === 'light';
+  const lightMode = theme.palette.mode === 'light';
 
   const strokeCount = 12;
 
