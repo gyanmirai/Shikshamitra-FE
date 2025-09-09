@@ -31,6 +31,7 @@ import { feeHeadApi } from './feeHeadApi/feeHeadApi';
 import { chargesApi } from './chargesApi/chargesApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
+import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
 import { payElementApi } from './payElement/payElementApi';
@@ -187,6 +188,7 @@ const reducers = combineReducers({
   [reservationRequestApi.reducerPath]: reservationRequestApi.reducer,
   [reservationDataApi.reducerPath]: reservationDataApi.reducer,
   [feeRefundsTermsApi.reducerPath]: feeRefundsTermsApi.reducer,
+  [librarySettingsApi.reducerPath]: librarySettingsApi.reducer,
 });
 
 const store = configureStore({
@@ -278,6 +280,7 @@ const store = configureStore({
       reservationRequestApi.middleware,
       reservationDataApi.middleware,
       feeRefundsTermsApi.middleware,
+      librarySettingsApi.middleware,
     ]),
 });
 
