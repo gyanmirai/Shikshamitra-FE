@@ -123,20 +123,21 @@
 "reservationRequestData" : [
   {
     "memberId": "DDVS001",
-    "memberName": "Dharmik Jinjala",
-    "reservationDate": "01-08-2025"
+    "memberName": "Dharmik Jinjala", 
+    "reservationDate": "01-08-2025",
+    "dueDate": "10-09-2025"
   },
   {
     "memberId": "DDVS002",
     "memberName": "Prerna Atre",
-    "reservationDate": "13-08-2025"
+    "reservationDate": "13-08-2025",
+    "dueDate": "23-09-2025"
   },
   {
     "memberId": "DDVS003",
     "memberName": "Mayur Solanki",
-    "reservationDate": "20-08-2025"
+    "reservationDate": "20-08-2025",
+    "dueDate": "30-09-2025"
   }
 ]
-
-
 }

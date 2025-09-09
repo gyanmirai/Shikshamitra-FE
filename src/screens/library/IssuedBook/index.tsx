@@ -34,7 +34,7 @@ const IssueReturnBook = () => {
   const deleteDialog = useBoolean();
 
   //   Fetch issued/returned books
-  const { data: issuedBooks, isLoading } = useQueryAndMutation({
+  const { data: issuedBooks } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIssueReturnFormsQuery,
   });

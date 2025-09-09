@@ -40,6 +40,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
 
@@ -51,6 +52,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
   }, [medium?.educationMediumStages]);
 
   // Initialize query hook for fetching students
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,

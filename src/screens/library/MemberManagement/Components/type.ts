@@ -1,3 +1,5 @@
+import type { Dayjs } from 'dayjs';
+
 export interface IMember {
   id: string;
   role: string;
@@ -31,6 +33,7 @@ export interface IMemberFormProps {
 
 export interface IChangeStatusPayload {
   status: string;
+  date: Dayjs | string | null;
   remarks: string;
 }
 
@@ -44,6 +47,7 @@ export interface IMakeReservationPayload {
   bookCategory: string;
   bookTitle: string;
   requestedDate: Date;
+  dueDate: Dayjs | string | null;
 }
 
 export interface IMakeReservationFormProps {

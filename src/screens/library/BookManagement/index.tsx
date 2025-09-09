@@ -24,7 +24,7 @@ import BookManagementTable from './Components/BookManagementTable';
 const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
   const [open, setOpen] = useState(false);
-  const { data: bookData, isLoading: bookLoading } = useQueryAndMutation({
+  const { data: bookData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBooksQuery,
   });
@@ -37,7 +37,6 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
-  const editDialog = useBoolean();
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
 
@@ -163,7 +162,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View comprehensive book information including title, author, category, availability status and other relevant details."
+              title="This modal displays complete details of a particular book, including its information, availability status."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

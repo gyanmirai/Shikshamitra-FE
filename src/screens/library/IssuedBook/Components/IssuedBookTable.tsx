@@ -50,7 +50,8 @@ const BookIssueReturnTable = ({
         { id: 'memberName', label: 'Member Name', align: 'left' },
         { id: 'bookCategory', label: 'Book Category', align: 'left' },
         { id: 'bookTitle', label: 'Book Title', align: 'left' },
-        { id: 'requestedDate', label: 'Requested Date', align: 'left', filterType: 'date' },
+        { id: 'requestedDate', label: 'Issue Date', align: 'left', filterType: 'date' },
+        { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
         {
           id: 'status',
           label: 'Status',
