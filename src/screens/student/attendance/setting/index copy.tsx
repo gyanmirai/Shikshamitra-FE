@@ -50,7 +50,7 @@ const HrAttendanceSettingScreen = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
-  const { data, isLoading } = useQueryAndMutation({
+  const { data } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });

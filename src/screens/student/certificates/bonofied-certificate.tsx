@@ -22,7 +22,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
-import { Box ,
+import {
+  Box,
   Grid,
   Chip,
   Button,
@@ -31,7 +32,6 @@ import { Box ,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
 
 const BonofiedCertificate = () => {
   const dialog = useBoolean();
@@ -144,11 +144,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   // Get current medium and board from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Initialize form with Formik
   const {

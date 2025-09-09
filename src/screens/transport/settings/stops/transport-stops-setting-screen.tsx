@@ -5,6 +5,7 @@ import { Box, Button, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+// eslint-disable-next-line import/no-named-as-default
 import ViewStopDetailDialog from './view-stop-details-dialog';
 import TransportAddingStopDialog from './transport-adding-stop-dialog';
 // import TransportAddingStopDialog from './transport-adding-stop-dialog';
@@ -73,9 +74,6 @@ const TransportStopsSettingScreen = () => {
                     <MenuList>
                       <MenuItem
                         onClick={() => {
-                          // setIsEdit(true);
-                          setSelectedEntry(row);
-
                           console.log('row', row);
 
                           viewStopDialog.onTrue();

@@ -11,7 +11,6 @@ import { LoadingButton } from '@mui/lab';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -103,9 +102,6 @@ const EntranceExamScreen = () => {
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
   });
-
-  // Material-UI theme hook
-  const theme = useTheme();
 
   /**
    * Memoized table data transformation

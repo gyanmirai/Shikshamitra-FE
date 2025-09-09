@@ -677,9 +677,6 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
     stops: [],
   });
 
-  useEffect(() => {
-    console.log('Updated route data:', allRouteDetails);
-  }, [allRouteDetails, allRouteDetails.stops]);
   const allRouteSteps = [
     // <LocationPicker onLocationSelect={handleLocationData}/>,
     <EnterRouteDetails onChange={handleInputChange} routeDetails={routeDetails} />,

@@ -16,9 +16,15 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
-import { termOptions } from './RefurnRequestForm';
 import { refundValidationSchema } from './NewRequestValidation';
 import { getInitialRefundFormData } from './NewrequestInitialValues';
+
+export const termOptions = [
+  { name: 'Quarter 1', amount: 5000 },
+  { name: 'Quarter 2', amount: 5000 },
+  { name: 'Quarter 3', amount: 5000 },
+  { name: 'Quarter 4', amount: 5000 },
+];
 
 const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);

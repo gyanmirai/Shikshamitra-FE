@@ -12,6 +12,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
 
+// eslint-disable-next-line import/no-named-as-default
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
 import { assignments, assignmentsForStaff } from './data/member-transport-screen-data';
 import TransportNotifyParentsDialog from '../starffTransport/component/transport-notify-parents.dialog';
@@ -210,7 +211,6 @@ const MemberTransportScreen = () => {
     },
   ];
   const dialog = useBoolean();
-  // const dialogForBulkEdit = useBoolean();
   const dialogNotify = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState();
   const [isEdit, setIsEdit] = useState<boolean>(false);

@@ -140,11 +140,7 @@ const LeavingForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const {
     touched,
     setFieldTouched,

@@ -28,6 +28,7 @@ const BuildingManagement = () => {
 
   // State for managing selected building and building data
   const [selectedBuilding, setSelectedBuilding] = useState<IBuilding | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [buildingData, setBuildingData] = useState<IBuilding[]>([
     {
       id: 1,

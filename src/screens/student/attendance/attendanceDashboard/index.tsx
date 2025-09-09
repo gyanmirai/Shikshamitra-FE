@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
@@ -15,40 +15,32 @@ import RecentLeaveRequests from './components/recentLeaveRequests';
 import DailyAttendanceTrend from './components/dailyAttendanceTrend';
 import AttendanceStatusCard from './components/attendanceMarkingStatus';
 
-const StudentAttendanceDashboard = () => {
-  const [sections, setSections] = useState([
-    { id: '0', title: 'Over View' },
-    { id: '1', title: 'Daily Attendance Trend' },
-    { id: '2', title: 'Attendance Marking Status' },
-    { id: '3', title: 'Recent Leave Requests' },
-  ]);
-  return (
-    <Box>
-      {/* <CustomizableView sections={sections} setSections={setSections} /> */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12 }}>
-          <Overview />
-        </Grid>
+const StudentAttendanceDashboard = () => (
+  <Box>
+    {/* <CustomizableView sections={sections} setSections={setSections} /> */}
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <Overview />
+      </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <DailyAttendanceTrend />
-        </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <DailyAttendanceTrend />
+      </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AttendanceStatusCard />
-        </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AttendanceStatusCard />
+      </Grid>
 
-        {/* <Grid size={{ xs: 12, md: 6 }}>
+      {/* <Grid size={{ xs: 12, md: 6 }}>
     <StudentBirthDate />
   </Grid> */}
 
-        <Grid size={{ xs: 12 }}>
-          <RecentLeaveRequests />
-        </Grid>
+      <Grid size={{ xs: 12 }}>
+        <RecentLeaveRequests />
       </Grid>
-    </Box>
-  );
-};
+    </Grid>
+  </Box>
+);
 
 export default StudentAttendanceDashboard;
 

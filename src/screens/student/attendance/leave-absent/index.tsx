@@ -19,6 +19,7 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import { editorClasses } from 'src/components/editor/classes';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
@@ -27,21 +28,19 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 import {
+  useGetStudentLeaveQuery,
+  useChangeLeaveStatusMutation,
+} from 'src/redux/student/student-leave/student-leave-api';
+import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-import {
-  useGetStudentLeaveQuery,
-  useAddStudentLeaveMutation,
-  useChangeLeaveStatusMutation,
-} from 'src/redux/student/student-leave/student-leave-api';
 import {
   Box,
   Grid,
@@ -73,6 +72,7 @@ const LeaveAndAbsentScreen = () => {
   const [leaveId, setLeaveId] = useState<string>('');
 
   // State to store selected students for notifications
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
 
   // Boolean state to control instant notification dialog visibility
@@ -349,11 +349,6 @@ const LeaveAndAbsentScreen = () => {
 
 export default LeaveAndAbsentScreen;
 
-// Configuration for file upload component
-const uploadProps = {
-  multiple: true,
-  accept: { 'image/*': [] },
-};
 const LeaveRequestForm = ({
   handleClose,
 }: {
@@ -414,36 +409,13 @@ const LeaveRequestForm = ({
     }
   }, [division, classes, organization, getStudents]);
 
-  const [addLeaveRequest] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddStudentLeaveMutation,
-  });
   // Fetch all attendance types
-  const { data: attendanceTypes, isLoading: isAttandanceTypeLoading } = useQueryAndMutation({
+  const { data: attendanceTypes } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
   });
-  // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback(
-    (
-      inputFile: File | string,
-      values: IFormValues,
-      setFieldValue: (field: string, value: any) => void
-    ) => {
-      setFieldValue('docs', '');
-    },
-    []
-  );
 
-  // Handler to remove all file attachments
-  const handleRemoveAllFiles = useCallback(
-    (values: IFormValues, setFieldValue: (field: string, value: any) => void) => {
-      setFieldValue('docs', '');
-    },
-    []
-  );
-
-  const { initialValues, errors, touched, setFieldValue, values, submitForm, handleSubmit } =
+  const { initialValues, errors, touched, setFieldValue, values, handleSubmit } =
     useFormik<IFormValues>({
       initialValues: {
         leaveType: '',

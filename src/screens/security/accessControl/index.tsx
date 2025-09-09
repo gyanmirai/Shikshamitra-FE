@@ -427,6 +427,7 @@ const BoardScreenStep = ({
   };
 
   // Function to render individual nodes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNode = (node: any, level: number = 0) => {
     const isSelected = checkedItem[`${node.type}` as keyof typeof checkedItem]?.includes(node.id);
     const isExpanded = expandedNodes.has(node.id);

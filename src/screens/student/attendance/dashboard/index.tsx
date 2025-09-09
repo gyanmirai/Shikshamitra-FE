@@ -145,6 +145,7 @@ const classDummyData = [
 ];
 const StudentAttendanceDashboardScreen = () => {
   // State to track overall school attendance percentage
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [schoolAttendance, setschoolAttendance] = useState(40);
   // State to track selected division for detailed view
   const [selectedDivision, setSelectedDivision] = useState(null);
@@ -219,61 +220,55 @@ const StudentAttendanceDashboardScreen = () => {
 
 export default StudentAttendanceDashboardScreen;
 
-const ClassCard = ({ classItem, setSelectedDivision }: any) => {
-  const a = null;
-  return (
-    <Paper sx={{ p: 2 }} elevation={3}>
-      <Box display="flex" justifyContent="space-between">
-        <Typography variant="h6">Class {classItem.name}</Typography>
-        <Label
-          color={
-            classItem.percentage > 75 ? 'success' : classItem.percentage > 40 ? 'warning' : 'error'
-          }
-        >
-          {classItem.percentage}%
-        </Label>
-      </Box>
-      <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
-        {classItem.divisions.map((item: any) => (
-          <RenderDivision
-            classDetails={classItem}
-            item={item}
-            setSelectedDivision={setSelectedDivision}
-          />
-        ))}
-      </Box>
-    </Paper>
-  );
-};
-
-const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => {
-  const a = null;
-  return (
-    <Paper
-      sx={{
-        borderRadius: 1,
-        p: 1,
-        gap: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': { scale: '1.17' },
-      }}
-      elevation={5}
-      onClick={() => setSelectedDivision({ ...item, class: classDetails })}
-    >
-      {item.name}
+const ClassCard = ({ classItem, setSelectedDivision }: any) => (
+  <Paper sx={{ p: 2 }} elevation={3}>
+    <Box display="flex" justifyContent="space-between">
+      <Typography variant="h6">Class {classItem.name}</Typography>
       <Label
-        sx={{ cursor: 'pointer' }}
-        color={item.percentage > 75 ? 'success' : item.percentage > 40 ? 'warning' : 'error'}
+        color={
+          classItem.percentage > 75 ? 'success' : classItem.percentage > 40 ? 'warning' : 'error'
+        }
       >
-        {item.percentage}%
+        {classItem.percentage}%
       </Label>
-    </Paper>
-  );
-};
+    </Box>
+    <Box display="flex" gap={2} flexWrap="wrap" mt={2}>
+      {classItem.divisions.map((item: any) => (
+        <RenderDivision
+          classDetails={classItem}
+          item={item}
+          setSelectedDivision={setSelectedDivision}
+        />
+      ))}
+    </Box>
+  </Paper>
+);
+
+const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => (
+  <Paper
+    sx={{
+      borderRadius: 1,
+      p: 1,
+      gap: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': { scale: '1.17' },
+    }}
+    elevation={5}
+    onClick={() => setSelectedDivision({ ...item, class: classDetails })}
+  >
+    {item.name}
+    <Label
+      sx={{ cursor: 'pointer' }}
+      color={item.percentage > 75 ? 'success' : item.percentage > 40 ? 'warning' : 'error'}
+    >
+      {item.percentage}%
+    </Label>
+  </Paper>
+);
 
 const DivisionOverview = ({ selectedDivision, setSelectedDivision }: any) => {
   // State to track the selected student

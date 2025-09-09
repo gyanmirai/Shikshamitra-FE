@@ -9,6 +9,7 @@ export const guardShiftValidationSchema = Yup.object().shape({
   endTime: Yup.date()
     .nullable()
     .required('End time is required')
+    // eslint-disable-next-line func-names
     .test('is-after-start', 'End time must be after start time', function (value) {
       const { startTime } = this.parent;
       return value && startTime && dayjs(value).isAfter(dayjs(startTime));

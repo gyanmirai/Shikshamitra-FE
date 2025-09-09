@@ -109,7 +109,7 @@ const Concession = () => {
       />
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <CustomSelect
-          label="Board *"
+          label="Board"
           options={boards || []}
           labelKey="name"
           valueKey="id"
@@ -121,7 +121,7 @@ const Concession = () => {
           formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
         />
         <CustomSelect
-          label="Medium *"
+          label="Medium"
           options={mediums || []}
           labelKey="name"
           disabled={!selectedBoard}

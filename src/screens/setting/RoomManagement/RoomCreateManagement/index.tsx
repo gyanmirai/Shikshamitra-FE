@@ -28,6 +28,7 @@ const RoomCreateManagement = () => {
 
   // State for managing selected room and room data
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [roomData, setRoomData] = useState<IRoom[]>([
     {
       id: 1,

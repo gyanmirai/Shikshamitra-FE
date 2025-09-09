@@ -43,6 +43,7 @@ import { expenseApi } from './finance/expenseApi/expenseApi';
 import { incomeCategoryApi } from './finance/incomeCategory';
 import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
+import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { BudgetsCategoryApi } from './finance/budgetsCategory';
 import { organizationApi } from './oraganization/oraganization';
@@ -185,6 +186,7 @@ const reducers = combineReducers({
   [bookCategoryOptionsApi.reducerPath]: bookCategoryOptionsApi.reducer,
   [reservationRequestApi.reducerPath]: reservationRequestApi.reducer,
   [reservationDataApi.reducerPath]: reservationDataApi.reducer,
+  [feeRefundsTermsApi.reducerPath]: feeRefundsTermsApi.reducer,
 });
 
 const store = configureStore({
@@ -275,6 +277,7 @@ const store = configureStore({
       bookCategoryOptionsApi.middleware,
       reservationRequestApi.middleware,
       reservationDataApi.middleware,
+      feeRefundsTermsApi.middleware,
     ]),
 });
 

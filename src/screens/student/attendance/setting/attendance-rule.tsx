@@ -2,13 +2,13 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { TimeUnitType } from 'src/enums/time-units';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -17,8 +17,6 @@ import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import {
   Box,
   Grid,
-  MenuItem,
-  MenuList,
   Checkbox,
   TextField,
   Typography,
@@ -41,39 +39,6 @@ const AttendanceRule = () => {
   // State for managing edit and delete operations
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
-
-  // Menu actions for each row in the table
-  const actions = useCallback(
-    ({ popover }: any, row: any) => (
-      <MenuList>
-        {/* Delete menu item */}
-        <MenuItem
-          onClick={() => {
-            confirm.onTrue();
-            popover.onClose();
-            setDeleteInformation(row);
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-
-        {/* Edit menu item */}
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            dialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    [confirm, dialog]
-  );
 
   // Fetch attendance rules data
   const { data, isLoading } = useQueryAndMutation({
