@@ -10,7 +10,7 @@ import {
 import type { IClassWiseFeeData } from '../../type';
 
 interface ClassSelectionViewProps {
-  feeStructureClasses: Record<string, IClassWiseFeeData[]>; // ✅ FIXED
+  feeStructureClasses: Record<string, IClassWiseFeeData[]>; //  FIXED
   selectedClass: string | null;
   onSelectClass: (className: string) => void;
 }

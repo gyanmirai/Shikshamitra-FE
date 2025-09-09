@@ -268,6 +268,13 @@ const store = configureStore({
       incomeCategoryApi.middleware,
       bookManagementApi.middleware,
       bookCategoryApi.middleware,
+      memberManagementApi.middleware,
+      issueReturnFormApi.middleware,
+      reservationBookApi.middleware,
+      bookIssuedApi.middleware,
+      bookCategoryOptionsApi.middleware,
+      reservationRequestApi.middleware,
+      reservationDataApi.middleware,
     ]),
 });
 

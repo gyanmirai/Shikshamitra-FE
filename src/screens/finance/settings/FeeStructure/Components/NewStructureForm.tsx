@@ -30,10 +30,8 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
           // Final submit
           if (editData) {
             // Update API call here
-            console.log('Updating Fee Structure:', values);
           } else {
             // Create API call here
-            console.log('Creating Fee Structure:', values);
           }
           onClose(null, true);
           return;

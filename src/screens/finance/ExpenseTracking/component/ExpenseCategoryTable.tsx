@@ -14,6 +14,7 @@ interface IExpenseCategoryTableProps {
   onEdit?: (row: IExpenseFormValues) => void;
   onDelete?: (row: IExpenseFormValues) => void;
   onView?: (row: IExpenseFormValues) => void;
+  isLoading: boolean;
 }
 
 const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
@@ -23,9 +24,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onEdit,
   onDelete,
   onView,
+  isLoading,
 }) => (
   <CustomizableTable
     tableId="expense-category-table"
+    isLoading={isLoading}
     noDataText={
       <>
         No Expense data found

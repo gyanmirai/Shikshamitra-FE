@@ -121,6 +121,34 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               })()}
             </Grid>
           </Grid>
+
+          {/* Receipt Book Code Field */}
+          <Grid size={{ xs: 12, sm: 12 }} pb="20px">
+            {(() => {
+              const field = 'receiptBookCode';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    name={field}
+                    label="Receipt Book Code *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        // Remove everything except letters and spaces
+                        .replace(/[^a-zA-Z0-9\s]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
         </Scrollbar>
 
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -145,6 +173,9 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
             type="submit"
             variant="contained"
             size="small"
+            onClick={(e: any) => {
+              formik.handleSubmit(e);
+            }}
           >
             {data ? 'Update' : 'Submit'}
           </Button>

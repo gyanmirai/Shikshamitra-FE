@@ -133,6 +133,7 @@ const FinanceExpenseTracking = () => {
             data={expenseDetailedData || []}
             addExpenseCategory={addExpenseDialog}
             setEditData={setSelectedExpense}
+            isLoading={isLoading}
             onEdit={(data) => {
               addExpenseDialog.onTrue();
               setSelectedExpense(data);
