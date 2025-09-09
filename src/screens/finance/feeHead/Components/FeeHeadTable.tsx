@@ -1,5 +1,9 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Typography, IconButton } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -12,96 +16,153 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   open,
   setOpenDialog,
   setEditData,
-  onDelete,
   onEdit,
-}) => (
-  <CustomizableTable
-    tableId="fee-head-data-table"
-    noDataText={
-      <>
-        Fee Head Data Not Found{' '}
-        <Box
-          onClick={() => {
-            onAddFeeHead.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Fee Head
-        </Box>
-      </>
-    }
-    columns={[
-      {
-        id: 'feeHeadName',
-        label: 'Fee Head Name',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'feeCategoryId',
-        label: 'Fee Category',
-        align: 'left',
-      },
-      {
-        id: 'description',
-        label: 'Description',
-        align: 'left',
-        render: (value) => (
-          <Typography
-            variant="caption"
-            fontSize="13px"
+  // New props for toggle functionality
+  activeDialog,
+  selectedEntry,
+  setSelectedEntry,
+}) => {
+  const theme = useTheme();
+
+  return (
+    <CustomizableTable
+      tableId="fee-head-data-table"
+      noDataText={
+        <>
+          Fee Head Data Not Found{' '}
+          <Box
+            onClick={() => {
+              onAddFeeHead.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
             sx={{
-              maxWidth: 300,
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
             }}
           >
-            {value || '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'action',
-        label: 'Actions',
-        minWidth: 60,
-        align: 'left',
-        isSort: false,
-        sticky: true,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              placement="right-top"
-              showDeleteIcon
-              showEditIcon
-              handleDeleteClick={() => {
-                onDelete(row as IFeeHead);
-              }}
-              handleEditClick={() => {
-                onEdit(row as IFeeHead);
-              }}
-            />
-          );
+            Add Fee Head
+          </Box>
+        </>
+      }
+      columns={[
+        {
+          id: 'feeHeadName',
+          label: 'Fee Head Name',
+          align: 'left',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          ),
         },
-      },
-    ]}
-    data={data || []}
-  />
-);
+        {
+          id: 'feeCategoryId',
+          label: 'Fee Category',
+          align: 'left',
+        },
+        {
+          id: 'description',
+          label: 'Description',
+          align: 'left',
+          render: (value) => (
+            <Typography
+              variant="caption"
+              fontSize="13px"
+              sx={{
+                maxWidth: 300,
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+              }}
+            >
+              {value || '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'toggle',
+          label: 'Active',
+          isFilter: false,
+          isSort: false,
+          render(value, row) {
+            const statusColor =
+              value === true ? theme.palette.success.main : theme.palette.text.secondary;
+            return (
+              <CustomTooltip
+                title={value === true ? 'Active' : 'InActive'}
+                arrow
+                placement="left"
+                PopperProps={{
+                  modifiers: [
+                    {
+                      name: 'offset',
+                      options: {
+                        offset: [0, 0],
+                      },
+                    },
+                  ],
+                }}
+              >
+                <IconButton
+                  onClick={() => {
+                    activeDialog.onTrue();
+                    setSelectedEntry(row as IFeeHead);
+                  }}
+                  sx={{
+                    p: 0.6,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      backgroundColor: 'rgba(0,0,0,0.08)',
+                    },
+                  }}
+                >
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      color: statusColor,
+                    }}
+                  />
+                </IconButton>
+              </CustomTooltip>
+            );
+          },
+        },
+        {
+          id: 'action',
+          label: 'Action',
+          minWidth: 60,
+          align: 'left',
+          isSort: false,
+          sticky: true,
+          isFilter: false,
+          render(value, row) {
+            return (
+              <ThreeDotsActions
+                showThreeDots={false}
+                placement="right-top"
+                showEditIcon
+                handleEditClick={() => {
+                  onEdit(row as IFeeHead);
+                }}
+              />
+            );
+          },
+        },
+      ]}
+      data={data || []}
+    />
+  );
+};
 
 export default FeeHeadTable;

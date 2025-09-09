@@ -24,7 +24,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose }) 
     const updated = [...formik.values.feeStructureClasses[className]];
 
     updated.push({
-      feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`, // ✅ auto-name if empty
+      feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`,
       status: FeeStructureClassStatusType.Current,
       feeItems: [],
     });

@@ -27,5 +27,5 @@ export const FeeStructureClassStatusTypeColors: Record<
 > = {
   [FeeStructureClassStatusType.Current]: 'success',
   [FeeStructureClassStatusType.Completed]: 'success',
-  [FeeStructureClassStatusType.Remaining]: 'warning',
+  [FeeStructureClassStatusType.Remaining]: 'inherit',
 };

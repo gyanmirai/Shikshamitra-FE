@@ -83,9 +83,7 @@ export const paymentTermValidationSchema = (currentYear: any) =>
           gracePeriod: Yup.number()
             .min(1, 'Grace Period must be greater than 0')
             .required('Grace Period is required'),
-          overdueCharges: Yup.number()
-            .min(1, 'Overdue Charges must be greater than 0')
-            .required('Overdue Charges is required'),
+          overdueCharges: Yup.number().required('Overdue Charges is required'),
         })
       )
       .required('Installments are required')

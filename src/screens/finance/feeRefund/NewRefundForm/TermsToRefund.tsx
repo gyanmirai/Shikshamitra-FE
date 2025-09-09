@@ -6,11 +6,11 @@ import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
 
 import ChargesList from '../../FeeCollection/Components/ChargesList';
 

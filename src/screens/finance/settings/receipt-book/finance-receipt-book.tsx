@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -27,7 +26,6 @@ import type { IReceiptBook } from './receipt-book-interface';
 
 const FinanceReceiptBookSetting = () => {
   // Dialog state for general purpose
-  const dialog = useBoolean();
   const theme = useTheme();
 
   // Dialog state specifically for receipt book operations
@@ -135,7 +133,7 @@ const FinanceReceiptBookSetting = () => {
                     : theme.vars.palette.text.secondary;
                 return (
                   <CustomTooltip
-                    title={value === true ? 'Active' : 'InActive'}
+                    title={value === true ? 'Active' : 'Inactive'}
                     arrow
                     placement="left"
                     PopperProps={{
@@ -174,7 +172,7 @@ const FinanceReceiptBookSetting = () => {
             },
             {
               id: 'action',
-              label: 'Actions',
+              label: 'Action',
               isFilter: false,
               isSort: false,
               sticky: true,
@@ -183,12 +181,6 @@ const FinanceReceiptBookSetting = () => {
               render: (value, row: any) => (
                 <ThreeDotsActions
                   showThreeDots={false}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    dialogForDeleteConfirmation.onTrue();
-                    setSelectedEntry(row);
-                    // handleDelete(row);
-                  }}
                   showEditIcon
                   handleEditClick={() => {
                     setIsEdit(true);
@@ -202,34 +194,6 @@ const FinanceReceiptBookSetting = () => {
           data={tableData}
         />
       </>
-
-      {dialogForDeleteConfirmation.value && (
-        <ConfirmDialog
-          open={dialogForDeleteConfirmation.value}
-          onClose={() => {
-            dialogForDeleteConfirmation.onFalse();
-            setSelectedEntry(null);
-          }}
-          title="Delete"
-          content={
-            <>
-              Are you sure you want to delete receipt book{' '}
-              <strong>{selectedEntry?.receiptBookName}</strong>?
-            </>
-          }
-          action={
-            <LoadingButton
-              variant="contained"
-              loading={false}
-              color="error"
-              onClick={() => {}}
-              size="small"
-            >
-              Yes
-            </LoadingButton>
-          }
-        />
-      )}
 
       {receiptBookDialog.value && (
         <CustomDialog

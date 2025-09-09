@@ -12,7 +12,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   addPaymentTerm,
   setEditData,
   onEdit,
-  onDelete,
   editData,
 }) => (
   <CustomizableTable
@@ -53,7 +52,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       },
       {
         id: 'action',
-        label: 'Actions',
+        label: 'Action',
         align: 'left',
         isSort: false,
         isFilter: false,
@@ -63,9 +62,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           <ThreeDotsActions
             showThreeDots={false}
             showEditIcon
-            showDeleteIcon
             handleEditClick={() => onEdit?.(row as IPaymentTerm)}
-            handleDeleteClick={() => onDelete?.(row as IPaymentTerm)}
           />
         ),
       },

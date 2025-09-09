@@ -197,7 +197,7 @@ const FeeStructure = () => {
                 message: (
                   <>
                     Fee Structure: <strong>{selectedFeeStructure?.feeStructureName}</strong> moved
-                    to {status} successfully.
+                    to {status} successfully
                   </>
                 ),
               });
