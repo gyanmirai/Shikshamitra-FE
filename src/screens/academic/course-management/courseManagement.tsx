@@ -372,7 +372,7 @@ const CourseManagement = (props: TabComponentType) => {
               icon="solar:user-rounded-bold"
               chart={{
                 series: 75,
-                colors: [theme.vars.palette.secondary.light, theme.vars.palette.secondary.main],
+                colors: [theme.palette.secondary.light, theme.palette.secondary.main],
               }}
             />
           </Card>
@@ -401,7 +401,7 @@ const CourseManagement = (props: TabComponentType) => {
               icon="solar:user-rounded-bold"
               chart={{
                 series: 21,
-                colors: [theme.vars.palette.secondary.light, theme.vars.palette.secondary.main],
+                colors: [theme.palette.secondary.light, theme.palette.secondary.main],
               }}
             />
           </Card>
@@ -604,10 +604,7 @@ interface AppWidgetProps {
 export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart }) => {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },

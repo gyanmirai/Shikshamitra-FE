@@ -28,10 +28,10 @@ export function FileDataActivity({ title, subheader, chart, ...other }: Props) {
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.error.main,
-    theme.vars.palette.warning.main,
-    hexAlpha(theme.vars.palette.grey[500], 0.48),
+    theme.palette.primary.main,
+    theme.palette.error.main,
+    theme.palette.warning.main,
+    hexAlpha(theme.palette.grey[500], 0.48),
   ];
 
   const chartOptions = useChart({

@@ -22,10 +22,10 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
   const chartSeries = chart.series.map((item: any) => item.value);
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.warning.light,
-    theme.vars.palette.info.dark,
-    theme.vars.palette.error.main,
+    theme.palette.primary.main,
+    theme.palette.warning.light,
+    theme.palette.info.dark,
+    theme.palette.error.main,
   ];
 
   const chartOptions = useChart({
@@ -72,8 +72,8 @@ export function YearlyAttendance({ title, subheader, chart, ...other }: any) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    hexAlpha(theme.vars.palette.primary.dark, 0.8),
-    hexAlpha(theme.vars.palette.warning.main, 0.8),
+    hexAlpha(theme.palette.primary.dark, 0.8),
+    hexAlpha(theme.palette.warning.main, 0.8),
   ];
 
   const chartOptions = useChart({

@@ -63,9 +63,9 @@ export function GradeDistribution({ title, subheader, chart, selectSeries, ...ot
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.dark,
-    theme.vars.palette.warning.main,
-    theme.vars.palette.info.main,
+    theme.palette.primary.dark,
+    theme.palette.warning.main,
+    theme.palette.info.main,
   ];
 
   const chartOptions = useChart({

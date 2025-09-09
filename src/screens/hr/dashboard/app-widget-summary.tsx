@@ -29,7 +29,7 @@ export function AppWidgetSummary({
 }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.vars.palette.primary.main];
+  const chartColors = chart.colors ?? [theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },

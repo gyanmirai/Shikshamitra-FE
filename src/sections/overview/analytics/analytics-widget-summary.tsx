@@ -35,7 +35,7 @@ export function AnalyticsWidgetSummary({
 }: Props) {
   const theme = useTheme();
 
-  const chartColors = [theme.vars.palette[color].dark];
+  const chartColors = [theme.palette[color].dark];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -71,7 +71,7 @@ export function AnalyticsWidgetSummary({
     <Card
       sx={{
         ...bgGradient({
-          color: `135deg, ${varAlpha(theme.vars.palette[color].lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette[color].lightChannel, 0.48)}`,
+          color: `135deg, ${varAlpha(theme.palette[color].lighterChannel, 0.48)}, ${varAlpha(theme.palette[color].lightChannel, 0.48)}`,
         }),
         p: 3,
         boxShadow: 'none',

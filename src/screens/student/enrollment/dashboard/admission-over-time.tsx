@@ -9,11 +9,7 @@ import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart
 const AdmissionOverTime = () => {
   const theme = useTheme();
   const chartOptions = useChart({
-    colors: [
-      theme.vars.palette.warning.main,
-      theme.vars.palette.success.main,
-      theme.vars.palette.info.main,
-    ],
+    colors: [theme.palette.warning.main, theme.palette.success.main, theme.palette.info.main],
     xaxis: {
       categories: [
         'Jan',
@@ -70,10 +66,7 @@ export function EcommerceYearlySales({ title, subheader, chart, ...other }: Prop
 
   const [selectedSeries, setSelectedSeries] = useState('2023');
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.warning.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
 
   const chartOptions = useChart({
     colors: chartColors,

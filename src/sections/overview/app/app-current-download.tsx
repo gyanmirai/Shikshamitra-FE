@@ -23,10 +23,10 @@ export function AppCurrentDownload({ title, icon, subheader, chart, ...other }: 
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.lighter,
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.dark,
-    theme.vars.palette.primary.darker,
+    theme.palette.primary.lighter,
+    theme.palette.primary.light,
+    theme.palette.primary.dark,
+    theme.palette.primary.darker,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);

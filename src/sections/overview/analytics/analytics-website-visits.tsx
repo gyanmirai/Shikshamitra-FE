@@ -49,9 +49,9 @@ export function AnalyticsWebsiteVisits({
 
   // Define chart colors with fallback to default color palette using alpha transparency
   const chartColors = chart.colors ?? [
-    hexAlpha(theme.vars.palette.primary.dark, 0.8),
-    hexAlpha(theme.vars.palette.warning.main, 0.8),
-    hexAlpha(theme.vars.palette.error.main, 0.8),
+    hexAlpha(theme.palette.primary.dark, 0.8),
+    hexAlpha(theme.palette.warning.main, 0.8),
+    hexAlpha(theme.palette.error.main, 0.8),
   ];
 
   // Configure chart options by merging default settings with custom options

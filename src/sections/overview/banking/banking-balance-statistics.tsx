@@ -28,9 +28,9 @@ export function BankingBalanceStatistics({ title, subheader, chart, ...other }: 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.dark,
-    theme.vars.palette.warning.main,
-    theme.vars.palette.info.main,
+    theme.palette.primary.dark,
+    theme.palette.warning.main,
+    theme.palette.info.main,
   ];
 
   const chartOptions = useChart({

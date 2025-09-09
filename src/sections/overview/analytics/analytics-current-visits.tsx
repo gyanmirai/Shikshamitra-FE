@@ -26,10 +26,10 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
 
   // Define chart colors - use provided colors or fallback to default theme colors
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.warning.light,
-    theme.vars.palette.info.dark,
-    theme.vars.palette.error.main,
+    theme.palette.primary.main,
+    theme.palette.warning.light,
+    theme.palette.info.dark,
+    theme.palette.error.main,
   ];
 
   // Configure chart options using the useChart hook

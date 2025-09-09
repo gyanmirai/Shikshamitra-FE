@@ -24,7 +24,7 @@ const InventoryCategoryChart = () => {
     { name: 'Issued', data: chartData.issued },
   ];
 
-  const chartColors = [theme.vars.palette.primary.dark, theme.vars.palette.warning.main];
+  const chartColors = [theme.palette.primary.dark, theme.palette.warning.main];
 
   const chartOptions = useChart({
     stroke: { width: 2, colors: ['transparent'] },

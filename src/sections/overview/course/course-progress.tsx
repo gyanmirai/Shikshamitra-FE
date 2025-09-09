@@ -20,9 +20,9 @@ export function CourseProgress({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    hexAlpha(theme.vars.palette.grey[500], 0.24),
-    theme.vars.palette.success.dark,
-    theme.vars.palette.warning.main,
+    hexAlpha(theme.palette.grey[500], 0.24),
+    theme.palette.success.dark,
+    theme.palette.warning.main,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);

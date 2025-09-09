@@ -24,8 +24,8 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.dark,
-    hexAlpha(theme.vars.palette.primary.dark, 0.24),
+    theme.palette.primary.dark,
+    hexAlpha(theme.palette.primary.dark, 0.24),
   ];
 
   const chartOptions = useChart({
@@ -43,7 +43,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
     dataLabels: {
       enabled: true,
       offsetX: -6,
-      style: { fontSize: '10px', colors: ['#FFFFFF', theme.vars.palette.text.primary] },
+      style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
     },
     plotOptions: {
       bar: { horizontal: true, borderRadius: 2, barHeight: '48%', dataLabels: { position: 'top' } },

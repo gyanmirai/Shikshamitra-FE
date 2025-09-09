@@ -20,10 +20,10 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.darker,
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.dark,
-    theme.vars.palette.primary.lighter,
+    theme.palette.primary.darker,
+    theme.palette.primary.light,
+    theme.palette.primary.dark,
+    theme.palette.primary.lighter,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -86,10 +86,10 @@ export function AppCurrentDownload2({ title, subheader, chart, ...other }: Props
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.darker,
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.dark,
-    theme.vars.palette.primary.lighter,
+    theme.palette.primary.darker,
+    theme.palette.primary.light,
+    theme.palette.primary.dark,
+    theme.palette.primary.lighter,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);

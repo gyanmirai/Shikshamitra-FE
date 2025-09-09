@@ -26,8 +26,8 @@ export function BookingCheckInWidgets({ chart, ...other }: Props) {
   const smUp = useResponsive('up', 'sm');
 
   const chartColors = chart.colors ?? [
-    [theme.vars.palette.primary.light, theme.vars.palette.primary.main],
-    [theme.vars.palette.warning.light, theme.vars.palette.warning.main],
+    [theme.palette.primary.light, theme.palette.primary.main],
+    [theme.palette.warning.light, theme.palette.warning.main],
   ];
 
   const chartOptions = useChart({

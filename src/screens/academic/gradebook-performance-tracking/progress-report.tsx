@@ -368,10 +368,7 @@ export function PerformanceOverTime({ title, subheader, chart, ...other }: any) 
 
   // const [selectedSeries, setSelectedSeries] = useState('2023');
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.warning.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.main, theme.palette.warning.main];
 
   const chartOptions = useChart({
     colors: chartColors,

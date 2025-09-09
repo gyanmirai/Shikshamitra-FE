@@ -21,10 +21,7 @@ type Props = CardProps & {
 export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -58,11 +55,11 @@ export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...ot
           position: 'relative',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: varAlpha(theme.vars.palette.success.mainChannel, 0.16),
+          bgcolor: varAlpha(theme.palette.success.mainChannel, 0.16),
           color: 'success.dark',
           [stylesMode.dark]: { color: 'success.light' },
           ...(percent < 0 && {
-            bgcolor: varAlpha(theme.vars.palette.error.mainChannel, 0.16),
+            bgcolor: varAlpha(theme.palette.error.mainChannel, 0.16),
             color: 'error.dark',
             [stylesMode.dark]: { color: 'error.light' },
           }),

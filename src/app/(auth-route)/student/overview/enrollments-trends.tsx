@@ -113,7 +113,7 @@ export function AttendanceGraph({
 
   const chartOptions = useChart({
     stroke: { width: 2, colors: ['transparent'] },
-    colors: [theme.vars.palette.primary.main],
+    colors: [theme.palette.primary.main],
     xaxis: { categories: currentSeries?.categories || [] },
     tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
   });

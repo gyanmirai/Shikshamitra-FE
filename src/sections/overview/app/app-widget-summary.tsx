@@ -20,7 +20,7 @@ type Props = CardProps & {
 export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.vars.palette.primary.main];
+  const chartColors = chart.colors ?? [theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },

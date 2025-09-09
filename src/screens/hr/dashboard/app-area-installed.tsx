@@ -40,10 +40,10 @@ export function AppAreaInstalled({
   const [selectedSeries, setSelectedSeries] = useState(selectSeries || '2023');
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.main,
-    theme.vars.palette.error.main,
-    theme.vars.palette.warning.main,
-    hexAlpha(theme.vars.palette.grey[500], 0.48),
+    theme.palette.primary.main,
+    theme.palette.error.main,
+    theme.palette.warning.main,
+    hexAlpha(theme.palette.grey[500], 0.48),
   ];
 
   const chartOptions = useChart({

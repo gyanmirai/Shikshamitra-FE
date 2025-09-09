@@ -28,12 +28,9 @@ export function EcommerceSaleByGender({ title, subheader, total, chart, ...other
   const chartSeries = chart.series.map((item) => item.value);
 
   const chartColors = chart.colors ?? [
-    [theme.vars.palette.primary.light, theme.vars.palette.primary.main],
-    [
-      hexAlpha(theme.vars.palette.warning.light, 0.8),
-      hexAlpha(theme.vars.palette.warning.main, 0.8),
-    ],
-    [hexAlpha(theme.vars.palette.error.light, 0.8), hexAlpha(theme.vars.palette.error.main, 0.8)],
+    [theme.palette.primary.light, theme.palette.primary.main],
+    [hexAlpha(theme.palette.warning.light, 0.8), hexAlpha(theme.palette.warning.main, 0.8)],
+    [hexAlpha(theme.palette.error.light, 0.8), hexAlpha(theme.palette.error.main, 0.8)],
   ];
 
   const chartOptions = useChart({
@@ -54,7 +51,7 @@ export function EcommerceSaleByGender({ title, subheader, total, chart, ...other
     plotOptions: {
       radialBar: {
         hollow: { margin: 10, size: '32%' },
-        track: { margin: 10, background: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+        track: { margin: 10, background: varAlpha(theme.palette.grey['500Channel'], 0.08) },
         dataLabels: {
           total: { formatter: () => fNumber(total) },
           value: { offsetY: 2, fontSize: theme.typography.h5.fontSize as string },

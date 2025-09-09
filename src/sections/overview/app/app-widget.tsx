@@ -21,10 +21,7 @@ type Props = BoxProps & {
 export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -44,7 +41,7 @@ export function AppWidget({ title, total, icon, chart, sx, ...other }: Props) {
           name: { show: false },
           value: {
             offsetY: 6,
-            color: theme.vars.palette.common.white,
+            color: theme.palette.common.white,
             fontSize: theme.typography.subtitle2.fontSize as string,
           },
         },

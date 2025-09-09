@@ -26,14 +26,14 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
-    theme.vars.palette.secondary.dark,
-    theme.vars.palette.error.main,
-    theme.vars.palette.primary.main,
-    theme.vars.palette.warning.main,
-    theme.vars.palette.info.dark,
-    theme.vars.palette.info.main,
-    theme.vars.palette.success.main,
-    theme.vars.palette.warning.dark,
+    theme.palette.secondary.dark,
+    theme.palette.error.main,
+    theme.palette.primary.main,
+    theme.palette.warning.main,
+    theme.palette.info.dark,
+    theme.palette.info.main,
+    theme.palette.success.main,
+    theme.palette.warning.dark,
   ];
 
   const chartSeries = chart.series.map((item) => item.value);
@@ -90,7 +90,7 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
         gridTemplateColumns="repeat(2, 1fr)"
         sx={{ textAlign: 'center', typography: 'h4' }}
       >
-        <Box sx={{ py: 2, borderRight: `dashed 1px ${theme.vars.palette.divider}` }}>
+        <Box sx={{ py: 2, borderRight: `dashed 1px ${theme.palette.divider}` }}>
           <Box sx={{ mb: 1, typography: 'body2', color: 'text.secondary' }}>Categories</Box>9
         </Box>
 

@@ -11,14 +11,14 @@ export function useChart(options?: ChartOptions): ChartOptions {
   const LABEL_TOTAL = {
     show: true,
     label: 'Total',
-    color: theme.vars.palette.text.secondary,
+    color: theme.palette.text.secondary,
     fontSize: theme.typography.subtitle2.fontSize as string,
     fontWeight: theme.typography.subtitle2.fontWeight,
   };
 
   const LABEL_VALUE = {
     offsetY: 8,
-    color: theme.vars.palette.text.primary,
+    color: theme.palette.text.primary,
     fontSize: theme.typography.h4.fontSize as string,
     fontWeight: theme.typography.h4.fontWeight,
   };
@@ -46,7 +46,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
       zoom: { enabled: false },
       parentHeightOffset: 0,
       fontFamily: theme.typography.fontFamily,
-      foreColor: theme.vars.palette.text.disabled,
+      foreColor: theme.palette.text.disabled,
       ...options?.chart,
       animations: {
         enabled: true,
@@ -61,15 +61,15 @@ export function useChart(options?: ChartOptions): ChartOptions {
      * Colors
      *************************************** */
     colors: options?.colors ?? [
-      theme.vars.palette.primary.main,
-      theme.vars.palette.warning.main,
-      theme.vars.palette.info.main,
-      theme.vars.palette.error.main,
-      theme.vars.palette.success.main,
-      theme.vars.palette.warning.dark,
-      theme.vars.palette.success.darker,
-      theme.vars.palette.info.dark,
-      theme.vars.palette.info.darker,
+      theme.palette.primary.main,
+      theme.palette.warning.main,
+      theme.palette.info.main,
+      theme.palette.error.main,
+      theme.palette.success.main,
+      theme.palette.warning.dark,
+      theme.palette.success.darker,
+      theme.palette.info.dark,
+      theme.palette.info.darker,
     ],
 
     /** **************************************
@@ -120,7 +120,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
      *************************************** */
     grid: {
       strokeDashArray: 3,
-      borderColor: theme.vars.palette.divider,
+      borderColor: theme.palette.divider,
       ...options?.grid,
       padding: { top: 0, right: 0, bottom: 0, ...options?.grid?.padding },
       xaxis: { lines: { show: false }, ...options?.grid?.xaxis },
@@ -135,7 +135,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
     /** **************************************
      * Markers
      *************************************** */
-    markers: { size: 0, strokeColors: theme.vars.palette.background.paper, ...options?.markers },
+    markers: { size: 0, strokeColors: theme.palette.background.paper, ...options?.markers },
 
     /** **************************************
      * Tooltip
@@ -152,7 +152,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
       fontSize: '13px',
       horizontalAlign: 'right',
       markers: {},
-      labels: { colors: theme.vars.palette.text.primary },
+      labels: { colors: theme.palette.text.primary },
       ...options?.legend,
       itemMargin: { horizontal: 8, vertical: 8, ...options?.legend?.itemMargin },
     },
@@ -191,7 +191,7 @@ export function useChart(options?: ChartOptions): ChartOptions {
         track: {
           margin: -8,
           strokeWidth: '50%',
-          background: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+          background: varAlpha(theme.palette.grey['500Channel'], 0.16),
           ...options?.plotOptions?.radialBar?.track,
         },
         dataLabels: {
@@ -206,16 +206,16 @@ export function useChart(options?: ChartOptions): ChartOptions {
         ...options?.plotOptions?.radar,
         polygons: {
           fill: { colors: ['transparent'] },
-          strokeColors: theme.vars.palette.divider,
-          connectorColors: theme.vars.palette.divider,
+          strokeColors: theme.palette.divider,
+          connectorColors: theme.palette.divider,
           ...options?.plotOptions?.radar?.polygons,
         },
       },
 
       // plotOptions: polarArea
       polarArea: {
-        rings: { strokeColor: theme.vars.palette.divider },
-        spokes: { connectorColors: theme.vars.palette.divider },
+        rings: { strokeColor: theme.palette.divider },
+        spokes: { connectorColors: theme.palette.divider },
         ...options?.plotOptions?.polarArea,
       },
 

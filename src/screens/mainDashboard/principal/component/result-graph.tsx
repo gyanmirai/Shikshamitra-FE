@@ -60,9 +60,9 @@ export function AnalyticsClassResults({ title, subheader, ...other }: Props) {
 
   const chartOptions: ChartOptions = useChart({
     colors: [
-      hexAlpha(theme.vars.palette.primary.dark, 0.8),
-      hexAlpha(theme.vars.palette.warning.main, 0.8),
-      hexAlpha(theme.vars.palette.error.main, 0.8),
+      hexAlpha(theme.palette.primary.dark, 0.8),
+      hexAlpha(theme.palette.warning.main, 0.8),
+      hexAlpha(theme.palette.error.main, 0.8),
     ],
     stroke: { width: 2, colors: ['transparent'] },
     xaxis: { categories: subjects },

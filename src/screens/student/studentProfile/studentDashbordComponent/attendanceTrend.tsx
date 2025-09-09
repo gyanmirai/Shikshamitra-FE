@@ -6,7 +6,7 @@ import { Box, Card, Grid, Typography } from '@mui/material';
 const AttendanceTrend = () => {
   const theme = useTheme();
   const chartOptions = useChart({
-    colors: [theme.vars.palette.primary.main, theme.vars.palette.error.main],
+    colors: [theme.palette.primary.main, theme.palette.error.main],
     xaxis: {
       categories: [
         'Jan',
@@ -43,7 +43,7 @@ const AttendanceTrend = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="subtitle2">Total Present Days</Typography>
             <Typography
-              color={theme.vars.palette.primary.main}
+              color={theme.palette.primary.main}
               variant="subtitle1"
               sx={{ fontWeight: 700 }}
             >
@@ -53,7 +53,7 @@ const AttendanceTrend = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="subtitle2">Total Present Days</Typography>
             <Typography
-              color={theme.vars.palette.error.main}
+              color={theme.palette.error.main}
               variant="subtitle1"
               sx={{ fontWeight: 700 }}
             >

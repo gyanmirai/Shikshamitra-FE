@@ -25,10 +25,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
 
   const chartSeries = (chart.series.filter((i) => i.label === 'Sold out')[0].value / total) * 100;
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.primary.light,
-    theme.vars.palette.primary.main,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -45,7 +42,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
     plotOptions: {
       radialBar: {
         hollow: { margin: -20 },
-        track: { margin: -20, background: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+        track: { margin: -20, background: varAlpha(theme.palette.grey['500Channel'], 0.08) },
         dataLabels: {
           name: { offsetY: -12 },
           value: { offsetY: 6 },
@@ -80,7 +77,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
                 width: 16,
                 height: 16,
                 borderRadius: 0.75,
-                bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+                bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.16),
                 ...(item.label === 'Sold out' && { bgcolor: chartColors[1] }),
               }}
             />

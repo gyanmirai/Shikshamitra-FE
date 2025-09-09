@@ -27,10 +27,7 @@ export function BookingStatistics({ title, subheader, chart, ...other }: Props) 
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
-  const chartColors = [
-    theme.vars.palette.primary.dark,
-    hexAlpha(theme.vars.palette.error.main, 0.48),
-  ];
+  const chartColors = [theme.palette.primary.dark, hexAlpha(theme.palette.error.main, 0.48)];
 
   const chartOptions = useChart({
     colors: chartColors,

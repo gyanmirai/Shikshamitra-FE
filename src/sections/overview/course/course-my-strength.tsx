@@ -15,7 +15,7 @@ type Props = CardProps & {
 export function CourseMyStrength({ title, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [theme.vars.palette.primary.main];
+  const chartColors = chart.colors ?? [theme.palette.primary.main];
 
   const chartOptions = useChart({
     colors: chartColors,
@@ -26,12 +26,12 @@ export function CourseMyStrength({ title, chart, ...other }: Props) {
       labels: {
         style: {
           colors: [
-            theme.vars.palette.text.disabled,
-            theme.vars.palette.text.disabled,
-            theme.vars.palette.text.disabled,
-            theme.vars.palette.text.disabled,
-            theme.vars.palette.text.disabled,
-            theme.vars.palette.text.disabled,
+            theme.palette.text.disabled,
+            theme.palette.text.disabled,
+            theme.palette.text.disabled,
+            theme.palette.text.disabled,
+            theme.palette.text.disabled,
+            theme.palette.text.disabled,
           ],
         },
       },

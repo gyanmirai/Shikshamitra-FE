@@ -19,10 +19,7 @@ type Props = CardProps & {
 export function FileStorageOverview({ data, total, chart, ...other }: Props) {
   const theme = useTheme();
 
-  const chartColors = chart.colors ?? [
-    theme.vars.palette.secondary.main,
-    theme.vars.palette.secondary.light,
-  ];
+  const chartColors = chart.colors ?? [theme.palette.secondary.main, theme.palette.secondary.light];
 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
@@ -48,7 +45,7 @@ export function FileStorageOverview({ data, total, chart, ...other }: Props) {
           value: { offsetY: -36 },
           total: {
             label: `Used of ${fData(total)} / ${fData(total * 2)}`,
-            color: theme.vars.palette.text.disabled,
+            color: theme.palette.text.disabled,
             fontSize: theme.typography.caption.fontSize as string,
             fontWeight: theme.typography.caption.fontWeight,
           },

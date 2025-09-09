@@ -26,7 +26,7 @@ export function CourseHoursSpent({ title, subheader, chart, ...other }: Props) {
 
   const currentSeries = chart.series.find((i) => i.name === selectedSeries);
 
-  const chartColors = chart.colors ?? [theme.vars.palette.text.primary];
+  const chartColors = chart.colors ?? [theme.palette.text.primary];
 
   const chartOptions = useChart({
     grid: { padding: { left: 24 } },
